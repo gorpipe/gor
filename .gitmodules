@@ -1,3 +1,3 @@
 [submodule "tests/data"]
 	path = tests/data
-	url = ../GOR-Test-Data
+	url = ../gor-test-data
