@@ -30,7 +30,7 @@ node {
 
         // We only need the following when building pull requests
         if (env.CHANGE_ID) {
-            gradleOpts += " -Dsonar.bitbucket.repoSlug=gor-open-source -Dsonar.bitbucket.accountName=nextcode-health -Dsonar.bitbucket.teamName=nextcode-health"
+            gradleOpts += " -Dsonar.bitbucket.repoSlug=gor -Dsonar.bitbucket.accountName=nextcode-health -Dsonar.bitbucket.teamName=nextcode-health"
             gradleOpts += " -Dsonar.bitbucket.apiKey=${BITBUCKET_TEAM_API_KEY} -Dsonar.bitbucket.branchName=${BRANCH_NAME} -Dsonar.bitbucket.pullRequestId=${CHANGE_ID}"
             gradleOpts += " -Dsonar.exclusions=**/*.png,**/*.gif,**/*.GIF,**/*.ttf,**/*.otf,**/*.eot,**/Thumbs.db"
             gradleOpts += " -Dsonar.dependencyCheck.xmlReportPath=${WORKSPACE}/build/reports/dependency-check-report.xml"
@@ -135,7 +135,7 @@ node {
                                 [$class: 'StringParameterValue', name: 'git_sha', value: sha1],
                                 [$class: 'StringParameterValue', name: 'tag', value: 'v' + version],
                                 [$class: 'StringParameterValue', name: 'message', value: 'Tagging with version from Jenkins2'],
-                                [$class: 'StringParameterValue', name: 'repo', value: 'gor-open-source']
+                                [$class: 'StringParameterValue', name: 'repo', value: 'gor']
                         ]
                     }
                 }
@@ -144,9 +144,9 @@ node {
         } finally {
             stage('Publish Test Reports') {
                 step([$class: 'JUnitResultArchiver', testResults: '**/build/test-results/*/TEST-*.xml'])
-                step([$class: 'JacocoPublisher',
-                      execPattern: '**/build/jacoco/*.exec',
-                      classPattern: '**/build/classes/java/main,**/build/classes/scala/main',
+                step([$class       : 'JacocoPublisher',
+                      execPattern  : '**/build/jacoco/*.exec',
+                      classPattern : '**/build/classes/java/main,**/build/classes/scala/main',
                       sourcePattern: '**/src/main/java,**/src/main/scala',
                 ])
             }

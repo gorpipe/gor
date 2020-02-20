@@ -1,4 +1,4 @@
-SHORT_NAME = gor-open-source
+SHORT_NAME = gor
 
 BRANCH = $(git rev-parse --abbrev-ref HEAD)
 COMMIT_HASH = $(git rev-parse --short HEAD)
