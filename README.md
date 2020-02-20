@@ -20,8 +20,7 @@ In the parent folder where this repository is located, setup test data by clonin
     
 When done cloning, setup the test data as a submodule to this repo via:
 
-    git submodule init
-    git submodule update
+    git submodule add ../GOR-Test-Data tests/data
 
 ## Getting Started With GorPipe
 
