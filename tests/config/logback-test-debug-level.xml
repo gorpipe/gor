@@ -1,0 +1,31 @@
+<configuration>
+    <!--
+    To use this configuration file, specify the following JVM config option (pointing to the correct path of this file):
+        java -Dlogback.configurationFile=path_to/logback-trace.xml
+    -->
+
+    <!--
+    Add a context listener that will change the log level of JUL according to the SLF4J log level. This will ensure
+    that JUL will not be performing needless work for logging statements that are eventually disabled in SLF4J.
+    -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder class="org.gorpipe.base.logging.ExtendedPatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%hostname] [%process_id] [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- You can limit your logger to a specific class only by adding the following line. In that case you should also
+         turn the level on the root logger to OFF-->
+    <!--<logger name="org.gorpipe.gor.manager" level="TRACE"/>-->
+    <!--<logger name="org.gorpipe.gor.table" level="TRACE"/>-->
+    <logger name="io.netty" level="WARN"/>
+
+    <root level="debug">
+        <appender-ref ref="STDERR"/>
+    </root>
+</configuration>

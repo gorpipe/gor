@@ -1,0 +1,144 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
+/**
+ * Utility functions used by build.gradle.
+ *
+ * Extracted here to make the build gradle cleaner.
+ *
+ * Note:  as apply from does not import methods or classes we use ext to make those methods available in the main.
+ */
+
+ext {
+    // Get the git SHA to use in manifests. Do this on top level to avoid executing many times in subprojects.
+    gitSHA = 'git rev-parse --short HEAD'.execute().text.trim()
+
+    allLeafProjects = {
+        rootProject.subprojects.findAll() {subproject ->
+            subproject.subprojects.size() == 0
+        }
+    }
+
+    /**
+     * Add dependencies from configuration to the given pom dependenciesNode objects.
+     */
+    updateDependenciesNode = { dependenciesNode, configurations ->
+        configurations.runtime.allDependencies.each { ModuleDependency dp ->
+            def dependencyNode = dependenciesNode.appendNode('dependency')
+            dependencyNode.appendNode('groupId', dp.group)
+            dependencyNode.appendNode('artifactId', dp.name)
+            dependencyNode.appendNode('version', dp.version)
+
+            // for exclusions
+            if (dp.excludeRules.size() > 0) {
+                def exclusions = dependencyNode.appendNode('exclusions')
+                dp.excludeRules.each { ExcludeRule ex ->
+                    def exclusion = exclusions.appendNode('exclusion')
+                    exclusion.appendNode('groupId', ex.group)
+                    exclusion.appendNode('artifactId', ex.module)
+                }
+            }
+        }
+    }
+
+    /**
+     * Utility method to update script task with info from params and project.
+     */
+    updateScriptTask = {projectName, scriptName, params, task, project ->
+        task.mainClassName = params.className
+        task.applicationName = scriptName
+        task.outputDir = new File(project.buildDir, 'scripts')
+        // Ideally we like to set the classpath as this, but as we currently have a lot of dependencies the class path
+        // will be to long (change this back if the class path becomes shorter)
+        // task.classpath = project.jar.outputs.files + project.configurations.runtime
+        // The task replaces APP_HOME with the linux or windows var.
+        task.classpath = files('__APP_HOME__/lib/*')
+        task.defaultJvmOpts = params.containsKey('defaultJvmOpts') ? params.defaultJvmOpts : []
+        task.optsEnvironmentVar = projectName + "_" + scriptName.toUpperCase() + "_OPTS"
+
+        // Use custom template for the unix start script.
+        task.unixStartScriptGenerator.template = resources.text.fromFile("${rootDir}/gradle/unixStartScript.txt")
+
+        task.doLast {
+            // Need to replace our __APP_HOME__ .               
+            task.unixScript.text = task.unixScript.text.replace('__APP_HOME__', '${APP_HOME}')
+            task.windowsScript.text = task.windowsScript.text.replace('__APP_HOME__', '%~dp0..')
+            // We currently only support setting the XMX for unix.
+            task.unixScript.text = task.unixScript.text.replace('XMX_RATIO=""', 'XMX_RATIO="' + (params.containsKey('xmxRatio') ? params.xmxRatio : '') + '"')
+        }
+
+        project.applicationDistribution.into("bin") {
+            from(task)
+            fileMode = 0755
+        }
+    }
+
+    /*
+    To ensure correctness in the dependency chain, we limit the possible permutations of casing
+    to 1 for each legal value.
+    */
+    IsLegalOS = {os ->
+        return ["Win", "Win32", "Osx", "Linux"].contains(os)
+    }
+
+    /**
+     * Parses the taskName and returns an array containing version, OS and architecture (64-bit or 32-bit)
+     * taskName == taskNameStart + version + OS + arch
+     */
+    getVersionOs = {taskName, taskNameStart ->
+        String versionOsArch = (taskName - taskNameStart)
+        def versionArch = versionOsArch.findAll(/\d+/)
+        String version = versionArch[0]
+        String arch = versionArch[1] == "32" ? versionArch[1] : "64"
+        String os = (taskName - (taskNameStart + version)) - arch
+        return [version:version, os:os, arch:arch]
+    }
+
+} // ext
+
+subprojects {
+    ext {
+        getProjectFullName = {
+            return getCustomProjectId()
+        }
+
+        getProjectRootName = {
+            // 2017-10-20
+            // making deployments behave the same as before combining the repositories
+            // revisit this when we start splitting the code into more logical modules
+            if (project.path.startsWith(":sm:")) {
+                return "sm"
+            } else {
+                return "gor"
+            }
+        }
+
+        getCustomProjectId = {
+            // 2017-10-20
+            // making deployments behave the same as before combining the repositories
+            // revisit this when we start splitting the code into more logical modules
+            customProjectId = project.path.replace(':sm:','').replace(':', '-')
+            customProjectId = customProjectId.startsWith('-') ? customProjectId.substring(1) : customProjectId
+            return getProjectRootName() + "-" + customProjectId
+        }
+
+        getCustomGroupId = {
+            // 2017-10-20
+            // making deployments behave the same as before combining the repositories
+            // revisit this when we start splitting the code into more logical modules
+            return "com.nextcode." + getProjectRootName()
+        }
+
+        manifestTemplate = {
+            attributes 'Implementation-Title': getProjectFullName(),
+                    'Implementation-Version': project.version + " (git SHA " +  gitSHA + ")",
+                    'Built-By': System.getProperty('user.name'),
+                    'Built-JDK': System.getProperty('java.version'),
+                    'Provider': 'gradle',
+                    'Git-SHA': gitSHA
+        }
+    }
+}
+
+task generateTestReport(type:Exec) {
+    commandLine 'python','tests/scripts/genReport.py'
+}

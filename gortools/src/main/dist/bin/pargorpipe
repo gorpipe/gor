@@ -1,0 +1,223 @@
+#!/bin/bash
+
+# TEST:
+# Test with pargorpipe "gor -p chr #dbSNP# | join -snpseg #genes#" myoutfile.gor
+
+
+# ===========================================
+# Defaults and usage.                               
+# ===========================================
+
+WORKDIR=partmp
+
+# Options
+DEBUG=FALSE
+PATTERN_SUBST='#chr;chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY'
+#PATTERN_SUBST='#chr;chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr20,chr21,chr22,chrX,chrY,chrM,chrXY'
+#PATTERN_SUBST='#chr;1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y,XY'
+PBS_RESOURCES=nodes=1:ppn=1,mem=2gb,walltime=01:00:00
+ALIASES_FILE_OPTION=
+CONFIG_FILE_OPTION=
+
+usage() {
+    echo -e "Usage:  pargorpipe [options] <gorpipe string> <outfile>"
+    echo -e ""
+    echo -e "Options:"
+    echo -e "\t-d|--debug\t\t\t\tPrint debug info.  Default: ${DEBUG}"
+    echo -e "\t-t|--tmp <tmp folder>\t\t\tName of the tmp folder to use.  Default: ${WORKDIR}"
+    echo -e "\t-s|--subst <subst pattern>\t\tUse the given subst pattern.  The pattern should be: '<placeholder>;<comma sep list of replace values>'"
+    echo -e "\t\t\t\t\t\tDefault: ${PATTERN_SUBST:0:20} ..."  
+    echo -e "\t-r|--pbs_resources <resource string>\tString with PBS resource requirements.  See PBS manual for details."  
+    echo -e "\t\t\t\t\t\tDefault: ${PBS_RESOURCES}"
+    echo -e "\t-a|--aliases <aliases file>\t\t\tSupply aliases file to gorpipe.  Default: gorpipe default used."
+    echo -e "\t-c|--config <config file>\t\t\tConfig file to use by gorpipe.  Default: gorpipe default used."    
+    echo -e ""
+    echo -e "Notes:"
+    echo -e " - If using quotes \" should be used around the gorpipe command but ' should be used inside the command."
+    echo -e " - If the outfile is a gord file there will be one gorz file created for each pattern and then these will be added to the output gordfile."
+    echo -e ""
+    echo -e "Examples:"
+    echo -e ""
+    echo -e "Ex. 1:"
+    echo -e ""
+    echo -e "  gorpipe 'gor #dbSNP# | join -snpseg -f 100000 #genes# | where distance=0' > test.gorz"
+    echo -e ""
+    echo -e "becomes:"
+    echo -e ""
+    echo -e "  pargorpipe 'gor -p chr #dbSNP# | join -snpseg -f 100000 #genes# | where distance=0' test.gorz"
+    echo -e ""
+    echo -e "where #chr will be replaced by the chromosome numbers and run in parallel.  The results will then be"
+    echo -e "combined into the test.gorz output file"
+    echo -e ""    
+    echo -e ""
+    echo -e "Ex. 2:"
+    echo -e ""
+    echo -e "  pargorpipe -s '#interval;chr1:1000-2000,chr10:2000-4000,chr24:3000-4000' 'gor -p#interval #dbSNP#' test.gorz"
+    echo -e ""
+    echo -e "will extract dpSNPs from the three given intervals in parallel.  "
+        
+}
+
+# ===========================================
+# Script setup and generic methods                    
+# ===========================================
+
+set -e
+set -o pipefail
+set -u
+
+trap "cleanup; exit" INT TERM
+
+cleanup_pbs() {
+    # Kill the remaining jobs (normally there are not any)
+    set +e
+    qdel ${MERGEJOBID} ${JOBIDS} 
+    set -e
+}
+
+cleanup_folder() {
+    # Remove the work folder.
+    if [ -e ${WORKDIR} ]; then
+        rm -rf ${WORKDIR}
+    fi
+}
+
+cleanup() {
+
+    cleanup_pbs
+    cleanup_folder
+
+}
+
+
+
+# ===========================================
+# Validation, parameters and options
+# ===========================================
+
+# TODO: Fix, we need to skip this standard option validation as it messes with the gorpipe string (which quoted).
+# options may be followed by one colon to indicate they have a required argument
+#if ! OPTIONS=$(getopt -o d,p:,r: -l debug,pattern:,pbs_resources: -- "$@")
+#then
+#    # something went wrong, getopt will put out an error message for us
+#    exit 1
+#fi
+
+#set -- ${OPTIONS}
+
+while [ $# -gt 2 ]
+do
+    case $1 in
+    (-d|--debug) DEBUG="TRUE" ;;
+    # for options with required arguments, an additional shift is required
+    (-t | --tmp) WORKDIR="$2" ; shift;;
+    (-s | --subst) PATTERN_SUBST="$2" ; shift;;
+    (-r | --pbs_resources) PBS_RESOURCES="$2" ; shift;;
+    (-a | --aliases) ALIASES_FILE_OPTION="-aliases $(readlink -f $2)" ; shift;;
+    (-c | --config) CONFIG_FILE_OPTION="-config $(readlink -f $2)" ; shift;;
+    (--) shift; break;;
+    (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
+    (*) break;;
+    esac
+    shift
+done
+
+# Params
+
+if [ $# -lt 2 ]; then
+    usage
+    exit
+fi 
+
+COMMAND=$1
+OUTFILE=$2
+
+
+[ ${DEBUG} == "TRUE" ] && echo "Debug - Subst: $PATTERN_SUBST"
+[ ${DEBUG} == "TRUE" ] && echo "Debug - Resources: $PBS_RESOURCES"
+[ ${DEBUG} == "TRUE" ] && echo "Debug - Command: $COMMAND"
+[ ${DEBUG} == "TRUE" ] && echo "Debug - Outfile: $OUTFILE"
+
+ 
+# ===========================================
+# Prep
+# ===========================================
+
+# Extract the substitution pattern
+PATTERN=${PATTERN_SUBST%;*}
+SUBST=${PATTERN_SUBST#*;}
+SUBSTLIST=${SUBST//','/' '}
+
+# Setup the working dir
+mkdir -p ${WORKDIR}
+
+
+PBS_QUEUE="-q exec"
+
+# ===========================================
+# Run remotely
+# ===========================================
+
+JOBIDS=
+RESULT_FILES=
+for S in ${SUBSTLIST}; do
+    output_file=${WORKDIR}/parres_${S}.gorz
+
+    RUNCOMMAND="set -o pipefail; gorpipe ${ALIASES_FILE_OPTION} ${CONFIG_FILE_OPTION} \"${COMMAND//${PATTERN}/${S}}\" | gor -o${output_file}"
+    [ ${DEBUG} == "TRUE" ] && echo "Debug - ${RUNCOMMAND}"
+    JOBID=$(echo "${RUNCOMMAND}" | qsub -d $(pwd) -e ${WORKDIR} -o ${WORKDIR} ${PBS_QUEUE} -N pargorpipe_${S} -l ${PBS_RESOURCES})
+
+    JOBIDS="${JOBIDS} ${JOBID}"
+    RESULT_FILES="${RESULT_FILES} ${output_file}"
+done
+JOBIDS=${JOBIDS## }  # Remove leading spaces
+RESULT_FILES=${RESULT_FILES## }  # Remove leading spaces
+
+
+[ ${DEBUG} == "TRUE" ] && echo "Debug - Jobids: ${JOBIDS}"
+
+# Merge the results
+OUTFILE_EXT="${OUTFILE##*.}"
+echo $OUTFILE_EXT
+MERGEJOBID=
+if [ "${OUTFILE_EXT}" == "gord" ]; then
+	[ ${DEBUG} == "TRUE" ] && echo "Debug - Create gord"
+	MERGEJOBID=$(echo "set -e; set -o pipefail; for S in ${SUBSTLIST}; do mv ${WORKDIR}/parres_\${S}.gorz . && echo -e parres_\${S}.gorz'\t'\${S} >> ${OUTFILE}; done && touch ${WORKDIR}/SUCCESS" | qsub -d $(pwd) -e ${WORKDIR} -o ${WORKDIR} ${PBS_QUEUE} -N pargorpipe_gord -l ${PBS_RESOURCES} -W depend=afterok:${JOBIDS// /:})
+else
+	[ ${DEBUG} == "TRUE" ] && echo "Debug - Merge files"
+	MERGEJOBID=$(echo "set -o pipefail; gor ${RESULT_FILES} | gor -o${OUTFILE} && touch ${WORKDIR}/SUCCESS" | qsub -d $(pwd) -e ${WORKDIR} -o ${WORKDIR} ${PBS_QUEUE} -N pargorpipe_merge -l ${PBS_RESOURCES} -W depend=afterok:${JOBIDS// /:})
+fi
+[ ${DEBUG} == "TRUE" ] && echo "Debug - Merge jobid: ${MERGEJOBID}"
+
+# Wait for it to finish
+DONE=
+until [[ "${MERGEJOBID}" == '' || "${DONE}" ]]; do
+    sleep 5
+    STATE=$(qstat -f ${MERGEJOBID} 2>&1 | grep job_state | cut -d'=' -f 2) && STATE=${STATE## }
+    if [ "${STATE}" == '' -o "${STATE}" == 'C' ]; then
+    DONE=TRUE
+    fi
+    [ ${DEBUG} == "TRUE" ] && echo "Debug - Job still running: STATE=${STATE}, DONE=${DONE}"
+done 
+
+# ===========================================
+# Test if successful and do clean up
+# ===========================================
+
+# TODO:  Is it enough to just test the merge step (should be as the if any of the others fail the merge should not have exit status).
+# Can not trust that qstat works as for some PBS server the jobs disappears as soon as it is finished.
+#if [ ${MERGEJOBID} ]; then
+#    EXIT_STATUS=$(qstat -f ${MERGEJOBID} 2>&1 | grep exit_status | cut -d'=' -f 2) && EXIT_STATUS=${EXIT_STATUS## }
+#fi
+#if [[ "${EXIT_STATUS}" == 0 ]]; then
+if [ -e ${WORKDIR}/SUCCESS ]; then
+	# Clean up 
+    [ ${DEBUG} == "TRUE" ] && echo "DEBUG - Clean up"
+    cleanup_folder
+    exit 0
+else
+	# Error
+   	cleanup_pbs
+   	echo "Job merge job failed, see log files in ${WORKDIR}"
+   	exit 1
+fi

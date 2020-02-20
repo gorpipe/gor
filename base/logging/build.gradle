@@ -1,0 +1,39 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+
+project(':base:logging') {
+    dependencies {
+        compile "commons-io:commons-io:2.6"
+        compile "commons-lang:commons-lang:2.6"
+        compile('net.logstash.logback:logstash-logback-encoder:6.2') {
+            // This library pulls jackson-databind:2.9.2 which is not compatible with jesque (which wants 2.8.).
+            exclude group: "com.fasterxml.jackson.core"
+        }
+        compile 'org.slf4j:jul-to-slf4j:1.7.+'
+        compile 'org.slf4j:slf4j-api:1.7.+'
+        compile 'ch.qos.logback:logback-classic:1.2.+' // Must be compile dependency due to Logback Metrics collection.
+        compile "ch.qos.logback:logback-core:1.2.+"
+        compile 'org.fusesource.jansi:jansi:1.18' // Needs to be included for Windows
+        runtime 'org.slf4j:jcl-over-slf4j:1.7.+'
+        runtime 'org.slf4j:log4j-over-slf4j:1.7.+'
+    }
+}

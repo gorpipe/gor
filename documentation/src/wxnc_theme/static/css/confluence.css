@@ -1,0 +1,895 @@
+@page
+{
+    margin: 0.5in;
+    padding: 1em;
+    @top-left
+    {
+        content: "\00a0";
+        background-image: url("//wiki/download/attachments/132579429/WXNC-logo.png");
+        background-position:4.5% 50%;
+        background-repeat: no-repeat;
+    }
+    @bottom-right
+    {
+        padding-left: 20px;
+        padding-bottom: 20px;
+        font-family: "Open Sans", Arial, sans-serif;
+        font-weight: 400;
+        font-size: 10px;
+        color: #464646;
+        content: '© 2018 WuXi NextCODE - Page 'counter(page);
+        float: right;
+    }
+    @bottom-left
+    {
+        content: element(footer);
+    }
+    /* Any other page-specific rules */
+}
+
+/* Any other page-specific rules
+#pdf-header
+ {
+    padding-left: 20px;
+    padding-bottom: 20px;
+    margin-top: 40px;
+    position: relative;
+    height: 50px;
+ }
+
+#pdf-header img
+{
+    width: 142px;
+    height: 21px;
+}
+
+#pageNum:before
+{
+   padding-left: 20px;
+   padding-bottom: 20px;
+   font-family: "Open Sans", Arial, sans-serif;
+   font-weight: 400;
+   font-size: 10px;
+   color: #464646;
+   content: '© 2017 WuXi NextCODE - Page 'counter(page);
+   float: right;
+}
+*/
+
+div#content-body {
+    position: relative;
+}
+
+body
+{
+    font-family: "Open Sans", Arial, sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    min-height: 100%;
+}
+
+p
+{
+    font-family: "Open Sans", Arial, sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+li
+{
+    font-size: 150%;
+    padding: 5px;
+    list-style-type: circle;
+}
+
+a
+{
+    text-decoration:none;
+}
+
+/* Headers */
+
+h1 a:link,h1 a:visited,h1 a:active
+{
+    text-decoration: none;
+}
+
+h1,h2,h3,h4,h5,h6,h7,h8,h9
+{
+    position: relative;
+    line-height: normal;
+    margin-bottom: 0px;
+    padding: 2px;
+}
+
+h1, h2 {
+    padding: 30px;
+    text-align: center;
+}
+
+h3 {
+    font-family: "Open Sans", Arial, sans-serif;
+    padding: 0px;
+    font-size: 150%;
+    font-weight: 300;
+    text-align: left;
+    margin: 0;
+    border-bottom: 1px solid #BABABA;
+}
+
+h4 {
+    font-size: 125%;
+    margin-bottom: 5px;
+}
+
+img
+{
+   max-width: 100%
+   display: block;
+   page-break-inside: avoid;
+   -fs-fit-images-to-width:6in;
+}
+
+table.confluenceTable tr
+{
+    page-break-inside: avoid;
+}
+
+table.confluenceTable p
+{
+    margin-bottom: 0;
+}
+
+.jira-macro-table-underline-pdfexport table
+{
+    page-break-inside: avoid;
+}
+
+.jira-macro-table-underline-pdfexport p
+{
+    margin-bottom: 0;
+}
+
+a, #default-labels-header a.add
+{
+    color: #00AEEF;
+}
+
+/* table view for several macros*/
+.tableview td
+{
+	border-color:#CCCCCC;
+	border-style:solid;
+	border-width:0 0 1px;
+	margin:0;
+	padding:4px 10px 4px 5px;
+	text-align:left;
+	background-color: pink;
+}
+
+/* built in gallery macro */
+div.gallery>table
+{
+    display: table-cell;
+}
+
+div.gallery>table>tr
+{
+    display: inline;
+}
+
+div.gallery>table>tr>td
+{
+    display: inline;
+}
+
+div.gallery>table>tr>th
+{
+    display: inline;
+}
+
+div.gallery>table>tr:first-child
+{
+    display: block;
+}
+
+pre
+{
+    white-space: pre-wrap;
+}
+
+table
+{
+    border-collapse: collapse;
+}
+
+div.panelMacro
+{
+    page-break-inside: avoid;
+}
+
+th.confluenceTh
+{
+    color: #003366;
+    background-color: #f0f0f0;
+}
+
+/* wraps the section columns underneath each other so they don't run off the page */
+table.sectionMacro
+{
+    display: block;
+}
+
+table.sectionMacro>tbody
+{
+    display: block;
+}
+
+table.sectionMacro>tbody>tr
+{
+    display: block;
+}
+
+table.sectionMacro>tbody>tr>td
+{
+    display: block;
+}
+
+table.sectionMacro>tbody>tr>td
+{
+    width: 100%
+}
+
+table.sectionMacroWithBorder
+{
+    display: block;
+}
+
+table.sectionMacroWithBorder>tbody
+{
+    display: block;
+}
+
+table.sectionMacroWithBorder>tbody>tr
+{
+    display: block;
+}
+
+table.sectionMacroWithBorder>tbody>tr>td
+{
+    display: block;
+}
+
+table.sectionMacroWithBorder>tbody>tr>td
+{
+   /* why 99 you ask? because the right border won't show in the export up if it's 100 */
+    width: 99%
+}
+
+body.content-preview
+{
+    background-color: #fff;
+    border: none;
+}
+
+/* Normal Table */
+
+li,td,table,tr,.bodytext,.stepfield
+{
+    line-height: 1.1em;
+    margin: 0;
+    font-size: 12px;
+}
+.print-only
+{
+    display: none;
+}
+
+.monospaceInput
+{
+    font: 10pt monospace;
+}
+
+pre
+{
+    padding: 0;
+    margin: 10px 0;
+    text-align: left;
+    overflow: auto;
+}
+
+a.grey:link
+{
+    color: #666;
+}
+
+a.grey:visited
+{
+    color: #666;
+}
+
+a.grey:active
+{
+    color: #666;
+}
+
+a.grey:hover
+{
+    color: #666;
+}
+
+hr
+{
+    color: #3c78b5;
+    height: 1px;
+}
+
+.grid
+{
+    margin: 2px 0 5px 0;
+    border-collapse: collapse;
+}
+
+.grid th
+{
+    border: 1px solid #ccc;
+    padding: 2px 4px 2px 4px;
+    background: #f0f0f0;
+    text-align: center;
+}
+
+.grid td
+{
+    border: 1px solid #ccc;
+    padding: 3px 4px 3px 4px;
+}
+
+.gridHover
+{
+    background-color: #f9f9f9;
+}
+
+td.infocell
+{
+    background-color: #f0f0f0;
+}
+
+
+/* block quote */
+blockquote
+{
+    font-style: italic;
+    border-left-width: 1px;
+    border-left-style: solid;
+    padding: 0 20px;
+    margin: 10px 20px;
+}
+
+
+blockquote em
+{
+    font-style: normal;
+}
+
+table.admin
+{
+    margin: 5px;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.admin td,table.admin th
+{
+    width: 50%;
+    border: 1px solid #ccc;
+    padding: 5px;
+    vertical-align: top;
+}
+
+table.admin th
+{
+    background-color: #f0f0f0;
+    text-align: right;
+    font-weight: bold;
+}
+
+table.admin td.controls
+{
+    text-align: center;
+}
+
+div.small
+{
+    font-size: 9px;
+}
+
+h1.pagetitle
+{
+    page-break-before: always;
+}
+
+h1.pagename
+{
+    margin-top: 0;
+}
+
+span.toclead:before
+{
+    content: leader(dotted);
+}
+
+span.tocnum:before
+{
+    content: target-counter(attr(href), page, decimal );
+}
+
+div.toc
+{
+    page-break-after: always;
+    counter-reset: chapter 0;
+}
+
+div.toc a
+{
+    text-decoration: none;
+    color: black;
+}
+
+div.toclvl0:before
+{
+    content:  counter(chapter) ". ";
+    counter-increment: chapter;  /* Add 1 to chapter */
+}
+
+div.toclvl0
+{
+    padding-left: 20px;
+    counter-reset: section 0;      /* Set section to 0 */
+}
+
+div.toclvl1:before
+{
+    content:  counter(chapter) "." counter(section) " ";
+    counter-increment:section;
+}
+
+div.toclvl1
+{
+    padding-left: 40px;
+    counter-reset: subsection 0;
+}
+
+div.toclvl2:before
+{
+    content:  counter(chapter) "." counter(section) "." counter(subsection) " ";
+    counter-increment:subsection;
+}
+
+div.toclvl2
+{
+    padding-left: 60px;
+    counter-reset: subsubsection 0;
+}
+
+div.toclvl3:before
+{
+    content:  counter(chapter) "." counter(section) "." counter(subsection) "." counter(subsubsection)  " ";
+    counter-increment:subsubsection;
+}
+
+div.toclvl3
+{
+    padding-left: 80px;
+    counter-reset: subsubsubsection 0;
+}
+
+div.toclvl4:before
+{
+    content:  counter(chapter) "." counter(section) "." counter(subsection) "." counter(subsubsection)  "." counter(subsubsubsection) " ";
+    counter-increment:subsubsubsection;
+}
+
+div.toclvl4
+{
+    padding-left: 100px;
+}
+
+/* hide any toc items beyond lvl 4 */
+div.toclvl5, div.toclvl6, div.toclvl7,div.toclvl8,div.toclvl9,div.toclvl10,div.toclvl11,div.toclvl12
+{
+    display:none;
+}
+
+ul.toc-indentation
+{
+    display:none;
+}
+
+span.pageName:before
+{
+    content: counter(page);
+}
+
+/* title area of tables for certain bundled macros (favpages)*/
+.tabletitle, .heading-text-color
+{
+	color:#003366;
+}
+
+.tabletitle, .pageSectionHeader
+{
+	border-bottom-color:#6699CC;
+}
+
+.tabletitle
+{
+	border-bottom-style:solid;
+	border-bottom-width:2px;
+	font-weight:bold;
+	margin:8px 4px 2px 0;
+	padding:3px 0 2px;
+}
+
+/* tabs */
+.tabnav, .comment .tabnav, ul.tabnav
+{
+	border-bottom-color:#6699CC;
+}
+.tabnav, .comment .tabnav
+{
+	border-bottom-style:solid;
+	border-bottom-width:1px;
+	display:inline;
+	float:left;
+	font-weight:bold;
+	list-style-position:outside;
+	margin:0;
+	padding:0;
+	width:100%;
+}
+.tabnav .tabs a:hover
+{
+	background:#003366 none repeat scroll 0 0;
+	border-color:#003366;
+	color:#FFFFFF;
+}
+.tabnav .tabs a:link, .tabnav .tabs a:visited
+{
+	color:#FFFFFF;
+}
+.tabnav .tabs a
+{
+	border-bottom:medium none;
+	border-style:solid solid none;
+	border-width:1px 1px medium;
+	display:block;
+	float:left;
+	margin:5px 3px 0 0;
+	padding:5px 5px 4px;
+	text-decoration:none;
+}
+.tabnav .tabs a
+{
+	background:#6699CC none repeat scroll 0 0;
+	border-color:#6699CC;
+}
+.tabnav .tabs a.current
+{
+	background:white none repeat scroll 0 0;
+	border-bottom:1px solid white;
+	color:black;
+}
+.tabnav li.tabs
+{
+	display:block;
+	float:left;
+	list-style-image:none;
+	list-style-position:outside;
+	list-style-type:none;
+	margin:0 0 -1px 10px;
+}
+
+/* space list macro */
+tr.spaceList td
+{
+	border-bottom:1px solid #CCCCCC;
+	padding:5px 0 5px 5px;
+	vertical-align:top;
+}
+#spacesLabel
+{
+	float:left;
+	margin-top:5px;
+	padding:4px 6px;
+}
+
+
+
+/*
+built in macro: popular-labels style = heatmap
+*/
+.heatmap
+{
+    list-style-image:none;
+    list-style-position:outside;
+    list-style-type:none;
+    margin:0 auto;
+    width:95%;
+}
+
+.heatmap li
+{
+    display:inline;
+}
+
+.heatmap a
+{
+    text-decoration:none;
+}
+
+/*
+built in macros: panel, code, info, note, warning, noformat, tip
+*/
+
+.noteMacro
+{
+	background-color:#FFFFCE;
+}
+
+
+.panelMacro
+{
+    margin:10px 20px;
+    overflow:hidden;
+}
+
+.panelMacro table
+{
+    text-align:left;
+    width:100%;
+    padding:0px 20px;
+}
+
+.panelMacro td
+{
+    font-size: 1em;
+    padding: 14px 7px;
+}
+
+.panel
+{
+    border-color:#6699CC;
+    background:#F0F0F0 none repeat scroll 0 0;
+    border-style:solid;
+    border-width:1px;
+    color:black;
+    margin:10px 20px;
+    overflow:hidden;
+    padding:0;
+    page-break-inside: avoid;
+}
+
+.codeHeader, .panelHeader, .panelContent {
+    background:#F0F0F0 none repeat scroll 0 0;
+}
+
+.panelHeader {
+    border-bottom-style:solid;
+    border-bottom-width:1px;
+    line-height:2;
+    padding:0 12px;
+    text-align:center;
+}
+
+.panelHeader, .menuheading, .pageheader, .sectionbottom
+{
+    border-bottom-color:#6699CC;
+}
+
+.panelContent
+{
+    color:#000000;
+    font-size:0.95em;
+    margin:0;
+    padding:0 12px;
+    text-align:left;
+
+}
+
+.code, .preformatted
+{
+    background-color:#FFFFFF;
+}
+
+.preformattedHeader, .codeContent, .preformattedContent
+{
+    background:#FFFFFF none repeat scroll 0 0;
+}
+
+.code pre, .preformatted pre
+{
+    font-family:"Courier New",Courier,monospace;
+    line-height:1.3;
+}
+
+pre
+{
+    margin:10px 0;
+    overflow:auto;
+    padding:0;
+    text-align:left;
+    page-break-inside: avoid;
+}
+
+.code
+{
+    border-style:dashed;
+    border-width:1px;
+    overflow:auto;
+    page-break-inside: avoid;
+}
+.code-object
+{
+    background-color:inherit;
+    color:#910091;
+}
+
+.code-keyword
+{
+    background-color:inherit;
+    color:#000091;
+}
+.code-tag
+ {
+    background-color:inherit;
+    color:#000091;
+}
+
+.code-quote
+{
+    background-color:inherit;
+    color:#009100;
+}
+
+.infoMacro
+{
+    background-color:#D8E4F1;
+    page-break-inside: avoid;
+}
+
+.tipMacro
+{
+    background-color:#DDFFDD;
+    page-break-inside: avoid;
+}
+
+.warningMacro
+{
+    background-color:#FFCCCC;
+    page-break-inside: avoid;
+}
+
+.errorBox
+ {
+    background-color:#FFCCCC;
+    border:1px solid #CC0000;
+    margin:5px;
+    padding:5px;
+}
+
+/* tables */
+table.sectionMacro td
+{
+    border:medium none;
+}
+
+table
+{
+    clear:left;
+}
+
+.wiki-content .confluenceTable, .grid
+{
+    margin:10px 0 10px 0;
+    padding:0;
+}
+
+table.confluenceTable
+ {
+    border-collapse:collapse;
+}
+
+th.confluenceTh, table.confluenceTable th.confluenceTh
+{
+    background-color:#F0F0F0;
+    border:1px solid #CCCCCC;
+    padding:5px;
+    text-align:left;
+    vertical-align:top;
+}
+
+/* Also the normal table*/
+
+td.confluenceTd, table.confluenceTable td.confluenceTd
+{
+    border:1px solid #CCCCCC;
+    padding:5px;
+    vertical-align:top;
+}
+
+.wiki-content td.confluenceTd, .wiki-content th.confluenceTh
+{
+    margin:0;
+    padding:0;
+}
+
+.wiki-content td.confluenceTd
+{
+    padding-right:10px;
+}
+
+.wiki-content td.confluenceTd, .wiki-content th.confluenceTh
+ {
+    margin:0;
+    padding:0;
+}
+
+/* Attachments macro */
+table.attachments
+{
+    width: 100%;
+}
+
+table.attachments th
+{
+    color:#003366;
+    border-bottom-style:solid;
+    border-bottom-width:2px;
+    font-weight:bold;
+
+}
+
+table.attachments a
+{
+    text-decoration: none;
+    color: black;
+}
+
+/* expand user macro */
+.toggle-answer
+ {
+   display: block !important;
+ }
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: light;
+    font-weight: 300;
+    src: url("//wiki/download/attachments/146243907/OpenSans-Light.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 400;
+    src: url("//wiki/download/attachments/146243907/OpenSans-Regular.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: italic;
+    font-weight: 400;
+    src: url("//wiki/download/attachments/146243907/OpenSans-Italic.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: bold;
+    font-weight: 700;
+    src: url("//wiki/download/attachments/146243907/OpenSans-Bold.ttf");
+    -fs-pdf-font-embed: embed;
+}

@@ -1,0 +1,67 @@
+AWS S3
+======
+
+The GOR engine supports live querying of any supported file format stored in an Amazon S3 bucket or with an S3 compatible storage.
+
+Formats
+-------
+.. code-block:: guess
+
+    s3://<bucket>/<path_to_file>
+    s3://<provider>:<bucket>/<path_to_file>
+
++------------------+-------------------------------------+
+| **provider**     | Provider identifier used to look up |
+|                  | credentials                         |
++------------------+-------------------------------------+
+| **bucket**       | Name of S3 bucket                   |
++------------------+-------------------------------------+
+| **path_to_file** | File path within bucket (object key)|
++------------------+-------------------------------------+
+
+The former case is intended to support S3 in AWS.  The latter can support any provider with a S3 compatible REST interface.
+
+Credentials
+-----------
+
+When accessing the data, the GOR engine uses the credential service (if configured) to lookup credentials.
+The following credentials fields are supported:
+
++-------------------+----------+----------------------------------+
+|  Field name       | Required | Description                      |
++===================+==========+==================================+
+| **service**       | Y        | Must be ``s3``.                  |
++-------------------+----------+----------------------------------+
+| **lookup_key**    | Y        | Must match first part of s3 url. |
+|                   |          | i.e. either ``bucket`` or        |
+|                   |          | ``provider:bucket``              |
++-------------------+----------+----------------------------------+
+| **key**           | Y        | Access key id                    |
++-------------------+----------+----------------------------------+
+| **secret**        | Y        | Secret access key id             |
++-------------------+----------+----------------------------------+
+| **api_endpoint**  | N        | Api endpoint url                 |
++-------------------+----------+----------------------------------+
+
+If no credentials are found, the GOR engine will fall back to the default credential provider chain as described in http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
+
+
+
+Examples
+--------
++------------------------------+-------------------------------------------------+---------+----------------+------+--------+--------------------------------------+
+| Example                      | Gor command                                     | service | lookup_key     | key  | secret | api_endpoint                         |
++==============================+=================================================+=========+================+======+========+======================================+
+| | Access BAM file in         | gor s3://mybucket/mybamfiles/mybam.bam          | s3      | mybucket       | XXXX | XXXX   |                                      |
+| | S3 bucket                  |                                                 |         |                |      |        |                                      |
++------------------------------+-------------------------------------------------+---------+----------------+------+--------+--------------------------------------+
+| | Access gorz file in Google | gor s3://google:bucket1/mydata/mygor/file1.gorz | s3      | google:bucket1 | XXXX | XXXX   | https://storage.googleapis.com       |
+| | cloud storage (with S3     |                                                 |         |                |      |        |                                      |
+| | compatibility enabled):    |                                                 |         |                |      |        |                                      |
++------------------------------+-------------------------------------------------+---------+----------------+------+--------+--------------------------------------+
+| | Access vcf file in Huawei  | gor s3://hw:mybucket/mydata/myvcf/file1.vcf.gz  | s3      | hw:mybucket    | XXXX | XXXX   | https://obs.cn-east-2.myhwclouds.com |
+| | cloud in China - region    |                                                 |         |                |      |        |                                      |
+| | cn-east-2                  |                                                 |         |                |      |        |                                      |
++------------------------------+-------------------------------------------------+---------+----------------+------+--------+--------------------------------------+
+
+

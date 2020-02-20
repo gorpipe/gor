@@ -1,0 +1,4 @@
+buildPath	../tests/data/ref_mini/chromSeq
+buildSizeFile	../tests/data/ref_mini/buildsize.gor
+buildSplitFile	../tests/data/ref_mini/buildsplit.txt
+cramReferencePath	../tests/data/external/samtools/cram_query_sorted.fasta

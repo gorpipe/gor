@@ -1,0 +1,24 @@
+plugins:
+  sonar-java:
+    enabled: true
+    #config:
+    #  tests_patterns:
+    #    - src/test/**
+    #    - app/src/test/**
+    #  minimum_severity: critical
+    #  sonar.java.source: "8"
+
+exclude_patterns:
+  - ".gradle/"
+  - "tests/"
+  - "**/build/*"
+  - "**/*.png"
+  - "**/*.jpg"
+  - "**/*.jpeg"
+  - "**/*.gif"
+  - "**/*.ico"
+  - "**/*.woff*"
+  - "**/*.ttf"
+  - "**/*.eot"
+  - "**/*.otf"
+  - "**/*.jar"

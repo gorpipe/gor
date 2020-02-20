@@ -1,0 +1,9 @@
+{%- if builder != 'singlehtml' %}
+<div role="search">
+  <form id="wxnc-search-form" class="wy-form" action="{{ pathto('search') }}" method="get">
+    <input size="30" class="fa-search" type="text" name="q" placeholder="&#xf002; &#32; Search the user manual" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+{%- endif %}

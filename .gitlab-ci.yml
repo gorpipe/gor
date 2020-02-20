@@ -1,0 +1,86 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: none
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+cache:
+  key: "$CI_COMMIT_REF_NAME"
+  policy: pull
+  paths:
+    - "*/build/classes"
+    - "*/*/build/classes"
+    - "*/*/*/build/classes"
+    - ".gradle/wrapper"
+    - ".gradle/cache"
+
+stages:
+  - "build and test"
+  - checks
+
+include:
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+  - template: Security/License-Management.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+buildtest:
+  stage: "build and test"
+
+  image: nextcode/builderimg-java:latest
+
+  tags:
+    - iceland
+
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+
+  before_script:
+    - ./gradlew -v
+
+  script: ./gradlew test slowTest integrationTest
+
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: pull-push
+    paths:
+      - "*/build/classes"
+      - "*/*/build/classes"
+      - "*/*/*/build/classes"
+      - ".gradle/wrapper"
+      - ".gradle/cache"
+
+  artifacts:
+    reports:
+      junit:
+        - "*/*/*/*/TEST-*.xml"
+        - "*/*/*/*/*/TEST-*.xml"
+
+# This codequality block is needed to work around https://gitlab.com/gitlab-org/gitlab/issues/12274
+code_quality:
+  stage: checks
+  
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    
+    paths: [gl-code-quality-report.json]
+    expire_in: 1 week
+
+license_management:
+  stage: checks
+
+  variables:
+    # There is no need to run tests or generate sphinx documentation for license management 
+    # analysis, however, the license management plugin calls the build task so we have to manually
+    # disable tests and documentation generation.
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
+    GIT_SUBMODULE_STRATEGY: none
+
+dependency_scanning:
+  stage: checks
+
+  artifacts:
+    paths: [gl-dependency-scanning-report.json]

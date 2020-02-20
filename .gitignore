@@ -1,0 +1,63 @@
+# Git ignore for the gor repository.
+# Gradle
+
+.gradle/
+**/build/
+**/_build/**
+**/out/
+**/html_output/**
+.gradletasknamecache
+.gor_gradle_home
+
+# Ide settings and files
+
+gor.ipr
+gor.iws
+**/*.iml
+**/.idea/
+
+**/.project
+**/.classpath
+**/.settings/
+**/.externalToolBuilders
+.metadata
+
+projectFilesBackup/
+
+atlassian-ide-plugin.xml
+.pydevproject
+
+#gradle/
+#gradlew
+#gradlew.bat
+
+
+# python
+
+.ropeproject/
+*.pyc
+*.pyo
+nosetests.xml
+ve-python*/
+
+# vim
+*~
+*.swp
+*.swo
+
+# Other
+
+**/*.class
+**/*~
+**/.DS_Store
+gortemp
+.recommenders/
+
+# Generated files
+**/src/*-generated/
+report.html
+
+# Local config files
+tests/config/logback-local-*.xml
+
+.vscode/

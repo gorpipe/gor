@@ -1,0 +1,61 @@
+# Gor defaults property file.
+
+
+# Use adaptive move to position.
+gor.iterators.useAdaptiveMTP=true
+# Should we cache dicionaryfile and tags to files (per GorPipeSession) 
+gor.filelist.cache.active=true
+# Should we cache dicionaries (per VM) 
+gor.dictionary.cache.active=true
+
+
+# ##################
+# Driver Modules
+# ##################
+
+gor.modules.core=org.gorpipe.gor.driver.GorDriverModule
+gor.modules.overrides=
+gor.driver.cram.generatemissingattributes=false
+gor.driver.cram.referencetimeout=60
+gor.driver.cram.referencepath=
+
+
+# ##################
+# Common
+# ##################
+
+gor.environment=dev
+gor.apps.config.path=.
+gor.log.path=.
+
+gor.caching.md5.enabled=false
+gor.s3.conn.pool.size=10000
+gor.db.credentials=
+gor.cmd.whitelist.file=${gor.apps.config.path}/whitelist.txt
+
+# You can specify the memory monitor limits either as MB or ratios of Xmx.
+# If both are specified the smaller MB number is used.
+gor.memoryMonitor.minFreeMemMB=1000
+gor.memoryMonitor.minFreeMemRatio=0.25
+# Ratio of minFreeMem that triggers GC.
+gor.memoryMonitor.gcRatio=2.0
+
+# ##################
+# Querylimits
+# ##################
+
+# 0 disables the limit, if x > 0, throws error if temporary files exceed x mb
+gor.querylimits.writequota.mb=0
+# 0 disables the limit, if x > 0, throws error if query takes longer than x seconds
+gor.querylimits.timeout.seconds=0
+
+## Additional (temporary) properties taken from context.xml
+## TODO: These properties need to be cleaned up
+
+gor.standard.config.file=config/gor_config.txt
+gor.s3.keystore=/home/rda/env/${gor.environment}/config/gor.aws.credentials
+gor.log.query.statistics=true
+filemod.cache.max.entry.cnt=1000000
+filemod.cache.sleep.time=100seconds
+filemod.cache.refresh.threshold=10minutes
+java.awt.headless=true

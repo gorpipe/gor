@@ -1,0 +1,28 @@
+@page
+{
+    @top-left
+    {
+        content: '';
+        padding-left: 20px;
+        padding-bottom: 20px;
+        margin-top: 40px;
+        position: relative;
+        height: 50px;
+        background-image: url("https://www.wuxinextcode.com/wp-content/themes/futuresequence/assets/images/structure/logo__wuxi-nextcode.png");
+        display: block;
+        background-size: 142px 21px;
+        background-repeat: no-repeat;
+    }
+    @bottom-right
+    {
+        padding-left: 20px;
+        padding-bottom: 20px;
+        font-family: "Open Sans", Arial, sans-serif;
+        font-weight: 400;
+        font-size: 10px;
+        color: #464646;
+        content: '© 2017 WuXiNextCODE - Page 'counter(page);
+        float: right;
+    }
+    /* Any other page-specific rules */
+}

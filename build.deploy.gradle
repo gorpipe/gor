@@ -1,0 +1,91 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+
+apply plugin: "org.sonarqube"
+
+allprojects {
+    apply plugin: "org.owasp.dependencycheck"
+
+    dependencyCheck {
+        format='ALL'
+    }
+
+    sonarqube {
+        properties {
+            // Setting the following properties in the Jenkins.SonarQubeAnalysis file.
+            //property "sonar.dependencyCheck.xmlReportPath", "build/reports/dependency-check-report.xml"
+            //property "sonar.dependencyCheck.jsonReportPath", "build/reports/dependency-check-report.json"
+            //property "sonar.dependencyCheck.htmlReportPath", "build/reports/dependency-check-report.html"
+        }
+    }
+}
+
+configure(allLeafProjects()){
+    // Artifactory setup publishing the src.
+    ext {
+        // Creates a list of tags for the docker images
+        resolveDockerTagList = {
+            // If tags are specified in the 'dockerTags' param, use that.
+            if (project.hasProperty('dockerTags') && dockerTags != null){
+                return dockerTags.split(',')
+            }
+            // If no tags are specified, we revert to the old behavior of tagging with the version number.
+            return [version]
+        }
+    }
+
+    apply plugin: 'maven-publish'
+    publishing {
+        publications {
+            mavenJavaLibModule(MavenPublication) {
+                from components.java
+                
+                artifactId = getCustomProjectId()
+                groupId = 'com.wuxinextcode.gor'
+            }
+        }
+    }
+
+    apply plugin: "com.jfrog.artifactory"
+
+    artifactory {
+        contextUrl = artifactory_contextUrl
+        publish {
+            repository {
+                repoKey = artifactory_repo // The Artifactory repository key to publish to
+                username = project.hasProperty('artifactory_user') ? artifactory_user : "" // The publisher user name
+                password = project.hasProperty('artifactory_password') ? artifactory_password : "" // The publisher password
+            }
+            defaults {
+                // Reference to Gradle publications defined in the build script.
+                // This is how we tell the Artifactory Plugin which artifacts should be
+                // published to Artifactory.
+                publications('mavenJavaLibModule')
+                publishArtifacts = true
+                // Properties to be attached to the published artifacts.
+                //properties = ['qa.level': 'basic', 'dev.team' : 'core']
+                // Publish generated POM files to Artifactory (true by default)
+                publishPom = true
+            }
+        }
+    }
+}
