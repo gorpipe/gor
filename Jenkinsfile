@@ -70,14 +70,12 @@ node {
             def version = readFile('version').trim()
             def dockerTags = [version]
 
-            if (env.BRANCH_NAME == "develop") {
+            if (env.BRANCH_NAME == "master") {
                 publishTo = "libs-snapshot-local"
                 // On develop we just push the latest build as a snapshot each time we build
                 isSnapshotBuild = true
                 dockerTags << env.BRANCH_NAME
-            } else if (env.BRANCH_NAME == "master") {
-                publishTo = "libs-release-local"
-            } else if (env.BRANCH_NAME.contains("release/")) {
+            }  else if (env.BRANCH_NAME.contains("release/")) {
                 publishTo = "libs-staging-local"
             }
 
