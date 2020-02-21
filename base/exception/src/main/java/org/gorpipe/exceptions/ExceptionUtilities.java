@@ -39,7 +39,7 @@ public final class ExceptionUtilities {
     private ExceptionUtilities() {
     }
 
-    private static Boolean showStackTrace = Boolean.parseBoolean(System.getProperty("gor.server.stacktrace.enabled", "true"));
+    private static boolean showStackTrace = Boolean.parseBoolean(System.getProperty("gor.server.stacktrace.enabled", "true"));
     private static final Logger log = LoggerFactory.getLogger(ExceptionUtilities.class);
 
     public static void setShowStackTrace(Boolean show) {
@@ -276,7 +276,7 @@ public final class ExceptionUtilities {
         }
     }
 
-    public static Boolean isNullOrEmpty(String value) {
+    public static boolean isNullOrEmpty(String value) {
         return value == null || value.length() == 0;
     }
 
@@ -383,8 +383,7 @@ public final class ExceptionUtilities {
     private static StackTraceElement parseStacktraceLineWithoutFile(String st) {
         String methodName = st.substring(st.indexOf(' ') + 1);
         String declaringClass = methodName.substring(0, methodName.lastIndexOf('.'));
-        StackTraceElement stackTraceElement = new StackTraceElement(declaringClass, methodName, null, -1);
-        return stackTraceElement;
+        return new StackTraceElement(declaringClass, methodName, null, -1);
     }
 
     private static StackTraceElement parseStacktraceLineWithFile(String st) {
