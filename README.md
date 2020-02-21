@@ -6,7 +6,7 @@ GORpipe is a tool based on a genomic ordered relational architecture and allows 
 
 ## Prerequisites
 
-Before setting up GorPipe the following need to be installed:
+Before setting up GORpipe the following need to be installed:
 
 * Java JDK or JRE version 8 or higher (https://www.oracle.com/java/technologies/javase-downloads.html)
 * Open JDK can also be used (https://openjdk.java.net/install/)
@@ -14,17 +14,13 @@ Before setting up GorPipe the following need to be installed:
     
 ## Setting Up Test Data
 
-In the parent folder where this repository is located, setup test data by cloning the GOR Test Data repository (https://github.com/gorpipe/GOR-Test-Data)
+Test data for GOR is setup by cloning the GOR test data repository (https://github.com/gorpipe/gor-test-data) as a submodule into the `tests/data` folder. This is done via:
 
-    git clone git@github.com:gorpipe/GOR-Test-Data.git
-    
-When done cloning, setup the test data as a submodule to this repo via:
+    git submodule update --init --recursive
 
-    git submodule add ../GOR-Test-Data tests/data
+## Getting Started With GORpipe
 
-## Getting Started With GorPipe
-
-To get started with GorPipe, compile the code:
+To get started with GORpipe, compile the code:
 
      make build
          
@@ -46,9 +42,9 @@ The results should be as follows:
     chr13   19020013        C       T       rs181615907
     chr13   19020145        G       T       rs28970552
 
-## Setting Up GOR Shell
+## Setting Up an Interactive Shell for GORpipe
 
-As an alternative for a local GorPipe, the GOR shell is a an interactive GOR session in a terminal - a sort of REPL for GOR. Start a GorShell by executing:
+GORpipe can be invoked and used through an interactive shell session in a terminal - a sort of REPL for GOR, coined GORshell. Start a GORshell by executing:
 
     tools/build/install/tools/bin/gorshell   
     
@@ -64,7 +60,7 @@ Running GOR without setting up the test data submodule can be done via generatin
 
 ## Add To Path
 
-For conveniance, GorPipe and GOR Shell can be added to path. For example on mac via by editing /etc/paths: 
+For convenience, GORpipe and GORshell can be added to path. For example on mac via by editing /etc/paths: 
 
     sudo vim /etc/paths 
     
@@ -75,7 +71,7 @@ and adding lines
 
 to /etcs/paths
 
-Then Gorpipe and GOR Shell can be started via `gorpipe` and `gorshell`
+Then GORpipe and GORshell can be started via `gorpipe` and `gorshell`
 
 ## Citations
         
