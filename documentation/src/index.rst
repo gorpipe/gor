@@ -34,8 +34,8 @@ This documentation covers a range of topics related to the usage of the GOR quer
 
    installation
    tutorials
-   commands
-   functions
+   ref_commands
+   ref_functions
 
 .. _GOR open source project: https://github.com/gorpipe/GOR
 .. _paper in Bioinformatics: https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199
