@@ -1,8 +1,8 @@
 .. _predefinedFunctions:
 
-=============
-GOR Functions
-=============
+=========
+Functions
+=========
 
 The following tables contain all of the functions that can be used in WHERE and CALC expressions in GOR queries.
 
@@ -158,26 +158,6 @@ Type and String Conversion
 Algebraic Functions
 ===================
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/floor
-   functions/ceil
-   functions/round
-   functions/div
-   functions/mod
-   functions/pow
-   functions/max
-   functions/min
-   functions/sqr
-   functions/sqrt
-   functions/abs
-   functions/log10
-   functions/natural_log
-   functions/exponential
-   functions/random
-
 .. list-table:: Algebraic functions in GOR query language
    :widths: 10  25 5
    :header-rows: 1
@@ -241,17 +221,6 @@ Algebraic Functions
 Trigonometric Functions
 =======================
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/sine
-   functions/cosine
-   functions/arcsine
-   functions/arccosine
-   functions/tangent
-   functions/arctangent
-
 .. list-table:: Trigonometric functions in GOR query language
    :widths: 10  25 5
    :header-rows: 1
@@ -282,22 +251,6 @@ Trigonometric Functions
 
 Statistical Functions
 =====================
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/chi_2x2
-   functions/chi2
-   functions/chisquare
-   functions/pval
-   functions/pvalone
-   functions/student
-   functions/invstudent
-   functions/normal
-   functions/invnormal
-   functions/poisson
-   functions/poissonc
 
 .. list-table:: Algebraic functions in GOR query language
    :widths: 10  25 5
@@ -355,44 +308,6 @@ The first input value for any list function is the source of the list. This can 
 With functions that allow a ``sep`` or separator value, note that the separator value in the list is assumed to be a comma and the separator value is optional. If a separator other than a comma is used in the list, the separator value should be defined in quotation marks.
 
 Click on "More info" for any of the functions below to get more information about how to use the function in a GOR query.
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/fsvmap
-   functions/contains
-   functions/containsany
-   functions/containscount
-   functions/cscontains
-   functions/cscountainscount
-   functions/listadd
-   functions/listcomb
-   functions/listdist
-   functions/listfilter
-   functions/listfirst
-   functions/listhasany
-   functions/listindex
-   functions/listlast
-   functions/listmap
-   functions/listmax
-   functions/listmin
-   functions/listnumavg
-   functions/listnummax
-   functions/listnummin
-   functions/listnumsortasc
-   functions/listnumsortdesc
-   functions/listnumstd
-   functions/listnumsum
-   functions/listreverse
-   functions/listsecond
-   functions/listsize
-   functions/listsortasc
-   functions/listsortdesc
-   functions/listtail
-   functions/listtrim
-   functions/listzip
-   functions/listzipfilter
 
 .. list-table:: List functions in GOR query language
    :widths: 10  25 5
@@ -501,30 +416,6 @@ Click on "More info" for any of the functions below to get more information abou
 Genomic-Specific Functions
 ==========================
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/hapldiff
-   functions/varsig
-   functions/revcompl
-   functions/revcigar
-   functions/revbase
-   functions/revbases
-   functions/bamtag
-   functions/tag
-   functions/vcfformattag
-   functions/iha
-   functions/iupac2gt
-   functions/iupacgtstat
-   functions/iupacfa
-   functions/iupacma
-   functions/gtshare
-   functions/gtstat
-   functions/gtfa
-   functions/gtma
-   functions/indag
-
 .. list-table:: Genomic-Specific functions in GOR query language
    :widths: 10  25 5
    :header-rows: 1
@@ -604,22 +495,6 @@ Genomic-Specific Functions
 Genotype-quality Functions
 ==========================
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/chars2prom
-   functions/chars2prhet
-   functions/chars2dose
-   functions/chars2prprpr
-   functions/chars2prpr
-   functions/chars2pr
-   functions/pr2char
-   functions/prpr2chars
-   functions/prprpr2chars
-   functions/chars2gt
-   functions/charsphased2gt
-
 .. list-table:: Genotype-quality functions in GOR query language
    :widths: 10  25 5
    :header-rows: 1
@@ -676,14 +551,6 @@ Genotype-quality Functions
 Date Functions
 ==============
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/date
-   functions/edate
-   functions/epoch
-
 .. list-table:: Date functions in GOR query language
    :widths: 10  25 5
    :header-rows: 1
@@ -719,30 +586,6 @@ Administration Functions
 
 Diagnostic Functions
 --------------------
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/time
-   functions/sleep
-   functions/hostname
-   functions/ip
-   functions/arch
-   functions/threadid
-   functions/cpuload
-   functions/syscpuload
-   functions/free
-   functions/freemem
-   functions/totalmem
-   functions/maxmem
-   functions/availcpu
-   functions/openfiles
-   functions/maxfiles
-   functions/system
-   functions/avgseektimemillis
-   functions/avgrowspermillis
-   functions/avgbasespermillis
 
 .. list-table:: Diagnostic functions in GOR query language
    :widths: 10  25 5
@@ -812,15 +655,6 @@ Diagnostic Functions
 
 Version Information
 -------------------
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   functions/gorversion
-   functions/majorversion
-   functions/minorversion
-   functions/javaversion
 
 .. list-table:: Version information in GOR query language
    :widths: 10  25 5
