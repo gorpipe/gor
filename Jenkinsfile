@@ -72,7 +72,7 @@ node {
 
             if (env.BRANCH_NAME == "master") {
                 publishTo = "libs-snapshot-local"
-                // On develop we just push the latest build as a snapshot each time we build
+                // On master we just push the latest build as a snapshot each time we build
                 isSnapshotBuild = true
                 dockerTags << env.BRANCH_NAME
             }  else if (env.BRANCH_NAME.contains("release/")) {
