@@ -33,7 +33,7 @@ buildscript {
         classpath "kr.motd.gradle:sphinx-gradle-plugin:2.6.1"
         classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8.0.1969"
         classpath "org.jacoco:org.jacoco.agent:0.8.5"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.10.0"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.13.0"
         classpath "org.owasp:dependency-check-gradle:5.3.0"  // Can not be updated to 5. unless we update SonarQube.
         classpath "de.undercouch:gradle-download-task:4.0.4"
 
