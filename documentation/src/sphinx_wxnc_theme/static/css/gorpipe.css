@@ -4781,7 +4781,7 @@ input[type="color"] {
     display: inline-block;
     border: 1px solid #e3e3e3;
     font-size: 90%;
-    color: #bababa;
+    color: #232323;
     -webkit-transition: border .3s linear;
     -moz-transition: border .3s linear;
     transition: border .3s linear
@@ -6145,6 +6145,10 @@ div[class^='highlight'] pre {
     }
 }
 
+.gor-gorilla {
+    border: 0
+}
+
 .wxnc-logo-home a img.logo {
     margin: 0 auto;
     margin-left: 5px;
@@ -6164,7 +6168,7 @@ div[class^='highlight'] pre {
 .wxnc-logo-home {
     padding: 10px;
     height: 60px;
-    width: 60px;
+    width: 100px;
     position: relative;
     float: left
 }
@@ -6648,7 +6652,7 @@ div[class^='highlight'] pre {
 .wy-master-nav {
     height: 60px;
     width: 100%;
-    background: #FCFCFC;
+    background: #FFFFFF;
     border-bottom: solid 1px #e3e3e3;
     position: fixed;
     display: block;
@@ -6668,7 +6672,7 @@ div[class^='highlight'] pre {
     bottom: 0;
     left: 0;
     padding-bottom: 20px;
-    background: #FCFCFC;
+    background: #FFFFFF;
     border-right: solid 1px #e3e3e3;
     width: 300px;
     overflow-x: hidden;
