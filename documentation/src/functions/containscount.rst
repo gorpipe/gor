@@ -1,8 +1,8 @@
 .. _containscount:
 
-============
+=============
 CONTAINSCOUNT
-============
+=============
 
 **CONTAINSCOUNT** counts the number of items from a literal list that appear in the defined string. It does not count the instances of the items, but only tallies the number of positive matches from the literal list that are found.
 

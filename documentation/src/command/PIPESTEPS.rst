@@ -21,7 +21,7 @@ The PIPESTEPS command reads one or more gor analysis steps from a .yml file
 Examples
 ========
 
-.. code-block:: yml
+.. code-block:: bash
 
    DialogName:
     Description: |
