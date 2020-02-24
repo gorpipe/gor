@@ -100,10 +100,6 @@ Commands
      - Executes system commands that return tabular data within GOR queries.
      - .. image:: images/check.png
      -
-   * - :ref:`GORINDEX`
-     - Creates a gori index file for preexisting gorz files.
-     - .. image:: images/check.png
-     -
    * - :ref:`GORROW`
      - Returns a single row of data based on the input parameters.
      - .. image:: images/check.png
