@@ -23,7 +23,6 @@
 package org.gorpipe.gor;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -31,34 +30,24 @@ import java.util.Collection;
 public class UTestGorScriptAnalyzer {
     GorScriptAnalyzer analyzer;
 
-    @Before
-    public void setUp() {
-        analyzer = new GorScriptAnalyzer();
-    }
-
     @Test
     public void empty() {
-        analyzer.parse("");
+        analyzer = new GorScriptAnalyzer("");
         Collection<GorScriptTask> tasks = analyzer.getTasks();
         Assert.assertEquals(0, tasks.size());
     }
 
     @Test
     public void simpleStatement() {
-        analyzer.parse("gor test.mem");
+        analyzer = new GorScriptAnalyzer("gor test.mem");
         Collection<GorScriptTask> tasks = analyzer.getTasks();
         Assert.assertEquals(1, tasks.size());
     }
 
     @Test
     public void twoStepScript() {
-        analyzer.parse("create x=gor test.mem;gor [x]");
+        analyzer = new GorScriptAnalyzer("create x=gor test.mem;gor [x]");
         Collection<GorScriptTask> tasks = analyzer.getTasks();
         Assert.assertEquals(2, tasks.size());
-    }
-
-    @Test
-    public void nonsenseScript() {
-        analyzer.parse("this is not a script");
     }
 }
