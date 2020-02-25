@@ -141,8 +141,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     // This is some cleanup, is it needed?
     gorCommands = CommandParseUtilities.cleanCommandStrings(gorCommands)
 
-    val analyzer = new GorScriptAnalyzer()
-    analyzer.parse(gorCommands.mkString(";"))
+    val analyzer = new GorScriptAnalyzer(gorCommands.mkString(";"))
     eventLogger.tasks(analyzer.getTasks)
 
     val (gorCommand, createdFiles) = processScript(gorCommands, doHeader = false, suggestName = suggestName)
@@ -243,7 +242,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
               val querySignature = StringUtilities.createMD5(cte.query + fileSignature)
               executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName)
-              eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query);
+              eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })
 
