@@ -134,6 +134,8 @@ public class RequestStats implements EventLogger {
         task.cacheFile = cacheFile;
         task.commandExecuted = commandToExecute;
 
+        createdFiles.put(cacheFile, name);
+
         nodeAddedOrUpdated(task);
     }
 
@@ -180,6 +182,7 @@ public class RequestStats implements EventLogger {
         public String requestId;
         public Map<String, GorScriptTask> tasks = new HashMap<>();
         public Map<String, StatsCollector> stats = new HashMap<>();
+        public Map<String, String> createdFiles = new HashMap<>();
     }
 
     public void saveToJson() throws IOException {
@@ -187,6 +190,7 @@ public class RequestStats implements EventLogger {
         queryInfo.requestId = session.getRequestId();
         queryInfo.tasks = nodes;
         queryInfo.stats = stats;
+        queryInfo.createdFiles = createdFiles;
 
         String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(queryInfo);
         String fileName = "gor-stats-" + session.getRequestId() + ".json";

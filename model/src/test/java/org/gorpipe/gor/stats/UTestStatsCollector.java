@@ -31,11 +31,17 @@ public class UTestStatsCollector {
     }
 
     @Test
-    public void registerSendersWithIdenticalNames() {
-        statsCollector.registerSender("test", "bingo");
-        statsCollector.registerSender("test", "bongo");
-        Map<String, Map<String, Double>> stats = statsCollector.getStats();
-        assertEquals(2, stats.size());
+    public void registerSendersWithIdenticalNamesDifferentAnnotations() {
+        int id1 = statsCollector.registerSender("test", "bingo");
+        int id2 = statsCollector.registerSender("test", "bongo");
+        assertNotEquals(id1, id2);
+    }
+
+    @Test
+    public void registerSendersWithIdenticalNamesIdenticalAnnotations() {
+        int id1 = statsCollector.registerSender("test", "bingo");
+        int id2 = statsCollector.registerSender("test", "bingo");
+        assertEquals(id1, id2);
     }
 
     @Test

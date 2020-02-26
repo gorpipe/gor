@@ -148,6 +148,8 @@ public class GorOptions {
     public boolean hasLocalDictonaryFile = false; // Flag that a local dictonary file has been found
     private boolean isDictionaryWithBuckets = false; // source col from dictionary files can be hiden if no buckets and no -f filters
 
+    private String sourceName;
+
     /**
      * Chromosome Name to Id Cache
      */
@@ -443,6 +445,10 @@ public class GorOptions {
             theIterator = genomicIterators.get(0);
         }
 
+        if (sourceName != null) {
+            theIterator.setSourceName(sourceName);
+        }
+
         if (chrname != null && !chrname.equals("")) {
             theIterator = new BoundedIterator(theIterator, chrname, begin, end);
         }
@@ -569,6 +575,8 @@ public class GorOptions {
      *
      */
     private void resolveSources(boolean isInsertSource, String[] fileList, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
+        sourceName = String.join(":", fileList);
+
         // Start by resolve simple filelists
         for (final String file : fileList) {
             createStandardSources(projectContext, allowBucketAccess, alltags, file);

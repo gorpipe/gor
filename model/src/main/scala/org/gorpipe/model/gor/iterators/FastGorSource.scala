@@ -75,8 +75,6 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     soughtTwice = true; soughtOnce = true
   }
 
-  initStats(context, "FastGorSource", inOptions)
-
   override def toString: String = {
     inOptions
   }
@@ -85,6 +83,10 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     if (gorSource == null) {
       val gorOptions = GorOptions.createGorOptions(context, StringUtil.splitReserveQuotesAndParenthesesToArray(options))
       gorSource = gorOptions.getIterator(gm)
+
+      initStats(context, gorSource.getSourceName, "FastGorSource")
+      incStat("openSource")
+
       if(gm != null) {
         gorSource = new MonitorIterator(gorSource, gm, minLogTime)
       }

@@ -32,30 +32,32 @@ public class StatsCollector {
     private Map<String, Integer> registeredNames = new HashMap<>();
 
     public int registerSender(String senderName, String annotation) {
-        int count = registeredNames.getOrDefault(senderName, 0);
-        String adjustedName = count == 0 ? senderName : String.format("%s_%03d", senderName, count + 1);
-        registeredNames.put(senderName, count + 1);
+        String registeredName = senderName + ":" + annotation;
+        int id = registeredNames.getOrDefault(registeredName, 0);
+        if (id == 0) {
+            id = senderNames.size() + 1;
+            registeredNames.put(registeredName, id);
 
-        int id = senderNames.size();
-        senderNames.put(id, adjustedName);
-        statsPerSender.put(id, new HashMap<>());
+            senderNames.put(id, senderName);
+            statsPerSender.put(id, new HashMap<>());
 
-        senderAnnotations.put(id, annotation);
+            senderAnnotations.put(id, annotation);
+        }
         return id;
     }
 
     public void inc(int sender, String stat) {
-        Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<String, Double>());
+        Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<>());
         senderStats.compute(stat, (k, v) -> v == null ? 1.0 : v + 1.0);
     }
 
     public void dec(int sender, String stat) {
-        Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<String, Double>());
+        Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<>());
         senderStats.compute(stat, (k, v) -> v == null ? -1.0 : v - 1.0);
     }
 
     public void add(int sender, String stat, double delta) {
-        Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<String, Double>());
+        Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<>());
         senderStats.compute(stat, (k, v) -> v == null ? delta : v + delta);
     }
 
