@@ -58,9 +58,10 @@ public class GorShell {
     private boolean requestStatsEnabled = false;
     private boolean displayResults = true;
     private boolean exit = false;
+    private String configFile = "";
+
     private Map<String, String> createStatements = new HashMap<>();
     private Map<String, String> defStatements = new HashMap<>();
-
     private GorShell() throws IOException {
         terminal = TerminalBuilder.builder().jansi(false).build();
 
@@ -99,6 +100,10 @@ public class GorShell {
 
     void exit() {
         exit = true;
+    }
+
+    public void setConfigFile(String configFile) {
+        this.configFile = configFile;
     }
 
     void setTimingEnabled(boolean enableTiming) {
@@ -222,15 +227,7 @@ public class GorShell {
                 }
                 input = lineReader.readLine(prompt);
                 if (!input.equals("")) {
-                    ParsedLine parsedLine = lineReader.getParsedLine();
-                    String cmd = parsedLine.words().get(0);
-                    InputSourceInfo info = GorInputSources.getInfo(cmd);
-                    if (info != null) {
-                        handleQuery();
-                    } else {
-                        String[] arguments = input.split(" ");
-                        commandLine.execute(arguments);
-                    }
+                    handleInput();
                 }
             } catch (UserInterruptException e) {
                 if (e.getPartialLine().equals("")) {
@@ -241,6 +238,18 @@ public class GorShell {
             } catch (Exception e) {
                 reportException(e);
             }
+        }
+    }
+
+    private void handleInput() {
+        ParsedLine parsedLine = lineReader.getParsedLine();
+        String cmd = parsedLine.words().get(0);
+        InputSourceInfo info = GorInputSources.getInfo(cmd);
+        if (info != null) {
+            handleQuery();
+        } else {
+            String[] arguments = input.split(" ");
+            commandLine.execute(arguments);
         }
     }
 
@@ -306,6 +315,7 @@ public class GorShell {
         runner.setFileCacheEnabled(fileCacheEnabled);
         runner.setRequestStatsEnabled(requestStatsEnabled);
         runner.setDisplayResults(displayResults);
+        runner.setConfigFile(configFile);
         runner.start();
     }
 
