@@ -36,7 +36,8 @@ case class ForkWriteOptions(remove: Boolean,
                             md5: Boolean,
                             idx: GorIndexType,
                             tags: Array[String],
-                            prefixFile: Option[String]
+                            prefixFile: Option[String],
+                            compressionLevel: Int
                            )
 
 case class ForkWrite(forkCol: Int,
@@ -87,10 +88,10 @@ case class ForkWrite(forkCol: Int,
   def openFile(sh: FileHolder) {
     val name = sh.fileName
     if (!sh.headerWritten) {
-      sh.out = OutFile(name, header, skipHeader = false, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile)
+      sh.out = OutFile(name, header, skipHeader = false, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile, options.compressionLevel)
       sh.headerWritten = true
     }
-    else sh.out = OutFile(name, header, skipHeader = true, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile)
+    else sh.out = OutFile(name, header, skipHeader = true, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile, options.compressionLevel)
     sh.out.setup()
     sh.fileOpen = true
     openFiles += 1

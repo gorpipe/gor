@@ -2,6 +2,7 @@
 # Gradle
 
 .gradle/
+.github/
 **/build/
 **/_build/**
 **/out/

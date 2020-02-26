@@ -17,6 +17,8 @@ The ``-c`` and ``-m`` options are used to encrypt the output of the WRITE comman
 
 The ``-i`` option writes an index file containing the file position of each chromosome.
 
+The ``-l`` option selects the compression level to be used by the deflater. Default: 1 (BEST_SPEED)
+
 Usage
 =====
 
@@ -37,6 +39,8 @@ Options
 | ``-m``          | Use MD5 encryption on the output file.                          |
 +-----------------+-----------------------------------------------------------------+
 | ``-i``          | Write index file (.gori) with a .gorz file                      |
++-----------------+-----------------------------------------------------------------+
+| ``-l [level]``  | Compression level (0-9). Default 1.                             |
 +-----------------+-----------------------------------------------------------------+
 | ``-t '[tags]'`` | List of tags which write ensures a file will be created.        |
 |                 | Only valid with the -f option.                                  |
