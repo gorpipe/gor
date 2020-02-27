@@ -1,0 +1,956 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Grouping and Aggregation &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Nested Streams" href="nestedStreams.html" />
+    <link rel="prev" title="Column Modifications" href="columnModifications.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Grouping and Aggregation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#grouping">Grouping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defining-the-binsize">Defining the Binsize</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#introducing-parallel-queries">Introducing Parallel Queries</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#grouping-on-columns">Grouping on Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculating-max-min-avgs">Calculating Max, Min, Avgs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-granno-to-annotate">Using GRANNO to Annotate</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Grouping and Aggregation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="grouping-and-aggregation">
+<span id="groupingaggregation"></span><h1>Grouping and Aggregation<a class="headerlink" href="#grouping-and-aggregation" title="Permalink to this headline">¶</a></h1>
+<p>The GOR syntax provides two commands to do grouping and aggregation, the <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command and the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command, which is for aggregating and annotating in a single pass.</p>
+<div class="section" id="grouping">
+<h2>Grouping<a class="headerlink" href="#grouping" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command allows you aggregate your results similarly to the way grouping works in SQL, although the syntax is slightly different. In the GOR language, grouping is always based on a sliding genomic bin size.</p>
+<p>For example, the following GOR query calculates the number of PNs with vars in chr21, i.e. the number of variants per pn and then the number of PNs.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #wgsvars# | <span class="nb">GROUP</span> chrom -<span class="no">gc</span> pn -<span class="no">count</span> | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
+</pre></div>
+</div>
+<p>We will now look at a few different types of grouping in the GOR query language.</p>
+</div>
+<div class="section" id="defining-the-binsize">
+<h2>Defining the Binsize<a class="headerlink" href="#defining-the-binsize" title="Permalink to this headline">¶</a></h2>
+<p>When performing a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command, the query can be set to group based on an integer to denote a range (in base pairs) or it can be set to chromosome or genome. The following query returns the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> variant table grouped by chromosome with a count of how many SNPs are on each (shown in the allCount column):</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">#dbsnp# grouped by chromosome</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>bpStart</p></th>
+<th class="head"><p>bpStop</p></th>
+<th class="head"><p>allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>0</p></td>
+<td><p>249250621</p></td>
+<td><p>18642860</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr2</p></td>
+<td><p>0</p></td>
+<td><p>243199373</p></td>
+<td><p>20216254</p></td>
+</tr>
+<tr class="row-even"><td><p>chr3</p></td>
+<td><p>0</p></td>
+<td><p>198022430</p></td>
+<td><p>16557941</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr4</p></td>
+<td><p>0</p></td>
+<td><p>191154276</p></td>
+<td><p>16044444</p></td>
+</tr>
+<tr class="row-even"><td><p>chr5</p></td>
+<td><p>0</p></td>
+<td><p>180915260</p></td>
+<td><p>14938502</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr6</p></td>
+<td><p>0</p></td>
+<td><p>171115067</p></td>
+<td><p>14143210</p></td>
+</tr>
+<tr class="row-even"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>Another way to get the total number of SNPs on chromosome 1, would be to use the following GOR query:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1 #dbsnp# | <span class="nb">GROUP</span> genome -<span class="no">count</span>
+</pre></div>
+</div>
+<p>Since we made the grouping over the genome, a special segment named <code class="docutils literal notranslate"><span class="pre">chrA</span></code> (chromosome all) is returned.</p>
+<p>To further illustrate the use of binsize, we could then take only chromosome 21 (using the position filter on the GOR query) and group with a binsize of 1 million basepairs, as shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">GROUP</span> 10000000 -<span class="no">count</span>
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">#dbsnp# chr21 grouped into buckets of 10m bp</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>bpStart</p></th>
+<th class="head"><p>bpStop</p></th>
+<th class="head"><p>allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>10000000</p></td>
+<td><p>38990</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>10000000</p></td>
+<td><p>20000000</p></td>
+<td><p>607009</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>20000000</p></td>
+<td><p>30000000</p></td>
+<td><p>889141</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>30000000</p></td>
+<td><p>40000000</p></td>
+<td><p>857939</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>40000000</p></td>
+<td><p>50000000</p></td>
+<td><p>782185</p></td>
+</tr>
+</tbody>
+</table>
+<p>The above example shows how many SNPs exist in each segment of 1m base pairs on chromosome 21.</p>
+<p>It is important to note that the binsize can directly impact the performance of your queries. It is advisable to limit the binsize to as small a number as possible (i.e. do not use the “genome” binsize when the “chrom” will do). Often you can limit the binsize to 3 megabases, which is longer than the longest human gene.</p>
+<div class="section" id="introducing-parallel-queries">
+<h3>Introducing Parallel Queries<a class="headerlink" href="#introducing-parallel-queries" title="Permalink to this headline">¶</a></h3>
+<p>The query above that shows a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command that returns the number of SNPs on each chromosome, but that query takes a very long time to run because it goes through the genome chromosome by chromosome. A better way to do this is using <a class="reference internal" href="command/PGOR.html#pgor"><span class="std std-ref">PGOR</span></a>. If we were to write the query as follows:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">pgor</span> #dbsnp# | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
+</pre></div>
+</div>
+<p>the query will automatically be split up and will return the count for each chromosome much faster. A full discussion of parallelization can be found in a later chapter specifically on <a class="reference internal" href="parallelGOR.html#parallelgor"><span class="std std-ref">Parallel GOR</span></a>.</p>
+</div>
+</div>
+<div class="section" id="grouping-on-columns">
+<h2>Grouping on Columns<a class="headerlink" href="#grouping-on-columns" title="Permalink to this headline">¶</a></h2>
+<p>We can specify additional grouping by using the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option, which stands for “grouping column”. To understand this type of group, we could take the same example of the 21st chromosome in the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code>, but in this case we would only look at substitutions as in the table shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id3">
+<caption><span class="caption-text">#dbsnp# chr21 - substitutions only</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 25%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>reference</p></th>
+<th class="head"><p>allele</p></th>
+<th class="head"><p>rsIDs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411199</p></td>
+<td><p>T</p></td>
+<td><p>C</p></td>
+<td><p>rs376129767</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9411236</p></td>
+<td><p>G</p></td>
+<td><p>A</p></td>
+<td><p>rs922165264</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411239</p></td>
+<td><p>G</p></td>
+<td><p>A</p></td>
+<td><p>rs559462325</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9411242</p></td>
+<td><p>C</p></td>
+<td><p>A</p></td>
+<td><p>rs531773366</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411243</p></td>
+<td><p>A</p></td>
+<td><p>C</p></td>
+<td><p>rs191612142</p></td>
+</tr>
+</tbody>
+</table>
+<p>Next, we might want to use the <a class="reference internal" href="command/CALC.html#calc"><span class="std std-ref">CALC</span></a> command to create a new column with the type of SNP in each substitution, as shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+| <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span> | <span class="nb">HIDE</span> <span class="na">rsIDs</span>
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id4">
+<caption><span class="caption-text">#dbsnp# chr21 with SNP type</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>reference</p></th>
+<th class="head"><p>allele</p></th>
+<th class="head"><p>snptype</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411199</p></td>
+<td><p>T</p></td>
+<td><p>C</p></td>
+<td><p>T/C</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9411236</p></td>
+<td><p>G</p></td>
+<td><p>A</p></td>
+<td><p>G/A</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411239</p></td>
+<td><p>G</p></td>
+<td><p>A</p></td>
+<td><p>G/A</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9411242</p></td>
+<td><p>C</p></td>
+<td><p>A</p></td>
+<td><p>C/A</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411243</p></td>
+<td><p>A</p></td>
+<td><p>C</p></td>
+<td><p>A/C</p></td>
+</tr>
+</tbody>
+</table>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option on the <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command, we could then group based on this new <code class="docutils literal notranslate"><span class="pre">snptype</span></code> column using the GOR query shown here:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+| <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span> | <span class="nb">HIDE</span> <span class="na">rsIDs</span> | <span class="nb">GROUP</span> chrom -<span class="no">count</span> -<span class="no">gc</span> snptype
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id5">
+<caption><span class="caption-text">#dbsnp# chr21: SNP types grouped over the chromosome</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>bpStart</p></th>
+<th class="head"><p>bpStop</p></th>
+<th class="head"><p>snptype</p></th>
+<th class="head"><p>allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>A/C</p></td>
+<td><p>117055</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>A/G</p></td>
+<td><p>399872</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>A/T</p></td>
+<td><p>109699</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>C/A</p></td>
+<td><p>152813</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>C/G</p></td>
+<td><p>133850</p></td>
+</tr>
+</tbody>
+</table>
+<p>As before, we could also define the binsize as a specific number of base pairs, in which case the output of the query would give us the number of each type of SNP in each interval we define in the binsize. In the GOR query below, we are grouping the SNP types with a bin size of 1m base pairs.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+| <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span> | <span class="nb">HIDE</span> <span class="na">rsIDs</span> | <span class="nb">GROUP</span> 1000000 -<span class="no">count</span> -<span class="no">gc</span> snptype
+</pre></div>
+</div>
+<p>The next example shows how we could calculate the number of PNs with variants in chr21.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #wgsvars# | <span class="nb">GROUP</span> chrom -<span class="no">gc</span> <span class="na">PN</span> -<span class="no">count</span> | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
+</pre></div>
+</div>
+<p>The example also shows a good example of using the GROUP command twice in a query, first to count the number of variants per PN and then to count the number of PNs.</p>
+<p>As we will see in the next section, we can then use another <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command to perform various statistical calculations in the query.</p>
+</div>
+<div class="section" id="calculating-max-min-avgs">
+<h2>Calculating Max, Min, Avgs<a class="headerlink" href="#calculating-max-min-avgs" title="Permalink to this headline">¶</a></h2>
+<p>We can use some options in the <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command to calculate the maximum, minimum, and average number of each type of SNP in each 1 megabase binsize as is shown in the following example. Note that you must specify the type (in this case <code class="docutils literal notranslate"><span class="pre">-ic</span></code> for integer column) and name of the column (or multiple columns, comma delimted) that you wish to perform the calculations for.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+| <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span> | <span class="nb">HIDE</span> <span class="na">rsIDs</span> | <span class="nb">GROUP</span> 100000 -<span class="no">count</span> -<span class="no">gc</span> snptype
+| <span class="nb">GROUP</span> chrom -<span class="no">max</span> -<span class="no">min</span> -<span class="no">avg</span> -<span class="no">ic</span> <span class="na">allCount</span> -<span class="no">gc</span> snptype
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id6">
+<caption><span class="caption-text">#dbsnp# chr21: SNP types (max, min, avg)</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>bpStart</p></th>
+<th class="head"><p>bpStop</p></th>
+<th class="head"><p>snptype</p></th>
+<th class="head"><p>min_allCount</p></th>
+<th class="head"><p>max_allCount</p></th>
+<th class="head"><p>avg_allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>A/C</p></td>
+<td><p>37</p></td>
+<td><p>936</p></td>
+<td><p>327.885154</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>A/G</p></td>
+<td><p>66</p></td>
+<td><p>2337</p></td>
+<td><p>1120.08963</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>A/T</p></td>
+<td><p>24</p></td>
+<td><p>1279</p></td>
+<td><p>307.28011</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>C/A</p></td>
+<td><p>61</p></td>
+<td><p>1422</p></td>
+<td><p>428.04761</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>C/G</p></td>
+<td><p>39</p></td>
+<td><p>1055</p></td>
+<td><p>374.92997</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>As you can see in the table above, the calculated columns are prefixed with the type of calculation that has been performed in each case.</p>
+</div>
+<div class="section" id="using-granno-to-annotate">
+<h2>Using GRANNO to Annotate<a class="headerlink" href="#using-granno-to-annotate" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command allows you to group and annotate in a single pass. A full description of the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command can be found <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">here</span></a>.</p>
+<p>To illustrate the use of the <strong>GRANNO</strong> command, we could take a look at the previous example. Let’s say that instead of grouping over the whole chromosome, we might want to find out how many different SNPs there are, on average, on each gene. The <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> does not have gene data, so we will have to join to either the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> or <code class="docutils literal notranslate"><span class="pre">#exons#</span></code> table and group on the <code class="docutils literal notranslate"><span class="pre">gene_symbol</span></code> column, as shown in the example below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+| <span class="nb">JOIN</span> -<span class="no">snpseg</span> #exons# | <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span>
+| <span class="nb">HIDE</span> <span class="na">rsIDs</span> | <span class="nb">GROUP</span> chrom -<span class="no">gc</span> <span class="na">gene_symbol</span> -<span class="no">count</span>
+</pre></div>
+</div>
+<p>Note that in the example we show here, we are hiding certain columns to sculpt the output of the query to include only those columns relevant to the example.</p>
+<table class="colwidths-given docutils align-default" id="id7">
+<caption><span class="caption-text">Aggregation of SNPs for each Gene</span><a class="headerlink" href="#id7" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>bpStart</p></th>
+<th class="head"><p>bpStop</p></th>
+<th class="head"><p>gene_symbol</p></th>
+<th class="head"><p>allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>7SK</p></td>
+<td><p>107</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>ABCC13</p></td>
+<td><p>1654</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>ABCG1</p></td>
+<td><p>5180</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>ADAMTS1</p></td>
+<td><p>1955</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>ADARB1</p></td>
+<td><p>1103</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>ADAMTS5</p></td>
+<td><p>5693</p></td>
+</tr>
+<tr class="row-even"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>However, as you can see above, this only gives us the start and stop position for the chromosome itself and not the exon in question. We may want to have this data genomic-ordered and so we need to add in the <code class="docutils literal notranslate"><span class="pre">chromstart</span></code> and <code class="docutils literal notranslate"><span class="pre">chromend</span></code> columns from the <code class="docutils literal notranslate"><span class="pre">#exons#</span></code> table.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
+| <span class="nb">JOIN</span> -<span class="no">snpseg</span> #exons# | <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span>
+| <span class="nb">HIDE</span> <span class="na">rsIDs</span> | <span class="nb">GROUP</span> chrom -<span class="no">gc</span> <span class="na">gene_symbol</span> -<span class="no">count</span>
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id8">
+<caption><span class="caption-text">Aggregation of SNPs for each gene with position information</span><a class="headerlink" href="#id8" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>bpStart</p></th>
+<th class="head"><p>bpStop</p></th>
+<th class="head"><p>chromstart</p></th>
+<th class="head"><p>chromend</p></th>
+<th class="head"><p>gene_symbol</p></th>
+<th class="head"><p>allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10199942</p></td>
+<td><p>10200025</p></td>
+<td><p>CR381653.1</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10380379</p></td>
+<td><p>10380661</p></td>
+<td><p>RN7SL52P</p></td>
+<td><p>13</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10385952</p></td>
+<td><p>10386047</p></td>
+<td><p>SNORA70</p></td>
+<td><p>9</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10475514</p></td>
+<td><p>10476061</p></td>
+<td><p>bP-21201H5.1</p></td>
+<td><p>57</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10862621</p></td>
+<td><p>10862667</p></td>
+<td><p>IGHV1OR21-1</p></td>
+<td><p>64</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10862750</p></td>
+<td><p>10863057</p></td>
+<td><p>IGHV1OR21-1</p></td>
+<td><p>243</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>0</p></td>
+<td><p>48129895</p></td>
+<td><p>10862750</p></td>
+<td><p>10863067</p></td>
+<td><p>IGHV1OR21-1</p></td>
+<td><p>250</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>As you can above, this gives us something closer to the genomic ordered stream we are looking for, but there are still multiple entries for individual genes (since they sometimes overlap with multiple exonic regions). To remedy this, we can use the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command, which can group and annotate in a single pass.</p>
+<p>In the next example, we use the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command and we can define the binsize as a special value of <code class="docutils literal notranslate"><span class="pre">gene</span></code>, which essentially sets the value to 3M base pairs in conjunction with the <code class="docutils literal notranslate"><span class="pre">-range</span></code> option. This means that we will not look for any grouping of the gene_symbol column (indicated with the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option) outside of a range of 3M base pairs. Next, we define the annotation columns that we wish to generate (with the <code class="docutils literal notranslate"><span class="pre">-ic</span></code> option) and what types of annotations we wish to perform (in this case, <code class="docutils literal notranslate"><span class="pre">-max</span></code> and <code class="docutils literal notranslate"><span class="pre">-min</span></code>).</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #exons#
+| <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1 | <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span>
+| <span class="nb">GRANNO</span> gene -range -<span class="no">gc</span> <span class="na">gene_symbol</span> -<span class="no">ic</span> <span class="na">chromstart</span>,<span class="na">chromend</span> -<span class="no">max</span> -<span class="no">min</span>
+| <span class="nb">SELECT</span> 1-4,<span class="na">chromstart</span>,<span class="na">chromend</span>,<span class="na">gene_symbol</span>,snptype-
+</pre></div>
+</div>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text">Aggregation of SNPs for each gene with GRANNO command</span><a class="headerlink" href="#id9" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>reference</p></th>
+<th class="head"><p>allele</p></th>
+<th class="head"><p>chromstart</p></th>
+<th class="head"><p>chromend</p></th>
+<th class="head"><p>gene_symbol</p></th>
+<th class="head"><p>snptype</p></th>
+<th class="head"><p>min_chromstart</p></th>
+<th class="head"><p>max_chromstart</p></th>
+<th class="head"><p>min_chromend</p></th>
+<th class="head"><p>max_chromend</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9683195</p></td>
+<td><p>G</p></td>
+<td><p>A</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>G/A</p></td>
+<td><p>9683190</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>9683272</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9683199</p></td>
+<td><p>C</p></td>
+<td><p>G</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>C/G</p></td>
+<td><p>9683190</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>9683272</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9683201</p></td>
+<td><p>G</p></td>
+<td><p>T</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>G/T</p></td>
+<td><p>9683190</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>9683272</p></td>
+</tr>
+</tbody>
+</table>
+<p>We can then further group this result over the chromosome (with a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command) on the columns <code class="docutils literal notranslate"><span class="pre">min_chromstart</span></code>, <code class="docutils literal notranslate"><span class="pre">max_chromend</span></code>, <code class="docutils literal notranslate"><span class="pre">gene_symbol</span></code>,  and <code class="docutils literal notranslate"><span class="pre">snptype</span></code>, as shown in the example below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #exons#
+| <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1 | <span class="nb">CALC</span> snptype <span class="na">reference</span>+&#39;/&#39;+<span class="na">allele</span>
+| <span class="nb">GRANNO</span> gene -range -<span class="no">gc</span> <span class="na">gene_symbol</span> -<span class="no">ic</span> <span class="na">chromstart</span>,<span class="na">chromend</span> -<span class="no">max</span> -<span class="no">min</span>
+| <span class="nb">GROUP</span> chrom -<span class="no">gc</span> <span class="na">min_chromstart</span>,<span class="na">max_chromend</span>,<span class="na">gene_symbol</span>,snptype -<span class="no">count</span>
+| <span class="nb">SELECT</span> <span class="na">Chrom</span>,<span class="na">min_chromstart</span>- | <span class="nb">SORT</span> chrom
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id10">
+<caption><span class="caption-text">Aggregation of SNPs using both GRANNO and GROUP, genomic-ordered stream</span><a class="headerlink" href="#id10" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>min_chromstart</p></th>
+<th class="head"><p>max_chromend</p></th>
+<th class="head"><p>gene_symbol</p></th>
+<th class="head"><p>snptype</p></th>
+<th class="head"><p>allCount</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>A/C</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>C/G</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>C/T</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>G/A</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9683190</p></td>
+<td><p>9683272</p></td>
+<td><p>CR381670.1</p></td>
+<td><p>G/T</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>There is a lot going on here, so we can take it line by line. The first line is the join between the tables. The second line does the filtering on the left source and adds the calculated column. The third line runs the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command as described above, grouping and annotating in a single step to find the <code class="docutils literal notranslate"><span class="pre">min_chromstart</span></code> and <code class="docutils literal notranslate"><span class="pre">max_chromend</span></code> for the genes. Next we group over the whole chromosome to get the count of each type of SNP. Finally, we <a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a> the columns we want to display.</p>
+<p>You’ll note at the end of this query that we have added a <strong>SORT</strong> command to make sure that the genomic order is preserved in the GOR stream. As discussed in a previous section <a class="reference internal" href="basicGORqueries.html#genomicorder"><span class="std std-ref">on genomic order</span></a>, this is often necessary when columns are being moved around so much within a GOR query.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="nestedStreams.html" class="btn btn-neutral float-right" title="Nested Streams" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="columnModifications.html" class="btn btn-neutral float-left" title="Column Modifications" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

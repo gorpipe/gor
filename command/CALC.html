@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CALC &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>CALC</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="calc">
+<span id="id1"></span><h1>CALC<a class="headerlink" href="#calc" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#calc"><span class="std std-ref">CALC</span></a> command supports integer, floating point, and string-based calculations. It adds a single new column (named according to the parameter colname) to the output. The command can be used repeatedly to create multiple new columns.</p>
+<p>Reference to columns and functions is case-insensitive. The column data type (int,float, or string) is inferred from the first 10000 rows in the input stream.</p>
+<p>In expressions, columns can be referred to either by their name or with the syntax #colnum[s|i|f].</p>
+<p>As an example #3 refers to column 3 whereas #3s refers to column 3 as a string.  Likewise, #4i instructs the compiler that column four contains integers and #4f that it contains floating point numbers. If no type-suffix is specified or the column name is used, the command will infer the data type from the first rows in the input.  This can potentially cause the type to be set to integers while the rest of the input contains floats or that the type is set to float while the column actually contains strings. Therefore, it is made possible to specify the type through the # suffix syntax as described above.</p>
+<p>Examples of arithmetic expressions are: (#3 + 4.0) or for instance IF(#4 &gt; 1.0,log(#3),exp(#3))</p>
+<p>The CALC command also allows equal sign, e.g. calc colname = expression.</p>
+<p>See the <a class="reference internal" href="../ref_functions.html#predefinedfunctions"><span class="std std-ref">functions</span></a> to get a list of available functions and <a class="reference internal" href="WHERE.html#where"><span class="std std-ref">WHERE</span></a> for the structure of functions.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">CALC</span> colname expression
+
+<span class="nd">gor</span> ... | <span class="nb">CALC</span> colname1,colname2 expression1,expression2
+</pre></div>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>In the following examples, we use the <a class="reference internal" href="GORROW.html#gorrow"><span class="std std-ref">GORROW</span></a> command to generate a single row, which we will then use to demonstrate various different calculations using the CALC command.</p>
+<p>The following query example shows a string concatenation that combines two calculated columns in a third and then calculates the length of the string using the <code class="docutils literal notranslate"><span class="pre">len</span></code> function.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nb">GORROW</span> chr1,1,1 | <span class="nb">CALC</span> FirstName = &#39;John&#39; | <span class="nb">CALC</span> LastName &#39;Smith&#39;
+| <span class="nb">CALC</span> FullName FirstName + &#39; &#39; + LastName | <span class="nb">CALC</span> NameLength len(FullName)
+</pre></div>
+</div>
+<p>The next query example calculates a random number (using the random function) and performs an additional calculation checking if the number generated is greater than 0.5 or not and assigns a label of “red” or “green” to the row based on that calculation. This example also shows how to use a negative match within an IF statement. Note the use of brackets in the example.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nb">GORROW</span> chr1,1,1 | <span class="nb">CALC</span> random_number = random() | <span class="nb">CALC</span> checkcol if(<span class="ni">NOT</span>(#4f &gt; 0.5),&#39;red&#39;,&#39;green&#39;)
+</pre></div>
+</div>
+<p>The query below will throw an exception if the random number that is generated is greater than 0.5.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nb">GORROW</span> chr1,1,1 | <span class="nb">CALC</span> random_number = random() | <span class="nb">THROWIF</span> (#3f &gt; 0.5)
+</pre></div>
+</div>
+<p>The CALC command supports calculating more than one columns in on step.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | select 1,2 | calc ColumnThree,aIntCol random(),<span class="k">int</span>(#3)+3
+</pre></div>
+</div>
+<p>If the column name is a nucleotide, the column name must be uppercase.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

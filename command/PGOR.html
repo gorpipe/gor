@@ -1,0 +1,244 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PGOR &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>PGOR</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="pgor">
+<span id="id1"></span><h1>PGOR<a class="headerlink" href="#pgor" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#pgor"><span class="std std-ref">PGOR</span></a> command is essentially a syntactic sugar for a query with CREATE statement.  The PGOR statement <em>cannot</em> be used within nested-queries.  In the current implementation, the optional attributes must also appear before the file source or nested query.</p>
+<p>When no split attribute is provided, the PGOR command uses the build split configuration file to specify the split partitions.  Typically, such configuration files partition the larger chromosomes into two partitions, separated on the centromeres.  If any of the commands GROUP, GRANNO, RANK, or SORT are present in the query using binsize other than 1 base, only whole chromosomes (contigs) are used, avoiding boundary effect issues arising from partition of query range.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">pgor</span> [attributes] source
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #tempfile# = <span class="nd">pgor</span> [attributes] source;
+<span class="nd">gor</span> [#tempfile#]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-split</span> <span class="pre">value[:overlap]</span></code></p></td>
+<td><p>If the split value is smaller or equal to 1000, it represents the number of
+partitions into which the genome is split.  If the split value is larger,
+it is the size of each split in sequence bases.</p>
+<p>The overlap number can be provided optionally to allow genome partitions
+to overlap. In such cases, the variable ##WHERE_SPLIT_WINDOW## can be used
+to set filtering on the output.</p>
+<p>Note, when partitions are represented in bases, no more
+than 100 partitions can be per chromosome.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>A full discussion of PGOR commands and examples of how to use them can be found in the manual chapter on <a class="reference internal" href="../parallelGOR.html#pgorexamples"><span class="std std-ref">Parallelization in GOR</span></a>.</p>
+<p>See also: <a class="reference internal" href="PARTGOR.html"><span class="doc">PARTGOR</span></a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

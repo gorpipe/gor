@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LIFTOVER &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>LIFTOVER</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="liftover">
+<span id="id1"></span><h1>LIFTOVER<a class="headerlink" href="#liftover" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>LIFTOVER</strong> command is used to convert GOR data from one reference genome build to another.  It provides similar functionality as the LiftOver functionality at UCSC, however, executes much faster.  The output of a LIFTOVER command is therefore in different coordinates than the input and therefore it is for instance meaningless to join such data with the source file or other sources in the original genome build.</p>
+<p>The mapping between the genome builds for the LIFTOVER command is stored in GOR files, e.g. config/liftover/hg19tohg38.gor, which are typically generated from chain files from UCSC.</p>
+<p>The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequence reads or segments, in order to reverse complement sequence columns where appropriate.  Note, that the LIFTOVER command must re-order the entire output and is therefore a blocking operation similar to SORT genome.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | bam ]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-snp</span></code></p></td>
+<td><p>Single nucleotide positions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code></p></td>
+<td><p>Segment data with start and stop (default).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-var</span></code></p></td>
+<td><p>Variation format (chrom,pos,ref,alt).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-bam</span></code></p></td>
+<td><p>BAM sequence read format (chrom,pos,end,Qname,..).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ref</span> <span class="pre">col</span></code></p></td>
+<td><p>The column denoting the reference seq. (default #3,reference,ref).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-alt</span> <span class="pre">col</span></code></p></td>
+<td><p>The column denoting the alternate (alleles) seq. (default #4,call,alt).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-build</span> <span class="pre">value</span></code></p></td>
+<td><p>Source build prefix (default hgOld)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-all</span></code></p></td>
+<td><p>Include all mappings, not just the one with best score (default).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>When doing a liftover on segments, we can use the approach below to minimize the unmapped segments.  The occurrence of unmapped segments is because of partial overlap with the segments that come from the UCSC chain-files.</p>
+<p>The query below maps the individual overlaps and then merges them (given they are not too far apart, e.g. 1000bp).  The 20Mbp is the maxseg in the liftover segments.  Rownum and liftsplits is just calculated to be able to see how each gene is split up.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">ROWNUM</span> | <span class="nb">JOIN</span> -segseg -maxseg 20000000 -rprefix lift
+   &lt;(<span class="nd">gor</span> config/liftover/hg19tohg38.gor | <span class="nb">SELECT</span> 1-3)
+| <span class="nb">GRANNO</span> 1 -<span class="no">gc</span> 3-rownum -<span class="no">count</span> | <span class="nb">RENAME</span> allcount liftSplits
+| <span class="nb">REPLACE</span> #2 if(lift_tStart&gt;#2,lift_tStart,#2) | <span class="nb">REPLACE</span> #3 if(lift_tEnd&lt;#3,lift_tEnd,#3)
+| <span class="nb">SELECT</span> 1-4,rownum,liftSplits
+| <span class="nb">SORT</span> 20000000
+| <span class="nb">LIFTOVER</span> config/liftover/hg19tohg38.gor -seg -build hg19
+| <span class="nb">REPLACE</span> #2 #2-1000 | <span class="nb">REPLACE</span> #3 #3+1000
+| <span class="nb">SEGSPAN</span> -<span class="no">gc</span> 4-rownum,liftsplits
+| <span class="nb">REPLACE</span> #2 #2+1000 | <span class="nb">REPLACE</span> #3 #3-1000
+| <span class="nb">GREP</span> CNTNAP3B | <span class="nb">GRANNO</span> chrom -sum -<span class="no">ic</span> segcount
+</pre></div>
+</div>
+</div>
+<div class="section" id="relevant-links">
+<h2>Relevant links<a class="headerlink" href="#relevant-links" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgLiftOver">https://genome.ucsc.edu/cgi-bin/hgLiftOver</a>
+<a class="reference external" href="https://genome.ucsc.edu/goldenpath/help/chain.html">https://genome.ucsc.edu/goldenpath/help/chain.html</a>
+<a class="reference external" href="http://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/">http://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/</a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

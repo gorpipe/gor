@@ -1,0 +1,286 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Nested Streams &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Joining Tables" href="joiningTables.html" />
+    <link rel="prev" title="Grouping and Aggregation" href="groupingAndAggregation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Nested Streams</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#special-notation">Special Notation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#merging-streams">Merging Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#further-examples">Further Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#joining-to-a-gor-stream">Joining to a GOR stream</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#nested-nor-queries">Nested NOR queries</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Nested Streams</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="nested-streams">
+<span id="nestedstreams"></span><h1>Nested Streams<a class="headerlink" href="#nested-streams" title="Permalink to this headline">¶</a></h1>
+<p>As the GOR framework is multi-threaded, it is possible for us to create efficient queries with many pipe steps and to create declarative and nested streams which are seekable. When a nested stream is included in a GOR query, the nested stream is run before the rest of the query and any data that is generated can be utilised in the rest of the GOR query.</p>
+<div class="section" id="special-notation">
+<h2>Special Notation<a class="headerlink" href="#special-notation" title="Permalink to this headline">¶</a></h2>
+<p>There is a special notation used for nested streams. It begins with a left angled bracket and the query in the nested stream is contained within parentheses or “round brackets”, as shown in the example below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> left_stream | ... &lt;(<span class="nd">gor</span> right_stream)
+</pre></div>
+</div>
+</div>
+<div class="section" id="merging-streams">
+<span id="mergetables"></span><h2>Merging Streams<a class="headerlink" href="#merging-streams" title="Permalink to this headline">¶</a></h2>
+<p>As stated in the section on the use of <a class="reference internal" href="basicGORqueries.html#multiple-files"><span class="std std-ref">multiple files</span></a> with the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command, we are inherently merging data by specifying any number of files after the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command. For example, if we wanted to merge the variation data from two subjects, we might have a command like the following:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> SUBJECT_A.wgs.genotypes.gorz SUBJECT_B.wgs.genotypes.gorz
+</pre></div>
+</div>
+<p>However, it is not possible to “GOR” together two files that have a different number of columns from each other. In those cases, we may wish to merge the two independent sources as streams using the <a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a> command, which works a bit like a “union” clause in SQL.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wgsVars# | <span class="nb">MERGE</span> #VEP#
+</pre></div>
+</div>
+<p>Take note though, that when you are merging two streams like this, any position information that you define in the left source will not apply for the right source. Therefore, if you were to write the following query:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #wgsVars# | <span class="nb">MERGE</span> #VEP#
+</pre></div>
+</div>
+<p>you would get all of the data from <code class="docutils literal notranslate"><span class="pre">#VEP#</span></code> across the genome, and then only the data from <code class="docutils literal notranslate"><span class="pre">chr21</span></code> from <code class="docutils literal notranslate"><span class="pre">#wgsVars#</span></code>. To get around this, we could use a nested stream, as follows:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 &lt;(#wgsVars# | <span class="nb">MERGE</span> #VEP#)
+</pre></div>
+</div>
+</div>
+<div class="section" id="further-examples">
+<h2>Further Examples<a class="headerlink" href="#further-examples" title="Permalink to this headline">¶</a></h2>
+<p>The main advantage of using nested streams in your GOR queries is that the streams are fully seekable, meaning that you can specify commands for the right source in the cases of joins or merges that you would not be able to do without nesting the queries. In the following sections we will discuss some useful examples of this.</p>
+<div class="section" id="joining-to-a-gor-stream">
+<h3>Joining to a GOR stream<a class="headerlink" href="#joining-to-a-gor-stream" title="Permalink to this headline">¶</a></h3>
+<p>As with the <a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a> command, the right-source in a GOR join can be specified as a nested GOR stream, as shown in the example below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> left_source.gor | <span class="nb">JOIN</span> -<span class="no">snpsnp</span> &lt;(<span class="nd">gor</span> right_source.gor)
+</pre></div>
+</div>
+</div>
+<div class="section" id="nested-nor-queries">
+<span id="nested-nor"></span><h3>Nested NOR queries<a class="headerlink" href="#nested-nor-queries" title="Permalink to this headline">¶</a></h3>
+<p>Nested queries can also be used in both NOR and GOR queries. As the next example shows, we are able to bring the file “genes.gor” into a NOR context and merge it with the NOR stream from the right source, which is a tab-delimited file:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> &lt;(<span class="nd">gor</span> -<span class="no">p</span> genes.gor) | <span class="nb">MERGE</span> &lt;(<span class="nd">nor</span> file2.tsv)
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="joiningTables.html" class="btn btn-neutral float-right" title="Joining Tables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="groupingAndAggregation.html" class="btn btn-neutral float-left" title="Grouping and Aggregation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

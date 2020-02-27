@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GROUP &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>GROUP</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="group">
+<span id="id1"></span><h1>GROUP<a class="headerlink" href="#group" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#group"><span class="std std-ref">GROUP</span></a> command allows you to group the output of your query according to a number of different criteria. The <strong>GROUP</strong> command is very similar to the “group by” function in SQL.</p>
+<p>This command groups a set of rows into a set of summary row by values of columns. It returns one row for each group. We often use the GROUP command with aggregate functions such as <code class="docutils literal notranslate"><span class="pre">-count</span></code>, <code class="docutils literal notranslate"><span class="pre">-cdist</span></code>, <code class="docutils literal notranslate"><span class="pre">-min</span></code>, <code class="docutils literal notranslate"><span class="pre">-med</span></code>, <code class="docutils literal notranslate"><span class="pre">-max</span></code>, <code class="docutils literal notranslate"><span class="pre">-dis</span></code>, <code class="docutils literal notranslate"><span class="pre">-set</span></code>, <code class="docutils literal notranslate"><span class="pre">-lis</span></code>, <code class="docutils literal notranslate"><span class="pre">-avg</span></code>, <code class="docutils literal notranslate"><span class="pre">-std</span></code>, and <code class="docutils literal notranslate"><span class="pre">-sum</span></code>.</p>
+<p>The aggregate functions allow us to perform a calculation of a set of rows while grouping.</p>
+<p>Using <strong>GROUP</strong> in a nor query will give an error if <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter is used.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GROUP</span> binsize [ attributes ]
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | <span class="nb">GROUP</span> [ attributes ]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-count</span></code></p></td>
+<td><p>Return the count for each bin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-cdist</span></code></p></td>
+<td><p>Return the number of distinct rows for each bin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns (other than bin).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sc</span> <span class="pre">cols</span></code></p></td>
+<td><p>String columns (-ac has been deprecated).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ic</span> <span class="pre">cols</span></code></p></td>
+<td><p>Integer columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-fc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Floating valued columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-min</span></code></p></td>
+<td><p>Calculate the min for any type of column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-med</span></code></p></td>
+<td><p>Calculate the median for any type of column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-max</span></code></p></td>
+<td><p>Calculate the max for any type of column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-dis</span></code></p></td>
+<td><p>Calculate the number of distinct values for any type of column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-set</span></code></p></td>
+<td><p>Return a comma separated set with the distinct values in the column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-lis</span></code></p></td>
+<td><p>Return a comma separated list with the values in the column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-len</span> <span class="pre">number</span></code></p></td>
+<td><p>Specify the maximum column length of a set and a list.
+Defaults to 10000 chars.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-avg</span></code></p></td>
+<td><p>Calculate the avg of all numeric columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-std</span></code></p></td>
+<td><p>Calculate the std of all numeric columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sum</span></code></p></td>
+<td><p>Calculate the sum of all numeric columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-steps</span> <span class="pre">number</span></code></p></td>
+<td><p>The number of sliding steps per group window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">'sep'</span></code></p></td>
+<td><p>The separator for elements in lists and sets.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Attributes <code class="docutils literal notranslate"><span class="pre">-ic</span></code> and <code class="docutils literal notranslate"><span class="pre">-fc</span></code> explicitly define columns of either integer type or floating point type, while the <code class="docutils literal notranslate"><span class="pre">-sc</span></code>
+attribute defines it as a string type. Any column defined with the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option and is a part of the following aggregation
+options <code class="docutils literal notranslate"><span class="pre">-sc</span></code>, <code class="docutils literal notranslate"><span class="pre">-ic</span></code> or <code class="docutils literal notranslate"><span class="pre">-fc</span></code> will result in an error</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-sc</span></code></p></td>
+<td><p>Works with -max, -min and -med.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ic</span></code></p></td>
+<td><p>Works with -max, -min, -med, -avg, -std and -sum.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-fc</span></code></p></td>
+<td><p>Works with -max, -min, -med, -avg, -std and -sum.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Ensure that there are no spaces between the numbers. Use SELECT to pick a subset of columns from the output.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">=</span> <span class="pre">chrom</span></code> to aggregate for a whole chromosome and <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">=</span> <span class="pre">genome</span></code> to aggregate for the entire genome.</p>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>Group columns a and b on each chromosome and counting the number of groups.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | group chrom -<span class="no">gc</span> a,b -<span class="no">count</span>
+</pre></div>
+</div>
+<p>Group column a for the whole genome and calculate the sum and average for columns b and c (which are defined as floating point columns).</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | group genome -<span class="no">gc</span> a -fc b,c -ave -sum
+</pre></div>
+</div>
+<p>Group <code class="docutils literal notranslate"><span class="pre">#dnsnp#</span></code> on reference for the whole genome and return it as a set with -set attribute. This query should return a set
+of <code class="docutils literal notranslate"><span class="pre">A,C,G,T</span></code> (in undefined order)</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | where len(<span class="na">reference</span>) = 1 | group genome -sc <span class="na">reference</span> -set
+</pre></div>
+</div>
+<p>In some cases, we may wish to know which individual rows have been grouped together. In that case, the <code class="docutils literal notranslate"><span class="pre">-lis</span></code> argument comes in handy:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> source/var/wgs_varcalls.gord -s <span class="na">PN</span>
+    | group 1 -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span> -lis -sc <span class="na">PN</span>
+    | top 100
+</pre></div>
+</div>
+<p>The query above will output a list on each variant showing which PN carried that variant.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

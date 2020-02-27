@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Parallelization in GOR &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Commands" href="ref_commands.html" />
+    <link rel="prev" title="Materialized Views" href="materializedViews.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Parallelization in GOR</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-parallel-queries">Basic Parallel Queries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parallel-examples">PARALLEL Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#creating-query-with-custom-split-regions">Creating query with custom split regions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pgor-examples">PGOR Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#calculating-the-transition-transversion-ratio">Calculating the transition transversion ratio</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-hash-strings-in-where-statements">Using Hash Strings in WHERE statements</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#partgor-examples">PARTGOR Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bi-dimensional-parallelism">Bi-Dimensional Parallelism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calculating-case-control-statistics">Calculating Case-Control Statistics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-partgor-to-find-denovo-variants">Using PARTGOR to Find deNovo Variants</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Parallelization in GOR</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="parallelization-in-gor">
+<span id="parallelgor"></span><h1>Parallelization in GOR<a class="headerlink" href="#parallelization-in-gor" title="Permalink to this headline">¶</a></h1>
+<p>The ability to run queries in parallel is an important aspect of the GOR architecture, making it possible to divide the workload across many processors and decrease the execution time of the query.</p>
+<p>The GOR query language allows you to run queries in parallel using the <a class="reference internal" href="command/PGOR.html#pgor"><span class="std std-ref">PGOR</span></a> and <a class="reference internal" href="command/PARTGOR.html#partgor"><span class="std std-ref">PARTGOR</span></a> commands. <a class="reference internal" href="command/PGOR.html#pgor"><span class="std std-ref">PGOR</span></a> partitions the query execution along the genomic axis, whereas <a class="reference internal" href="command/PARTGOR.html#partgor"><span class="std std-ref">PARTGOR</span></a> allows for partition along the tag-partition axis of a GOR dictionary table, typically sample IDs. The maximum level of parallelism depends on the number of cores in the machines being used to run the query.</p>
+<div class="section" id="basic-parallel-queries">
+<h2>Basic Parallel Queries<a class="headerlink" href="#basic-parallel-queries" title="Permalink to this headline">¶</a></h2>
+<p>You will recall that we previously covered an introduction to parallel GOR queries in the chapter on <a class="reference internal" href="groupingAndAggregation.html#groupingaggregation"><span class="std std-ref">Grouping and Aggregation</span></a>, which we will review here. In the following query, we are fetching the number of mutations per individual chromosomes by accessing the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table, as shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
+</pre></div>
+</div>
+<p>As we mentioned before, a more efficient way to process this information is to write a parallel GOR query, or <a class="reference internal" href="command/PGOR.html#pgor"><span class="std std-ref">PGOR</span></a>, as follows:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">pgor</span> #dbsnp# | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parallel-examples">
+<span id="parallelexamples"></span><h2>PARALLEL Examples<a class="headerlink" href="#parallel-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="creating-query-with-custom-split-regions">
+<h3>Creating query with custom split regions<a class="headerlink" href="#creating-query-with-custom-split-regions" title="Permalink to this headline">¶</a></h3>
+<p>The example shown below can be used to split any gor query with custom split ranges.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #splits# = <span class="nd">gor</span> #genes# | top 10;
+parallel -parts [#splits#] &lt;(<span class="nd">gor</span> -<span class="no">p</span> #{col:chrom}:#{col:start}-#{col:stop} #dbsnp# | group chrom -<span class="no">count</span>)
+</pre></div>
+</div>
+<p>Using a split from the gene list, taking the 10 first genes in the list. Creating parallel execution where for each gene we count the number of snips using group -count.</p>
+<p>The following sections will show more examples of how to use PGOR and PARTGOR to improve the speed of your queries.</p>
+</div>
+</div>
+<div class="section" id="pgor-examples">
+<span id="pgorexamples"></span><h2>PGOR Examples<a class="headerlink" href="#pgor-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="calculating-the-transition-transversion-ratio">
+<h3>Calculating the transition transversion ratio<a class="headerlink" href="#calculating-the-transition-transversion-ratio" title="Permalink to this headline">¶</a></h3>
+<p>The example shown below can be used to calculate the transition-transversion ratio.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #temp# = <span class="nd">pgor</span> -split 300 #dbsnp# | where len(ref)=1 and len(<span class="na">alt</span>)=1
+| calc transition = if(ref+’&gt;’+<span class="na">alt</span> in (’A&gt;G’,’G&gt;A’,’C&gt;T’,’T&gt;C’),1,0)
+| calc transversion = 1 - transition
+| group chrom -<span class="no">gc</span> <span class="na">PID</span> -sum -<span class="no">ic</span> transition,transversion;
+
+<span class="nd">gor</span> [#temp#] | group genome -sum -<span class="no">ic</span> sum_* | calc TiTv_ratio <span class="k">float</span>(sum_sum_transition)/sum_sum_transversion
+</pre></div>
+</div>
+<p>Using a split of 300 causes approximately 300 rows with chromosomal segments to be generated, representing the count within each partition.  The final step sum up these counts over the genome and calculates the tt-ratio.  If no split would be provided, by default, the query would generate one partition per chromosome.</p>
+</div>
+<div class="section" id="using-hash-strings-in-where-statements">
+<h3>Using Hash Strings in WHERE statements<a class="headerlink" href="#using-hash-strings-in-where-statements" title="Permalink to this headline">¶</a></h3>
+<p>### This notation needs more of an introduction. Ask about this. ###</p>
+<p>In the above query, the partitions are 10Mb in size, overlapping by 2000 bases to ensure that all the sequence reads from the BAM file that provide coverage for the corresponding genome partition are read.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #temp# = <span class="nd">pgor</span> -split 10000000:2000 file.bam | pileup -span 2000 | where ##WHERE_SPLIT_WINDOW##;
+
+<span class="nd">gor</span> [#temp#] | write mypileup.gorz
+</pre></div>
+</div>
+<p>The PGOR logic recognizes the special string in the WHERE command and replaces it with the appropriate filtering condition to avoid overlap of data in the temporary files stored in #temp#.</p>
+</div>
+</div>
+<div class="section" id="partgor-examples">
+<span id="partgorexamples"></span><h2>PARTGOR Examples<a class="headerlink" href="#partgor-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bi-dimensional-parallelism">
+<h3>Bi-Dimensional Parallelism<a class="headerlink" href="#bi-dimensional-parallelism" title="Permalink to this headline">¶</a></h3>
+<p>The following example shows how a <a class="reference internal" href="command/PGOR.html#pgor"><span class="std std-ref">PGOR</span></a> command can be used inside the <a class="reference internal" href="command/PARTGOR.html#partgor"><span class="std std-ref">PARTGOR</span></a> command expression.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using PGOR in a nested query is allowed inside a PARTGOR expression.</p>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #temp# = partgor -dict #wgsvars# -parts 10 &lt;(<span class="nd">pgor</span> #wgsvars# -<span class="no">f</span> #{tags} | <span class="nb">GROUP</span> chrom -<span class="no">gc</span> <span class="na">PN</span> -<span class="no">count</span>);
+<span class="nd">gor</span> [#temp#] | <span class="nb">GROUP</span> chrom -<span class="no">avg</span> -<span class="no">ic</span> allcount -<span class="no">count</span> | <span class="nb">RENAME</span> avg_allcount variantsPerPN | <span class="nb">RENAME</span> <span class="na">allCount</span> PNcount
+</pre></div>
+</div>
+<p>The parallelism is therefore manifested in two dimensions; along the tag-partitions and along the genomic axis.</p>
+</div>
+<div class="section" id="calculating-case-control-statistics">
+<h3>Calculating Case-Control Statistics<a class="headerlink" href="#calculating-case-control-statistics" title="Permalink to this headline">¶</a></h3>
+<p>The query shown below calculates case-control statistics for PNs stored in the phenotype file pn2casectrl.tsv.  It does so using variants stored in a sparse manner in the table <code class="docutils literal notranslate"><span class="pre">#wesvars#</span></code> and coverage segments in <code class="docutils literal notranslate"><span class="pre">#goodcov8#</span></code>, representing good coverage with sequence read depth of 8 or more.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> ##allvariantsparts## = partgor #wesvars# -ff
+&lt;(<span class="nd">nor</span> mypns.tsv | select <span class="na">PN</span> | distinct)
+&lt;(<span class="nd">gor</span> #wesvars# -<span class="no">f</span> #{tags} | group 1 -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span> );
+
+<span class="nd">create</span> ##allvariants## = <span class="nd">pgor</span> [##allvariantsparts##] | distinct;
+
+<span class="nd">create</span> ##ccvarsparts## = partgor -dict #wesvars# -ff &lt;(<span class="nd">nor</span> pn2casectrl.tsv | <span class="nb">SELECT</span> <span class="na">PN</span> | DISTINCT)
+&lt;(<span class="nd">gor</span> [##allvariants##]
+| <span class="nb">CALC</span> pn &#39;#{tags}&#39; | <span class="nb">SPLIT</span> pn
+| <span class="nb">VARJOIN</span> -l -xl <span class="na">PN</span> -xr <span class="na">PN</span> -r -e 0 &lt;(<span class="nd">gor</span> #wesvars# -<span class="no">f</span> #{tags} | <span class="nb">SELECT</span> 1,2,<span class="na">reference</span>,<span class="na">call</span>,<span class="na">PN</span> )
+| <span class="nb">JOIN</span> -<span class="no">snpseg</span> -xl <span class="na">PN</span> -xr <span class="na">PN</span> -<span class="no">ic</span> -maxseg 10000 &lt;(<span class="nd">gor</span> #goodcov8# -<span class="no">f</span> #{tags} ) | <span class="nb">HIDE</span> PNx
+| <span class="nb">CALC</span> het if(CallCopies = &#39;1&#39;,1,0)
+| <span class="nb">CALC</span> hom if(CallCopies = &#39;2&#39;,1,0)
+| <span class="nb">CALC</span> alleles het+2*hom
+| <span class="nb">CALC</span> present het+hom
+| <span class="nb">CALC</span> unknown if(present = 0 and overlapCount = 0,1,0)
+| <span class="nb">CALC</span> absent if(present = 0 and unknown = 0,1,0)
+| <span class="nb">CALC</span> absent_hom if(hom = 0 and unknown = 0,1,0)
+| <span class="nb">CALC</span> absent_alleles if(unknown = 0,2-alleles,0)
+| <span class="nb">MULTIMAP</span> -c <span class="na">PN</span> -h pn2casectrlpheno.tsv
+| <span class="nb">GROUP</span> 1 -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span>,casectrlpheno -sum -<span class="no">ic</span> het-absent_alleles );
+
+<span class="nd">pgor</span> [##ccvarsparts##] | <span class="nb">GROUP</span> 1 -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span>,casectrlpheno -sum -<span class="no">ic</span> sum_* | <span class="nb">RENAME</span> sum_(.*) #{1}
+| <span class="nb">PIVOT</span> casectrlpheno -v CASE,CTRL -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span> -e 0
+</pre></div>
+</div>
+<p>First, the query finds all the exonic variants present in the samples listed in mypns.tsv.  This is done in two phases: first we use the GROUP command to find a distinct list of variants in each partition split generated by the PARTGOR command.</p>
+<p>Then we create the <code class="docutils literal notranslate"><span class="pre">##allvariants##</span></code> relation by collapsing the variants from each partition using the <strong>DISTINCT</strong> command (here we could also have used GROUP 1 -gc 3,4).</p>
+<p>Then we calculate a left-join from each possible variant and the sparse variants stored in <code class="docutils literal notranslate"><span class="pre">#wesvars#</span></code>.  For the left-join to generate one row per PN, we must expand each variant with each possible PN.  Within each parallel partition, this is done by calculating the PN column as a comma-separated list of all the tags and then using the <strong>SPLIT</strong> command to generate one row per PN.  Then we perform the left-varjoin, using additional equi-join on PN and similarly we use a left-join into the segments (which maximum length is 10k bases).</p>
+<p>Notice that we use the same filter option for both nested queries, accessing only data from the appropriate PNs in <code class="docutils literal notranslate"><span class="pre">#wesvars#</span></code> and <code class="docutils literal notranslate"><span class="pre">#goodcov8#</span></code>.  Also, notice that the <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command aggregates the data to variant levels within each partition, thus the temporary files generated by the <strong>CREATE</strong> statements will not be prohibitively large, i.e. (#variants)x(#phenotypes)x(#partgor partitions).</p>
+<p>Finally, we sum up the information from each <a class="reference internal" href="command/PARTGOR.html#partgor"><span class="std std-ref">PARTGOR</span></a> partition, using the fact that the sum aggregation is distributive in nature, and we pivot the results to show all the counts in a single row per variant.</p>
+</div>
+<div class="section" id="using-partgor-to-find-denovo-variants">
+<h3>Using PARTGOR to Find deNovo Variants<a class="headerlink" href="#using-partgor-to-find-denovo-variants" title="Permalink to this headline">¶</a></h3>
+<p>The above query shows the use of <a class="reference internal" href="command/PARTGOR.html#partgor"><span class="std std-ref">PARTGOR</span></a> to find deNovo variants in PNs for which the family relationships are defined in (PN,FN,MN) pedigree relation.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> ##PNs## = <span class="nd">nor</span> pedigree.tsv | <span class="nb">CALC</span> x <span class="na">PN</span>+&#39;,&#39;+FN+&#39;,&#39;+MN | <span class="nb">SELECT</span> x | <span class="nb">RENAME</span> x <span class="na">PN</span> | <span class="nb">SPLIT</span> <span class="na">PN</span> | <span class="nb">SELECT</span> <span class="na">PN</span>;
+
+<span class="nd">def</span> ##PNsAndParents## = <span class="nd">nor</span> pedigree.tsv | <span class="nb">WHERE</span> listhasany(&#39;#{tags}&#39;,<span class="na">PN</span>)
+| <span class="nb">CALC</span> x <span class="na">PN</span>+&#39;,&#39;+FN+&#39;,&#39;+MN | <span class="nb">SELECT</span> x | <span class="nb">RENAME</span> x <span class="na">PN</span> | <span class="nb">SPLIT</span> <span class="na">PN</span>;
+
+<span class="nd">create</span> ##ccvarsparts## = partgor -dict #wesvars# -ff &lt;(##PNs##) &lt;(<span class="nd">gor</span> #wesvars# -s <span class="na">PN</span> -ff &lt;(##PNsAndParents##)
+| <span class="nb">SELECT</span> 1-4 | DISTINCT
+| <span class="nb">VARJOIN</span> -l -r -xl pn -xr pn &lt;(<span class="nd">gor</span> #wesvars# -s <span class="na">PN</span> -ff &lt;(##PNsAndParents##) | <span class="nb">SELECT</span> 1-4,callcopies,<span class="na">PN</span> )
+| <span class="nb">JOIN</span> -<span class="no">snpseg</span> -xl <span class="na">PN</span> -xr <span class="na">PN</span> -<span class="no">ic</span> -maxseg 10000 &lt;(<span class="nd">gor</span> #goodcov8# -ff &lt;(##PNsAndParents##) )
+| <span class="nb">REPLACE</span> callcopies if (callcopies=&#39;&#39;,if (overlapCount &gt; 1,0,&#39;NA&#39;),callcopies)
+| <span class="nb">HIDE</span> PNx
+| <span class="nb">PEDPIVOT</span> <span class="na">PN</span> pedigree.tsv -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span> -e NA
+| <span class="nb">INSET</span> -c P_PN &lt;(<span class="nd">nor</span> pedigree.tsv | <span class="nb">WHERE</span> FN != &#39;&#39; and MN != &#39;&#39; |  select <span class="na">PN</span> )
+| <span class="nb">CALC</span> denovo if(P_callcopies in (&#39;1&#39;,&#39;2&#39;) and F_callcopies = &#39;0&#39; and M_callcopies = &#39;0&#39;,1,0)
+| <span class="nb">WHERE</span> denovo != 0 );
+
+<span class="nd">gor</span> [##ccvarsparts##]
+</pre></div>
+</div>
+<p>Here we use the file-filtering option with the GOR command, through the definition <code class="docutils literal notranslate"><span class="pre">##PNsAndParents##</span></code>  which uses the #{tag} variable to filter the pedigree relation such that we get not only the children in the given tag-partition but also the parents.  Thus, the same parent PNs may show up in multiple partition queries if they have children that don’t cluster together in partition (something which is not possible to guarantee for arbitrary family structure).</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ref_commands.html" class="btn btn-neutral float-right" title="Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="materializedViews.html" class="btn btn-neutral float-left" title="Materialized Views" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

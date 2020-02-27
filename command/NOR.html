@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>NOR &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>NOR</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="nor">
+<span id="id1"></span><h1>NOR<a class="headerlink" href="#nor" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#nor"><span class="std std-ref">NOR</span></a> command reads non-ordered relations from a single file or a nested source. File sources are assumed to be tab-separated (.tsv, .rep, or .map) and with # as the first symbol in the first line to indicate that it is a header. Comma-separated files can also be used if they are named .csv. Likewise, .gor and .gorz files can be read, but are treated as unordered relations.</p>
+<p>It is important to note that NOR queries on very large files can be memory intensive.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> file.tsv | ...
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Instructs the query to read the first line as a header.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-asdict</span></code></p></td>
+<td><p>Tells the query to return the metadata content of the <a class="reference internal" href="../basicGORqueries.html#dictionarytables"><span class="std std-ref">dictionary table</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<td><p>Ignore empty lines in the input stream.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">A[,B]*</span></code></p></td>
+<td><p>List of tags to filter files and file contents on. Used with .nord and .gord files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ff</span> <span class="pre">File</span></code></p></td>
+<td><p>Read tags from a tag file and filter files and file contents on. Also accepts a nested query. Used
+with .nord and .gord files.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-fs</span></code></p></td>
+<td><p>Silent filter, filter tags don’t need to be in the dictionary table.
+Only applicable with the -f or -ff options.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">[name]</span></code></p></td>
+<td><p>Write source name into output (alias if present in dictionary table, else filename).
+Column name will be <code class="docutils literal notranslate"><span class="pre">name</span></code> but <code class="docutils literal notranslate"><span class="pre">Source</span></code> if no name is specified.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+<td><p>Maximum depth when using nor to list the content of a folder. Defaults to infinite</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<td><p>Show modification date when using nor to list the content of a folder.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>In the following example, we are using NOR to open the Variant Effect Predictor (VEP) impact map table. We are setting the -h flag on the NOR query in order to read the first line as a header and the -i option to ignore all empty lines.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> -h -i ref/VEP_impact.map
+</pre></div>
+</div>
+<p>We often want to open up the contents of a GOR Dictionary table, such as the WES varcalls dictionary, rather than opening the files it references. To do this we use the <code class="docutils literal notranslate"><span class="pre">-asdict</span></code> option:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> -asdict source/var/wes_varcalls.gord
+</pre></div>
+</div>
+<p>Using custom NOR Dictionary table, with filter and custom source column name:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span>  custom.nord -<span class="no">f</span> <span class="na">PN</span>-001,<span class="na">PN</span>-005,<span class="na">PN</span>-010 -s <span class="na">PN</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reserved-metacharacters">
+<h2>Reserved Metacharacters<a class="headerlink" href="#reserved-metacharacters" title="Permalink to this headline">¶</a></h2>
+<p>Note that some characters are reserved in the nor file and will be automatically replaced if used in the data rows:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Reserved Metacharacters</p></td>
+</tr>
+<tr class="row-even"><td><p>./<a href="#id2"><span class="problematic" id="id3">*</span></a>+-‘$;,</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

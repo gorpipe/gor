@@ -1,0 +1,310 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GRANNO &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>GRANNO</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="granno">
+<span id="id1"></span><h1>GRANNO<a class="headerlink" href="#granno" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#granno"><span class="std std-ref">GRANNO</span></a> command is a “single-pass” aggregation and annotation. GRANNO adds annotation columns to the output stream for all the rows that fall into the given binsize in addition to those that would normally be added by the GROUP command.</p>
+<p>When using <strong>GRANNO</strong> in a gor query, the command takes a binsize parameter, which divides the entire range of values into a series of intervals. The command then annotates the values falling into each interval.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using GRANNO in a nor query omits the <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GRANNO</span> binsize [ attributes ]
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | <span class="nb">GRANNO</span> [ attributes ]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-count</span></code></p></td>
+<td><p>Return the count for each bin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-cdist</span></code></p></td>
+<td><p>Return the number of distinct rows for each bin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns (other than bin).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sc</span> <span class="pre">cols</span></code></p></td>
+<td><p>String columns (-ac has been deprecated).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ic</span> <span class="pre">cols</span></code></p></td>
+<td><p>Integer columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-fc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Floating valued columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-min</span></code></p></td>
+<td><p>Calculate the min for any type of column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-med</span></code></p></td>
+<td><p>Calculate the median for any type of column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-max</span></code></p></td>
+<td><p>Calculate the max for any type of column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-dis</span></code></p></td>
+<td><p>Calculate the number of distinct values for any type of column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-set</span></code></p></td>
+<td><p>Return a comma separated set with the distinct values in the column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-lis</span></code></p></td>
+<td><p>Return a comma separated list with the values in the column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-len</span> <span class="pre">number</span></code></p></td>
+<td><p>Specify the maximum column length of a set.  Defaults to 200 chars.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-avg</span></code></p></td>
+<td><p>Calculate the avg of all numeric columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-std</span></code></p></td>
+<td><p>Calculate the std of all numeric columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sum</span></code></p></td>
+<td><p>Calculate the sum of all numeric columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-steps</span> <span class="pre">number</span></code></p></td>
+<td><p>The number of sliding steps per group window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">'sep'</span></code></p></td>
+<td><p>The separator for elements in lists and sets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-range</span></code></p></td>
+<td><p>This interpretes the binsize as the maximum range or span for which the group (as specified
+with the -gc option) extends.  Groups that extend beyond the specified range will not be
+properly aggregated and annotations of row belonging to those group may be incorrect.
+A special binsize value, “gene”, can be used to denote 3Mbp in conjunction with the range option.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #genes#
+| <span class="nb">GRANNO</span> chrom -<span class="no">gc</span> genestart,genestop,genename -<span class="no">count</span>
+</pre></div>
+</div>
+<p>is equivalent to the more verbose</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | join -<span class="no">snpseg</span> &lt;(<span class="nd">gor</span> #dbSNP# | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #genes#
+| <span class="nb">GROUP</span> chrom -<span class="no">gc</span> genestart,genestop,genename
+| <span class="nb">SELECT</span> chrom,genestart,genestop,<span class="na">allCount</span> | <span class="nb">SORT</span> chrom)
+</pre></div>
+</div>
+<p>The range option can be used like this:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #genes# | <span class="nb">GRANNO</span> gene -range -<span class="no">gc</span> <span class="na">gene_symbol</span> -<span class="no">count</span>
+</pre></div>
+</div>
+<p>will add a column (allCount) to each SNP row with, representing the number of rows (SNPs)
+that belong to each gene.</p>
+<p>See also the <a class="reference internal" href="RANK.html#rank"><span class="std std-ref">RANK</span></a> command which is of similar nature as the GRANNO (group anno) command</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

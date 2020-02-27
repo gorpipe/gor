@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GTGEN &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>GTGEN</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="gtgen">
+<span id="id1"></span><h1>GTGEN<a class="headerlink" href="#gtgen" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>GTGEN</strong> command is used to generate genotypes in a horizontal bucket format, e.g. with one or more rows per variant
+(chrom,pos,ref,alt) and <code class="docutils literal notranslate"><span class="pre">bucket</span></code> and <code class="docutils literal notranslate"><span class="pre">values</span></code> column to store the genotypes as characters (0,1,2,3).  The input is a
+input stream of row-based variants with a genotype column (<code class="docutils literal notranslate"><span class="pre">GT</span></code>), a tagbucketrelation and coverage relation.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">GT</span></code> column (0,1,2,3) is mapped to a bucket and the horizontal character seat in the <code class="docutils literal notranslate"><span class="pre">Values</span></code>.
+GT in rows with empty tag value (PN) are not put into the value column, but can be used to enforce that
+a variant row is present for each bucket (see the -u option in <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> and <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a>).</p>
+<p>A presence of a coverage segment (per tag <code class="docutils literal notranslate"><span class="pre">PN</span></code>) indicates sufficient coverage, i.e. missing variant data (GT not 0,1, or 3)
+is interpreted as homozygous reference.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTGEN tagbucketrelation coveragefile [ attributes ]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns other than (chrom,pos)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tag</span> <span class="pre">tagcolname</span></code></p></td>
+<td><p>Override the default PN colunm name used to represent the tag value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-maxseg</span> <span class="pre">bpsize</span></code></p></td>
+<td><p>The maximum span size of the coverage segments.  Defaults to 10000 (10kb).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example of creating horizontal variations stored in buckets */
+
+<span class="nd">create</span> #PNbuckets# = <span class="nd">nor</span> -asdict #wesVars# | <span class="nb">SELECT</span> #2 | <span class="nb">RENAME</span> #1 <span class="na">PN</span> | <span class="nb">ROWNUM</span>
+| <span class="nb">CALC</span> bucket &#39;bucket&#39;+<span class="k">str</span>(div((rownum-1),500)+1) | <span class="nb">SELECT</span> <span class="na">PN</span>,bucket | <span class="nb">SORT</span> -c <span class="na">PN</span>;
+
+<span class="nd">create</span> #allvars# = <span class="nd">gor</span> #wesvars# -ff [#PNbuckets#] -s <span class="na">PN</span> | <span class="nb">SELECT</span> 1-8,<span class="na">PN</span> | DISTINCT;
+
+<span class="nd">create</span> #horvars# = <span class="nd">gor</span> [#allvars#]
+| <span class="nb">CALC</span> GT <span class="k">IF</span>( Depth = 9999 OR GL_Call &gt;= 5 <span class="ni">AND</span> Depth &gt;= 8 <span class="ni">AND</span>
+  (CallCopies = 2 <span class="ni">AND</span> CallRatio &gt;= 0.66 OR CallCopies = 1 <span class="ni">AND</span> CallRatio &gt;= 0.2
+  <span class="ni">AND</span> CallRatio &lt;= 1.0-0.2), CallCopies, 3)
+| gtgen -<span class="no">gc</span> #3,#4 [#PNbuckets#] &lt;(<span class="nd">gor</span> source/cov/goodcov_8.wgs.gord -s <span class="na">PN</span> -ff [#PNbuckets#]);
+
+/* Selecting a random subset of PNs*/
+<span class="nd">gor</span> [#horvars#] | <span class="nb">CSVSEL</span> [#PNbuckets#] &lt;(<span class="nd">nor</span> [#PNbuckets#] | <span class="nb">SELECT</span> <span class="na">PN</span> | <span class="nb">WHERE</span> random() &lt; 0.05) -<span class="no">gc</span> #3,#4 -u 3
+</pre></div>
+</div>
+<p>The above query example generates a tag-bucket relation and a GOR relation with all variants.
+The <a class="reference internal" href="#gtgen"><span class="std std-ref">GTGEN</span></a> command generates horizontal genotypes from the sparse row-based genotypes, based on
+the PN-bucket structure, the quality of the variants and the presence of coverage information.  The
+output has a <code class="docutils literal notranslate"><span class="pre">bucket</span></code> column and <code class="docutils literal notranslate"><span class="pre">values</span></code> column storing the genotypes of the PN as a single character (0,1,2, or 3)
+according to the position within the bucket.</p>
+<p>For comparison, the #horvar# query can also be generated in the following manner using left-join logic, although
+it is much less efficient.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #horvars# = <span class="nd">gor</span> [#allvars#] | <span class="nb">SELECT</span> 1-4 | <span class="nb">MULTIMAP</span> -cartesian -h [#PNbuckets#]
+| <span class="nb">VARJOIN</span> -r -l -e 0 -xl pn -xr pn &lt;(<span class="nd">gor</span> #wesVars# -ff [#PNbuckets#]
+| <span class="nb">CALC</span> qual <span class="k">IF</span>( Depth = 9999 OR GL_Call &gt;= 5 <span class="ni">AND</span> Depth &gt;= 8 <span class="ni">AND</span>
+  (CallCopies = 2 <span class="ni">AND</span> CallRatio &gt;= 0.66 OR CallCopies = 1 <span class="ni">AND</span> CallRatio &gt;= 0.2
+  <span class="ni">AND</span> CallRatio &lt;= 1.0-0.2),1,-1)
+| <span class="nb">SELECT</span> 1-4,<span class="na">PN</span>,callcopies,qual )
+| <span class="nb">JOIN</span> -<span class="no">snpseg</span> -l -r -maxseg 10000 -e 0 -xl pn -xr pn
+  &lt;(<span class="nd">gor</span> source/cov/goodcov_8.wgs.gord -s <span class="na">PN</span> -ff [#PNbuckets#]  | <span class="nb">CALC</span> goodcov 1)
+| <span class="nb">REPLACE</span> callcopies <span class="k">IF</span>(qual=-1,&#39;NA&#39;,<span class="k">IF</span>(callcopies=&#39;0&#39; <span class="ni">AND</span> goodcov=0,&#39;NA&#39;,callcopies))
+| <span class="nb">SORT</span> 1 -c #3,#4,<span class="na">PN</span> | <span class="nb">GROUP</span> 1 -<span class="no">gc</span> #3-#4,bucket -sc callcopies -lis -len 100000
+| <span class="nb">RENAME</span> lis_CallCopies values | <span class="nb">SELECT</span> 1-4,values,bucket;
+</pre></div>
+</div>
+<p>Then horizontal variants are then created by expanding each variants with PN and bucket and followed with a left-join into
+the sparse variant table <code class="docutils literal notranslate"><span class="pre">#wesVars#</span></code> and the coverage table. The variant stream is then sorted into a PN order, consistent with the tag-bucket relation, and then collapsed into a comma-separated list per variant. The final query reads a random subset of PNs from the <code class="docutils literal notranslate"><span class="pre">#horvars#</span></code> relation.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* Selecting 10 PNs from the first bucket and return as rows */
+
+<span class="nd">gor</span> [#horvars#] | <span class="nb">CSVSEL</span> -tag <span class="na">PN</span> [#PNbuckets#]
+  &lt;(<span class="nd">nor</span> [#PNbuckets#] | <span class="nb">WHERE</span> bucket = &#39;bucket1&#39; | <span class="nb">SELECT</span> #<span class="na">PN</span> | top 10) -<span class="no">gc</span> #3,#4 -u 4
+
+/* Selecting 10 PNs from the first bucket, a slightly faster version */
+
+<span class="nd">gor</span> [#horvars#] | <span class="nb">WHERE</span> bucket = &#39;bucket1&#39; | <span class="nb">CSVSEL</span> -tag <span class="na">PN</span> [#PNbuckets#]
+  &lt;(<span class="nd">nor</span> [#PNbuckets#] | <span class="nb">WHERE</span> bucket = &#39;bucket1&#39; | <span class="nb">SELECT</span> #<span class="na">PN</span> | top 10) -<span class="no">gc</span> #3,#4 -u 4
+</pre></div>
+</div>
+<p>The last example show how data is read from a table with horizontal buckets and filtered, partially in the reading of the bucket partitions and also in the <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> step.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> source/hvar/transwgs.gord -nf -ff myPNs.tsv | <span class="nb">CSVSEL</span> source/hvar/PNbuckets.tsv myPNs.tsv -<span class="no">gc</span> #3,#4 -u 4
+</pre></div>
+</div>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

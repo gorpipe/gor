@@ -1,0 +1,500 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Variation Data &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Materialized Views" href="materializedViews.html" />
+    <link rel="prev" title="Sequence Reads" href="sequenceReads.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Variation Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#joining-variation-data">Joining Variation Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#different-types-of-varjoin">Different Types of VARJOIN</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#merging-variants">Merging Variants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-simple-variation-caller">Creating a Simple Variation Caller</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normalising-variation-data">Normalising Variation Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Variation Data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="variation-data">
+<h1>Variation Data<a class="headerlink" href="#variation-data" title="Permalink to this headline">¶</a></h1>
+<p>Genetic variation is the result of individuals having a unique blend of variations in their genomes. The most common of these is a Single Nucleotide Polymorphism, or SNP, which is a change in a single nucleotide in the sequence in comparison with a reference genome. Other types of variation may be in the form of insertions of any number of bases or deletions of a string of bases, which are referred to collectively as Indels.</p>
+<p>The variation data for an individual can be stored in a number of ways. Variant Call Format, or VCF, files can be created that include only Indel variant or only SNP variants. The sample data that you will be working with in the Sequence Miner contains both Whole Genome Sequence and Whole Exon Sequence data, the latter of which only includes variation data at those areas of the genome that take place on an exon (in other words, excluding non-gene coding areas of the genome).</p>
+<p>There is a certain amount of ambiguity involved in the representation of equivalent variations in genomic data. The variation columns might not have the same representation for the same variants or indels might have a slightly different notation in a call for individual A than for individual B. For example, a variant may be represented as (chr1, 9, ‘GA’, ‘GC’) in one patient and (chr1, 10, ‘A’, ‘C’) in another. Likewise, the annotated variants that we keep in the VEP table may not be notated in the same manner as in the file for the individual.</p>
+<p>The following chapters describe commands in the GOR Query Language that deal specifically with this representation issue and other issues that arise when working with variation data.</p>
+<div class="section" id="joining-variation-data">
+<span id="joiningvariationdata"></span><h2>Joining Variation Data<a class="headerlink" href="#joining-variation-data" title="Permalink to this headline">¶</a></h2>
+<p>The GOR query language has a special <strong>VARJOIN</strong> command to join relations with variation data or “<a class="reference internal" href="glossary.html#term-variants"><span class="xref std std-term">variants</span></a>” (for example, VCF-like formats with columns for chromosome, position, reference, and call) and resolve this ambiguity on the fly.</p>
+<p>To understand this command better, we will take the example of two separate tables, the <code class="docutils literal notranslate"><span class="pre">#wgsvars#</span></code> table again which contains the variation data for all the subjects in the example study and the Variation Effect Predictor table, which has the alias <code class="docutils literal notranslate"><span class="pre">#VEP#</span></code> and contains annotations for variants.</p>
+<p>First of all, let’s take a look at the variation data for a single individual on chromosome 21. In this example we are only interested in the first four columns of the table, so we can select only those columns. Also, we can use the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option to filter the output of the query on the <code class="docutils literal notranslate"><span class="pre">PN</span></code> column. This would give us about 80.658 rows.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #wgsVars# -<span class="no">f</span> C416TO_INDEX | <span class="nb">SELECT</span> 1-4
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">#wgsvars# for a single individual (C416TO_INDEX)</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 43%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>CHROM</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>Reference</p></th>
+<th class="head"><p>Call</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411318</p></td>
+<td><p>C</p></td>
+<td><p>T</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9411410</p></td>
+<td><p>C</p></td>
+<td><p>T</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411500</p></td>
+<td><p>G</p></td>
+<td><p>T</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9411602</p></td>
+<td><p>T</p></td>
+<td><p>C</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9411609</p></td>
+<td><p>G</p></td>
+<td><p>T</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>For our other data set, let’s take only the entries from the <code class="docutils literal notranslate"><span class="pre">#VEP#</span></code> table that have a Max_Impact of ‘HIGH’ as shown in the partial table below, which would give us a stream of about 5.412 rows.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #VEP# | <span class="nb">WHERE</span> <span class="na">Max_Impact</span> = &#39;HIGH&#39; | <span class="nb">SELECT</span> 1-7
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">#wgsvars# for a single individual (C416TO_INDEX)</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 36%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>Pos</p></th>
+<th class="head"><p>Reference</p></th>
+<th class="head"><p>Call</p></th>
+<th class="head"><p>Max_Impact</p></th>
+<th class="head"><p>Biotype</p></th>
+<th class="head"><p>Gene_Symbol</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>9909279</p></td>
+<td><p>T</p></td>
+<td><p>A</p></td>
+<td><p>HIGH</p></td>
+<td><p>processed_transcript_KNOWN,transcribed_unprocessed_pseudogene_KNOWN</p></td>
+<td><p>TEKT4P2</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>9911927</p></td>
+<td><p>C</p></td>
+<td><p>A</p></td>
+<td><p>HIGH</p></td>
+<td><p>transcribed_unprocessed_pseudogene_KNOWN</p></td>
+<td><p>TEKT4P2</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>10862623</p></td>
+<td><p>T</p></td>
+<td><p>C</p></td>
+<td><p>HIGH</p></td>
+<td><p>IG_V_gene_KNOWN</p></td>
+<td><p>IGHV1OR21-1</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>10862624</p></td>
+<td><p>G</p></td>
+<td><p>T</p></td>
+<td><p>HIGH</p></td>
+<td><p>IG_V_gene_KNOWN</p></td>
+<td><p>IGHV1OR21-1</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>10862629</p></td>
+<td><p>G</p></td>
+<td><p>A</p></td>
+<td><p>HIGH</p></td>
+<td><p>IG_V_gene_KNOWN</p></td>
+<td><p>IGHV1OR21-1</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+</tbody>
+</table>
+<p>If we were to perform a basic join of these two tables with the standard -snpsnp join, we would get 37 rows. However, this join is only comparing the position columns in the two tables. It is not taking into account the variation data in these two columns. A quick scan of the output stream shows that there are many joined rows that are not actually the same variants.</p>
+<p>To take the variants into account, we use the <strong>VARJOIN</strong> command. We don’t need to specify the type of join in this case.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #wgsVars# -<span class="no">f</span> C416TO_INDEX | <span class="nb">SELECT</span> 1-4
+| <span class="nb">VARJOIN</span> #VEP# | <span class="nb">WHERE</span> (<span class="na">Max_Impact</span> = &#39;HIGH&#39;) <span class="ni">AND</span> <span class="na">Reference</span> != Referencex | <span class="nb">SELECT</span> 1-10
+</pre></div>
+</div>
+<table class="colwidths-given docutils align-default" id="id3">
+<caption><span class="caption-text">#wgsvars# for a single individual (C416TO_INDEX)</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 11%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 28%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>Pos</p></th>
+<th class="head"><p>Reference</p></th>
+<th class="head"><p>Call</p></th>
+<th class="head"><p>Posx</p></th>
+<th class="head"><p>Referencex</p></th>
+<th class="head"><p>Callx</p></th>
+<th class="head"><p>Max_Impact</p></th>
+<th class="head"><p>Biotype</p></th>
+<th class="head"><p>Gene_Symbol</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>28215836</p></td>
+<td><p>GC</p></td>
+<td><p>G</p></td>
+<td><p>28215837</p></td>
+<td><p>CC</p></td>
+<td><p>C</p></td>
+<td><p>HIGH</p></td>
+<td><p>protein_coding_PUTATIVE</p></td>
+<td><p>ADAMTS1</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>34948684</p></td>
+<td><p>G</p></td>
+<td><p>GA</p></td>
+<td><p>34948685</p></td>
+<td><p>A</p></td>
+<td><p>AA</p></td>
+<td><p>HIGH</p></td>
+<td><p>protein_coding_KNOWN,protein_coding_PUTATIVE</p></td>
+<td><p>SON</p></td>
+</tr>
+<tr class="row-even"><td><p>chr21</p></td>
+<td><p>38092247</p></td>
+<td><p>GA</p></td>
+<td><p>G</p></td>
+<td><p>38092257</p></td>
+<td><p>AA</p></td>
+<td><p>A</p></td>
+<td><p>HIGH</p></td>
+<td><p>protein_coding_PUTATIVE</p></td>
+<td><p>SIM2</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr21</p></td>
+<td><p>47545369</p></td>
+<td><p>A</p></td>
+<td><p>AC</p></td>
+<td><p>47545376</p></td>
+<td><p>C</p></td>
+<td><p>CC</p></td>
+<td><p>HIGH</p></td>
+<td><p>protein_coding_NOVEL</p></td>
+<td><p>COL6A2</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="different-types-of-varjoin">
+<span id="varjointypes"></span><h3>Different Types of VARJOIN<a class="headerlink" href="#different-types-of-varjoin" title="Permalink to this headline">¶</a></h3>
+<p>As with basic <strong>JOIN</strong> commands, the <strong>VARJOIN</strong> command has flags for <code class="docutils literal notranslate"><span class="pre">-l</span></code>, <code class="docutils literal notranslate"><span class="pre">-i</span></code>, and <code class="docutils literal notranslate"><span class="pre">-n</span></code>, which allow you to perform left, intersect, and negative joins respectively.</p>
+<p>A full description of VARJOIN can be found on the <a class="reference internal" href="command/VARJOIN.html#varjoin"><span class="std std-ref">VARJOIN reference page</span></a>.</p>
+</div>
+</div>
+<div class="section" id="merging-variants">
+<span id="mergingvariants"></span><h2>Merging Variants<a class="headerlink" href="#merging-variants" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> command ensures that overlapping variants are denoted in an equivalent manner.</p>
+<p>If a stream with two variants such as and (chr1,9,’GA’,’GC’,PN2) and (chr1,10,’A’,’C’,PN1) is analyzed for the frequency of variants with “gor … | group 1 -gc ref,alt -count” the result would be incorrect, i.e. two rows with (chr1,9,’GA’,’GC’,1) and (chr1,10,’A’,’C’,1) since the group command can make no assumptions about the variant data.</p>
+<p>The proper way to do the above analysis is</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARMERGE</span> ref <span class="na">alt</span> -nonorm | <span class="nb">GROUP</span> 1 -<span class="no">gc</span> ref,<span class="na">alt</span> -<span class="no">count</span>&quot;,
+</pre></div>
+</div>
+<p>resulting in the output (chr1,9,’GA’,’GC’,2).  Without the <code class="docutils literal notranslate"><span class="pre">-nonorm</span></code> option the output is (chr1,10,’A’,’C’,2)</p>
+<p>Note that if the variants are represented as segments, the <code class="docutils literal notranslate"><span class="pre">-seg</span></code> option must be specified such that <a class="reference internal" href="command/VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> modifies both the start and the end coordinate, in case the reference sequence representation of a row is changed.</p>
+</div>
+<div class="section" id="creating-a-simple-variation-caller">
+<span id="simplevariationcaller"></span><h2>Creating a Simple Variation Caller<a class="headerlink" href="#creating-a-simple-variation-caller" title="Permalink to this headline">¶</a></h2>
+<p>In the following example, we are using several of the sequence read commands from <a class="reference internal" href="sequenceReads.html#sequencereads"><span class="std std-ref">the previous chapter</span></a> along with <a class="reference internal" href="command/VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> to create a simple variation caller.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr2:10000- sampleA.bam | <span class="nb">TOP</span> 1000000 | <span class="nb">WHERE</span> MapQ &gt;= 15
+| <span class="nb">BAMFLAG</span> | <span class="nb">VARIANTS</span> -<span class="no">gc</span> qStrand | <span class="nb">VARMERGE</span> Ref Alt
+| <span class="nb">GROUP</span> 1 -<span class="no">gc</span> ref,<span class="na">alt</span>,qStrand -<span class="no">count</span>
+| <span class="nb">PIVOT</span> qStrand -v ’0’,’1’ -<span class="no">gc</span> Ref,Alt -e 0
+| <span class="nb">RENAME</span> 1_allCount F_allCount
+| <span class="nb">RENAME</span> 0_allCount R_allCount
+| <span class="nb">WHERE</span> F_allcount &gt; 0 and R_allCount &gt; 0
+| <span class="nb">CALC</span> varReadCount F_allcount + R_allcount
+| <span class="nb">JOIN</span> -<span class="no">snpsnp</span> -r -maxseg 250
+   &lt;(<span class="nd">gor</span> sampleA.bam | <span class="nb">WHERE</span> MapQ &gt;= 15 | <span class="nb">PILEUP</span> -depth)
+| <span class="nb">SELECT</span> #1,#2,Ref,Alt,varReadCount,Depth
+</pre></div>
+</div>
+<p>The above query calls variants from one milion sequence reads on chromosome 2 where the read is supported by both forward and reverse aligned sequence reads with a mapping quality (<code class="docutils literal notranslate"><span class="pre">MapQ</span></code>) larger than 15 on a <a class="reference internal" href="glossary.html#term-phred-scale"><span class="xref std std-term">Phred scale</span></a>. Next, the <a class="reference internal" href="command/BAMFLAG.html#bamflag"><span class="std std-ref">BAMFLAG</span></a> command expands the Flag “bit-mask BAM column” into regular Boolean columns. For each sequence read, the <a class="reference internal" href="command/VARIANTS.html#variants"><span class="std std-ref">VARIANTS</span></a> command then outputs every delta from the reference genome in a VCF-like Ref,Alt form. This step with the <a class="reference internal" href="command/VARIANTS.html#variants"><span class="std std-ref">VARIANTS</span></a> command also returns the variants from overlapping read in genomic order due to its use of a sliding window sort.</p>
+<p>Next, we use the <a class="reference internal" href="command/VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> command to right-normalise the variations in different rows into a coherent form. This is done because most aligners do not guarantee consistent representations of InDels for sequence reads in repeat regions. This may involve reordering the rows to ensure genomic order, since there can be changes to the Pos, Ref and Alt columns in this normalising step. A <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command is then used to count how many copies we have of each variant per strand type.</p>
+<p>In the <a class="reference internal" href="command/PIVOT.html#pivot"><span class="std std-ref">PIVOT</span></a> step, we take the grouped data and pivot per genomic base position, and also per group formed by the values of the <code class="docutils literal notranslate"><span class="pre">Ref</span></code> and <code class="docutils literal notranslate"><span class="pre">Alt</span></code> columns, for each of the two possible <code class="docutils literal notranslate"><span class="pre">qStrand</span></code> values, i.e. 0 and 1. We then rename the columns from 1 and 0 to F and R to have the column names more meaningful and filter out any variants that do not have support from both the forward and reverse alignment.</p>
+<p>Finally, we <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> to the the BAM file in a nested query. This nested query is filtered once again on the mapping quality and a <a class="reference internal" href="command/PILEUP.html#pileup"><span class="std std-ref">PILEUP</span></a> is used to calculate the depth of the base read at each position. Note that the <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> here has a maximum segment size set to 250 base-pairs, since the features are generated from sequence read segments, which are up to 250bp long.</p>
+</div>
+<div class="section" id="normalising-variation-data">
+<span id="normalisingvariationdata"></span><h2>Normalising Variation Data<a class="headerlink" href="#normalising-variation-data" title="Permalink to this headline">¶</a></h2>
+<p>The VARJOIN query shown above that joined the patient sample data to the <code class="docutils literal notranslate"><span class="pre">#VEP#</span></code> table illustrated how a single variation can be represented in different ways. In the case of the first entry in the joined table from chromosome 21 above, the resulting variation is the same in the left and the right source (a deletion of a single cytosine), but in the case of the left source, the variation is “normalised” to the left, whereas the right source is “right-normalised”.</p>
+<p>The <strong>VARNORM</strong> command can be used to normalise sample data to the left or right using the <code class="docutils literal notranslate"><span class="pre">-left</span></code> and <code class="docutils literal notranslate"><span class="pre">-right</span></code> options for that command respectively.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="materializedViews.html" class="btn btn-neutral float-right" title="Materialized Views" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="sequenceReads.html" class="btn btn-neutral float-left" title="Sequence Reads" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

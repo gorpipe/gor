@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GOR and NOR &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Filtering Streams" href="filteringStreams.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">GOR and NOR</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#genomic-order">Genomic Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-are-streams">What are streams?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#source-commands-and-pipe-steps">Source Commands and Pipe Steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-data-sources">Other Data Sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selecting-by-position">Selecting By Position</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-multiple-files">Working with Multiple Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dictionary-tables">Dictionary Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>GOR and NOR</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gor-and-nor">
+<h1>GOR and NOR<a class="headerlink" href="#gor-and-nor" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command is the primary <a class="reference internal" href="glossary.html#term-source-commands"><span class="xref std std-term">source command</span></a> in the GOR query language (along with the <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> command).</p>
+<div class="section" id="genomic-order">
+<span id="genomicorder"></span><h2>Genomic Order<a class="headerlink" href="#genomic-order" title="Permalink to this headline">¶</a></h2>
+<p>There are two main types of relations that can be used in the GOR Query Language: <a class="reference internal" href="glossary.html#term-genomic-ordered-data"><span class="xref std std-term">genomic-ordered</span></a> and <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">non-ordered</span></a>. Genomic-ordered relations have the chromosome and position in the first two columns.  They should be sorted in order of the chromosome (1 through to 22, followed by X and Y - and in some cases “M”, for mitochrondrial DNA) and then, within each chromosome, numerically on the position.</p>
+<img alt="_images/genomic_order.png" src="_images/genomic_order.png" />
+<p>If this condition is not met in a GOR file, it can lead to incorrect seeking when a genomic range is fetched.  Compressed GOR files generated with the <a class="reference internal" href="command/WRITE.html#write"><span class="std std-ref">WRITE</span></a> command are guaranteed to be correctly ordered. Plain TSV-like GOR files created with other software tools may not.  To verify the order use <a class="reference internal" href="command/VERIFYORDER.html#verifyorder"><span class="std std-ref">VERIFYORDER</span></a> and to fix the order use <a class="reference internal" href="command/SORT.html#sort"><span class="std std-ref">SORT</span></a> genome.</p>
+<p>Non-ordered relations can be used with <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a>, but whenever possible it is recommended to use <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command since it allows for more efficient execution and many commands are only available in a GOR context.</p>
+</div>
+<div class="section" id="what-are-streams">
+<span id="streams"></span><h2>What are streams?<a class="headerlink" href="#what-are-streams" title="Permalink to this headline">¶</a></h2>
+<p>Both GOR and NOR commands create a <a class="reference internal" href="glossary.html#term-stream"><span class="xref std std-term">stream</span></a> of rows. However, the <a class="reference internal" href="glossary.html#term-stream"><span class="xref std std-term">stream</span></a> from the GOR command is genomic ordered while there is no guarantee about ordering from the NOR command. When the stream can be assumed to ordered, the system can use that information to choose a very efficient implementation to execute various types of commands such as joins, aggregation, pivoting, etc.</p>
+<p>A full explanation of the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command can be found <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">here</span></a>. The <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> command is described <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">here</span></a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can run a query in the Sequence Miner by using the keyboard shortcut: <code class="docutils literal notranslate"><span class="pre">⌘+Enter</span></code> on a Mac or <code class="docutils literal notranslate"><span class="pre">CTRL+Enter</span></code> on a PC.</p>
+</div>
+</div>
+<div class="section" id="source-commands-and-pipe-steps">
+<h2>Source Commands and Pipe Steps<a class="headerlink" href="#source-commands-and-pipe-steps" title="Permalink to this headline">¶</a></h2>
+<p>There are two different types of commands that can be used in a GOR query:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><a class="reference internal" href="glossary.html#term-source-commands"><span class="xref std std-term">Source commands</span></a> start a GOR query and generate data that will be worked on in the query.</p></li>
+<li><p><a class="reference internal" href="glossary.html#term-pipe-steps"><span class="xref std std-term">Pipe steps</span></a> manipulate the data that is streamed from the source command or previous pipe step.</p></li>
+</ol>
+</div></blockquote>
+<p>The first step in creating a GOR query is to determine the source of the stream you will be working with. In most cases this will either be genomic ordered relational data in the form of a GOR file or some non-ordered relational data that can be retrieved using the NOR command.</p>
+<p>It is important to note that the type of source command defines the context for the subsequent pipe steps.  Thus, the number of input parameters to the pipe step commands and which commands are available depends on the context.  As an example, <a class="reference internal" href="command/SORT.html#sort"><span class="std std-ref">SORT</span></a> and <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> require <code class="docutils literal notranslate"><span class="pre">binsize</span></code> when working in a GOR context whereas they do not in the NOR context. Similarly, the <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> command is only available in context of GOR whereas <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> must be used to perform a join in NOR.</p>
+</div>
+<div class="section" id="other-data-sources">
+<h2>Other Data Sources<a class="headerlink" href="#other-data-sources" title="Permalink to this headline">¶</a></h2>
+<p>It is also possible to retrieve data directly from the operating system or another database type using
+the <a class="reference internal" href="command/GORCMD.html#gorcmd"><span class="std std-ref">GORCMD</span></a>, <a class="reference internal" href="command/NORCMD.html#norcmd"><span class="std std-ref">NORCMD</span></a>, <a class="reference internal" href="command/GORSQL.html#gorsql"><span class="std std-ref">GORSQL</span></a>. or <a class="reference internal" href="command/NORSQL.html#norsql"><span class="std std-ref">NORSQL</span></a> commands.  The prefix of their names specify GOR or NOR context for the subsequent commands. In some situations (and depending on the tools you are using to run the commands), you may need to white-list scripts before running them within these source commands.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> &lt;(<span class="nd">nor</span> chr1_data.tsv | <span class="nb">SELECT</span> position,colA,colB | <span class="nb">CALC</span> chrom &#39;chr1&#39;
+| <span class="nb">SELECT</span> chrom,position,colA,colB | <span class="nb">SORT</span> -c chrom,position:n)
+| <span class="nb">VERIFYORDER</span> | write chr1_data.gorz
+</pre></div>
+</div>
+<p>The above query shows an example where the <code class="docutils literal notranslate"><span class="pre">GOR</span></code> command is used to read a nested NOR query.  In the nested query, the pipe steps are in a NOR context, thus is is possible to use a <a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a> command where the first two columns are not (chrom,position).  Similarly, the <a class="reference internal" href="command/SORT.html#sort"><span class="std std-ref">SORT</span></a> command does not take a binsize.  The <a class="reference internal" href="command/VERIFYORDER.html#verifyorder"><span class="std std-ref">VERIFYORDER</span></a> command and the <a class="reference internal" href="command/WRITE.html#write"><span class="std std-ref">WRITE</span></a> command are however in GOR context and the file chr1_data.gorz guaranteed to be in proper genomic order.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note here that the <a class="reference internal" href="command/VERIFYORDER.html#verifyorder"><span class="std std-ref">VERIFYORDER</span></a> command is not required here, since it is implicit in the <a class="reference internal" href="command/WRITE.html#write"><span class="std std-ref">WRITE</span></a> command.</p>
+</div>
+</div>
+<div class="section" id="selecting-by-position">
+<span id="id1"></span><h2>Selecting By Position<a class="headerlink" href="#selecting-by-position" title="Permalink to this headline">¶</a></h2>
+<p>It is possible to seek into a GOR stream based on the position. The GOR command has a position selection option (<code class="docutils literal notranslate"><span class="pre">-p</span></code>) that allows it to select a subset of data from a genomic ordered source. For example, if you want to limit your output to only chr10 in the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> reference data, you would execute the following GOR query:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr10 #dbsnp# | <span class="nb">TOP</span> 100
+</pre></div>
+</div>
+<p>Note that the <a class="reference internal" href="command/TOP.html#top"><span class="std std-ref">TOP</span></a> command is used above to limit the number of rows returned to 100 for demonstration purposes since otherwise the result set would be around 11 million rows.</p>
+<p>If you only wish to read positions 1000 to 2000 on chromosome 1 in the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> reference file, you would write the following query:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1:1000-2000 #dbsnp#
+</pre></div>
+</div>
+<p>Note that it is also possible to use the <code class="docutils literal notranslate"><span class="pre">-p</span></code> option for nested GOR queries, e.g.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr7 &lt;(<span class="nd">gor</span> file1.gorz | merge &lt;(<span class="nd">gor</span> file2.gor | select 1-2,colA))
+</pre></div>
+</div>
+<p>However, it is not possible to use the <code class="docutils literal notranslate"><span class="pre">-p</span></code> option on nested NOR queries.  Thus the following is illegal:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr7 &lt;(<span class="nd">norsql</span> select * from sqltable1 )
+</pre></div>
+</div>
+</div>
+<div class="section" id="working-with-multiple-files">
+<span id="multiple-files"></span><h2>Working with Multiple Files<a class="headerlink" href="#working-with-multiple-files" title="Permalink to this headline">¶</a></h2>
+<p>We can add data from multiple sources at once by specifying multiple files in the GOR command if the files are identical (same number and order of columns in the data).
+This will combine the data in the files.  Unlike the <code class="docutils literal notranslate"><span class="pre">cat</span></code> command in Unix, the output is returned genomic-ordered.</p>
+<p>It is possible to add a column to the output that indicates the source of each row in the output by using the <code class="docutils literal notranslate"><span class="pre">-s</span></code> option in the GOR query, as shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> fileA.gor fileB.gor -s Source
+</pre></div>
+</div>
+<p>The GOR query above will combine the contents of the GOR files, return them genomic-ordered, and add a column to the output labelled “Source”, which will contain the source file name for each row in the output. This topic is investigated more thoroughly in a later chapter on <a class="reference internal" href="#dictionarytables"><span class="std std-ref">Dictionary Tables</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It comparing columns, the number and names of the columns must be the same, but the names are not case-sensitive.</p>
+</div>
+<p>It is not possible to use the GOR command on two files that do not have the same list of columns, thus it would therefore not be possible to have a GOR command like the command below since these two formats have different  columns:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> fileA.vcf fileB.bam
+</pre></div>
+</div>
+<p>It is however always possible to merge two files using the <a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a> command, e.g.:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> fileA.vcf | merge fileB.bam
+</pre></div>
+</div>
+<p>The above example is however not very meaningful and it would be difficult to recognize the rows from the variant file since the density of sequence read data is much higher.
+The following query could be a more meaningful example:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> fileA.vcf | rename #10 Sample | merge &lt;(<span class="nd">gor</span> fileb.vcf | rename #10 Sample)
+</pre></div>
+</div>
+<p>Since the convention in VCF file is to name the 10th column according to the sample it represents, multiple VCF files to not represent the same type of relations.
+By using the <a class="reference internal" href="command/RENAME.html#rename"><span class="std std-ref">RENAME</span></a> command, we can harmonize the column names before the merge takes place.</p>
+</div>
+<div class="section" id="dictionary-tables">
+<span id="dictionarytables"></span><h2>Dictionary Tables<a class="headerlink" href="#dictionary-tables" title="Permalink to this headline">¶</a></h2>
+<p>A dictionary table is any file (<code class="docutils literal notranslate"><span class="pre">gord</span></code> or <code class="docutils literal notranslate"><span class="pre">gort</span></code>) that contains references to multiple files of the same relational type, hence it is essentially a metadata table. Running a GOR query on a dictionary file will combine or the contents of the file and return a genomically ordered result set.</p>
+<p>To illustrate this concept, consider the example of the <code class="docutils literal notranslate"><span class="pre">#wgsvars#</span></code> table, which contains all WGS variants within the project. The alias <code class="docutils literal notranslate"><span class="pre">#wgsvars#</span></code> is in fact a reference to a dictionary table, which, in turn, contains references to each of the compressed GOR files of variants for subjects in the project.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Dictionaries can contain references to multiple files or they can be meta-dictionaries (i.e. references to multiple dictionaries).</p>
+</div>
+<p>Running a GOR query on <code class="docutils literal notranslate"><span class="pre">#wgsvars#</span></code> will give us a combined result from all the GOR files referenced within.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wgsvars# | <span class="nb">TOP</span> 1000
+</pre></div>
+</div>
+<p>Likewise, a <code class="docutils literal notranslate"><span class="pre">NOR</span></code> on the table will give us the variant, however, in a NOR context.  Thus we can for example generate a list of the PNs from the first 1000 rows:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> #wgsvars#  | <span class="nb">TOP</span> 1000 | <span class="nb">SELECT</span> <span class="na">PN</span> | DISTINCT
+</pre></div>
+</div>
+<p>However, if we wish to see the meta-data contents of that file, we would use a NOR query, using the <code class="docutils literal notranslate"><span class="pre">-asdict</span></code> option to specify that we want to see the metadata:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> -asdict #wgsvars#
+</pre></div>
+</div>
+<p>This would show us the contents of the dictionary itself, rather than the GOR output. An example of this is shown below:</p>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">#wgsVars# Dictionary Table</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>col1</p></th>
+<th class="head"><p>col2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>wgs/C416TO_FATHER.wgs.genotypes.gorz</p></td>
+<td><p>C416TO_FATHER</p></td>
+</tr>
+<tr class="row-odd"><td><p>wgs/C416TO_MOTHER.wgs.genotypes.gorz</p></td>
+<td><p>C416TO_MOTHER</p></td>
+</tr>
+<tr class="row-even"><td><p>wgs/C416TO_SISTER.wgs.genotypes.gorz</p></td>
+<td><p>C416TO_SISTER</p></td>
+</tr>
+<tr class="row-odd"><td><p>wgs/C416TO_INDEX.wgs.genotypes.gorz</p></td>
+<td><p>C416TO_INDEX</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="filteringStreams.html" class="btn btn-neutral float-right" title="Filtering Streams" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="introduction.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

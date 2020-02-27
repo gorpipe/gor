@@ -1,0 +1,304 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Map and Multimap &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Pivoting" href="pivoting.html" />
+    <link rel="prev" title="Joining Tables" href="joiningTables.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Map and Multimap</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-map-to-annotate">Using MAP to Annotate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mapping-using-nested-streams">Mapping using Nested Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mapping-in-a-nor-context">Mapping in a NOR context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-multimap">Using Multimap</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-mapfiles-to-include-phenotype-data">Using mapfiles to include phenotype data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Map and Multimap</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="map-and-multimap">
+<span id="mapmultimap"></span><h1>Map and Multimap<a class="headerlink" href="#map-and-multimap" title="Permalink to this headline">¶</a></h1>
+<p>When we are joining table data that is not genomic ordered, it is necessary to use the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> and <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> commands, which we will now discuss in the following chapter.</p>
+<div class="section" id="using-map-to-annotate">
+<h2>Using MAP to Annotate<a class="headerlink" href="#using-map-to-annotate" title="Permalink to this headline">¶</a></h2>
+<p>Occasionally, we will have annotation data that is not genome-ordered, but is based on some other column data. One example of this would be with the Ensemble annotation data for genes, which can be found in a <a class="reference internal" href="glossary.html#term-mapfile"><span class="xref std std-term">mapfile</span></a> called <code class="docutils literal notranslate"><span class="pre">ensgenes.map</span></code> in the reference data. If we wanted to join the information in this annotation file to the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> table we would need to use the MAP command.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A map file in the reference data typically has a <code class="docutils literal notranslate"><span class="pre">.map</span></code> file extension, although any tab-separated value file can be used.</p>
+</div>
+<p>As you can see in the following example, we use the map command to join the two tables by setting the column (using the <code class="docutils literal notranslate"><span class="pre">-c</span></code> option) that we want to use for the mapping. The column specified must exist in both sources, although the match on column name is not case-sensitive. To get the headers from the mapped table in the output stream, you can use the <code class="docutils literal notranslate"><span class="pre">-h</span></code> option.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> ref/ensgenes/ensgenes.map -c <span class="na">Gene_Symbol</span> -h
+</pre></div>
+</div>
+</div>
+<div class="section" id="mapping-using-nested-streams">
+<h2>Mapping using Nested Streams<a class="headerlink" href="#mapping-using-nested-streams" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="glossary.html#term-mapfile"><span class="xref std std-term">mapfile</span></a> can also be a nested stream, which is particularly useful if you wish to perform some filtering on the mapfile before mapping. An example of this is shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> &lt;(<span class="nd">nor</span> -h ref/ensgenes/ensgenes.map | <span class="nb">WHERE</span> OMIM_Descriptions != &#39;.&#39;)
+-c <span class="na">Gene_Symbol</span>
+</pre></div>
+</div>
+<p>Note that in the above example, we only get output for the rows where there is a Gene_Symbol found in the table. If we use the <code class="docutils literal notranslate"><span class="pre">-m</span></code>, as shown in the following example:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> &lt;(<span class="nd">nor</span> -h ref/ensgenes/ensgenes.map | <span class="nb">WHERE</span> OMIM_Descriptions != &#39;.&#39;)
+-c <span class="na">Gene_Symbol</span> -h -m ?
+</pre></div>
+</div>
+<p>then we can get use the <code class="docutils literal notranslate"><span class="pre">-m</span></code> option to retrieve output for all the rows in the left source and fill any empty cells with the specified symbol (in this example, a <code class="docutils literal notranslate"><span class="pre">?</span></code>). In this way, we are guaranteed to have a line in the output for every line in the left source.</p>
+<p>If we only wish to get certain columns from the mapped table, then we can specify those columns using the <code class="docutils literal notranslate"><span class="pre">-n</span></code> flag followed by a list of the columns we want to let through. This is shown in the example below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> &lt;(<span class="nd">nor</span> -h ref/ensgenes/ensgenes.map | <span class="nb">WHERE</span> OMIM_Descriptions != &#39;.&#39;)
+-c <span class="na">Gene_Symbol</span> -h -n OMIM_Descriptions
+</pre></div>
+</div>
+</div>
+<div class="section" id="mapping-in-a-nor-context">
+<h2>Mapping in a NOR context<a class="headerlink" href="#mapping-in-a-nor-context" title="Permalink to this headline">¶</a></h2>
+<p>We can also base our mapping on more than one column. For example, we could use the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> command to link two separate mapfiles together. Notice here that since neither of files contain genome-ordered data, we must perform this mapping in the nor context:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ref/ensgenes/ensgenes.map | <span class="nb">MAP</span> &lt;(<span class="nd">nor</span> -h ref/ensgenes/ensgenes_alias.map
+| <span class="nb">GROUP</span> -<span class="no">gc</span> <span class="na">Gene_Symbol</span>,gene_stable_id -<span class="no">count</span>) -h -c <span class="na">Gene_Symbol</span>,gene_stable_id
+</pre></div>
+</div>
+<p>In the example above, a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command was used to ensure that there was only result per combination of Gene_Symbol and gene_stable_id in the second source file.</p>
+</div>
+<div class="section" id="using-multimap">
+<h2>Using Multimap<a class="headerlink" href="#using-multimap" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> command assumes that each gene_symbol is only going to be mapped to one output row. However, there are scenarios, such as with the mapping of genes to pathways, where the relation is one-to-many. In these cases, it is better to use the <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> command.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While it is not necessary to use a specific file type with this, the reference data does use the file extension <code class="docutils literal notranslate"><span class="pre">.mmap</span></code> to indicate a mapfile with a one-to-many relation.</p>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MULTIMAP</span> ref/ensgenes/ensgenes_gene2pathway.mmap -h -c <span class="na">Gene_Symbol</span>
+</pre></div>
+</div>
+<p>The main difference with the <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> command is that each of the rows in the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> table can be mapped to multiple rows based on the Gene_Symbol column.</p>
+<p>The options for <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> are similar to the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> command.</p>
+<div class="section" id="using-mapfiles-to-include-phenotype-data">
+<h3>Using mapfiles to include phenotype data<a class="headerlink" href="#using-mapfiles-to-include-phenotype-data" title="Permalink to this headline">¶</a></h3>
+<p>One example of how we may want to use mapfiles is in including phenotype data, which can be found in a report file for the subjects in our studies. In the example below, we are joining the variants from our subject with the <code class="docutils literal notranslate"><span class="pre">#VEP#</span></code> table and then mapping this data to the phenotypes found in the phenotypes subject report.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wesVars# | <span class="nb">VARJOIN</span> #VEP# | <span class="nb">TOP</span> 10000 | <span class="nb">SELECT</span> 1-<span class="na">Call</span>,Max_Consequence,<span class="na">Max_Impact</span>,<span class="na">PN</span>
+| <span class="nb">WHERE</span> <span class="na">Max_Impact</span> IN (&#39;HIGH&#39;,&#39;MODERATE&#39;) | <span class="nb">MAP</span> SubjectReports/Phenotypes.rep.link -c <span class="na">PN</span> -h
+</pre></div>
+</div>
+<p>This can also be accomplished using a grid from another open table in the Sequence Miner.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pivoting.html" class="btn btn-neutral float-right" title="Pivoting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="joiningTables.html" class="btn btn-neutral float-left" title="Joining Tables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

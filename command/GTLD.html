@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GTLD &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>GTLD</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="gtld">
+<span id="id1"></span><h1>GTLD<a class="headerlink" href="#gtld" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>GTLD</strong> command is used to calculate linkage disequilibrium between genotypes in different locations.
+The command takes in an input stream and uses a self-join style way to calculate the LD in the surrounding region
+as specified with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option.  Note that large span requires large memory buffers.  The command can be
+used in parallel, however, then one must be careful that the genomic range partitions overlap by the amount
+specified with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option.  Similarly, it is possibly to use partition parallelism via <strong>PARTGOR</strong>
+and separate the sum step and the calculation steps for Dprime and r.</p>
+<p>The input stream must have <code class="docutils literal notranslate"><span class="pre">VALUES</span></code> column storing the genotypes (as 0,1,2, or 3), with or without a <code class="docutils literal notranslate"><span class="pre">BUCKET</span></code>
+column.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTLD [ attributes ]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">distance</span></code></p></td>
+<td><p>The maximum span for LD calculation in base pairs.
+Note very large span can require time and memory</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sum</span></code></p></td>
+<td><p>Aggregate the correlation counts LD_x11,LD_x12,LD_x21, and LD_x22,
+from single genotype character values column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-calc</span></code></p></td>
+<td><p>Calculate Dprime and the correlation coefficient r from LD_x11,LD_x12,LD_x21, and LD_x22.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example calculating LD from a stream of (chr,<span class="na">pos</span>,ref,<span class="na">alt</span>,bucket,values) */
+
+<span class="nd">pgor</span> -split 10000000:100000 [#buckethorvars#] | GTLD -sum -calc -<span class="no">f</span> 100000
+| where posx != <span class="na">pos</span> and (LD_Dp &gt; 0.2 or LD_r)
+| where ##WHERE_SPLIT_WINDOW##
+</pre></div>
+</div>
+<p>The above query example calculates LD using genomic range parallelism from all the variants in all the buckets.
+The following query calculate LD in a single gene:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | where <span class="na">gene_symbol</span> = &#39;BRCA2&#39; | join -<span class="no">segsnp</span> -<span class="no">f</span> 1000000 -ir &lt;(<span class="nd">gor</span> [#buckethorvars#])
+| GTLD -sum -calc -<span class="no">f</span> 100000 | where posx != <span class="na">pos</span> and (LD_Dp &gt; 0.2 or LD_r)
+</pre></div>
+</div>
+<p>Finally, the following query uses sample parallelism to calculate the LD, allowing for bigger range with less memory usage:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> xxx = partgor -dict horvars.gord &lt;(<span class="nd">pgor</span> horvars.gord -<span class="no">f</span> #{tags} -nf
+| csvsel -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span> -u 3 horvarsbuckets.tsv &lt;(<span class="nd">nor</span> horvarsbuckets.tsv | select #1 | where listhasany(<span class="na">PN</span>,&#39;#{tags}&#39;))
+| varjoin -r &lt;(<span class="nd">gor</span> #VEP# | where max_impact in (&#39;HIGH&#39;,&#39;MODERATE&#39;) | select 1-4,max_consequence,max_impact)
+| GTLD -sum -<span class="no">f</span> 1000000 | where posx != <span class="na">pos</span>;
+
+<span class="nd">pgor</span> [xxx] | GTLD -calc | where LD_Dp &gt; 0.2 or LD_r | hide LD_x11,LD_x12,LD_x21,LD_x22 | sort 1 -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span>,LD_r:n
+</pre></div>
+</div>
+<p>Note that it is possible to have asymmetry in the LD calculation pairs. I.e. you can specify which variants in the input stream are only used as the left-variant in the pair.</p>
+<p>An example of this is shown below:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span>  varsofinterest.gor
+| varjoin -ir #gtfreeze#
+| varjoin -r -e 0 &lt;(<span class="nd">gor</span> myleftvars.gor | select 1-4 | calc useonlyasleftvar 1)
+| GTLD -sum -calc -<span class="no">f</span> #maxlddist#
+</pre></div>
+</div>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

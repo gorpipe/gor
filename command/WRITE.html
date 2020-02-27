@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>WRITE &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>WRITE</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="write">
+<span id="id1"></span><h1>WRITE<a class="headerlink" href="#write" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#write"><span class="std std-ref">WRITE</span></a> command can be used to write a stream into one or more files simultaneously.</p>
+<p>By specifying a “fork” column, with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, you must also specify the column that is used to fork the output files.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> option can be used to eliminate the fork column from the output, since it is already represented in the filenames.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> and <code class="docutils literal notranslate"><span class="pre">-m</span></code> options are used to encrypt the output of the WRITE command. <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output and <code class="docutils literal notranslate"><span class="pre">-m</span></code> is used to encrypt the files with the MD5 algorithm.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-i</span></code> option writes an index file containing the file position of each chromosome.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-l</span></code> option selects the compression level to be used by the deflater. Default: 1 (BEST_SPEED)</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write filename [-<span class="no">f</span> forkCol] [-r] [-c] [-m] [-i]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">column</span></code></p></td>
+<td><p>The “fork column” used to split the output into multiple files.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
+<td><p>Eliminate the fork column from the output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Use column store compression for the output.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<td><p>Use MD5 encryption on the output file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<td><p>Write index file (.gori) with a .gorz file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">[level]</span></code></p></td>
+<td><p>Compression level (0-9). Default 1.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">'[tags]'</span></code></p></td>
+<td><p>List of tags which write ensures a file will be created.
+Only valid with the -f option.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
+<td><p>Takes in a text source containing prefix to be prepended to the
+file written.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1:10020-10051 fileA.gor | write fileB.gorz
+</pre></div>
+</div>
+<p>The query above will read the first four rows of the example file shown above and write them to a compressed GOR file in the same directory.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> multiPIDfile.gor | write data_#{fork}.gor -<span class="no">f</span> <span class="na">PID</span> -r
+</pre></div>
+</div>
+<p>The query above will write the contents of multiPIDfile.gor into as many files as there are distinct PIDs in the file. In this example, the output files from the WRITE command will be named data_101.gor and data_102.gor and the <code class="docutils literal notranslate"><span class="pre">-r</span></code> flag removes the PID column (i.e. the column used to fork the data).</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> multiPIDfile.gor | write data_#{fork}.gor -<span class="no">f</span> <span class="na">PID</span> -r -t &#39;PN001,PN002,PN003&#39;
+</pre></div>
+</div>
+<p>The query above will write the contents of multiPIDfile.gor into as many files as there are distinct PIDs in the file. In this example a list of PIDs is supplied and the write command will create an empty file for each of the tags listed.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

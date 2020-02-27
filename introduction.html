@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GOR and NOR" href="basicGORqueries.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-gor">What is GOR?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#writing-gor-queries">Writing GOR queries</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#options-attributes-flags">Options, Attributes, Flags</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#reference-data">Reference Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-pipeline">Data pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Introduction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="what-is-gor">
+<h2>What is GOR?<a class="headerlink" href="#what-is-gor" title="Permalink to this headline">¶</a></h2>
+<p>GOR is a <a class="reference internal" href="glossary.html#term-genomic-ordered-data"><span class="xref std std-term">genomic ordered</span></a> relational database architecture, which was developed for working with large volumes of DNA sequence data.</p>
+<p>The GOR system uses a declarative query language which combines features from SQL and shell pipe syntax. The GOR system can be used, for example, to annotate sequence variants, to find genomic spatial overlap between various types of genomic features, and to filter and aggregate them in various ways.</p>
+<p>The GOR architecture is at the foundation of WuXi NextCODE’s genome analysis and discovery tools. For an in-depth discussion of the GOR architecture, please refer to:</p>
+<a class="reference external image-reference" href="https://academic.oup.com/bioinformatics/article/32/20/3081/2196339/GorPipe-a-query-tool-for-working-with-sequence"><img alt="_images/paper.png" src="_images/paper.png" /></a>
+<p><em>GorPipe: a query tool for working with sequence data based on a Genomic Ordered Relational (GOR) architecture</em></p>
+<p>The target audience of this manual is a <a class="reference internal" href="glossary.html#term-bioinformatician"><span class="xref std std-term">bioinformatician</span></a> or other support personnel who will be creating their own GOR queries using either the Sequence Miner or the command line interfaces, GorPipe and GORdb.</p>
+<p>This manual will provide an overview of the GOR language and a comprehensive list of commands that are available both through GORdb, GorPipe and the Sequence Miner (SM) with use cases input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.</p>
+</div>
+<div class="section" id="writing-gor-queries">
+<h2>Writing GOR queries<a class="headerlink" href="#writing-gor-queries" title="Permalink to this headline">¶</a></h2>
+<p>The best way to learn to write GOR queries is to try it for yourself. Get your hands on some data and an environment from which you can run queries. As we describe each command and concept, we will post example of their usage.</p>
+<p>In the example below, we can see the conventions used in each example, which may be familiar to those who have used shell pipe syntax, but may require more explanation for others.</p>
+<p>GOR queries have the following structure:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> relation [options/attributes/flags] | command_1 [options/attributes/flags] | command_2 [options/attributes/flags]
+</pre></div>
+</div>
+<p>As shown above, many commands in GOR can be linked together in a pipeline of commands with each individual command separated by a vertical bar (or “pipe”) character. A combination of piped commands allow for specialised operations that individual commands can perform on their own. The rows from the file or table referred in the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> source command are streamed from left to right.  Depending on the nature of the pipe step commands, they may output their input unchanged, rows with different output columns, fewer rows (e.g. aggregation) or more rows than in the input (e.g. split up of rows).  In every case, commands in a GOR stream must output rows with genomic position (chr,pos) whereas in a NOR stream, this is not necessary.</p>
+<p>Whenever possible, we will show example queries for each of the GOR commands that will help to illustrate the usage of the GOR syntax.</p>
+<div class="section" id="options-attributes-flags">
+<h3>Options, Attributes, Flags<a class="headerlink" href="#options-attributes-flags" title="Permalink to this headline">¶</a></h3>
+<p>Each of the commands in a GOR query may have one or more options and flags that are specific to that command. We will define options and flags for each command on the manual page for each command. An option may in some cases require the input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.</p>
+</div>
+</div>
+<div class="section" id="reference-data">
+<h2>Reference Data<a class="headerlink" href="#reference-data" title="Permalink to this headline">¶</a></h2>
+<p>There are a wide variety of source of data that are used and the best way to get familiar with the WuXi NextCODE reference data package is to explore it for yourself. Try viewing existing queries and report builders to see what reference sources are commonly used.</p>
+<p>An installation of the Sequence Miner tool (<span class="xref std std-ref">see above</span>) will make a set of reference data available to you along with any studies that you have access to. To make the examples in this manual easier to follow, we will be using this reference data in each of the examples. Although the data is stored as a physical GOR file, each of these sets of reference data can be thought of as tables in the GOR database and in this document they are referred to as such.</p>
+<p>Reference Data used in example queries are introduced in the table below:</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">Reference Data used in Examples</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 25%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Alias</p></th>
+<th class="head"><p>File Location</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#genes#</span></code></p></td>
+<td><p>ref/genes.gorz</p></td>
+<td><p>Ensembl gene table with only one entry per (Gene_Symbol,Chrom)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">#exons#</span></code></p></td>
+<td><p>ref/ensgenes/ensgenes_exons.gorz</p></td>
+<td><p>Ensembl exons</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#VEP#</span></code></p></td>
+<td><p>source/anno/vep_v85/vep_single_wgs.gord</p></td>
+<td><p>Variant Effect Predictor summary annotations (only the max transcript consequence per gene)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">#dbSNP#</span></code></p></td>
+<td><p>ref/dbsnp/dbsnp.gorz</p></td>
+<td><p>A database of all registered small variants (SNPs and InDel) at NCBI.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">#wgsVars#</span></code></p></td>
+<td><p>source/var/wgs_varcalls.gord -s PN</p></td>
+<td><p>Whole Genome Sequence Variants - a table with variants from all the samples (PNs) in the project.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">#wesVars#</span></code></p></td>
+<td><p>source/var/wes_varcalls.gord -s PN</p></td>
+<td><p>Whole Exome Sequence Variants - a subset of variants in #wgsVars# that are overlapping or close to exon boundaries.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="data-pipeline">
+<h2>Data pipeline<a class="headerlink" href="#data-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>The most common use case for the GOR query language is in working with germline DNA samples. This section describes where this data comes from and how the processing pipeline works.</p>
+<p>Often in this manual, we will use the term “data pipeline” to describe the series of steps that are executed in sequencing germline DNA samples and annotating them with the various sets of data that are available to us within a project.</p>
+<p>A diagram of one of the use cases of the data pipeline can be seen below:</p>
+<a class="reference internal image-reference" href="_images/dataPipeline.png"><img alt="_images/dataPipeline.png" src="_images/dataPipeline.png" style="width: 1141.5px; height: 654.0px;" /></a>
+<p>The data processing is often split into distinct step that are referred to as the primary, secondary and tertiary pipeline. These are explained further below:</p>
+<ol class="arabic simple">
+<li><p>Before the samples reach the Clinical Sequence Analyser (CSA), the <em>Primary analysis pipeline</em> takes raw data from a sequencing machine (such as BCL format from Illumina) and produces a standard text-formatted data file describing the base calls (typically, this is the FASTQ format).</p></li>
+<li><p>In the <em>Secondary analysis pipeline</em>, the FASTQ format is converted to BAM and VCF files, aligning the reads that are listed in the FASTQ back to their coordinates by comparing the string sequences to the known sequences from a reference genome.</p></li>
+</ol>
+<div class="figure align-default" id="id2">
+<a class="reference internal image-reference" href="_images/alignment.png"><img alt="_images/alignment.png" src="_images/alignment.png" style="width: 900.0px; height: 288.75px;" /></a>
+<p class="caption"><span class="caption-text">Alignment of string sequences to the reference genome</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<ol class="arabic simple">
+<li><p>The <em>Tertiary analysis pipeline</em> starts from BAM+VCF and produce additional variant annotation data using VEP and derived coverage data.</p></li>
+</ol>
+<p>When the data pipeline has finished completely, we are left with the folder structure of source files that you can see in the Sequence Miner file explorer, namely <em>anno</em>, <em>bam</em>, <em>cov</em> and <em>var</em>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="basicGORqueries.html" class="btn btn-neutral float-right" title="GOR and NOR" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

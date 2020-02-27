@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Sequence Reads &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Variation Data" href="variantData.html" />
+    <link rel="prev" title="Pivoting" href="pivoting.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Sequence Reads</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#viewing-sequence-reads-in-sequence-miner">Viewing Sequence Reads in Sequence Miner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pileup">Pileup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bamflag">Bamflag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cigarsegs">Cigarsegs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bases">Bases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#variants">Variants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#liftover">Liftover</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Sequence Reads</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sequence-reads">
+<span id="sequencereads"></span><h1>Sequence Reads<a class="headerlink" href="#sequence-reads" title="Permalink to this headline">¶</a></h1>
+<p>The sequence data that is imported into the WuXi NextCODE system is part of an analysis pipeline that begins with the DNA samples taken from a subject, which are sequenced using next-generation sequencing (NGS). The overlapping sequence reads are then aligned to the reference genome and compiled into a coverage file. Individual sequence reads can be up to 250 base-pairs long.</p>
+<p>Finally, this coverage file is compared to known variants that have been annotated with regards to their effects on the individual (i.e. their genetic traits or the likelihood of developing certain diseases). The WXNC tools are developed specifically to work with this last step in the pipeline.</p>
+<p>In the following chapter, we will introduce some commands for working with sequence read data in the GOR query language, in particular sequence read data that is stored in BAM files.</p>
+<div class="section" id="viewing-sequence-reads-in-sequence-miner">
+<h2>Viewing Sequence Reads in Sequence Miner<a class="headerlink" href="#viewing-sequence-reads-in-sequence-miner" title="Permalink to this headline">¶</a></h2>
+<p>Before we show each of the commands that can be performed with sequence read data, we will first show how to open the data in Sequence Miner and describe how the data can be interpreted using the tool. In the following video example, we show how to open the variation and BAM files for participants in a study and view the BAM tracks in the genome browser.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uRps0kZdWOY" frameborder="0" allowfullscreen></iframe></div>
+<div class="section" id="pileup">
+<h2>Pileup<a class="headerlink" href="#pileup" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>PILEUP</strong> command describes the base-pair formation at each chromosomal position. It summarizes the base calls of aligned sequence reads to a reference sequence.</p>
+</div>
+<div class="section" id="bamflag">
+<h2>Bamflag<a class="headerlink" href="#bamflag" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">FLAG</span></code> column in the sequence reads indicates settings for a number of different parameters. The <strong>BAMFLAG</strong> command expands the FLAG bitmap column into multiple Boolean (1/0) columns, which are easier to read. The table below has a list of the different parameters and their corresponding bit in the flag value.</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">The Flag Column as expanded by BAMFLAG</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 17%" />
+<col style="width: 14%" />
+<col style="width: 17%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>#</p></th>
+<th class="head"><p>Binary</p></th>
+<th class="head"><p>Decimal</p></th>
+<th class="head"><p>Hexadecimal</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>0x1</p></td>
+<td><p>Read paired</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>10</p></td>
+<td><p>2</p></td>
+<td><p>0x2</p></td>
+<td><p>Read mapped in proper pair</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>100</p></td>
+<td><p>4</p></td>
+<td><p>0x4</p></td>
+<td><p>Read unmapped</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>1000</p></td>
+<td><p>8</p></td>
+<td><p>0x8</p></td>
+<td><p>Mate unmapped</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p>10000</p></td>
+<td><p>16</p></td>
+<td><p>0x10</p></td>
+<td><p>Read reverse strand</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p>100000</p></td>
+<td><p>32</p></td>
+<td><p>0x20</p></td>
+<td><p>Mate reverse strand</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p>1000000</p></td>
+<td><p>64</p></td>
+<td><p>0x40</p></td>
+<td><p>First in pair</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p>10000000</p></td>
+<td><p>128</p></td>
+<td><p>0x80</p></td>
+<td><p>Second in pair</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p>100000000</p></td>
+<td><p>256</p></td>
+<td><p>0x100</p></td>
+<td><p>Not primary alignment</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p>1000000000</p></td>
+<td><p>512</p></td>
+<td><p>0x200</p></td>
+<td><p>Read fails platform/vendor quality checks</p></td>
+</tr>
+<tr class="row-even"><td><p>11</p></td>
+<td><p>10000000000</p></td>
+<td><p>1024</p></td>
+<td><p>0x400</p></td>
+<td><p>Read is PCR or optical duplicate</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>100000000000</p></td>
+<td><p>2048</p></td>
+<td><p>0x800</p></td>
+<td><p>Supplementary alignment</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="cigarsegs">
+<h2>Cigarsegs<a class="headerlink" href="#cigarsegs" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/CIGARSEGS.html#cigarsegs"><span class="std std-ref">CIGARSEGS</span></a> command takes sequence reads from a BAM-like stream and splits them into multiple reads based on the <code class="docutils literal notranslate"><span class="pre">CIGAR</span></code> column in the stream.</p>
+</div>
+<div class="section" id="bases">
+<h2>Bases<a class="headerlink" href="#bases" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/BASES.html#bases"><span class="std std-ref">BASES</span></a> command splits the <code class="docutils literal notranslate"><span class="pre">SEQ</span></code> column in the BAM file into the individual bases, showing the relative position within the read and the <a class="reference internal" href="glossary.html#term-base-quality"><span class="xref std std-term">base-quality</span></a>.</p>
+</div>
+<div class="section" id="variants">
+<h2>Variants<a class="headerlink" href="#variants" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>VARIANTS</strong> command returns the variants found in sequence reads and their associated quality. The variant quality is simply the <a class="reference internal" href="glossary.html#term-base-quality"><span class="xref std std-term">base-quality</span></a> of the first position in the <a class="reference internal" href="glossary.html#term-variants"><span class="xref std std-term">variants</span></a>. The VARIANTS command uses sliding window sort so that variants from overlapping reads are returned in genomic order.</p>
+</div>
+<div class="section" id="liftover">
+<h2>Liftover<a class="headerlink" href="#liftover" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>LIFTOVER</strong> command is used to convert GOR data from one reference genome build to another, for example from hg19 to hg38.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="variantData.html" class="btn btn-neutral float-right" title="Variation Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pivoting.html" class="btn btn-neutral float-left" title="Pivoting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

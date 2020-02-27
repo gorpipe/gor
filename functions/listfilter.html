@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LISTFILTER &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>LISTFILTER</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="listfilter">
+<span id="id1"></span><h1>LISTFILTER<a class="headerlink" href="#listfilter" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>LISTFILTER</strong> function filters a list using the expression provided in second argument. Elements in the list are represented in the expression as <code class="docutils literal notranslate"><span class="pre">x</span></code>, and the index value is represented as <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
+<p>The expression in the second argument must be enclosed in quotation marks, which means that if the elements are compared to strings, the quotations around those quotation marks must be escaped with a backslash (or if single quotations are used for the expression, then double quotation marks can be used for the string.</p>
+<p>All mathematical operators may be used in the expression, but these are only meaningful if the elements are treated as numbers. Elements in a list are treated as strings unless they are specifically cast into integers in the expression (see below).</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(string,expression)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>The query shown below will result in a filtered list of ‘a,b,d’ because the filter only lets through elements in the example_list that are not equal to ‘c’.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;a,b,c,d&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;x!=c&#39;)
+</pre></div>
+</div>
+<p>The elements in the list are strings unless they specifically cast otherwise and so in order to compare numerical expressions, you must use an additional int() function to cast the elements into integers.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;3,6,9,12&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;INT(x)&gt;6&#39;)
+</pre></div>
+</div>
+<p>The next query shows that you can also compare elements in a list to the values in another column.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> column_1 &#39;4&#39; | <span class="nb">CALC</span> column_2 &#39;1,2,3,4&#39; | calc filtered_list <span class="k">listfilter</span>(column_2,&#39;x!=column_1&#39;)
+</pre></div>
+</div>
+<p>Any string can be used to compare, but if the string is explicitly stated in the expression and single quotations are used, the quotation marks around the string must be escaped.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;apples,bananas,pears,peaches,apricots&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;x!=\&#39;apples\&#39;&#39;)
+</pre></div>
+</div>
+<p>Alternately, the use of double quotations around the string in the comparison may be used when single quotes are used to envelop the expression (and vice versa).</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;apples,bananas,pears,peaches,apricots&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;x!=&quot;apples&quot;&#39;)
+</pre></div>
+</div>
+<p>List elements can also be compared based on their position (or ‘index’) in the list. In these cases, <code class="docutils literal notranslate"><span class="pre">i</span></code> is used instead of <code class="docutils literal notranslate"><span class="pre">x</span></code>. The next query will return all elements in the list that have an index greater than 2, or in the given example: ‘pears,peaches,apricots’.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;apples,bananas,pears,peaches,apricots&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;i&gt;2&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

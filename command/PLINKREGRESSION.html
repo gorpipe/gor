@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PLINKREGRESSION &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>PLINKREGRESSION</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="plinkregression">
+<span id="id1"></span><h1>PLINKREGRESSION<a class="headerlink" href="#plinkregression" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#plinkregression"><span class="std std-ref">PLINKREGRESSION</span></a> is used to run Plink’s –glm command on the incoming source. The incoming source must have columns
+containing reference and alternative alleles and character encoded genotype values.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | PLINKREGRESSION phenoFile [-imp] [-threshold d] [-covar covFile]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-imp</span></code></p></td>
+<td><p>Indicates that the value column contains imputed genotypes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-threshold</span> <span class="pre">d</span></code></p></td>
+<td><p>The threshold to use when converting imputed genotypes to hardcalls.
+The default value is 0.9.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-firth</span></code></p></td>
+<td><p>For Firth test.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-covar</span> <span class="pre">covs</span></code></p></td>
+<td><p>To provide covariates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-hwe</span> <span class="pre">thres</span></code></p></td>
+<td><p>Hardy-Weinberg equilibrium threshold to filter on.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-geno</span> <span class="pre">thres</span></code></p></td>
+<td><p>The –geno option on plink2 regression.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-maf</span> <span class="pre">thres</span></code></p></td>
+<td><p>The –maf option on plink2 regression.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-dom</span></code></p></td>
+<td><p>Use dominant model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rec</span></code></p></td>
+<td><p>Use recessive model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-cvs</span></code></p></td>
+<td><p>The –covar-variance-standardize option on plink2 regression.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-vs</span></code></p></td>
+<td><p>The –variance-standardize option on plink2 regression.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-qn</span></code></p></td>
+<td><p>The –quantile-normalize option on plink2 regression.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-hc</span></code></p></td>
+<td><p>The hide-covar option on plink2 regression.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Flags used in this command are directly from the PLINK2 command line tool, which is documented on the following website.</p>
+<p>See: <a class="reference external" href="https://www.cog-genomics.org/plink/2.0/general_usage">https://www.cog-genomics.org/plink/2.0/general_usage</a></p>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The following general example shows how PLINK2 can be used within a GOR command.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> ##ref## = ref; <span class="nd">def</span> ##freqmax## = ##ref##/freq_max.gorz; <span class="nd">def</span> #ref/genes.gorz# = ##ref##/genes.gorz;
+<span class="nd">create</span> ##PNs## = <span class="nd">nor</span> user_data/rep/PhenoGrid_example.rep | select <span class="na">PN</span> | distinct;
+<span class="nd">create</span> ##pheno## = <span class="nd">nor</span> user_data/rep/PhenoGrid_example.rep | rename <span class="na">PN</span> IID | select IID,2- | distinct;
+<span class="nd">create</span> ##covar## = <span class="nd">nor</span> user_data/rep/CovarGrid_example_PLINK2.rep | rename <span class="na">PN</span> IID | select IID,2- | inset -c IID [##pheno##];
+<span class="nd">create</span> xxx = <span class="nd">gor</span> -<span class="no">p</span> chr22 source/hvar/ukbb_array.gord -nf | skip -111 | <span class="nb">CSVSEL</span> source/hvar/ukbb_array_buckets.tsv [##PNs##] -u 3 -<span class="no">gc</span> 3,4,5 -vs 1
+| PLINKREGRESSION [##pheno##] -covar [##covar##];
+<span class="nd">gor</span> [xxx] | group chrom -<span class="no">count</span>
+</pre></div>
+</div>
+<p>In the next example, we show an example where we are running the command on directly measured genotypes:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>   <span class="nd">pgor</span> -split 500 UKBB/genotype_array/array.gord -nf | <span class="nb">CSVSEL</span> UKBB/genotype_array/array_buckets.tsv [##PNs##] -u 3 -<span class="no">gc</span> 3,4,5 -vs 1
+| PLINKREGRESSION [##pheno##] -geno 0.1 -hwe 1.0E-50 -maf 0.01 -hc -covar [##covar##]
+</pre></div>
+</div>
+<p>When running on imputed data, we would use the following:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>   <span class="nd">pgor</span> -split 500 UKBB/genotype_array/imputed.gord -nf -ff [##PNs##] | <span class="nb">CSVSEL</span> UKBB/genotype_array/imputed_buckets.tsv [##PNs##] -u &#39; &#39; -<span class="no">gc</span> 3,4,5 -vs 2
+| PLINKREGRESSION [##pheno##] -threshold 0.9 -geno 0.1 -hwe 1.0E-50 -maf 0.01 -hc -covar [##covar##]
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

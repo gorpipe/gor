@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Filtering Streams &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Column Modifications" href="columnModifications.html" />
+    <link rel="prev" title="GOR and NOR" href="basicGORqueries.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Filtering Streams</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#top-and-skip">TOP and SKIP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#where">WHERE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#matching-patterns">Matching Patterns</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-wildcard-notation">Using Wildcard Notation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#base-pair-notation">Base-pair Notation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#using-functions-in-where-commmands">Using Functions in WHERE commmands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-select-to-choose-columns">Using SELECT to choose columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#showing-and-hiding-columns">Showing and Hiding Columns</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Filtering Streams</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="filtering-streams">
+<h1>Filtering Streams<a class="headerlink" href="#filtering-streams" title="Permalink to this headline">¶</a></h1>
+<p>Once you have defined a source table for your data, you can start to structure the way you want to have the data processed and filtered. You can define commands for data processing and filtering in any number of pipe steps. Note that data flows through the pipes from left to right so that, most often, the order of the steps matters.</p>
+<div class="section" id="top-and-skip">
+<h2>TOP and SKIP<a class="headerlink" href="#top-and-skip" title="Permalink to this headline">¶</a></h2>
+<p>There are several commands that filter streams in the GOR Query Language. The most basic are the <strong>TOP</strong> and <strong>SKIP</strong> commands, which are used to limit the number and section of rows in the stream.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | top 100
+</pre></div>
+</div>
+<p>The above example will only show the first 100 rows of the <code class="docutils literal notranslate"><span class="pre">##dbsnp##</span></code> table and terminate the reading of the data.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr2 #dbsnp# | skip 100 | top 100
+</pre></div>
+</div>
+<p>will likewise only show rows from 101 to 200 on chr2 from the <code class="docutils literal notranslate"><span class="pre">##dbsnp##</span></code> table.</p>
+</div>
+<div class="section" id="where">
+<h2>WHERE<a class="headerlink" href="#where" title="Permalink to this headline">¶</a></h2>
+<p>The main function for filtering streams is the <strong>WHERE</strong> command. We will now go over some of the different ways that a WHERE command can be used.</p>
+<div class="section" id="matching-patterns">
+<h3>Matching Patterns<a class="headerlink" href="#matching-patterns" title="Permalink to this headline">¶</a></h3>
+<p>To start with a simple example of a <strong>WHERE</strong> command, we can consider the gene table, which is included in the reference data for the Sequence Miner. If you were to run the following GOR query:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">WHERE</span> <span class="na">Gene_Symbol</span> IN (&#39;BRCA1&#39;, &#39;BRCA2&#39;)
+</pre></div>
+</div>
+<p>you would expect the following output from the query showing only the two rows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom    gene_start     gene_end    Gene_Symbol
+chr13    <span class="m">32889610</span>       <span class="m">32973805</span>    BRCA1
+chr17    <span class="m">41196311</span>       <span class="m">41277500</span>    BRCA2
+</pre></div>
+</div>
+<p>Multiple match conditions can be linked together in a single <strong>WHERE</strong> command such in the following case:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> <span class="na">reference</span>+’&gt;’+<span class="na">allele</span> IN (’A&gt;G’,’G&gt;A’,’C&gt;T’,’T&gt;C’) OR (len(#3)=len(#4) <span class="ni">AND</span> (len(#3)=2 OR len(#3)=3))
+</pre></div>
+</div>
+<p>As shown above, <code class="docutils literal notranslate"><span class="pre">AND</span></code> and <code class="docutils literal notranslate"><span class="pre">OR</span></code> statements can be nested in curved brackets to include multiple match conditions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Clicking the <code class="docutils literal notranslate"><span class="pre">TAB</span></code> key while writing queries in the Sequence Miner brings up a context-sensitive dialog that allows you to select columns that can be added to the query.</p>
+</div>
+</div>
+<div class="section" id="using-wildcard-notation">
+<h3>Using Wildcard Notation<a class="headerlink" href="#using-wildcard-notation" title="Permalink to this headline">¶</a></h3>
+<p>It is also possible to use wildcard notation in <strong>WHERE</strong> clauses. The previous example with the <code class="docutils literal notranslate"><span class="pre">##genes##</span></code> table could be accomplished as follows by using a wildcard:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">WHERE</span> <span class="na">Gene_Symbol</span> LIKE &#39;BRCA*&#39;
+</pre></div>
+</div>
+<p>Another example is shown with wildcards below, this time using <strong>LIKE</strong> and <strong>RLIKE</strong> which accepts regular expressions:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | top 1000 | <span class="nb">WHERE</span> <span class="na">rsIDs</span> ~ &#39;rs22*&#39; and <span class="ni">NOT</span>( <span class="na">rsIDs</span> LIKE &#39;rs?23*&#39; or <span class="na">rsIDs</span> RLIKE &#39;rs(3|4)*2.*&#39;)
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">~</span></code> is equivalent to using <strong>LIKE</strong>. <code class="docutils literal notranslate"><span class="pre">?</span></code> can be used for any character.</p>
+</div>
+</div>
+<div class="section" id="base-pair-notation">
+<h3>Base-pair Notation<a class="headerlink" href="#base-pair-notation" title="Permalink to this headline">¶</a></h3>
+<p>There is a special syntax for base-pair positions, i.e. integers can be represented with commas every 3 digits.
+They must however be followed by the letters bp, e.g. not( pos &gt; 123,345,789bp ).</p>
+</div>
+</div>
+<div class="section" id="using-functions-in-where-commmands">
+<h2>Using Functions in WHERE commmands<a class="headerlink" href="#using-functions-in-where-commmands" title="Permalink to this headline">¶</a></h2>
+<p>It is possible to use Functions in <strong>WHERE</strong> commands and also in <strong>CALC</strong> commands, which are discussed in <a class="reference internal" href="columnModifications.html#addingcalccolumns"><span class="std std-ref">a later chapter</span></a>.</p>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">#dbsnp# (showing different Indel examples)</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 25%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Chrom</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>reference</p></th>
+<th class="head"><p>allele</p></th>
+<th class="head"><p>rsIDs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>10233</p></td>
+<td><p>CCTAACCCTAACCCTAAACCCTAAACCC</p></td>
+<td><p>C</p></td>
+<td><p>rs200462216</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>10332</p></td>
+<td><p>CCTAACCCTAACCCTAACCCTACCC</p></td>
+<td><p>C</p></td>
+<td><p>rs201106462</p></td>
+</tr>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>10621</p></td>
+<td><p>GTTGCAAAGGCGCGCCGCGCCG</p></td>
+<td><p>G</p></td>
+<td><p>rs376342519</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>12940</p></td>
+<td><p>AAACA</p></td>
+<td><p>A</p></td>
+<td><p>rs756849893</p></td>
+</tr>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>13421</p></td>
+<td><p>A</p></td>
+<td><p>AGAGA</p></td>
+<td><p>rs777038595</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>15189</p></td>
+<td><p>CGGGCACTGATGAGACAGCGGC</p></td>
+<td><p>C</p></td>
+<td><p>rs768510816</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) &gt; 4 OR len(<span class="na">allele</span>) &gt; 4 | <span class="nb">TOP</span> 6
+</pre></div>
+</div>
+<p>In the above example, we are using the <strong>LEN</strong> function, which calculates the length of a string, to filter out any results from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table that do not have reference or allele base lengths longer than 4 bases. You can find more information on different formulas in GOR queries <span class="xref std std-ref">here</span>. More information on the <strong>CALC</strong> command can be found <a class="reference internal" href="columnModifications.html#addingcalccolumns"><span class="std std-ref">here</span></a></p>
+</div>
+<div class="section" id="using-select-to-choose-columns">
+<h2>Using SELECT to choose columns<a class="headerlink" href="#using-select-to-choose-columns" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a> command allows you to choose which columns to show from the source by entering a comma-delimited list.</p>
+<p>When selecting in GOR, genomic ordered relational data is expected, so it is mandatory to have a <code class="docutils literal notranslate"><span class="pre">CHROM</span></code> and <code class="docutils literal notranslate"><span class="pre">POS</span></code> as the first two columns. However, when the SELECT statement is used in NOR, you can choose whatever columns you want.  If columns other than the first two (e.g. <code class="docutils literal notranslate"><span class="pre">#1</span></code> and <code class="docutils literal notranslate"><span class="pre">#2</span></code>) are selected to become the first two columns, care must be taken to ensure that proper genomic order is preserved (see discussion on the <code class="docutils literal notranslate"><span class="pre">-ir</span></code> option in the <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> command).</p>
+</div>
+<div class="section" id="showing-and-hiding-columns">
+<h2>Showing and Hiding Columns<a class="headerlink" href="#showing-and-hiding-columns" title="Permalink to this headline">¶</a></h2>
+<p>In the next example, let’s take a table that has many different columns such as the whole exon sequence variants from the subject project, which can be loaded using the alias <code class="docutils literal notranslate"><span class="pre">#wesVars#</span></code>:</p>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">#wesVars#</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 19%" />
+<col style="width: 6%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>CHROM</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>Reference</p></th>
+<th class="head"><p>Call</p></th>
+<th class="head"><p>CallCopies</p></th>
+<th class="head"><p>CallRatio</p></th>
+<th class="head"><p>Depth</p></th>
+<th class="head"><p>GL_Call</p></th>
+<th class="head"><p>FILTER</p></th>
+<th class="head"><p>FS</p></th>
+<th class="head"><p>FormatZip</p></th>
+<th class="head"><p>PN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>13273</p></td>
+<td><p>G</p></td>
+<td><p>C</p></td>
+<td><p>1</p></td>
+<td><p>0.2</p></td>
+<td><p>85</p></td>
+<td><p>318</p></td>
+<td><p>VQSRTrancheSNP99.90to100.00</p></td>
+<td><p>0.0</p></td>
+<td><p>Alt=C:GT=0/1,AD=68,17,DP=85,GQ=99,PL=318,0,826</p></td>
+<td><p>C416TO_ANDERSON_CHILD_2005_M</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>13273</p></td>
+<td><p>G</p></td>
+<td><p>C</p></td>
+<td><p>1</p></td>
+<td><p>0.239</p></td>
+<td><p>88</p></td>
+<td><p>408</p></td>
+<td><p>VQSRTrancheSNP99.90to100.00</p></td>
+<td><p>0.0</p></td>
+<td><p>Alt=C:GT=0/1,AD=67,21,DP=88,GQ=99,PL=408,0,723</p></td>
+<td><p>C416TO_ANDERSON_FATHER_1967_M</p></td>
+</tr>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>13273</p></td>
+<td><p>G</p></td>
+<td><p>C</p></td>
+<td><p>1</p></td>
+<td><p>0.206</p></td>
+<td><p>68</p></td>
+<td><p>231</p></td>
+<td><p>VQSRTrancheSNP99.90to100.00</p></td>
+<td><p>12.71</p></td>
+<td><p>Alt=C:GT=0/1,AD=54,14,DP=68,GQ=99,PL=231,0,687</p></td>
+<td><p>C416TO_ANDERSON_CHILD_2000_F</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>13302</p></td>
+<td><p>C</p></td>
+<td><p>T</p></td>
+<td><p>1</p></td>
+<td><p>0.614</p></td>
+<td><p>44</p></td>
+<td><p>50</p></td>
+<td><p>LowQual</p></td>
+<td><p>0.0</p></td>
+<td><p>Alt=T:GT=0/1,AD=17,27,DP=44,GQ=50,PL=50,0,239</p></td>
+<td><p>C416TO_FATHER</p></td>
+</tr>
+</tbody>
+</table>
+<p>Now let’s say that we only want to retrieve the reference and call columns along with quality filter (FILTER column) and the unique patient identifier. To retrieve only those columns, we could execute the following GOR query on the table:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wesVars# | <span class="nb">SELECT</span> 1,2,<span class="na">Reference</span>,<span class="na">Call</span>,<span class="na">FILTER</span>,<span class="na">PN</span> | <span class="nb">TOP</span> 4
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When writing comma-separated lists, take care not to have spaces between the items in a list.</p>
+</div>
+<p>This would result in the following result set being returned:</p>
+<table class="colwidths-given docutils align-default" id="id3">
+<caption><span class="caption-text">#wesVars# with 6 columns selected</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>CHROM</p></th>
+<th class="head"><p>POS</p></th>
+<th class="head"><p>Reference</p></th>
+<th class="head"><p>Call</p></th>
+<th class="head"><p>FILTER</p></th>
+<th class="head"><p>PN</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>13273</p></td>
+<td><p>G</p></td>
+<td><p>C</p></td>
+<td><p>VQSRTrancheSNP99.90to100.00</p></td>
+<td><p>C416TO_ANDERSON_CHILD_2005_M</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>13273</p></td>
+<td><p>G</p></td>
+<td><p>C</p></td>
+<td><p>VQSRTrancheSNP99.90to100.00</p></td>
+<td><p>C416TO_ANDERSON_FATHER_1967_M</p></td>
+</tr>
+<tr class="row-even"><td><p>chr1</p></td>
+<td><p>13273</p></td>
+<td><p>G</p></td>
+<td><p>C</p></td>
+<td><p>VQSRTrancheSNP99.90to100.00</p></td>
+<td><p>C416TO_ANDERSON_CHILD_2000_F</p></td>
+</tr>
+<tr class="row-odd"><td><p>chr1</p></td>
+<td><p>13302</p></td>
+<td><p>C</p></td>
+<td><p>T</p></td>
+<td><p>LowQual</p></td>
+<td><p>C416TO_FATHER</p></td>
+</tr>
+</tbody>
+</table>
+<p>We could accomplish the same result if we were to use the <a class="reference internal" href="command/HIDE.html#hide"><span class="std std-ref">HIDE</span></a> command to hide the columns we do not wish to see.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wesVars# | <span class="nb">HIDE</span> 5-8,FS,#11 | <span class="nb">TOP</span> 4
+</pre></div>
+</div>
+<p>In the example above, we are defining a range of columns (i.e. 5 through to 8); the FS column is referred to by its name; column #11 is referred to by its position in the column sequence.
+Commands allow reference to columns based on their number and their names, however, numbers must be prefixed by <code class="docutils literal notranslate"><span class="pre">#</span></code> must be used in <strong>WHERE</strong> and <strong>CALC</strong> to distinguish
+them from numbers in expressions. If the listed columns do not exist, the query will throw an exception.</p>
+<p>Note that commands and column names are case insensitive.</p>
+<p>See also: <a class="reference internal" href="command/HIDE.html"><span class="doc">HIDE</span></a> and <a class="reference internal" href="command/TRYSELECT.html"><span class="doc">TRYSELECT</span></a></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="columnModifications.html" class="btn btn-neutral float-right" title="Column Modifications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="basicGORqueries.html" class="btn btn-neutral float-left" title="GOR and NOR" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

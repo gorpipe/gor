@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>JOIN &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="wxnc-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">User manual</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>JOIN</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="join">
+<span id="id1"></span><h1>JOIN<a class="headerlink" href="#join" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#join"><span class="std std-ref">JOIN</span></a> command can be used in GOR queries to work with multiple sources (files, tables, or GOR streams) at once based on some overlap condition between the sources. It is possible to define the type of overlap condition and also to structure the output of the query based on some options that are defined in the table below.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> &lt;left_source&gt; | <span class="nb">JOIN</span> &lt;condition&gt; [options] &lt;right_source&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="conditions">
+<h2>Conditions<a class="headerlink" href="#conditions" title="Permalink to this headline">¶</a></h2>
+<p>A special set of arguments specify the matching conditions for the key columns in the left and right sources (i.e. <code class="docutils literal notranslate"><span class="pre">snp</span></code>, <code class="docutils literal notranslate"><span class="pre">seg</span></code> and <code class="docutils literal notranslate"><span class="pre">var</span></code>).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Type of join</p></td>
+<td><p>Description</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-snpsnp</span></code></p></td>
+<td><p>The overlap condition is an exact match between the first two columns (chr,pos) if no fuzz-factor is specified.
+Otherwise the overlap condition is snpB.pos-fuzzfac &lt;= snpA.pos and snpA.pos &lt;= snpB.pos+fuzzfac</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-snpseg</span></code></p></td>
+<td><p>The overlap condition is seg.start-fuzzfac &lt; snp.pos and snp.pos &lt;= seg.stop+fuzzfac.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-segseg</span></code></p></td>
+<td><p>The overlap condition is segA.start-fuzzfac &lt; segB.stop &amp;&amp; segA.stop+fuzzfac &gt; segB.start.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-segsnp</span></code></p></td>
+<td><p>The overlap condition is seg.start-fuzzfac &lt; snp.pos and snp.pos &lt;= seg.stop+fuzzfac.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-varseg</span></code></p></td>
+<td><p>Overlap of (ref,alt) variant with segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-segvar</span></code></p></td>
+<td><p>Overlap of segment with (ref,alt) variant.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>Further options on joins are specified in the table below.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-lstop</span> <span class="pre">col</span></code></p></td>
+<td><p>The column with the stop position of the segments in the left-source. Defaults to #3.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-rstop</span> <span class="pre">col</span></code></p></td>
+<td><p>The column with the stop position of the segments in the right-source. Defaults to #3.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-xl</span> <span class="pre">cols</span></code></p></td>
+<td><p>The columns to perform additional equi-join in the left-source.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-xr</span> <span class="pre">cols</span></code></p></td>
+<td><p>The columns to perform additional equi-join in the right-source</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-xcis</span></code></p></td>
+<td><p>Use case insensitive equi-joins.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-maxseg</span> <span class="pre">size</span></code></p></td>
+<td><p>The maximum segment size. The default is 3MB for -segseg  and -snpseg join.
+The default for the <code class="docutils literal notranslate"><span class="pre">-maxseg</span></code> value is set to 1 for <code class="docutils literal notranslate"><span class="pre">-segsnp</span></code>, <code class="docutils literal notranslate"><span class="pre">-varsnp</span></code>, <code class="docutils literal notranslate"><span class="pre">-snpsnp</span></code> joins.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span></code></p></td>
+<td><p>Left-join style overlap, shows all rows in the left-source.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span></code></p></td>
+<td><p>To-List style, single output line per left-source row.  Comma separation of multiple overlap values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Count, returns a column with the number of overlaps.  Only used with the -t option.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">fuzzfac</span></code></p></td>
+<td><p>A base pair proximity integer value, e.g. 0, 1000 or 10000000.
+Note that a large fuzz factor can increase the running time and memory usage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-n</span></code></p></td>
+<td><p>Return only rows from the left-stream that do NOT overlap with rightfile.gor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<td><p>Return only rows from leftfile.gor that are included in the overlap (without the columns from the right-source).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ic</span></code></p></td>
+<td><p>Return the rows in left-source and a column named overlap.
+Count which shows how many rows in right-source overlap.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ir</span></code></p></td>
+<td><p>Return the rows from right-source that overlap with the left-source.
+Depending on the nature of the left-source and the overlap condition,
+the join may have to be followed with SORT step to ensure GOR.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<td><p>Return only overlaps with the smallest distance (one or many). Only makes sense when used with the -f option.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">n</span></code></p></td>
+<td><p>Return only the closest n overlaps row from rightfile per row in the left input source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rprefix</span> <span class="pre">name</span></code></p></td>
+<td><p>A prefix to be added to the columns in the right-source.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
+<td><p>Reduced output.  Do not include distances and position columns from the right source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">colname</span></code></p></td>
+<td><p>Source column name (for GOR dictionary database file).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">char</span></code></p></td>
+<td><p>Character to denote empty field. Defaults to empty string, i.e. of length 0.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For <code class="docutils literal notranslate"><span class="pre">-varseg</span></code> and <code class="docutils literal notranslate"><span class="pre">-segvar</span></code> joins, there are a few extra options possible:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 87%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ref</span></code></p></td>
+<td><p>The column denoting the reference seq. (for both left- and right-source).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-refl</span></code></p></td>
+<td><p>The column denoting the reference seq. in left-source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-refr</span></code></p></td>
+<td><p>The column denoting the reference seq. right-source.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The following join command joins a <code class="docutils literal notranslate"><span class="pre">snp</span></code> left source (the <code class="docutils literal notranslate"><span class="pre">#dbSNP#</span></code> table) to a right source containing segments (<code class="docutils literal notranslate"><span class="pre">#genes#</span></code>).</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | join -<span class="no">snpseg</span> #genes#
+</pre></div>
+</div>
+<p>In this next example, the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> table is joined as a nested query, which is necessary if there will be some calculations or other modifications done to the right source. Here, the size of the genes is being calculated and they are then ranked in relation to all other genes on the same chromosome. Furthermore, the <code class="docutils literal notranslate"><span class="pre">-maxseg</span></code> is setting the maximum segment size to 1B bases to cover the length of the longest chromosome, since otherwise the result would be incorrect.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | join -<span class="no">snpseg</span> -maxseg 1000000000 &lt;(<span class="nd">gor</span> #genes# | calc size #3-#2 | rank chrom size -o asc | where rank_size &lt; 100)
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | where <span class="na">gene_symbol</span> ~ &#39;B*&#39; | join -segvar -ir #dbSNP# | sort 3000000 | verifyorder
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | where <span class="na">gene_symbol</span> ~ &#39;B*&#39; | segspan | join -segvar -ir #dbSNP# | verifyorder
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | where <span class="na">gene_symbol</span> ~ &#39;B*&#39; | segspan | join -segvar -ir #wgsvars# -s <span class="na">PN</span>
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | where <span class="na">gene_symbol</span> ~ &#39;B*&#39; | segspan | join -segvar -ir &lt;(<span class="nd">gor</span> #wgsvars# -s <span class="na">PN</span> -<span class="no">f</span> PN1,PN2)
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wgsvars# -ff myPNs.tsv | join -<span class="no">snpseg</span> -<span class="no">ic</span> -xl <span class="na">PN</span> -xr <span class="na">PN</span> -maxseg 10000 &lt;(<span class="nd">gor</span> #goodcov8# -ff myPNs.tsv)
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | multimap -cartesian myPNs.tsv | varjoin -l -xl <span class="na">PN</span> -xr <span class="na">PN</span> -e &#39;0&#39; -r &lt;(#wgsvars# -ff myPNs.tsv | select 1-4,<span class="na">FILTER</span>,Callcopies)
+| join -<span class="no">snpseg</span> -<span class="no">ic</span> -xl <span class="na">PN</span> -xr <span class="na">PN</span> &lt;(<span class="nd">gor</span> #goodcov8# -ff myPNs.tsv) | replace callcopies if(<span class="na">FILTER</span> != &#39;PASS&#39;,&#39;NA&#39;,if(callcopies=&#39;0&#39; and overlapCount=0,&#39;NA&#39;,callcopies)
+| sort 1 -c <span class="na">PN</span> | group 1 -<span class="no">gc</span> 3,4,rsID -lis -sc
+</pre></div>
+</div>
+<div class="section" id="equivalent-queries">
+<h3>Equivalent Queries<a class="headerlink" href="#equivalent-queries" title="Permalink to this headline">¶</a></h3>
+<p>The following queries are equivalent and illustrate how to use different commands to achieve the same result.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> -i #genes# == <span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> #genes# | group 1 -<span class="no">gc</span> 3-rsids
+
+<span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> -<span class="no">ic</span> #genes# == <span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> -l &lt;(<span class="nd">gor</span> #genes# | calc overlap 1) | group 1 -<span class="no">gc</span> 3-rsids -sum -<span class="no">ic</span> overlap | rename sum_overlap overlapcount
+
+<span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> -ir #genes# | sort 3000000 == <span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span>  #genes#  | select rsids[+1]- | sort 3000000
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1970 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
