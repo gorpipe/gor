@@ -67,6 +67,7 @@ public class GorZipLexOutputStream extends OutputStream {
     private int cachedOutputIdx = 0;
     private final byte byteToWrite;
 
+    private final int compressionLevel;
     private final boolean base64;
 
     private final LexRow chrColRow;
@@ -114,7 +115,17 @@ public class GorZipLexOutputStream extends OutputStream {
      * @throws IOException
      */
     public GorZipLexOutputStream(String fileName, boolean append, boolean useColumnEncodingZip, boolean md5, GorIndexType idx) throws IOException {
-        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5 ? new File(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx);
+        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5 ? new File(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx, Deflater.BEST_SPEED);
+    }
+
+    /**
+     * @param fileName             Name of gorz file to write to
+     * @param append               true if lines should be append to the end of the file
+     * @param useColumnEncodingZip
+     * @throws IOException
+     */
+    public GorZipLexOutputStream(String fileName, boolean append, boolean useColumnEncodingZip, boolean md5, GorIndexType idx, int compressionLevel) throws IOException {
+        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5 ? new File(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx, compressionLevel);
     }
 
     /**
@@ -122,7 +133,7 @@ public class GorZipLexOutputStream extends OutputStream {
      * @param useColumnEncodingZip
      */
     public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File, boolean base64) throws IOException {
-        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, null, GorIndexType.NONE, base64);
+        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, null, GorIndexType.NONE, Deflater.BEST_SPEED, base64);
     }
 
     /**
@@ -130,15 +141,15 @@ public class GorZipLexOutputStream extends OutputStream {
      * @param useColumnEncodingZip
      */
     public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File) throws IOException {
-        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, null, GorIndexType.NONE, false);
+        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, null, GorIndexType.NONE, Deflater.BEST_SPEED, false);
     }
 
     /**
      * @param output
      * @param useColumnEncodingZip
      */
-    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File, File idxFile, GorIndexType idxType) throws IOException {
-        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, idxFile, idxType, false);
+    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File, File idxFile, GorIndexType idxType, int compressionLevel) throws IOException {
+        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, idxFile, idxType, compressionLevel, false);
     }
 
     /**
@@ -149,13 +160,14 @@ public class GorZipLexOutputStream extends OutputStream {
      * @param posCol
      * @param useColumnEncodingZip
      */
-    private GorZipLexOutputStream(OutputStream output, int chrCol, int posCol, boolean useColumnEncodingZip, File md5File, File idxFile, GorIndexType idxType, boolean base64) throws IOException {
+    private GorZipLexOutputStream(OutputStream output, int chrCol, int posCol, boolean useColumnEncodingZip, File md5File, File idxFile, GorIndexType idxType, int compressionLevel, boolean base64) throws IOException {
         this.chrColRow = new LexRow(chrCol, posCol);
         this.idx = idxFile != null ? new GorIndexFile(idxFile, idxType) : null;
         this.target = md5File != null ? new Md5CalculatingOutputStream(output, md5File) : output;
         this.byteOutput = new ByteArrayWrapper(DEFAULT_CHUNK);
         this.useColumnEncodingZip = useColumnEncodingZip;
         this.byteToWrite = (byte) ((useColumnEncodingZip ? 1 : 0) + ((useZStd ? 1 : 0) << 1));
+        this.compressionLevel = compressionLevel;
         this.base64 = base64;
     }
 
@@ -328,7 +340,7 @@ public class GorZipLexOutputStream extends OutputStream {
                 this.target.write(headerbytes, 0, headerbytes.length);
                 if (this.useColumnEncodingZip) { // Only write external column map if using column encoding
                     byte[] zippedExtMap = BlockPacker.bytesFromLookupMap(extLookupMap);
-                    byte[] zipBuffer = this.useZStd ? zipItZStd(zippedExtMap) : zipItZLib(zippedExtMap);
+                    byte[] zipBuffer = this.useZStd ? zipItZStd(zippedExtMap, compressionLevel) : zipItZLib(zippedExtMap, compressionLevel);
                     int len = zipBuffer.length;
                     int siz = base64 ? base64Length(len, true) : base128Length(len);
                     if( zippedExtMap.length < siz ) {
@@ -360,7 +372,7 @@ public class GorZipLexOutputStream extends OutputStream {
         Arrays.stream(this.cachedOutput, 0, this.cachedOutputIdx).parallel().forEach(bufferInfo -> {
             byte[] buffer = bufferInfo.block;
             byte[] zipBuffer = bufferInfo.zipBuffer;
-            int len = this.useZStd ? zipItZStd(bufferInfo) : zipItZLib(bufferInfo);
+            int len = this.useZStd ? zipItZStd(bufferInfo, compressionLevel) : zipItZLib(bufferInfo, compressionLevel);
             int siz = base64 ? base64Length(len, true) : base128Length(len);
             if( buffer.length < siz ) {
                 int newLen = buffer.length;
@@ -394,8 +406,8 @@ public class GorZipLexOutputStream extends OutputStream {
         this.cachedOutputIdx = 0;
     }
 
-    private static byte[] zipItZLib(byte[] buffer) {
-        final Deflater deflater = new Deflater();
+    private static byte[] zipItZLib(byte[] buffer, int compressionLevel) {
+        final Deflater deflater = new Deflater(compressionLevel);
         deflater.setInput(buffer);
         deflater.finish();
         byte[] toWriteTo = new byte[1024];
@@ -413,9 +425,9 @@ public class GorZipLexOutputStream extends OutputStream {
         return Arrays.copyOfRange(toWriteTo, 0, len);
     }
 
-    private static byte[] zipItZStd(byte[] buffer) {
+    private static byte[] zipItZStd(byte[] buffer, int compressionLevel) {
         final ByteArrayWrapper bufferToWriteTo = new ByteArrayWrapper(16);
-        try (final ZstdOutputStream zipStream = new ZstdOutputStream(bufferToWriteTo)) {
+        try (final ZstdOutputStream zipStream = new ZstdOutputStream(bufferToWriteTo, compressionLevel)) {
             zipStream.write(buffer);
             zipStream.flush();
             zipStream.close();
@@ -425,8 +437,8 @@ public class GorZipLexOutputStream extends OutputStream {
         }
     }
 
-    private static int zipItZLib(BufferInfo bufferInfo) {
-        final Deflater deflater = new Deflater();
+    private static int zipItZLib(BufferInfo bufferInfo, int compressionLevel) {
+        final Deflater deflater = new Deflater(compressionLevel);
         deflater.setInput(bufferInfo.block, 0, bufferInfo.blockLen);
         deflater.finish();
         int len = 0;
@@ -443,9 +455,9 @@ public class GorZipLexOutputStream extends OutputStream {
         return len;
     }
 
-    private static int zipItZStd(BufferInfo bufferInfo) {
+    private static int zipItZStd(BufferInfo bufferInfo, int compressionLevel) {
         final ByteArrayWrapper zipBuffer = new ByteArrayWrapper(bufferInfo.zipBuffer);
-        try (final ZstdOutputStream zipStream = new ZstdOutputStream(zipBuffer)){
+        try (final ZstdOutputStream zipStream = new ZstdOutputStream(zipBuffer, compressionLevel)){
             zipStream.write(bufferInfo.block, 0, bufferInfo.blockLen);
             zipStream.flush();
             zipStream.close();

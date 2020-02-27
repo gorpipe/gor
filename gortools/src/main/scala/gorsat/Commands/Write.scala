@@ -22,6 +22,8 @@
 
 package gorsat.Commands
 
+import java.util.zip.Deflater
+
 import gorsat.Analysis.{ForkWrite, ForkWriteOptions}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
@@ -29,7 +31,7 @@ import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.binsearch.GorIndexType
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m", "-f -i -t -prefix", 1),
+  CommandArguments("-r -c -m", "-f -i -t -l -prefix", 1),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -44,11 +46,13 @@ class Write extends CommandInfo("WRITE",
     var columnCompress: Boolean = false
     var md5 = false
     var idx = GorIndexType.NONE
+    var compressionLevel = Deflater.BEST_SPEED
 
     if (hasOption(args, "-f")) forkCol = columnOfOption(args, "-f", forcedInputHeader, executeNor)
     remove = hasOption(args, "-r")
     columnCompress = hasOption(args, "-c")
     md5 = hasOption(args, "-m")
+    if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0","1","2","3","4","5","6","7","8","9")).toInt
 
     var indexing = "NONE"
 
@@ -72,6 +76,6 @@ class Write extends CommandInfo("WRITE",
       case "FULL" => idx = GorIndexType.FULLINDEX
     }
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, executeNor, ForkWriteOptions(remove, columnCompress, md5, idx, tagArray, prefixFile)), forcedInputHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, executeNor, ForkWriteOptions(remove, columnCompress, md5, idx, tagArray, prefixFile, compressionLevel)), forcedInputHeader)
   }
 }

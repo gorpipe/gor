@@ -31,7 +31,8 @@ import picocli.CommandLine;
                 SetCmd.FileCache.class,
                 SetCmd.RequestStats.class,
                 SetCmd.Timing.class,
-                SetCmd.DisplayResults.class
+                SetCmd.DisplayResults.class,
+                SetCmd.ConfigFile.class
         }
 )
 public class SetCmd implements Runnable {
@@ -124,6 +125,23 @@ public class SetCmd implements Runnable {
         @Override
         public void run() {
             parent.getShell().setDisplayResults(state == State.ON);
+        }
+    }
+
+    @CommandLine.Command(
+            name="config",
+            description = "Set the config file for GOR"
+    )
+    static public class ConfigFile implements Runnable {
+        @CommandLine.ParentCommand
+        private SetCmd parent;
+
+        @CommandLine.Parameters(index = "0", arity = "0..1")
+        private String configFile;
+
+        @Override
+        public void run() {
+            parent.getShell().setConfigFile(configFile);
         }
     }
 

@@ -22,6 +22,8 @@
 
 package gorsat.Outputs
 
+import java.util.zip.Deflater
+
 import gorsat.Commands.Output
 import org.gorpipe.model.genome.files.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.model.genome.files.gor.Row
@@ -35,8 +37,8 @@ import org.gorpipe.model.genome.files.gor.Row
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   * @param idx Whether and index file should be written.
   */
-class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, idx: GorIndexType = GorIndexType.NONE) extends Output {
-  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, idx)
+class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED) extends Output {
+  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, idx, compressionLevel)
 
   def setup {
     if (header != null & !skipHeader) out.setHeader(header)

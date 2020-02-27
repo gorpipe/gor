@@ -31,6 +31,7 @@ import org.junit.Test;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -61,6 +62,18 @@ public class UTestGorWrite {
         path.toFile().deleteOnExit();
         String md5str = new String(Files.readAllBytes(path));
         Assert.assertEquals("Not a valid md5 string", 32, md5str.length());
+    }
+
+    @Test
+    public void testGorzWriteCompressionLevel() throws IOException {
+        Path tmpfile = tmpdir.resolve("genes.gorz");
+        tmpfile.toFile().deleteOnExit();
+        String query = "gor ../tests/data/gor/genes.gor | write -l 9 " + tmpfile.toAbsolutePath().normalize().toString();
+
+        TestUtils.runGorPipeCount(query);
+
+        Path originalGenesGorz = Paths.get("../tests/data/gor/genes.gorz");
+        Assert.assertNotEquals("Files with different compression level are of same size", Files.size(tmpfile), Files.size(originalGenesGorz));
     }
 
     @Test

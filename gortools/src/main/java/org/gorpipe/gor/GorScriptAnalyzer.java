@@ -22,41 +22,29 @@
 
 package org.gorpipe.gor;
 
-import org.gorpipe.exceptions.GorException;
-import org.gorpipe.exceptions.GorParsingException;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.MacroUtilities;
 import gorsat.Script.ExecutionBlock;
 import gorsat.Script.ExecutionGraph;
+import org.gorpipe.exceptions.GorException;
 
 import java.util.*;
 
 public class GorScriptAnalyzer {
+    final private String input;
     private Map<String, GorScriptTask> tasksByName = new HashMap<>();
     private List<List<GorScriptTask>> tasksByLevel = new ArrayList<>();
     private List<GorScriptTask> extraTasks = new ArrayList<>();
 
     private GorException exception;
 
-    public void parse(String input) {
-        tasksByName = new HashMap<>();
-        tasksByLevel = new ArrayList<>();
+    public GorScriptAnalyzer(String input) {
+        this.input = input;
+    }
 
-        try {
-            SemanticChecker semanticChecker = new SemanticChecker();
-            semanticChecker.validate(input);
-
-            String[] rawCommands = CommandParseUtilities.quoteSafeSplitAndTrim(input, ';');
-            for( int i = 0; i < rawCommands.length; i++) {
-                rawCommands[i] = CommandParseUtilities.cleanupQuery(rawCommands[i]);
-            }
-            Map<String, String> aliases = MacroUtilities.extractAliases(rawCommands);
-            String[] commands = MacroUtilities.applyAliases(rawCommands, aliases);
-            ExecutionGraph executionGraph = new ExecutionGraph(commands);
-            convertExecutionGraph(executionGraph);
-        } catch (GorParsingException e) {
-            exception = e;
-        }
+    public void semanticCheck() {
+        SemanticChecker semanticChecker = new SemanticChecker();
+        semanticChecker.validate(input);
     }
 
     public GorException getException() {
@@ -72,6 +60,17 @@ public class GorScriptAnalyzer {
     }
 
     public Collection<GorScriptTask> getTasks() {
+        tasksByName = new HashMap<>();
+        tasksByLevel = new ArrayList<>();
+        String[] rawCommands = CommandParseUtilities.quoteSafeSplitAndTrim(input, ';');
+        for( int i = 0; i < rawCommands.length; i++) {
+            rawCommands[i] = CommandParseUtilities.cleanupQuery(rawCommands[i]);
+        }
+        Map<String, String> aliases = MacroUtilities.extractAliases(rawCommands);
+        String[] commands = MacroUtilities.applyAliases(rawCommands, aliases);
+        ExecutionGraph executionGraph = new ExecutionGraph(commands);
+        convertExecutionGraph(executionGraph);
+
         return tasksByName.values();
     }
 

@@ -22,21 +22,16 @@
 
 package org.gorpipe.gorshell;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.commons.io.FileUtils;
-import org.gorpipe.exceptions.GorException;
+import gorsat.process.PipeInstance;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.gor.RequestStats;
 import org.gorpipe.model.genome.files.gor.GorMonitor;
 import org.gorpipe.model.genome.files.gor.Row;
-import gorsat.process.PipeInstance;
 import org.jline.reader.LineReader;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStyle;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 public class QueryRunner extends Thread {
     private final String query;
@@ -55,6 +50,7 @@ public class QueryRunner extends Thread {
     private long afterLoopTime;
     private boolean isDone;
     private boolean displayResults = true;
+    private String configFile;
 
     QueryRunner(String query, LineReader lineReader, Thread owner) {
         this.query = query;
@@ -71,6 +67,7 @@ public class QueryRunner extends Thread {
         GorShellSessionFactory sessionFactory = new GorShellSessionFactory(cwd);
         sessionFactory.setFileCacheEnabled(fileCacheEnabled);
         sessionFactory.setRequestStatsEnabled(requestStatsEnabled);
+        sessionFactory.setConfigFile(configFile);
 
         gorSession = sessionFactory.create();
         gorSession.getSystemContext().setMonitor(gorMonitor);
@@ -176,5 +173,9 @@ public class QueryRunner extends Thread {
 
     public void setDisplayResults(boolean displayResults) {
         this.displayResults = displayResults;
+    }
+
+    public void setConfigFile(String configFile) {
+        this.configFile = configFile;
     }
 }
