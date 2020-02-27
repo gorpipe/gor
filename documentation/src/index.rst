@@ -11,6 +11,7 @@ This documentation covers all aspects of the `GOR open source project`_, which c
   :class: gor-gorilla
   :align: center
   :alt: The GOR Logo
+  :target: #
 
 About GORpipe
 =============
