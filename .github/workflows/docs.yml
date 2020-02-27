@@ -1,0 +1,32 @@
+name: Publish docs
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    # Pinned to the SHA that's currently tagged as 0.4
+    - uses: ammaraskar/sphinx-action@8b4f60114d7fd1faeba1a712269168508d4750d2
+      with:
+        docs-folder: "documentation/src/"
+    - name: Commit documentation changes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git clone https://github.com/gorpipe/gor.git --branch gh-pages --single-branch gh-pages
+        cp -r documentation/src/_build/html/* gh-pages/
+        cd gh-pages
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        # Commit fails if no changes are present. If it succeeds we set $GIT_PUSH to true,
+        # otherwise we just return true so the pipeline doesn't fail.
+        git commit -m "Update documentation" -a && GIT_PUSH=true || true
+        if [[ "$GIT_PUSH" = true ]]; then
+                git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/gorpipe/gor.git" HEAD:gh-pages
+        fi
