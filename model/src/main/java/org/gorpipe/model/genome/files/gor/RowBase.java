@@ -412,9 +412,13 @@ public class RowBase extends Row implements Serializable {
         }
 
         String newChr = columns[0] == 0 ? chr : sb.substring(0, newSplitArray[0]);
-        int newPos = columns[1] == 1 ? pos : RowObj.colInt(1, sb, newSplitArray);
+        try {
+            int newPos = columns[1] == 1 ? pos : RowObj.colInt(1, sb, newSplitArray);
+            return new RowBase(newChr, newPos, sb, newSplitArray, null);
+        } catch (NumberFormatException e) {
+            throw new GorDataException("Position is invalid", e);
+        }
 
-        return new RowBase(newChr, newPos, sb, newSplitArray, null);
     }
 
     @Override
