@@ -11,13 +11,13 @@ Before setting up GORpipe you need to have Java set up on your computer:
 * Java JDK or JRE version 8 or higher (https://www.oracle.com/java/technologies/javase-downloads.html)
 * Open JDK can also be used (https://openjdk.java.net/install/)
     
-## Setting up Test Data
+## Setting up test data
 
 Test data for GOR is obtained by cloning the GOR test data repository (https://github.com/gorpipe/gor-test-data) as a submodule into the `tests/data` folder:
 
     git submodule update --init --recursive
 
-## Getting Started With GORpipe
+## Getting started with GORpipe
 
 To get started with GORpipe, compile the code:
 
@@ -41,7 +41,7 @@ The results should be as follows:
     chr13   19020013        C       T       rs181615907
     chr13   19020145        G       T       rs28970552
 
-## Setting up an Interactive Shell for GORpipe
+## Setting up an interactive shell for GORpipe
 
 GORpipe can be invoked and used through an interactive shell session in a terminal - a sort of REPL for GOR, coined GORshell. Start a GORshell by executing:
 
@@ -57,7 +57,7 @@ Running GOR without setting up the test data submodule can be done by generating
 
     gor <(gorrows -p chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian <(norrows 100 | group -lis -sc #1))
 
-## Add to Path
+## Setting environment variables
 
 For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths: 
 
@@ -69,6 +69,11 @@ For convenience, GORpipe and GORshell can be added to path. For example on Mac b
     <PATH_TO_GOR_REPO>/tools/build/install/tools/bin/gorshell 
 
 Then GORpipe and GORshell can be started via `gorpipe` and `gorshell` from any location.
+
+## How to get help?
+
+Documentation for GORpipe can be found at: http://docs.gorpipe.org/. Additionally, help can be found while using GORpipe
+by executing `gorpipe help` or just `help` within the GOR shell.
 
 ## Citations
         

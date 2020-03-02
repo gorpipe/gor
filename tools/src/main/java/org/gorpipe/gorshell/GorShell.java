@@ -22,6 +22,7 @@
 
 package org.gorpipe.gorshell;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gorsat.Commands.InputSourceInfo;
 import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
@@ -53,15 +54,20 @@ public class GorShell {
     private CommandLine commandLine;
     private QueryRunner runner = null;
     private String input = "";
-    private boolean timingEnabled = false;
-    private boolean fileCacheEnabled = true;
-    private boolean requestStatsEnabled = false;
-    private boolean displayResults = true;
     private boolean exit = false;
-    private String configFile = "";
 
-    private Map<String, String> createStatements = new HashMap<>();
-    private Map<String, String> defStatements = new HashMap<>();
+    public static class Settings {
+        public boolean timingEnabled = false;
+        public boolean fileCacheEnabled = true;
+        public boolean requestStatsEnabled = false;
+        public boolean displayResults = true;
+        public String configFile = "";
+        public Map<String, String> createStatements = new HashMap<>();
+        public Map<String, String> defStatements = new HashMap<>();
+    }
+
+    private Settings settings = new Settings();
+
     private GorShell() throws IOException {
         terminal = TerminalBuilder.builder().jansi(false).build();
 
@@ -103,31 +109,31 @@ public class GorShell {
     }
 
     public void setConfigFile(String configFile) {
-        this.configFile = configFile;
+        settings.configFile = configFile;
     }
 
     void setTimingEnabled(boolean enableTiming) {
-        timingEnabled = enableTiming;
+        settings.timingEnabled = enableTiming;
     }
 
     void setFileCacheEnabled(boolean fileCacheEnabled) {
-        this.fileCacheEnabled = fileCacheEnabled;
+        settings.fileCacheEnabled = fileCacheEnabled;
     }
 
     void setRequestStatsEnabled(boolean requestStatsEnabled) {
-        this.requestStatsEnabled = requestStatsEnabled;
+        settings.requestStatsEnabled = requestStatsEnabled;
     }
 
     void setDisplayResults(boolean displayResults) {
-        this.displayResults = displayResults;
+        settings.displayResults = displayResults;
     }
 
     void create(String name, String stmt) {
-        createStatements.put(name, stmt);
+        settings.createStatements.put(name, stmt);
     }
 
     void def(String name, String stmt) {
-        defStatements.put(name, stmt);
+        settings.defStatements.put(name, stmt);
     }
 
     void script(String scriptName) {
@@ -148,19 +154,19 @@ public class GorShell {
     }
 
     void showCreates() {
-        if (createStatements.isEmpty()) {
+        if (settings.createStatements.isEmpty()) {
             lineReader.printAbove("No create statements defined");
         } else {
-            String msg = String.format("%d create statements:", createStatements.size());
+            String msg = String.format("%d create statements:", settings.createStatements.size());
             lineReader.printAbove(msg);
         }
-        for (String name : createStatements.keySet()) {
+        for (String name : settings.createStatements.keySet()) {
             lineReader.printAbove(name);
         }
     }
 
     void showCreate(String name) {
-        String statement = createStatements.getOrDefault(name, null);
+        String statement = settings.createStatements.getOrDefault(name, null);
         if (statement == null) {
             String msg = String.format("%s is not a defined create statement", name);
             lineReader.printAbove(msg);
@@ -170,19 +176,19 @@ public class GorShell {
     }
 
     void showDefs() {
-        if (defStatements.isEmpty()) {
+        if (settings.defStatements.isEmpty()) {
             lineReader.printAbove("No def statements");
         } else {
-            String msg = String.format("%d def statements:", defStatements.size());
+            String msg = String.format("%d def statements:", settings.defStatements.size());
             lineReader.printAbove(msg);
         }
-        for (String name : defStatements.keySet()) {
+        for (String name : settings.defStatements.keySet()) {
             lineReader.printAbove(name);
         }
     }
 
     void showDef(String name) {
-        String statement = defStatements.getOrDefault(name, null);
+        String statement = settings.defStatements.getOrDefault(name, null);
         if (statement == null) {
             String msg = String.format("%s is not a def statement", name);
             lineReader.printAbove(msg);
@@ -211,11 +217,29 @@ public class GorShell {
     }
 
     private void run() throws IOException {
+        loadSettings();
         lineReader.getHistory().load();
 
         mainLoop();
 
         lineReader.getHistory().save();
+        saveSettings();
+    }
+
+    private void saveSettings() throws IOException {
+        File file = getSettingsFile();
+        String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(settings);
+        FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
+    }
+
+    private void loadSettings() throws IOException {
+        File file = getSettingsFile();
+        String json = FileUtils.readFileToString(file, Charset.defaultCharset());
+        settings = new ObjectMapper().readValue(json, Settings.class);
+    }
+
+    private File getSettingsFile() {
+        return new File(System.getProperty("user.home") + File.separator + ".gorshell_settings");
     }
 
     private void mainLoop() {
@@ -303,19 +327,19 @@ public class GorShell {
 
     private StringBuilder getScript() {
         StringBuilder script = new StringBuilder();
-        addStatements(script, "def", this.defStatements);
-        addStatements(script, "create", this.createStatements);
+        addStatements(script, "def", settings.defStatements);
+        addStatements(script, "create", settings.createStatements);
         return script;
     }
 
     private void runQuery(String script) {
         resetRunner();
         runner = new QueryRunner(script, lineReader, Thread.currentThread());
-        runner.setTimingEnabled(timingEnabled);
-        runner.setFileCacheEnabled(fileCacheEnabled);
-        runner.setRequestStatsEnabled(requestStatsEnabled);
-        runner.setDisplayResults(displayResults);
-        runner.setConfigFile(configFile);
+        runner.setTimingEnabled(settings.timingEnabled);
+        runner.setFileCacheEnabled(settings.fileCacheEnabled);
+        runner.setRequestStatsEnabled(settings.requestStatsEnabled);
+        runner.setDisplayResults(settings.displayResults);
+        runner.setConfigFile(settings.configFile);
         runner.start();
     }
 
