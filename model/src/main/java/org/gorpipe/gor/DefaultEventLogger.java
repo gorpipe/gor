@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor;
 
+import org.gorpipe.gor.stats.StatsCollector;
+
 import java.util.Collection;
 
 @SuppressWarnings("squid:S1186")
@@ -52,6 +54,11 @@ public class DefaultEventLogger implements EventLogger {
 
     @Override
     public SessionInfo getInfo() {
+        return null;
+    }
+
+    @Override
+    public StatsCollector getStatsCollector() {
         return null;
     }
 }

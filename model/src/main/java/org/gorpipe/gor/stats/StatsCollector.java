@@ -31,7 +31,7 @@ public class StatsCollector {
     private Map<Integer, String> senderAnnotations = new HashMap<>();
     private Map<String, Integer> registeredNames = new HashMap<>();
 
-    public int registerSender(String senderName, String annotation) {
+    public synchronized int registerSender(String senderName, String annotation) {
         String registeredName = senderName + ":" + annotation;
         int id = registeredNames.getOrDefault(registeredName, 0);
         if (id == 0) {
@@ -46,22 +46,22 @@ public class StatsCollector {
         return id;
     }
 
-    public void inc(int sender, String stat) {
+    public synchronized void inc(int sender, String stat) {
         Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<>());
         senderStats.compute(stat, (k, v) -> v == null ? 1.0 : v + 1.0);
     }
 
-    public void dec(int sender, String stat) {
+    public synchronized void dec(int sender, String stat) {
         Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<>());
         senderStats.compute(stat, (k, v) -> v == null ? -1.0 : v - 1.0);
     }
 
-    public void add(int sender, String stat, double delta) {
+    public synchronized void add(int sender, String stat, double delta) {
         Map<String, Double> senderStats = statsPerSender.computeIfAbsent(sender, k ->new HashMap<>());
         senderStats.compute(stat, (k, v) -> v == null ? delta : v + delta);
     }
 
-    public Map<String, Map<String, Double>> getStats() {
+    public synchronized Map<String, Map<String, Double>> getStats() {
         HashMap<String, Map<String, Double>> namedStats = new HashMap<>();
         statsPerSender.forEach((k,v) -> namedStats.put(senderNames.get(k) + ":" + senderAnnotations.get(k), v));
         return namedStats;
