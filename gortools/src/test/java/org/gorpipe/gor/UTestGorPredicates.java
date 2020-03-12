@@ -54,7 +54,7 @@ public class UTestGorPredicates {
         String[] header = Files.lines(p).findFirst().orElseThrow(() -> new NoSuchElementException("No value present")).split("\t");
         String[] types = Files.lines(p).skip(1).limit(8).map(RowObj::apply).reduce(gorInfer).orElseThrow(() -> new NoSuchElementException("No value present")).toString().split("\t");
         GorRowFilterFunction<Row> gorFilter = new GorRowFilterFunction<>("Gene_Symbol = 'BRCA2'", header, types);
-        Row gene = Files.lines(p).map(RowObj::apply).filter(gorFilter).findFirst().orElseThrow(() -> new NoSuchElementException("No value present"));
+        Row gene = Files.lines(p).skip(1).map(RowObj::apply).filter(gorFilter).findFirst().orElseThrow(() -> new NoSuchElementException("No value present"));
         Assert.assertEquals("Wrong gene locus", "chr13\t32889610\t32973805\tBRCA2", gene.toString());
     }
 
@@ -66,7 +66,7 @@ public class UTestGorPredicates {
         String[] types = Files.lines(p).skip(1).limit(8).map(RowObj::apply).reduce(gorInfer).orElseThrow(() -> new NoSuchElementException("No value present")).toString().split("\t");
         GorRowFilterFunction<Row> gorFilter = new GorRowFilterFunction<>("Gene_Symbol = 'BRCA2'", header, types);
         GorRowMapFunction gorMap = new GorRowMapFunction("if(1>0,1,0)", header, types);
-        Row gene = Files.lines(p).map(RowObj::apply).filter(gorFilter).map(gorMap).findFirst().orElseThrow(() -> new NoSuchElementException("No value present"));
+        Row gene = Files.lines(p).skip(1).map(RowObj::apply).filter(gorFilter).map(gorMap).findFirst().orElseThrow(() -> new NoSuchElementException("No value present"));
         Assert.assertEquals("Wrong row generated", "chr13\t32889610\t32973805\tBRCA2\t1", gene.toString());
     }
 
@@ -81,7 +81,7 @@ public class UTestGorPredicates {
 
         GorRowFilterFunction<Row> gorFilter = new GorRowFilterFunction<>("Gene_Symbol = 'BRCA2'", hsplit, types);
         GorRowQueryFunction gorQuery = new GorRowQueryFunction("group chrom -count", header);
-        Row gene = Stream.concat(Files.lines(p).map(RowObj::apply).filter(gorFilter),Stream.of(RowObj.apply("chrZ\t-1"))).flatMap(gorQuery).findFirst().orElseThrow(() -> new NoSuchElementException("No value present"));
+        Row gene = Stream.concat(Files.lines(p).skip(1).map(RowObj::apply).filter(gorFilter),Stream.of(RowObj.apply("chrZ\t-1"))).flatMap(gorQuery).findFirst().orElseThrow(() -> new NoSuchElementException("No value present"));
         Assert.assertEquals("Wrong result generated", "chr13\t0\t150000000\t1", gene.toString());
     }
 }

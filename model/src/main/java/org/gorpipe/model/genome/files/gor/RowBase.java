@@ -52,11 +52,7 @@ public class RowBase extends Row implements Serializable {
         allCols = input;
         splitArray = createSplitArray(allCols, numColumns);
         chr = RowObj.colString(0, allCols, splitArray).toString();
-        try {
-            pos = RowObj.colInt(1, allCols, splitArray);
-        } catch(NumberFormatException e) {
-            pos = 0;
-        }
+        pos = RowObj.colInt(1, allCols, splitArray);
     }
 
     public RowBase(CharSequence input) {

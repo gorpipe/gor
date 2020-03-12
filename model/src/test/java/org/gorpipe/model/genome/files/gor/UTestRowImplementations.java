@@ -63,6 +63,7 @@ public abstract class UTestRowImplementations {
 
     @Test
     public void posWhenPosIsInvalid() {
+        exception.expect(NumberFormatException.class);
         Row r = createRow("chr1\tx");
         assertEquals(0, r.pos);
     }

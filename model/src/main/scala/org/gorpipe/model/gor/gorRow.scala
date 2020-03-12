@@ -68,7 +68,11 @@ object RowObj {
         throw new java.lang.NumberFormatException("Error in "+str.subSequence(start,stop)+". "+"Row: "+str+" column: "+n)
       }
       else {
-        num = num * 10 + (si - '0'); i += 1
+        val next = num * 10 + (si - '0')
+        if (next < num) {
+          throw new java.lang.NumberFormatException("Number is too large for Int")
+        }
+        num = next; i += 1
       }
     }
     if (isNegative) -num else num

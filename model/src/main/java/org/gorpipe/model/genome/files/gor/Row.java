@@ -431,10 +431,13 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
         while(end < length && input.charAt(end) != '\t') {
             char digit = input.charAt(end);
             if(digit < '0' || digit > '9') {
-                pos = 0;
-                return end;
+                throw new NumberFormatException("Invalid position");
             }
-            val = val * 10 + (digit - '0');
+            int next = val * 10 + (digit - '0');
+            if (next < val) {
+                throw new NumberFormatException("Number too large for position");
+            }
+            val = next;
             end++;
         }
         pos = val;
