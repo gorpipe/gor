@@ -202,7 +202,7 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         if (Files.exists(tablePath)) {
             throw new GorSystemException("Table already exists:  " + tablePath, null);
         }
-        DictionaryTable table = new DictionaryTable.Builder<>(tablePath).useHistory(true)
+        DictionaryTable table = new Builder<>(tablePath).useHistory(true)
                 .securityContext("").validateFiles(false).build();
         table.insert(data);
         table.save();
