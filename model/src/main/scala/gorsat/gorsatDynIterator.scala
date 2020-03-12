@@ -27,7 +27,7 @@
 package gorsat
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
-import org.gorpipe.exceptions.GorSystemException
+import org.gorpipe.exceptions.{GorDataException, GorSystemException}
 import org.gorpipe.gor.{GorContext, GorSession}
 import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.iterators.{LineIterator, RowSource, TimedRowSource}
@@ -291,14 +291,18 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   class DynamicGorNorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) {
     override def next() : Row = {
       val nr = super.next()
-      val x = nr.toString
-      val f = x.indexOf('\t')
-      val s = x.indexOf('\t',f+1)
-      val n = x.indexOf('\t',s+1)
-      val l = x.indexOf('\t',n+1)
-      val k = x.substring( l+1 )
-      val r = RowObj(x.substring(s+1,n),x.substring(n+1,l).toInt,k)
-      r
+      try {
+        val chrom = nr.colAsString(2).toString
+        val pos = nr.colAsInt(3)
+        val rest = nr.colsSlice(4, nr.numCols()).toString
+        val r = RowObj.apply(chrom, pos, rest)
+        r
+      } catch {
+        case e: ArrayIndexOutOfBoundsException =>
+          val exception = new GorDataException("Invalid GOR row")
+          exception.setRow(nr.otherCols())
+          throw exception
+      }
     }
     override def getHeader : String = {
       val h = super.getHeader

@@ -638,12 +638,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
         inputSource.close()
         gue.setCommandName(command)
         gue.setCommandIndex(i + 1)
-
-        gue match {
-          case gpe: GorParsingException => gpe.setCommandStep(command + " " + paramString)
-          case gre: GorResourceException => gre.setCommandStep(command + " " + paramString)
-        }
-
+        gue.setCommandStep(command + " " + paramString)
         gue.setRequestID(context.getSession.getRequestId)
 
         throw gue

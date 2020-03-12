@@ -51,4 +51,5 @@ public interface EventLogger {
     void iteratorCreated(String args);
     void endSession();
     SessionInfo getInfo();
+    StatsCollector getStatsCollector();
 }

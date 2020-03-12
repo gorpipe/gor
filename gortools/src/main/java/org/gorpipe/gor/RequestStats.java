@@ -178,6 +178,11 @@ public class RequestStats implements EventLogger {
         addContextStats(session.getGorContext());
     }
 
+    @Override
+    public StatsCollector getStatsCollector() {
+        return new StatsCollector();
+    }
+
     static class QueryInfo {
         public String requestId;
         public Map<String, GorScriptTask> tasks = new HashMap<>();

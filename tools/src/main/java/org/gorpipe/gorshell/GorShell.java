@@ -226,16 +226,24 @@ public class GorShell {
         saveSettings();
     }
 
-    private void saveSettings() throws IOException {
-        File file = getSettingsFile();
-        String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(settings);
-        FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
+    private void saveSettings() {
+        try {
+            File file = getSettingsFile();
+            String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(settings);
+            FileUtils.writeStringToFile(file, json, Charset.defaultCharset());
+        } catch (IOException e) {
+            // Ignore
+        }
     }
 
-    private void loadSettings() throws IOException {
-        File file = getSettingsFile();
-        String json = FileUtils.readFileToString(file, Charset.defaultCharset());
-        settings = new ObjectMapper().readValue(json, Settings.class);
+    private void loadSettings() {
+        try {
+            File file = getSettingsFile();
+            String json = FileUtils.readFileToString(file, Charset.defaultCharset());
+            settings = new ObjectMapper().readValue(json, Settings.class);
+        } catch (IOException e) {
+            settings = new Settings();
+        }
     }
 
     private File getSettingsFile() {

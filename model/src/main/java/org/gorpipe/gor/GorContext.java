@@ -35,7 +35,7 @@ public class GorContext {
     private final String signature;
 
     private Optional<String> sortCols = Optional.empty();
-    private final StatsCollector stats = new StatsCollector();
+    private StatsCollector stats = null;
 
     private long startedAt = System.currentTimeMillis();
     private long endedAt = 0;
@@ -108,6 +108,9 @@ public class GorContext {
     }
 
     public StatsCollector getStats() {
+        if (stats == null && session.getEventLogger() != null) {
+            stats = session.getEventLogger().getStatsCollector();
+        }
         return stats;
     }
 

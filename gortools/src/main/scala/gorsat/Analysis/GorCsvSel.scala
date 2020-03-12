@@ -313,8 +313,9 @@ object GorCsvSel {
                     if (outCol != 0 && sepSize != 0) ladd.append(sepval)
                     ladd.append(unknownVal)
                   }
+                } else if(!nextProcessor.pipeFrom.wantsNoMore) {
+                  throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
                 }
-                else throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
               } else {
                 val offset = sh.offsetArray(buckNo)
                 if (valSize == -1) {

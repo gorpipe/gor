@@ -75,7 +75,7 @@ project(':gortools') {
 
         testCompile project(':base:test')
         testCompile "org.mockito:mockito-core:3.0.+"
-        testCompile "org.scalatest:scalatest_2.12:3.+"
+        testCompile "org.scalatest:scalatest_2.12:3.0.8"
         testCompile "org.scalacheck:scalacheck_2.12:1.13.+"
         testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
 
