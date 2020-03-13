@@ -82,15 +82,25 @@ public class GorLogbackUtil {
 
 
     public static void initServiceLog() {
+        initLog(UNKNOWN_PROPERTY);
+    }
+
+    public static void initLog(String appName) {
         try {
-            LoggerContext context = (LoggerContext)LoggerFactory.getILoggerFactory();
+            String serviceName = System.getProperty("service.name", UNKNOWN_PROPERTY);
+            if (appName.equals(UNKNOWN_PROPERTY)) {
+                appName = serviceName;
+            }
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
             context.putProperty("processid", ProcessIdConverter.getProcessId());
-            context.putProperty("gor_service", System.getProperty("service.name", UNKNOWN_PROPERTY));
+            context.putProperty("gor_service", serviceName);
+            context.putProperty("gor_app", appName);
+            context.putProperty("gor_version", getGORVersion());
             context.putProperty("environment", getEnv("ENVIRONMENT_NAME", "unkown_environment"));
             context.putProperty("csa_env", getEnv("CSA_ENV", "unkown"));
 
             MDC.put("processid", ProcessIdConverter.getProcessId());
-            MDC.put( "gor_service", System.getProperty("service.name", UNKNOWN_PROPERTY));
+            MDC.put( "gor_service", serviceName);
         } catch (Exception e) {
             logger.warn("Failed to initialize service status");
         }
