@@ -1,0 +1,1157 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Functions &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Commands" href="commands.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="gor-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">Documentation</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#boolean-functions">Boolean Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#type-and-string-conversion">Type and String Conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#algebraic-functions">Algebraic Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#trigonometric-functions">Trigonometric Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#statistical-functions">Statistical Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-functions">List Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#genomic-specific-functions">Genomic-Specific Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#genotype-quality-functions">Genotype-quality Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#date-functions">Date Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#administration-functions">Administration Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#diagnostic-functions">Diagnostic Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-information">Version Information</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Functions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="functions">
+<span id="predefinedfunctions"></span><h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<p>The following tables contain all of the functions that can be used in WHERE and CALC expressions in GOR queries.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 69%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EVAL(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Returns the result of a GOR/NOR query</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="boolean-functions">
+<h2>Boolean Functions<a class="headerlink" href="#boolean-functions" title="Permalink to this headline">¶</a></h2>
+<p>Certain functions in GOR can be used to return a Boolean result (i.e. 0 for false, 1 for true) or a conditional result. By their nature, Boolean-type functions cannot be used with all CALC and WHERE commands (as other functions can). For example, the IF function returns one of two values based on a condition set in the function. As a result, IF can only be used with CALC commands.</p>
+<table class="colwidths-given docutils align-default" id="id3">
+<caption><span class="caption-text">Boolean functions in GOR query language</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IF(cond,any,any)</span> <span class="pre">:</span> <span class="pre">any</span></code></p></td>
+<td><p>Returns the second parameter if the condition in the first parameter is true, otherwise the third parameter.</p></td>
+<td><p><a class="reference internal" href="functions/if.html#if"><span class="std std-ref">IF</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ISINT(col)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Test if a column has integer value.</p></td>
+<td><p><a class="reference internal" href="functions/isint.html#isint"><span class="std std-ref">ISINT</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ISFLOAT(col)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Test if a column has floating point value.</p></td>
+<td><p><a class="reference internal" href="functions/isfloat.html#isfloat"><span class="std std-ref">ISFLOAT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTHASANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the comma separated list has an element in the lit-list.</p></td>
+<td><p><a class="reference internal" href="functions/containsany.html#containsany"><span class="std std-ref">CONTAINSANY</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSLISTHASANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Case-sensitive version of <a class="reference internal" href="functions/containsany.html#containsany"><span class="std std-ref">CONTAINSANY</span></a></p></td>
+<td><p><a class="reference internal" href="functions/containsany.html#containsany"><span class="std std-ref">CONTAINSANY</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONTAINS(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains all the string literals in the list. Not case-sensitive.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONTAINSALL(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains all the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONTAINSANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains any of the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINS(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Case-sensitive version of <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINSALL(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains all the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINSANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains any of the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="type-and-string-conversion">
+<h2>Type and String Conversion<a class="headerlink" href="#type-and-string-conversion" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id4">
+<caption><span class="caption-text">Type and string conversion in GOR query language</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STR(num)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Convert number to string.</p></td>
+<td><p><a class="reference internal" href="functions/str.html#str"><span class="std std-ref">STR</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">STRING(num)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Same as <a class="reference internal" href="functions/str.html#str"><span class="std std-ref">STR</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/str.html#str"><span class="std std-ref">STR</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FLOAT(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Convert string to float.</p></td>
+<td><p><a class="reference internal" href="functions/float.html#float"><span class="std std-ref">FLOAT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FLOAT(str,</span> <span class="pre">float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Convert string to float with default value.</p></td>
+<td><p><a class="reference internal" href="functions/float.html#float"><span class="std std-ref">FLOAT</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NUMBER(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Same as <a class="reference internal" href="functions/float.html#float"><span class="std std-ref">FLOAT</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/float.html#float"><span class="std std-ref">FLOAT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INT(str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Convert string to integer.</p></td>
+<td><p><a class="reference internal" href="functions/int.html#int"><span class="std std-ref">INT</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BASE26(num)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Converts an integer number to base 26 representation.</p></td>
+<td><p><a class="reference internal" href="functions/base26.html#base26"><span class="std std-ref">BASE26</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BASEPN(num)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Converts an integer number to PN-like ID, e.g. AAAAAAA</p></td>
+<td><p><a class="reference internal" href="functions/basepn.html#basepn"><span class="std std-ref">BASEPN</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LEN(str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The length of the string.</p></td>
+<td><p><a class="reference internal" href="functions/len.html#len"><span class="std std-ref">LEN</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REVERSE(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The string reversed.</p></td>
+<td><p><a class="reference internal" href="functions/reverse.html#reverse"><span class="std std-ref">REVERSE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TRIM(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Trims whitespace from the beginning and end of a string.</p></td>
+<td><p><a class="reference internal" href="functions/trim.html#trim"><span class="std std-ref">TRIM</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MD5(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The MD5 message-digest of the string.</p></td>
+<td><p><a class="reference internal" href="functions/md5.html#md5"><span class="std std-ref">MD5</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IOOA(str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>In order of appearance, i.e. returns an integer number based on the order in which str value shows up.</p></td>
+<td><p><a class="reference internal" href="functions/iooa.html#iooa"><span class="std std-ref">IOOA</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UPPER(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Upper-case a string.</p></td>
+<td><p><a class="reference internal" href="functions/upper.html#upper"><span class="std std-ref">UPPER</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LOWER(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Lower-case a string.</p></td>
+<td><p><a class="reference internal" href="functions/lower.html#lower"><span class="std std-ref">LOWER</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LEFT(str,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Return the specified left-most characters in a string.</p></td>
+<td><p><a class="reference internal" href="functions/left.html#left"><span class="std std-ref">LEFT</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RIGHT(str,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Return the specified right-most characters in a string.</p></td>
+<td><p><a class="reference internal" href="functions/right.html#right"><span class="std std-ref">RIGHT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SUBSTR(str,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>A substring.  A zero-based range, not including the last position.</p></td>
+<td><p><a class="reference internal" href="functions/substr.html#substr"><span class="std std-ref">SUBSTR</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MID(str,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>A substring.  A zero-based starting position and size.</p></td>
+<td><p><a class="reference internal" href="functions/mid.html#mid"><span class="std std-ref">MID</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REPLACE(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Replace from a string a pattern with the new string.</p></td>
+<td><p><a class="reference internal" href="functions/replace.html#f-replace"><span class="std std-ref">REPLACE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">POSOF(str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The position within a string of a string.  -1 if not found.</p></td>
+<td><p><a class="reference internal" href="functions/posof.html#posof"><span class="std std-ref">POSOF</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BRACKETS(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Adds brackets around the string, e.g. LISTMAP(LISTZIP(col1,col2),’BRACKETS(x)’).</p></td>
+<td><p><a class="reference internal" href="functions/brackets.html#brackets"><span class="std std-ref">BRACKETS</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UNBRACKET(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Removes surrounding brackets from a string.</p></td>
+<td><p><a class="reference internal" href="functions/unbracket.html#unbracket"><span class="std std-ref">UNBRACKET</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SQUOTE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Adds single quotes around the string, e.g. LISTMAP(LISTZIP(col1,col2),’SQUOTE(x)’).</p></td>
+<td><p><a class="reference internal" href="functions/squote.html#squote"><span class="std std-ref">SQUOTE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SUNQUOTE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Removes surrounding single quotes from a string.</p></td>
+<td><p><a class="reference internal" href="functions/sunquote.html#sunquote"><span class="std std-ref">SUNQUOTE</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DQUOTE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Adds double quotes around the string, e.g. LISTMAP(LISTZIP(col1,col2),’DQUOTE(x)’).</p></td>
+<td><p><a class="reference internal" href="functions/dquote.html#dquote"><span class="std std-ref">DQUOTE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DUNQUOTE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Removes surrounding double quotes from a string.</p></td>
+<td><p><a class="reference internal" href="functions/dunquote.html#dunquote"><span class="std std-ref">DUNQUOTE</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FORM(num,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Format a number, specifying the space and decimals (C-style %x.yf format style).</p></td>
+<td><p><a class="reference internal" href="functions/form.html#form"><span class="std std-ref">FORM</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REGSEL(str,str-const)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Extract a single substring based on regular expression binding pattern, e.g. with single brackets.</p></td>
+<td><p><a class="reference internal" href="functions/regsel.html#f-regsel"><span class="std std-ref">REGSEL</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="algebraic-functions">
+<h2>Algebraic Functions<a class="headerlink" href="#algebraic-functions" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id5">
+<caption><span class="caption-text">Algebraic functions in GOR query language</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FLOOR()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Floor value, e.g. the largest integer that is smaller or equal.</p></td>
+<td><p><a class="reference internal" href="functions/floor.html#floor"><span class="std std-ref">FLOOR</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CEIL(num)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Ceiling value, e.g. the smallest integer that is larger or equal.</p></td>
+<td><p><a class="reference internal" href="functions/ceil.html#ceil"><span class="std std-ref">CEIL</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROUND(num)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The closest integer.</p></td>
+<td><p><a class="reference internal" href="functions/round.html#round"><span class="std std-ref">ROUND</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DIV(int,int)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The quotient in integer division.</p></td>
+<td><p><a class="reference internal" href="functions/div.html#div"><span class="std std-ref">DIV</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MOD(int,int)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The remainder in integer division.</p></td>
+<td><p><a class="reference internal" href="functions/mod.html#mod"><span class="std std-ref">MOD</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POW(num,num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Raise the first parameter to the power of the second.</p></td>
+<td><p><a class="reference internal" href="functions/pow.html#pow"><span class="std std-ref">POW</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MIN(num,num)</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
+<td><p>Minimum.</p></td>
+<td><p><a class="reference internal" href="functions/min.html#min"><span class="std std-ref">MIN</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MAX(num,num)</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
+<td><p>Maximum.</p></td>
+<td><p><a class="reference internal" href="functions/max.html#max"><span class="std std-ref">MAX</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SQRT(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Square root.</p></td>
+<td><p><a class="reference internal" href="functions/sqrt.html#sqrt"><span class="std std-ref">SQRT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SQR(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Square.</p></td>
+<td><p><a class="reference internal" href="functions/sqr.html#sqr"><span class="std std-ref">SQR</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ABS(num)</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
+<td><p>The absolute value, e.g. abs(x) = |x|.</p></td>
+<td><p><a class="reference internal" href="functions/abs.html#abs"><span class="std std-ref">ABS</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LOG(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>10-based logarithm.</p></td>
+<td><p><span class="xref std std-ref">log10</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Natural logarithm.</p></td>
+<td><p><span class="xref std std-ref">natural_log</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EXP(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The exponent, e.g. exp(x) = e^x.</p></td>
+<td><p><span class="xref std std-ref">exponential</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RANDOM()</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
+<td><p>A random floating point number.</p></td>
+<td><p><span class="xref std std-ref">random</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SEGDIST(x,y,a,b)</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
+<td><p>The distance between two segments. Returns 0 if segments overlap.</p></td>
+<td><p><a class="reference internal" href="functions/segdist.html#segdist"><span class="std std-ref">SEGDIST</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SEGOVERLAP(x,y,a,b)</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
+<td><p>Determines if two segments overlap.</p></td>
+<td><p><a class="reference internal" href="functions/segoverlap.html#segoverlap"><span class="std std-ref">SEGOVERLAP</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="trigonometric-functions">
+<h2>Trigonometric Functions<a class="headerlink" href="#trigonometric-functions" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id6">
+<caption><span class="caption-text">Trigonometric functions in GOR query language</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SIN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Sine based on radians.</p></td>
+<td><p><a class="reference internal" href="functions/sine.html#sine"><span class="std std-ref">SIN</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COS(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Cosine based on radians.</p></td>
+<td><p><a class="reference internal" href="functions/cosine.html#cosine"><span class="std std-ref">COS</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ASIN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Arc-sine or inverse sine.</p></td>
+<td><p><a class="reference internal" href="functions/arcsine.html#arcsine"><span class="std std-ref">ASIN</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ACOS(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Arc-cosine.</p></td>
+<td><p><a class="reference internal" href="functions/arccosine.html#arccosine"><span class="std std-ref">ACOS</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TAN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Tangents based on radians.</p></td>
+<td><p><a class="reference internal" href="functions/tangent.html#tangent"><span class="std std-ref">TAN</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ATAN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Arc-tangents.</p></td>
+<td><p><a class="reference internal" href="functions/arctangent.html#arctangent"><span class="std std-ref">ATAN</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="statistical-functions">
+<h2>Statistical Functions<a class="headerlink" href="#statistical-functions" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id7">
+<caption><span class="caption-text">Algebraic functions in GOR query language</span><a class="headerlink" href="#id7" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHI(int,int,int,int)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The chi-squared value in a 2x2 table.</p></td>
+<td><p><span class="xref std std-ref">chi_2x2</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHI2(float,float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Chi-square complement.</p></td>
+<td><p><span class="xref std std-ref">chi2</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHISQUARE(float,float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Chi-square</p></td>
+<td><p><span class="xref std std-ref">chisquare</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHISQUARECOMPL(float,float)</span></code></p></td>
+<td><p>Chi-square complement.  Same as CHI2.</p></td>
+<td><p><span class="xref std std-ref">chi2</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PVAL(int,int,int,int)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The 2-sided Fisher-exact or Chi-square based p-val for a 2x2 table.</p></td>
+<td><p><span class="xref std std-ref">pval</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PVALONE(int,..,int)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The one-sided Fisher-exact or Chi-square based p-val for a 2x2 table.</p></td>
+<td><p><span class="xref std std-ref">pvalone</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STUDENT(int,float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Student T distribution.  (degrees of freedom, integration end point)</p></td>
+<td><p><span class="xref std std-ref">student</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INVSTUDENT(float,int)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Inverse Student T distribution (alpha, size).</p></td>
+<td><p><span class="xref std std-ref">invstudent</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NORMAL(float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Normal distribution</p></td>
+<td><p><span class="xref std std-ref">normal</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INVNORMAL(float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Inverse Normal distribution.</p></td>
+<td><p><span class="xref std std-ref">invnormal</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">POISSON(int,float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Poisson distribution.</p></td>
+<td><p><span class="xref std std-ref">poission</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POISSONC(int,float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Poisson complement.  See <a class="reference external" href="http://acs.lbl.gov/software/colt/api/cern/jet/stat/Probability.html">http://acs.lbl.gov/software/colt/api/cern/jet/stat/Probability.html</a></p></td>
+<td><p><span class="xref std std-ref">poissonc</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="list-functions">
+<span id="id1"></span><h2>List Functions<a class="headerlink" href="#list-functions" title="Permalink to this headline">¶</a></h2>
+<p>The table below shows a complete list of functions for dealing with lists in the GOR query language.</p>
+<p>The first input value for any list function is the source of the list. This can be explicitly set by either by listing elements in quotation marks or by referencing a column in the input stream. The other input values vary depending on the function. String inputs must be input</p>
+<p>With functions that allow a <code class="docutils literal notranslate"><span class="pre">sep</span></code> or separator value, note that the separator value in the list is assumed to be a comma and the separator value is optional. If a separator other than a comma is used in the list, the separator value should be defined in quotation marks.</p>
+<p>Click on “More info” for any of the functions below to get more information about how to use the function in a GOR query.</p>
+<table class="colwidths-given docutils align-default" id="id8">
+<caption><span class="caption-text">List functions in GOR query language</span><a class="headerlink" href="#id8" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTHASANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the comma separated list has an element in the literal list.</p></td>
+<td><p><a class="reference internal" href="functions/listhasany.html#listhasany"><span class="std std-ref">LISTHASANY</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTHASCOUNT(str,lit-list)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Returns a number indicating how many items in the literal list are contained in the list defined in the first parameter.</p></td>
+<td><p><a class="reference internal" href="functions/listhascount.html#listhascount"><span class="std std-ref">LISTHASCOUNT</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONTAINS(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains all the string literals in the list. Not case-sensitive.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINS(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Returns true if the string contains all the string literals in the list. Case-sensitive.</p></td>
+<td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONTAINSCOUNT(str,lit-list)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Returns a number indicating how many items in the literal list are contained in the string. Also try CONTAINSANY, CSCONTAINSANY, CSCONTAINSCOUNT, LISTHASCOUNT, and CSLISTHASCOUNT.</p></td>
+<td><p><a class="reference internal" href="functions/containscount.html#containscount"><span class="std std-ref">CONTAINSCOUNT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFIRST(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Retrieves the first element (i.e. the head) in a comma-separated list.</p></td>
+<td><p><a class="reference internal" href="functions/listfirst.html#listfirst"><span class="std std-ref">listfirst</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSECOND(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Second element in a comma separated list.</p></td>
+<td><p><a class="reference internal" href="functions/listsecond.html#listsecond"><span class="std std-ref">LISTSECOND</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTLAST(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Last element in a comma separated list.</p></td>
+<td><p><a class="reference internal" href="functions/listlast.html#listlast"><span class="std std-ref">LISTLAST</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTTAIL(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The tail (the list minus the first element).</p></td>
+<td><p><a class="reference internal" href="functions/listtail.html#listtail"><span class="std std-ref">listtail</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTREVERSE(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list reversed with optional “sep”, e.g. ‘;’.</p></td>
+<td><p><a class="reference internal" href="functions/listreverse.html#listreverse"><span class="std std-ref">LISTREVERSE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSORTASC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list sorted alphabetically in a ascending order.</p></td>
+<td><p><a class="reference internal" href="functions/listsortasc.html#listsortasc"><span class="std std-ref">LISTSORTASC</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSORTDESC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list sorted alphabetically in a descending order.</p></td>
+<td><p><span class="xref std std-ref">listsortdesc</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSORTASC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list sorted numerically in a ascending order.</p></td>
+<td><p><span class="xref std std-ref">listnumsortasc</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSORTDESC(str):</span> <span class="pre">str</span></code></p></td>
+<td><p>The list sorted numerically in a descending order</p></td>
+<td><p><span class="xref std std-ref">listnumsortdesc</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTTRIM(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>A comma separated list trimmed from white-spaces.</p></td>
+<td><p><span class="xref std std-ref">listtrim</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTDIST(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The distinct elements in the list, i.e. corresponding set.</p></td>
+<td><p><span class="xref std std-ref">listdist</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMAX(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The maximum element (element as string).</p></td>
+<td><p><span class="xref std std-ref">listmax</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMIN(str):</span> <span class="pre">str</span></code></p></td>
+<td><p>The minimum element (element as string).</p></td>
+<td><p><span class="xref std std-ref">listmin</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSIZE(str,sep)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The size of the list.</p></td>
+<td><p><span class="xref std std-ref">listsize</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMMAX(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The maximum element (element as number).</p></td>
+<td><p><span class="xref std std-ref">listnummax</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMMIN(str):</span> <span class="pre">float</span></code></p></td>
+<td><p>The minimum element (element as number).</p></td>
+<td><p><span class="xref std std-ref">listnummin</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSUM(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The sum of the elements (element as numbers).</p></td>
+<td><p><span class="xref std std-ref">listnumsum</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMAVG(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The average of the elements (element as numbers).</p></td>
+<td><p><span class="xref std std-ref">listnumavg</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSTD(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The unbiased standard deviation of the elements (element as numbers).</p></td>
+<td><p><span class="xref std std-ref">listnumstd</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTINDEX(str,</span> <span class="pre">str,</span> <span class="pre">sep)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The one based index to a list of elements where a target is found. The function will search the list defined in parameter 1 for the first instance of parameter 2.</p></td>
+<td><p><span class="xref std std-ref">listindex</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMAP(str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list translated using expression provided in second argument. Element denoted with x.</p></td>
+<td><p><a class="reference internal" href="functions/listmap.html#listmap"><span class="std std-ref">LISTMAP</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list filtered using expression provided in second argument. Element as x, index as i. Example LISTFILTER(col,’x != 1’) or LISTFILTER(col,’i &gt; 2’)</p></td>
+<td><p><a class="reference internal" href="functions/listfilter.html#listfilter"><span class="std std-ref">LISTFILTER</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIP(str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Two lists zipped together, each pair of elements separated with a semicolon.</p></td>
+<td><p><a class="reference internal" href="functions/listzip.html#listzip"><span class="std std-ref">LISTZIP</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIPFILTER(str,str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Filter the first list by the content of the second list.</p></td>
+<td><p><span class="xref std std-ref">listzipfilter</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTCOMB(str,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns a semi-comma-separated list of all combinations of elements in the input list of length within the interval specified by the input integers.</p></td>
+<td><p><a class="reference internal" href="functions/listcomb.html#listcomb"><span class="std std-ref">LISTCOMB</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTADD(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns a list with the given item added to the end.</p></td>
+<td><p><a class="reference internal" href="functions/listadd.html#listadd"><span class="std std-ref">LISTADD</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FSVMAP(str,int,str-con,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list of equally separated values (second argument) translated using expression provided in third argument. Fourth argument is the result separator. Element denoted with x. Example FSVMAP(col,2,’x+1’,’,’). Also see <a class="reference internal" href="functions/listmap.html#listmap"><span class="std std-ref">LISTMAP</span></a>.</p></td>
+<td><p><span class="xref std std-ref">fsvmap</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="genomic-specific-functions">
+<h2>Genomic-Specific Functions<a class="headerlink" href="#genomic-specific-functions" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id9">
+<caption><span class="caption-text">Genomic-Specific functions in GOR query language</span><a class="headerlink" href="#id9" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HAPLDIFF(str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The Hamming-like distance between two haplotype strings.</p></td>
+<td><p><span class="xref std std-ref">hapldiff</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VARSIG(str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Variant signature.</p></td>
+<td><p><span class="xref std std-ref">varsig</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REVCOMPL(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Reverse complement of a DNA sequence string.</p></td>
+<td><p><span class="xref std std-ref">revcompl</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Shorthand for REVCOMPL(str).</p></td>
+<td><p><span class="xref std std-ref">revcompl</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REVCIGAR(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>BAM cigar string for the corresponding reverse complement sequence.</p></td>
+<td><p><span class="xref std std-ref">revcigar</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REFBASE(str,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The reference base at the given locus, based on the build specified in the gor_config.txt file.</p></td>
+<td><p><span class="xref std std-ref">refbase</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REFBASES(str,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The reference bases, based on the build specified in the gor_config.txt file.</p></td>
+<td><p><span class="xref std std-ref">refbases</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BAMTAG(col,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Extract a single substring from an attribute value TAG_VALUE-like field (as in BAM files).</p></td>
+<td><p><span class="xref std std-ref">bamtag</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TAG(col,str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Extract a single substring from an attribute value field (as in GFF or VCF files, e.g. use semicolon ‘;’ as separator).</p></td>
+<td><p><span class="xref std std-ref">tag</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VCFFORMATTAG(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Gets a value from a vcf file.
+Parameters are: &lt;name of the format column that contains the format of the data column&gt;,
+&lt;the name of the data column that contains data for a given PN, the column name is the same as the pn&gt;,
+&lt;the tag to get value for&gt;.</p></td>
+<td><p><a class="reference internal" href="functions/vcfformattag.html#vcfformattag"><span class="std std-ref">vcfformattag</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IHA(str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Returns 1 if IUPAC genotype string contains SNP allele str, zero otherwise.</p></td>
+<td><p><span class="xref std std-ref">iha</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IUPAC2GT(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Converts IUPAC genotype to ‘A1/A2’ genotype.</p></td>
+<td><p><span class="xref std std-ref">iupac2gt</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACGTSTAT(str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Input IUPAC genotypes for subject, father and mother. Returns ‘0’ if IHE, ‘1’ if OK, and ‘2’ if OK and phase-able.</p></td>
+<td><p><span class="xref std std-ref">iupacgtstat</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACFA(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns the SNP allele of the father.  Only valid if IUPACGTSTAT returns 2.</p></td>
+<td><p><span class="xref std std-ref">iupacfa</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACMA(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns the SNP allele of the mother.  Only valid if IUPACGTSTAT returns 2.</p></td>
+<td><p><span class="xref std std-ref">iupacma</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTSHARE(str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Input two (pos,Ref,Alleles) genotypes where Alleles = ‘All1,All2,..’ or ‘All1/All2/..’ or ‘All1|All2’.
+Returns the number of identical allels based on all pairwise comparisons between Alleles1 and Alleles2. First
+parameter is chr.</p></td>
+<td><p><span class="xref std std-ref">gtshare</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GTSTAT(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Input (pos,Ref,Alt) genotypes for subject, father and mother. Returns ‘0’ if IHE, ‘1’ if OK, and ‘2’ if OK and phase-able.</p></td>
+<td><p><span class="xref std std-ref">gtstat</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTFA(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns the Alt allele of the father.  Only valid if GTSTAT returns ‘2’.</p></td>
+<td><p><span class="xref std std-ref">gtfa</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GTMA(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns the Alt allele of the mother.  Only valid if GTSTAT returns ‘2’.</p></td>
+<td><p><span class="xref std std-ref">gtma</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INDAG(dag</span> <span class="pre">file,str-cont)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<td><p>Not a standard function.  Should be used as | where go_id INDAG(‘go.txt’,’GO:111111’) or INDAG([#temp#],’GO:111111’)</p></td>
+<td><p><span class="xref std std-ref">indag</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="genotype-quality-functions">
+<span id="id2"></span><h2>Genotype-quality Functions<a class="headerlink" href="#genotype-quality-functions" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id10">
+<caption><span class="caption-text">Genotype-quality functions in GOR query language</span><a class="headerlink" href="#id10" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHARS2PRHOM(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Turn 2 chars into homozygous genotype prob</p></td>
+<td><p><span class="xref std std-ref">chars2prom</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHARS2PRHET(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Turn 2 chars into heterozygous genotype prob</p></td>
+<td><p><span class="xref std std-ref">chars2prhet</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHARS2DOSE(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Turn 2 chars into genotype dosage</p></td>
+<td><p><span class="xref std std-ref">chars2dose</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHARS2PRPRPR(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn 2 chars, round((1.0-pr)*93.0)+33 , into genotype prob triplet (Pr(gt=0),Pr(gt=1),Pr(gt=2)).
+Two spaces (c32c32) map to ‘0;0;0’ (unknown).  Assumes non-phased.</p></td>
+<td><p><span class="xref std std-ref">chars2prprpr</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHARS2PRPR(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn 2 chars, round((1.0-pr)*93.0)+33 , into genotype prob doublet (Pr(gt=1),Pr(gt=2)).</p></td>
+<td><p><span class="xref std std-ref">chars2prpr</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHAR2PR(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn on char into probability, e.g CHAR2PR(‘!’) = 1.0, CHAR2PR(‘~’)=0.</p></td>
+<td><p><span class="xref std std-ref">chars2pr</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PR2CHAR(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn probability to characters, i.e. the semi-inverse of CHAR2PR.</p></td>
+<td><p><span class="xref std std-ref">pr2char</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PRPR2CHARS(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn probability pair to chars, e.g. PRPR2CHAR(‘1.0;0.0’) = ‘!~’</p></td>
+<td><p><span class="xref std std-ref">prpr2chars</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PRPRPR2CHARS(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn probability triplet to chars, e.g. PRPR2CHAR(‘1.0;0.0;0.0’) = ‘!~’</p></td>
+<td><p><span class="xref std std-ref">prprpr2chars</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PRPR2CHARS(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn probability pair to chars, e.g. PRPR2CHAR(‘1.0;0.0’) = ‘!~’ with custom separator</p></td>
+<td><p><span class="xref std std-ref">prpr2chars</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PRPRPR2CHARS(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn probability triplet to chars, e.g. PRPRPR2CHAR(‘1.0;0.0’) = ‘!~’ with custom separator</p></td>
+<td><p><span class="xref std std-ref">prprpr2chars</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHARS2GT(str,float)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn 2 chars, round((1.0-pr)*93.0)+33 , into genotype 0,1,2 if prob &gt;= thresh else 3.
+Two spaces (c32c32) map to 3 (unknown).  Assumes non-phased probabilities.</p></td>
+<td><p><span class="xref std std-ref">chars2gt</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHARSPHASED2GT(str,float)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Turn 2 chars, round((1.0-pr)*93.0)+33 , into phased genotype 0,1,2 if prob &gt;= thresh else 3.
+Two spaces (c32c32) map to 3 (unknown).  Assumes probabilities of phased haplotypes.
+Pr(gt=0) = (1.0 - pfalt) * (1.0 - pmalt), Pr(gt=1) = (1.0 - pfalt) * pmalt + pfalt * (1.0 - pmalt),
+Pr(gt=2) = pfalt * pmalt, where pfalt and pmalt are the chars probabilities values.</p></td>
+<td><p><span class="xref std std-ref">charsphased2gt</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="date-functions">
+<h2>Date Functions<a class="headerlink" href="#date-functions" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id11">
+<caption><span class="caption-text">Date functions in GOR query language</span><a class="headerlink" href="#id11" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATE()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>The current time in the format ‘yyyy-MM-dd HH:mm:ss’.</p></td>
+<td><p><span class="xref std std-ref">date</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>The current time in a specific format, defined by a string of characters that represent time units.
+Example: ‘dd/MM/yyyy’. Uses the Java SimpleDateFormat class for formatting.</p></td>
+<td><p><span class="xref std std-ref">date</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EDATE(long)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>A specific time, indicated by a timestamp, in the format ‘yyyy-MM-dd HH:mm:ss’.</p></td>
+<td><p><span class="xref std std-ref">edate</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EDATE(long,string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>A specific time, indicated by a timestamp, in a specific format. The format is defined in the same way as with date(string).</p></td>
+<td><p><span class="xref std std-ref">edate</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EPOCH()</span> <span class="pre">:</span> <span class="pre">long</span></code></p></td>
+<td><p>A timestamp of the current time.</p></td>
+<td><p><span class="xref std std-ref">epoch</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EPOCH(string,string)</span> <span class="pre">:</span> <span class="pre">long</span></code></p></td>
+<td><p>A timestamp of a specific time, indicated with a specified format.
+The format is defined in the same way as with date(string) and edate(long, string). Example: epoch(‘16/06/2017’,’dd/MM/yyyy’).</p></td>
+<td><p><span class="xref std std-ref">epoch</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="administration-functions">
+<h2>Administration Functions<a class="headerlink" href="#administration-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="diagnostic-functions">
+<h3>Diagnostic Functions<a class="headerlink" href="#diagnostic-functions" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-given docutils align-default" id="id12">
+<caption><span class="caption-text">Diagnostic functions in GOR query language</span><a class="headerlink" href="#id12" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TIME()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The time in milli seconds since the query started.</p></td>
+<td><p><span class="xref std std-ref">time</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SLEEP(int)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Sleep for given milliseconds while processing each row</p></td>
+<td><p><span class="xref std std-ref">sleep</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HOSTNAME()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Name of the host running the query</p></td>
+<td><p><span class="xref std std-ref">hostname</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IP()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>IP number of the host running the query</p></td>
+<td><p><span class="xref std std-ref">ip</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ARCH()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>CPU architecture of the host running the query</p></td>
+<td><p><span class="xref std std-ref">arch</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">THREADID()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Thread id of the thread running the query</p></td>
+<td><p><span class="xref std std-ref">threadid</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CPULOAD()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The cpuload of the process running the query</p></td>
+<td><p><span class="xref std std-ref">cpuload</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYSCPULOAD()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>The cpuload on the system running the query</p></td>
+<td><p><span class="xref std std-ref">syscpuload</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FREE()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Free physical memory on the system running the query</p></td>
+<td><p><span class="xref std std-ref">free</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FREEMEM()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Free memory on the system running the query</p></td>
+<td><p><span class="xref std std-ref">freemem</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TOTALMEM()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Total memory on the system running the query</p></td>
+<td><p><span class="xref std std-ref">totalmem</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MAXMEM()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Maximum memory of the process running the query</p></td>
+<td><p><span class="xref std std-ref">maxmem</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AVAILCPU()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Number of available cpus on the system</p></td>
+<td><p><span class="xref std std-ref">availcpu</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OPENFILES()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Number of open filedescriptors on the system</p></td>
+<td><p><span class="xref std std-ref">openfiles</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MAXFILES()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Maximum number of file descriptors</p></td>
+<td><p><span class="xref std std-ref">maxfiles</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYSTEM(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Returns one line from the stdout of a whitelisted system command</p></td>
+<td><p><span class="xref std std-ref">system</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AVGSEEKTIMEMILLIS()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Returns the average seektime for the current rowSource in milliseconds</p></td>
+<td><p><span class="xref std std-ref">avgseektimemillis</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AVGROWSPERMILLIS()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Returns average rows per millisecond for the current rowSource</p></td>
+<td><p><span class="xref std std-ref">avgrowspermillis`</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AVGBASESPERMILLIS()</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
+<td><p>Returns average bases per millisecond for the current rowSource</p></td>
+<td><p><span class="xref std std-ref">avgbasespermillis</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="version-information">
+<h3>Version Information<a class="headerlink" href="#version-information" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-given docutils align-default" id="id13">
+<caption><span class="caption-text">Version information in GOR query language</span><a class="headerlink" href="#id13" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 63%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>More info</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GORVERSION()</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns the GOR version</p></td>
+<td><p><span class="xref std std-ref">gorversion</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MAJORVERSION()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Returns the major version of GOR</p></td>
+<td><p><span class="xref std std-ref">majorversion</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MINORVERSION()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Returns the minor version of GOR</p></td>
+<td><p><span class="xref std std-ref">minorversion</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">JAVAVERSION()</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns the JRE version</p></td>
+<td><p><span class="xref std std-ref">javaversion</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="commands.html" class="btn btn-neutral float-left" title="Commands" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-136552918-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
+    
+   
+
+</body>
+</html>

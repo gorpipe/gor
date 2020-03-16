@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Introduction &mdash; GOR Open Source v.2.0 documentation</title>
+  <title>Tutorials &mdash; GOR Open Source v.2.0 documentation</title>
   
 
   
@@ -38,14 +38,14 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="GOR and NOR" href="basicGORqueries.html" />
-    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <nav class="wy-master-nav">
-    <div class="wxnc-logo-home">
+    <div class="gor-logo-home">
         <a href="index.html">
             <img src="_static/GORLogoText.svg" class="logo" />
         </a>
@@ -94,17 +94,7 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="tutorials.html">Tutorials</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Introduction</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#what-is-gor">What is GOR?</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#writing-gor-queries">Writing GOR queries</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#options-attributes-flags">Options, Attributes, Flags</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#reference-data">Reference Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#data-pipeline">Data pipeline</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
 <li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
@@ -117,10 +107,16 @@
 <li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-gor">What is GOR?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-gor-queries">Writing GOR queries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#options-attributes-flags">Options, Attributes, Flags</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reference-data">Reference Data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
 </ul>
 
             
@@ -167,9 +163,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-          <li><a href="tutorials.html">Tutorials</a> &raquo;</li>
-        
-      <li>Introduction</li>
+      <li>Tutorials</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -186,8 +180,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="what-is-gor">
@@ -196,9 +190,9 @@
 <p>The GOR system uses a declarative query language which combines features from SQL and shell pipe syntax. The GOR system can be used, for example, to annotate sequence variants, to find genomic spatial overlap between various types of genomic features, and to filter and aggregate them in various ways.</p>
 <p>The GOR architecture is at the foundation of WuXi NextCODE’s genome analysis and discovery tools. For an in-depth discussion of the GOR architecture, please refer to:</p>
 <a class="reference external image-reference" href="https://academic.oup.com/bioinformatics/article/32/20/3081/2196339/GorPipe-a-query-tool-for-working-with-sequence"><img alt="_images/paper.png" src="_images/paper.png" /></a>
-<p><em>GorPipe: a query tool for working with sequence data based on a Genomic Ordered Relational (GOR) architecture</em></p>
-<p>The target audience of this manual is a <a class="reference internal" href="glossary.html#term-bioinformatician"><span class="xref std std-term">bioinformatician</span></a> or other support personnel who will be creating their own GOR queries using either the Sequence Miner or the command line interfaces, GorPipe and GORdb.</p>
-<p>This manual will provide an overview of the GOR language and a comprehensive list of commands that are available both through GORdb, GorPipe and the Sequence Miner (SM) with use cases input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.</p>
+<p><em>GORpipe: a query tool for working with sequence data based on a Genomic Ordered Relational (GOR) architecture</em></p>
+<p>The target audience of this manual is a <a class="reference internal" href="glossary.html#term-bioinformatician"><span class="xref std std-term">bioinformatician</span></a> or other support personnel who will be creating their own GOR queries using either the Sequence Miner or the command line interfaces, GORpipe and GORdb.</p>
+<p>This manual will provide an overview of the GOR language and a comprehensive list of commands that are available both through GORdb, GORpipe and the Sequence Miner (SM) with use cases input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.</p>
 </div>
 <div class="section" id="writing-gor-queries">
 <h2>Writing GOR queries<a class="headerlink" href="#writing-gor-queries" title="Permalink to this headline">¶</a></h2>
@@ -261,26 +255,6 @@
 </tbody>
 </table>
 </div>
-<div class="section" id="data-pipeline">
-<h2>Data pipeline<a class="headerlink" href="#data-pipeline" title="Permalink to this headline">¶</a></h2>
-<p>The most common use case for the GOR query language is in working with germline DNA samples. This section describes where this data comes from and how the processing pipeline works.</p>
-<p>Often in this manual, we will use the term “data pipeline” to describe the series of steps that are executed in sequencing germline DNA samples and annotating them with the various sets of data that are available to us within a project.</p>
-<p>A diagram of one of the use cases of the data pipeline can be seen below:</p>
-<a class="reference internal image-reference" href="_images/dataPipeline.png"><img alt="_images/dataPipeline.png" src="_images/dataPipeline.png" style="width: 1141.5px; height: 654.0px;" /></a>
-<p>The data processing is often split into distinct step that are referred to as the primary, secondary and tertiary pipeline. These are explained further below:</p>
-<ol class="arabic simple">
-<li><p>Before the samples reach the Clinical Sequence Analyser (CSA), the <em>Primary analysis pipeline</em> takes raw data from a sequencing machine (such as BCL format from Illumina) and produces a standard text-formatted data file describing the base calls (typically, this is the FASTQ format).</p></li>
-<li><p>In the <em>Secondary analysis pipeline</em>, the FASTQ format is converted to BAM and VCF files, aligning the reads that are listed in the FASTQ back to their coordinates by comparing the string sequences to the known sequences from a reference genome.</p></li>
-</ol>
-<div class="figure align-default" id="id2">
-<a class="reference internal image-reference" href="_images/alignment.png"><img alt="_images/alignment.png" src="_images/alignment.png" style="width: 900.0px; height: 288.75px;" /></a>
-<p class="caption"><span class="caption-text">Alignment of string sequences to the reference genome</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
-</div>
-<ol class="arabic simple">
-<li><p>The <em>Tertiary analysis pipeline</em> starts from BAM+VCF and produce additional variant annotation data using VEP and derived coverage data.</p></li>
-</ol>
-<p>When the data pipeline has finished completely, we are left with the folder structure of source files that you can see in the Sequence Miner file explorer, namely <em>anno</em>, <em>bam</em>, <em>cov</em> and <em>var</em>.</p>
-</div>
 </div>
 
 
@@ -294,7 +268,7 @@
         <a href="basicGORqueries.html" class="btn btn-neutral float-right" title="GOR and NOR" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -327,6 +301,18 @@
 
   
   
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-136552918-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
     
    
 

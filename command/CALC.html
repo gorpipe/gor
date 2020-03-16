@@ -43,7 +43,7 @@
 
    
   <nav class="wy-master-nav">
-    <div class="wxnc-logo-home">
+    <div class="gor-logo-home">
         <a href="../index.html">
             <img src="../_static/GORLogoText.svg" class="logo" />
         </a>
@@ -92,9 +92,9 @@
             
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ref_commands.html">Commands</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ref_functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
 </ul>
 
             
@@ -166,7 +166,7 @@
 <p>As an example #3 refers to column 3 whereas #3s refers to column 3 as a string.  Likewise, #4i instructs the compiler that column four contains integers and #4f that it contains floating point numbers. If no type-suffix is specified or the column name is used, the command will infer the data type from the first rows in the input.  This can potentially cause the type to be set to integers while the rest of the input contains floats or that the type is set to float while the column actually contains strings. Therefore, it is made possible to specify the type through the # suffix syntax as described above.</p>
 <p>Examples of arithmetic expressions are: (#3 + 4.0) or for instance IF(#4 &gt; 1.0,log(#3),exp(#3))</p>
 <p>The CALC command also allows equal sign, e.g. calc colname = expression.</p>
-<p>See the <a class="reference internal" href="../ref_functions.html#predefinedfunctions"><span class="std std-ref">functions</span></a> to get a list of available functions and <a class="reference internal" href="WHERE.html#where"><span class="std std-ref">WHERE</span></a> for the structure of functions.</p>
+<p>See the <a class="reference internal" href="../functions.html#predefinedfunctions"><span class="std std-ref">functions</span></a> to get a list of available functions and <a class="reference internal" href="WHERE.html#where"><span class="std std-ref">WHERE</span></a> for the structure of functions.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">CALC</span> colname expression
@@ -234,6 +234,18 @@
 
   
   
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-136552918-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
     
    
 

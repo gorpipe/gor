@@ -36,7 +36,7 @@ Glossary
       3. The GOR architecture as a whole.
       4. The act of merging two streams together, e.g. to "gor" together two files.
 
-   GorPipe
+   GORpipe
       A command line interface for the GOR language.
 
    GOR stream

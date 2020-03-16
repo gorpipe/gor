@@ -7,7 +7,7 @@
 ======
 GORSQL
 ======
-The GORSQL command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.db.credentials in the config directory). This command is not enabled when running against a gor-server and therefore does not work within the Sequence Miner. It is intended to be used with gorpipe only.
+The GORSQL command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.db.credentials in the config directory). This command is not enabled when running against a gor-server and therefore does not work within the Sequence Miner. It is intended to be used with GORpipe only.
 
 For GORSQL to work properly, the defined query must access a table have Chrom-POS information as first columns.
 

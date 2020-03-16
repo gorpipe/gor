@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tutorials" href="tutorials.html" />
+    <link rel="next" title="Tutorials" href="introduction.html" />
     <link rel="prev" title="Welcome to GOR" href="index.html" /> 
 </head>
 
@@ -45,7 +45,7 @@
 
    
   <nav class="wy-master-nav">
-    <div class="wxnc-logo-home">
+    <div class="gor-logo-home">
         <a href="index.html">
             <img src="_static/GORLogoText.svg" class="logo" />
         </a>
@@ -95,10 +95,10 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-test-data">Setting Up Test Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#getting-started-with-gorpipe">Getting Started With GorPipe</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-up-gor-shell">Setting Up GOR Shell</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#add-to-path">Add To Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-test-data">Setting up test data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started-with-gorpipe">Getting started with GORPipe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-gor-shell">Setting up GOR shell</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-environment-variables">Setting environment variables</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#other">Other</a><ul>
@@ -108,9 +108,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ref_commands.html">Commands</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ref_functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
 </ul>
 
             
@@ -176,10 +176,10 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>This page describes how to get started with GOR</p>
+<p>This page describes how to get started with GORpipe.</p>
 <div class="section" id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
-<p>Before setting up GorPipe the following need to be installed:</p>
+<p>Before setting up GORpipe the following need to be installed:</p>
 <ul class="simple">
 <li><p>Java JDK or JRE version 8 or higher (<a class="reference external" href="https://www.oracle.com/java/technologies/javase-downloads.html">https://www.oracle.com/java/technologies/javase-downloads.html</a>)</p></li>
 <li><p>Open JDK can also be used (<a class="reference external" href="https://openjdk.java.net/install/">https://openjdk.java.net/install/</a>)</p></li>
@@ -187,20 +187,15 @@
 </ul>
 </div>
 <div class="section" id="setting-up-test-data">
-<h2>Setting Up Test Data<a class="headerlink" href="#setting-up-test-data" title="Permalink to this headline">¶</a></h2>
-<p>In the parent folder where this repository is located, setup test data by cloning the GOR Test Data repository (<a class="reference external" href="https://github.com/gorpipe/GOR-Test-Data">https://github.com/gorpipe/GOR-Test-Data</a>)</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone git@github.com:gorpipe/GOR-Test-Data.git
-</pre></div>
-</div>
-<p>When done cloning, setup the test data as a submodule to this repo via:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git submodule init
-git submodule update
+<h2>Setting up test data<a class="headerlink" href="#setting-up-test-data" title="Permalink to this headline">¶</a></h2>
+<p>Test data for GOR is obtained by cloning the GOR test data repository (<a class="reference external" href="https://github.com/gorpipe/gor-test-data">https://github.com/gorpipe/gor-test-data</a>) as a submodule into the tests/data folder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git submodule update --init --recursive
 </pre></div>
 </div>
 </div>
 <div class="section" id="getting-started-with-gorpipe">
-<h2>Getting Started With GorPipe<a class="headerlink" href="#getting-started-with-gorpipe" title="Permalink to this headline">¶</a></h2>
-<p>To get started with GorPipe, compile the code:</p>
+<h2>Getting started with GORPipe<a class="headerlink" href="#getting-started-with-gorpipe" title="Permalink to this headline">¶</a></h2>
+<p>To get started with GORPipe, compile the code:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make build
 </pre></div>
 </div>
@@ -224,33 +219,32 @@ chr13   <span class="m">19020145</span>        G       T       rs28970552
 </div>
 </div>
 <div class="section" id="setting-up-gor-shell">
-<h2>Setting Up GOR Shell<a class="headerlink" href="#setting-up-gor-shell" title="Permalink to this headline">¶</a></h2>
-<p>As an alternative for a local GorPipe, the GOR shell is a an interactive GOR session in a terminal - a sort of REPL for GOR. Start a GorShell by executing:</p>
+<h2>Setting up GOR shell<a class="headerlink" href="#setting-up-gor-shell" title="Permalink to this headline">¶</a></h2>
+<p>GORpipe can be invoked and used through an interactive shell session in a terminal - a sort of REPL for GOR, coined GORshell. Start a GORshell by executing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tools/build/install/tools/bin/gorshell
 </pre></div>
 </div>
-<p>Now queries can be via:</p>
+<p>This will start an interactive shell session where queries can be executed:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> tests/data/<span class="nd">gor</span>/dbsnp_test.gor | top 10
 </pre></div>
 </div>
-<p>For a list of GOR input sources and pipe commands and other details, simple type “help” within the GOR shell</p>
-<p>Running GOR without setting up the test data submodule can be done via generating GOR rows and then running GOR against that data. For example:</p>
+<p>For a list of GOR input sources, pipe commands and other details, simply type help within the GOR shell.</p>
+<p>Running GOR without setting up the test data submodule can be done by generating GOR rows and then running GOR against that data. For example:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> &lt;(gorrows -<span class="no">p</span> chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian &lt;(norrows 100 | group -lis -sc #1))
 </pre></div>
 </div>
-<div class="section" id="add-to-path">
-<h3>Add To Path<a class="headerlink" href="#add-to-path" title="Permalink to this headline">¶</a></h3>
-<p>For convenience, GorPipe and GOR Shell can be added to path. For example on mac via by editing /etc/paths:</p>
+<div class="section" id="setting-environment-variables">
+<h3>Setting environment variables<a class="headerlink" href="#setting-environment-variables" title="Permalink to this headline">¶</a></h3>
+<p>For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo vim /etc/paths
 </pre></div>
 </div>
-<p>and adding lines</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;...&gt;/gortools/build/install/gor-scripts/bin
-&lt;...&gt;/tools/build/install/tools/bin/gorshell
+<p>and add the following lines:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;PATH_TO_GOR_REPO&gt;/gortools/build/install/gor-scripts/bin
+&lt;PATH_TO_GOR_REPO&gt;/tools/build/install/tools/bin/gorshell
 </pre></div>
 </div>
-<p>to /etcs/paths</p>
-<p>Then Gorpipe and GOR Shell can be started via <cite>gorpipe</cite> and <cite>gorshell</cite></p>
+<p>Then GORpipe and GORshell can be started via <cite>gorpipe</cite> and <cite>gorshell</cite> from any location.</p>
 </div>
 </div>
 <div class="section" id="other">
@@ -289,7 +283,7 @@ along with GORpipe.  If not, see &lt;<a class="reference external" href="http://
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="introduction.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to GOR" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -325,6 +319,18 @@ along with GORpipe.  If not, see &lt;<a class="reference external" href="http://
 
   
   
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-136552918-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
     
    
 

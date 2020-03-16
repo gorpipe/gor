@@ -7,7 +7,7 @@
 ===
 TEE
 ===
-The TEE command mimics the UNIX command as it splits a GOR stream into two output streams from a single input. This is useful for writing to two separate files concurrently. It can only be used as part of the command line interface, gorpipe.
+The TEE command mimics the UNIX command as it splits a GOR stream into two output streams from a single input. This is useful for writing to two separate files concurrently. It can only be used as part of the command line interface, GORpipe.
 
 Usage
 =====
