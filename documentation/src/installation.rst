@@ -2,37 +2,30 @@
 Installation
 ============
 
-This page describes how to get started with GOR
+This page describes how to get started with GORpipe.
 
 Prerequisites
 =============
 
-Before setting up GorPipe the following need to be installed:
+Before setting up GORpipe the following need to be installed:
 
 * Java JDK or JRE version 8 or higher (https://www.oracle.com/java/technologies/javase-downloads.html)
 * Open JDK can also be used (https://openjdk.java.net/install/)
 * Gradle (https://gradle.org/install/)
 
-Setting Up Test Data
+Setting up test data
 ====================
 
-In the parent folder where this repository is located, setup test data by cloning the GOR Test Data repository (https://github.com/gorpipe/GOR-Test-Data)
+Test data for GOR is obtained by cloning the GOR test data repository (https://github.com/gorpipe/gor-test-data) as a submodule into the tests/data folder:
 
 .. code-block:: bash
 
-    git clone git@github.com:gorpipe/GOR-Test-Data.git
+    git submodule update --init --recursive
 
-When done cloning, setup the test data as a submodule to this repo via:
-
-.. code-block:: bash
-
-    git submodule init
-    git submodule update
-
-Getting Started With GorPipe
+Getting started with GORPipe
 ============================
 
-To get started with GorPipe, compile the code:
+To get started with GORPipe, compile the code:
 
 .. code-block:: bash
 
@@ -60,48 +53,47 @@ The results should be as follows:
     chr13   19020013        C       T       rs181615907
     chr13   19020145        G       T       rs28970552
 
-Setting Up GOR Shell
+Setting up GOR shell
 ====================
 
-As an alternative for a local GorPipe, the GOR shell is a an interactive GOR session in a terminal - a sort of REPL for GOR. Start a GorShell by executing:
+GORpipe can be invoked and used through an interactive shell session in a terminal - a sort of REPL for GOR, coined GORshell. Start a GORshell by executing:
 
 .. code-block:: bash
 
     tools/build/install/tools/bin/gorshell
 
-Now queries can be via:
+This will start an interactive shell session where queries can be executed:
 
 .. code-block:: gor
 
     gor tests/data/gor/dbsnp_test.gor | top 10
 
-For a list of GOR input sources and pipe commands and other details, simple type "help" within the GOR shell
+For a list of GOR input sources, pipe commands and other details, simply type help within the GOR shell.
 
-Running GOR without setting up the test data submodule can be done via generating GOR rows and then running GOR against that data. For example:
+Running GOR without setting up the test data submodule can be done by generating GOR rows and then running GOR against that data. For example:
 
 .. code-block:: gor
 
     gor <(gorrows -p chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian <(norrows 100 | group -lis -sc #1))
 
-Add To Path
------------
+Setting environment variables
+-----------------------------
 
-For convenience, GorPipe and GOR Shell can be added to path. For example on mac via by editing /etc/paths:
+For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths:
 
 .. code-block:: bash
 
     sudo vim /etc/paths
 
-and adding lines
+and add the following lines:
 
 .. code-block:: bash
 
-    <...>/gortools/build/install/gor-scripts/bin
-    <...>/tools/build/install/tools/bin/gorshell
+    <PATH_TO_GOR_REPO>/gortools/build/install/gor-scripts/bin
+    <PATH_TO_GOR_REPO>/tools/build/install/tools/bin/gorshell
 
-to /etcs/paths
 
-Then Gorpipe and GOR Shell can be started via `gorpipe` and `gorshell`
+Then GORpipe and GORshell can be started via `gorpipe` and `gorshell` from any location.
 
 Other
 =====

@@ -5537,7 +5537,7 @@ p {
 }
 
 h1 {
-    font-size: 250%;
+    font-size: 200%;
     margin: 20px 0
 }
 
@@ -6149,7 +6149,7 @@ div[class^='highlight'] pre {
     border: 0
 }
 
-.wxnc-logo-home a img.logo {
+.gor-logo-home a img.logo {
     margin: 0 auto;
     margin-left: 5px;
     border-radius: 0;
@@ -6165,9 +6165,8 @@ div[class^='highlight'] pre {
     font-weight: 500;
 }
 
-.wxnc-logo-home {
+.gor-logo-home {
     padding: 10px;
-    height: 60px;
     width: 100px;
     position: relative;
     float: left
@@ -6563,9 +6562,6 @@ div[class^='highlight'] pre {
 .wy-side-nav-search img {
     display: block;
     margin: 0;
-    height: 45px;
-    width: 45px;
-    padding: 5px;
     border-radius: 100%
 }
 
