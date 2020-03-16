@@ -236,6 +236,9 @@ Commands
    * - :ref:`UNTIL`
      - Terminates the stream when a condition is matched.
      - GOR/NOR
+   * - :ref:`VARGROUP`
+     - Groups together variants with the same reference allele at a given position.
+     - GOR
    * - :ref:`VARIANTS`
      - Returns the variants found in sequence reads and their associated quality.
      - GOR
