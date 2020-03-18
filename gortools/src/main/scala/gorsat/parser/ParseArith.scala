@@ -25,6 +25,7 @@ package gorsat.parser
 import java.util
 
 import gorsat.Analysis.DagMapAnalysis
+import gorsat.Commands.RowHeader
 import gorsat.parser.FunctionTypes._
 import gorsat.parser.ParseUtilities._
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
@@ -48,7 +49,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
 
   var refSeq: RefSeq = _
   var context: GorContext = _
-  private var executeNor = false
+  var executeNor = false
   private var outputType: String = "Boolean, String, Int, Double, Long"
   var stringFunction: sFun = _
   var intFunction: iFun = _
@@ -229,6 +230,10 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
 
   def getAvgSeekTimeMilliSecond: Double = {
     if(rs != null) rs.getAvgSeekTimeMilliSecond else -1.0
+  }
+
+  def getHeader: RowHeader = {
+    RowHeader(orgColNames, orgColTypes)
   }
 
   def StringVariableHandler(colName: String): sFun = {

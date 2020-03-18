@@ -11,6 +11,8 @@
    functions/brackets
    functions/ceil
    functions/chisquare
+   functions/cols2list
+   functions/cols2listmap
    functions/contains
    functions/containsany
    functions/cosine
