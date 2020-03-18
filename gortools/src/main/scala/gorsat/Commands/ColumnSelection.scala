@@ -89,6 +89,7 @@ case class ColumnSelection(
   }
 
   def addPosColumns(): Unit = {
+    if(isRange) populateColumnsFromRange()
     columnValues = (List(0, 1) ::: columnValues).distinct
     isEmpty = false
   }
