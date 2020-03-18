@@ -3,10 +3,25 @@
 ====
 GAVA
 ====
-The **GAVA** command
+**GAVA** is a variant association algorithm, based on the VAAST algorithm.
+http://www.ncbi.nlm.nih.gov/pubmed/21700766
+
+Computes a p-value for a genomic feature (typically a single gene) using a randomization test, where the
+affection status of the subjects is permuted and the test statistic computed using a composite likelihood
+ratio test as described in the VAAST paper.
+
+Note: This is not an exact implementation and for example we have a bailout parameter to avoid spending
+too much computing time on uninteresting features.
 
 Usage
 =====
+
+We need to first set the case and control lists, the disease model (regular, dominant, or recessive),
+and other parameters. Then the procedure is as follows:
+    * Before processing a feature, call initializeGroup() to clear the counts.
+    * Iterate through the data for the feature and for each variant found for some subject, add the call counts using addFeature().
+    * Calculate the p-value (and a few other values) using calculateValues().
+    * Repeat the process for the next feature.
 
 .. code-block:: gor
 
@@ -46,9 +61,3 @@ Options
 .. WARNING::
 
     casepene and ctrlpene specify the number of cases and ctrls which DO NOT have to comply with the inheritance model.
-
-Examples
-========
-.. code-block:: gor
-
-    create #cosmic# = pgor ref/cosmic.gorz | select 1,2,ref,alt,CNT- | distinct | group 1 -gc ref,alt -len 1000 -sc primarysites,cnt,pscount -lis

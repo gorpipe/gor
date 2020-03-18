@@ -160,9 +160,25 @@
             
   <div class="section" id="gava">
 <span id="id1"></span><h1>GAVA<a class="headerlink" href="#gava" title="Permalink to this headline">¶</a></h1>
-<p>The <strong>GAVA</strong> command</p>
+<p><strong>GAVA</strong> is a variant association algorithm, based on the VAAST algorithm.
+<a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/21700766">http://www.ncbi.nlm.nih.gov/pubmed/21700766</a></p>
+<p>Computes a p-value for a genomic feature (typically a single gene) using a randomization test, where the
+affection status of the subjects is permuted and the test statistic computed using a composite likelihood
+ratio test as described in the VAAST paper.</p>
+<p>Note: This is not an exact implementation and for example we have a bailout parameter to avoid spending
+too much computing time on uninteresting features.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>We need to first set the case and control lists, the disease model (regular, dominant, or recessive),
+and other parameters. Then the procedure is as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Before processing a feature, call initializeGroup() to clear the counts.</p></li>
+<li><p>Iterate through the data for the feature and for each variant found for some subject, add the call counts using addFeature().</p></li>
+<li><p>Calculate the p-value (and a few other values) using calculateValues().</p></li>
+<li><p>Repeat the process for the next feature.</p></li>
+</ul>
+</div></blockquote>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GAVA</span> maxiterations -casefile &lt;filename&gt; -ctrlfile &lt;filename&gt; [ attributes ]
 </pre></div>
 </div>
@@ -214,12 +230,6 @@
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>casepene and ctrlpene specify the number of cases and ctrls which DO NOT have to comply with the inheritance model.</p>
-</div>
-</div>
-<div class="section" id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #cosmic# = <span class="nd">pgor</span> ref/cosmic.gorz | select 1,2,ref,<span class="na">alt</span>,CNT- | distinct | group 1 -<span class="no">gc</span> ref,<span class="na">alt</span> -len 1000 -sc primarysites,cnt,pscount -lis
-</pre></div>
 </div>
 </div>
 </div>
