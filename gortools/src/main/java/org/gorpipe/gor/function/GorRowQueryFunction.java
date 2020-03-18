@@ -64,7 +64,7 @@ public class GorRowQueryFunction implements Function<Row, Stream<Row>>, AutoClos
         GenericSessionFactory gsf = new GenericSessionFactory();
         GorSession gps = gsf.create();
         PipeInstance pi = new PipeInstance(gps.getGorContext());
-        pi.subProcessArguments(pipeOptions.query(), pipeOptions.fileSignature(), pipeOptions.virtualFile(), pipeOptions.scriptAnalyzer(), pipeOptions.stdIn(), header);
+        pi.init(pipeOptions.query(), pipeOptions.stdIn(), header);
         return pi;
     }
 
