@@ -28,6 +28,7 @@ import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.logging.GorLogbackUtil;
 import org.gorpipe.model.util.ConfigUtil;
 import org.jline.builtins.Completers;
 import org.jline.reader.*;
@@ -97,6 +98,8 @@ public class GorShell {
     }
 
     public static void main(String[] args) throws IOException {
+        GorLogbackUtil.initLog("gorshell");
+
         ConfigUtil.loadConfig("gor");
         PipeInstance.initialize();
 

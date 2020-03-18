@@ -1,10 +1,23 @@
-============
-Introduction
-============
+=========
+Tutorials
+=========
 
 .. toctree::
-   :caption: Contents
-   :maxdepth: 2
+   :maxdepth: 1
+   :hidden:
+
+   basicGORqueries
+   filteringStreams
+   columnModifications
+   groupingAndAggregation
+   nestedStreams
+   joiningTables
+   mapMultimap
+   pivoting
+   sequenceReads
+   variantData
+   materializedViews
+   parallelGOR
 
 What is GOR?
 ============
@@ -17,11 +30,11 @@ The GOR architecture is at the foundation of WuXi NextCODE's genome analysis and
 .. image:: images/paper.png
    :target: https://academic.oup.com/bioinformatics/article/32/20/3081/2196339/GorPipe-a-query-tool-for-working-with-sequence
 
-*GorPipe: a query tool for working with sequence data based on a Genomic Ordered Relational (GOR) architecture*
+*GORpipe: a query tool for working with sequence data based on a Genomic Ordered Relational (GOR) architecture*
 
-The target audience of this manual is a :term:`bioinformatician` or other support personnel who will be creating their own GOR queries using either the Sequence Miner or the command line interfaces, GorPipe and GORdb.
+The target audience of this manual is a :term:`bioinformatician` or other support personnel who will be creating their own GOR queries using either the Sequence Miner or the command line interfaces, GORpipe and GORdb.
 
-This manual will provide an overview of the GOR language and a comprehensive list of commands that are available both through GORdb, GorPipe and the Sequence Miner (SM) with use cases input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.
+This manual will provide an overview of the GOR language and a comprehensive list of commands that are available both through GORdb, GORpipe and the Sequence Miner (SM) with use cases input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.
 
 Writing GOR queries
 ===================
@@ -78,30 +91,3 @@ Reference Data used in example queries are introduced in the table below:
    * - ``#wesVars#``
      - source/var/wes_varcalls.gord -s PN
      - Whole Exome Sequence Variants - a subset of variants in #wgsVars# that are overlapping or close to exon boundaries.
-
-
-Data pipeline
-=============
-The most common use case for the GOR query language is in working with germline DNA samples. This section describes where this data comes from and how the processing pipeline works.
-
-Often in this manual, we will use the term "data pipeline" to describe the series of steps that are executed in sequencing germline DNA samples and annotating them with the various sets of data that are available to us within a project.
-
-A diagram of one of the use cases of the data pipeline can be seen below:
-
-.. image:: images/dataPipeline.png
-   :scale: 50 %
-
-The data processing is often split into distinct step that are referred to as the primary, secondary and tertiary pipeline. These are explained further below:
-
-#. Before the samples reach the Clinical Sequence Analyser (CSA), the *Primary analysis pipeline* takes raw data from a sequencing machine (such as BCL format from Illumina) and produces a standard text-formatted data file describing the base calls (typically, this is the FASTQ format).
-
-#. In the *Secondary analysis pipeline*, the FASTQ format is converted to BAM and VCF files, aligning the reads that are listed in the FASTQ back to their coordinates by comparing the string sequences to the known sequences from a reference genome.
-
-.. figure:: images/alignment.png
-   :scale: 75 %
-
-   Alignment of string sequences to the reference genome
-
-#. The *Tertiary analysis pipeline* starts from BAM+VCF and produce additional variant annotation data using VEP and derived coverage data.
-
-When the data pipeline has finished completely, we are left with the folder structure of source files that you can see in the Sequence Miner file explorer, namely *anno*, *bam*, *cov* and *var*.

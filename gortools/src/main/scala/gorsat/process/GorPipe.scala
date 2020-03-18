@@ -32,6 +32,7 @@ import gorsat._
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import org.gorpipe.gor.servers.GorConfig
+import org.gorpipe.logging.GorLogbackUtil
 import org.gorpipe.model.genome.files.gor.{DbSource, DefaultFileReader}
 import org.gorpipe.model.util.ConfigUtil
 import org.slf4j.LoggerFactory
@@ -72,6 +73,8 @@ object GorPipe extends GorPipeFirstOrderCommands {
       printOutGORPipeVersion()
       System.exit(0)
     }
+
+    GorLogbackUtil.initLog("gorpipe");
 
     // Initialize config
     ConfigUtil.loadConfig("gor")

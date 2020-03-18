@@ -7,7 +7,7 @@
 ======
 COLNUM
 ======
-The **COLNUM** command prefixes a column number to the cell in the stream (keeping the value of the cell within parentheses). The POS header is prefixed but not the values of the positions. The CHROM column is also omitted from the numbering (since this is assumed to be first in the GOR context. It is used to help you figure out the number of columns in a result and is particularly useful when working with GorPipe on the command-line in a shell that does not have tabular visualisation.
+The **COLNUM** command prefixes a column number to the cell in the stream (keeping the value of the cell within parentheses). The POS header is prefixed but not the values of the positions. The CHROM column is also omitted from the numbering (since this is assumed to be first in the GOR context. It is used to help you figure out the number of columns in a result and is particularly useful when working with GORpipe on the command-line in a shell that does not have tabular visualisation.
 
 This command does not take any parameters.
 

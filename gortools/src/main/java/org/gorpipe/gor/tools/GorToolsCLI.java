@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.tools;
 
+import org.gorpipe.logging.GorLogbackUtil;
 import org.gorpipe.model.genome.files.binsearch.GorIndexFile;
 import org.gorpipe.model.genome.files.binsearch.GorIndexType;
 import org.gorpipe.model.util.ConfigUtil;
@@ -55,6 +56,7 @@ public class GorToolsCLI {
      * @param args commandline arguments.
      */
     static public void main(String[] args) {
+        GorLogbackUtil.initLog("gortool");
         log.trace("GorToolsCLI starting");
         try {
             runCLI(args);

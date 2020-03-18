@@ -27,16 +27,16 @@ This documentation is organized in two separate ways. The chapters can be read f
 
 Alternatively, you can use this manual as a reference. :ref:`Each command in GOR has its own page<quickReference>` with examples and a comprehensive list of functions with a description of their usage can also be found here. This manual assumes that you have some background in using databases and a working knowledge of writing SQL queries is certainly an asset when working with GOR queries.
 
-This documentation covers a range of topics related to the usage of the GOR query language both in the Sequence Miner and on the command line with GorPipe. The :ref:`Quick Reference<quickReference>` contains a comprehensive list of GOR commands with all of the attributes that can be used with each.
+This documentation covers a range of topics related to the usage of the GOR query language both in the Sequence Miner and on the command line with GORpipe. The :ref:`Quick Reference<quickReference>` contains a comprehensive list of GOR commands with all of the attributes that can be used with each.
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    installation
-   tutorials
-   ref_commands
-   ref_functions
+   introduction
+   commands
+   functions
 
 .. _GOR open source project: https://github.com/gorpipe/GOR
 .. _paper in Bioinformatics: https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199

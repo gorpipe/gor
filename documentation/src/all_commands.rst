@@ -78,6 +78,7 @@
    command/TOP
    command/UNPIVOT
    command/UNTIL
+   command/VARGROUP
    command/VARIANTS
    command/VARJOIN
    command/VARMERGE

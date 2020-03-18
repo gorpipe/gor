@@ -4,7 +4,7 @@ Commands
 ========
 
 .. list-table:: A list of available GOR and NOR commands with descriptions
-   :widths: 3  15 1
+   :widths: 15  35 8
    :header-rows: 1
    :class: wxnc-reference
 
@@ -236,6 +236,9 @@ Commands
    * - :ref:`UNTIL`
      - Terminates the stream when a condition is matched.
      - GOR/NOR
+   * - :ref:`VARGROUP`
+     - Groups together variants with the same reference allele at a given position.
+     - GOR
    * - :ref:`VARIANTS`
      - Returns the variants found in sequence reads and their associated quality.
      - GOR
@@ -263,3 +266,4 @@ Commands
    * - :ref:`WRITE`
      - Used to write a stream into one or more files simultaneously.
      - GOR/NOR
+

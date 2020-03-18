@@ -29,6 +29,7 @@ import org.gorpipe.gor.cli.info.InfoCommand;
 import org.gorpipe.gor.cli.manager.ManagerCommand;
 import org.gorpipe.gor.cli.query.QueryCommand;
 import org.gorpipe.gor.cli.render.RenderCommand;
+import org.gorpipe.logging.GorLogbackUtil;
 import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
@@ -39,6 +40,7 @@ import picocli.CommandLine;
                 CacheCommand.class, RenderCommand.class, InfoCommand.class})
 public class GorCLI extends HelpOptions implements Runnable {
     public static void main(String[] args) {
+        GorLogbackUtil.initLog("gor");
         CommandLine cmd = new CommandLine(new GorCLI());
         cmd.parseWithHandlers(
                 new CommandLine.RunLast(),

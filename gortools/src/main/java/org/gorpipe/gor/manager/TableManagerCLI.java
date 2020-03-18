@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.manager;
 
+import org.gorpipe.logging.GorLogbackUtil;
 import org.gorpipe.model.util.ConfigUtil;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.GenomicRange;
@@ -69,6 +70,8 @@ public class TableManagerCLI {
      * @param args commandline arguments.
      */
     static public void main(String[] args) {
+        GorLogbackUtil.initLog("gormanager");
+
         log.trace("TableManager starting");
         ConfigUtil.loadConfig("gor");
         log.trace("config loaded");
