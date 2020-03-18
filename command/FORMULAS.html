@@ -433,8 +433,8 @@ See <a class="reference external" href="http://acs.lbl.gov/software/colt/api/cer
 <h2>List Functions<a class="headerlink" href="#list-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
+<col style="width: 28%" />
+<col style="width: 72%" />
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFIRST(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
@@ -507,6 +507,18 @@ Example LISTFILTER(col,’x != 1’) or LISTFILTER(col,’i &gt; 2’)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIPFILTER(str,str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Filter the first list by the content of the second list.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LIST(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Collapse values from multiple columns into a single list, separated by commas</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LIST(str,</span> <span class="pre">str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Collapse values from multiple columns into a single list, with a custom separator</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(str,</span> <span class="pre">str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Collapse values from multiple columns into a single list with an expression applied, separated by commas</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(str,</span> <span class="pre">str,</span> <span class="pre">str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Collapse values from multiple columns into a single list with an expression applied, with a custom separator</p></td>
 </tr>
 </tbody>
 </table>
