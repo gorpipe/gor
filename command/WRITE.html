@@ -164,7 +164,7 @@
 <p>By specifying a “fork” column, with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, you must also specify the column that is used to fork the output files.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> option can be used to eliminate the fork column from the output, since it is already represented in the filenames.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> and <code class="docutils literal notranslate"><span class="pre">-m</span></code> options are used to encrypt the output of the WRITE command. <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output and <code class="docutils literal notranslate"><span class="pre">-m</span></code> is used to encrypt the files with the MD5 algorithm.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">-i</span></code> option writes an index file containing the file position of each chromosome.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-i</span></code> option writes an index file containing the file position of each chromosome. This option requires a type to be set, which can be FULL or CHROM.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-l</span></code> option selects the compression level to be used by the deflater. Default: 1 (BEST_SPEED)</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
@@ -192,8 +192,9 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
 <td><p>Use MD5 encryption on the output file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
-<td><p>Write index file (.gori) with a .gorz file</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">[type]</span></code></p></td>
+<td><p>Write index file (.gori) with a .gorz file
+Must state the type, which can be FULL or CHROM</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">[level]</span></code></p></td>
 <td><p>Compression level (0-9). Default 1.</p></td>
