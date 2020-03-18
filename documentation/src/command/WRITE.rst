@@ -15,7 +15,7 @@ The ``-r`` option can be used to eliminate the fork column from the output, sinc
 
 The ``-c`` and ``-m`` options are used to encrypt the output of the WRITE command. ``-c`` tells the command to use column store compression for the output and ``-m`` is used to encrypt the files with the MD5 algorithm.
 
-The ``-i`` option writes an index file containing the file position of each chromosome.
+The ``-i`` option writes an index file containing the file position of each chromosome. This option requires a type to be set, which can be FULL or CHROM.
 
 The ``-l`` option selects the compression level to be used by the deflater. Default: 1 (BEST_SPEED)
 
@@ -38,7 +38,8 @@ Options
 +-----------------+-----------------------------------------------------------------+
 | ``-m``          | Use MD5 encryption on the output file.                          |
 +-----------------+-----------------------------------------------------------------+
-| ``-i``          | Write index file (.gori) with a .gorz file                      |
+| ``-i [type]``   | Write index file (.gori) with a .gorz file                      |
+|                 | Must state the type, which can be FULL or CHROM                 |
 +-----------------+-----------------------------------------------------------------+
 | ``-l [level]``  | Compression level (0-9). Default 1.                             |
 +-----------------+-----------------------------------------------------------------+
