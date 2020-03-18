@@ -110,8 +110,8 @@ public class GorDictionarySetup {
             String source = sources != null && sources.length > 0 ? sources[sourceIndex % sources.length] : String.format("PN%d", sourceIndex + 1);
             sourceIndex++;
 
-            String fileNamePrefix = String.format("%s_datafile_%d_%s", name, i + 1, oneSourcePerFile ? source + "_" : "");
-            Path dataFilePath = path != null ? Files.createTempFile(path, fileNamePrefix, ".gor") : Files.createTempFile(fileNamePrefix, ".gor");
+            String fileNamePrefix = String.format("%s_datafile_%d_%s", name, i + 1, oneSourcePerFile ? source : "");
+            Path dataFilePath = path != null ? Files.createFile(path.resolve(fileNamePrefix + ".gor")) : Files.createTempFile(fileNamePrefix, ".gor");
             dataFilePath.toFile().deleteOnExit();
 
             // If we multiple sources per file, we can't map single source to a list files, so we map all to "All".
@@ -181,32 +181,41 @@ public class GorDictionarySetup {
         this(name, fileCount, bucketSize, chrs, rowsPerChr, false);
     }
 
+    public GorDictionarySetup(String name, int fileCount, int bucketSize, int[] chrs, int rowsPerChr, boolean addMultiTagLines) throws IOException {
+        this(null, name, fileCount, bucketSize, chrs, rowsPerChr, addMultiTagLines);
+    }
+
     /**
      * Constructor
      *
-     * @param name       Name to identify the files with.
+     * @param root       Root folder
+     * @param name       Name to identify the files with (without .gord).
      * @param fileCount  Number of data files to create (same as number of pns used)
      * @param bucketSize Number of files in each bucket.
      * @param chrs       Array with the chromosomes to use.
      * @param rowsPerChr Number of rows per chromosome in each file.
      * @throws IOException
      */
-    public GorDictionarySetup(String name, int fileCount, int bucketSize, int[] chrs, int rowsPerChr, boolean addMultiTagLines) throws IOException {
+    public GorDictionarySetup(Path root, String name, int fileCount, int bucketSize, int[] chrs, int rowsPerChr, boolean addMultiTagLines) throws IOException {
+        if (root == null) {
+            root = Files.createTempDirectory("tempdict");
+            root.toFile().deleteOnExit();
+        }
+
         this.name = name;
 
         this.bucketFiles = new Path[fileCount / bucketSize];
 
-        int skipFileFromBuckets = 6;  // Leave some files out of the buckets.
         String[] sources = IntStream.range(1, fileCount + 1).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
 
         // Create data file
-        Map<String, List<String>> data = GorDictionarySetup.createDataFilesMap(name, null, fileCount, chrs, rowsPerChr, "PN", true, sources);
+        Map<String, List<String>> data = GorDictionarySetup.createDataFilesMap(name, root, fileCount, chrs, rowsPerChr, "PN", true, sources);
         this.dataFiles = data.values().stream().flatMap(l -> l.stream()).collect(Collectors.toList()).toArray(new String[0]);
 
         // Bucketize
 
         for (int i = 0; i < this.bucketFiles.length; i++) {
-            this.bucketFiles[i] = java.nio.file.Files.createTempFile(name + "_bucketfile_Bucket" + i + "_", ".gor");
+            this.bucketFiles[i] = Paths.get(name + "_bucketfile_Bucket" + i + ".gor");
             this.bucketFiles[i].toFile().deleteOnExit();
         }
 
@@ -220,7 +229,7 @@ public class GorDictionarySetup {
         for (String alias : data.keySet()) {
             for (String dataFile : data.get(alias)) {
                 int bucketIndex = fileIndex / bucketSize;
-                if (bucketIndex < this.bucketFiles.length && fileIndex % skipFileFromBuckets != 0) {
+                if (bucketIndex < this.bucketFiles.length) {
                     mapBucketToFiles.computeIfAbsent(this.bucketFiles[bucketIndex], k -> new ArrayList<>()).add(dataFile);
                     mapFileToBuckets.put(dataFile, this.bucketFiles[bucketIndex]);
                 }
@@ -231,15 +240,14 @@ public class GorDictionarySetup {
 
         // Create bucket files
 
-
         for (Path bucketFile : this.bucketFiles) {
             boolean printHeader = true;
-            try (PrintWriter out = new PrintWriter(bucketFile.toFile())) {
+            try (PrintWriter out = new PrintWriter(root.resolve(bucketFile).toFile())) {
                 ArrayList<String>[] fileLines = (ArrayList<String>[]) new ArrayList[mapBucketToFiles.get(bucketFile).size()];
                 for (int k = 0; k < fileLines.length; k++) fileLines[k] = new ArrayList<>();
                 int i = 0;
                 for (String dataFile : mapBucketToFiles.get(bucketFile)) {
-                    try (BufferedReader br = new BufferedReader(new FileReader(dataFile))) {
+                    try (BufferedReader br = new BufferedReader(new FileReader(root.resolve(dataFile).toString()))) {
                         String line;
 
                         // Read the header.
@@ -269,12 +277,12 @@ public class GorDictionarySetup {
 
         // Create dictionary file.
 
-        this.dictionary = java.nio.file.Files.createTempFile(name + "_dictionary_", ".gord");
+        this.dictionary = java.nio.file.Files.createTempFile(root, name + "_dictionary_", ".gord");
         this.dictionary.toFile().deleteOnExit();
         try (PrintWriter out = new PrintWriter(this.dictionary.toFile())) {
             for (String dataFile : this.dataFiles) {
                 String bucketInfo = mapFileToBuckets.containsKey(dataFile) ? "|" + mapFileToBuckets.get(dataFile) : "";
-                out.print(dataFile + bucketInfo + "\t" + mapFileToAlias.get(dataFile));
+                out.print(root.relativize(Paths.get(dataFile)).toString()  + bucketInfo + "\t" + mapFileToAlias.get(dataFile));
                 out.println();
             }
             out.flush();

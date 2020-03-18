@@ -105,7 +105,6 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
-
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
 
@@ -126,6 +125,7 @@ public class UTestTableManager {
         TableManager manNoHist = TableManager.newBuilder().useHistory(false).build();
         String noHistDict = "noHistDict";
         BaseTable<BucketableTableEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        table.save();
         manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
         Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseTable.HISTORY_DIR_NAME)));
@@ -134,8 +134,10 @@ public class UTestTableManager {
         TableManager manHist = TableManager.newBuilder().useHistory(true).build();
         String histDict = "histDict";
         table = manHist.initTable(workDirPath.resolve(histDict + ".gord"));
+        table.save();
         manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        table.reload();
         Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(BaseTable.HISTORY_DIR_NAME)));
         Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(BaseTable.HISTORY_DIR_NAME)).count()); // 1 action log.
     }
@@ -268,7 +270,7 @@ public class UTestTableManager {
         testTableManagerUtil.waitForBucketizeToStart(table, p);
 
         // Bucketize in main - should return immediately.
-        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
 
         // Wait for the thread and print out stuff.
         log.debug(testTableManagerUtil.waitForProcessPlus(p));

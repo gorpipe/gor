@@ -260,8 +260,8 @@ public class TableManagerCLI {
     @CmdCommand(names = {"bucketize"}, description = "Bucketize the table")
     private static class CommandBucketize implements CommandRun {
 
-        @CmdOption(names = {"-w", "--workers"}, args = {"<value>"}, description = "Number of workers/threads to use.  Default: " + BucketManager.DEFAULT_NUMBER_WORKERS)
-        protected int workers = BucketManager.DEFAULT_NUMBER_WORKERS;
+        @CmdOption(names = {"-w", "--workers"}, args = {"<value>"}, description = "Number of workers/threads to use.  Default: " + BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS)
+        protected int workers = BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS;
         @CmdOption(names = {"--min_bucket_size"}, args = {"<value>"}, description = "Minimum number of files in a bucket.  Can never be larger than the bucket size.  Default: " + BucketManager.DEFAULT_MIN_BUCKET_SIZE)
         protected int minBucketSize = BucketManager.DEFAULT_MIN_BUCKET_SIZE;
         @CmdOption(names = {"--bucket_size"}, args = {"<value>"}, description = "Preferred number of files in a bucket (effective maximum).  Default: " + BucketManager.DEFAULT_BUCKET_SIZE)

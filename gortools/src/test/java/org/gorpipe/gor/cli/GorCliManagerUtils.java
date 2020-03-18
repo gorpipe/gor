@@ -71,7 +71,7 @@ public class GorCliManagerUtils {
         BucketManager buc = new BucketManager(table);
 
         buc.setBucketDirs(bucketDirs);
-        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
         Assert.assertEquals("Wrong number of buckets", fileCount / man.getBucketSize(), bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
         buckets = table.filter().get().stream().map(l -> l.getBucketPath()).distinct().collect(Collectors.toList());

@@ -65,7 +65,7 @@ project(':gortools') {
 
         compile "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
         compile "org.scalanlp:breeze_2.12:0.13.+"
-        compile "info.picocli:picocli:4.0.+"
+        compile "info.picocli:picocli:4.1.+"
         compile "de.tototec:de.tototec.cmdoption:0.6.+"
         compile "colt:colt:1.2.+"
 
