@@ -156,7 +156,7 @@ object GorPrePipe {
     val sessionFactory = new GenericSessionFactory()
     val mainAliasMap:singleHashMap = new java.util.HashMap[String, String]()
 
-    val engine = ScriptEngineFactory.create(session.getGorContext)
+    val engine = ScriptEngineFactory.create(session.getGorContext, scriptAnalyser = false)
 
     try {
       val modifiedInputCommands = inputCommands.map(x => pgorReplacer(replaceAllAliases(x, mainAliasMap)))

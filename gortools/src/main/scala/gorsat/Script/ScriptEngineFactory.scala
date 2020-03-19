@@ -31,16 +31,20 @@ import org.gorpipe.gor.GorContext
   */
 object ScriptEngineFactory {
 
-  def create(context: GorContext) : ScriptExecutionEngine = {
-    {
-      val remoteQueryHandler = if (context.getSession.getProjectContext.getQueryHandler != null) {
-        context.getSession.getProjectContext.getQueryHandler
-      } else {
-        new QueryHandler(context)
-      }
+  def create(context: GorContext, scriptAnalyser: Boolean) : ScriptExecutionEngine = {
+    create(context, scriptAnalyser, doHeader = true)
+  }
 
-      new ScriptExecutionEngine(remoteQueryHandler, context)
+  def create(context: GorContext, scriptAnalyser: Boolean, doHeader: Boolean) : ScriptExecutionEngine = {
+    val remoteQueryHandler = if (context.getSession.getProjectContext.getQueryHandler != null) {
+      context.getSession.getProjectContext.getQueryHandler
+    } else {
+      new QueryHandler(context)
     }
-  }
 
+    val localQueryHandler = new GeneralQueryHandler(context, doHeader)
+    val analyzer:ScriptExecutionListener = if(scriptAnalyser) new ConsoleLogListener() else new DefaultListener
+
+    new ScriptExecutionEngine(remoteQueryHandler, localQueryHandler, context, analyzer)
   }
+}

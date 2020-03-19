@@ -112,7 +112,7 @@ public class TestUtils {
 
         try (PipeInstance pipe = new PipeInstance(factory.create().getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.init(queryToExecute, false, "");
+            pipe.subProcessArguments(queryToExecute,false, null, false, false, "");
             StringBuilder result = new StringBuilder();
             result.append(pipe.getHeader());
             result.append("\n");
@@ -176,7 +176,7 @@ public class TestUtils {
 
         try (PipeInstance pipe = new PipeInstance(sessionSupplier.get().getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.init(queryToExecute, false, "");
+            pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
             int count = 0;
             while (pipe.hasNext()) {
                 pipe.next();
@@ -193,7 +193,7 @@ public class TestUtils {
 
         try (PipeInstance pipe = new PipeInstance(createSession(args, whitelistFile.toAbsolutePath().toString(), false).getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.init(queryToExecute, false, "");
+            pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
             int count = 0;
             while (pipe.hasNext()) {
                 pipe.next();

@@ -100,7 +100,7 @@ public class UTestTableFunction {
         GorSessionFactory factory = new GenericSessionFactory();
 
         PipeInstance pi = PipeInstance.createGorIterator(factory.create().getGorContext());
-        pi.init(query, false, "");
+        pi.subProcessArguments(query, false, null, false, false, "");
         int count = 0;
         while (pi.hasNext()) {
             pi.next();
@@ -428,7 +428,7 @@ public class UTestTableFunction {
         factory.setConfigFile(configFile.getAbsolutePath());
 
         PipeInstance pi = PipeInstance.createGorIterator(factory.create().getGorContext());
-        pi.init(query, false, "");
+        pi.subProcessArguments(query, false, null, false, false, "");
         int count = 0;
         while (pi.hasNext()) {
             pi.next();

@@ -38,6 +38,7 @@ abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
   var thePipeStep : Analysis = _
   var theInputSource: RowSource = _
   var combinedHeader : String = _
+  var featureLoaderArgs : Array[String] = _
   var theParams = ""
   var usedFiles : List[String] = Nil
   var fixHeader : Boolean = true
@@ -47,21 +48,26 @@ abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
   def processArguments(args : Array[String], executeNor : Boolean, forcedInputHeader : String = ""): RowSource
 
   def scalaPipeStepInit(iparams : String, forcedInputHeader : String = "") {
+    val params = iparams.replace("\r","").replace("\n","")
     if (theIterator != null) close()
-    val args = CommandParseUtilities.quoteSafeSplit(iparams + " -stdin",' ')
-    processArguments(args, isNorContext,forcedInputHeader)
-    theParams = iparams
+    featureLoaderArgs = CommandParseUtilities.quoteSafeSplit(params+" -stdin",' ')
+    processArguments(featureLoaderArgs, isNorContext,forcedInputHeader)
+    theParams = params
     theIterator = null
   }
 
   def scalaInit(iparams : String, forcedInputHeader : String = "") {
+    val strbuff = new StringBuilder(iparams.length)
+    var i = 0; while (i < iparams.length) { if (iparams(i) >= ' ') strbuff.append(iparams(i)); i += 1 }
+    val params = strbuff.toString
+
     if (theIterator != null) {
       close()
     }
 
-    val args = Array(iparams)
-    processArguments(args, isNorContext,forcedInputHeader)
-    theParams = iparams
+    featureLoaderArgs = Array(params)
+    processArguments(featureLoaderArgs, isNorContext,forcedInputHeader)
+    theParams = params
   }
 
   override def init(params : String, gm : GorMonitor): Unit = { context.getSession.getSystemContext.setMonitor(gm); scalaInit(params) }

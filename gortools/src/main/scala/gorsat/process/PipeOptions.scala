@@ -77,6 +77,8 @@ object PipeOptions {
     "-logdir",
     "-workers",
     "-script",
+    "-signature",
+    "-virtualfile",
     "-helpfile",
     "-stacktrace",
     "-version",
@@ -97,12 +99,18 @@ class PipeOptions {
   var query: String = _
   //Specifies whether gor should be run in pre-pipe mode, used for error checks and syntax highlighting. Value from the -prepipe option
   var prePipe: Boolean = false
+  // Gor should return the signature of the input query. Value from the -signature option
+  var fileSignature: Boolean = false
   // The first input step is from the stdin, no input source in the query. Value from the -stdin option
   var stdIn: Boolean = false
   // Gor should run in a forced not context mode. Value from the -nor option
   var norContext: Boolean = false
   // Shows the stack trace when errors occur. Value from the -stacktrace option
   var showStackTrace: Boolean = false
+  // Attaches a script analyzer that logs script states to the console. Value from the -scriptanalyzer option
+  var scriptAnalyzer: Boolean = false
+  // Virtual file??. VAlue from the -virtualfile option
+  var virtualFile: String = _
   // Sets the current project root. Value from the -gorroot option
   var gorRoot: String = _
   // Sets the cache dir, full path or relative to project root. Value from the -cacheDir option
@@ -135,6 +143,8 @@ class PipeOptions {
     this.logDir = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-logdir", null)
     this.workers = CommandParseUtilities.intValueOfOptionWithDefault(args, "-workers")
     this.query = PipeOptions.getQueryFromArgs(args)
+    this.fileSignature = CommandParseUtilities.hasOption(args, "-signature")
+    this.virtualFile = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-virtualfile", null)
     this.helpFile = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-helpfile", null)
     this.showStackTrace = CommandParseUtilities.hasOption(args, "-stacktrace")
     this.version = CommandParseUtilities.hasOption(args, "-version")
@@ -142,6 +152,7 @@ class PipeOptions {
 
     // Following options should not be part of the documentation
     this.prePipe = CommandParseUtilities.hasOption(args, "-prepipe")
+    this.scriptAnalyzer = CommandParseUtilities.hasOption(args, "-scriptanalyser")
     this.queryHandler = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-queryhandler", null)
     this.gorRoot = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-gorroot", "")
     this.requestId = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-requestid", UUID.randomUUID().toString)
