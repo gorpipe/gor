@@ -59,8 +59,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
 
     private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_FILES_VALIDATE", "true"));
+    private static final String DEFAULT_SOURCE_COLUMN = "PN";
     private static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
+    public static final boolean DEFAULT_USE_HISTORY = true;
 
     private final Path path;            // Path to the table (currently absolute instead of real for compatibility with older code).
     private final Path folderPath;      // Path to the table folder.  The table folder is hidden folder that sits next to the
@@ -72,44 +74,39 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private final Path historyDir;      // Backup dir for older versions of this dictionary (absolute) (if requested).
 
     protected String securityContext;
-    private final boolean useHistory;
-    private final String tagColumn;     // Name of the files tag column.
+
     protected final TableHeader header;                // Header info.
+    private String tagColumn = DEFAULT_SOURCE_COLUMN;     // Name of the files tag column (source column).
+    private boolean useHistory = DEFAULT_USE_HISTORY;
     private boolean hasUniqueTags = false;    //True if we don't want to allow double entries of the same tag
-    private boolean validateFiles;
+    private boolean validateFiles = DEFAULT_VALIDATE_FILES;
 
     protected ITableEntries<T> tableEntries;
 
     private TableLog tableLog;
-    /**
-     * Construct new dict file from the given path and chromosome cache.
-     *
-     * @param path path to the dictionary file.
-     */
-    protected BaseTable(Path path) {
-        this(path, null, false,
-                null, DEFAULT_VALIDATE_FILES);
-    }
 
     protected BaseTable(Builder builder) {
-        this(builder.path, builder.tagColumn, builder.useHistory,
-                 builder.securityContext, builder.validateFiles);
+        this(builder.path);
+        if (builder.tagColumn != null) {
+            setTagColumn(builder.tagColumn);
+        }
+        if (builder.validateFiles != null) {
+            setValidateFiles(builder.validateFiles);
+        }
+        if (builder.useHistory != null) {
+            setUseHistory(builder.useHistory);
+        }
+        if (builder.uniqueTags != null) {
+            setUniqueTags(builder.uniqueTags);
+        }
     }
 
     /**
      * Main constructor.
      *
      * @param path              path to the dictionary file.
-     * @param tagColumn         name of the tag (alias) column.
-     * @param useHistory        should history (log) of changes to the table be recorded.
-     * @param securityContext   security context
-     * @param validateFiles     should input files be validated.
      */
-    protected BaseTable(Path path, String tagColumn, boolean useHistory,
-                         String securityContext, boolean validateFiles) {
-
-        this.tagColumn = tagColumn != null ? tagColumn : "PN";
-        this.useHistory = useHistory;
+    protected BaseTable(Path path) {
 
         this.rootPath = normalize(path.getParent() != null ? path.getParent() : Paths.get("")).toAbsolutePath();
         this.rootUri = normalize(Paths.get(this.rootPath + "/").toUri());
@@ -118,16 +115,14 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.name = FilenameUtils.removeExtension(path.getFileName().toString());
         this.folderPath = this.rootPath.resolve("." + this.name);
 
-        this.securityContext = securityContext;
-        this.validateFiles = validateFiles;
-
         this.historyDir = this.folderPath.resolve(HISTORY_DIR_NAME);
         this.tableLog = new TableLog(this.historyDir);
 
+        this.securityContext = securityContext;
+        this.tableEntries = createTableEntries(this.getPath());
         this.header = new TableHeader();
 
-        this.tableEntries = createTableEntries(this.getPath());
-
+        // Loads the header, and loads/initializes fields read from header.
         reload();
     }
 
@@ -169,12 +164,12 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         return this.header.getColumns();
     }
 
-    public boolean isUseHistory() {
-        return this.useHistory;
-    }
-
     public String getTagColumn() {
         return this.tagColumn;
+    }
+
+    public void setTagColumn(String tagColumn) {
+        this.tagColumn = tagColumn;
     }
 
     public Path getRootPath() {
@@ -237,8 +232,20 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.validateFiles = validateFiles;
     }
 
+    public boolean isHasUniqueTags() {
+        return this.hasUniqueTags;
+    }
+
     public void setUniqueTags(boolean hasUniqueTags){
         this.hasUniqueTags = hasUniqueTags;
+    }
+
+    public boolean isUseHistory() {
+        return this.useHistory;
+    }
+
+    public void setUseHistory(boolean useHistory){
+        this.useHistory = useHistory;
     }
 
     /**
@@ -501,10 +508,11 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     /**
      * Reload from file.
+     * Note:  Reload is called when we open read transaction.
      */
     public void reload() {
-//        xxx Loading is split into this method and getRawlines (but we can have update inbtween) will that affect us?? Do we need lock (and update metadata here)
-//        but we definitly need it for getRawLines.
+        // Loading is split into this method and getRawlines (but we can have update in between) will that affect us?? Do we need lock (and update metadata here)
+        // but we definitly need it for getRawLines.
 
         updateFolderMetadata();
 
@@ -514,9 +522,19 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         // when we need the data.
         String prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
         parseHeader();
+
         if (prevSerial.equals(TableHeader.NO_SERIAL) || !this.header.getProperty(TableHeader.HEADER_SERIAL_KEY).equals(prevSerial)) {
             tableEntries.clear();
         }
+
+        // Reload meta data from the table, use the current values as defaults, so if the table has already been saved
+        // the reload will replace the set values.  If the table has never been saved we keep the set values (we
+        // do this for backward compatibility with TableManager, as it is probably more correct to use the default
+        // values if the table has never been saved).
+        tagColumn = getConfigTableProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY,  tagColumn);
+        validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
+        useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
+        hasUniqueTags = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY,  Boolean.toString(hasUniqueTags)));
     }
 
     /**
@@ -540,6 +558,12 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      */
     public void save() {
         initialize();
+
+        this.header.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, this.tagColumn);
+        this.header.setProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(this.useHistory));
+        this.header.setProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(this.validateFiles));
+        this.header.setProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY, Boolean.toString(this.hasUniqueTags));
+
         doSave();
         if (useHistory) {
             tableLog.commit();
@@ -588,9 +612,6 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             // Create the header.
             this.header.setProperty(TableHeader.HEADER_FILE_FORMAT_KEY, "1.0");
             this.header.setProperty(TableHeader.HEADER_CREATED_KEY, new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
-            if (this.tagColumn != null) {
-                this.header.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, this.tagColumn);
-            }
             this.header.setTableColumns(new String[]{"File", "Alias", "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"});
         }
     }
@@ -710,10 +731,11 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     protected abstract static class Builder<B extends Builder<B>> {
         protected Path path;
-        protected boolean useHistory = false;
+        protected Boolean useHistory;
         protected String tagColumn;
         protected String securityContext;
-        protected boolean validateFiles = DEFAULT_VALIDATE_FILES;
+        protected Boolean validateFiles;
+        protected Boolean uniqueTags;
 
         public Builder(Path path) {
             this.path = path;
@@ -741,6 +763,11 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
         public B validateFiles(boolean val) {
             this.validateFiles = val;
+            return self();
+        }
+
+        public B uniqueTags(boolean val) {
+            this.uniqueTags = val;
             return self();
         }
 
@@ -831,9 +858,9 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
                             ||
                             ((files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentRelative())))
                                     && (tags == null || (l.getTags().length == 0 && tags.length == 0)
-                                    || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(l.getTags(), t)) : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(l.getTags(), t))))
+                                        || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(l.getTags(), t)) : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(l.getTags(), t))))
                                     && (buckets == null || (!l.hasBucket() && buckets.length == 0) ||
-                                    (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucket()))))
+                                        (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucket()))))
                                     && (chrRange == null || (l.getRange() != null && chrRange.equals(l.getRange().format())))
                             )
                     )

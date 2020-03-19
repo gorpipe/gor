@@ -288,8 +288,9 @@ public class TableManager {
                 .bucketSize(this.bucketSize)
                 .minBucketSize(this.minBucketSize)
                 .lockType(this.lockType)
+                .bucketCreator(new BucketCreatorGorPipe(workers))
                 .build()
-                .bucketize(packLevel, workers, maxBucketCount, bucketDirs, false);
+                .bucketize(packLevel, maxBucketCount, bucketDirs, false);
     }
 
     /**

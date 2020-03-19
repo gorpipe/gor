@@ -29,17 +29,13 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
-import gorsat.process.CLIGorExecutionEngine;
-import gorsat.process.PipeOptions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,7 +61,6 @@ public class BucketManager<T extends BucketableTableEntry> {
         FULL_PACKING    // Full packing. Rebucket all small buckets and all buckets with deleted files.
     }
 
-    public static final int DEFAULT_NUMBER_WORKERS = 4;
     public static final int DEFAULT_MIN_BUCKET_SIZE = 20;
     public static final int DEFAULT_BUCKET_SIZE = 100;
     public static final int DEFAULT_MAX_BUCKET_COUNT = -1;
@@ -77,6 +72,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
     public static final String HEADER_MIN_BUCKET_SIZE_KEY = "GOR_TABLE_MIN_BUCKET_SIZE";
     public static final String HEADER_BUCKET_SIZE_KEY = "GOR_TABLE_BUCKET_SIZE";
+    public static final String HEADER_BUCKET_DIRS_KEY = "GOR_TABLE_BUCKET_DIRS";
 
     protected Duration gracePeriodForDeletingBuckets = Duration.ofHours(24);
 
@@ -92,14 +88,18 @@ public class BucketManager<T extends BucketableTableEntry> {
     private int bucketSize;
     private int minBucketSize;
 
+    private BucketCreator<T> bucketCreator;
+
     /**
      * Default constructor.
      */
     public BucketManager(BaseTable<T> table) {
         this.table = table;
-        setBucketDirs(null);
+        this.bucketCreator = new BucketCreatorGorPipe<>();
+
         setBucketSize(Integer.parseInt(table.getConfigTableProperty(HEADER_BUCKET_SIZE_KEY, Integer.toString(DEFAULT_BUCKET_SIZE))));
         setMinBucketSize(Integer.parseInt(table.getConfigTableProperty(HEADER_MIN_BUCKET_SIZE_KEY, Integer.toString(DEFAULT_MIN_BUCKET_SIZE))));
+        setBucketDirs(parseBucketDirString(table.getConfigTableProperty(HEADER_BUCKET_DIRS_KEY, null)));
     }
 
     private BucketManager(Builder builder) {
@@ -114,6 +114,9 @@ public class BucketManager<T extends BucketableTableEntry> {
         if (builder.minBucketSize > 0) {
             setMinBucketSize(builder.minBucketSize);
         }
+        if (builder.bucketCreator != null) {
+            this.bucketCreator = builder.bucketCreator;
+        }
     }
 
     public static Builder newBuilder(BaseTable table) {
@@ -121,25 +124,24 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     public void bucketize() {
-        bucketize(DEFAULT_BUCKET_PACK_LEVEL, DEFAULT_NUMBER_WORKERS, DEFAULT_MAX_BUCKET_COUNT, null, false);
+        bucketize(DEFAULT_BUCKET_PACK_LEVEL, DEFAULT_MAX_BUCKET_COUNT, null, false);
     }
 
-    public int bucketize(BucketPackLevel packLevel, int workers, int maxBucketCount) {
-        return bucketize(packLevel, workers, maxBucketCount, null, false);
+    public int bucketize(BucketPackLevel packLevel, int maxBucketCount) {
+        return bucketize(packLevel, maxBucketCount, null, false);
     }
 
     /**
      * Bucketize the given table.
      *
      * @param packLevel      pack level to use (see BucketPackLevel).
-     * @param workers        number of workers to use for bucketization (if needed).
      * @param maxBucketCount Maximum number of buckets to generate on this call.
      * @param bucketDirs     array of directories to bucketize to, ignored if null.  The dirs are absolute
      *                       or relative to the table dir.
      * @param forceClean     Should we force clean bucket files (if force clean we ignoring grace periods).
      * @return buckets created.
      */
-    public int bucketize(BucketPackLevel packLevel, int workers, int maxBucketCount, List<Path> bucketDirs, boolean forceClean) {
+    public int bucketize(BucketPackLevel packLevel, int maxBucketCount, List<Path> bucketDirs, boolean forceClean) {
         if (bucketDirs != null && !bucketDirs.isEmpty()) {
             setBucketDirs(bucketDirs);
         }
@@ -152,7 +154,7 @@ public class BucketManager<T extends BucketableTableEntry> {
             }
 
             cleanTempFolders(bucketizeLock);
-            int count = doBucketize(bucketizeLock, packLevel, workers, maxBucketCount);
+            int count = doBucketize(bucketizeLock, packLevel, maxBucketCount);
             cleanBucketFiles(bucketizeLock, forceClean);
             return count;
         } catch (IOException e) {
@@ -183,7 +185,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         return Math.min(this.getMinBucketSize(), this.getBucketSize());
     }
 
-    protected int getBucketSize() {
+    public int getBucketSize() {
         return this.bucketSize;
     }
 
@@ -200,7 +202,7 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     protected Path getDefaultBucketDir() {
-        return Paths.get("." + table.getName() + ".buckets");
+        return Paths.get("." + table.getName(), "buckets");
     }
 
     public Duration getLockTimeout() {
@@ -223,12 +225,38 @@ public class BucketManager<T extends BucketableTableEntry> {
      */
     public void setBucketDirs(List<Path> newBucketDirs) {
         this.bucketDirs.clear();
-        if (newBucketDirs != null) {
+        if (newBucketDirs != null && newBucketDirs.size() > 0) {
             for (Path p : newBucketDirs) {
                 this.bucketDirs.add(relativize(table.getRootPath(), p));
             }
         } else {
             this.bucketDirs.add(getDefaultBucketDir());
+        }
+    }
+
+    private List<Path> parseBucketDirString(String bucketDirs) {
+        if (bucketDirs == null) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(bucketDirs.split(","))
+                .filter(s -> !s.trim().isEmpty())
+                .map(s -> Paths.get(s))
+                .collect(Collectors.toList());
+    }
+
+    private void checkBucketDirExistance(Path bucketDir) {
+        // Create the default bucket dir (if it is to be used and is missing)
+        if (!Files.exists(bucketDir)) {
+            Path fullPathDefaultBucketDir = resolve(table.getRootPath(), getDefaultBucketDir());
+            if (bucketDir.equals(fullPathDefaultBucketDir)) {
+                try {
+                    Files.createDirectories(fullPathDefaultBucketDir);
+                } catch (IOException e) {
+                    throw new GorSystemException("Could not create default bucket dir: " + fullPathDefaultBucketDir, e);
+                }
+            } else {
+                throw new GorSystemException(String.format("Bucket dirs must exists, directory %s is not found!", bucketDir), null);
+            }
         }
     }
 
@@ -286,12 +314,11 @@ public class BucketManager<T extends BucketableTableEntry> {
      *
      * @param bucketizeLock  the bucketize lock to use.
      * @param packLevel      pack level to use (see BucketPackLevel).
-     * @param workers        number of workers to use for bucketization (if needed).
      * @param maxBucketCount Maximum number of buckets to generate on this call.
      * @return number of buckets created.
      * @throws IOException
      */
-    private int doBucketize(TableLock bucketizeLock, BucketPackLevel packLevel, int workers, int maxBucketCount) throws IOException {
+    private int doBucketize(TableLock bucketizeLock, BucketPackLevel packLevel, int maxBucketCount) throws IOException {
         if (!bucketizeLock.isValid()) {
             log.debug("Bucketize - Bucketization already in progress");
             return 0;
@@ -327,9 +354,10 @@ public class BucketManager<T extends BucketableTableEntry> {
         }
 
         // Run separate bucketization run for each bucket dir (for space and for fast move of the results).
-
+        // TODO:  This can be run in parallel if running on cluster, if local it might be better do just run sequeneally
+        //        Reason to run this per bucket dir is having tmp files on that dir so the move is fast.
         for (Path bucketDir : getBucketDirs()) {
-            doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap, workers);
+            doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap);
         }
 
         // Clean up
@@ -349,26 +377,20 @@ public class BucketManager<T extends BucketableTableEntry> {
         return newBucketsMap.size();
     }
 
-    private void doBucketizeForBucketDir(BaseTable tempTable, Path bucketDir, Map<Path, List<T>> newBucketsMap, int workers) throws IOException {
+    private void doBucketizeForBucketDir(BaseTable tempTable, Path bucketDir, Map<Path, List<T>> newBucketsMap) throws IOException {
         Map<Path, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
                         .filter(p -> p.getParent().equals(bucketDir))
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        Path tempBucketPath = createBucketFilesGorPipe(newBucketsMapForBucketDir, workers, resolve(table.getRootPath(), bucketDir), tempTable);
+        createBucketFiles(tempTable, newBucketsMapForBucketDir, resolve(table.getRootPath(), bucketDir));
 
         // Move files and update dictionary.
         for (Path bucket : newBucketsMapForBucketDir.keySet()) {
             List<T> bucketEntries = newBucketsMapForBucketDir.get(bucket);
-            // Move the bucket files.
-            Path targetBucketPath = resolve(table.getRootPath(), bucket);
-            Files.move(tempBucketPath.resolve(bucket), targetBucketPath);
-
             updateTableWithNewBucket(table, bucket, bucketEntries);
         }
-
-        deleteIfTempBucketizingFolder(tempBucketPath, table);
     }
 
     private void updateTableWithNewBucket(BaseTable table, Path bucket, List<T> bucketEntries) {
@@ -380,6 +402,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             table.setProperty(HEADER_BUCKET_SIZE_KEY, Integer.toString(this.getBucketSize()));
             table.setProperty(HEADER_MIN_BUCKET_SIZE_KEY, Integer.toString(this.getMinBucketSize()));
+            table.setProperty(HEADER_BUCKET_DIRS_KEY, bucketDirs.stream().map(p -> p.toString()).collect(Collectors.joining(",")));
             trans.commit();
         }
     }
@@ -411,8 +434,12 @@ public class BucketManager<T extends BucketableTableEntry> {
      */
     private BaseTable initTempTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {
-            return new DictionaryTable.Builder<>(path).useHistory(table.isUseHistory())
-                    .securityContext(table.getSecurityContext()).validateFiles(table.isValidateFiles()).build();
+            return new DictionaryTable.Builder<>(path)
+                    .useHistory(table.isUseHistory())
+                    .tagColumn(table.getTagColumn())
+                    .securityContext(table.getSecurityContext())
+                    .validateFiles(table.isValidateFiles())
+                    .build();
         } else {
             throw new GorSystemException("BaseTable of type " + path.toString() + " are not supported!", null);
         }
@@ -521,18 +548,13 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             try (Stream<Path> pathList = Files.list(fullPathBucketDir)) {
                 for (Path candTempDir : pathList.collect(Collectors.toList())) {
-                    deleteIfTempBucketizingFolder(candTempDir, table);
+                    BucketCreatorGorPipe.deleteIfTempBucketizingFolder(candTempDir, table);
                 }
             } catch (IOException ioe) {
                 log.warn("Got exception when trying to clean up temp folders.  Just logging out the exception", ioe);
             }
         }
     }
-
-    String getBucketizingFolderPrefix(BaseTable<? extends BucketableTableEntry> table) {
-        return "bucketizing_" + table.getId();
-    }
-
     private String getBucketFilePrefix(BaseTable table) {
         return table.getName() + "_" + BUCKET_FILE_PREFIX;
     }
@@ -637,113 +659,19 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     /**
-     * Create and validate folders, both temp and final.
-     *
-     * @param buckets
-     * @param workBaseDir path to the work base dir.
-     * @return
-     * @throws IOException
-     */
-    private Path createTempfoldersForCreateBucketFiles(Set<Path> buckets, Path workBaseDir) throws IOException {
-        // Create the default bucket dir (if it is to be used and is missing)
-        if (!Files.exists(workBaseDir)) {
-            Path fullPathDefaultBucketDir = resolve(table.getRootPath(), getDefaultBucketDir());
-            if (workBaseDir.equals(fullPathDefaultBucketDir)) {
-                try {
-                    Files.createDirectories(fullPathDefaultBucketDir);
-                } catch (IOException e) {
-                    throw new GorSystemException("Could not create default bucket dir: " + fullPathDefaultBucketDir, e);
-                }
-            } else {
-                throw new GorSystemException(String.format("Bucket dirs must exists, directory %s is not found!", workBaseDir), null);
-            }
-        }
-
-        // Create temp root.
-        Path tempRootDir = Files.createDirectory(workBaseDir.resolve(getBucketizingFolderPrefix(table)));
-
-        log.trace("Created temp folder {}", tempRootDir);
-        tempRootDir.toFile().deleteOnExit();
-
-        // Validate bucket dirs and create temp folders for the created buckets.  After the bucketization
-        // we will copy the buckets from temp dirs to the final dir.
-        for (Path bucketDir : buckets.stream().map(b -> b.getParent()).distinct().collect(Collectors.toList())) {
-            // Create temp folders.
-            Path bucketsRelativePath = bucketDir.isAbsolute() ? workBaseDir.relativize(bucketDir) : bucketDir;
-            if (bucketsRelativePath.toString().length() > 0) {
-                Files.createDirectories(tempRootDir.resolve(bucketsRelativePath));
-            }
-        }
-
-        // Cache dir
-        Files.createDirectory(tempRootDir.resolve("cache"));
-
-        return tempRootDir;
-    }
-
-    private String createBucketizeGorPipeCommand(Map<Path, List<T>> bucketsToCreate, Path tempRootDir, BaseTable tempTable) {
-        // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
-        // Tag based, does not work if we are adding more files with same alias, why not?.
-        StringBuilder sb = new StringBuilder();
-        for (Path bucket : bucketsToCreate.keySet()) {
-            String tags = bucketsToCreate.get(bucket).stream().map(l -> l.getAliasTag()).distinct().collect(Collectors.joining(","));
-            if (tags.length() > 0) {
-                sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | log 1000000 | write -c %s;\n",
-                        bucket, tempTable.getPath(), table.getTagColumn(), tags,
-                        table.getSecurityContext() != null ? table.getSecurityContext() : "",
-                        tempRootDir.resolve(bucket.toString())));
-            }
-        }
-
-        // Must add no-op gor command as the create commands can not be run on their own.
-        sb.append("gor 1.mem| top 1\n");
-        return sb.toString();
-    }
-
-    /**
      * Create bucket files using gorpipe.
      *
+     * NOTE:  We run gorpipe and a temp folder on the same drive as the final destination so the move to that
+     *        destination is fast.
+     *
+     * @param table
      * @param bucketsToCreate map with bucket name to table entries, representing the buckets to be created.
-     * @param workers         number of workers to use in gorpipe.
-     * @param workBaseDir
-     * @return the path where the output files can be found (temp folder under workBaseDir so move should be fast)
+     * @param absBucketDir
      * @throws IOException
      */
-    private Path createBucketFilesGorPipe(Map<Path, List<T>> bucketsToCreate,
-                                          int workers, Path workBaseDir, BaseTable tempTable) throws IOException {
-        // Create common temp directories and folders.
-        Path tempRootDir = createTempfoldersForCreateBucketFiles(bucketsToCreate.keySet(), workBaseDir);
-
-        // Build the gor query (gorpipe)
-        String gorPipeCommand = createBucketizeGorPipeCommand(bucketsToCreate, tempRootDir, tempTable);
-        String[] args = new String[]{gorPipeCommand, "-cachedir", tempRootDir.resolve("cache").toString(), "-workers", String.valueOf(workers)};
-        log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", (Object[]) args);
-
-        PrintStream oldOut = System.out;
-
-        PipeOptions options = new PipeOptions();
-        options.parseOptions(args);
-        CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, table.getSecurityContext());
-
-        try (PrintStream newPrintStream = new PrintStream(new NullOutputStream())){
-            System.setOut(newPrintStream);
-            engine.execute();
-        } catch (Throwable t) {
-            log.error("Calling bucketize failed.  Command args: {} \"{}\" {} {} {} {} failed", (Object[]) args);
-            throw t;
-        } finally {
-
-            System.setOut(oldOut);
-        }
-
-        return tempRootDir;
-    }
-
-    private void deleteIfTempBucketizingFolder(Path path, BaseTable<? extends T> table) throws IOException {
-        if (path.getFileName().toString().startsWith(getBucketizingFolderPrefix(table))) {
-            log.debug("Deleting temp folder: {}", path);
-            FileUtils.deleteDirectory(path.toFile());
-        }
+    private void createBucketFiles(BaseTable table, Map<Path, List<T>> bucketsToCreate, Path absBucketDir) throws IOException {
+        checkBucketDirExistance(absBucketDir);
+        bucketCreator.createBuckets(table, bucketsToCreate, absBucketDir);
     }
 
     public static final class Builder<T extends BucketableTableEntry> {
@@ -752,6 +680,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         private Class<? extends TableLock> lockType = null;
         private int minBucketSize = -1;
         private int bucketSize = -1;
+        private BucketCreator<T> bucketCreator = null;
 
         private Builder(BaseTable<T> table) {
             this.table = table;
@@ -774,6 +703,11 @@ public class BucketManager<T extends BucketableTableEntry> {
 
         public Builder bucketSize(int val) {
             bucketSize = val;
+            return this;
+        }
+
+        public Builder bucketCreator(BucketCreator<T> val) {
+            bucketCreator = val;
             return this;
         }
 

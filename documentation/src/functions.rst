@@ -412,6 +412,18 @@ Click on "More info" for any of the functions below to get more information abou
    * - ``FSVMAP(str,int,str-con,str) : str``
      - The list of equally separated values (second argument) translated using expression provided in third argument. Fourth argument is the result separator. Element denoted with x. Example FSVMAP(col,2,'x+1',','). Also see :ref:`LISTMAP<listmap>`.
      - :ref:`fsvmap`
+   * - ``COLS2LIST(str) : str``
+     - Collapse values from multiple columns into a single list, separated by commas
+     - :ref:`cols2list`
+   * - ``COLS2LIST(str, str) : str``
+     - Collapse values from multiple columns into a single list, with a custom separator
+     - :ref:`cols2list`
+   * - ``COLS2LISTMAP(str, str) : str``
+     - Collapse values from multiple columns into a single list with an expression applied, separated by commas
+     - :ref:`cols2listmap`
+   * - ``COLS2LISTMAP(str, str, str) : str``
+     - Collapse values from multiple columns into a single list with an expression applied, with a custom separator
+     - :ref:`cols2listmap`
 
 Genomic-Specific Functions
 ==========================

@@ -22,6 +22,8 @@
 
 package gorsat.Analysis
 
+import java.lang
+
 import gorsat.Commands.{Analysis, ColumnSelection, RowHeader}
 import gorsat.parser.ParseArith
 import org.gorpipe.gor.ColumnValueProvider
@@ -47,7 +49,7 @@ import org.gorpipe.model.gor.RowObj
 case class Cols2ListAnalysis(collapse: ColumnSelection, include: ColumnSelection, separator: String,
                              forNor: Boolean, mapExpression: String, incomingHeader: RowHeader) extends Analysis {
 
-  private val ex: (Row, CharSequence) => CharSequence = compileExpression(mapExpression)
+  private val ex = Cols2ListAnalysis.compileExpression(mapExpression, incomingHeader)
 
   override def isTypeInformationMaintained: Boolean = true
 
@@ -70,31 +72,20 @@ case class Cols2ListAnalysis(collapse: ColumnSelection, include: ColumnSelection
       buffer.append('\t')
     }
 
-    val range = if (collapse.isRange)
-      collapse.firstInRange - offset to collapse.lastInRange - offset
-    else
-      collapse.columns.map(c => c - offset)
-
-    var needsSeparator = false
-    for (col <- range) {
-      if (needsSeparator)
-        buffer.append(separator)
-      else
-        needsSeparator = true
-      val value = ex(r, r.colAsString(col + offset))
-      buffer.append(value)
-    }
+    Cols2ListAnalysis.addColumnValuesAsList(collapse, offset, separator, r, ex, buffer)
     super.process(RowObj(buffer))
   }
+}
 
+object Cols2ListAnalysis {
   /**
     * Compiles an expression using ParseArith. If the expression is empty, the value is returned unchanged.
     * @param src The expression
     * @return A lambda that performs the calculation specified in the source.
     */
-  def compileExpression(src: String): (Row, CharSequence) => CharSequence = {
+  def compileExpression(src: String, incomingHeader: RowHeader): (ColumnValueProvider, CharSequence) => CharSequence = {
     if (src.isEmpty) {
-      (_: Row, x: CharSequence) => x
+      (_: ColumnValueProvider, x: CharSequence) => x
     } else {
       val incomingColumnNames = incomingHeader.columnNames.toList ::: List("x")
       val incomingColumnTypes = incomingHeader.getTypesOrDefault("S").toList ::: List("S")
@@ -104,13 +95,33 @@ case class Cols2ListAnalysis(collapse: ColumnSelection, include: ColumnSelection
       p.compileCalculation(src)
 
       val cvp = new XColumnValueProvider(incomingHeader.columnNames.length)
-      (r: Row, x: CharSequence) => {
+      (r: ColumnValueProvider, x: CharSequence) => {
         cvp.row = r
         cvp.x = x.toString
         p.evalFunction(cvp)
       }
     }
   }
+
+  def addColumnValuesAsList(columns: ColumnSelection, offset: Int, separator: String, cvp: ColumnValueProvider,
+                            ex: (ColumnValueProvider, CharSequence) => CharSequence, buffer: lang.StringBuilder): Unit = {
+    val range = if (columns.isRange) {
+      columns.firstInRange - offset to columns.lastInRange - offset
+    } else {
+      columns.columns.map(c => c - offset)
+    }
+    var needsSeparator = false
+    for (col <- range) {
+      if (needsSeparator) {
+        buffer.append(separator)
+      } else {
+        needsSeparator = true
+      }
+      val value = ex(cvp, cvp.stringValue(col + offset))
+      buffer.append(value)
+    }
+  }
+
 }
 
 /**

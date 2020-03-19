@@ -114,12 +114,6 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         this.useEmbeddedHeader = builder.useEmbededHeader;
     }
 
-    public DictionaryTable(Path path, String tagColumn, boolean useHistory, boolean useEmbeddedHeader,
-                           String securityContext, boolean validateFiles) {
-        super(path, tagColumn, useHistory, securityContext, validateFiles);
-        this.useEmbeddedHeader = useEmbeddedHeader;
-    }
-
     @Override
     protected ITableEntries<DictionaryEntry> createTableEntries(Path path) {
         return new TableEntries<>(path, DictionaryEntry.class);

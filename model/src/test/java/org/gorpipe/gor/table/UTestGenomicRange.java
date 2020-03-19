@@ -130,6 +130,9 @@ public class UTestGenomicRange {
         Assert.assertEquals("Fully specified, same chromosome", "chr10:100-200",
                 GenomicRange.parseGenomicRange("chr10:100-chr10:200").toString());
 
+        Assert.assertEquals("No pos", "chr10-chr11",
+                GenomicRange.parseGenomicRange("chr10-chr11").toString());
+
         Assert.assertEquals("From location, without hyphen", "chr10:100-",
                 GenomicRange.parseGenomicRange("chr10:100").toString());
 

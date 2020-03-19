@@ -150,25 +150,26 @@ public class UTestBucketManager {
         
         // Initial bucketize.
 
-        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, -1);
 
         Assert.assertEquals("Wrong number of buckets created", 4, bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
 
         // Test default bucket added files.
 
-        dataFiles = GorDictionarySetup.createDataFilesMap(name, workDirPath, 70, new int[]{1, 2, 3}, 10, "PN", true, sources);
+        dataFiles = GorDictionarySetup.createDataFilesMap(name + "_2", workDirPath, 70, new int[]{1, 2, 3}, 10, "PN", true, sources);
         table.insert(dataFiles);
-        bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, -1);
 
         Assert.assertEquals("Wrong number of buckets created", 2, bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
 
         // Add small buckets.
+        int idIndex = 0;
         for (int count : new int[]{20, 10, 10, 10, 10, 10}) {
-            dataFiles = GorDictionarySetup.createDataFilesMap(name, workDirPath, count, new int[]{1, 2, 3}, 10, "PN", true, sources);
+            dataFiles = GorDictionarySetup.createDataFilesMap(name + "_3" + idIndex++, workDirPath, count, new int[]{1, 2, 3}, 10, "PN", true, sources);
             table.insert(dataFiles);
-            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
         }
         // 5 : 50, 2 : 20 : 5 : 10
 
@@ -178,7 +179,7 @@ public class UTestBucketManager {
 
         // Test no packing.
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
         bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
 
         Assert.assertEquals("Wrong number of buckets", 12, bucketCount);
@@ -187,7 +188,7 @@ public class UTestBucketManager {
 
         // Test consolidate packing
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, -1);
         List<String> ml = table.selectAll().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
         bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
         // 6 : 50, 2 : 20 : 0 : 10
@@ -198,7 +199,7 @@ public class UTestBucketManager {
 
         // Test full packing.
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, -1);
         bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
         // 6 : 50, 1: 40, 0 : 20 : 0 : 10
 
@@ -216,7 +217,7 @@ public class UTestBucketManager {
         table.delete(table.filter().buckets(bucketToDeleteFrom).get().subList(0, 45));
         // 5 : 50, 1: 40, 0 : 20 : 0 : 10  1 : 5
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, -1);
         bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
 
         Assert.assertEquals("Wrong number of buckets", 7, bucketCount);
@@ -224,10 +225,10 @@ public class UTestBucketManager {
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
 
         // Add 5 files.
-        dataFiles = GorDictionarySetup.createDataFilesMap(name, workDirPath, 5, new int[]{1, 2, 3}, 10, "PN", true, sources);
+        dataFiles = GorDictionarySetup.createDataFilesMap(name + "_4", workDirPath, 5, new int[]{1, 2, 3}, 10, "PN", true, sources);
         table.insert(dataFiles);
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, -1);
         bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
         // 6 : 50, 0: 40, 0 : 20 : 0 : 10  0 : 5
 
@@ -246,7 +247,7 @@ public class UTestBucketManager {
             table.delete(table.filter().buckets(bucket).get().subList(0, 10));
         }
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, -1);
         bucketCount = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(l -> l.getBucket()).distinct().count();
 
         Assert.assertEquals("Wrong number of buckets", 6, bucketCount);
@@ -262,7 +263,7 @@ public class UTestBucketManager {
             table.delete(table.filter().buckets(bucket).get());
         }
 
-        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 1, -1);
+        bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, -1);
         bucketCount = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(l -> l.getBucket()).distinct().count();
         long bucketCountWithDeleted = table.selectAll().stream().filter(l -> l.hasBucket()).map(l -> l.getBucket()).distinct().count();
 
@@ -280,7 +281,7 @@ public class UTestBucketManager {
         // Delete the buckets
         List<Path> buckets = table.getBuckets();
         buc.deleteBuckets(buckets.toArray(new Path[buckets.size()]));
-        bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1, 1);
+        bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1);
         Assert.assertEquals("Only one bucket should be created", 1, bucketsCreated);
 
         buckets = table.getBuckets();
@@ -310,17 +311,17 @@ public class UTestBucketManager {
             String dictContent = FileUtils.readFileToString(dictPath.toFile(), Charset.defaultCharset());
             Assert.assertEquals("Incorrect line count in dictionary", fileCount, Arrays.stream(dictContent.split("\n")).filter(l -> !l.startsWith("#")).count());
 
-            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
 
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             Assert.assertEquals("Not correct number of buckets created", 10, Files.list(resolve(table.getRootPath(), bucketDir)).filter(p -> p.toString().endsWith(".gorz")).count());
 
             // Add more - exact bucket size
             dataFiles = GorDictionarySetup.createDataFilesMap(
-                    name, workDirPath, 100, new int[]{1, 2, 3}, 10, "PN", true, sources);
+                    name + "_2", workDirPath, 100, new int[]{1, 2, 3}, 10, "PN", true, sources);
             table.insert(dataFiles);
             table.save();
-            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             Assert.assertEquals("Not correct number of buckets created", 11, Files.list(bucketDir).filter(p -> p.toString().endsWith(".gorz")).count());
 
@@ -330,16 +331,16 @@ public class UTestBucketManager {
                     name, workDirPath, 180, new int[]{1, 2, 3}, 10, "PN", true, sources);
             table.insert(dataFiles);
             table.save();
-            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             Assert.assertEquals("Not correct number of buckets created", 13, Files.list(bucketDir).filter(p -> p.toString().endsWith(".gorz")).count());
 
             // Add more files - with existing sources
             dataFiles = GorDictionarySetup.createDataFilesMap(
-                    name, workDirPath, 110, new int[]{1, 2, 3}, 10, "PN", true, sources);
+                    name + "_3", workDirPath, 110, new int[]{1, 2, 3}, 10, "PN", true, sources);
             table.insert(dataFiles);
             table.save();
-            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
             Assert.assertEquals("Not all lines bucketized", 10, table.needsBucketizing().size());
             Assert.assertEquals("Not correct number of buckets created", 14, Files.list(bucketDir).filter(p -> p.toString().endsWith(".gorz")).count());
 
@@ -364,7 +365,7 @@ public class UTestBucketManager {
         buc.setMinBucketSize(10);
         buc.setBucketSize(10);
 
-        buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 4, -1);
+        buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, -1);
 
         Path[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucketPath()).distinct().toArray(Path[]::new);
         Assert.assertEquals("Should have ten buckets", 10, buckets.length);
@@ -397,7 +398,7 @@ public class UTestBucketManager {
         BaseTable<DictionaryEntry> table = new DictionaryTable.Builder<>(workDirPath.resolve(name + ".gord")).build();
         BucketManager buc = new BucketManager(table);
 
-        Path tempFolder = workDirPath.resolve(buc.getDefaultBucketDir().resolve(buc.getBucketizingFolderPrefix(table) + "xxx"));
+        Path tempFolder = workDirPath.resolve(buc.getDefaultBucketDir().resolve(BucketCreatorGorPipe.getBucketizingFolderPrefix(table) + "xxx"));
         Path nonTempFolder = workDirPath.resolve(buc.getDefaultBucketDir().resolve("DummyDir"));
         Files.createDirectories(tempFolder);
         Files.createDirectories(nonTempFolder);
@@ -433,7 +434,7 @@ public class UTestBucketManager {
 
             List<Path> buckets = table.filter().get().stream().map(l -> l.getBucketPath()).distinct().filter(b -> b != null).collect(Collectors.toList());
             buc.deleteBuckets(buckets.toArray(new Path[buckets.size()]));
-            bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+            bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
             Assert.assertEquals("Wrong number of buckets", fileCount / buc.getBucketSize(), bucketsCreated);
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             buckets = table.filter().get().stream().map(l -> Paths.get(l.getBucket())).distinct().collect(Collectors.toList());
@@ -547,7 +548,7 @@ public class UTestBucketManager {
         List<Path> buckets = table.filter().get().stream().map(l -> l.getBucketPath()).filter(p -> p != null).distinct().collect(Collectors.toList());
         buc.deleteBuckets(buckets.toArray(new Path[buckets.size()]));
         buc.setBucketDirs(bucketDirs);
-        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
         Assert.assertEquals("Wrong number of buckets", fileCount / buc.getBucketSize(), bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
         buckets = table.filter().get().stream().map(l -> l.getBucketPath()).distinct().collect(Collectors.toList());

@@ -59,6 +59,9 @@ public class TableHeader {
     public static final String HEADER_COLUMNS_KEY = "COLUMNS";
     public static final String HEADER_SERIAL_KEY = "SERIAL";
     public static final String HEADER_LINE_COUNT_KEY = "LINE_COUNT";
+    public static final String HEADER_USE_HISTORY_KEY = "USE_HISTORY";
+    public static final String HEADER_UNIQUE_TAGS_KEY = "UNIQUE_TAGS";
+    public static final String HEADER_VALIDATE_FILES_KEY = "VALIDATE_FILES";
 
     HashMap<String, String> headerProps;
     private String[] contentColumns;                   // Columns of the content (output).

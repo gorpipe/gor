@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli.manager;
 
+import org.gorpipe.gor.manager.BucketCreatorGorPipe;
 import org.gorpipe.gor.manager.BucketManager;
 import picocli.CommandLine;
 
@@ -37,8 +38,8 @@ public abstract class CommandBucketizeOptions extends ManagerOptions {
     protected int bucketSize = BucketManager.DEFAULT_BUCKET_SIZE;
 
     @CommandLine.Option(names = {"-w", "--workers"},
-            description = "Number of workers/threads to use.  Default: " + BucketManager.DEFAULT_NUMBER_WORKERS)
-    protected int workers = BucketManager.DEFAULT_NUMBER_WORKERS;
+            description = "Number of workers/threads to use.  Default: " + BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS)
+    protected int workers = BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS;
 
     @CommandLine.Option(names = {"-c", "--pack_level"},
             description = "Should we pack/compress the buckets.\n\tNO_PACKING = No packing.\n\tCONSOLIDATE = Merge small buckets into larger ones as needed.\n\tFULL_PACKING = Full packing (rebucketize all small buckets and rebucketize partially deleted buckets)\nDefault: CONSOLIDATE")
