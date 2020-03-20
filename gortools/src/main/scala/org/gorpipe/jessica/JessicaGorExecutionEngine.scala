@@ -64,7 +64,7 @@ class JessicaGorExecutionEngine(
     queryToExecute = replaceAllAliases(queryToExecute, fileAliasMap)
 
     val iterator = new PipeInstance(session.getGorContext)
-    iterator.subProcessArguments(queryToExecute, pipeOptions.fileSignature, pipeOptions.virtualFile, pipeOptions.scriptAnalyzer, pipeOptions.stdIn, "")
+    iterator.init(queryToExecute, pipeOptions.stdIn, "")
 
     var header = iterator.combinedHeader
     if (containsWriteCommand(pipeOptions.query)) header = null

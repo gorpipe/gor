@@ -246,12 +246,7 @@ object ParseUtilities {
     */
   def eval(s: String, context: GorContext): String = {
     val pipeInstance = gorsat.process.PipeInstance.createGorIterator(context)
-    val args = Array(s)
-
-    val options = new PipeOptions
-    options.parseOptions(args)
-    options.norContext = false
-    pipeInstance.subProcessArguments(options)
+    pipeInstance.init(s)
 
     val rs = pipeInstance.theIterator
     var systemMessage = ""

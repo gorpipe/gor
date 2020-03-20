@@ -75,24 +75,17 @@ object ScriptExecutionEngine {
 }
 
 /**
-  * Class to execute gor scripts. Scripts are executed with the supplied query handlers, one for the main execution
-  * and another for fetching headers. Users can supply a listener to monitor the internals of the script engine for
-  * logging and testing purposes.
+  * Class to execute gor scripts. Scripts are executed with the supplied query handler.
   *
   * @param queryHandler         Remote query handler
-  * @param headerQueryHandler   Local query handler for executing local queries such as dictionary and header queries
   * @param context              Current gor pipe session
-  * @param listener             Interface for monitoring internal state of the execution engine
   */
 class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
-                            headerQueryHandler: GorParallelQueryHandler,
-                            context: GorContext,
-                            listener: ScriptExecutionListener = new DefaultListener()
-                           ) {
+                            localQueryHandler: GorParallelQueryHandler,
+                            context: GorContext) {
 
   private var executionBlocks: ExecutionBlocks = Map.empty[String, ExecutionBlock]
   private var aliases: singleHashMap = new java.util.HashMap[String, String]()
-  private var allUsedFiles: List[String] = Nil
   private var fileSignatureMap = Map.empty[String, String]
   private var singleFileSignatureMap = Map.empty[String, String]
   private val virtualFileManager = new VirtualFileManager
@@ -111,32 +104,13 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     aliases
   }
 
-  def execute(gorCommands: Array[String]): String = {
-    internalExecute(gorCommands, suggestName = false, "")
-  }
-
-  def executeSuggestName(gorCommands: Array[String]): String = {
-    internalExecute(gorCommands, suggestName = true, "")
-  }
-
-  def executeVirtualFile(virtualFile: String, gorCommands: Array[String]): String = {
-    internalExecute(gorCommands, suggestName = false, virtualFile)
-  }
-
-  private def internalExecute(igorCommands: Array[String], suggestName: Boolean, virtualFile: String): String = {
-
-    listener.beforeExecution(igorCommands)
-
+  def execute(commands: Array[String]): String = {
     // Apply aliases to query, this replaces the def entries
-    aliases = extractAliases(igorCommands)
-    listener.beforeAlias(igorCommands)
-    var gorCommands = applyAliases(igorCommands, aliases)
-    listener.afterAlias(gorCommands)
+    aliases = extractAliases(commands)
+    var gorCommands = applyAliases(commands, aliases)
 
     // Preprocess the script, change macros to create + gor statements
-    listener.beforePreProcessing(gorCommands)
     gorCommands = performScriptPreProcessing(gorCommands)
-    listener.afterPreProcessing(gorCommands)
 
     // This is some cleanup, is it needed?
     gorCommands = CommandParseUtilities.cleanCommandStrings(gorCommands)
@@ -144,14 +118,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     val analyzer = new GorScriptAnalyzer(gorCommands.mkString(";"))
     eventLogger.tasks(analyzer.getTasks)
 
-    val (gorCommand, createdFiles) = processScript(gorCommands, doHeader = false, suggestName = suggestName)
+    val gorCommand = processScript(gorCommands)
 
-    listener.afterExecution(gorCommand, createdFiles)
-
-    if (virtualFile != "") {
-      val temp = createdFiles.filter(x => x._1 == ("[" + virtualFile + "]")).toList
-      if (temp.isEmpty) return "" else return temp.head._2
-    }
     gorCommand
   }
 
@@ -169,7 +137,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     processedGorCommands
   }
 
-  private def processScript(igorCommands: Array[String], doHeader: Boolean, suggestName: Boolean): (String, Map[String, String]) = {
+  private def processScript(igorCommands: Array[String]): String = {
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
     // any left there is an error, something was not executed
@@ -194,14 +162,12 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
       // Create a new batch of execution blocks which are independent from each other
       executionBatch = getNextBatch(level)
-      listener.beforeExecuteBatch(executionBatch)
-
       executionBatch.getBlocks.foreach(firstLevelBlock => {
         // Replace any virtual file in the current query
         firstLevelBlock.query = virtualFileManager.replaceVirtualFiles(firstLevelBlock.query)
 
         // Expand the executionBlock with macros
-        val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock), doHeader)
+        val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock))
 
         // We need to determine if there is any dependency in the new executions, remove dependent blocks and
         // add them to the executionBlocks map
@@ -210,10 +176,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         virtualFileManager.addRange(activeExecutionBlocks)
 
         activeExecutionBlocks.foreach {newExecutionBlock =>
-          listener.beforeVirtualFileReplacement(firstLevelBlock.query, virtualFileManager)
           // Get the command to finally execute
-          val commandToExecute = getCommandToExecute(suggestName, doHeader, newExecutionBlock._2.query)
-          listener.afterVirtualFileReplacement(commandToExecute)
+          val commandToExecute = newExecutionBlock._2.query
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
@@ -222,9 +186,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val splitManager = SplitManager.createFromCommand(newExecutionBlock._1, commandToExecute, context)
 
           // Expand execution blocks based on the active split
-          listener.beforeSplitExpand(commandToExecute, splitManager)
           val commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock._1)
-          listener.afterSplitExpand(commandToExecute, commandGroup, splitManager)
 
           // Remove this command from the execution blocks if needed
           if (commandGroup.removeFromCreate) {
@@ -245,9 +207,6 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })
-
-          // Collect files if we are suggesting virtual file name
-          if (suggestName) allUsedFiles :::= usedFiles.filter(x => !x.startsWith("["))
         }
 
         // Add dictionary entries back to the execution blocks lists but process other entries
@@ -255,27 +214,23 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       })
 
       // Execute the current batch
-      executeBatch(executionBatch, suggestName, doHeader)
-
-      listener.afterExecuteBatch(executionBatch)
-
+      executeBatch(executionBatch)
     } while (executionBatch.hasBlocks)
 
     // We'll need to validate the current execution and throw exception if there are still execution blocks available
     // IN the final execution list
-    postValidateExecution(suggestName, doHeader)
+    postValidateExecution()
 
-    if (suggestName) gorCommand = StringUtilities.createMD5(igorCommands.mkString(" ") + allUsedFiles.distinct.sorted.map(x => fileFingerPrint(x, context.getSession)).mkString(" "))
-
-    (gorCommand, virtualFileManager.getCreatedFiles)
+    gorCommand
   }
 
   private def preValidateExecution(): Unit = {
     var externalVirtualRelation: List[String] = Nil
     executionBlocks.values.foreach{block =>
       MacroUtilities.virtualFiles(block.query).foreach{relation =>
-        if(MacroUtilities.isExternalVirtFile(relation))
+        if (MacroUtilities.isExternalVirtFile(relation)) {
           externalVirtualRelation ::= relation
+        }
       }
     }
 
@@ -284,7 +239,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def postValidateExecution(suggestName: Boolean, doHeader: Boolean): Unit = {
+  private def postValidateExecution(): Unit = {
     val unusedEntries = virtualFileManager.getUnusedVirtualFileEntries
 
     if (unusedEntries.length > 0) {
@@ -293,12 +248,10 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         .foreach(entry => ScriptExecutionEngine.log.warn(s"No reference to virtual file: ${entry.name}"))
     }
 
-    if (executionBlocks.keys.nonEmpty && !suggestName) {
+    if (executionBlocks.keys.nonEmpty) {
       var message = "Could not create the following queries due to virtual dependencies:\n"
       executionBlocks.keys.foreach(x => message += "\t" + (x + " = ").replace("[] = ", " ") + executionBlocks(x).query.substring(0, Math.min(executionBlocks(x).query.length, 50)) + "\n")
-      if (!doHeader) {
-        throw new GorParsingException(message)
-      }
+      throw new GorParsingException(message)
     }
   }
 
@@ -308,17 +261,17 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       virtualFileManager.get(e._1) match {
         case Some(x) =>
           if (x.fileName == null) {
-            createBlockIAvailable(executionBatch, e._1, e._2)
+            createBlockIfAvailable(executionBatch, e._1, e._2)
           }
         case None =>
-          createBlockIAvailable(executionBatch, e._1, e._2)
+          createBlockIfAvailable(executionBatch, e._1, e._2)
       }
     })
 
     executionBatch
   }
 
-  private def createBlockIAvailable(executionBatch: ExecutionBatch, key: String, executionBlock: ExecutionBlock): Unit = {
+  private def createBlockIfAvailable(executionBatch: ExecutionBatch, key: String, executionBlock: ExecutionBlock): Unit = {
     val dependencies = executionBlock.dependencies
     if (dependencies.isEmpty || virtualFileManager.areDependenciesReady(dependencies)) {
       executionBatch.createNewBlock(key, executionBlock.query, dependencies, executionBlock.groupName)
@@ -351,14 +304,6 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
 
     (activeExecutionBlocks, dependantExecutionBlocks)
-  }
-
-  private def getCommandToExecute(suggestName: Boolean, doHeader: Boolean, query: String): String = {
-    if (!suggestName && doHeader) {
-      query.replace("|", "| top 0 |") + "| top 0"
-    } else {
-      query
-    }
   }
 
   def getUsedFiles(commandToExecute: String): List[String] = {
@@ -396,19 +341,12 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     fileSignature
   }
 
-  private def executeBatch(executionBatch: ExecutionBatch, suggestName: Boolean, doHeader: Boolean): Unit = {
+  private def executeBatch(executionBatch: ExecutionBatch): Unit = {
     val dictionaryExecutions = executionBatch.getCommands.filter(x => CommandParseUtilities.isDictionaryQuery(x.query))
     val regularExecutions = executionBatch.getCommands.filter(x => !CommandParseUtilities.isDictionaryQuery(x.query))
 
-    listener.beforeExecuteQueryHandler(executionBatch, dictionaryExecutions, regularExecutions)
-    if (!suggestName) {
-      if (!dictionaryExecutions.isEmpty) runQueryHandler(dictionaryExecutions, doHeader)
-      if (!regularExecutions.isEmpty) runQueryHandler(regularExecutions, doHeader)
-    } else {
-      dictionaryExecutions.foreach(x => executionBlocks -= x.createName)
-      regularExecutions.foreach(x => executionBlocks -= x.createName)
-    }
-    listener.afterExecuteQueryHandler(executionBatch, dictionaryExecutions, regularExecutions)
+    if (!dictionaryExecutions.isEmpty) runQueryHandler(dictionaryExecutions)
+    if (!regularExecutions.isEmpty) runQueryHandler(regularExecutions)
   }
 
   private def fileFingerPrint(fileName: String, gorPipeSession: GorSession): String = {
@@ -450,9 +388,9 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def runQueryHandler(executionCommands: Array[ExecutionCommand], doHeader: Boolean) {
+  private def runQueryHandler(executionCommands: Array[ExecutionCommand]) {
     if (executionCommands != null && !executionCommands.isEmpty) {
-      val activeQueryHandler = if (doHeader || CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) headerQueryHandler else queryHandler
+      val activeQueryHandler = if (CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) localQueryHandler else queryHandler
 
       val cacheFiles = activeQueryHandler.executeBatch(executionCommands.map(x => x.signature),
         executionCommands.map(x => x.query),
@@ -478,7 +416,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def expandMacros(creates: ExecutionBlocks, doHeader: Boolean): ExecutionBlocks = {
+  private def expandMacros(creates: ExecutionBlocks): ExecutionBlocks = {
 
     var activeCreates = creates
     var macroCreated = false
@@ -503,7 +441,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
             val macroResult = macroEntry.get.init(create._1,
               create._2,
               context,
-              doHeader,
+              false,
               commandOptions.slice(1, commandOptions.length))
 
             newCreates ++= macroResult.createCommands
