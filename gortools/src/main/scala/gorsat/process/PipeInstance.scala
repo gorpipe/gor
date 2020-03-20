@@ -545,12 +545,13 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
           }
         }
 
-        //If the parsing needs access to the current
-        val commandRuntime = CommandRuntime(thePipeStep, cacheDir, inputSource)
-
+        val commandArgs = CommandParseUtilities.quoteSafeSplit(paramString, ' ')
         if (!commandInfo.isPlaceholder) {
 
-          val result = commandInfo.init(context, executeNor, combinedHeader, argString, CommandParseUtilities.quoteSafeSplit(paramString, ' '), commandRuntime)
+          //If the parsing needs access to the current
+          val commandRuntime = CommandRuntime(thePipeStep, cacheDir, inputSource)
+
+          val result = commandInfo.init(context, executeNor, combinedHeader, argString, commandArgs, commandRuntime)
           aPipeStep = result.step
 
           if (commandInfo.commandOptions.cancelCommand && context.getSession.getSystemContext.getMonitor != null) {
@@ -581,6 +582,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
             firstCommand = i + 1
           }
         } else {
+          commandInfo.validateArguments(commandArgs)
           val (placeholderPipeStep, placeholderHeader, placeholderInputSource, placeholderFirstCommand) = handlePlaceholderCommands(command, i, paramString,
             cacheDir, whiteListCmdSet)
 
