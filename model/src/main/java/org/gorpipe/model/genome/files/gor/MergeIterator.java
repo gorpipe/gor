@@ -53,11 +53,7 @@ public class MergeIterator extends GenomicIterator {
      * added.
      */
     private boolean insertSource;
-    /**
-     * An optional tag filter that is used to look at the source column and only
-     * allow rows that come from a source listed in the tag filter.
-     */
-    private TagFilter tagFilter;
+
     /**
      * Set once queue has been primed.
      */
@@ -78,7 +74,6 @@ public class MergeIterator extends GenomicIterator {
         gorMonitor = gm;
 
         getHeaderFromSources(options);
-        prepareTagFilter(options);
     }
 
     @Override
@@ -198,23 +193,6 @@ public class MergeIterator extends GenomicIterator {
         return true;
     }
 
-    private void prepareTagFilter(GorOptions options) {
-        if (!options.isNoLineFilter && options.columnTags != null && hasPossibleTag()) {
-            final int sourceColIx = sources.get(0).getHeader().length - 1;
-            tagFilter = new TagFilter(options.columnTags, sourceColIx);
-        }
-    }
-
-    private boolean hasPossibleTag() {
-        for (GenomicIterator it : sources) {
-            final byte tagStatus = it.getTagStatus();
-            if (tagStatus == SourceRef.POSSIBLE_TAG) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void primeQueue(List<GenomicIterator> sources) {
         isPrimed = true;
         clearQueue();
@@ -243,19 +221,11 @@ public class MergeIterator extends GenomicIterator {
             if (insertSource && !it.isSourceAlreadyInserted()) {
                 insertOptionalSourceColumn(r, it.getSourceName());
             }
-            if (isIncluded(r)) {
+            if (it.isIncluded(r)) {
                 queue.add(new RowFromIterator(r, it));
                 break;
             }
         }
-    }
-
-    private boolean isIncluded(Row r) {
-        boolean isIncluded = true;
-        if (tagFilter != null) {
-            isIncluded = tagFilter.isIncluded(r);
-        }
-        return isIncluded;
     }
 
     private void insertOptionalSourceColumn(Row r, String s) {

@@ -710,32 +710,51 @@ public class UTestDictionaryTable {
     public void testQueryOnReAddedFile() throws Exception {
         String testName = "testQueryOnReAddedFile";
         File gordFile = new File(tableWorkDir.toFile(), testName + ".gord");
-        File agor = new File(tableWorkDir.toFile(), testName + "_a.gor");
-        File bgor = new File(tableWorkDir.toFile(), testName + "_b.gor");
+        File pn1gor = new File(tableWorkDir.toFile(), testName + "_pn1.gor");
+        File pn2gor = new File(tableWorkDir.toFile(), testName + "_pn2.gor");
         File bucket1gor = new File(tableWorkDir.toFile(), testName + "_bucket1.gor");
-        File bucket2gor = new File(tableWorkDir.toFile(), testName + "_bucket2.gor");
 
         // Setup data.
-        FileUtils.write(bgor, "chrom\tpos\tcol1\tcol2\nchr2\t2\tbgor\tb\n", (String) null);
-        FileUtils.write(bucket1gor, "chrom\tpos\tcol1\tcol2\nchr1\t1\tagor\ta\nchr2\t2\tbgor\tb\n", (String) null);
-        FileUtils.write(bucket2gor, "chrom\tpos\tcol1\tcol2\nchr5\t5\tagor_other\ta\n", (String) null);
-        FileUtils.write(agor, "chrom\tpos\tcol1\tcol2\nchr3\t3\tagor_new\ta\n", (String) null);
+        FileUtils.write(pn1gor, "chrom\tpos\tcol1\nchr1\t1\tpn1gor\n", "UTF-8");
+        FileUtils.write(pn2gor, "chrom\tpos\tcol1\nchr2\t2\tpn2gor\n", "UTF-8");
 
+        String bucketData = "chrom\tpos\tcol1\tSource\n" +
+                "chr1\t1\tpn1gor\tpn1\n" +
+                "chr2\t2\tpn2gor\tpn2\n" +
+                "chr3\t3\tpn3gor\tpn3\n" +
+                "chr4\t4\tpn4gor\tpn4\n" +
+                "chr5\t5\tpn5gor\tpn5\n" +
+                "chr6\t6\tpn6gor\tpn6\n" +
+                "chr7\t7\tpn7gor\tpn7\n" +
+                "chr8\t8\tpn8gor\tpn8\n" +
+                "chr9\t9\tpn9gor\tpn9\n";
+        FileUtils.write(bucket1gor, bucketData, "UTF-8");
 
         FileUtils.write(gordFile,
-                testName + "_a.gor|D|" + testName + "_bucket1.gor\ta\n"
-                        + testName + "_a.gor|D|" + testName + "_bucket2.gor\ta\n"
-                        + testName + "_b.gor|" + testName + "_bucket1.gor\tb\n"
-                        + testName + "_a.gor\ta\n", (String) null);
+                testName + "_pn1.gor|D|" + testName + "_bucket1.gor\tpn1\n"
+                        + testName + "_pn2.gor|" + testName + "_bucket1.gor\tpn2\n"
+                        + testName + "_pn3.gor|" + testName + "_bucket1.gor\tpn3\n"
+                        + testName + "_pn4.gor|" + testName + "_bucket1.gor\tpn4\n"
+                        + testName + "_pn5.gor|" + testName + "_bucket1.gor\tpn5\n"
+                        + testName + "_pn6.gor|" + testName + "_bucket1.gor\tpn6\n"
+                        + testName + "_pn7.gor|" + testName + "_bucket1.gor\tpn7\n"
+                        + testName + "_pn8.gor|" + testName + "_bucket1.gor\tpn8\n"
+                        + testName + "_pn9.gor|" + testName + "_bucket1.gor\tpn9\n"
+                        + testName + "_pn1.gor\tpn1\n", "UTF-8");
 
         // Do testing
-        Assert.assertEquals("No filter fails", "chr2\t2\tbgor\tb\tb\nchr3\t3\tagor_new\ta\ta", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " ").trim());
+        Assert.assertEquals("No filter fails", bucketData, TestUtils.runGorPipe(gordFile.getAbsolutePath() + " "));
 
-        Assert.assertEquals("All filter fails", "chr2\t2\tbgor\tb\tb\nchr3\t3\tagor_new\ta\ta", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f a,b").trim());
+        Assert.assertEquals("All filter fails", bucketData, TestUtils.runGorPipe(gordFile.getAbsolutePath() + " -f pn1,pn2,pn3,pn4,pn5,pn6,pn7,pn8,pn9"));
 
-        Assert.assertEquals("Filter deleted fails", "chr3\t3\tagor_new\ta\ta", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f a").trim());
+        Assert.assertEquals("Partial filter fails",
+                "chrom\tpos\tcol1\tSource\n" +
+                "chr1\t1\tpn1gor\tpn1\n" +
+                "chr2\t2\tpn2gor\tpn2\n" , TestUtils.runGorPipe(gordFile.getAbsolutePath() + " -f pn1,pn2"));
 
-        Assert.assertEquals("Filter not deleted fails", "chr2\t2\tbgor\tb\tb", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f b").trim());
+        Assert.assertEquals("Filter deleted fails", "chr1\t1\tpn1gor\tpn1", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f pn1").trim());
+
+        Assert.assertEquals("Filter not deleted fails", "chr2\t2\tpn2gor\tpn2", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f pn2").trim());
     }
 
     @SafeVarargs

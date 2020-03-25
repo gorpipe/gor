@@ -33,6 +33,8 @@ import java.util.Iterator;
  * <p>
  * This is implemented as input into the gor engine.
  *
+ * WARNING:  If adding methods to this class those should also be added to GenomicIteratorAdapterBase.
+ *
  * @version $Id$
  */
 public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
@@ -118,6 +120,11 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
     String statsSenderName = "";
     String statsSenderAnnotation = "";
 
+    /**
+     * An optional tag filter that is used to look at the source column and only
+     * allow rows that come from a source listed in the tag filter.
+     */
+    private TagFilter tagFilter;
 
     public GorContext getContext() {
         return context;
@@ -194,6 +201,18 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
 
     public void setTagStatus(byte tagStatus) {
         this.tagStatus = tagStatus;
+    }
+
+    public TagFilter getTagFilter() {
+        return tagFilter;
+    }
+
+    public void setTagFilter(TagFilter tagFilter) {
+        this.tagFilter = tagFilter;
+    }
+
+    public boolean isIncluded(Row r) {
+        return tagFilter != null ? tagFilter.isIncluded(r) : true;
     }
 
     /**

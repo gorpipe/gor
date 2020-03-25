@@ -22,27 +22,35 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import java.util.Collection;
 import java.util.Set;
 
 public class TagFilter {
-    private final Set<String> tags;
-    private final int column;
+    private final Set<String> includeTags;
+    private final Collection<String> excludeTags;
+    private final int tagColumnIndex;
 
-    public TagFilter(Set<String> tags, int col) {
-        this.tags = tags;
-        this.column = col;
+    public TagFilter(Set<String> includeTags, int col) {
+        this(includeTags, null, col);
+    }
+
+    public TagFilter(Set<String> includeTags, Collection<String> excludeTags, int tagColumnIndex) {
+        this.includeTags = includeTags;
+        this.excludeTags = excludeTags;
+        this.tagColumnIndex = tagColumnIndex;
     }
 
     public boolean isIncluded(Row r) {
-        return tags.contains(r.stringValue(column));
+        String tag =  r.stringValue(tagColumnIndex);
+        return isIncluded(tag);
     }
 
-    boolean isIncluded(String pn) {
-        return tags.contains(pn);
+    boolean isIncluded(String tag) {
+        return includeTags.contains(tag) && (excludeTags == null || !excludeTags.contains(tag));
     }
 
     @Override
     public String toString() {
-        return "in(" + String.join(", ", tags) + ")";
+        return "in(" + String.join(", ", includeTags) + ") and not in(" + String.join(", ", excludeTags) + ")";
     }
 }
