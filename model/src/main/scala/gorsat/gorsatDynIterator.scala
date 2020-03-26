@@ -263,7 +263,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         headerFiles.setFormer(headerItDyn.getHeader)
         headerFiles.setLatter(headerItDyn.usedFiles.toArray)
 
-        if (headerItDyn != null) headerItDyn.close()
+        headerItDyn.close()
 
         header = headerFiles.getFormer
         usedFiles = headerFiles.getLatter.toList

@@ -84,6 +84,9 @@ abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
     if (theIterator != null) {
       theIterator.close()
     }
+    if (thePipeStep != null) {
+      thePipeStep.securedFinish(null)
+    }
     if (context != null && context.getSession != null) context.getSession.close()
   }
 

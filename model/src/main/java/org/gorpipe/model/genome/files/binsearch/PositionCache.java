@@ -23,6 +23,7 @@
 package org.gorpipe.model.genome.files.binsearch;
 
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +227,8 @@ public class PositionCache {
 
     synchronized void loadIndex(StreamSourceSeekableFile indexFile) throws IOException {
         if (!this.isIndexLoaded) {
-            try (InputStream inputStream = indexFile.getDataSource().open()) {
+            try (StreamSource dataSource = indexFile.getDataSource();
+                 InputStream inputStream = dataSource.open()) {
                 GorIndexFile.load(inputStream, this);
             }
             this.isIndexLoaded = true;

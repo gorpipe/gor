@@ -24,6 +24,7 @@ package gorsat;
 
 import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.iterators.RowSource;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,6 +60,11 @@ public class UTestGorVcfWithHtsjdk {
         Assert.assertEquals(expected, count);
 
         return ret.toString();
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        System.gc();
     }
 
     @Test
