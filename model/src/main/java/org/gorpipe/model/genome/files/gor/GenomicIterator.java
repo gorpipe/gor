@@ -101,6 +101,7 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
 
 
     }
+    private String header = "";
     private int colnum = 0;
 
     private String sourceName = "";
@@ -130,23 +131,27 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
         return context;
     }
 
-    public void setContext(GorContext context) {
-        this.context = context;
+    public void initStats(GorContext context, String sender, String annotation) {
         if (context != null) {
             statsCollector = context.getStats();
-            if (statsCollector != null && !statsSenderName.equals("")) {
-                statsSenderId = statsCollector.registerSender(statsSenderName, statsSenderAnnotation);
+            if (statsCollector != null && !sender.equals("")) {
+                statsSenderId = statsCollector.registerSender(sender, annotation);
             }
         }
     }
 
-    void incStat(String name) {
+    public void setContext(GorContext context) {
+        this.context = context;
+        initStats(context, statsSenderName, statsSenderAnnotation);
+    }
+
+    public void incStat(String name) {
         if (statsCollector != null) {
             statsCollector.inc(statsSenderId, name);
         }
     }
 
-    void decStat(String name) {
+    public void decStat(String name) {
         if (statsCollector != null) {
             statsCollector.dec(statsSenderId, name);
         }
@@ -227,7 +232,13 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
      *
      * @return An array of column names
      */
-    public abstract String[] getHeader();
+    public String getHeader() {
+        return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
+    }
 
     /**
      * Seek to the specified genomic position in the data source

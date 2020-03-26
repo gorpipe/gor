@@ -84,8 +84,8 @@ public class GorzSeekableIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
-        return this.header.getColumns();
+    public String getHeader() {
+        return String.join("\t", this.header.getColumns());
     }
 
     @Override

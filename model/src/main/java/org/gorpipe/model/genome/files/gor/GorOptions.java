@@ -487,10 +487,10 @@ public class GorOptions {
         i.setSourceName(ref.getName());
         i.setTagStatus(columnTags == null ? SourceRef.NO_TAG : ref.analyzeQueryTags(columnTags, insertSource));
         if (!isNoLineFilter && i.getTagStatus() == SourceRef.POSSIBLE_TAG) {
-            i.setTagFilter(new TagFilter(columnTags, ref.deletedTags, i.getHeader().length - 1));
+            i.setTagFilter(new TagFilter(columnTags, ref.deletedTags, i.getHeader().split("\t").length - 1));
         }
         i.setSourceAlreadyInserted(ref.sourceAlreadyInserted);
-        i.setColnum(i.getHeader().length - 2);
+        i.setColnum(i.getHeader().split("\t").length - 2);
         if (chrname != null && !chrname.equals("")) {
             i = new BoundedIterator(i, chrname, begin, end);
         }

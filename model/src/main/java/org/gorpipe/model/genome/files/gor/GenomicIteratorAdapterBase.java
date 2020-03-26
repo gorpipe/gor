@@ -102,7 +102,7 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
+    public String getHeader() {
         return iterator.getHeader();
     }
 

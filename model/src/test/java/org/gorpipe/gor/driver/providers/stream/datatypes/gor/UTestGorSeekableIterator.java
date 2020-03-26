@@ -94,7 +94,7 @@ public class UTestGorSeekableIterator {
         iterator.init(null);
 
         // This is done in LineSource - next doesn't work correctly without this
-        iterator.setColnum(iterator.getHeader().length - 2);
+        iterator.setColnum(iterator.getHeader().split("\t").length - 2);
 
         return iterator;
     }
@@ -102,7 +102,7 @@ public class UTestGorSeekableIterator {
     @Test
     public void getHeader_WhenFileIsGor() {
         GenomicIterator iterator = getGenomicIterator(GOR_FILE);
-        String[] header = iterator.getHeader();
+        String[] header = iterator.getHeader().split("\t");
         assertEquals(4, header.length);
         assertEquals("Chrom", header[0]);
         assertEquals("gene_start", header[1]);
@@ -113,7 +113,7 @@ public class UTestGorSeekableIterator {
     @Test
     public void getHeader_WhenFileIsGorz() {
         GenomicIterator iterator = getGenomicIterator(GORZ_FILE);
-        String[] header = iterator.getHeader();
+        String[] header = iterator.getHeader().split("\t");
         assertEquals(4, header.length);
         assertEquals("Chrom", header[0]);
         assertEquals("gene_start", header[1]);

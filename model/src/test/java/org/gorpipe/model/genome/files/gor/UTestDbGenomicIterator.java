@@ -47,7 +47,7 @@ public class UTestDbGenomicIterator {
     @Test
     public void getHeader() {
         try (final GenomicIterator iterator = getIterator()) {
-            final String[] header = iterator.getHeader();
+            final String[] header = iterator.getHeader().split("\t");
             assertEquals(50, header.length);
         }
     }
@@ -167,7 +167,7 @@ public class UTestDbGenomicIterator {
         iterator.init(null);
 
         // This is done in LineSource - next doesn't work correctly without this
-        iterator.setColnum(iterator.getHeader().length - 2);
+        iterator.setColnum(iterator.getHeader().split("\t").length - 2);
 
         return iterator;
     }

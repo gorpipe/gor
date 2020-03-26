@@ -30,13 +30,13 @@ case class RowListIterator(lineList: List[Row]) extends RowSource {
   private var gorHeader: GorHeader = _
   var l: List[Row] = lineList
 
-  def hasNext: Boolean = l.nonEmpty
+  override def hasNext: Boolean = l.nonEmpty
 
-  def next(): Row = {
+  override def next(): Row = {
     val r = l.head; l = l.tail; r
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {}
+  override def setPosition(seekChr: String, seekPos: Int) {}
 
   def close() {}
 

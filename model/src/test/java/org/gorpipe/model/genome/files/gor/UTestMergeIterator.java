@@ -63,7 +63,7 @@ public class UTestMergeIterator {
         List<GenomicIterator> genomicIterators = options.getIterators();
 
         try(MergeIterator mi = new MergeIterator(genomicIterators, options) ) {
-            String[] header = mi.getHeader();
+            String[] header = mi.getHeader().split("\t");
             assertEquals(5, header.length);
             assertEquals("Chrom", header[0]);
             assertEquals("POS", header[1]);
@@ -79,7 +79,7 @@ public class UTestMergeIterator {
         List<GenomicIterator> genomicIterators = options.getIterators();
 
         try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
-            String[] header = mi.getHeader();
+            String[] header = mi.getHeader().split("\t");
             assertEquals(6, header.length);
             assertEquals("Chrom", header[0]);
             assertEquals("POS", header[1]);
@@ -127,7 +127,7 @@ public class UTestMergeIterator {
         List<GenomicIterator> genomicIterators = options.getIterators();
 
         try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
-            String[] header = mi.getHeader();
+            String[] header = mi.getHeader().split("\t");
             assertEquals(5, header.length);
             assertEquals("Chromo", header[0]);
             assertEquals("Pos", header[1]);
@@ -143,7 +143,7 @@ public class UTestMergeIterator {
         List<GenomicIterator> genomicIterators = options.getIterators();
 
         try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
-            String[] header = mi.getHeader();
+            String[] header = mi.getHeader().split("\t");
             assertEquals(6, header.length);
             assertEquals("Chromo", header[0]);
             assertEquals("Pos", header[1]);

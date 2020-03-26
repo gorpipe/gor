@@ -29,9 +29,9 @@ import org.gorpipe.model.gor.iterators.RowSource
 case class CountingNorRowIterator(count: Int, offset: Int = 0, step: Int = 1) extends RowSource {
   var counter: Int = 0
 
-  def hasNext: Boolean = counter < count
+  override def hasNext: Boolean = counter < count
 
-  def next(): Row = {
+  override def next(): Row = {
     val row = RowObj("chrN\t0\t" + (offset + counter * step).toString)
     counter += 1
     row
@@ -39,7 +39,7 @@ case class CountingNorRowIterator(count: Int, offset: Int = 0, step: Int = 1) ex
 
   override def getHeader: String = "ChromNOR\tPosNOR\t" + super.getHeader
 
-  def setPosition(seekChr: String, seekPos: Int) {}
+  override def setPosition(seekChr: String, seekPos: Int) {}
 
   def close {}
 }

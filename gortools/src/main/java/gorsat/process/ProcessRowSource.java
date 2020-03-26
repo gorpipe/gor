@@ -169,9 +169,10 @@ public class ProcessRowSource extends ProcessSource {
                 it = bamIterator( is );
             }
             if( range.chromosome() != null ) it.seek(range.chromosome(), range.start(), range.stop());
-            String[] headerArray = it.getHeader();
+            String header = it.getHeader();
+            String[] headerArray = header.split("\t");
             it.setColnum(headerArray.length-2);
-            header_$eq(String.join("\t", headerArray));
+            setHeader(String.join("\t", header));
         } catch (IOException e) {
             throw new GorResourceException("unable to get header from process " + commands.get(0), "", e);
         }
@@ -179,11 +180,12 @@ public class ProcessRowSource extends ProcessSource {
 
     private GenomicIterator gorIterator( InputStream is, List<String> headercommands, String type ) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        header_$eq( br.readLine() );
-        if (header() == null) {
+        final String header = br.readLine();
+        setHeader(header);
+        if (getHeader() == null) {
             throw new GorSystemException("Running external process: " + String.join(" ", headercommands) + " with error: " + errorStr, null);
         }
-        if (nor) header_$eq("ChromNOR\tPosNOR\t" + header().replace(" ", "_").replace(":", "") );
+        if (nor) setHeader("ChromNOR\tPosNOR\t" + getHeader().replace(" ", "_").replace(":", "") );
         return new GenomicIterator() {
             BufferedReader reader = br;
             String next = readLine();
@@ -205,15 +207,15 @@ public class ProcessRowSource extends ProcessSource {
                 try {
                     next = readLine();
                 } catch (IOException e) {
-                            throw new GorSystemException("Error reading next line from external process", e);
+                    throw new GorSystemException("Error reading next line from external process", e);
                 }
 
                 return row;
             }
 
             @Override
-            public String[] getHeader() {
-                return header().split("\t");
+            public String getHeader() {
+                return header;
             }
 
             @Override

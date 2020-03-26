@@ -90,7 +90,7 @@ public class TestUtils {
     }
 
     public static void addHeader(StringBuilder builder, GenomicIterator iterator) {
-        builder.append(Joiner.on("\t").join(iterator.getHeader()));
+        builder.append(iterator.getHeader());
         builder.append("\n");
     }
 

@@ -41,11 +41,11 @@ class MultiFileSource(fileList: List[String], fileMap: mutable.Map[String, Strin
 
   def this(fileList: List[String], gorRoot: String, sortInfo: Array[SortInfo], context: GorContext) = this(fileList, null, gorRoot, sortInfo, context)
 
-  def hasNext: Boolean = rowsource.hasNext
+  override def hasNext: Boolean = rowsource.hasNext
 
-  def next(): Row = rowsource.next()
+  override def next(): Row = rowsource.next()
 
-  def setPosition(seekChr: String, seekPos: Int): Unit = rowsource.setPosition(seekChr, seekPos)
+  override def setPosition(seekChr: String, seekPos: Int): Unit = rowsource.setPosition(seekChr, seekPos)
 
   def close(): Unit = rowsource.close()
 

@@ -77,7 +77,7 @@ case class MergeSources(rightSource : RowSource, empty : String, addRightLeft : 
     }
     var tryOutputFromRight = lastRightRow == null
     while (tryOutputFromRight && !wantsNoMore && rightSource.hasNext) {
-      val rr = rightSource.next
+      val rr = rightSource.next()
       if (rr.advancedCompare(lr, null) < 0) outputRightRow(rr) else {
         lastRightRow = rr; tryOutputFromRight = false
       }

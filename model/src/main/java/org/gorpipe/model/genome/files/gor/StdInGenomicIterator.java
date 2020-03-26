@@ -33,7 +33,6 @@ class StdInGenomicIterator extends GenomicIterator {
     private int begin = 0;
     private int end = 0;
     private int[] columns;
-    private String[] header;
     private int[] columnMap; // map source columns into Line data columns
     private boolean hasMore = true;
     private ChromoLookup lookup;
@@ -42,9 +41,10 @@ class StdInGenomicIterator extends GenomicIterator {
         buf = new byte[1024 * 1024];
         this.lookup = lookup;
         cache();
-        this.header = readHeader();
-        this.columns = columns != null ? columns : createDefaultColumns(header.length);
-        this.columnMap = new int[header.length];
+        setHeader(readHeader());
+        int headerLength = getHeader().split("\t").length;
+        this.columns = columns != null ? columns : createDefaultColumns(headerLength);
+        this.columnMap = new int[headerLength];
         Arrays.fill(columnMap, -1);
         for (int i = 2; i < this.columns.length; i++) {
             columnMap[this.columns[i]] = i - 2;
@@ -84,11 +84,6 @@ class StdInGenomicIterator extends GenomicIterator {
                 throw new GorSystemException("Cache error in sourceRef.", ex);
             }
         }
-    }
-
-    @Override
-    public String[] getHeader() {
-        return header;
     }
 
     @Override
@@ -166,7 +161,7 @@ class StdInGenomicIterator extends GenomicIterator {
         }
     }
 
-    private String[] readHeader() {
+    private String readHeader() {
         // Start by checking first line, is it header line or data line
         int secColBegin = -1, secColLen = -1, colcnt = 1;
         for (int i = begin; i < end && buf[i] != '\n'; i++) {
@@ -194,7 +189,7 @@ class StdInGenomicIterator extends GenomicIterator {
             for (int i = 2; i < colcnt; i++) {
                 h[i] = "Col" + (i + 1);
             }
-            return h;
+            return String.join("\t",h);
         } catch (NumberFormatException ex) {
             // Found non numeric data which indicates a header line
         }
@@ -216,6 +211,6 @@ class StdInGenomicIterator extends GenomicIterator {
                 throw new GorSystemException("Standard input header to big, must be less than " + buf.length + " bytes!", null);
             }
         }
-        return cols.toArray(new String[cols.size()]);
+        return String.join("\t",cols);
     }
 }

@@ -21,10 +21,8 @@ import scala.collection.mutable.ListBuffer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 import static org.junit.Assert.*;
-
 
 public class UTestParquetFileIterator {
 
@@ -102,8 +100,8 @@ public class UTestParquetFileIterator {
     public void shouldReadParquetHeader() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        String[] expectedHeaders = Arrays.asList("Chrom", "POS", "reference", "allele", "differentrsIDs").toArray(new String[5]);
-        assertEquals(expectedHeaders, iterator.getHeader());
+        String expectedHeader = "Chrom\tPOS\treference\tallele\tdifferentrsIDs";
+        assertEquals(expectedHeader, iterator.getHeader());
     }
 
     @Test
@@ -112,8 +110,8 @@ public class UTestParquetFileIterator {
         ParquetFileIterator iterator = new ParquetFileIterator(file);
         GorSession gorSession = new GorSession("dummy");
         gorSession.setNorContext(true);
-        String[] expectedHeaders = Arrays.asList("Chrom", "POS", "reference", "allele", "differentrsIDs").toArray(new String[5]);
-        assertEquals(expectedHeaders, iterator.getHeader());
+        String expectedHeader = "Chrom\tPOS\treference\tallele\tdifferentrsIDs";
+        assertEquals(expectedHeader, iterator.getHeader());
     }
 
     @Test
@@ -127,7 +125,7 @@ public class UTestParquetFileIterator {
     public void shouldHandleSelectCommand() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        String[] header = iterator.getHeader();
+        iterator.getHeader();
 
         Select2 select = Select2.apply(scala.collection.JavaConverters.asScalaBuffer(Collections.list(1, 2, 3, 4)));
         ListBuffer<Row> buff = new ListBuffer();
@@ -139,7 +137,6 @@ public class UTestParquetFileIterator {
             select.process(row);
         }
 
-
         assertEquals(48, scala.collection.JavaConverters.bufferAsJavaList(buff).size());
     }
 
@@ -147,7 +144,7 @@ public class UTestParquetFileIterator {
     public void shouldHandleGorZipLexOutputCommand() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        String[] header = iterator.getHeader();
+        iterator.getHeader();
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             GorZipLexOutputStream gorzip = new GorZipLexOutputStream(byteStream, false, null);

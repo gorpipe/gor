@@ -651,7 +651,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         String args = line.getContentReal() + (securityContext != null ? " " + securityContext : "");
         GorOptions gorOptions = GorOptions.createGorOptions(args);
         try(GenomicIterator source = gorOptions.getIterator()) {
-            newHeader.setColumns(source.getHeader());
+            newHeader.setColumns(source.getHeader().split("\t"));
         }
         return newHeader;
     }

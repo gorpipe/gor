@@ -40,7 +40,7 @@ public class MonitorIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
+    public String getHeader() {
         return iterator.getHeader();
     }
 

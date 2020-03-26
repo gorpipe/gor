@@ -155,6 +155,16 @@ public class Line extends Row {
     }
 
     /**
+     * Copy the column contents from the specified line
+     * @param src The source line to copy
+     */
+    public void copyColumnsFrom(Row src) {
+        for (int i = 0; i < cols.length; i++) {
+            cols[i].set(src.colAsString(i));
+        }
+    }
+
+    /**
      * Set the data columns with the data from the buffer.
      * Assume buffer contains a 'line' of data i.e. columns separated with \t and either ending with \n for the line or all the buffer content is the line
      *

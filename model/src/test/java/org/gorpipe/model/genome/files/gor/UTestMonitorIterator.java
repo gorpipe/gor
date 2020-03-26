@@ -29,8 +29,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.gorpipe.model.IteratorTestUtilities.countRemainingLines;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class UTestMonitorIterator {
     public class TestMonitor extends GorMonitor {
@@ -48,12 +47,12 @@ public class UTestMonitorIterator {
     public void getHeader() throws IOException {
         GorOptions gorOptions = GorOptions.createGorOptions("1.mem");
         GenomicIterator iterator = gorOptions.getIterator();
-        String[] header = iterator.getHeader();
+        String header = iterator.getHeader();
 
         TestMonitor testMonitor = new TestMonitor();
         MonitorIterator monitorIterator = new MonitorIterator(iterator, testMonitor, 0);
 
-        assertArrayEquals(header, monitorIterator.getHeader());
+        assertEquals(header, monitorIterator.getHeader());
     }
 
     @Test
@@ -99,11 +98,11 @@ public class UTestMonitorIterator {
 
         try (final MonitorIterator source = new MonitorIterator(git, listener, 10)) {
             // Note in the following we assume source will read 500 rows between checks of current time to estimate ms between notifications
-            Assert.assertEquals(490, countRemainingLines(source, 490));
+            assertEquals(490, countRemainingLines(source, 490));
             Assert.assertTrue(source.hasNext());
             cancelled.set(true);
             Thread.sleep(100);
-            Assert.assertEquals(9, countRemainingLines(source, 9));
+            assertEquals(9, countRemainingLines(source, 9));
             Assert.assertTrue("There should be 500 records prior to cancel taking effect", source.hasNext());
             source.next();
             Assert.assertFalse("There should be not 501th record due to cancel", source.hasNext());

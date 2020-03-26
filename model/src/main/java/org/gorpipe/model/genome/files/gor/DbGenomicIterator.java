@@ -92,7 +92,7 @@ public class DbGenomicIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
+    public String getHeader() {
         try {
             if (rs == null) {
                 stmt = conn.prepareStatement(sqlOrdered(scoping(sqlbase, true)));
@@ -125,7 +125,7 @@ public class DbGenomicIterator extends GenomicIterator {
         }
     }
 
-    private String[] getHeaderFromResultSetMetaData(ResultSetMetaData md) throws SQLException {
+    private String getHeaderFromResultSetMetaData(ResultSetMetaData md) throws SQLException {
         final IntHashMap map = new IntHashMap();
         if (columns != null) { // Map source column to header array destination
             for (int i = 0; i < columns.length; i++) {
@@ -147,7 +147,7 @@ public class DbGenomicIterator extends GenomicIterator {
                 header[headerPosition] = md.getColumnName(sourcePosition + 1);
             }
         }
-        return header;
+        return String.join("\t",header);
     }
 
     private String sqlOrdered(String sql) {

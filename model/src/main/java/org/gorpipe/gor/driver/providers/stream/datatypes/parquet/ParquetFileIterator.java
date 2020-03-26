@@ -58,7 +58,6 @@ public class ParquetFileIterator extends GenomicIterator {
     private List<Path> parquetPaths = new ArrayList<>();
     private GenomicIterator.ChromoLookup lookup;
     private boolean nor = false;
-    private String[] header;
     private java.nio.file.Path resultPath;
     private int[] sortCols;
     private Configuration configuration = new Configuration(true);
@@ -159,8 +158,8 @@ public class ParquetFileIterator extends GenomicIterator {
         try(ParquetFileReader pfr = ParquetFileReader.open(inputFile)) {
             ParquetMetadata readFooter = pfr.getFooter();
             MessageType schema = readFooter.getFileMetaData().getSchema();
-            String[] parquetHeader = schema.getFields().stream().map(this::getTypeName).toArray(String[]::new);
-            header = parquetHeader;
+            String parquetHeader = schema.getFields().stream().map(this::getTypeName).collect(Collectors.joining("\t"));//.toArray(String[]::new);
+            setHeader(parquetHeader);
             readSupport.init(configuration, null, schema);
         }
     }
@@ -175,9 +174,9 @@ public class ParquetFileIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
+    public String getHeader() {
         init();
-        return header;
+        return super.getHeader();
     }
 
     @Override

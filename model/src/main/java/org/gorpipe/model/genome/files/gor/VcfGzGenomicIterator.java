@@ -123,19 +123,14 @@ public class VcfGzGenomicIterator extends GenomicIterator {
                 this.columns[i - 2] = cols[i] - 2;
                 newheader[i] = headerAll[cols[i]];
             }
-            header = newheader;
+            setHeader(String.join("\t",newheader));
             linebuf = new Line(totalExtraCols);
         } else {
             columns = null;
             linebuf = null;
-            header = headerAll;
+            setHeader(String.join("\t",headerAll));
         }
         next = reader.readLine();
-    }
-
-    @Override
-    public String[] getHeader() {
-        return header;
     }
 
     @Override

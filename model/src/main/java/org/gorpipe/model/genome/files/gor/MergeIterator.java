@@ -46,7 +46,6 @@ public class MergeIterator extends GenomicIterator {
      * from the source where it came from.
      */
     private PriorityQueue<RowFromIterator> queue;
-    private String[] header;
     /**
      * This flag controls whether a column should be added to each row with the name
      * of the of the source. Note that the source may already have the source column
@@ -84,7 +83,7 @@ public class MergeIterator extends GenomicIterator {
     }
 
     private static String[] getHeaderWithOptionalSourceColumn(GorOptions options, GenomicIterator i) {
-        String[] header = i.getHeader();
+        String[] header = i.getHeader().split("\t");
         if (options.insertSource) {
             String name = getSourceColumnName(options);
             if (i.isSourceAlreadyInserted()) {
@@ -99,11 +98,6 @@ public class MergeIterator extends GenomicIterator {
 
     private static String getSourceColumnName(GorOptions options) {
         return options.sourceColName != null ? options.sourceColName : DEFAULT_SOURCE_COLUMN_NAME;
-    }
-
-    @Override
-    public String[] getHeader() {
-        return header;
     }
 
     @Override
@@ -164,16 +158,18 @@ public class MergeIterator extends GenomicIterator {
         String firstName = "";
         for (GenomicIterator it : this.sources) {
             String[] headerWithOptionalSourceColumn = getHeaderWithOptionalSourceColumn(options, it);
-            if (header == null) {
-                header = headerWithOptionalSourceColumn;
-                setColnum(header.length - 2);
+            String header = getHeader();
+            if (header.length() == 0) {
+                setHeader(String.join("\t",headerWithOptionalSourceColumn));
+                setColnum(headerWithOptionalSourceColumn.length - 2);
                 firstName = it.getSourceName();
             } else {
-                if (!areHeadersEqual(header, headerWithOptionalSourceColumn)) {
+                String[] headerSplit = header.split("\t");
+                if (!areHeadersEqual(headerSplit, headerWithOptionalSourceColumn)) {
                     String message = "Error initializing query: Header for " + it.getSourceName() + " ("
                             +  String.join(",", headerWithOptionalSourceColumn)
                             + ") is different from the first opened file "
-                            + firstName + " (" + String.join(",", header) + ")";
+                            + firstName + " (" + String.join(",", headerSplit) + ")";
                     throw new GorDataException(message);
                 }
             }
@@ -229,6 +225,7 @@ public class MergeIterator extends GenomicIterator {
     }
 
     private void insertOptionalSourceColumn(Row r, String s) {
+        String[] header = getHeader().split("\t");
         if(r.numCols() == header.length) {
             r.setColumn(header.length - 3, s);
         } else {

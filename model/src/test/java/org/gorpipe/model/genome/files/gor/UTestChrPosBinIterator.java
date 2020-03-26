@@ -55,7 +55,7 @@ public class UTestChrPosBinIterator {
         iterator.init(null);
 
         // This is done in LineSource - next doesn't work correctly without this
-        iterator.setColnum(iterator.getHeader().length - 2);
+        iterator.setColnum(iterator.getHeader().split("\t").length - 2);
 
         return iterator;
     }
@@ -63,7 +63,7 @@ public class UTestChrPosBinIterator {
     @Test
     public void getHeader_WhenFileIsVcf() {
         GenomicIterator iterator = getGenomicIterator(VCF_FILE);
-        String[] header = iterator.getHeader();
+        String[] header = iterator.getHeader().split("\t");
         assertEquals(8, header.length);
         assertEquals("CHROM", header[0]);
         assertEquals("POS", header[1]);

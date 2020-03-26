@@ -60,8 +60,8 @@ public class UTestStdInGenomicIterator {
     @Test
     public void getHeader() throws IOException {
         try(GenomicIterator iterator = getIterator(defaultContents)) {
-            final String[] header = iterator.getHeader();
-            assertEquals("Chrom\tPos\tCategory\tValue", String.join("\t", header));
+            final String header = iterator.getHeader();
+            assertEquals("Chrom\tPos\tCategory\tValue", header);
         }
     }
 
@@ -74,8 +74,8 @@ public class UTestStdInGenomicIterator {
                 "chr1\t2\t2\t22\n" +
                 "chr1\t2\t3\t222";
         try(GenomicIterator iterator = getIterator(contents)) {
-            final String[] header = iterator.getHeader();
-            assertEquals("Chromo\tPos\tCol3\tCol4", String.join("\t", header));
+            final String header = iterator.getHeader();
+            assertEquals("Chromo\tPos\tCol3\tCol4", header);
         }
     }
 
@@ -144,7 +144,7 @@ public class UTestStdInGenomicIterator {
         System.setIn(new ByteArrayInputStream(contents.getBytes()));
 
         GenomicIterator iterator = SourceRef.STANDARD_IN.iterate(new DefaultChromoLookup(), null, null);
-        iterator.setColnum(iterator.getHeader().length);
+        iterator.setColnum(iterator.getHeader().split("\t").length);
         return iterator;
     }
 }
