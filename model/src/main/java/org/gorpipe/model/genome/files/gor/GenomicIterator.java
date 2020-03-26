@@ -213,6 +213,9 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
     }
 
     public void setTagFilter(TagFilter tagFilter) {
+        if(tagFilter!=null) {
+            pushdownFilter(tagFilter.toString());
+        }
         this.tagFilter = tagFilter;
     }
 
@@ -309,5 +312,69 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
 
     public Row next() {
         return line;
+    }
+
+    /**
+     * Sends the gor filter down to the source iterator
+     * The source iterator pushdownFilter implementation
+     * must parse the gor filter and translate it to corresponding
+     * readable form for the source iterator
+     * @param gorwhere
+     * @return true if the filter is successfully pushed down
+     */
+    public boolean pushdownFilter(String gorwhere) {
+        return false;
+    }
+
+    /**
+     * Pushes down a one-to-one line (.map) function corresponding to
+     * the gor calc step. The source iterator pushdownCalc implementation
+     * must parse the gor calc and translate it to corresponding
+     * readable form for the source iterator.
+     * @param formula
+     * @param colName
+     * @return true if the map/calc step is successfully pushed down
+     */
+    public boolean pushdownCalc(String formula, String colName) {
+        return false;
+    }
+
+    /**
+     * Pushes down a column selection to the source iterator.
+     * @param colList
+     * @return if the selection step is successfully pushed down
+     */
+    public boolean pushdownSelect(String[] colList) {
+        return false;
+    }
+
+    /**
+     * Pushes down writing results file the source iterator.
+     * @param filename
+     * @return if the selection step is successfully pushed down
+     */
+    public boolean pushdownWrite(String filename) {
+        return false;
+    }
+
+    /**
+     * Pushes down arbitrary gor command (many-to-many, flatMap) to the source iterator.
+     * The source iterator pushdownGor implementation
+     * must parse the gor command and translate it to corresponding
+     * readable form for the source iterator.
+     * @param cmd
+     * @return if the selection step is successfully pushed down
+     */
+    public boolean pushdownGor(String cmd) {
+        return false;
+    }
+
+    /**
+     * Pushes down result limitation to the source iterator.
+     * @param limit
+     * @return if the result limitation is successfully pushed down
+     */
+    public boolean pushdownTop(int limit) {
+        return false;
     }
 }

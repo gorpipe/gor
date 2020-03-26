@@ -77,4 +77,8 @@ class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
   override def getHeader: String = theIterator.getHeader
 
   override def getGorHeader: GorHeader = theIterator.getGorHeader
+
+  override def pushdownFilter(gorwhere: String): Boolean = theIterator.pushdownFilter(gorwhere)
+
+  override def pushdownTop(limit: Int): Boolean = theIterator.pushdownTop(limit)
 }

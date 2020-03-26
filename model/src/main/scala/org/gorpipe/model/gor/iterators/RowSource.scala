@@ -47,12 +47,6 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
   def getBufferSize : Int = bufferSize
   def setBufferSize( bs : Int ) { bufferSize = bs }
   def isBuffered = false
-  def pushdownFilter(gorwhere: String) : Boolean = false
-  def pushdownCalc(formula: String, colName: String) : Boolean = false
-  def pushdownSelect() : Boolean = false
-  def pushdownWrite(filename: String) : Boolean = false
-  def pushdownGor(cmd: String) : Boolean = false
-  def pushdownTop(limit: Int) : Boolean = false
 
   def getGorHeader: GorHeader = null
 

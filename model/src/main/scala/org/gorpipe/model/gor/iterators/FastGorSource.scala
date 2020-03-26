@@ -272,4 +272,9 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     }
     super.getHeader
   }
+
+  override def pushdownFilter(gorwhere: String): Boolean = {
+    if (gorSource == null) openSource()
+    gorSource.pushdownFilter(gorwhere)
+  }
 }

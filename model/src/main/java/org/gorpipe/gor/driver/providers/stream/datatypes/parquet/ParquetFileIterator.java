@@ -22,6 +22,12 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 
+import org.apache.parquet.filter2.compat.FilterCompat;
+import org.apache.parquet.filter2.predicate.FilterApi;
+import org.apache.parquet.filter2.predicate.FilterPredicate;
+import org.apache.parquet.filter2.predicate.Operators;
+import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.PrimitiveType;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.Line;
@@ -62,6 +68,9 @@ public class ParquetFileIterator extends GenomicIterator {
     private int[] sortCols;
     private Configuration configuration = new Configuration(true);
     private GroupReadSupport readSupport = new GroupReadSupport();
+    private MessageType schema;
+    private FilterPredicate filterPredicate;
+    private FilterCompat.Filter filter;
 
     public ParquetFileIterator(StreamSourceFile parquetFile) {
         this.lookup = parquetFile.getFileSource().getSourceReference().getLookup();
@@ -132,9 +141,18 @@ public class ParquetFileIterator extends GenomicIterator {
     }
 
     private void initParquetReader(Path parquetFilePath) throws IOException {
-        ParquetReader<Group> reader = ParquetReader.builder(readSupport, parquetFilePath)
+        ParquetReader<Group> reader;
+        if(filter != null) {
+            reader = ParquetReader.builder(readSupport, parquetFilePath)
+                    .withConf(configuration)
+                    .withFilter(filter)
+                    .build();
+        } else {
+            reader = ParquetReader.builder(readSupport, parquetFilePath)
                 .withConf(configuration)
                 .build();
+        }
+
         ParquetRowReader parquetRowReader = nor ? new NorParquetRowReader(reader, sortCols) : new ParquetRowReader(reader, lookup);
         if (parquetRowReader.row != null) mergeParquet.add(parquetRowReader);
     }
@@ -157,8 +175,8 @@ public class ParquetFileIterator extends GenomicIterator {
         InputFile inputFile = HadoopInputFile.fromPath(parquetFilePath, configuration);
         try(ParquetFileReader pfr = ParquetFileReader.open(inputFile)) {
             ParquetMetadata readFooter = pfr.getFooter();
-            MessageType schema = readFooter.getFileMetaData().getSchema();
-            String parquetHeader = schema.getFields().stream().map(this::getTypeName).collect(Collectors.joining("\t"));//.toArray(String[]::new);
+            schema = readFooter.getFileMetaData().getSchema();
+            String parquetHeader = schema.getFields().stream().map(this::getTypeName).collect(Collectors.joining("\t"));
             setHeader(parquetHeader);
             readSupport.init(configuration, null, schema);
         }
@@ -181,7 +199,14 @@ public class ParquetFileIterator extends GenomicIterator {
 
     @Override
     public boolean seek(String chr, int pos) {
-        return false;
+        Binary bin = Binary.fromString(chr);
+        String[] header = getHeader().split("\t");
+        if(pos<=1) {
+            filter = FilterCompat.get(FilterApi.eq(FilterApi.binaryColumn(header[0]), bin));
+        } else {
+            filter = FilterCompat.get(FilterApi.and(FilterApi.eq(FilterApi.binaryColumn(header[0]), bin),FilterApi.gtEq(FilterApi.intColumn(header[1]), pos)));
+        }
+        return true;
     }
 
     @Override
@@ -215,5 +240,123 @@ public class ParquetFileIterator extends GenomicIterator {
     public Row next() {
         if(row==null) throw new NoSuchElementException();
         return row;
+    }
+
+    private FilterPredicate intFilter(String valStr,String colName,char comp,boolean eq) {
+        int ival = Integer.parseInt(valStr);
+        Operators.IntColumn intColumn = FilterApi.intColumn(colName);
+        if(comp=='=') return FilterApi.eq(intColumn, ival);
+        else if(comp=='<') return eq?FilterApi.ltEq(intColumn, ival):FilterApi.lt(intColumn, ival);
+        else if(eq) return FilterApi.gtEq(intColumn, ival);
+        else return FilterApi.gt(intColumn, ival);
+    }
+
+    private FilterPredicate longFilter(String valStr,String colName,char comp,boolean eq) {
+        long lval = Long.parseLong(valStr);
+        Operators.LongColumn longColumn = FilterApi.longColumn(colName);
+        if (comp == '=') return FilterApi.eq(longColumn, lval);
+        else if (comp == '<') return eq ? FilterApi.ltEq(longColumn, lval) : FilterApi.lt(longColumn, lval);
+        else if (eq) return FilterApi.gtEq(longColumn, lval);
+        else return FilterApi.gt(longColumn, lval);
+    }
+
+    private FilterPredicate doubleFilter(String valStr,String colName,char comp,boolean eq) {
+        double dval = Double.parseDouble(valStr);
+        Operators.DoubleColumn doubleColumn = FilterApi.doubleColumn(colName);
+        if(comp=='=') return FilterApi.eq(doubleColumn, dval);
+        else if(comp=='<') return eq?FilterApi.ltEq(doubleColumn, dval):FilterApi.lt(doubleColumn, dval);
+        else if(eq) return FilterApi.gtEq(doubleColumn, dval);
+        else return FilterApi.gt(doubleColumn, dval);
+    }
+
+    private FilterPredicate stringFilter(String valStr,String colName,char comp,boolean eq) {
+        Binary bin = Binary.fromString(valStr);
+        Operators.BinaryColumn binaryColumn = FilterApi.binaryColumn(colName);
+        if(comp=='=') return FilterApi.eq(binaryColumn, bin);
+        else if(comp=='<') return eq?FilterApi.ltEq(binaryColumn, bin):FilterApi.lt(binaryColumn, bin);
+        else if(eq) return FilterApi.gtEq(binaryColumn, bin);
+        else return FilterApi.gt(binaryColumn, bin);
+    }
+
+    private FilterPredicate inFilter(String all,String colName) {
+        String[] split = all.split(",");
+        Operators.BinaryColumn binaryColumn = FilterApi.binaryColumn(colName);
+        FilterPredicate newFilterPredicate = null;
+        for(String val : split) {
+            String valStr = val.trim().replace("'","");
+            Binary bin = Binary.fromString(valStr);
+            FilterPredicate tmpFilterPredicate = FilterApi.eq(binaryColumn, bin);
+            if(newFilterPredicate==null) {
+                newFilterPredicate = tmpFilterPredicate;
+            } else {
+                newFilterPredicate = FilterApi.or(newFilterPredicate, tmpFilterPredicate);
+            }
+        }
+        return newFilterPredicate;
+    }
+
+    private FilterPredicate getFilterPredicate(PrimitiveType.PrimitiveTypeName primName, String filterStr, String valStr, String colName, char comp, char comp2, boolean eq) {
+        if (primName.equals(PrimitiveType.PrimitiveTypeName.INT32)) {
+            return intFilter(valStr,colName,comp,eq);
+        } else if (primName.equals(PrimitiveType.PrimitiveTypeName.INT64)) {
+            return longFilter(valStr,colName,comp,eq);
+        } else if (primName.equals(PrimitiveType.PrimitiveTypeName.DOUBLE)) {
+            return doubleFilter(valStr,colName,comp,eq);
+        } else if(filterStr.endsWith("'")) {
+            valStr = filterStr.substring(colName.length()+(eq?3:2),filterStr.length()-1);
+            return stringFilter(valStr,colName,comp,eq);
+        } else if(filterStr.endsWith(")")) {
+            if(comp=='i' && comp2=='n' && filterStr.charAt(colName.length()+2)=='(') {
+                String all = filterStr.substring(colName.length()+3,filterStr.length()-1);
+                return inFilter(all,colName);
+            }
+        }
+        return null;
+    }
+
+    private void mergeWithPreviousFilter(FilterPredicate newFilterPredicate) {
+        if (filterPredicate == null) {
+            filterPredicate = newFilterPredicate;
+        } else {
+            filterPredicate = FilterApi.and(filterPredicate, newFilterPredicate);
+        }
+        filter = FilterCompat.get(filterPredicate);
+    }
+
+    @Override
+    public boolean pushdownFilter(String origFilterStr) {
+        String filterStr = origFilterStr.replace(" ","");
+        String filterUpper = filterStr.toUpperCase();
+        String[] header = getHeader().split("\t");
+        if(filterUpper.startsWith("IN(")) {
+            String all = filterStr.substring(3,filterStr.length()-1);
+            FilterPredicate newFilterPredicate = inFilter(all,header[header.length-1]);
+            mergeWithPreviousFilter(newFilterPredicate);
+            return true;
+        } else {
+            int i = 0;
+            for (; i < header.length; i++) {
+                String col = header[i].toUpperCase();
+                if (filterUpper.startsWith(col)) break;
+            }
+            if (i < header.length) {
+                String col = header[i];
+                char comp = filterStr.charAt(col.length());
+                char comp2 = filterStr.charAt(col.length() + 1);
+                if (comp == '<' || comp == '>' || comp == '=' || comp == 'i') {
+                    boolean eq = (comp == '<' || comp == '>') && comp2 == '=';
+                    String valStr = filterStr.substring(col.length() + (eq ? 2 : 1), filterStr.length() - 1);
+
+                    PrimitiveType.PrimitiveTypeName primName = schema.getColumns().get(i).getPrimitiveType().getPrimitiveTypeName();
+                    FilterPredicate newFilterPredicate = getFilterPredicate(primName, filterStr, valStr, col, comp, comp2, eq);
+
+                    if (newFilterPredicate != null) {
+                        mergeWithPreviousFilter(newFilterPredicate);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

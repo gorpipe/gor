@@ -170,4 +170,34 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     public Row next() {
         return iterator.next();
     }
+
+    @Override
+    public boolean pushdownFilter(String where) {
+        return iterator.pushdownFilter(where);
+    }
+
+    @Override
+    public boolean pushdownSelect(String[] colList) {
+        return iterator.pushdownSelect(colList);
+    }
+
+    @Override
+    public boolean pushdownCalc(String formula, String colName) {
+        return iterator.pushdownCalc(formula, colName);
+    }
+
+    @Override
+    public boolean pushdownGor(String gor) {
+        return iterator.pushdownGor(gor);
+    }
+
+    @Override
+    public boolean pushdownTop(int limit) {
+        return iterator.pushdownTop(limit);
+    }
+
+    @Override
+    public boolean pushdownWrite(String write) {
+        return iterator.pushdownWrite(write);
+    }
 }

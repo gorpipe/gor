@@ -16,18 +16,22 @@ import gorsat.Analysis.Select2;
 import gorsat.Outputs.ToList;
 import gorsat.TestUtils;
 import org.aeonbits.owner.util.Collections;
+import org.junit.Assert;
 import org.junit.Test;
 import scala.collection.mutable.ListBuffer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.Assert.*;
 
 public class UTestParquetFileIterator {
 
     static {
-        //suppres excessive from apache libs
+        //suppress excessive logging from apache libs
         LoggerContext logContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
         logContext.getLogger("org.apache").setLevel(Level.WARN);
     }
@@ -115,13 +119,6 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void doesNotSupportSeek() {
-        StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
-        ParquetFileIterator iterator = new ParquetFileIterator(file);
-        assertFalse(iterator.seek("chr22", 0));
-    }
-
-    @Test
     public void shouldHandleSelectCommand() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
@@ -161,8 +158,58 @@ public class UTestParquetFileIterator {
         } catch (IOException e) {
             fail("IOException not expected on memory stream " + e.getMessage());
         }
+    }
 
+    @Test
+    public void testPushdownWhere() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where Chrom = 'chr12'");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr12\t60162\tC\tG\trs544101329\n" +
+                "chr12\t60545\tA\tT\trs570991495\n", result);
+    }
 
+    @Test
+    public void testPushdownWhereCustomColumn() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where Chrom = 'chrX' | where differentrsIDs > 'rs6'");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chrX\t2699625\tA\tG\trs6655038\n", result);
+    }
+
+    @Test
+    public void testPushdownWhereNumeric() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where pos < 10000");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr17\t186\tG\tA\trs547289895\n" +
+                "chr17\t460\tG\tA\trs554808397\n", result);
+    }
+
+    @Test
+    public void testPushdownWhereInSet() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where differentrsIDs in ('rs547289895','rs554808397')");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr17\t186\tG\tA\trs547289895\n" +
+                "chr17\t460\tG\tA\trs554808397\n", result);
+    }
+
+    @Test
+    public void testParquetFiltering() {
+        String result = TestUtils.runGorPipe("gor -f 'rs547289895' ../tests/data/parquet/dbsnp_test.parquet");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\tSource\n" +
+                "chr17\t186\tG\tA\trs547289895\tdbsnp_test.parquet\n", result);
+    }
+
+    @Test
+    public void testParquetDictionaryFiltering() throws IOException {
+        Path p = Paths.get("../tests/data/parquet/dbsnp_test.gord");
+        try {
+            Files.write(p, ("dbsnp_test.parquet\tdummy\tchr1\t0\tchr1\t1000000000\trs367896724,rs199706086\n" +
+                    "dbsnp_test.parquet\tdummy\tchr2\t0\tchr2\t1000000000\trs536478188,rs370414480\n").getBytes());
+            String result = TestUtils.runGorPipe("gor -p chr1 -f 'rs199706086','rs370414480' ../tests/data/parquet/dbsnp_test.gord");
+            Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\tSource\n" +
+                    "chr1\t10250\tA\tC\trs199706086\tdummy\n", result);
+        } finally {
+            if (Files.exists(p)) Files.delete(p);
+        }
     }
 
     @Test

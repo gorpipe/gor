@@ -22,6 +22,9 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.apache.parquet.example.data.simple.SimpleGroup;
+import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.GroupType;
 import org.gorpipe.model.gor.RowObj;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.schema.PrimitiveType;
@@ -29,6 +32,7 @@ import org.apache.parquet.schema.Type;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -189,7 +193,9 @@ public class ParquetLine extends Line {
 
     @Override
     public void addSingleColumnToRow(String rowString) {
-        throw new UnsupportedOperationException("addSingleColumnToRow not supported in parquet line");
+        int colNum = this.numCols();
+        this.addColumns(1);
+        this.setColumn(colNum-2, rowString);
     }
 
     @Override
@@ -215,12 +221,31 @@ public class ParquetLine extends Line {
 
     @Override
     public void setColumn(int i, String val) {
-        throw new UnsupportedOperationException("setColumn not supported in parquet line");
+        Binary bin = Binary.fromString(val);
+        group.add(i+2,bin);
     }
 
     @Override
     public void addColumns(int num) {
-        throw new UnsupportedOperationException("addColumns not supported in parquet line");
+        GroupType original = group.getType();
+        List<Type> types = original.getFields();
+        List<Type> newtypes = new ArrayList<>(types);
+        newtypes.add(types.get(0));
+        GroupType groupType = new GroupType(original.getRepetition(), original.getName(), newtypes);
+        SimpleGroup simpleGroup = new SimpleGroup(groupType);
+        for(int i = 0; i < group.getType().getFieldCount(); i++) {
+            Type type = group.getType().getType(i);
+            if(type.asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.INT32)) {
+                simpleGroup.add(i, group.getInteger(i,0));
+            } else if(type.asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.INT64)) {
+                simpleGroup.add(i, group.getInteger(i,0));
+            } else if(type.asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.DOUBLE)) {
+                simpleGroup.add(i, group.getDouble(i,0));
+            } else if(type.asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.BINARY)) {
+                simpleGroup.add(i, group.getBinary(i,0));
+            }
+        }
+        group = simpleGroup;
     }
 
 }

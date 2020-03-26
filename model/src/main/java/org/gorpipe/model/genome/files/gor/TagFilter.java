@@ -51,6 +51,6 @@ public class TagFilter {
 
     @Override
     public String toString() {
-        return "in(" + String.join(", ", includeTags) + ") and not in(" + String.join(", ", excludeTags) + ")";
+        return "in(" + String.join(", ", includeTags) + (excludeTags!=null?") and not in(" + String.join(", ", excludeTags)+")":")");
     }
 }
