@@ -36,7 +36,6 @@ public class UTestParquetFileIterator {
         logContext.getLogger("org.apache").setLevel(Level.WARN);
     }
 
-
     @Test
     public void shouldReadMultifileData() {
         //This parquet data is a duplication of the first dataset - hence 96 rows.
@@ -215,6 +214,32 @@ public class UTestParquetFileIterator {
     @Test
     public void testMergeWithParuet() {
         TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet ../tests/data/gor/dbsnp_test.gor | top 10");
+    }
+
+    @Test
+    public void testParquetWrite() throws IOException {
+        Path parquetWrite = Files.createTempFile("write",".parquet");
+        try {
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write " + parquetWrite.toAbsolutePath().toString());
+            String rereadResult = TestUtils.runGorPipe("gor "+parquetWrite.toAbsolutePath().toString()+" | top 1");
+            Assert.assertEquals("Wrong content in written parquet file", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                    "chr1\t10179\tC\tCC\trs367896724\n", rereadResult);
+        } finally {
+            if(Files.exists(parquetWrite)) Files.delete(parquetWrite);
+        }
+    }
+
+    @Test
+    public void testNorParquetWrite() throws IOException {
+        Path parquetWrite = Files.createTempFile("write",".parquet");
+        try {
+            TestUtils.runGorPipe("nor ../tests/data/gor/dbsnp_test.gor | sort -c differentrsIDs | write " + parquetWrite.toAbsolutePath().toString());
+            String rereadResult = TestUtils.runGorPipe("gor "+parquetWrite.toAbsolutePath().toString()+" | top 1");
+            Assert.assertEquals("Wrong content in written parquet file", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                    "chrY\t10069\tT\tA\trs111065272\n", rereadResult);
+        } finally {
+            if(Files.exists(parquetWrite)) Files.delete(parquetWrite);
+        }
     }
 
     private StreamSourceFile createStreamSourceFile(String fileUrl) {

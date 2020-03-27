@@ -26,6 +26,7 @@ import java.io._
 import java.util.zip.Deflater
 
 import gorsat.Commands.Output
+import gorsat.parquet.GorParquetFileOut
 import htsjdk.samtools.util.Md5CalculatingOutputStream
 import org.gorpipe.model.genome.files.binsearch.GorIndexType
 import org.gorpipe.model.genome.files.gor.Row
@@ -89,6 +90,8 @@ object OutFile {
       new GORzip(name, header, options.skipHeader, append, options.columnCompress, options.md5, options.idx, options.compressionLevel)
     } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
       new NorFileOut(name, header, options.skipHeader, append)
+    } else if (nameUpper.endsWith(".PARQUET")) {
+      new GorParquetFileOut(name, header, options.nor)
     } else if (options.nor) {
       new CmdFileOut(name, header, options.skipHeader, append)
     } else {
