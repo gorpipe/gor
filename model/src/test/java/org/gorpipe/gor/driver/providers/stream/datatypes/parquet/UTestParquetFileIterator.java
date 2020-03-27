@@ -118,6 +118,42 @@ public class UTestParquetFileIterator {
     }
 
     @Test
+    public void doesSupportSeek() {
+        StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
+        ParquetFileIterator iterator = new ParquetFileIterator(file);
+        GorSession gorSession = new GorSession("dummy");
+        iterator.init(gorSession);
+
+        Assert.assertTrue(iterator.seek("chr22", 0));
+        Assert.assertTrue(iterator.hasNext());
+        Assert.assertEquals("Gor line after seek not correct", "chr22\t16050036\tA\tC\trs374742143", iterator.next().toString());
+        Assert.assertTrue(iterator.hasNext());
+        Assert.assertEquals("Gor line after seek not correct", "chr22\t16050527\tC\tA\trs587769434", iterator.next().toString());
+    }
+
+    @Test
+    public void seekOnNoneExistingChrom() {
+        StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
+        ParquetFileIterator iterator = new ParquetFileIterator(file);
+        GorSession gorSession = new GorSession("dummy");
+        iterator.init(gorSession);
+
+        Assert.assertTrue(iterator.seek("chr23", 0));
+        Assert.assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void seekOnChromNotInFile() {
+        StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
+        ParquetFileIterator iterator = new ParquetFileIterator(file);
+        GorSession gorSession = new GorSession("dummy");
+        iterator.init(gorSession);
+
+        Assert.assertTrue(iterator.seek("chrM", 0));
+        Assert.assertFalse(iterator.hasNext());
+    }
+
+    @Test
     public void shouldHandleSelectCommand() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
@@ -209,6 +245,20 @@ public class UTestParquetFileIterator {
         } finally {
             if (Files.exists(p)) Files.delete(p);
         }
+    }
+
+    @Test
+    public void testJoinWithParquetFiles() {
+        String expectedResult = TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | join -snpsnp ../tests/data/gor/dbsnp_test.gor");
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | join -snpsnp ../tests/data/parquet/dbsnp_test.parquet");
+        Assert.assertEquals("Join results not the same",expectedResult,result);
+    }
+
+    @Test
+    public void testJoinWithNestedParquetFiles() {
+        String expectedResult = TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | join -snpsnp ../tests/data/gor/dbsnp_test.gor");
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | join -snpsnp <(gor ../tests/data/parquet/dbsnp_test.parquet)");
+        Assert.assertEquals("Join results not the same",expectedResult,result);
     }
 
     @Test

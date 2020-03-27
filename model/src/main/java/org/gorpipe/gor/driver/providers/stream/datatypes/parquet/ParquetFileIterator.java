@@ -62,6 +62,7 @@ import java.util.stream.Stream;
 public class ParquetFileIterator extends GenomicIterator {
     private PriorityQueue<ParquetRowReader> mergeParquet = new PriorityQueue<>();
     private List<Path> parquetPaths = new ArrayList<>();
+    private List<Path> parquetPathsForSeek = new ArrayList<>();
     private GenomicIterator.ChromoLookup lookup;
     private boolean nor = false;
     private java.nio.file.Path resultPath;
@@ -71,6 +72,7 @@ public class ParquetFileIterator extends GenomicIterator {
     private MessageType schema;
     private FilterPredicate filterPredicate;
     private FilterCompat.Filter filter;
+    private FilterCompat.Filter seekfilter;
 
     public ParquetFileIterator(StreamSourceFile parquetFile) {
         this.lookup = parquetFile.getFileSource().getSourceReference().getLookup();
@@ -112,6 +114,7 @@ public class ParquetFileIterator extends GenomicIterator {
         if (resultPath != null) {
             try {
                 parquetPaths = init(resultPath);
+                parquetPathsForSeek = new ArrayList<>(parquetPaths);
             } catch (IOException e) {
                 throw new GorSystemException("Init parquet", e);
             } finally {
@@ -141,17 +144,10 @@ public class ParquetFileIterator extends GenomicIterator {
     }
 
     private void initParquetReader(Path parquetFilePath) throws IOException {
-        ParquetReader<Group> reader;
-        if(filter != null) {
-            reader = ParquetReader.builder(readSupport, parquetFilePath)
-                    .withConf(configuration)
-                    .withFilter(filter)
-                    .build();
-        } else {
-            reader = ParquetReader.builder(readSupport, parquetFilePath)
-                .withConf(configuration)
-                .build();
-        }
+        ParquetReader.Builder<Group> parquetBuilder = ParquetReader.builder(readSupport, parquetFilePath).withConf(configuration);
+        if(filter!=null) parquetBuilder.withFilter(filter);
+        if(seekfilter!=null) parquetBuilder.withFilter(seekfilter);
+        ParquetReader<Group> reader = parquetBuilder.build();
 
         ParquetRowReader parquetRowReader = nor ? new NorParquetRowReader(reader, sortCols) : new ParquetRowReader(reader, lookup);
         if (parquetRowReader.row != null) mergeParquet.add(parquetRowReader);
@@ -188,7 +184,7 @@ public class ParquetFileIterator extends GenomicIterator {
 
     @Override
     public void close() {
-        // Iterator doesn't close resources
+        mergeParquet.forEach(ParquetRowReader::close);
     }
 
     @Override
@@ -202,9 +198,17 @@ public class ParquetFileIterator extends GenomicIterator {
         Binary bin = Binary.fromString(chr);
         String[] header = getHeader().split("\t");
         if(pos<=1) {
-            filter = FilterCompat.get(FilterApi.eq(FilterApi.binaryColumn(header[0]), bin));
+            seekfilter = FilterCompat.get(FilterApi.eq(FilterApi.binaryColumn(header[0]), bin));
         } else {
-            filter = FilterCompat.get(FilterApi.and(FilterApi.eq(FilterApi.binaryColumn(header[0]), bin),FilterApi.gtEq(FilterApi.intColumn(header[1]), pos)));
+            seekfilter = FilterCompat.get(FilterApi.and(FilterApi.eq(FilterApi.binaryColumn(header[0]), bin),FilterApi.gtEq(FilterApi.intColumn(header[1]), pos)));
+        }
+        mergeParquet.forEach(ParquetRowReader::close);
+        mergeParquet.clear();
+        parquetPaths = new ArrayList<>(parquetPathsForSeek);
+        try {
+            subInit();
+        } catch (IOException e) {
+            throw new GorSystemException("Error while reading parquet file", e);
         }
         return true;
     }

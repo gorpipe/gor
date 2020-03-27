@@ -147,12 +147,35 @@ public class ParquetLine extends Line {
     }
 
     @Override
-    public CharSequence colsSlice(int startCol, int stopCol) {
-        return null;
+    public Row rowWithAddedColumn(CharSequence s) {
+        return RowObj.apply(getAllColumns().append('\t').append(s));
     }
 
     @Override
-    public CharSequence getAllCols() {
+    public CharSequence colsSlice(int startCol, int stopCol) {
+        if (startCol == stopCol) {
+            return "";
+        } else {
+            StringBuilder sb = new StringBuilder();
+            if (startCol == 0) {
+                sb.append(chr);
+                sb.append("\t");
+                sb.append(pos);
+                startCol++;
+            } else if (startCol == 1) {
+                sb.append(pos);
+            } else {
+                sb.append(colAsString(startCol));
+            }
+            for (int i = startCol + 1; i < stopCol; i++) {
+                sb.append("\t");
+                sb.append(colAsString(i));
+            }
+            return sb;
+        }
+    }
+
+    private StringBuilder getAllColumns() {
         StringBuilder sb = new StringBuilder();
         sb.append(chr);
         sb.append('\t');
@@ -164,6 +187,11 @@ public class ParquetLine extends Line {
             sb.append(val);
         }
         return sb;
+    }
+
+    @Override
+    public CharSequence getAllCols() {
+        return getAllColumns();
     }
 
     @Override

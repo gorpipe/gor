@@ -34,7 +34,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<Row> {
+public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<Row>, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ParquetRowReader.class);
     ParquetReader<Group> reader;
     Row row;
@@ -73,5 +73,14 @@ public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<
     @Override
     public int compareTo(ParquetRowReader o) {
         return row.compareTo(o.row);
+    }
+
+    @Override
+    public void close() {
+        try {
+            reader.close();
+        } catch (IOException e) {
+            // Dont care
+        }
     }
 }
