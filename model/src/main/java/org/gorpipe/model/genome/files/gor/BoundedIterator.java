@@ -22,11 +22,13 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorSystemException;
+
 /**
  * BoundedIterator wraps an iterator with a range.
  */
 public class BoundedIterator extends GenomicIteratorAdapterBase {
-    
+
     private String startChromosome;
     private String stopChromosome;
     private int startPosition;
@@ -93,7 +95,7 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
 
     @Override
     public boolean next(Line line) {
-        throw new GorException("next filling Line should not be used from BoundedIterator", "");
+        throw new GorSystemException("next filling Line should not be used from BoundedIterator", null);
     }
 
     @Override

@@ -23,6 +23,7 @@
 package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorContext;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
@@ -144,7 +145,7 @@ public class MergeIterator extends GenomicIterator {
 
     @Override
     public boolean next(Line line) {
-        throw new GorException("next filling Line should not be used from MergeIterator", "");
+        throw new GorSystemException("next filling Line should not be used from MergeIterator", null);
     }
 
     @Override
@@ -167,7 +168,7 @@ public class MergeIterator extends GenomicIterator {
                 String[] headerSplit = header.split("\t");
                 if (!areHeadersEqual(headerSplit, headerWithOptionalSourceColumn)) {
                     String message = "Error initializing query: Header for " + it.getSourceName() + " ("
-                            +  String.join(",", headerWithOptionalSourceColumn)
+                            + String.join(",", headerWithOptionalSourceColumn)
                             + ") is different from the first opened file "
                             + firstName + " (" + String.join(",", headerSplit) + ")";
                     throw new GorDataException(message);
@@ -194,7 +195,7 @@ public class MergeIterator extends GenomicIterator {
         clearQueue();
         int index = 0;
         for (GenomicIterator it : sources) {
-            if(gorMonitor != null && gorMonitor.isCancelled()) {
+            if (gorMonitor != null && gorMonitor.isCancelled()) {
                 return;
             }
             it.setSourceIndex(index);
@@ -226,7 +227,7 @@ public class MergeIterator extends GenomicIterator {
 
     private void insertOptionalSourceColumn(Row r, String s) {
         String[] header = getHeader().split("\t");
-        if(r.numCols() == header.length) {
+        if (r.numCols() == header.length) {
             r.setColumn(header.length - 3, s);
         } else {
             r.addSingleColumnToRow(s);
