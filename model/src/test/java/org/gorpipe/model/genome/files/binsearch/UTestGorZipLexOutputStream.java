@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
+import org.gorpipe.RangedNumberFormatter;
 import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
@@ -33,6 +34,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.zip.InflaterOutputStream;
 
@@ -102,8 +104,11 @@ public class UTestGorZipLexOutputStream {
         final String path = tf.newFile("longLines.gorz").getAbsolutePath();
         final GorZipLexOutputStream os = new GorZipLexOutputStream(path, false);
         final String header = "CHROM\tPOS\tCOL";
-        final byte[] otherColBytes = new byte[64 * 1024];
-        Arrays.fill(otherColBytes, (byte) 'a');
+        final byte[] otherColBytes = new byte[256 * 1024];
+        Random random = new Random();
+        for (int i = 0; i < otherColBytes.length; i++) {
+            otherColBytes[i] = (byte) (random.nextInt(64)+33);
+        }
         final String otherCol = new String(otherColBytes);
         os.setHeader(header);
         final int posPerChr = 2;
