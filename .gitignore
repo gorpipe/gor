@@ -21,6 +21,7 @@ gor.iws
 **/.classpath
 **/.settings/
 **/.externalToolBuilders
+**/bin/
 .metadata
 
 projectFilesBackup/

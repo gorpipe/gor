@@ -33,8 +33,9 @@ project(':documentation') {
             }
         }
     }
-
+/*
     artifactoryPublish {
         publications ('mavenDocumentationJar')
     }
+    */
 }

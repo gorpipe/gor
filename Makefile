@@ -2,7 +2,7 @@ SHORT_NAME = gor
 
 BRANCH = $(git rev-parse --abbrev-ref HEAD)
 COMMIT_HASH = $(git rev-parse --short HEAD)
-CURRENT_VERSION = $(cat version)
+CURRENT_VERSION = $(cat VERSION)
 
 help:  ## This help.
 	@grep -E '^[a-zA-Z0-9_-]+:.*?#*.*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?#+"}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -67,8 +67,8 @@ update-master-version: update-master    ## Update version on the master branch, 
 	git checkout -b "Update_master_version_to_${NEW_VERSION}"
 	git push -u origin "Update_master_version_to_${NEW_VERSION}"
 
-	echo "${NEW_VERSION}" > version
-	git add version
+	echo "${NEW_VERSION}" > VERSION
+	git add VERSION
 	git commit -m "Updated version to ${NEW_VERSION} on master."
 	git push
 
@@ -86,8 +86,8 @@ release:  ## Update version on new feature branch off the release branch, assume
 	git checkout -b "Release_${NEW_VERSION}_on_${BRANCH_VERSION}"
 	git push -u origin "Release_${NEW_VERSION}_on_${BRANCH_VERSION}"
 
-	echo "${NEW_VERSION}" > version
-	git add version
+	echo "${NEW_VERSION}" > VERSION
+	git add VERSION
 
 	./gradlew allDeps --update-locks com.wuxinextcode.gor:*
 	find . -name *.lockfile | grep -v '/build/' | xargs git add
