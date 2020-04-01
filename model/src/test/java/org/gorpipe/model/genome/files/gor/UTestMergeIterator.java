@@ -293,7 +293,7 @@ public class UTestMergeIterator {
     }
 
     @Test
-    public void readingFromDictionaryWithFilterOnTagsSingleTwoTags() throws IOException {
+    public void readingFromDictionaryWithFilterOnTagsTwoTags() throws IOException {
         GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,PN3"));
         String expected = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tPN\n" +
                 "chr1\t1\tPN1\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tPN1\n" +
@@ -318,6 +318,20 @@ public class UTestMergeIterator {
                 "chr1\t10\tPN3\tLineData for the chromosome and position line 1 10\tThis line should be long enough for this test purpose\t853857\tPN3\n";
 
         assertContent(expected, options);
+    }
+
+    @Test
+    public void readingFromDictionaryWithFilterOnTagsTaglistWithEmptyTagAtEnd() throws IOException {
+        thrown.expect(GorDataException.class);
+        thrown.expectMessage("Empty tag is not allowed");
+        GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,PN3,"));
+    }
+
+    @Test
+    public void readingFromDictionaryWithFilterOnTagsTaglistWithEmptyTagInMiddle() throws IOException {
+        thrown.expect(GorDataException.class);
+        thrown.expectMessage("Empty tag is not allowed");
+        GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,,PN3"));
     }
 
     @Test

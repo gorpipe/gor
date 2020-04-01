@@ -207,7 +207,8 @@ public class Dictionary {
 
                 // Here we throw the data exception if the call is not silent
                 if (hasInvalidTags && !isSilentTagFilter) {
-                    throw new GorDataException("Invalid Source Filter for dictionary file: " + path + ". Following are not in dictionary " + String.join(",", badTags));
+                    throwBadTagException(path, badTags);
+                    return;
                 }
                 this.files = fileListAndMore.getFormer();
                 if (this.files.length == 0 && cache.activeDictionaryLines.length > 0) this.fallbackLineForHeader = cache.activeDictionaryLines[0];
@@ -216,6 +217,16 @@ public class Dictionary {
         } else {
             parseDictionary(path, allowBucketAccess, queryTags, isSilentTagFilter);
         }
+    }
+
+    private void throwBadTagException(String path, Set<String> badTags) {
+        String message = "Invalid Source Filter for dictionary file: " + path + ". ";
+        if (badTags.contains("")) {
+            message += "Empty tag is not allowed";
+        } else {
+            message = "Following are not in dictionary " + String.join(",", badTags);
+        }
+        throw new GorDataException(message);
     }
 
     public Set<String> getValidTags() {
@@ -379,7 +390,7 @@ public class Dictionary {
         }
 
         if (hasInvalidTags(badTags) && !isSilentTagFilter) {
-            throw new GorDataException("Invalid Source Filter for dictionary file: " + path + ". Following are not in dictionary " + String.join(",", badTags));
+            throwBadTagException(path, badTags);
         }
 
         final int[] bucketTotalCountArray = bucketTotalCounts.toArray();
