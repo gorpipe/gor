@@ -224,7 +224,7 @@ public class Dictionary {
         if (badTags.contains("")) {
             message += "Empty tag is not allowed";
         } else {
-            message = "Following are not in dictionary " + String.join(",", badTags);
+            message += "Following are not in dictionary " + String.join(",", badTags);
         }
         throw new GorDataException(message);
     }
