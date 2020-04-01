@@ -97,8 +97,10 @@ public class GorzSeekableIterator extends GenomicIterator {
         } else {
             try {
                 return seekFile(key);
-            } catch (IOException | DataFormatException e) {
-                throw new GorResourceException("Corrupt gorz file", this.filePath, e);
+            } catch (IOException e) {
+                throw new GorResourceException("Error reading gorz file: " + e.getMessage(), this.filePath, e);
+            } catch (DataFormatException e) {
+                throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
         }
     }
@@ -124,8 +126,10 @@ public class GorzSeekableIterator extends GenomicIterator {
         if (!this.bufferIterator.hasNext()) {
             try {
                 loadBufferIterator();
-            } catch (IOException | DataFormatException e) {
-                throw new GorResourceException("Corrupt gorz file", this.filePath, e);
+            } catch (IOException e) {
+                throw new GorResourceException("Error reading gorz file: " + e.getMessage(), this.filePath, e);
+            } catch (DataFormatException e) {
+                throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
         }
         return RowObj.apply(this.bufferIterator.getNextAsString());
