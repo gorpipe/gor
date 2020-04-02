@@ -67,7 +67,7 @@ node {
             // We only publish if tests ran successfully
             def publishTo = ""
             def isSnapshotBuild = false
-            def version = readFile('version').trim()
+            def version = readFile('VERSION').trim()
             def dockerTags = [version]
 
             if (env.BRANCH_NAME == "master") {

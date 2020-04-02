@@ -37,7 +37,7 @@ build:
 
 
 .build_cache:
-  extends: build
+  image: "$JAVA_BUILDER_IMAGE"
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull

@@ -103,7 +103,7 @@ configure(allLeafProjects()) {
         jcenter()
         mavenCentral()
         maven {
-            name "gitlab-maven"
+            name "gitlab-gor-maven"
             url uri("https://gitlab.com/api/v4/projects/17033400/packages/maven")
             credentials(HttpHeaderCredentials) {
                 //name = "Private-Token"
