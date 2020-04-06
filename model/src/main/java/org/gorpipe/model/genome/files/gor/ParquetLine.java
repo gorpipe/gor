@@ -109,7 +109,7 @@ public class ParquetLine extends Line {
         return PrimitiveType.PrimitiveTypeName.BINARY;
     }
 
-    private String extractGroup(Type tp, Group group, int colNum, int idx) {
+    String extractGroup(Type tp, Group group, int colNum, int idx) {
         if (tp.isPrimitive()) {
             int size = group.getFieldRepetitionCount(colNum);
             String ret = idx < size ? group.getValueToString(colNum, idx) : "";
@@ -134,14 +134,17 @@ public class ParquetLine extends Line {
     @Override
     public String otherCols() {
         StringBuilder sb = new StringBuilder();
-        Type tp = group.getType().getFields().get(0);
-        String val = extractGroup(tp, group, 0, 0);
-        sb.append(val);
-        for (int i = 1; i < numCols(); i++) {
-            sb.append('\t');
-            tp = group.getType().getFields().get(i);
-            val = extractGroup(tp, group, i, 0);
+        List<Type> fields = group.getType().getFields();
+        if(fields.size() > 2) {
+            Type tp = fields.get(2);
+            String val = extractGroup(tp, group, 2, 0);
             sb.append(val);
+            for (int i = 3; i < numCols(); i++) {
+                sb.append('\t');
+                tp = fields.get(i);
+                val = extractGroup(tp, group, i, 0);
+                sb.append(val);
+            }
         }
         return sb.toString();
     }
@@ -211,12 +214,12 @@ public class ParquetLine extends Line {
 
     @Override
     public String selectedColumns(int[] columnIndices) {
-        return null;
+        return IntStream.of(columnIndices).mapToObj(this::colAsString).collect(Collectors.joining("\t"));
     }
 
     @Override
     public int otherColsLength() {
-        return 0;
+        return otherCols().length();
     }
 
     @Override
@@ -224,6 +227,15 @@ public class ParquetLine extends Line {
         int colNum = this.numCols();
         this.addColumns(1);
         this.setColumn(colNum-2, rowString);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof ParquetLine) {
+            ParquetLine pObj = (ParquetLine)obj;
+            return group.equals(pObj.group);
+        }
+        return super.equals(obj);
     }
 
     @Override
