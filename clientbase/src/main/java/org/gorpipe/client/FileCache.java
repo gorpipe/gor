@@ -30,7 +30,7 @@ import java.nio.file.Path;
  * used to create it.
  */
 
-public interface FileCache {
+public interface FileCache extends AutoCloseable {
     /**
      * Check if file exists. Updates file timestamp
      *
