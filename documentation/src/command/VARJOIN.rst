@@ -7,9 +7,25 @@
 =======
 VARJOIN
 =======
-The :ref:`VARJOIN` command behaves similarly as a join with additional constraint that the columns denoting the reference and alternative allele are equal in both the left- and the right-source.
+The :ref:`VARJOIN` command behaves similarly as a join with additional constraint that the columns denoting the
+reference and alternative allele are equal in both the left- and the right-source.
 
-The command does join on single alleles, e.g. (ref,all), or multi-alleles (ref,a1,a2) or (ref,a1/a2).  Also, the variations only have to be equivalent and not necessarily represented in the same manner, i.e. (chr1,2,'A','C') and (chr1,1,'AA','AC') are equivalent representations of the same variants.
+The command does join on single alleles, e.g. (ref,all), or multi-alleles (ref,a1,a2) or (ref,a1/a2).
+Also, the variations only have to be equivalent and not necessarily represented in the same manner,
+i.e. (chr1,2,'A','C') and (chr1,1,'AA','AC') are equivalent representations of the same variants.
+
+The system can be configured to assume normalized variants.  In that case, the varjoin defaults to ``-norm`` and
+``-nonorm`` is needed for the dynamic normalization (-span relates to its function).  If configured the other way
+around (like we do now) ``-norm`` skips the dynamic normalization on indels (the implementation is equivalent
+but faster than to apply varnorm first).
+
+.. code-block:: gor
+
+	varjoin -nonorm == varnorm | join -snpsnp -xl ref,alt -xr ref,alt
+
+.. code-block:: gor
+
+	varjoin -norm == join -snpsnp -xl ref,alt -xr ref,alt
 
 Usage
 =====
@@ -69,7 +85,16 @@ Options
 +--------------------+---------------------------------------------------------------------------------------+
 | ``-e char``        | Character to denote empty field. Defaults to empty string, i.e. of length 0.          |
 +--------------------+---------------------------------------------------------------------------------------+
+| ``-norm``          | Assume left or right normalised variants, i.e. -span is zero.                         |
+|                    | Skip dynamic normalization on indels. Equivalent to VARNORM, but faster.              |
++--------------------+---------------------------------------------------------------------------------------+
+| ``-nonorm``        | Do NOT assume left or right normalised variants, i.e. ambiguity of InDels             |
+|                    | defined by -span size. Default join type -norm or -nonorm is set by Java system       |
+|                    | property 'gor.varjointype' or 'varjointype' in gor config file.                       |
++--------------------+---------------------------------------------------------------------------------------+
 
 See also :ref:`VARMERGE` and the example for the :ref:`LEFTWHERE` command in relation to this.
                 
 The right-source can also be specified as a gor-stream, using the <(...) notation as in the :ref:`JOIN` command.
+
+
