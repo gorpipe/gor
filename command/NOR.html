@@ -160,7 +160,11 @@
             
   <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="nor">
 <span id="id1"></span><h1>NOR<a class="headerlink" href="#nor" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#nor"><span class="std std-ref">NOR</span></a> command reads non-ordered relations from a single file or a nested source. File sources are assumed to be tab-separated (.tsv, .rep, or .map) and with # as the first symbol in the first line to indicate that it is a header. Comma-separated files can also be used if they are named .csv. Likewise, .gor and .gorz files can be read, but are treated as unordered relations.</p>
+<p>The <a class="reference internal" href="#nor"><span class="std std-ref">NOR</span></a> command reads non-ordered relations from a single file or a nested source. File sources are assumed to be
+tab-separated (.tsv, .rep, or .map) and with <code class="docutils literal notranslate"><span class="pre">#</span></code> as the first symbol in the first line to indicate that it is a header.
+Comma-separated files can also be used if they are named .csv. Likewise, .gor and .gorz files can be read, but are treated as unordered relations.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-h</span></code> option can be used to instruct the query to read the first line as a header, but this option is not necessary
+if the first line starts with a <code class="docutils literal notranslate"><span class="pre">#</span></code> symbol.</p>
 <p>It is important to note that NOR queries on very large files can be memory intensive.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
