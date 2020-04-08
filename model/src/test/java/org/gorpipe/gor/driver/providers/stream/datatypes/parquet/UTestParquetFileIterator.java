@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 import static org.junit.Assert.*;
 
@@ -291,6 +292,76 @@ public class UTestParquetFileIterator {
             if(Files.exists(parquetWrite)) Files.delete(parquetWrite);
         }
     }
+
+    @Test
+    public void testPartitionedParquet() throws IOException {
+        Path tmpdir = null;
+        try {
+            tmpdir = Files.createTempDirectory("mu");
+            Path tmprparquet = tmpdir.resolve("forkr.parquet");
+            Path tmpparquet = tmpdir.resolve("forkr.parquet");
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f Chrom " + tmprparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f Chrom " + tmpparquet.toString());
+            String resultr = TestUtils.runGorPipe("gor "+tmprparquet.toString());
+            String result = TestUtils.runGorPipe("gor "+tmpparquet.toString());
+            Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
+        } finally {
+            if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch(Exception e) {
+
+                }
+            });
+        }
+    }
+
+    @Test
+    public void testPartitionedParquetCustomCol() throws IOException {
+        Path tmpdir = null;
+        try {
+            tmpdir = Files.createTempDirectory("mu");
+            Path tmprparquet = tmpdir.resolve("forkr.parquet");
+            Path tmpparquet = tmpdir.resolve("fork.parquet");
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet.toString());
+            String resultr = TestUtils.runGorPipe("gor "+tmprparquet.toString());
+            String result = TestUtils.runGorPipe("gor "+tmpparquet.toString());
+            Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
+        } finally {
+            if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch(Exception e) {
+
+                }
+            });
+        }
+    }
+
+    @Test
+    public void testPartitionedParquetNor() throws IOException {
+        Path tmpdir = null;
+        try {
+            tmpdir = Files.createTempDirectory("mu");
+            Path tmprparquet = tmpdir.resolve("forkr.parquet");
+            Path tmpparquet = tmpdir.resolve("fork.parquet");
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet.toString());
+            String resultr = TestUtils.runGorPipe("nor "+tmprparquet.toString());
+            String result = TestUtils.runGorPipe("nor "+tmpparquet.toString());
+            Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
+        } finally {
+            if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch(Exception e) {
+
+                }
+            });
+        }
+    }
+
 
     private StreamSourceFile createStreamSourceFile(String fileUrl) {
         SourceReference sourceReference = new SourceReference(fileUrl);

@@ -11,6 +11,8 @@ The :ref:`WRITE` command can be used to write a stream into one or more files si
 
 By specifying a "fork" column, with the ``-f`` option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the ``-f`` option, you must also specify the column that is used to fork the output files.
 
+The ``-d`` option can be used to write the fork files to directories instead of spliting filenames with #{fork}.
+
 The ``-r`` option can be used to eliminate the fork column from the output, since it is already represented in the filenames.
 
 The ``-c`` and ``-m`` options are used to encrypt the output of the WRITE command. ``-c`` tells the command to use column store compression for the output and ``-m`` is used to encrypt the files with the MD5 algorithm.
@@ -31,6 +33,8 @@ Options
 
 +-----------------+-----------------------------------------------------------------+
 | ``-f column``   | The "fork column" used to split the output into multiple files. |
++-----------------+-----------------------------------------------------------------+
+| ``-d``          | Use subdirectories instead of #{fork} in filename for forkwrite |
 +-----------------+-----------------------------------------------------------------+
 | ``-r``          | Eliminate the fork column from the output.                      |
 +-----------------+-----------------------------------------------------------------+
