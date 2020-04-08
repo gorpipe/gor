@@ -162,6 +162,7 @@
 <span id="id1"></span><h1>WRITE<a class="headerlink" href="#write" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#write"><span class="std std-ref">WRITE</span></a> command can be used to write a stream into one or more files simultaneously.</p>
 <p>By specifying a “fork” column, with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, you must also specify the column that is used to fork the output files.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">-d</span></code> option can be used to write the fork files to directories instead of spliting filenames with #{fork}.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> option can be used to eliminate the fork column from the output, since it is already represented in the filenames.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> and <code class="docutils literal notranslate"><span class="pre">-m</span></code> options are used to encrypt the output of the WRITE command. <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output and <code class="docutils literal notranslate"><span class="pre">-m</span></code> is used to encrypt the files with the MD5 algorithm.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-i</span></code> option writes an index file containing the file position of each chromosome. This option requires a type to be set, which can be FULL or CHROM.</p>
@@ -183,27 +184,30 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">column</span></code></p></td>
 <td><p>The “fork column” used to split the output into multiple files.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+<td><p>Use subdirectories instead of #{fork} in filename for forkwrite</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
 <td><p>Eliminate the fork column from the output.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
 <td><p>Use column store compression for the output.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
 <td><p>Use MD5 encryption on the output file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">[type]</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">[type]</span></code></p></td>
 <td><p>Write index file (.gori) with a .gorz file
 Must state the type, which can be FULL or CHROM</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">[level]</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">[level]</span></code></p></td>
 <td><p>Compression level (0-9). Default 1.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">'[tags]'</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">'[tags]'</span></code></p></td>
 <td><p>List of tags which write ensures a file will be created.
 Only valid with the -f option.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
 <td><p>Takes in a text source containing prefix to be prepended to the
 file written.</p></td>
 </tr>
