@@ -3,7 +3,7 @@
 #
 
 variables:
-  JAVA_BUILDER_IMAGE: nextcode/builderimg-java:latest
+  JAVA_BUILDER_IMAGE: nextcode/builderimg-java:openjdk8
   GIT_SUBMODULE_STRATEGY: none
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"

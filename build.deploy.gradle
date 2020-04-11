@@ -65,13 +65,11 @@ configure(allLeafProjects()){
         }
         repositories {
             maven {
-                name "gitlab-maven"
+                name "gitlab-gor-maven"
                 url uri("https://gitlab.com/api/v4/projects/17033400/packages/maven")
                 credentials(HttpHeaderCredentials) {
-                    //name = "Private-Token"
-                    // value = project.findProperty('gitlab_token') ?: System.getenv("GITLAB_TOKEN")
-                    name = "Job-Token"
-                    value = System.getenv("CI_JOB_TOKEN")
+                    name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
+                    value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
                 }
                 authentication {
                     header(HttpHeaderAuthentication)
