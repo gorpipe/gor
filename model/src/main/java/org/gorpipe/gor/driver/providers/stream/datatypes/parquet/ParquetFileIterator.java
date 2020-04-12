@@ -183,7 +183,9 @@ public class ParquetFileIterator extends GenomicIterator {
         String part = partCol != null ? partCol[1] : null;
 
         ParquetRowReader parquetRowReader = nor ? new NorParquetRowReader(reader, sortCols, part) : new ParquetRowReader(reader, lookup, part);
-        if (parquetRowReader.row != null) mergeParquet.add(parquetRowReader);
+        if (parquetRowReader.row != null) synchronized (this) {
+            mergeParquet.add(parquetRowReader);
+        }
     }
 
     private void subInit() throws IOException {
