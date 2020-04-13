@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -174,7 +175,7 @@ public class ParquetFileIterator extends GenomicIterator {
         else filter = null;
     }
 
-    private void initParquetReader(Path parquetFilePath) throws IOException {
+    private ParquetRowReader initParquetReader(Path parquetFilePath) throws IOException {
         ParquetReader.Builder<Group> parquetBuilder = ParquetReader.builder(readSupport, parquetFilePath).withConf(configuration);
         if(filter!=null) parquetBuilder.withFilter(filter);
         ParquetReader<Group> reader = parquetBuilder.build();
@@ -182,26 +183,39 @@ public class ParquetFileIterator extends GenomicIterator {
         String[] partCol = extractPartCol(parquetFilePath.toString());
         String part = partCol != null ? partCol[1] : null;
 
-        ParquetRowReader parquetRowReader = nor ? new NorParquetRowReader(reader, sortCols, part) : new ParquetRowReader(reader, lookup, part);
-        if (parquetRowReader.row != null) mergeParquet.add(parquetRowReader);
+        return nor ? new NorParquetRowReader(reader, sortCols, part) : new ParquetRowReader(reader, lookup, part);
+    }
+
+    class Path2ParquetReader implements Function<Path, ParquetRowReader> {
+        IOException ioe;
+
+        @Override
+        public ParquetRowReader apply(Path path) {
+            try {
+                return initParquetReader(path);
+            } catch (IOException e) {
+                ioe = e;
+            }
+            return null;
+        }
+
+        public Optional<IOException> getError() {
+            return Optional.ofNullable(ioe);
+        }
     }
 
     private void subInit() throws IOException {
         if( nor && (sortCols == null || sortCols.length == 1) ) {
             if( parquetPaths.size() > 0 ) {
-                initParquetReader(parquetPaths.remove(0));
+                ParquetRowReader parquetRowReader = initParquetReader(parquetPaths.remove(0));
+                if (parquetRowReader.row != null) mergeParquet.add(parquetRowReader);
             }
         } else {
-            Optional<IOException> ioException = parquetPaths.parallelStream().map(parquetFilePath -> {
-                IOException ret = null;
-                try {
-                    initParquetReader(parquetFilePath);
-                } catch (IOException e) {
-                    ret = e;
-                }
-                return ret;
-            }).filter(Objects::nonNull).findFirst();
-            if(ioException.isPresent()) throw ioException.get();
+            Path2ParquetReader path2ParquetReader = new Path2ParquetReader();
+            // Use takeWhile(Objects::nonNull) before collect when compiling with jdk9+
+            List<ParquetRowReader> parquetRowReaders = parquetPaths.parallelStream().map(path2ParquetReader).collect(Collectors.toList());
+            if(path2ParquetReader.getError().isPresent()) throw path2ParquetReader.getError().get();
+            parquetRowReaders.stream().filter(p -> p.row != null).forEach(parquetRowReader -> mergeParquet.add(parquetRowReader));
             parquetPaths.clear();
         }
     }
