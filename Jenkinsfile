@@ -129,12 +129,15 @@ node {
                         def sha1 = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
 
                         // Always tag with a version
+                        /* Skip tagging:  now done in gitlab.
                         build job: '../TagBranch', wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'git_sha', value: sha1],
                                 [$class: 'StringParameterValue', name: 'tag', value: 'v' + version],
                                 [$class: 'StringParameterValue', name: 'message', value: 'Tagging with version from Jenkins2'],
                                 [$class: 'StringParameterValue', name: 'repo', value: 'gor']
                         ]
+
+                         */
                     }
                 }
 
