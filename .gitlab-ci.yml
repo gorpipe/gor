@@ -147,7 +147,7 @@ gor-services:
   extends: .on-releasable-branch-only
   stage: trigger-cross-projects
   trigger:
-    project:  gor-platfrom/gor-services
+    project:  wuxi-nextcode/wxnc-gor/gor-services
     branch:   develop
 
 
