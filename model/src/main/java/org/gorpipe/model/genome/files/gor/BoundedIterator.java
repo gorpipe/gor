@@ -113,6 +113,10 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
             return false;
         }
         Row r = iterator.next();
+        if (r == null) {
+            String msg = String.format("Iterator next returned null after hasNext returned true (%s, %s)", iterator.getClass().getName(), iterator.getSourceName());
+            throw new GorSystemException(msg, null);
+        }
         if(isInRange(r)) {
             nextFromIterator = r;
             return true;
