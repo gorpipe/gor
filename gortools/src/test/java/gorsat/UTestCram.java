@@ -22,11 +22,10 @@
 
 package gorsat;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.gorpipe.util.string.StringUtil;
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class UTestCram {
 
@@ -44,6 +42,15 @@ public class UTestCram {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    public static File createWrongConfigFile(File directory) throws IOException {
+        return FileTestUtils.createTempFile(directory, "generic.gor",
+                "buildPath\t../tests/data/ref_mini/chromSeq\n" +
+                        "buildSizeFile\t../tests/data/ref_mini/buildsize.gor\n" +
+                        "buildSplitFile\t../tests/data/ref_mini/buildsplit.txt\n" +
+                        "cramReferencePath\t../tests/data/external/samtools/cram_query_sorted2.fasta"
+        );
+    }
 
     @Test
     public void readCramWithFastaReference() {
@@ -76,6 +83,19 @@ public class UTestCram {
         String[] args = new String[]{"gor ../tests/data/external/samtools/cram_query_sorted.cram", "-config", "../tests/config/gor_unittests_config.txt"};
         int count = TestUtils.runGorPipeCount(args);
         Assert.assertEquals(7, count);
+    }
+
+    @Test
+    public void readCramWithFastaReferenceFromConfigException() throws IOException {
+        File wrongConfigFile = createWrongConfigFile(workDir.getRoot());
+        System.clearProperty("gor.driver.cram.fastareferencesource");
+        String[] args = new String[]{"gor ../tests/data/external/samtools/cram_query_sorted.cram", "-config", wrongConfigFile.getCanonicalPath()};
+        try {
+            TestUtils.runGorPipeCount(args);
+        } catch (GorResourceException e) {
+            Assert.assertEquals("Reference does not exist.", e.getMessage());
+            Assert.assertTrue(e.getUri().contains("/cram_query_sorted2.fasta"));
+        }
     }
 
     @Test
@@ -130,42 +150,11 @@ public class UTestCram {
         Assert.assertEquals(8, lines.length);
     }
 
-    @Test
-    public void readCramWithChromseqReference() throws IOException {
-
-        File chromseqDirectory = workDir.newFolder("chromseq");
-        fastaFileToChromSeq("../tests/data/external/samtools/cram_query_sorted.fasta", chromseqDirectory.toString());
-
-        File configFile = workDir.newFile("gor-config.txt");
-        FileUtils.writeStringToFile(configFile, "buildPath\t" + chromseqDirectory, Charset.defaultCharset());
-
-        String result = TestUtils.runGorPipe("gor ../tests/data/external/samtools/cram_query_sorted.cram",
-                "-config", configFile.toString());
-        String[] lines = result.split("\n");
-        Assert.assertEquals(8, lines.length);
-    }
-
     private void copyFiles(String baseDirectory, String destinationDirectory, String[] filesToCopy) throws IOException {
         for (String fileName : filesToCopy) {
             File sourceFile = new File(baseDirectory, fileName);
             File destinationFile = new File(destinationDirectory, fileName);
             FileUtils.copyFile(sourceFile, destinationFile);
-        }
-    }
-
-    private void fastaFileToChromSeq(String fastaFile, String chromseqDirectory) throws IOException {
-        List<String> lines = FileUtils.readLines(new File(fastaFile), Charset.defaultCharset());
-        String chromosome = "";
-
-        for (String line : lines) {
-            if (line.startsWith(">")) {
-                chromosome = line.substring(1);
-            } else {
-                if (!StringUtil.isEmpty(chromosome)) {
-                    String fileName = chromosome + ".txt";
-                    FileUtils.writeStringToFile(new File(chromseqDirectory, fileName), line, Charset.defaultCharset(), true);
-                }
-            }
         }
     }
 
