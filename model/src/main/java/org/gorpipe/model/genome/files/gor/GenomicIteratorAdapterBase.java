@@ -117,21 +117,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     }
 
     @Override
-    public TagFilter getTagFilter() {
-        return iterator.getTagFilter();
-    }
-
-    @Override
-    public void setTagFilter(TagFilter tagFilter) {
-        iterator.setTagFilter(tagFilter);
-    }
-
-    @Override
-    public boolean isIncluded(Row r) {
-        return iterator.isIncluded(r);
-    }
-
-    @Override
     public void init(GorSession session) {
         iterator.init(session);
     }

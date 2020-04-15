@@ -486,9 +486,6 @@ public class GorOptions {
         i.init(getSession());
         i.setSourceName(ref.getName());
         i.setTagStatus(columnTags == null ? SourceRef.NO_TAG : ref.analyzeQueryTags(columnTags, insertSource));
-        if (!isNoLineFilter && i.getTagStatus() == SourceRef.POSSIBLE_TAG) {
-            i.setTagFilter(new TagFilter(columnTags, ref.deletedTags, i.getHeader().split("\t").length - 1));
-        }
         i.setSourceAlreadyInserted(ref.sourceAlreadyInserted);
         i.setColnum(i.getHeader().split("\t").length - 2);
         if (chrname != null && !chrname.equals("")) {
@@ -815,21 +812,18 @@ public class GorOptions {
         this.hasLocalDictonaryFile = true;
         this.isDictionaryWithBuckets = gord.isDictionaryWithBuckets();
         final Dictionary.DictionaryLine[] fileList = gord.getFiles().length == 0 && hasTags ? gord.getFallbackLinesForHeader() : gord.getFiles();
-        if (!hasTags && gord.getAnyBucketHasDeletedFile()) {
+        if (!hasTags && gord.getBucketHasDeletedFile()) {
             if (this.columnTags == null) this.columnTags = new HashSet<>(gord.getValidTags());
             else this.columnTags.addAll(gord.getValidTags());
         }
         for (Dictionary.DictionaryLine line : fileList) {
-            subProcessOfProcessDictionary(line, allowBucketAccess, projectContext, alltags,
-                    gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
+            subProcessOfProcessDictionary(line, allowBucketAccess, projectContext, alltags);
         }
     }
 
-    private void subProcessOfProcessDictionary(Dictionary.DictionaryLine dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags) {
+    private void subProcessOfProcessDictionary(Dictionary.DictionaryLine dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags) {
         if (dictionaryLine.sourceInserted) {
-            files.add(new SourceRef(dictionaryLine.fileRef.logical, dictionaryLine.alias, null, null,
-                    dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos,
-                    dictionaryLine.tags, deletedTags, dictionaryLine.sourceInserted,
+            files.add(new SourceRef(dictionaryLine.fileRef.logical, dictionaryLine.alias, null, null, dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos, dictionaryLine.tags, dictionaryLine.sourceInserted,
                     projectContext.securityKey, projectContext.commonRoot));
 
         } else {

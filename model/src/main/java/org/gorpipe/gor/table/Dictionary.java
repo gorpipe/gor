@@ -22,8 +22,6 @@
 
 package org.gorpipe.gor.table;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -117,7 +115,7 @@ public class Dictionary {
     private FileReference dictFileParent = null;
     private Set<String> validTags;    //Set containing all not deleted tags in the dictionary.
     private final boolean hasTags;  //Whether the user has specified any tags to filter the dictionary with.
-    private Multimap<String, String> bucketHasDeletedFile;
+    private boolean bucketHasDeletedFile;
     final static ConcurrentHashMap<String, DictionaryCacheObject> dictCache = new ConcurrentHashMap<>();   //A map from dictionaries to the cache objects.
 
     /**
@@ -135,13 +133,13 @@ public class Dictionary {
         final int[] bucketActiveCount;
         final String[] bucketResetNames; //bucketResetNames[i] = resetFilePath(...).physical of bucket i.
         final Set<String>[] bucketTags; //bucketTags[i] = set of tags in bucket i.
-        final Multimap<String, String> bucketHasDeletedFile;   //Is there any deleted file in a bucket in the dictionary?
+        final boolean bucketHasDeletedFile;   //Is there any deleted file in a bucket in the dictionary?
         final Set<String> validTags;  //Set of all tags which are not deleted.
         final ConcurrentHashMap<String, Pair<DictionaryLine[], Boolean>> tagsToListCache = new ConcurrentHashMap<>();
 
         DictionaryCacheObject(String fileSignature, LinkedHashMap<String, IntArray> tagsToActiveLines, FileReference fileReference, DictionaryLine[] activeDictionaryLines,
                               HashMap<String, Integer> mapBucketIndex, int[] bucketTotalCount, int[] bucketActiveCount, String[] bucketResetNames, Set<String>[] bucketTags,
-                              Multimap<String, String>  bucketHasDeletedFile, Set<String> validTags) {
+                              boolean bucketHasDeletedFile, Set<String> validTags) {
             this.fileSignature = fileSignature;
             this.tagsToActiveLines = tagsToActiveLines;
             this.fileReference = fileReference;
@@ -189,7 +187,6 @@ public class Dictionary {
                     throw e;
                 }
                 this.validTags = cache.validTags;
-                this.bucketHasDeletedFile = cache.bucketHasDeletedFile;
                 final String orderedTags = orderTags(queryTags);
                 final Set<String> badTags = new HashSet<>();
                 final Pair<DictionaryLine[], Boolean> fileListAndMore =
@@ -222,12 +219,8 @@ public class Dictionary {
         return this.validTags;
     }
 
-    public boolean getAnyBucketHasDeletedFile() {
-        return !this.bucketHasDeletedFile.isEmpty();
-    }
-
-    public Collection<String> getBucketDeletedFiles(String bucket) {
-        return this.bucketHasDeletedFile.get(bucket);
+    public boolean getBucketHasDeletedFile() {
+        return this.bucketHasDeletedFile;
     }
 
     public DictionaryLine[] getFiles() {
@@ -271,7 +264,7 @@ public class Dictionary {
         final ArrayList<DictionaryLine> activeDictionaryLines = new ArrayList<>();
         final LinkedHashMap<String, IntArray> tagsToLines = new LinkedHashMap<>();
         final Set<String> validTags = new HashSet<>();
-        final Multimap<String, String> bucketHasDeletedFile = ArrayListMultimap.create(); //This is changed if we find a deleted line with bucket.
+        this.bucketHasDeletedFile = false; //This is changed if we find a deleted line with bucket.
         if(Files.exists(gordPath)) {
             try (final Stream<String> stream = Files.newBufferedReader(gordPath).lines()) {
                 stream.map(String::trim)
@@ -279,7 +272,7 @@ public class Dictionary {
                         .map(line -> parseDictionaryLine(line, this.dictFileParent))
                         .filter(Objects::nonNull)
                         .forEach(dictLine ->
-                                processLineForCache(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
+                                processLineForCache(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, dictLine)
                         );
             } catch (IOException ex) {
                 throw new GorResourceException("Error Initializing Query. Can not open file " + path, path, ex);
@@ -287,10 +280,10 @@ public class Dictionary {
         }
         return new DictionaryCacheObject(uniqueId, tagsToLines, this.dictFileParent, activeDictionaryLines.toArray(new DictionaryLine[0]),
                 bucketToIdx, bucketTotalCounts.toArray(), bucketActiveCount.toArray(), resetBucketNames.toArray(new String[0]),
-                bucketTagsList.toArray(new Set[0]), bucketHasDeletedFile, validTags);
+                bucketTagsList.toArray(new Set[0]), this.bucketHasDeletedFile, validTags);
     }
 
-    private void processLineForCache(ArrayList<Set<String>> bucketTagsList, ArrayList<String> resetBucketNames, IntArray bucketTotalCounts, IntArray bucketActiveCount, HashMap<String, Integer> bucketToIdx, FileReference bucketsParent, ArrayList<DictionaryLine> activeDictionaryLines, LinkedHashMap<String, IntArray> tagsToLines, Set<String> validTags, Multimap<String, String> bucketHasDeletedFile, DictionaryLine dictLine) {
+    private void processLineForCache(ArrayList<Set<String>> bucketTagsList, ArrayList<String> resetBucketNames, IntArray bucketTotalCounts, IntArray bucketActiveCount, HashMap<String, Integer> bucketToIdx, FileReference bucketsParent, ArrayList<DictionaryLine> activeDictionaryLines, LinkedHashMap<String, IntArray> tagsToLines, Set<String> validTags, DictionaryLine dictLine) {
         if (dictLine.bucket != null) {
             final int bucketIdx = bucketToIdx.computeIfAbsent(dictLine.bucket, bucket -> {
                 resetBucketNames.add(resetFilePath(bucket, bucket.contains("://") ? new FileReference("") : bucketsParent).physical);
@@ -301,7 +294,7 @@ public class Dictionary {
             });
             bucketTotalCounts.increment(bucketIdx);
             if (dictLine.isDeleted) {
-                bucketHasDeletedFile.put(Paths.get(dictLine.bucket).getFileName().toString(), dictLine.alias);
+                this.bucketHasDeletedFile = true;
                 bucketTagsList.get(bucketIdx).add(dictLine.alias);
             } else {
                 bucketActiveCount.increment(bucketIdx);
@@ -333,7 +326,7 @@ public class Dictionary {
         this.dictFileParent = dictFileParent;
         final FileReference bucketsParent = getBucketsPath(dictFileParent);
         final ArrayList<DictionaryLine> activeDictionaryLines = new ArrayList<>();
-        this.bucketHasDeletedFile = ArrayListMultimap.create();
+        this.bucketHasDeletedFile = false; //This is changed in subProcess if we find a deleted line with bucket.
         final ArrayList<Set<String>> bucketTagsList = new ArrayList<>();
         try (final Stream<String> lines = new BufferedReader(new FileReader(gordPath.toFile())).lines()) {
             numberOfLinesWithoutBuckets = (int) lines.map(String::trim)
@@ -351,7 +344,7 @@ public class Dictionary {
                                 });
                                 bucketTotalCounts.increment(bucketIdx);
                                 if (dictLine.isDeleted) {
-                                    bucketHasDeletedFile.put(Paths.get(dictLine.bucket).getFileName().toString(), dictLine.alias);
+                                    this.bucketHasDeletedFile = true;
                                     bucketTagsList.get(bucketIdx).add(dictLine.alias);
                                 } else {
                                     bucketTagsList.get(bucketIdx).addAll(dictLine.tags);
