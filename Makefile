@@ -74,7 +74,7 @@ create-release-branch-old: update-master      ## DEPRECATED: 	Create a release b
 	git checkout -b release/v${BRANCH_VERSION}
 
 	./gradlew allDeps --write-locks
-	find . -name *.lockfile | grep -v '/build/' | xargs git add
+	find . -name '*.lockfile' | grep -v '/build/' | xargs git add
 	git commit -m "Creating release branch ${BRANCH_VERSION}, updating dependency locking"
 
 	git push -u origin release/v${BRANCH_VERSION}
@@ -97,7 +97,7 @@ release-old:  ## DEPRECATED: Update version on new feature branch off the releas
 	git add VERSION
 
 	./gradlew allDeps --update-locks com.wuxinextcode.gor:*
-	find . -name *.lockfile | grep -v '/build/' | xargs git add
+	find . -name '*.lockfile' | grep -v '/build/' | xargs git add
 
 	git commit -m "Created new release ${NEW_VERSION} on ${BRANCH_VERSION}."
 	git push
@@ -117,7 +117,7 @@ create-release-branch: update-master  ## Create a release branch, assumes BRANCH
 
 	# Create the library locks
 	./gradlew allDeps --write-locks
-	find . -name *.lockfile | grep -v '/build/' | xargs git add
+	find . -name '*.lockfile' | grep -v '/build/' | xargs git add
 	git commit -m "Creating release branch ${BRANCH_VERSION}, updating dependency locking"
 	git push -u origin release/v${BRANCH_VERSION}
 
@@ -159,6 +159,12 @@ release-from-release:  ## Release from the given release branch.  Assumes BRANCH
 	git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
 	git push origin $(CURRENT_TAG_VERSION)
 
+release-from-master:  ## Release from master.
+	git checkout master
+	git pull
+
+	git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
+	git push origin $(CURRENT_TAG_VERSION)
 
 #
 # Release directly from main.
