@@ -426,7 +426,7 @@ public class UTestTableLock {
         String lockName = "LockRenew";
         BaseTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
 
-        long reserveTime = 400;
+        long reserveTime = 1000;
 
         if (drlp != null) {
             drlp.set(null, Duration.ofMillis(reserveTime));
