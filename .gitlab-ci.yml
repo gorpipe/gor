@@ -96,13 +96,14 @@ integrationtest:
   script: ./gradlew --continue integrationTest
 
 
-# This codequality block is needed to work around https://gitlab.com/gitlab-org/gitlab/issues/12274
+# This code quality block is needed to work around https://gitlab.com/gitlab-org/gitlab/issues/12274
 code_quality:
   extends:
     - .on-releasable-or-release-branch-only
   stage: test
-  tags:
-    - iceland
+  # Code quality fails on the iceland runners!
+  #tags:       
+  #  - iceland
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
