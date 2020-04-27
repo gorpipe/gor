@@ -33,12 +33,13 @@ class Prefix extends CommandInfo("PREFIX",
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
     val colName = iargs(0)
     val prefix = iargs(1)
-    val colNums = columnsFromHeader(colName, forcedInputHeader, executeNor)
+    val colNums = columnsFromHeader(colName, forcedInputHeader, executeNor).toSet
+
     var cnum = 0
     val oCols = forcedInputHeader.split("\t")
     val nCols = oCols.map(cn => {
       cnum += 1
-      if (cnum > 2 && colNums.exists(x => oCols(x) == cn)) prefix + "_" + cn else cn
+      if (cnum > 2 && colNums.contains(cnum - 1)) prefix + "_" + cn else cn
     })
 
     CommandParsingResult(null, validHeader(nCols.mkString("\t")))
