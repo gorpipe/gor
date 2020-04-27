@@ -215,6 +215,10 @@ public class MergeIterator extends GenomicIterator {
     private void addNextToQueue(GenomicIterator it) {
         while (it.hasNext()) {
             Row r = it.next();
+            if (r == null) {
+                String msg = String.format("Iterator next returned null after hasNext returned true (%s, %s)", it.getClass().getName(), it.getSourceName());
+                throw new GorSystemException(msg, null);
+            }
             if (insertSource && !it.isSourceAlreadyInserted()) {
                 insertOptionalSourceColumn(r, it.getSourceName());
             }

@@ -55,7 +55,6 @@ import java.util.List;
  * <li><b>-ref</b> option in gor</li>
  * <li>File at cram location ending with <i>cram.ref</i> containing a reference to a fasta file or a chromseq directory</li>
  * <li>Fasta file through gor option <i>gor.driver.cram.fastareferencesource</i></li>
- * <li>Chromseq as defined by the gor config</li>
  * </ol>
  * <p>Cram is not fully compatible with BAM as it does not save the MD and NM option. Those are though easily generated
  * from the BAM row. To enable the generation of these option set the <i>gor.driver.cram.generatemissingattributes</i>
@@ -232,26 +231,13 @@ public class CramIterator extends BamIterator {
         file = getReferenceFromReferenceLinkFile(file);
         file = getReferenceFromGorConfig(file, root);
         file = getReferenceFromGorOptions(file);
-        file = getChromSeqReference(file);
 
         if (!file.exists()) {
             throw new GorResourceException("Reference does not exist.", file.toString());
         }
 
-        if (file.isDirectory()) {
-            // This should be a chromSeq reference folder
-            return createChromSeqReference(file.toString());
-        } else {
-            // This reference should be fasta but we let the htsjdk library decide
-            return createFileReference(file.toString());
-        }
-    }
-
-    private File getChromSeqReference(File file) {
-        if (!file.exists() && !StringUtil.isEmpty(buildPath)) {
-            return new File(buildPath);
-        }
-        return file;
+        // This reference should be fasta but we let the htsjdk library decide
+        return createFileReference(file.toString());
     }
 
     private File getReferenceFromGorOptions(File file) {
@@ -295,11 +281,6 @@ public class CramIterator extends BamIterator {
         String referenceKey = FilenameUtils.removeExtension(FilenameUtils.getBaseName(ref));
         referenceSequenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(new File(ref));
         return new SharedFastaReferenceSource(referenceSequenceFile, referenceKey);
-    }
-
-    private CRAMReferenceSource createChromSeqReference(String ref) {
-        String referenceKey = FilenameUtils.getBaseName(ref);
-        return new SharedChromSeqReferenceSource(ref, referenceKey);
     }
 
 }

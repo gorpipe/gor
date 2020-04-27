@@ -99,6 +99,9 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         if (builder.uniqueTags != null) {
             setUniqueTags(builder.uniqueTags);
         }
+        if(builder.securityContext != null) {
+            setSecurityContext(securityContext);
+        }
     }
 
     /**
@@ -118,7 +121,6 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.historyDir = this.folderPath.resolve(HISTORY_DIR_NAME);
         this.tableLog = new TableLog(this.historyDir);
 
-        this.securityContext = securityContext;
         this.tableEntries = createTableEntries(this.getPath());
         this.header = new TableHeader();
 
@@ -192,6 +194,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     public String getSecurityContext() {
         return securityContext;
+    }
+
+    public void setSecurityContext(String securityContext) {
+        this.securityContext = securityContext;
     }
 
     /**

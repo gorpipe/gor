@@ -543,7 +543,6 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
             readerThread.stopProcessing("Stop processing closing source");
             try {
                 readerThread.join(2000);
-                closeSourceIterator();
             } catch (InterruptedException ie) {
                 log.warn("Reader thread join interrupted");
                 Thread.currentThread().interrupt();
