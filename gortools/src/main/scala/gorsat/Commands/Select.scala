@@ -42,10 +42,11 @@ object Select {
     var useCols = (if (executeNor) List(0,1) else Nil) ::: columnsFromHeader(allArgs,forcedInputHeader,executeNor,ignoreNonExisting)
 
     var pickCols = useCols.map( _ + 1 )
+    val pickColsSet = pickCols.toSet
 
     if (hasOption(args,"-s")) {
       val colNum = forcedInputHeader.split("\t",-1).length
-      pickCols = List(1,2) ::: (Range(3,colNum+1).toList filterNot (pickCols contains))
+      pickCols = List(1,2) ::: (Range(3,colNum+1).toList filterNot (pickColsSet contains))
       useCols = pickCols.map( _ - 1 )
     }
 
@@ -53,7 +54,7 @@ object Select {
       val colNames = forcedInputHeader.split("\t",-1)
       val colNum = colNames.length
       if (pickCols.length < 3) pickCols = List(1,2)
-      val sortCols = Range(1,colNum+1).toList filterNot (pickCols contains)
+      val sortCols = Range(1,colNum+1).toList filterNot (pickColsSet contains)
       pickCols = pickCols ::: sortCols.map(x => (x,colNames(x-1))).sortWith( (x,y) => x._2.toUpperCase < y._2.toUpperCase ).map(x => x._1)
       useCols = pickCols.map( _ - 1 )
     }
