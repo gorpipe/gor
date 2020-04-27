@@ -100,7 +100,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             setUniqueTags(builder.uniqueTags);
         }
         if(builder.securityContext != null) {
-            setSecurityContext(securityContext);
+            setSecurityContext(builder.securityContext);
         }
     }
 
