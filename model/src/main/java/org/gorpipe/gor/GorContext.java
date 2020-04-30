@@ -122,7 +122,7 @@ public class GorContext {
         return nestedContexts.toArray(new GorContext[0]);
     }
 
-    public GorContext createNestedContext(String name, String signature, String cmd) {
+    public synchronized GorContext createNestedContext(String name, String signature, String cmd) {
         String sig = signature != null ? signature : String.format("%s.nested_%02d", this.signature, nestedContexts.size());
         String nestedName = name != null ? name : String.format("%s.nested_%02d", this.name, nestedContexts.size());
         GorContext gorContext = new GorContext(session, this, sig, cmd, nestedName);
