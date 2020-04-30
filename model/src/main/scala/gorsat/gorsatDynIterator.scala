@@ -281,8 +281,14 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
 
   class DynamicNorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) with LineIterator {
     override def nextLine : String = { super.next().otherCols }
-    override def getLineHeader : String = { super.getHeader.split("\t").slice(2,1000).mkString("\t") }
+    override def getLineHeader : String = {
+      val rawHeader = super.getHeader
+      val firstTabIndex = rawHeader.indexOf('\t')
+      val secondTabIndex = rawHeader.indexOf('\t', firstTabIndex + 1)
+      rawHeader.substring(secondTabIndex + 1)
+    }
   }
+
   class DynamicNorGorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) {
     override def next() : Row = { val x = super.next(); RowObj("chr1",0,x.toString) }
     override def getHeader : String = { "ChromNOR\tPosNOR\t"+super.getHeader }

@@ -339,7 +339,7 @@ public class TestUtils {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server);
+        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, null);
         return factory.create();
     }
 
