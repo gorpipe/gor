@@ -321,29 +321,35 @@ public final class ExceptionUtilities {
         GorException exception = null;
         JSONParser parser = new JSONParser();
 
-        try {
-            JSONObject obj = (JSONObject) parser.parse(error);
-            if (obj.containsKey(ERROR_TYPE)) {
-                String errorType = (String) obj.get(ERROR_TYPE);
+        if (error == null || error.isEmpty()) {
+            exception =  new GorSystemException("Got error with null or empty json", null);
+        } else {
+            // Asssume we have json.
+            try {
+                JSONObject obj = (JSONObject) parser.parse(error);
+                if (obj.containsKey(ERROR_TYPE)) {
+                    String errorType = (String) obj.get(ERROR_TYPE);
 
-                if (errorType.startsWith("GorParsingException")) {
-                    exception = createGorParsingExceptionFromJSON(obj);
-                } else if (errorType.startsWith("GorDataException")) {
-                    exception = createGorDataExceptionFromJSON(obj);
-                } else if (errorType.startsWith("GorResourceException")) {
-                    exception = createGorResourceException(obj);
-                } else {
-                    exception = createGorSystemException(obj);
+                    if (errorType.startsWith("GorParsingException")) {
+                        exception = createGorParsingExceptionFromJSON(obj);
+                    } else if (errorType.startsWith("GorDataException")) {
+                        exception = createGorDataExceptionFromJSON(obj);
+                    } else if (errorType.startsWith("GorResourceException")) {
+                        exception = createGorResourceException(obj);
+                    } else {
+                        exception = createGorSystemException(obj);
+                    }
+
+                    exception.requestID = getStringValue(obj, REQUEST_ID, "");
+
+                    if (obj.containsKey(STACK_TRACE)) {
+                        setStackTrace(exception, obj);
+                    }
                 }
-
-                exception.requestID = getStringValue(obj, REQUEST_ID, "");
-
-                if (obj.containsKey(STACK_TRACE)) {
-                    setStackTrace(exception, obj);
-                }
+            } catch (Exception e) {
+                exception = new GorSystemException("Got error: '" + error + "'\n" +
+                        "Trying to parse this error as json error resulted in an exception.", e);
             }
-        } catch (Exception e) {
-            throw new GorSystemException("Failed to create gor exception from JSON", e);
         }
 
         return exception;

@@ -27,6 +27,11 @@ variables:
       - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
       - $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
 
+.on-semver-tag-only:
+  only:
+    variables:
+      - $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
+
 
 stages:
   - build
@@ -39,25 +44,10 @@ before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
 
-build:
-  stage: build
+.build_with_cache:
   image: "$JAVA_BUILDER_IMAGE"
-  script: ./gradlew assemble
-  tags:
-    - iceland
   only:
     - branches
-  cache:
-    key: "$CI_COMMIT_REF_NAME"
-    policy: pull-push
-    paths:
-      - "build"
-      - "**/build"
-      - ".gradle"
-
-
-.build_cache:
-  extends: build
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
@@ -66,12 +56,23 @@ build:
       - "**/build"
       - ".gradle"
 
+build:
+  extends: .build_with_cache
+  stage: build
+  script: ./gradlew classes
+  tags:
+    - iceland
+  cache:
+    policy: pull-push
+
 
 .test:
-  extends: .build_cache
+  extends: .build_with_cache
   stage: test
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - iceland
   artifacts:
     reports:
       junit:
@@ -113,7 +114,7 @@ code_quality:
 
 license_management:
   extends:
-    - .build_cache
+    - .build_with_cache
     - .on-releasable-or-release-branch-only
   stage: test
   variables:
@@ -138,10 +139,20 @@ dependency_scanning:
 
 publish:
   extends:
-    - .build_cache
+    - .build_with_cache
     - .on-releasable-or-semver-tag-only
   stage: publish
   script: ./gradlew publish -x test -x slowTest -x integrationTest
+  tags:
+    - iceland
+
+
+artifactory_publish:
+  extends:
+    - .build_with_cache
+    - .on-semver-tag-only
+  stage: publish
+  script: ./gradlew -Partifactory_repo=libs-staging-local -Partifactory_user=${ARTIFACTORY_USER} -Partifactory_password=${ARTIFACTORY_PASSWORD} artifactoryPublish -x test -x slowTest -x integrationTest
 
 
 gor-services:

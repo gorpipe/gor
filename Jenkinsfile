@@ -119,7 +119,7 @@ node {
                             doPublish = false
                         }
                     }
-
+                  /* Skip publishing and tagging:  now done in gitlab.
                     // Deploy to Artifactory if everything is ok
                     if (doPublish) {
                         echo "Publishing " + version + " to " + publishTo + " in Artifactory"
@@ -136,9 +136,8 @@ node {
                                 [$class: 'StringParameterValue', name: 'message', value: 'Tagging with version from Jenkins2'],
                                 [$class: 'StringParameterValue', name: 'repo', value: 'gor']
                         ]
-
-                         */
                     }
+                    */
                 }
 
             }
