@@ -59,7 +59,7 @@ before_script:
 build:
   extends: .build_with_cache
   stage: build
-  script: ./gradlew assemble
+  script: ./gradlew classes
   tags:
     - iceland
   cache:
