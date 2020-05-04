@@ -113,4 +113,10 @@ public class ArgumentType {
     public static final ArgumentType GENE_LIST = new ArgumentType(GENE_LIST_ORDINAL, "GENE_LIST", 250);
     public static final int CHECK_ITEMS_ORDINAL = 14;
     public static final ArgumentType CHECK_ITEMS = new ArgumentType(CHECK_ITEMS_ORDINAL, "CHECK_ITEMS", 250);
+
+    /**
+     * For creating a selection dialog from a nor/gor query
+     */
+    public static final int QUERY_ORDINAL = 15;
+    public static final ArgumentType QUERY = new ArgumentType(QUERY_ORDINAL, "QUERY", 250);
 }

@@ -214,7 +214,7 @@ public abstract class Argument extends AbstractListBean {
         return defaultValue;
     }
 
-    private void checkAllowed(Object theValue) {
+    protected void checkAllowed(Object theValue) {
         if (theValue != null && !allowedValues.isEmpty() && valuesPath == null && !allowedValues.contains(theValue)) {
             throw new RuntimeException("Invalid value: " + theValue + " for argument " + argDescr.name);
         }
