@@ -100,6 +100,8 @@ class PlinkThread implements Callable<Boolean> {
             plinkArgList.add("--covar");
             plinkArgList.add(args.covar);
             if (args.cvs) plinkArgList.add("--covar-variance-standardize");
+        } else {
+            plinkArgList.add("allow-no-covars");
         }
         if (args.vs) {
             plinkArgList.add("--variance-standardize");
