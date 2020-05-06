@@ -134,7 +134,8 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     calcCompiler.setColumnNamesAndTypes(colNames, colTypes)
 
     if (colNames.length != colTypes.length) {
-      throw new GorParsingException("Error in column names - column names and type arrays differ in size: ")
+      val msg = "Error in column names - column names and type arrays differ in size"
+      throw new GorSystemException(msg, null)
     }
     val colSymbol = "#"
 

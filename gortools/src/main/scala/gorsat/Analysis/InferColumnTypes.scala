@@ -24,6 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import gorsat.Commands.RowHeader
+import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.model.genome.files.gor.Row
 
 /**
@@ -71,7 +72,7 @@ case class InferColumnTypes() extends Analysis {
     hasAnalyzedTypes = true
 
     val outgoingHeader = if(columnTypes != null) {
-      val columnNames = if(true /*rowHeader == null*/) {
+      val columnNames = if(rowHeader == null) {
         val columnNames = new Array[String](columnTypes.length)
         for(ix <- 1 to columnTypes.length) {
           columnNames(ix-1) = s"Col$ix"
@@ -79,6 +80,9 @@ case class InferColumnTypes() extends Analysis {
         columnNames
       } else {
         rowHeader.columnNames
+      }
+      if (columnNames.length != columnTypes.length) {
+        throw new GorDataException("Row doesn't match header")
       }
       RowHeader(columnNames, columnTypes)
     } else {
@@ -140,22 +144,30 @@ case class InferColumnTypes() extends Analysis {
 
   private def isColumnAllEmpty(c: Int, rowBuff: Array[Row], bCount: Int): Boolean = {
     for(i <- 0 until bCount) {
-      if(rowBuff(i).colAsString(c).length() > 0) return false
+      val row = rowBuff(i)
+      if(row.numCols() != columnCount) {
+        throw new GorDataException("Row has different number of columns than header suggests", row.toString)
+      }
+      if(row.colAsString(c).length() > 0) return false
     }
     true
   }
 
   private def isColumnAllIntOrEmpty(c: Int, rowBuff: Array[Row], bCount: Int): Boolean = {
     for(i <- 0 until bCount) {
-      if(rowBuff(i).colAsString(c).length() > 0) {
+      val row = rowBuff(i)
+      if(row.numCols() != columnCount) {
+        throw new GorDataException("Row has different number of columns than header suggests", row.toString)
+      }
+      if(row.colAsString(c).length() > 0) {
         try {
-          val d = rowBuff(i).colAsLong(c)
+          val d = row.colAsLong(c)
           if(d > Int.MaxValue) return false
           if(d < Int.MinValue) return false
 
           // colAsLong doesn't behave the same as colAsInt wrt NaN - work around that
           // by calling colAsInt here to have it throw exception
-          rowBuff(i).colAsInt(c)
+          row.colAsInt(c)
         } catch {
           case e: Exception => return false
         }
@@ -166,9 +178,13 @@ case class InferColumnTypes() extends Analysis {
 
   private def isColumnAllLongOrEmpty(c: Int, rowBuff: Array[Row], bCount: Int): Boolean = {
     for(i <- 0 until bCount) {
-      if(rowBuff(i).colAsString(c).length() > 0) {
+      val row = rowBuff(i)
+      if(row.numCols() != columnCount) {
+        throw new GorDataException("Row has different number of columns than header suggests", row.toString)
+      }
+      if(row.colAsString(c).length() > 0) {
         try {
-          val d = rowBuff(i).colAsLong(c)
+          val d = row.colAsLong(c)
         } catch {
           case e: Exception => return false
         }
@@ -179,9 +195,13 @@ case class InferColumnTypes() extends Analysis {
 
   private def isColumnAllDoubleOrEmpty(c: Int, rowBuff: Array[Row], bCount: Int): Boolean = {
     for(i <- 0 until bCount) {
-      if(rowBuff(i).colAsString(c).length() > 0) {
+      val row = rowBuff(i)
+      if(row.numCols() != columnCount) {
+        throw new GorDataException("Row has different number of columns than header suggests", row.toString)
+      }
+      if(row.colAsString(c).length() > 0) {
         try {
-          val d = rowBuff(i).colAsDouble(c)
+          val d = row.colAsDouble(c)
         } catch {
           case e: Exception => return false
         }

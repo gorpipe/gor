@@ -48,6 +48,10 @@ public class GorDataException extends GorUserException {
         this(message, columnNumber, header, row, null);
     }
 
+    public GorDataException(String message, String row) {
+        this(message, 0, "", row, null);
+    }
+
     public GorDataException(String message, int columnNumber, String header, String row, Throwable cause) {
         super(message, cause);
         this.header = header;
