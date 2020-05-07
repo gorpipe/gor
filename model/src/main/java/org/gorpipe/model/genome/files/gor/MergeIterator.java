@@ -23,6 +23,7 @@
 package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorContext;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
@@ -46,18 +47,13 @@ public class MergeIterator extends GenomicIterator {
      * from the source where it came from.
      */
     private PriorityQueue<RowFromIterator> queue;
-    private String[] header;
     /**
      * This flag controls whether a column should be added to each row with the name
      * of the of the source. Note that the source may already have the source column
      * added.
      */
     private boolean insertSource;
-    /**
-     * An optional tag filter that is used to look at the source column and only
-     * allow rows that come from a source listed in the tag filter.
-     */
-    private TagFilter tagFilter;
+
     /**
      * Set once queue has been primed.
      */
@@ -78,7 +74,6 @@ public class MergeIterator extends GenomicIterator {
         gorMonitor = gm;
 
         getHeaderFromSources(options);
-        prepareTagFilter(options);
     }
 
     @Override
@@ -89,7 +84,7 @@ public class MergeIterator extends GenomicIterator {
     }
 
     private static String[] getHeaderWithOptionalSourceColumn(GorOptions options, GenomicIterator i) {
-        String[] header = i.getHeader();
+        String[] header = i.getHeader().split("\t");
         if (options.insertSource) {
             String name = getSourceColumnName(options);
             if (i.isSourceAlreadyInserted()) {
@@ -104,11 +99,6 @@ public class MergeIterator extends GenomicIterator {
 
     private static String getSourceColumnName(GorOptions options) {
         return options.sourceColName != null ? options.sourceColName : DEFAULT_SOURCE_COLUMN_NAME;
-    }
-
-    @Override
-    public String[] getHeader() {
-        return header;
     }
 
     @Override
@@ -155,7 +145,7 @@ public class MergeIterator extends GenomicIterator {
 
     @Override
     public boolean next(Line line) {
-        throw new GorException("next filling Line should not be used from MergeIterator", "");
+        throw new GorSystemException("next filling Line should not be used from MergeIterator", null);
     }
 
     @Override
@@ -169,16 +159,18 @@ public class MergeIterator extends GenomicIterator {
         String firstName = "";
         for (GenomicIterator it : this.sources) {
             String[] headerWithOptionalSourceColumn = getHeaderWithOptionalSourceColumn(options, it);
-            if (header == null) {
-                header = headerWithOptionalSourceColumn;
-                setColnum(header.length - 2);
+            String header = getHeader();
+            if (header.length() == 0) {
+                setHeader(String.join("\t",headerWithOptionalSourceColumn));
+                setColnum(headerWithOptionalSourceColumn.length - 2);
                 firstName = it.getSourceName();
             } else {
-                if (!areHeadersEqual(header, headerWithOptionalSourceColumn)) {
+                String[] headerSplit = header.split("\t");
+                if (!areHeadersEqual(headerSplit, headerWithOptionalSourceColumn)) {
                     String message = "Error initializing query: Header for " + it.getSourceName() + " ("
-                            +  String.join(",", headerWithOptionalSourceColumn)
+                            + String.join(",", headerWithOptionalSourceColumn)
                             + ") is different from the first opened file "
-                            + firstName + " (" + String.join(",", header) + ")";
+                            + firstName + " (" + String.join(",", headerSplit) + ")";
                     throw new GorDataException(message);
                 }
             }
@@ -198,29 +190,12 @@ public class MergeIterator extends GenomicIterator {
         return true;
     }
 
-    private void prepareTagFilter(GorOptions options) {
-        if (!options.isNoLineFilter && options.columnTags != null && hasPossibleTag()) {
-            final int sourceColIx = sources.get(0).getHeader().length - 1;
-            tagFilter = new TagFilter(options.columnTags, sourceColIx);
-        }
-    }
-
-    private boolean hasPossibleTag() {
-        for (GenomicIterator it : sources) {
-            final byte tagStatus = it.getTagStatus();
-            if (tagStatus == SourceRef.POSSIBLE_TAG) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void primeQueue(List<GenomicIterator> sources) {
         isPrimed = true;
         clearQueue();
         int index = 0;
         for (GenomicIterator it : sources) {
-            if(gorMonitor != null && gorMonitor.isCancelled()) {
+            if (gorMonitor != null && gorMonitor.isCancelled()) {
                 return;
             }
             it.setSourceIndex(index);
@@ -240,26 +215,23 @@ public class MergeIterator extends GenomicIterator {
     private void addNextToQueue(GenomicIterator it) {
         while (it.hasNext()) {
             Row r = it.next();
+            if (r == null) {
+                String msg = String.format("Iterator next returned null after hasNext returned true (%s, %s)", it.getClass().getName(), it.getSourceName());
+                throw new GorSystemException(msg, null);
+            }
             if (insertSource && !it.isSourceAlreadyInserted()) {
                 insertOptionalSourceColumn(r, it.getSourceName());
             }
-            if (isIncluded(r)) {
+            if (it.isIncluded(r)) {
                 queue.add(new RowFromIterator(r, it));
                 break;
             }
         }
     }
 
-    private boolean isIncluded(Row r) {
-        boolean isIncluded = true;
-        if (tagFilter != null) {
-            isIncluded = tagFilter.isIncluded(r);
-        }
-        return isIncluded;
-    }
-
     private void insertOptionalSourceColumn(Row r, String s) {
-        if(r.numCols() == header.length) {
+        String[] header = getHeader().split("\t");
+        if (r.numCols() == header.length) {
             r.setColumn(header.length - 3, s);
         } else {
             r.addSingleColumnToRow(s);

@@ -33,7 +33,7 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
   protected var posSet: Boolean = false
   protected var mustReCheck: Boolean = true
 
-  def hasNext: Boolean = {
+  override def hasNext: Boolean = {
     if (!mustReCheck) return myHasNext
     mustReCheck = false
     if (theIterator.hasNext) {
@@ -55,7 +55,7 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
     }
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {
+  override def setPosition(seekChr: String, seekPos: Int) {
     //	val e = new Exception; e.printStackTrace
     posSet = true
     mustReCheck = true

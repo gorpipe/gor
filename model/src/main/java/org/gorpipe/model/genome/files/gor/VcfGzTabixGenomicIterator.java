@@ -54,7 +54,6 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
     private ChrNameSystem chrNameSystem;
 
     private int[] columns; // Source columns to include
-    private String[] filteredHeader = null;
     GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
 
     @Override
@@ -87,7 +86,7 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
     }
 
     private void setColumns(int[] cols) throws IOException {
-        String line = null;
+        String line;
         while ((line = reader.readLine()) != null && line.startsWith("##")) {
             // Read all extra header lines
         }
@@ -106,18 +105,13 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
                 this.columns[i - 2] = cols[i] - 2;
                 newheader[i] = header[cols[i]];
             }
-            filteredHeader = newheader;
+            setHeader(String.join("\t",newheader));
             linebuf = new Line(totalExtraCols);
         } else {
             columns = null;
             linebuf = null;
-            filteredHeader = header;
+            setHeader(String.join("\t",header));
         }
-    }
-
-    @Override
-    public String[] getHeader() {
-        return filteredHeader;
     }
 
     @Override

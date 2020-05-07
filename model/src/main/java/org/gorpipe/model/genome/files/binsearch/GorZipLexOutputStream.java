@@ -370,9 +370,9 @@ public class GorZipLexOutputStream extends OutputStream {
     private void writeCachedData() throws IOException {
         writeHeader();
         Arrays.stream(this.cachedOutput, 0, this.cachedOutputIdx).parallel().forEach(bufferInfo -> {
+            int len = this.useZStd ? zipItZStd(bufferInfo, compressionLevel) : zipItZLib(bufferInfo, compressionLevel);
             byte[] buffer = bufferInfo.block;
             byte[] zipBuffer = bufferInfo.zipBuffer;
-            int len = this.useZStd ? zipItZStd(bufferInfo, compressionLevel) : zipItZLib(bufferInfo, compressionLevel);
             int siz = base64 ? base64Length(len, true) : base128Length(len);
             if( buffer.length < siz ) {
                 int newLen = buffer.length;

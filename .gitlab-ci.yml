@@ -1,86 +1,169 @@
+#
+# Gitlab build file for GOR.
+#
+
 variables:
+  JAVA_BUILDER_IMAGE: nextcode/builderimg-java:openjdk8
   GIT_SUBMODULE_STRATEGY: none
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
+  RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
-cache:
-  key: "$CI_COMMIT_REF_NAME"
-  policy: pull
-  paths:
-    - "*/build/classes"
-    - "*/*/build/classes"
-    - "*/*/*/build/classes"
-    - ".gradle/wrapper"
-    - ".gradle/cache"
+
+.on-releasable-branch-only:
+  only:
+    variables:
+      - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
+
+.on-releasable-or-release-branch-only:
+  only:
+    variables:
+      - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
+      - $CI_COMMIT_REF_NAME =~ /^release\/v(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+
+.on-releasable-or-semver-tag-only:
+  only:
+    variables:
+      - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
+      - $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
+
+.on-semver-tag-only:
+  only:
+    variables:
+      - $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
+
 
 stages:
-  - "build and test"
-  - checks
+  - build
+  - test
+  - publish
+  - trigger-cross-projects
 
-include:
-  - template: Jobs/Code-Quality.gitlab-ci.yml
-  - template: Security/License-Management.gitlab-ci.yml
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
 
-buildtest:
-  stage: "build and test"
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
 
-  image: nextcode/builderimg-java:latest
 
-  tags:
-    - iceland
-
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
-
-  before_script:
-    - ./gradlew -v
-
-  script: ./gradlew test slowTest integrationTest
-
+.build_with_cache:
+  image: "$JAVA_BUILDER_IMAGE"
+  only:
+    - branches
   cache:
     key: "$CI_COMMIT_REF_NAME"
-    policy: pull-push
+    policy: pull
     paths:
-      - "*/build/classes"
-      - "*/*/build/classes"
-      - "*/*/*/build/classes"
-      - ".gradle/wrapper"
-      - ".gradle/cache"
+      - "build"
+      - "**/build"
+      - ".gradle"
 
+build:
+  extends: .build_with_cache
+  stage: build
+  script: ./gradlew classes
+  tags:
+    - iceland
+  cache:
+    policy: pull-push
+
+
+.test:
+  extends: .build_with_cache
+  stage: test
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  tags:
+    - iceland
   artifacts:
     reports:
       junit:
         - "*/*/*/*/TEST-*.xml"
         - "*/*/*/*/*/TEST-*.xml"
+        # Seems like ** does not work properly (even though it is used in the Gitlab docutmentation)
+        #- "**/build/test-results/test/**/TEST-*.xml"
 
-# This codequality block is needed to work around https://gitlab.com/gitlab-org/gitlab/issues/12274
+
+unittest:
+  extends: .test
+  script: ./gradlew --continue test
+
+
+slowtest:
+  extends: .test
+  script: ./gradlew --continue slowTest
+
+
+integrationtest:
+  extends: .test
+  script: ./gradlew --continue integrationTest
+
+
+# This code quality block is needed to work around https://gitlab.com/gitlab-org/gitlab/issues/12274
 code_quality:
-  stage: checks
-  
-  variables:
-    GIT_SUBMODULE_STRATEGY: none
-
+  extends:
+    - .on-releasable-or-release-branch-only
+  stage: test
+  # Code quality fails on the iceland runners!
+  #tags:       
+  #  - iceland
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
-    
     paths: [gl-code-quality-report.json]
     expire_in: 1 week
 
-license_management:
-  stage: checks
 
+license_management:
+  extends:
+    - .build_with_cache
+    - .on-releasable-or-release-branch-only
+  stage: test
   variables:
-    # There is no need to run tests or generate sphinx documentation for license management 
+    # There is no need to run tests or generate sphinx documentation for license management
     # analysis, however, the license management plugin calls the build task so we have to manually
     # disable tests and documentation generation.
     GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
-    GIT_SUBMODULE_STRATEGY: none
+
 
 dependency_scanning:
-  stage: checks
-
+  stage: test
+  tags:
+    - iceland
+  variables:
+    # There is no need to run tests or generate sphinx documentation for license management
+    # analysis, however, the license management plugin calls the build task so we have to manually
+    # disable tests and documentation generation.
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
   artifacts:
     paths: [gl-dependency-scanning-report.json]
+
+
+publish:
+  extends:
+    - .build_with_cache
+    - .on-releasable-or-semver-tag-only
+  stage: publish
+  script: ./gradlew publish -x test -x slowTest -x integrationTest
+  tags:
+    - iceland
+
+
+artifactory_publish:
+  extends:
+    - .build_with_cache
+    - .on-semver-tag-only
+  stage: publish
+  script: ./gradlew -Partifactory_repo=libs-staging-local -Partifactory_user=${ARTIFACTORY_USER} -Partifactory_password=${ARTIFACTORY_PASSWORD} artifactoryPublish -x test -x slowTest -x integrationTest
+
+
+gor-services:
+  extends: .on-releasable-branch-only
+  stage: trigger-cross-projects
+  trigger:
+    project:  wuxi-nextcode/wxnc-gor/gor-services
+    branch:   develop
+
+
+include:
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+  - template: Security/License-Management.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml

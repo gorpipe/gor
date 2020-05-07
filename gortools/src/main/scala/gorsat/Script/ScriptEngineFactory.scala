@@ -39,7 +39,8 @@ object ScriptEngineFactory {
         new QueryHandler(context)
       }
 
-      new ScriptExecutionEngine(remoteQueryHandler, context)
+      val localQueryHandler = new GeneralQueryHandler(context, false)
+      new ScriptExecutionEngine(remoteQueryHandler, localQueryHandler, context)
     }
   }
 

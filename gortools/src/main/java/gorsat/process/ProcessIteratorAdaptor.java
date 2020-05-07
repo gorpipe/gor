@@ -192,7 +192,7 @@ public class ProcessIteratorAdaptor extends RowSource {
         this.nor = nor;
         this.allowerror = allowerror;
         this.rowSource = rs;
-        header_$eq(header);
+        setHeader(header);
 
         List<String> commands = new ArrayList<>();
         Path fileRoot = ProcessIteratorAdaptor.getFileRoot(context.getSession());
@@ -253,13 +253,13 @@ public class ProcessIteratorAdaptor extends RowSource {
     }
 
     private void processHeader(boolean nor, OutputStream os) throws IOException {
-        header_$eq(line != null ? line : breader.readLine());
+        setHeader(line != null ? line : breader.readLine());
         // R in some cases outputs 'WARNING' as first line to stdout
-        while (header() != null && (header().length() == 0 || header().startsWith("WARNING"))) {
-            header_$eq(breader.readLine());
+        while (getHeader() != null && (getHeader().length() == 0 || getHeader().startsWith("WARNING"))) {
+            setHeader(breader.readLine());
         }
 
-        if (header() == null) {
+        if (getHeader() == null) {
             String newline = breader.readLine();
 
             proc.destroy();
@@ -275,7 +275,7 @@ public class ProcessIteratorAdaptor extends RowSource {
             if (ie != null) throw new GorSystemException(error, ie);
             else throw new GorSystemException(error, null);
         } else if (nor) {
-            header_$eq(ProcessIteratorAdaptor.norheaderprefix + header());
+            setHeader(ProcessIteratorAdaptor.norheaderprefix + getHeader());
         }
     }
 
@@ -359,7 +359,7 @@ public class ProcessIteratorAdaptor extends RowSource {
         }
 
         if (exitValue != 0) {
-            String errMsg = errorStr == null || errorStr.length() == 0 ? header() : errorStr.toString();
+            String errMsg = errorStr == null || errorStr.length() == 0 ? getHeader() : errorStr.toString();
             if (allowerror) {
                 log.trace("Allowed external process " + processName + " with non-zero exit code: " + errMsg);
             } else {

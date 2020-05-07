@@ -45,7 +45,7 @@ class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
     theIterator.toString
   }
 
-  def hasNext : Boolean = {
+  override def hasNext : Boolean = {
     if (!mustReCheck) return myHasNext
     mustReCheck = false
     myHasNext = theIterator.hasNext
@@ -61,7 +61,7 @@ class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
     }
   }
 
-  def setPosition(seekChr : String, seekPos : Int) {
+  override def setPosition(seekChr : String, seekPos : Int) {
     posSet = true
     mustReCheck = true
     theIterator.setPosition(seekChr,seekPos)
@@ -77,4 +77,8 @@ class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
   override def getHeader: String = theIterator.getHeader
 
   override def getGorHeader: GorHeader = theIterator.getGorHeader
+
+  override def pushdownFilter(gorwhere: String): Boolean = theIterator.pushdownFilter(gorwhere)
+
+  override def pushdownTop(limit: Int): Boolean = theIterator.pushdownTop(limit)
 }

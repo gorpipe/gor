@@ -124,6 +124,16 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     }
   }
 
+  @Deprecated
+  def subProcessArguments(pipeOptions: PipeOptions): RowSource = {
+    init(pipeOptions.query, pipeOptions.stdIn, "")
+  }
+
+  @Deprecated
+  def subProcessArguments(inputQuery: String, fileSignature: Boolean, virtualFile: String, scriptAnalyzer: Boolean, useStdin: Boolean, forcedInputHeader: String): RowSource = {
+    init(inputQuery, useStdin, forcedInputHeader)
+  }
+
   def init(inputQuery: String, useStdin: Boolean = false, forcedInputHeader: String = ""): RowSource = {
 
     DynIterator.createGorIterator = (ctx: GorContext) => PipeInstance.createGorIterator(ctx)
@@ -258,7 +268,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       var inputSourceResult: InputSourceParsingResult = null
       firstCommand = 1
       var arguments = CommandParseUtilities.quoteSafeSplitAndTrim(gorString, ' ')
-      arguments = arguments.slice(1, arguments.length)
+      arguments = expandGetValue(arguments.slice(1, arguments.length))
 
       if (inputSourceInfo != null) {
         inputSourceResult = inputSourceInfo.init(context, combinedHeader, argString, arguments)
@@ -308,6 +318,20 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
         throw gue
     }
     inputSourceCommand
+  }
+
+  private def expandGetValue(arguments: Array[String]) = {
+    arguments.map(arg => {
+      if (arg.toUpperCase.startsWith("GETVALUE(") && arg.endsWith(")")) {
+        val getValueArgs = arg.substring(9, arg.length - 1)
+        val lastCommaIx = getValueArgs.lastIndexOf(',')
+        val query = CommandParseUtilities.replaceSingleQuotes(getValueArgs.substring(0, lastCommaIx))
+        val col = getValueArgs.substring(lastCommaIx + 1, getValueArgs.length).trim.toInt
+        new OptionEvaluator(context).getValue(query, col)
+      } else {
+        arg
+      }
+    })
   }
 
   def checkHeader(forcedInputHeader: String, inputSourceCommand: String, firstCommand: Int, gorString: String): String = {
@@ -535,12 +559,14 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
           }
         }
 
-        //If the parsing needs access to the current
-        val commandRuntime = CommandRuntime(thePipeStep, cacheDir, inputSource)
-
+        val commandArgs = CommandParseUtilities.quoteSafeSplit(paramString, ' ')
         if (!commandInfo.isPlaceholder) {
 
-          val result = commandInfo.init(context, executeNor, combinedHeader, argString, CommandParseUtilities.quoteSafeSplit(paramString, ' '), commandRuntime)
+          //If the parsing needs access to the current
+          val commandRuntime = CommandRuntime(thePipeStep, cacheDir, inputSource)
+
+          val args = expandGetValue(commandArgs)
+          val result = commandInfo.init(context, executeNor, combinedHeader, argString, args, commandRuntime)
           aPipeStep = result.step
 
           if (commandInfo.commandOptions.cancelCommand && context.getSession.getSystemContext.getMonitor != null) {
@@ -571,6 +597,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
             firstCommand = i + 1
           }
         } else {
+          commandInfo.validateArguments(commandArgs)
           val (placeholderPipeStep, placeholderHeader, placeholderInputSource, placeholderFirstCommand) = handlePlaceholderCommands(command, i, paramString,
             cacheDir, whiteListCmdSet)
 

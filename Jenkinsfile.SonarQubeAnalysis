@@ -1,6 +1,6 @@
 #!groovy
 node {
-    def buildImage = docker.image('nextcode/builderimg-java:latest')
+    def buildImage = docker.image('nextcode/builderimg-java:openjdk8')
     stage('Pull build image') {
         buildImage.pull()
     }

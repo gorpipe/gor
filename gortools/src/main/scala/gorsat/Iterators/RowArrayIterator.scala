@@ -30,13 +30,13 @@ case class RowArrayIterator(lineList: Array[Row], length: Int) extends RowSource
   var l: Array[Row] = lineList
   var index = 0
 
-  def hasNext: Boolean = length - index > 0
+  override def hasNext: Boolean = length - index > 0
 
-  def next(): Row = {
+  override def next(): Row = {
     val r = l(index); index += 1; r
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {}
+  override def setPosition(seekChr: String, seekPos: Int) {}
 
   def close {}
 }

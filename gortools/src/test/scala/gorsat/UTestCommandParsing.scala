@@ -179,7 +179,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
           val result = command.init(context, x.norContext, x.header, x.command + " " + x.arguments, arguments)
           if (result.step != null) {
             try {
-              result.step.finish()
+              result.step.securedFinish(null)
             } catch {
               case _:Throwable => // Do nothing
             }

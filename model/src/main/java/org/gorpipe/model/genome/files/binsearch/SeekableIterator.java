@@ -106,7 +106,16 @@ public class SeekableIterator implements AutoCloseable {
      * @throws IOException In case there is a problem accessing the file.
      */
     protected byte[] readHeader() throws IOException {
-        return this.hasNext() ? this.getNextAsBytes() : new byte[0];
+        while (hasNext()) {
+            byte[] nextAsBytes = getNextAsBytes();
+            if (nextAsBytes.length < 2) {
+                return nextAsBytes;
+            }
+            if (nextAsBytes[0] != '#' || nextAsBytes[1] != '#') {
+                return nextAsBytes;
+            }
+        }
+        return new byte[0];
     }
 
     /**

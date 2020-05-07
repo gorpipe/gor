@@ -28,6 +28,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.model.genome.files.binsearch.GorSeekableIterator;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -74,6 +75,10 @@ public class SourceRef {
      * Set of all tags. If a tag is provided it is assumed that all possible tag values for that column are provided.
      */
     public final Set<String> tags;
+    /**
+     * Set of deleted tags. .
+     */
+    public final Collection<String> deletedTags;
     /**
      * The alias to use for the file
      */
@@ -156,7 +161,7 @@ public class SourceRef {
      * @param commonRoot      The common root path
      */
     public SourceRef(byte type, String file, String alias, boolean sourceInserted, String securityContext, String commonRoot) {
-        this(type, file, null, null, alias, null, -1, null, -1, null, sourceInserted, securityContext, commonRoot);
+        this(type, file, null, null, alias, null, -1, null, -1, null, null, sourceInserted, securityContext, commonRoot);
     }
 
     /**
@@ -174,7 +179,26 @@ public class SourceRef {
      * @param commonRoot      The common root path
      */
     public SourceRef(String file, String index, String reference, String alias, String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, boolean sourceInserted, String securityContext, String commonRoot) {
-        this(TYPE_FILE, file, index, reference, alias, startChr, startPos, stopChr, stopPos, tags, sourceInserted, securityContext, commonRoot);
+        this(TYPE_FILE, file, index, reference, alias, startChr, startPos, stopChr, stopPos, tags, null, sourceInserted, securityContext, commonRoot);
+    }
+
+    /**
+     * Construct
+     *
+     * @param file
+     * @param alias
+     * @param startChr
+     * @param startPos
+     * @param stopChr
+     * @param stopPos
+     * @param tags            Any tags associated with a specified column.
+     * @param deletedTags
+     * @param sourceInserted  True if source column is already inserted into the data
+     * @param securityContext The client specified security context to access the sources
+     * @param commonRoot      The common root path
+     */
+    public SourceRef(String file, String index, String reference, String alias, String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, Collection<String> deletedTags, boolean sourceInserted, String securityContext, String commonRoot) {
+        this(TYPE_FILE, file, index, reference, alias, startChr, startPos, stopChr, stopPos, tags, deletedTags, sourceInserted, securityContext, commonRoot);
     }
 
 
@@ -195,7 +219,7 @@ public class SourceRef {
      * @param securityContext The client specified security context to access the sources
      * @param commonRoot      The common root path
      */
-    public SourceRef(byte type, String file, String index, String reference, String alias, String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, boolean sourceInserted, String securityContext, String commonRoot) {
+    public SourceRef(byte type, String file, String index, String reference, String alias, String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, Collection<String> deletedTags, boolean sourceInserted, String securityContext, String commonRoot) {
         assert file != null;
         this.type = type;
         this.file = file.replace('\\', '/');
@@ -205,6 +229,7 @@ public class SourceRef {
         this.stopChr = stopChr;
         this.stopPos = stopPos;
         this.tags = tags;
+        this.deletedTags = deletedTags;
         this.sourceAlreadyInserted = sourceInserted;
         this.securityContext = securityContext;
         this.commonRoot = commonRoot;
@@ -256,7 +281,7 @@ public class SourceRef {
      * POSSIBLE_TAG in all other cases.
      */
     public final byte analyzeQueryTags(Set<String> queryTags, boolean aliasIsTag) {
-        return analyzeQueryTags(tags, queryTags, alias, aliasIsTag);
+        return analyzeQueryTags(tags, queryTags, alias, aliasIsTag, deletedTags);
     }
 
     /**
@@ -270,10 +295,10 @@ public class SourceRef {
      * ALL_TAG if all the source tags exist in the query tags.
      * POSSIBLE_TAG in all other cases.
      */
-    public static final byte analyzeQueryTags(Set<String> tags, Set<String> queryTags, String alias, boolean aliasIsTag) {
+    public static final byte analyzeQueryTags(Set<String> tags, Set<String> queryTags, String alias, boolean aliasIsTag, Collection<String> deletedTags) {
         if (tags == null || tags.isEmpty()) {
             if (aliasIsTag && alias != null) {
-                if (queryTags.contains(alias)) return ALL_TAGS;
+                if (queryTags.contains(alias) && (deletedTags == null || !deletedTags.contains(alias))) return ALL_TAGS;
                 else return NO_TAG;
             } else return POSSIBLE_TAG;
         } else {
@@ -281,7 +306,8 @@ public class SourceRef {
                 boolean all = true, none = true, tmp;
                 final Iterator<String> tagIt = tags.iterator();
                 while ((all || none) && tagIt.hasNext()) {
-                    tmp = queryTags.contains(tagIt.next());
+                    String tag = tagIt.next();
+                    tmp = queryTags.contains(tag) && (deletedTags == null || !deletedTags.contains(tag));
                     all &= tmp;
                     none &= !tmp;
                 }

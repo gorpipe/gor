@@ -360,7 +360,7 @@ public class ByteTextBuilder implements CharSequence, Serializable, Comparable<B
      *
      * @param s The string as a sequence of 7 bit ASCII symbols.
      */
-    public void set(String s) {
+    public void set(CharSequence s) {
         pos = 0;
         append(s);
     }

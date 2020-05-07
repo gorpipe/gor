@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.model.util.NCGZIPInputStream;
@@ -43,6 +44,7 @@ public class VcfGzGenomicIterator extends GenomicIterator {
     private int[] columns; // Source columns to include
     private String[] header; // Header of file
     public BufferedReader reader; // The reader to use
+    private StreamSource streamSource;
     final GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
     private Line linebuf; // The linebuf to temporarily read the data into
     public String next;
@@ -56,6 +58,7 @@ public class VcfGzGenomicIterator extends GenomicIterator {
 
     public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int cols[], StreamSource streamsource, boolean compressed) throws IOException {
         this(lookup, file, cols, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
+        this.streamSource = streamsource;
     }
 
     public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int cols[], BufferedReader reader) throws IOException {
@@ -120,19 +123,14 @@ public class VcfGzGenomicIterator extends GenomicIterator {
                 this.columns[i - 2] = cols[i] - 2;
                 newheader[i] = headerAll[cols[i]];
             }
-            header = newheader;
+            setHeader(String.join("\t",newheader));
             linebuf = new Line(totalExtraCols);
         } else {
             columns = null;
             linebuf = null;
-            header = headerAll;
+            setHeader(String.join("\t",headerAll));
         }
         next = reader.readLine();
-    }
-
-    @Override
-    public String[] getHeader() {
-        return header;
     }
 
     @Override
@@ -199,6 +197,15 @@ public class VcfGzGenomicIterator extends GenomicIterator {
                 reader = null;
             } catch (Exception e) {
                 throw new RuntimeException("Failed closing VcfGzGenomicIterator reader", e);
+            }
+        }
+        if (streamSource != null) {
+            String name = "<unknown>";
+            try {
+                streamSource.close();
+                name = streamSource.getName();
+            } catch (IOException e) {
+                throw new GorResourceException("Failed closing VcfGzGenomicIterator stream source", name, e);
             }
         }
     }

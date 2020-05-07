@@ -34,21 +34,27 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<Row> {
+public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<Row>, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ParquetRowReader.class);
     ParquetReader<Group> reader;
     Row row;
+    String part;
 
     Function<Group, ParquetLine> lineProvider;
 
-    public ParquetRowReader(ParquetReader<Group> reader, GenomicIterator.ChromoLookup lookup) {
-        this(reader, (Group group) -> new ParquetLine(group, lookup));
+    public ParquetRowReader(ParquetReader<Group> reader, GenomicIterator.ChromoLookup lookup, String part) {
+        this(reader, (Group group) -> new ParquetLine(group, lookup), part);
     }
 
-    public ParquetRowReader(ParquetReader<Group> reader, Function<Group, ParquetLine> lineProvider) {
+    public ParquetRowReader(ParquetReader<Group> reader, Function<Group, ParquetLine> lineProvider, String part) {
         this.reader = reader;
         this.lineProvider = lineProvider;
+        this.part = part;
         hasNext();
+    }
+    
+    public String getPart() {
+        return part;
     }
 
     @Override
@@ -73,5 +79,14 @@ public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<
     @Override
     public int compareTo(ParquetRowReader o) {
         return row.compareTo(o.row);
+    }
+
+    @Override
+    public void close() {
+        try {
+            reader.close();
+        } catch (IOException e) {
+            // Dont care
+        }
     }
 }

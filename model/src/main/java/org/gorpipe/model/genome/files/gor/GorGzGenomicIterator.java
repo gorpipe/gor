@@ -41,8 +41,6 @@ public class GorGzGenomicIterator extends GenomicIterator {
     private TabixReader reader; // The reader to use
     Iterator iterator;
     private GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
-    private String[] header = null;
-    private String[] filteredHeader = null;
     int[] columns; // source columns to include
     String filename;
     String firstChr;
@@ -70,29 +68,26 @@ public class GorGzGenomicIterator extends GenomicIterator {
             break;
         }
         setColumns(cols);
-        line = new Line(header.length);
+        line = new Line(getHeader().split("\t").length);
     }
 
     private void setColumns(int[] cols) throws IOException {
-        header = reader.readLine().split("\t");
+        String header = reader.readLine();
+        String[] headerSplit = header.split("\t");
         if (cols == null) {
-            columns = createAllCols(header.length - 2);
-            filteredHeader = header;
+            columns = createAllCols(headerSplit.length - 2);
+            setHeader(header);
         } else {
             columns = new int[cols.length - 2];
-            filteredHeader = new String[cols.length];
-            filteredHeader[0] = header[cols[0]];
-            filteredHeader[1] = header[cols[1]];
+            String[] filteredHeader = new String[cols.length];
+            filteredHeader[0] = headerSplit[cols[0]];
+            filteredHeader[1] = headerSplit[cols[1]];
             for (int col = 2; col < cols.length; col++) {
-                filteredHeader[col] = header[cols[col]];
+                filteredHeader[col] = headerSplit[cols[col]];
                 columns[col - 2] = cols[col];
             }
+            setHeader(String.join("\t",filteredHeader));
         }
-    }
-
-    @Override
-    public String[] getHeader() {
-        return filteredHeader;
     }
 
     @Override

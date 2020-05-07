@@ -232,4 +232,9 @@ public class LocalFileCacheClient implements FileCache {
 
         return to.toString();
     }
+
+    @Override
+    public void close() throws Exception {
+        cache.cleanUp();
+    }
 }

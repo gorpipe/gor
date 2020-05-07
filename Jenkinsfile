@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 node {
-    def buildImage = docker.image('nextcode/builderimg-java:latest')
+    def buildImage = docker.image('nextcode/builderimg-java:openjdk8')
     stage('Pull build image') {
         buildImage.pull()
     }
@@ -67,7 +67,7 @@ node {
             // We only publish if tests ran successfully
             def publishTo = ""
             def isSnapshotBuild = false
-            def version = readFile('version').trim()
+            def version = readFile('VERSION').trim()
             def dockerTags = [version]
 
             if (env.BRANCH_NAME == "master") {
@@ -119,7 +119,7 @@ node {
                             doPublish = false
                         }
                     }
-
+                  /* Skip publishing and tagging:  now done in gitlab.
                     // Deploy to Artifactory if everything is ok
                     if (doPublish) {
                         echo "Publishing " + version + " to " + publishTo + " in Artifactory"
@@ -129,6 +129,7 @@ node {
                         def sha1 = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
 
                         // Always tag with a version
+                        /* Skip tagging:  now done in gitlab.
                         build job: '../TagBranch', wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'git_sha', value: sha1],
                                 [$class: 'StringParameterValue', name: 'tag', value: 'v' + version],
@@ -136,6 +137,7 @@ node {
                                 [$class: 'StringParameterValue', name: 'repo', value: 'gor']
                         ]
                     }
+                    */
                 }
 
             }

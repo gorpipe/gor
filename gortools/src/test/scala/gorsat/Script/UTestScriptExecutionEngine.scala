@@ -41,7 +41,8 @@ class UTestScriptExecutionEngine extends FunSuite with BeforeAndAfter {
   def createScriptExecutionEngine(): ScriptExecutionEngine = {
     val context = new GenericSessionFactory().create().getGorContext
     val queryHandler = new GeneralQueryHandler(context, false)
-    new ScriptExecutionEngine(queryHandler, context)
+    val localQueryHandler = new GeneralQueryHandler(context, false)
+    new ScriptExecutionEngine(queryHandler, localQueryHandler, context)
   }
 
   def performTest(commands: Array[String]): Unit = {

@@ -53,7 +53,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   val norRowSource: stream.Stream[String] = if (!readStdin) fileReader.iterateFile(fileName, maxWalkDepth, showModificationDate) else throw new GorParsingException("Stdin not supported in NOR context.")
   val norRowIterator: util.Iterator[String] = norRowSource.filter(x => !x.startsWith(IGNORE_PATTERN)).iterator()
 
-  def hasNext: Boolean = {
+  override def hasNext: Boolean = {
     if (!haveReadHeader) {
       getHeader
     }
@@ -89,11 +89,11 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     }
   }
 
-  def next(): Row = {
+  override def next(): Row = {
     RowObj("chrN\t0\t" + nextLine())
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {
+  override def setPosition(seekChr: String, seekPos: Int) {
     /* do nothing */
   }
 

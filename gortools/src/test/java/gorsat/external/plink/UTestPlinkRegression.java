@@ -124,8 +124,8 @@ public class UTestPlinkRegression {
             Files.write(pp, pheno.getBytes());
             String query = "gor vcf.gor | plinkregression pheno.txt -vcf";
             String res = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Regression results not correct", "CHROM\tPOS\tID\tREF\tALT\tA1\tTEST\tOBS_CT\tOR\tSE\tZ_STAT\tP\tPHENO\n" +
-                    "chr1\t1\trs1\tA\tC\tC\tADD\t9\t12\t1.60727\t1.54604\t0.122094\tpheno\n", res);
+            Assert.assertEquals("Regression results not correct", "CHROM\tPOS\tID\tREF\tALT\tA1\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tN\tADD\t9\t12\t1.60727\t1.54604\t0.122094\t.\tpheno\n", res);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
@@ -143,8 +143,8 @@ public class UTestPlinkRegression {
             Files.write(pp, pheno.getBytes());
             String query = "create phn = nor pheno.txt; gor reg.gor | plinkregression [phn]";
             String results = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Wrong regression result", "#CHROM\tPOS\tID\tREF\tALT\tA1\tTEST\tOBS_CT\tOR\tSE\tZ_STAT\tP\tPHENO\n" +
-                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\tNA\tNA\tNA\tNA\tpheno\n", results);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
@@ -163,8 +163,8 @@ public class UTestPlinkRegression {
             Files.write(pp, pheno.getBytes());
             String query = "gor reg.gor | plinkregression pheno.txt";
             String results = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Wrong regression result", "#CHROM\tPOS\tID\tREF\tALT\tA1\tTEST\tOBS_CT\tOR\tSE\tZ_STAT\tP\tPHENO\n" +
-                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\tNA\tNA\tNA\tNA\tpheno\n", results);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
@@ -182,9 +182,9 @@ public class UTestPlinkRegression {
             Files.write(pp, multipheno.getBytes());
             String query = "gor reg.gor | plinkregression pheno.txt";
             String results = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Wrong regression result", "#CHROM\tPOS\tID\tREF\tALT\tA1\tTEST\tOBS_CT\tOR\tSE\tZ_STAT\tP\tPHENO\n" +
-                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\t2.25\t1.29099\t0.628144\t0.52991\tpheno2\n", results);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tN\tADD\t10\t2.25\t1.29099\t0.628144\t0.52991\t.\tpheno2\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
@@ -210,16 +210,16 @@ public class UTestPlinkRegression {
             Files.write(pp, (pheno+"k\t1\nl\t2\n").getBytes());
             String query = "gor <(reg.gor | plinkregression pheno.txt)";
             String results = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Wrong regression result", "#CHROM\tPOS\tID\tREF\tALT\tA1\tTEST\tOBS_CT\tOR\tSE\tZ_STAT\tP\tPHENO\n" +
-                    "chr1\t1\trs1\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr2\t2\trs2\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr3\t3\trs3\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr4\t4\trs4\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr5\t5\trs5\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr6\t6\trs6\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr7\t7\trs7\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr8\t8\trs8\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n" +
-                    "chr9\t9\trs9\tA\tC\tC\tADD\t12\tNA\tNA\tNA\tNA\tpheno\n", results);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr2\t2\trs2\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr3\t3\trs3\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr4\t4\trs4\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr5\t5\trs5\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr6\t6\trs6\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr7\t7\trs7\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr8\t8\trs8\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
+                    "chr9\t9\trs9\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);

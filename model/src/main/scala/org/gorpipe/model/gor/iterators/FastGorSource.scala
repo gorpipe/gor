@@ -90,15 +90,16 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
       if(gm != null) {
         gorSource = new MonitorIterator(gorSource, gm, minLogTime)
       }
-      headerLength = gorSource.getHeader.length
-      header = gorSource.getHeader.mkString("\t")
+      val header = gorSource.getHeader
+      setHeader(header)
+      headerLength = header.split("\t").length
       if (chrpos != "") {
         gorSource.seek(seekChr, seekPos)
       }
     }
   }
 
-  def hasNext: Boolean = {
+  override def hasNext: Boolean = {
     incStat("hasNext")
     if (gorSource == null ) openSource()
     if (!mustReCheck) return myHasNext
@@ -222,7 +223,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     maxDistEstimated = true; check = maxReads / checksPerMaxRun
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {
+  override def setPosition(seekChr: String, seekPos: Int) {
     posSet = true
     mustReCheck = true
     if (useAdaptiveMTP) {
@@ -265,9 +266,15 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
   }
 
   override def getHeader: String = {
+    val header = super.getHeader
     if (header == null || header.length == 0) {
       openSource()
     }
-    header
+    super.getHeader
+  }
+
+  override def pushdownFilter(gorwhere: String): Boolean = {
+    if (gorSource == null) openSource()
+    gorSource.pushdownFilter(gorwhere)
   }
 }

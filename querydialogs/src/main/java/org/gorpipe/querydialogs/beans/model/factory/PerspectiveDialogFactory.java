@@ -32,6 +32,7 @@ import org.gorpipe.querydialogs.beans.model.factory.builder.DateArgumentBuilder;
 import org.gorpipe.querydialogs.beans.model.factory.builder.FileArgumentBuilder;
 import org.gorpipe.querydialogs.beans.model.factory.builder.NumberArgumentBuilder;
 import org.gorpipe.querydialogs.beans.model.factory.builder.StringArgumentBuilder;
+import org.gorpipe.querydialogs.beans.model.factory.builder.QueryArgumentBuilder;
 import freemarker.template.TemplateException;
 import org.gorpipe.querydialogs.beans.model.*;
 
@@ -78,6 +79,7 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
         factory.registerArgumentBuilder(ArgumentType.GENE_LIST, new StringArgumentBuilder(fileResolver));
         factory.registerArgumentBuilder(ArgumentType.GRID, new GridArgumentBuilder(fileResolver));
         factory.registerArgumentBuilder(ArgumentType.CHECK_ITEMS, new StringArgumentBuilder(fileResolver));
+        factory.registerArgumentBuilder(ArgumentType.QUERY, new QueryArgumentBuilder(fileResolver, queryEval));
         return factory;
     }
 

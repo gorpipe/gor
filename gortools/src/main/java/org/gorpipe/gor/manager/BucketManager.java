@@ -647,7 +647,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
         Map<Path, List<T>> bucketsToCreate = new HashMap<>();
         bucketDirCount = null;
-        for (int i = 1; i <= Math.min(bucketCreateCount, maxBucketCount >= 0 ? maxBucketCount : Integer.MAX_VALUE); i++) {
+        for (int i = 1; i <= Math.min(bucketCreateCount, maxBucketCount > 0 ? maxBucketCount : Integer.MAX_VALUE); i++) {
             Path bucketDir = pickBucketDir();
             int nextToBeAddedIndex = (i - 1) * getBucketSize();
             int nextBucketSize = Math.min(getBucketSize(), lines2bucketize.size() - nextToBeAddedIndex);

@@ -433,7 +433,7 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
         this.pipeStep = pipeStep;
         this.brsConfig = brsConfig;
         this.autoclose = autoclose;
-        this.header_$eq(theHeader);
+        setHeader(theHeader);
 
         timeTriggerBufferFlush = brsConfig.getBufferFlushTimout();
         batchOfferTimeout = brsConfig.getBatchOfferTimeout();

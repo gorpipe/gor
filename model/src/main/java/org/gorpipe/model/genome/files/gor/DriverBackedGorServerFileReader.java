@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.ProjectContext;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.model.util.Util;
@@ -53,7 +54,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
 
     @Override
     protected void checkValidServerFileName(final String fileName) {
-        ProjectContext.validateServerFileName(fileName,allowAbsolutePath);
+        ProjectContext.validateServerFileName(fileName, allowAbsolutePath);
     }
 
     @Override
@@ -72,7 +73,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
 
     @Override
     Stream<String> directDbUrl(String resolvedUrl) {
-        throw new GorException("Direct queries on db urls not allowed on server", "Trying to open "+resolvedUrl);
+        throw new GorSystemException("Direct queries on db urls not allowed on server. Trying to open " + resolvedUrl, null);
     }
 
     @Override

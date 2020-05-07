@@ -60,8 +60,8 @@ public class BGenIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
-        return new String[] {"CHROM", "POS", "REF", "ALT", "RSID", "VARIANTID", "VALUES"};
+    public String getHeader() {
+        return String.join("\t",new String[] {"CHROM", "POS", "REF", "ALT", "RSID", "VARIANTID", "VALUES"});
     }
 
     @Override

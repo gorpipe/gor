@@ -426,7 +426,7 @@ public class UTestTableLock {
         String lockName = "LockRenew";
         BaseTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
 
-        long reserveTime = 400;
+        long reserveTime = 1000;
 
         if (drlp != null) {
             drlp.set(null, Duration.ofMillis(reserveTime));
@@ -482,7 +482,7 @@ public class UTestTableLock {
         //main(new String[]{tableLockClass.getCanonicalName(), "WRITE", "100000000", "100", "CrashLockStandard", tableWorkDir.toString(), "W0", storyName});
 
         Process p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(100), table, "CrashLockStandard", tableWorkDir, "W1", storyName, dataFileName);
-        Thread.sleep(2000); // Must wait a little while the external process starts.
+        Thread.sleep(4000); // Must wait a little while the external process starts.
 
         try {
             debugReadLock(tableLockClass, Duration.ofMillis(10), null, table, "CrashLockStandard", Duration.ofMillis(10));
@@ -493,14 +493,14 @@ public class UTestTableLock {
             // Ignore
         }
         p.destroy();
-        Thread.sleep(100);  // Again must wait while the process exits and cleans up.
+        Thread.sleep(3000);  // Again must wait while the process exits and cleans up.
         // Should clean up. Try getting the lock, get exception if fails.
         debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockStandard", Duration.ofMillis(10));
 
         // Finally some negative testing (to make sure the first half is not working by chance).
 
         p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(100), table, "CrashLockForce", tableWorkDir, "W2", storyName, dataFileName);
-        Thread.sleep(2000); // Must wait a little while the external process starts.
+        Thread.sleep(4000); // Must wait a little while the external process starts.
         try {
             debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockForce", Duration.ofMillis(10));
             // Should not be here.
@@ -510,7 +510,7 @@ public class UTestTableLock {
             // Ignore
         }
         p.destroyForcibly();
-        Thread.sleep(100);  // Again must wait while the process exits and cleans up.
+        Thread.sleep(3000);  // Again must wait while the process exits and cleans up.
         // Should not clean up. Try getting the lock, get exception if fails.
         try {
             debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockForce", Duration.ofMillis(10));

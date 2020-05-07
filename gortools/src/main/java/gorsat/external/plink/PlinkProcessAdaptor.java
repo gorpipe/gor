@@ -22,6 +22,7 @@
 
 package gorsat.external.plink;
 
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.model.genome.files.gor.pgen.PGenWriter;
 import org.gorpipe.model.genome.files.gor.pgen.PGenWriterFactory;
 import org.gorpipe.model.genome.files.gor.Row;
@@ -72,11 +73,15 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
     private String lastChr = "";
     private int lastPos = -1;
 
+    private String expectedHeader;
+    private boolean checkedHeaderFromPlink = false;
+
     public PlinkProcessAdaptor(GorSession session, PlinkArguments plinkArguments,
                                int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header) throws IOException {
         GorDriverConfig cfg = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
         plinkExecutable = cfg.plinkExecutable().split(" ");
         this.session = session;
+        this.expectedHeader = header;
         this.es = Executors.newSingleThreadExecutor();
         try {
             this.writeDir = Files.createTempDirectory("plinkregression");
@@ -113,6 +118,15 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
     void sendLine(PriorityQueue<GORLine> pq) {
         while (pq.size() > 0) {
             GORLine gorline = pq.poll();
+            if(!checkedHeaderFromPlink) {
+                String header = gorline.getHeader();
+                if(header!=null&&header.length()>0) {
+                    if(expectedHeader.split("\t").length-1!=header.split("\t").length) {
+                        throw new GorDataException("Unexpected number of columns in plink2 result");
+                    }
+                    checkedHeaderFromPlink = true;
+                }
+            }
             super.process(RowObj.apply(gorline.toString()));
             nextGorLine(pq, gorline);
         }

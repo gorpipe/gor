@@ -22,11 +22,14 @@
 
 package gorsat.Analysis
 
+import java.nio.file.{Files, Paths}
+
 import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.model.genome.files.binsearch.GorIndexType
 import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -37,27 +40,38 @@ case class ForkWriteOptions(remove: Boolean,
                             idx: GorIndexType,
                             tags: Array[String],
                             prefixFile: Option[String],
-                            compressionLevel: Int
+                            compressionLevel: Int,
+                            useFolder: Boolean
                            )
 
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,
                      inHeader: String,
-                     nor: Boolean,
+                     isNor: Boolean,
                      options: ForkWriteOptions) extends Analysis {
 
   case class FileHolder(forkValue: String) {
-    if (forkCol >= 0 && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
+    if (forkCol >= 0 && !options.useFolder && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
       throw new GorResourceException("WRITE error: #{fork} of ${fork}missing from filename.", fullFileName)
     }
-    var fileName: String = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+    var fileName : String = _
+    if(forkCol >= 0 && options.useFolder) {
+      val dir = Paths.get(fullFileName)
+      val cols = inHeader.split("\t")
+      val forkdir = dir.resolve(cols(forkCol)+"="+forkValue)
+      if(!Files.exists(forkdir)) {
+        Files.createDirectories(forkdir)
+      }
+      fileName = forkdir.resolve(dir.getFileName).toString
+    } else fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
     var fileOpen = false
     var headerWritten = false
     var rowBuffer = new ArrayBuffer[Row]
     var out: Output = _
   }
 
-  var useFork: Boolean = if (forkCol >= 0) true else false
+  var nor = isNor || (forkCol == 0 && options.remove)
+  var useFork: Boolean = forkCol >= 0
   var forkMap = mutable.Map.empty[String, FileHolder]
   val tagSet: mutable.Set[String] = scala.collection.mutable.Set()++options.tags
   var singleFileHolder: FileHolder = FileHolder("")
@@ -73,6 +87,7 @@ case class ForkWrite(forkCol: Int,
     val headerBuilder = new mutable.StringBuilder(inHeader.length + cols.length - 1)
     headerBuilder.append(cols(0))
     headerBuilder.append('\t')
+    if(forkCol==0) headerBuilder.append("posnor\t")
     headerBuilder.append(cols(1))
     var c = 2
     while (c < cols.length) {
@@ -117,7 +132,10 @@ case class ForkWrite(forkCol: Int,
 
     var r = ir
     if (options.remove) {
-      r.removeColumn(forkCol)
+      if(forkCol > 0) r.removeColumn(forkCol)
+      else {
+        r = RowObj("chrN\t0\t"+r.pos+"\t"+r.otherCols())
+      }
     }
 
     if (sh.fileOpen) {

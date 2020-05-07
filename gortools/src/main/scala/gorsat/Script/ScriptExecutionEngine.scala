@@ -80,7 +80,9 @@ object ScriptExecutionEngine {
   * @param queryHandler         Remote query handler
   * @param context              Current gor pipe session
   */
-class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler, context: GorContext) {
+class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
+                            localQueryHandler: GorParallelQueryHandler,
+                            context: GorContext) {
 
   private var executionBlocks: ExecutionBlocks = Map.empty[String, ExecutionBlock]
   private var aliases: singleHashMap = new java.util.HashMap[String, String]()
@@ -352,43 +354,53 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler, context: GorC
       case Some(signature) =>
         signature
       case None =>
-        val fileReader = gorPipeSession.getProjectContext.getFileReader
-        val cacheDirectory = AnalysisUtilities.theCacheDirectory(gorPipeSession)
-
-        try {
-          if (fileName.startsWith("#gordict#")) {
-            val hasTags = fileName.contains("#gortags#")
-            val dictFile = fileName.substring("#gordict#".length, if (hasTags) fileName.indexOf("#gortags#") else fileName.length())
-            val dictTags = if (hasTags) fileName.substring(fileName.indexOf("#gortags#") + "#gortags#".length, fileName.length).split(',') else null
-            val tmp = if (dictTags != null && dictTags.length > 9) fileReader.getFileSignature(dictFile) else fileReader.getDictionarySignature(dictFile, dictTags)
-
-            singleFileSignatureMap += (fileName -> tmp)
-            tmp
+        val signature = if (fileName.startsWith("#gordict#")) {
+          getGorDictSignature(gorPipeSession, fileName)
+        } else {
+          val fileReader = gorPipeSession.getProjectContext.getFileReader
+          val cacheDirectory = AnalysisUtilities.theCacheDirectory(gorPipeSession)
+          // TODO: Get a gor config instance somehow into gorpipeSession or gorContext to skip using system.getProperty here
+          val x_f_name = fileName.split('/').last.split('.').head
+          val tmp: String = if (System.getProperty("gor.caching.md5.enabled", "false").toBoolean
+            && x_f_name.split('.').head.endsWith("_md5")) {
+            // cache files with md5 have the md5 sum encoded in the filename
+            return x_f_name.split('.').head
+          } else if (fileName.startsWith(cacheDirectory)) {
+            return "0"
           } else {
-            // TODO: Get a gor config instance somehow into gorpipeSession or gorContext to skip using system.getProperty here
-            val x_f_name = fileName.split('/').last.split('.').head
-            val tmp: String = if (System.getProperty("gor.caching.md5.enabled", "false").toBoolean
-              && x_f_name.split('.').head.endsWith("_md5")) {
-              // cache files with md5 have the md5 sum encoded in the filename
-              return x_f_name.split('.').head
-            } else if (fileName.startsWith(cacheDirectory)) {
-              return "0"
-            } else {
+            try {
               fileReader.getFileSignature(fileName)
+            } catch {
+              case e: Exception => throw new GorResourceException("In fileFingerPrint: file " + fileName + " does not exist!", fileName, e)
             }
-
-            singleFileSignatureMap += (fileName -> tmp)
-            tmp
           }
-        } catch {
-          case e: Exception => throw new GorResourceException("In fileFingerPrint: file " + fileName + " does not exist!", fileName, e)
+          tmp
         }
+        singleFileSignatureMap += (fileName -> signature)
+        signature
+    }
+  }
+
+  private def getGorDictSignature(gorPipeSession: GorSession, fileName: String) = {
+    val fileReader = gorPipeSession.getProjectContext.getFileReader
+    val hasTags = fileName.contains("#gortags#")
+    val dictFile = fileName.substring("#gordict#".length, if (hasTags) fileName.indexOf("#gortags#") else fileName.length())
+    val dictTags = if (hasTags) fileName.substring(fileName.indexOf("#gortags#") + "#gortags#".length, fileName.length).split(',') else null
+    try {
+      if (dictTags != null && dictTags.length > 9) {
+        fileReader.getFileSignature(dictFile)
+      } else {
+        fileReader.getDictionarySignature(dictFile, dictTags)
+      }
+    } catch {
+      case e: GorResourceException =>
+        throw new GorResourceException(s"Could not get signature for file", dictFile, e)
     }
   }
 
   private def runQueryHandler(executionCommands: Array[ExecutionCommand]) {
     if (executionCommands != null && !executionCommands.isEmpty) {
-      val activeQueryHandler = queryHandler
+      val activeQueryHandler = if (CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) localQueryHandler else queryHandler
 
       val cacheFiles = activeQueryHandler.executeBatch(executionCommands.map(x => x.signature),
         executionCommands.map(x => x.query),

@@ -37,7 +37,7 @@ import org.gorpipe.util.string.StringUtil
   * @param whitelistedCmdFiles  File for white listing
   * @param server               Indicates if the session is running on server or not
   */
-class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean) extends GorSessionFactory{
+class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean, securityContext:String = null) extends GorSessionFactory{
 
   override def create(): GorSession = {
     val requestId = pipeOptions.requestId
@@ -54,7 +54,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
       .setRoot(pipeOptions.gorRoot)
-      .setFileReader(createFileReader(pipeOptions.gorRoot))
+      .setFileReader(createFileReader(pipeOptions.gorRoot, securityContext))
       .setFileCache(new LocalFileCacheClient(Paths.get(pipeOptions.cacheDir), useSubFolder, subFolderSize))
       .setQueryHandler(new GeneralQueryHandler(session.getGorContext, false))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
@@ -78,9 +78,10 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     session
   }
 
-  def createFileReader(gorRoot: String): FileReader = {
-    if (!StringUtil.isEmpty(gorRoot)) {
-      new DriverBackedFileReader(null, gorRoot, null)
+  def createFileReader(gorRoot: String, securityContext: String = null): FileReader = {
+    val emptyGorRoot = StringUtil.isEmpty(gorRoot);
+    if (!emptyGorRoot || !StringUtil.isEmpty(securityContext)) {
+      new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
     } else {
       GorFileReaderContext.DEFAULT_READER
     }

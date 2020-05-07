@@ -40,8 +40,8 @@ public class PlinkVcfProcessAdaptor extends PlinkProcessAdaptor {
     private FileWriter vcf;
     private String vcfHeader;
 
-    public PlinkVcfProcessAdaptor(GorSession session, PlinkArguments plinkArguments, int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header) throws IOException {
-        super(session, plinkArguments, refIdx, altIdx, rsIdx, valueIdx, hc, th, vcf, header);
+    public PlinkVcfProcessAdaptor(GorSession session, PlinkArguments plinkArguments, int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header, String expectedHeader) throws IOException {
+        super(session, plinkArguments, refIdx, altIdx, rsIdx, valueIdx, hc, th, vcf, expectedHeader);
         if( vcf ) vcfHeader = "#"+header+"\n";
     }
 

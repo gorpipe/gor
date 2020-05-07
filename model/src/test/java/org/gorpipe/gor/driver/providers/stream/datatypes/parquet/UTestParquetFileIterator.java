@@ -16,24 +16,26 @@ import gorsat.Analysis.Select2;
 import gorsat.Outputs.ToList;
 import gorsat.TestUtils;
 import org.aeonbits.owner.util.Collections;
+import org.junit.Assert;
 import org.junit.Test;
 import scala.collection.mutable.ListBuffer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 
 import static org.junit.Assert.*;
-
 
 public class UTestParquetFileIterator {
 
     static {
-        //suppres excessive from apache libs
+        //suppress excessive logging from apache libs
         LoggerContext logContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
         logContext.getLogger("org.apache").setLevel(Level.WARN);
     }
-
 
     @Test
     public void shouldReadMultifileData() {
@@ -102,8 +104,8 @@ public class UTestParquetFileIterator {
     public void shouldReadParquetHeader() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        String[] expectedHeaders = Arrays.asList("Chrom", "POS", "reference", "allele", "differentrsIDs").toArray(new String[5]);
-        assertEquals(expectedHeaders, iterator.getHeader());
+        String expectedHeader = "Chrom\tPOS\treference\tallele\tdifferentrsIDs";
+        assertEquals(expectedHeader, iterator.getHeader());
     }
 
     @Test
@@ -112,22 +114,51 @@ public class UTestParquetFileIterator {
         ParquetFileIterator iterator = new ParquetFileIterator(file);
         GorSession gorSession = new GorSession("dummy");
         gorSession.setNorContext(true);
-        String[] expectedHeaders = Arrays.asList("Chrom", "POS", "reference", "allele", "differentrsIDs").toArray(new String[5]);
-        assertEquals(expectedHeaders, iterator.getHeader());
+        String expectedHeader = "Chrom\tPOS\treference\tallele\tdifferentrsIDs";
+        assertEquals(expectedHeader, iterator.getHeader());
     }
 
     @Test
-    public void doesNotSupportSeek() {
+    public void doesSupportSeek() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        assertFalse(iterator.seek("chr22", 0));
+        GorSession gorSession = new GorSession("dummy");
+        iterator.init(gorSession);
+
+        Assert.assertTrue(iterator.seek("chr22", 0));
+        Assert.assertTrue(iterator.hasNext());
+        Assert.assertEquals("Gor line after seek not correct", "chr22\t16050036\tA\tC\trs374742143", iterator.next().toString());
+        Assert.assertTrue(iterator.hasNext());
+        Assert.assertEquals("Gor line after seek not correct", "chr22\t16050527\tC\tA\trs587769434", iterator.next().toString());
+    }
+
+    @Test
+    public void seekOnNoneExistingChrom() {
+        StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
+        ParquetFileIterator iterator = new ParquetFileIterator(file);
+        GorSession gorSession = new GorSession("dummy");
+        iterator.init(gorSession);
+
+        Assert.assertTrue(iterator.seek("chr23", 0));
+        Assert.assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void seekOnChromNotInFile() {
+        StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
+        ParquetFileIterator iterator = new ParquetFileIterator(file);
+        GorSession gorSession = new GorSession("dummy");
+        iterator.init(gorSession);
+
+        Assert.assertTrue(iterator.seek("chrM", 0));
+        Assert.assertFalse(iterator.hasNext());
     }
 
     @Test
     public void shouldHandleSelectCommand() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        String[] header = iterator.getHeader();
+        iterator.getHeader();
 
         Select2 select = Select2.apply(scala.collection.JavaConverters.asScalaBuffer(Collections.list(1, 2, 3, 4)));
         ListBuffer<Row> buff = new ListBuffer();
@@ -139,7 +170,6 @@ public class UTestParquetFileIterator {
             select.process(row);
         }
 
-
         assertEquals(48, scala.collection.JavaConverters.bufferAsJavaList(buff).size());
     }
 
@@ -147,7 +177,7 @@ public class UTestParquetFileIterator {
     public void shouldHandleGorZipLexOutputCommand() {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        String[] header = iterator.getHeader();
+        iterator.getHeader();
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             GorZipLexOutputStream gorzip = new GorZipLexOutputStream(byteStream, false, null);
@@ -164,14 +194,174 @@ public class UTestParquetFileIterator {
         } catch (IOException e) {
             fail("IOException not expected on memory stream " + e.getMessage());
         }
+    }
 
+    @Test
+    public void testPushdownWhere() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where Chrom = 'chr12'");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr12\t60162\tC\tG\trs544101329\n" +
+                "chr12\t60545\tA\tT\trs570991495\n", result);
+    }
 
+    @Test
+    public void testPushdownWhereCustomColumn() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where Chrom = 'chrX' | where differentrsIDs > 'rs6'");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chrX\t2699625\tA\tG\trs6655038\n", result);
+    }
+
+    @Test
+    public void testPushdownWhereNumeric() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where pos < 10000");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr17\t186\tG\tA\trs547289895\n" +
+                "chr17\t460\tG\tA\trs554808397\n", result);
+    }
+
+    @Test
+    public void testPushdownWhereInSet() {
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | where differentrsIDs in ('rs547289895','rs554808397')");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr17\t186\tG\tA\trs547289895\n" +
+                "chr17\t460\tG\tA\trs554808397\n", result);
+    }
+
+    @Test
+    public void testParquetFiltering() {
+        String result = TestUtils.runGorPipe("gor -f 'rs547289895' ../tests/data/parquet/dbsnp_test.parquet");
+        Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\tSource\n" +
+                "chr17\t186\tG\tA\trs547289895\tdbsnp_test.parquet\n", result);
+    }
+
+    @Test
+    public void testParquetDictionaryFiltering() throws IOException {
+        Path p = Paths.get("../tests/data/parquet/dbsnp_test.gord");
+        try {
+            Files.write(p, ("dbsnp_test.parquet\tdummy\tchr1\t0\tchr1\t1000000000\trs367896724,rs199706086\n" +
+                    "dbsnp_test.parquet\tdummy\tchr2\t0\tchr2\t1000000000\trs536478188,rs370414480\n").getBytes());
+            String result = TestUtils.runGorPipe("gor -p chr1 -f 'rs199706086','rs370414480' ../tests/data/parquet/dbsnp_test.gord");
+            Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\tSource\n" +
+                    "chr1\t10250\tA\tC\trs199706086\tdummy\n", result);
+        } finally {
+            if (Files.exists(p)) Files.delete(p);
+        }
+    }
+
+    @Test
+    public void testJoinWithParquetFiles() {
+        String expectedResult = TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | join -snpsnp ../tests/data/gor/dbsnp_test.gor");
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | join -snpsnp ../tests/data/parquet/dbsnp_test.parquet");
+        Assert.assertEquals("Join results not the same",expectedResult,result);
+    }
+
+    @Test
+    public void testJoinWithNestedParquetFiles() {
+        String expectedResult = TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | join -snpsnp ../tests/data/gor/dbsnp_test.gor");
+        String result = TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet | join -snpsnp <(gor ../tests/data/parquet/dbsnp_test.parquet)");
+        Assert.assertEquals("Join results not the same",expectedResult,result);
     }
 
     @Test
     public void testMergeWithParuet() {
         TestUtils.runGorPipe("gor ../tests/data/parquet/dbsnp_test.parquet ../tests/data/gor/dbsnp_test.gor | top 10");
     }
+
+    @Test
+    public void testParquetWrite() throws IOException {
+        Path parquetWrite = Files.createTempFile("write",".parquet");
+        try {
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write " + parquetWrite.toAbsolutePath().toString());
+            String rereadResult = TestUtils.runGorPipe("gor "+parquetWrite.toAbsolutePath().toString()+" | top 1");
+            Assert.assertEquals("Wrong content in written parquet file", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                    "chr1\t10179\tC\tCC\trs367896724\n", rereadResult);
+        } finally {
+            if(Files.exists(parquetWrite)) Files.delete(parquetWrite);
+        }
+    }
+
+    @Test
+    public void testNorParquetWrite() throws IOException {
+        Path parquetWrite = Files.createTempFile("write",".parquet");
+        try {
+            TestUtils.runGorPipe("nor ../tests/data/gor/dbsnp_test.gor | sort -c differentrsIDs | write " + parquetWrite.toAbsolutePath().toString());
+            String rereadResult = TestUtils.runGorPipe("gor "+parquetWrite.toAbsolutePath().toString()+" | top 1");
+            Assert.assertEquals("Wrong content in written parquet file", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                    "chrY\t10069\tT\tA\trs111065272\n", rereadResult);
+        } finally {
+            if(Files.exists(parquetWrite)) Files.delete(parquetWrite);
+        }
+    }
+
+    @Test
+    public void testPartitionedParquet() throws IOException {
+        Path tmpdir = null;
+        try {
+            tmpdir = Files.createTempDirectory("mu");
+            Path tmprparquet = tmpdir.resolve("forkr.parquet");
+            Path tmpparquet = tmpdir.resolve("forkr.parquet");
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f Chrom " + tmprparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f Chrom " + tmpparquet.toString());
+            String resultr = TestUtils.runGorPipe("gor "+tmprparquet.toString());
+            String result = TestUtils.runGorPipe("gor "+tmpparquet.toString());
+            Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
+        } finally {
+            if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch(Exception e) {
+
+                }
+            });
+        }
+    }
+
+    @Test
+    public void testPartitionedParquetCustomCol() throws IOException {
+        Path tmpdir = null;
+        try {
+            tmpdir = Files.createTempDirectory("mu");
+            Path tmprparquet = tmpdir.resolve("forkr.parquet");
+            Path tmpparquet = tmpdir.resolve("fork.parquet");
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet.toString());
+            String resultr = TestUtils.runGorPipe("gor "+tmprparquet.toString());
+            String result = TestUtils.runGorPipe("gor "+tmpparquet.toString());
+            Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
+        } finally {
+            if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch(Exception e) {
+
+                }
+            });
+        }
+    }
+
+    @Test
+    public void testPartitionedParquetNor() throws IOException {
+        Path tmpdir = null;
+        try {
+            tmpdir = Files.createTempDirectory("mu");
+            Path tmprparquet = tmpdir.resolve("forkr.parquet");
+            Path tmpparquet = tmpdir.resolve("fork.parquet");
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet.toString());
+            String resultr = TestUtils.runGorPipe("nor "+tmprparquet.toString());
+            String result = TestUtils.runGorPipe("nor "+tmpparquet.toString());
+            Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
+        } finally {
+            if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch(Exception e) {
+
+                }
+            });
+        }
+    }
+
 
     private StreamSourceFile createStreamSourceFile(String fileUrl) {
         SourceReference sourceReference = new SourceReference(fileUrl);

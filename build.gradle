@@ -20,8 +20,6 @@
  *  END_COPYRIGHT
  */
 
-description = """GOR Gradle build script"""
-
 // Configure the build script repositories and dependencies, must be defined in the top level gradle file.
 buildscript {
     repositories {
@@ -48,7 +46,13 @@ buildscript {
     }
 }
 
-version = new File("${rootDir}/version").text.trim()
+plugins {
+    id "com.github.ben-manes.versions" version "0.28.0"
+}
+
+
+description = """GOR Gradle build script"""
+version = new File("${rootDir}/VERSION").text.trim()
 
 apply from: "${rootDir}/gradle/util.gradle"
 
@@ -103,7 +107,7 @@ configure(allLeafProjects()) {
         jcenter()
         mavenCentral()
     }
-
+    
     jar {
         manifest manifestTemplate
         baseName = getProjectFullName()

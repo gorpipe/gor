@@ -145,7 +145,7 @@ public class UTestTableManager {
     @Test
     public void testMultiProcessInsert() throws Exception {
         String name = "test_multiprocess_insert";
-        int fileCount = 10;
+        int fileCount = 5;
         String[] sources = IntStream.range(1, fileCount + 1).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
@@ -168,7 +168,7 @@ public class UTestTableManager {
 
         // Wait for all the processes to finish.
         for (Process p : processes) {
-            boolean noTimeout = p.waitFor(20, TimeUnit.SECONDS);
+            boolean noTimeout = p.waitFor(30, TimeUnit.SECONDS);
             int errCode = -1;
             if (noTimeout) errCode = p.exitValue();
             if (errCode != 0) {

@@ -22,19 +22,14 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.GorContext
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.gor.stats.StatsCollector
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.model.genome.files.gor.{GenomicIterator, Line, Row}
 import org.gorpipe.model.gor.Pipes
 
-abstract class RowSource extends java.util.Iterator[Row] with AutoCloseable {
-  var header = ""
+abstract class RowSource extends GenomicIterator with AutoCloseable {
   var bufferSize: Int = Pipes.rowsToProcessBuffer
   private var ex : Throwable = _
   var parent : RowSource = _
-  private var stats: StatsCollector = _
-  private var statsSenderId: Int = -1
 
   def getParent : RowSource = parent
   def setParent(rs : RowSource): Unit = { parent = rs }
@@ -45,23 +40,13 @@ abstract class RowSource extends java.util.Iterator[Row] with AutoCloseable {
   def getCurrentBatchSize = 0
   def getCurrentBatchLoc = 0
   def getCurrentBatchRow( i : Int ) : Row = null
-  override def hasNext : Boolean
-  override def next() : Row
-  def setPosition(seekChr: String, seekPos : Int)
+  def setPosition(seekChr: String, seekPos : Int) { seek(seekChr, seekPos) }
   def moveToPosition(seekChr: String, seekPos : Int, maxReads: Int = 10000): Unit = setPosition(seekChr, seekPos)
   def close()
   def terminateReading() { /* do nothing */ }
-  def getHeader : String = header
-  def setHeader(x : String) { header = x }
   def getBufferSize : Int = bufferSize
   def setBufferSize( bs : Int ) { bufferSize = bs }
   def isBuffered = false
-  def pushdownFilter(gorwhere: String) : Boolean = false
-  def pushdownCalc(formula: String, colName: String) : Boolean = false
-  def pushdownSelect() : Boolean = false
-  def pushdownWrite(filename: String) : Boolean = false
-  def pushdownGor(cmd: String) : Boolean = false
-  def pushdownTop(limit: Int) : Boolean = false
 
   def getGorHeader: GorHeader = null
 
@@ -75,33 +60,12 @@ abstract class RowSource extends java.util.Iterator[Row] with AutoCloseable {
     ex
   }
 
-  def initStats(context: GorContext, sender: String, annotation: String) = {
-    if (context != null) {
-      stats = context.getStats
-      if (stats != null) {
-        statsSenderId = stats.registerSender(sender, annotation)
-      }
-    }
-  }
-
-  def incStat(name: String): Unit = {
-    if (stats != null) {
-      stats.inc(statsSenderId, name)
-    }
-  }
-
   override def clone(): RowSource = {
     val rs = new RowSource {
       /**
        * Close the data source, releasing all resources (typically files).
        */
       override def close(): Unit = ???
-
-      override def hasNext: Boolean = ???
-
-      override def next(): Row = ???
-
-      override def setPosition(seekChr: String, seekPos: Int): Unit = ???
     }
     rs.bufferSize = bufferSize
     rs.ex = ex
@@ -109,4 +73,14 @@ abstract class RowSource extends java.util.Iterator[Row] with AutoCloseable {
     rs
   }
 
+  override def next(line: Line): Boolean = {
+    if( hasNext ) {
+      val row = next()
+      line.copyColumnsFrom(row)
+      return true
+    }
+    false
+  }
+
+  override def seek(seekChr: String, seekPos: Int) = false
 }

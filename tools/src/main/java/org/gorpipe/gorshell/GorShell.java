@@ -24,8 +24,10 @@ package org.gorpipe.gorshell;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gorsat.Commands.InputSourceInfo;
+import gorsat.Script.MacroInfo;
 import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
+import gorsat.process.GorPipeMacros;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.logging.GorLogbackUtil;
@@ -39,6 +41,7 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import picocli.CommandLine;
 import picocli.shell.jline3.PicocliCommands;
+import scala.Option;
 
 import java.io.File;
 import java.io.IOException;
@@ -280,7 +283,8 @@ public class GorShell {
         ParsedLine parsedLine = lineReader.getParsedLine();
         String cmd = parsedLine.words().get(0);
         InputSourceInfo info = GorInputSources.getInfo(cmd);
-        if (info != null) {
+        Option<MacroInfo> macroInfo = GorPipeMacros.getInfo(cmd);
+        if (info != null || macroInfo.isDefined()) {
             handleQuery();
         } else {
             String[] arguments = input.split(" ");

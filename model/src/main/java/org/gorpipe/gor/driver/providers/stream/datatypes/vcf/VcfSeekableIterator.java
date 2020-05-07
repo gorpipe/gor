@@ -68,8 +68,8 @@ public class VcfSeekableIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
-        return this.gh.getColumns();
+    public String getHeader() {
+        return String.join("\t",this.gh.getColumns());
     }
 
     @Override

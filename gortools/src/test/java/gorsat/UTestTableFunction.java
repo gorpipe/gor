@@ -65,6 +65,11 @@ public class UTestTableFunction {
         System.setProperty("dialog.macrodir", macroPath);
     }
 
+    @AfterClass
+    public static void cleanup() {
+        System.gc();
+    }
+
     @Test
     public void testTablefunctionFreemarkerMacros() {
         String query = "create tf = tablefunction ../tests/data/reports/testmacro.yml() | signature -timeres 1; gor [tf]";

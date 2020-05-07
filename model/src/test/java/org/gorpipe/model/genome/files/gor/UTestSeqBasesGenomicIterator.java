@@ -65,8 +65,8 @@ public class UTestSeqBasesGenomicIterator {
     @Test
     public void getHeader() {
         try (SeqBasesGenomicIterator iterator = getSeqBasesGenomicIterator()) {
-            final String[] header = iterator.getHeader();
-            assertArrayEquals(SeqBasesGenomicIterator.COLS, header);
+            final String header = iterator.getHeader();
+            assertArrayEquals(SeqBasesGenomicIterator.COLS, header.split("\t"));
         }
     }
 

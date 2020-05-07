@@ -50,12 +50,12 @@ public class GorSeekableIterator extends GenomicIterator {
             throw new GorSystemException(e);
         }
         final String headerAsString = this.iterator.getHeader();
-        setHeader(headerAsString);
+        setGorHeader(headerAsString);
     }
 
     @Override
-    public String[] getHeader() {
-        return this.header.getColumns();
+    public String getHeader() {
+        return String.join("\t",this.header.getColumns());
     }
 
     @Override
@@ -96,15 +96,13 @@ public class GorSeekableIterator extends GenomicIterator {
         }
     }
 
-    private void setHeader(String headerAsString) {
+    private void setGorHeader(String headerAsString) {
         int i = 0;
         while (i < headerAsString.length() && headerAsString.charAt(i) == '#') ++i;
 
-        if (i == 0) {
-            this.header = new GorHeader(headerAsString.split("\t"));
-        } else {
-            this.header = new GorHeader(headerAsString.substring(i, headerAsString.length()).split("\t"));
-        }
+        String headerString = headerAsString.substring(i);
+        this.header = new GorHeader(headerString.split("\t"));
+        setHeader(headerString);
     }
 }
 

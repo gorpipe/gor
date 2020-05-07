@@ -31,9 +31,9 @@ import org.gorpipe.model.gor.iterators.RowSource
 case class CountingGorRowIterator(genomicRange: GenomicRange.Range, segmentValue: Int, stepValue: Int) extends RowSource {
   var chromPosition: Int = genomicRange.start
 
-  def hasNext: Boolean = chromPosition < genomicRange.stop
+  override def hasNext: Boolean = chromPosition < genomicRange.stop
 
-  def next(): Row = {
+  override def next(): Row = {
     var rowValues = genomicRange.chromosome + "\t" + chromPosition
 
     if (segmentValue > Int.MinValue) {
@@ -67,7 +67,7 @@ case class CountingGorRowIterator(genomicRange: GenomicRange.Range, segmentValue
     header
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {}
+  override def setPosition(seekChr: String, seekPos: Int) {}
 
   def close {}
 }

@@ -93,12 +93,12 @@ public class TableModelIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
+    public String getHeader() {
         String[] header = new String[getModel().getColumnCount()];
         for (int i = 0; i < getModel().getColumnCount(); i++) {
             header[i] = getModel().getColumnName(i);
         }
-        return header;
+        return String.join("\t",header);
     }
 
     @Override

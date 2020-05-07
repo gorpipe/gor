@@ -27,7 +27,7 @@ import org.apache.parquet.example.data.Group;
 import org.apache.parquet.hadoop.ParquetReader;
 
 public class NorParquetRowReader extends ParquetRowReader {
-    public NorParquetRowReader(ParquetReader<Group> reader, int[] sortCols) {
-        super(reader, (Group grp) -> new NorParquetLine(grp, sortCols));
+    public NorParquetRowReader(ParquetReader<Group> reader, int[] sortCols, String part) {
+        super(reader, (Group grp) -> new NorParquetLine(grp, sortCols), part);
     }
 }

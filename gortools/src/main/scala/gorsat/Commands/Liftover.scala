@@ -185,8 +185,7 @@ class Liftover extends CommandInfo("LIFTOVER",
             | replace CIGAR if(liftover_qstrand='-',revcigar(CIGAR),CIGAR)
             | replace MPOS if(isint(MPOS),MPOS-#2+liftover_nStart,MPOS)
             | select liftover_nChrom,liftover_nStart,liftover_nEnd,""" + (if (lhColnum > 3) "4-distance[-1]," else "") +
-          """
-1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
+          """1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
             | rename #1 """ + lhChrom +
           """ | rename #2 """ + lhStart +
@@ -223,8 +222,7 @@ class Liftover extends CommandInfo("LIFTOVER",
             | calc liftover_nStart IF(fulloverlap = 'mapped',int(liftover_nnStart),int(0))
             | calc liftover_nEnd IF(fulloverlap = 'mapped',int(liftover_nnEnd),int(1))
             | select liftover_nChrom,liftover_nStart,liftover_nEnd,""" + (if (lhColnum > 3) "4-distance[-1]," else "") +
-          """
-1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
+          """1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
             | rename #1 """ + lhChrom +
           """ | rename #2 """ + lhStart +
