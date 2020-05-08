@@ -51,10 +51,14 @@ public class AnalysisTestEngine {
     public static final RowHeader ROW_HEADER = RowHeader.apply(new String[] {"Chrom", "Pos", "Column"}, new String[] {"S","I", "S"});
 
     public void run(Analysis processor, String input, String output) {
-        run(processor, input.split("\n", -1), output.split("\n", -1));
+        run(processor, input.split("\n", -1), output.split("\n", -1), ROW_HEADER);
     }
 
     public void run(Analysis processor, String[] inputStrings, String[] outputStrings) {
+        run(processor, inputStrings, outputStrings, ROW_HEADER);
+    }
+
+    public void run(Analysis processor, String[] inputStrings, String[] outputStrings, RowHeader header) {
         List<Row> inputRows = new ArrayList<>();
         List<Row> outputRows = new ArrayList<>();
 
@@ -70,13 +74,22 @@ public class AnalysisTestEngine {
             }
         }
 
-        run(processor, inputRows.toArray(new Row[0]), outputRows.toArray(new Row[0]));
+        run(processor, inputRows.toArray(new Row[0]), outputRows.toArray(new Row[0]), header);
     }
 
     public void run(Analysis processor, Row[] inputRows, Row[] outputRows) {
         run(processor,
                 new RowArrayIterator(inputRows, inputRows.length),
-                new RowArrayIterator(outputRows, outputRows.length));
+                new RowArrayIterator(outputRows, outputRows.length),
+                ROW_HEADER);
+
+    }
+
+    public void run(Analysis processor, Row[] inputRows, Row[] outputRows, RowHeader header) {
+        run(processor,
+                new RowArrayIterator(inputRows, inputRows.length),
+                new RowArrayIterator(outputRows, outputRows.length),
+                header);
 
     }
 
@@ -84,13 +97,14 @@ public class AnalysisTestEngine {
         try {
             run(processor,
                     FileUtils.readLines(inputFile, Charset.defaultCharset()).toArray(new String[0]),
-                    FileUtils.readLines(outputFile, Charset.defaultCharset()).toArray(new String[0]));
+                    FileUtils.readLines(outputFile, Charset.defaultCharset()).toArray(new String[0]),
+                    ROW_HEADER);
         } catch (IOException ioe) {
             throw new GorResourceException("Failed to open file.", ioe.getMessage(), ioe);
         }
     }
 
-    public void run(Analysis processor, RowSource inputIterator, RowSource outputIterator) {
+    public void run(Analysis processor, RowSource inputIterator, RowSource outputIterator, RowHeader header) {
         AnalysisSink sink = new AnalysisSink();
 
         processor.$bar(sink);
@@ -99,7 +113,7 @@ public class AnalysisTestEngine {
         processor.isTypeInformationMaintained();
 
         // For test coverage
-        processor.setRowHeader(ROW_HEADER);
+        processor.setRowHeader(header);
 
         processor.setup();
 
