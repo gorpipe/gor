@@ -164,6 +164,6 @@ gor-services:
 
 
 include:
-  - template: Jobs/Code-Quality.gitlab-ci.yml
-  - template: Security/License-Management.gitlab-ci.yml
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Code-Quality.gitlab-ci.yml
+  - template: License-Scanning.gitlab-ci.yml
+  - template: Dependency-Scanning.gitlab-ci.yml
