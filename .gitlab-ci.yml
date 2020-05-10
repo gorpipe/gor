@@ -112,7 +112,7 @@ code_quality:
     expire_in: 1 week
 
 
-license_management:
+license_scanning:
   extends:
     - .build_with_cache
     - .on-releasable-or-release-branch-only
@@ -155,15 +155,16 @@ artifactory_publish:
   script: ./gradlew -Partifactory_repo=libs-staging-local -Partifactory_user=${ARTIFACTORY_USER} -Partifactory_password=${ARTIFACTORY_PASSWORD} artifactoryPublish -x test -x slowTest -x integrationTest
 
 
-gor-services:
-  extends: .on-releasable-branch-only
-  stage: trigger-cross-projects
-  trigger:
-    project:  wuxi-nextcode/wxnc-gor/gor-services
-    branch:   develop
+# TODO:  The trigger starts the gor-services with wrong variables.  Needs some tuning.
+#gor-services:
+#  extends: .on-releasable-branch-only
+#  stage: trigger-cross-projects
+#  trigger:
+#    project:  wuxi-nextcode/wxnc-gor/gor-services
+#    branch:   develop
 
 
 include:
-  - template: Jobs/Code-Quality.gitlab-ci.yml
-  - template: Security/License-Management.gitlab-ci.yml
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Code-Quality.gitlab-ci.yml
+  - template: License-Scanning.gitlab-ci.yml
+  - template: Dependency-Scanning.gitlab-ci.yml
