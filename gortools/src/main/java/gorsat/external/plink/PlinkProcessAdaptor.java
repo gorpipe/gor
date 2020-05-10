@@ -122,7 +122,7 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
                 String header = gorline.getHeader();
                 if(header!=null&&header.length()>0) {
                     if(expectedHeader.split("\t").length-1!=header.split("\t").length) {
-                        throw new GorDataException("Unexpected number of columns in plink2 result");
+                        throw new GorDataException("Unexpected number of columns in plink2 result, expected "+expectedHeader+" got "+header);
                     }
                     checkedHeaderFromPlink = true;
                 }

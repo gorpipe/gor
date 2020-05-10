@@ -89,12 +89,8 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     headerBuilder.append('\t')
     headerBuilder.append(inHeaderCols(colIndices(2)))
     headerBuilder.append('\t')
+    headerBuilder.append("A1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO")
 
-    if (firth) {
-      headerBuilder.append("A1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO")
-    } else {
-      headerBuilder.append("A1\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO")
-    }
 
     val header = headerBuilder.toString()
     val pip = if( vcf ) new PlinkVcfProcessAdaptor(context.getSession, plinkArguments, colIndices(1), colIndices(2), colIndices(0), if( colIndices.length == 4 ) colIndices(3) else -1, !imputed, threshold, vcf, forcedInputHeader, header)
