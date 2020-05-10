@@ -155,12 +155,13 @@ artifactory_publish:
   script: ./gradlew -Partifactory_repo=libs-staging-local -Partifactory_user=${ARTIFACTORY_USER} -Partifactory_password=${ARTIFACTORY_PASSWORD} artifactoryPublish -x test -x slowTest -x integrationTest
 
 
-gor-services:
-  extends: .on-releasable-branch-only
-  stage: trigger-cross-projects
-  trigger:
-    project:  wuxi-nextcode/wxnc-gor/gor-services
-    branch:   develop
+# TODO:  The trigger starts the gor-services with wrong variables.  Needs some tuning.
+#gor-services:
+#  extends: .on-releasable-branch-only
+#  stage: trigger-cross-projects
+#  trigger:
+#    project:  wuxi-nextcode/wxnc-gor/gor-services
+#    branch:   develop
 
 
 include:
