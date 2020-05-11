@@ -22,7 +22,10 @@
 
 package gorsat.Outputs
 
+import java.io.{File, OutputStream}
+
 import gorsat.Commands.Output
+import htsjdk.samtools.util.Md5CalculatingOutputStream
 import org.gorpipe.model.genome.files.gor.Row
 
 /**
@@ -31,8 +34,16 @@ import org.gorpipe.model.genome.files.gor.Row
   * @param skipHeader Whether the header should be written or not.
   * @param append Whether we should write the output to the beginning or end of the file.
   */
-class NorFileOut(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false) extends Output {
-  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(name, append)), 1024 * 100)
+class NorFileOut(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false, md5: Boolean = false) extends Output {
+  val finalFileOutputStream = new java.io.FileOutputStream(name, append)
+  val interceptingFileOutputStream: OutputStream =
+    if (md5) {
+      new Md5CalculatingOutputStream(finalFileOutputStream, new File(name + ".md5"))
+    } else {
+      finalFileOutputStream
+    }
+
+  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(interceptingFileOutputStream), 1024 * 100)
 
   def setup {
     if (header != null & !skipHeader) out.write("#" + header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
