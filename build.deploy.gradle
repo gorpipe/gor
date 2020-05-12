@@ -68,8 +68,8 @@ configure(allLeafProjects()){
                 name = "GitHubPackages"
                 url = "https://maven.pkg.github.com/sigmarkarl/gor"
                 credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
+                    username = project.findProperty('github_user') ?: System.getenv("GITHUB_ACTOR")
+                    password = project.findProperty('github_token') ?: System.getenv("GITHUB_TOKEN")
                 }
             }
             /*maven {
