@@ -89,7 +89,7 @@ object OutFile {
     if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
       new GORzip(name, header, options.skipHeader, append, options.columnCompress, options.md5, options.idx, options.compressionLevel)
     } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
-      new NorFileOut(name, header, options.skipHeader, append)
+      new NorFileOut(name, header, options.skipHeader, append, options.md5)
     } else if (nameUpper.endsWith(".PARQUET")) {
       new GorParquetFileOut(name, header, options.nor)
     } else if (options.nor) {
@@ -100,7 +100,9 @@ object OutFile {
   }
 
   def apply(name: String, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
-    driver(name, header, OutputOptions(skipHeader, columnCompress,  md5, nor, idx, prefixFile, compressionLevel))
+    driver(name, header, OutputOptions(skipHeader, columnCompress, md5, nor, idx, prefixFile, compressionLevel))
+
+  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, header, OutputOptions(skipHeader, nor = nor, md5 = md5))
 
   def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean): Output = driver(name, header, OutputOptions(skipHeader, nor = nor))
 
