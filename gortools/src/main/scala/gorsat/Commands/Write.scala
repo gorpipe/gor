@@ -78,6 +78,6 @@ class Write extends CommandInfo("WRITE",
       case "FULL" => idx = GorIndexType.FULLINDEX
     }
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, executeNor, ForkWriteOptions(remove, columnCompress, md5, idx, tagArray, prefixFile, compressionLevel, useFolder)), forcedInputHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, executeNor, ForkWriteOptions(remove, columnCompress, md5, idx, tagArray, prefixFile, compressionLevel, useFolder)), forcedInputHeader.split("\t").slice(0,2).mkString("\t"))
   }
 }
