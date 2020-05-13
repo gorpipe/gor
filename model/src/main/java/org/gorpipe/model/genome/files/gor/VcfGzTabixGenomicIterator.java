@@ -45,6 +45,7 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
     private TabixReader reader;
     private TabixReader.Iterator iterator;
     private Line linebuf;
+    private int seekPos = -1;
 
     public enum ChrNameSystem {
         WITH_CHR_PREFIX,
@@ -116,6 +117,7 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
 
     @Override
     public boolean seek(String chr, int pos) {
+        seekPos = pos;
         chrId = lookup.chrToId(chr); // Mark that a single chromosome seek
         createIterator(chrId, Math.max(0, pos - 1));
         return iterator != null;
@@ -144,6 +146,7 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
                         }
 
                         l.pos = ByteArray.toInt(buf, offset);
+                        if(seekPos > -1 && l.pos < seekPos) return next(l);
                         offset += ByteTextBuilder.cntDigits(l.pos) + 1;
 
                         if (linebuf != null) {
