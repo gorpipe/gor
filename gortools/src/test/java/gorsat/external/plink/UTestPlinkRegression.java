@@ -66,8 +66,8 @@ public class UTestPlinkRegression {
         oldPlinkExec = System.getProperty("org.gorpipe.gor.driver.plink.executable");
         String wd = Paths.get(".").toAbsolutePath().toString();
         String tmpd = System.getProperty("java.io.tmpdir");
-        String dockerPlink = "docker run --rm -i -v "+tmpd+":"+tmpd+" -v "+wd+":"+wd+" -w "+wd+" nextcode/gorplink2runner plink2";
-        System.setProperty("org.gorpipe.gor.driver.plink.executable",dockerPlink);
+        //String dockerPlink = "docker run --rm -i -v "+tmpd+":"+tmpd+" -v "+wd+":"+wd+" -w "+wd+" nextcode/gorplink2runner plink2";
+        //System.setProperty("org.gorpipe.gor.driver.plink.executable",dockerPlink);
     }
 
     @After

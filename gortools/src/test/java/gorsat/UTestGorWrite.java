@@ -65,6 +65,15 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testGorWriteColumnNumber() {
+        Path tmpfile = tmpdir.resolve("genes_md5.gorz");
+        tmpfile.toFile().deleteOnExit();
+        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize().toString();
+        String headerRes = TestUtils.runGorPipe(query);
+        Assert.assertEquals("", "Chrom\tgene_start\n", headerRes);
+    }
+
+    @Test
     public void testGorzWriteCompressionLevel() throws IOException {
         Path tmpfile = tmpdir.resolve("genes.gorz");
         tmpfile.toFile().deleteOnExit();

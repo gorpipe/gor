@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 
 /**
@@ -120,6 +121,8 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
         if(isInRange(r)) {
             nextFromIterator = r;
             return true;
+        } else if(isPreviousPos(r.chr, r.pos)) {
+            throw new GorDataException("Wrong position received after seek");
         }
 
         isOutOfRange = true;
@@ -148,6 +151,10 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
 
         }
         return chr.equals(startChromosome) && pos >= startPosition && pos <= stopPosition;
+    }
+
+    private boolean isPreviousPos(String chr, int pos) {
+        return chr.compareTo(startChromosome) < 0 || (chr.equals(startChromosome) && pos < startPosition);
     }
 
     @Override
