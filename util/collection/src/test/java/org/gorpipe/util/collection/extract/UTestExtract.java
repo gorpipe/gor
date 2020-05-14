@@ -345,6 +345,40 @@ public class UTestExtract {
         Assert.assertEquals(hash3, hash4);
     }
 
+    /**
+     * Test MD5 on directory
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testMd5Directory() throws IOException {
+        final String text = "dkdkdk dkjf dkdkdalk39 93 3944kd ikdkdsfjasdlfk afodsf sdf9ds fdsf7423348d 8d8 8d r8s7d d kd kdkkdkddkdkkdkdkdked dfd";
+        Path dir = null;
+        try {
+            dir = Files.createTempDirectory("testmd5");
+            final Path file1 = dir.resolve("test.txt");
+            Files.write(file1, text.getBytes());
+            final Path file2 = dir.resolve("test2.txt");
+            Files.write(file2, text.getBytes());
+
+            byte[] textbytes = text.getBytes();
+            byte[] combined = new byte[textbytes.length*2];
+            System.arraycopy(textbytes, 0, combined, 0, textbytes.length);
+            System.arraycopy(textbytes, 0, combined, textbytes.length, textbytes.length);
+            final String hash = Extract.md5(dir);
+            final String hashtest = Extract.md5(combined);
+            Assert.assertEquals(hash, hashtest);
+        } finally {
+            if(dir != null && Files.exists(dir)) Files.walk(dir).sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.delete(path);
+                } catch (IOException e) {
+                    // don't care
+                }
+            });
+        }
+    }
+
     static class MyObj {
         final int ival;
 
