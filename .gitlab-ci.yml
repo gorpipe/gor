@@ -10,27 +10,27 @@ variables:
   RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
 
+.on-branches:
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+
 .on-releasable-branch-only:
-  only:
-    variables:
-      - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
 
 .on-releasable-or-release-branch-only:
-  only:
-    variables:
-      - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
-      - $CI_COMMIT_REF_NAME =~ /^release\/v(0|[1-9]\d*)\.(0|[1-9]\d*)$/
-
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
+    - if: $CI_COMMIT_REF_NAME =~ /^release\/v(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+      
 .on-releasable-or-semver-tag-only:
-  only:
-    variables:
-      - $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
-      - $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
 
 .on-semver-tag-only:
-  only:
-    variables:
-      - $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
 
 
 stages:
@@ -45,9 +45,8 @@ before_script:
 
 
 .build_with_cache:
+  extends: .on-branches
   image: "$JAVA_BUILDER_IMAGE"
-  only:
-    - branches
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
