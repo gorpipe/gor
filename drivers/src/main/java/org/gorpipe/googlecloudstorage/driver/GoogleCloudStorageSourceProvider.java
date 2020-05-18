@@ -22,8 +22,10 @@
 
 package org.gorpipe.googlecloudstorage.driver;
 
+import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
@@ -32,7 +34,10 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 
 import java.util.Set;
 
+@AutoService(SourceProvider.class)
 public class GoogleCloudStorageSourceProvider extends StreamSourceProvider {
+    public GoogleCloudStorageSourceProvider() {}
+
     @Inject
     public GoogleCloudStorageSourceProvider(GorDriverConfig config, FileCache cache, Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, cache, initialFactories);

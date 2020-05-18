@@ -44,6 +44,10 @@ public class S3SourceProvider extends StreamSourceProvider {
     private final CredentialClientCache<S3Client> clientCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final S3Configuration s3Config;
 
+    public S3SourceProvider() {
+        s3Config = null;
+    }
+
     @Inject
     public S3SourceProvider(GorDriverConfig config, S3Configuration s3Config, FileCache cache,
                             Set<StreamSourceIteratorFactory> initialFactories) {

@@ -22,9 +22,11 @@
 
 package org.gorpipe.azure.driver;
 
+import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import com.microsoft.azure.storage.StorageException;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
@@ -36,7 +38,10 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.Set;
 
+@AutoService(SourceProvider.class)
 public class AzureSourceProvider extends StreamSourceProvider {
+    public AzureSourceProvider() {}
+
     @Inject
     public AzureSourceProvider(GorDriverConfig config, FileCache cache,
                                Set<StreamSourceIteratorFactory> initialFactories) {

@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.simple;
 
+import com.google.auto.service.AutoService;
+import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
@@ -29,7 +31,15 @@ import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 
+@AutoService(SourceProvider.class)
 public class SimpleSourceProvider implements SourceProvider {
+
+    public SimpleSourceProvider() {}
+
+    @Override
+    public void setConfig(GorDriverConfig config) {
+
+    }
 
     @Override
     public DataSource resolveDataSource(SourceReference sourceReference) {

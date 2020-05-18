@@ -36,6 +36,9 @@ project(':model') {
 
     dependencies {
 
+        annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
+        compileOnly 'com.google.auto.service:auto-service:1.0-rc6'
+
         compile project(':util:collection')
         compile project(':util:string')
         compile project(':util:gorutil')
@@ -66,8 +69,6 @@ project(':model') {
 
         compile 'org.apache.hadoop:hadoop-common:3.2.1'
         compile 'org.apache.hadoop:hadoop-mapreduce-client-core:3.2.1'
-
-        compile 'com.google.inject:guice:4.2.+'
 
         runtime "org.xerial:sqlite-jdbc:3.28.+"
         // Exclude slf4j bindings we dont want.

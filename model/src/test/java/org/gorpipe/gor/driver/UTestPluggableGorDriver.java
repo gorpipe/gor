@@ -27,6 +27,7 @@ import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import gorsat.TestUtils;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -58,5 +59,11 @@ public class UTestPluggableGorDriver {
         Assert.assertTrue("Open files now " + newCount + ", was " + count, newCount <= count + 10);
     }
 
+    @Test
+    public void noGuice() throws IOException {
+        PluggableGorDriver pd = PluggableGorDriver.instance();
+        GenomicIterator iterator = pd.createIterator(new SourceReference("1.mem"));
+        Assert.assertNotNull(iterator);
+    }
 
 }
