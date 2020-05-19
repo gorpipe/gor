@@ -20,13 +20,18 @@
  *  END_COPYRIGHT
  */
 
-project(':drivers') {
-    dependencies {
-        compile project(':model')
-        compile project(':base:config')
+package org.gorpipe.gor.driver;
 
-        compile "com.google.cloud:google-cloud-storage:1.91.+"
-        compile "com.amazonaws:aws-java-sdk-s3:1.11.+"
-        compile "com.microsoft.azure:azure-storage:8.3.+"
-    }
+import com.google.inject.Module;
+
+/**
+ * Gor driver plugin interface.
+ * <p>
+ * 1. Implement this interface (e.g. by extending Guice AbstractModule) and add reference to META-INF/services/org.gorpipe.gor.driver.Plugin
+ * 2. E.g. in configure() method - add source providers by using static bindSourceProvider method in GorDriverModule
+ * 3. News types of stream source providers can extend StreamSourceProvider class to automatically get handling for all data types.
+ * 3. Add data types handling to all stream sources by using static bindStreamSourceIteratorFactory helper method in StreamSourcePlugin
+ */
+public interface Plugin extends Module {
+
 }

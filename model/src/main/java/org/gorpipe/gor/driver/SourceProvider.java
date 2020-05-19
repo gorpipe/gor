@@ -31,8 +31,6 @@ import java.io.UnsupportedEncodingException;
 
 public interface SourceProvider {
 
-    void setConfig(GorDriverConfig config);
-
     /**
      * Get sources handled by this provider
      */

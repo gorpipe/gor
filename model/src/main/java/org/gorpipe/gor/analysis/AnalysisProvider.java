@@ -20,13 +20,15 @@
  *  END_COPYRIGHT
  */
 
-project(':drivers') {
-    dependencies {
-        compile project(':model')
-        compile project(':base:config')
+package org.gorpipe.gor.analysis;
 
-        compile "com.google.cloud:google-cloud-storage:1.91.+"
-        compile "com.amazonaws:aws-java-sdk-s3:1.11.+"
-        compile "com.microsoft.azure:azure-storage:8.3.+"
-    }
+import gorsat.Commands.Analysis;
+
+/**
+ * Created by sigmar on 05/02/16.
+ */
+public interface AnalysisProvider {
+    String[] getCommandNames();
+
+    Analysis createAnalyser(String cmd);
 }

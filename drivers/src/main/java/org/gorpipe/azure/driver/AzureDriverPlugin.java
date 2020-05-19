@@ -20,13 +20,16 @@
  *  END_COPYRIGHT
  */
 
-project(':drivers') {
-    dependencies {
-        compile project(':model')
-        compile project(':base:config')
+package org.gorpipe.azure.driver;
 
-        compile "com.google.cloud:google-cloud-storage:1.91.+"
-        compile "com.amazonaws:aws-java-sdk-s3:1.11.+"
-        compile "com.microsoft.azure:azure-storage:8.3.+"
+import com.google.inject.AbstractModule;
+import org.gorpipe.gor.driver.GorDriverModule;
+import org.gorpipe.gor.driver.Plugin;
+
+public class AzureDriverPlugin extends AbstractModule implements Plugin {
+
+    @Override
+    protected void configure() {
+        GorDriverModule.bindSourceProvider(binder(), AzureSourceProvider.class);
     }
 }

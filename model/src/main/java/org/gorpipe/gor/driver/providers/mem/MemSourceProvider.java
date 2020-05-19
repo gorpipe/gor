@@ -23,9 +23,8 @@
 package org.gorpipe.gor.driver.providers.mem;
 
 import java.util.Set;
-
-import com.google.auto.service.AutoService;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import com.google.inject.Inject;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
@@ -36,19 +35,12 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@AutoService(SourceProvider.class)
 public class MemSourceProvider implements SourceProvider {
 
     private static final Logger log = LoggerFactory.getLogger(MemSourceProvider.class);
 
 
-    public MemSourceProvider() {}
-
-    @Override
-    public void setConfig(GorDriverConfig config) {
-
-    }
-
+    @Inject
     public MemSourceProvider(GorDriverConfig config, FileCache cache,
                              Set<StreamSourceIteratorFactory> initialFactories) {
     }

@@ -23,21 +23,17 @@
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
 import java.util.Set;
-
-import com.google.auto.service.AutoService;
+import com.google.inject.Inject;
 import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 
-@AutoService(SourceProvider.class)
 public class FileSourceProvider extends StreamSourceProvider {
 
-    public FileSourceProvider() {}
-
+    @Inject
     public FileSourceProvider(GorDriverConfig config, FileCache cache,
                               Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, cache, initialFactories);

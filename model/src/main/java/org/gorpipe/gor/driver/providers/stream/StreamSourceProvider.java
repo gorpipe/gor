@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver.providers.stream;
 
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import com.google.inject.Inject;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -52,18 +53,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
     private FileCache cache;
     protected GorDriverConfig config;
 
-    public StreamSourceProvider() {}
-
-    public void setConfig(GorDriverConfig config) {
-        this.config = config;
-    }
-
-    public void setIteratorFactories(Set<StreamSourceIteratorFactory> factories) {
-        for (StreamSourceIteratorFactory factory : factories) {
-            register(factory);
-        }
-    }
-
+    @Inject
     public StreamSourceProvider(GorDriverConfig config, FileCache cache, Set<StreamSourceIteratorFactory> initialFactories) {
         this.config = config;
         this.cache = cache;

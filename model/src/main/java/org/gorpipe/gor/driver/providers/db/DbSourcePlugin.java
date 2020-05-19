@@ -22,35 +22,15 @@
 
 package org.gorpipe.gor.driver.providers.db;
 
-import java.io.IOException;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.SourceProvider;
-import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.driver.meta.SourceType;
+import com.google.inject.Binder;
+import org.gorpipe.gor.driver.GorDriverModule;
+import org.gorpipe.gor.driver.Plugin;
 
-public class DbSourceProvider implements SourceProvider {
+public class DbSourcePlugin implements Plugin {
 
     @Override
-    public DataSource resolveDataSource(SourceReference sourceReference) {
-        return new DbSource(sourceReference);
+    public void configure(Binder binder) {
+        GorDriverModule.bindSourceProvider(binder, DbSourceProvider.class);
     }
-
-    @Override
-    public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{DbSourceType.DB};
-    }
-
-    @Override
-    public DataSource wrap(DataSource source) {
-        return source;
-    }
-
-    @Override
-    public GenomicIterator createIterator(DataSource source) throws IOException {
-        return ((DbSource) source).open();
-
-    }
-
 
 }

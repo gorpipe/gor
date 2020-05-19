@@ -1,0 +1,3 @@
+org.gorpipe.gor.driver.providers.stream.StreamSourcePlugin
+org.gorpipe.gor.driver.providers.db.DbSourcePlugin
+org.gorpipe.gor.driver.providers.simple.SimpleSourcePlugin

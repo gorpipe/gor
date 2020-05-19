@@ -20,30 +20,15 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.stream.datatypes.cram;
+package org.gorpipe.gor.iterator;
 
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
-import java.io.IOException;
+/**
+ * Created by sigmar on 12/02/16.
+ */
+public interface IteratorProvider {
+    String[] getIteratorNames();
 
-public class CramFileIteratorFactory implements StreamSourceIteratorFactory {
-
-    @Override
-    public GenomicIterator createIterator(StreamSourceFile file) throws IOException {
-        return new CramFileIterator((CramFile) file);
-    }
-
-    @Override
-    public DataType[] getSupportedDataTypes() {
-        return new DataType[]{DataType.CRAM};
-    }
-
-    @Override
-    public StreamSourceFile resolveFile(StreamSource source) {
-        return new CramFile(source);
-    }
+    GenomicIterator createIterator(String name);
 }

@@ -20,28 +20,26 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
+package org.gorpipe.s3.driver;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import org.gorpipe.gor.driver.GorDriverModule;
+import org.gorpipe.gor.driver.Plugin;
+import org.gorpipe.base.config.ConfigManager;
 
-
-public class ParquetIteratorFactory implements StreamSourceIteratorFactory {
-    @Override
-    public GenomicIterator createIterator(StreamSourceFile file) {
-        return new ParquetFileIterator(file);
-    }
+public class S3DriverPlugin extends AbstractModule implements Plugin {
 
     @Override
-    public DataType[] getSupportedDataTypes() {
-        return new DataType[] {DataType.PARQUET};
+    protected void configure() {
+        GorDriverModule.bindSourceProvider(binder(), S3SourceProvider.class);
     }
 
-    @Override
-    public StreamSourceFile resolveFile(StreamSource source) {
-        return new StreamSourceFile(source);
+    @Provides
+    @Singleton
+    public S3Configuration config() {
+        return ConfigManager.createPrefixConfig("gor.s3", S3Configuration.class);
     }
+
 }

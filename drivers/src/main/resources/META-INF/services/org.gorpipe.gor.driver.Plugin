@@ -1,0 +1,3 @@
+org.gorpipe.azure.driver.AzureDriverPlugin
+org.gorpipe.s3.driver.S3DriverPlugin
+org.gorpipe.googlecloudstorage.driver.GoogleCloudStorageDriverPlugin

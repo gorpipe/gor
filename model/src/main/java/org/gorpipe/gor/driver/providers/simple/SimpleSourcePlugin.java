@@ -20,13 +20,17 @@
  *  END_COPYRIGHT
  */
 
-project(':drivers') {
-    dependencies {
-        compile project(':model')
-        compile project(':base:config')
+package org.gorpipe.gor.driver.providers.simple;
 
-        compile "com.google.cloud:google-cloud-storage:1.91.+"
-        compile "com.amazonaws:aws-java-sdk-s3:1.11.+"
-        compile "com.microsoft.azure:azure-storage:8.3.+"
+import com.google.inject.Binder;
+import org.gorpipe.gor.driver.GorDriverModule;
+import org.gorpipe.gor.driver.Plugin;
+
+public class SimpleSourcePlugin implements Plugin {
+
+    @Override
+    public void configure(Binder binder) {
+        GorDriverModule.bindSourceProvider(binder, SimpleSourceProvider.class);
     }
+
 }

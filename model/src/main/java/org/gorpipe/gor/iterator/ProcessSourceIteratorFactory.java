@@ -20,34 +20,18 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.simple;
+package org.gorpipe.gor.iterator;
 
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.SourceProvider;
-import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.driver.meta.SourceType;
 
-public class SimpleSourceProvider implements SourceProvider {
+import java.io.IOException;
 
-    @Override
-    public DataSource resolveDataSource(SourceReference sourceReference) {
-        return new SimpleSource(sourceReference);
-    }
+/**
+ * Created by sigmar on 12/02/16.
+ */
+public interface ProcessSourceIteratorFactory {
+    String[] getCommandNames();
 
-    @Override
-    public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{SimpleSourceType.SIMPLE};
-    }
-
-    @Override
-    public DataSource wrap(DataSource source) {
-        return source;
-    }
-
-    @Override
-    public GenomicIterator createIterator(DataSource source) {
-        throw new GorSystemException("SimpleSource does not support gor iterator", null);
-    }
+    GenomicIterator createIterator(DataSource ds) throws IOException;
 }

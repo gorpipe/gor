@@ -20,13 +20,12 @@
  *  END_COPYRIGHT
  */
 
-project(':drivers') {
-    dependencies {
-        compile project(':model')
-        compile project(':base:config')
+package org.gorpipe.gor.analysis;
 
-        compile "com.google.cloud:google-cloud-storage:1.91.+"
-        compile "com.amazonaws:aws-java-sdk-s3:1.11.+"
-        compile "com.microsoft.azure:azure-storage:8.3.+"
-    }
+import com.google.inject.Module;
+
+/**
+ * Created by sigmar on 11/02/16.
+ */
+public interface AnalysisPlugin extends Module {
 }
