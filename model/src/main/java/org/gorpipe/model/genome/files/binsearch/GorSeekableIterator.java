@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
@@ -47,10 +48,18 @@ public class GorSeekableIterator extends GenomicIterator {
             this.filePath = file.getCanonicalPath();
             this.iterator = new SeekableIterator(file, true);
         } catch (IOException e) {
-            throw new GorSystemException(e);
+            throw wrapIOException(e);
         }
         final String headerAsString = this.iterator.getHeader();
         setGorHeader(headerAsString);
+    }
+
+    private GorException wrapIOException(IOException e) {
+        if (e.getMessage().equals("Stale file handle")) {
+            return new GorSystemException("Stale file handle reading " + this.filePath, e);
+        } else {
+            return new GorResourceException("Error reading gorz file: " + e.getMessage(), this.filePath, e);
+        }
     }
 
     @Override
@@ -64,7 +73,7 @@ public class GorSeekableIterator extends GenomicIterator {
             this.iterator.seek(new StringIntKey(chr, pos));
             return this.iterator.hasNext();
         } catch (IOException e) {
-            throw new GorResourceException(e.getMessage(), this.filePath, e);
+            throw wrapIOException(e);
         }
     }
 
@@ -78,7 +87,7 @@ public class GorSeekableIterator extends GenomicIterator {
         try {
             return RowObj.apply(this.iterator.getNextAsString());
         } catch (IOException e) {
-            throw new GorResourceException(e.getMessage(), this.filePath, e);
+            throw wrapIOException(e);
         }
     }
 
