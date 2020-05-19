@@ -23,7 +23,6 @@
 package org.gorpipe.util.string;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,26 +80,6 @@ public class StringUtil {
             }
         }
         return -1;
-    }
-
-    /**
-     * Prints the exception stacktrace and its backtrace to the specified print stream.
-     *
-     * @param exception the exception to list
-     * @param s         <code>PrintWriter</code> to use for output
-     */
-    private static void printStackTrace(Throwable exception, PrintWriter s) {
-        s.println(exception.toString());
-        StackTraceElement[] trace = exception.getStackTrace();
-        for (StackTraceElement element : trace) {
-            s.println("\tat " + element);
-        }
-
-        Throwable ourCause = exception.getCause();
-        if (ourCause != null) {
-            s.print("Caused by: ");
-            printStackTrace(ourCause, s);
-        }
     }
 
     /**

@@ -22,16 +22,16 @@
 
 package org.gorpipe.security.cred;
 
-import org.gorpipe.util.string.JsonUtil;
-
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class CredentialsParser {
+
     public Credentials parseFromJson(Map<String, Object> cred) {
-        Instant expires = JsonUtil.parseIso8601Timestamp((String) cred.get("expires"));
+        Instant expires = parseIso8601Timestamp((String) cred.get("expires"));
         Credentials.Builder builder = new Credentials.Builder();
         builder.service((String) cred.get("service"));
         builder.lookupKey(nullBlank((String) cred.get("lookup_key")));
@@ -87,4 +87,13 @@ public class CredentialsParser {
         }
         return builder.build();
     }
+
+
+    public static Instant parseIso8601Timestamp(CharSequence stamp) {
+        if (stamp != null) {
+            return Instant.from(ZonedDateTime.parse(stamp));
+        }
+        return null;
+    }
+
 }
