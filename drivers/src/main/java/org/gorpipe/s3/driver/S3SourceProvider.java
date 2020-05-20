@@ -25,6 +25,7 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.*;
 import com.google.auto.service.AutoService;
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -45,7 +46,7 @@ public class S3SourceProvider extends StreamSourceProvider {
     private final S3Configuration s3Config;
 
     public S3SourceProvider() {
-        s3Config = null;
+        s3Config = ConfigManager.createPrefixConfig("gor.s3", S3Configuration.class);
     }
 
     public S3SourceProvider(GorDriverConfig config, S3Configuration s3Config, FileCache cache,
