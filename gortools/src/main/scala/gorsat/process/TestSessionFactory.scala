@@ -28,7 +28,7 @@ import gorsat.QueryHandlers.GeneralQueryHandler
 import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor._
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext}
-import org.gorpipe.util.string.StringUtil
+import org.gorpipe.model.util.StringUtil
 
 /**
   * Factory method tho create session used for tests

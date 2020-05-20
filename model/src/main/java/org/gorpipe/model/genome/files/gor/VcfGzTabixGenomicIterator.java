@@ -29,7 +29,7 @@ import org.gorpipe.model.util.Util;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import htsjdk.tribble.readers.TabixReader;
 
 import java.io.IOException;

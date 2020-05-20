@@ -30,7 +30,7 @@ import org.gorpipe.model.util.Util;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;

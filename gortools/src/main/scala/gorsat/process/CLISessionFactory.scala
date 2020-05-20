@@ -29,7 +29,7 @@ import gorsat.QueryHandlers.GeneralQueryHandler
 import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor._
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext, GorParallelQueryHandler}
-import org.gorpipe.util.string.StringUtil
+import org.gorpipe.model.util.StringUtil
 
 /**
   * Factory class to create session which relates to running gor in a command line. The session is created based on

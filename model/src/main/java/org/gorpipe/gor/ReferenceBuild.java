@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor;
 
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

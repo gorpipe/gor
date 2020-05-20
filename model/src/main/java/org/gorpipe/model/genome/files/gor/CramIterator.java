@@ -29,7 +29,7 @@ import org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.PathUtils;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import htsjdk.samtools.*;
 import htsjdk.samtools.cram.ref.CRAMReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;

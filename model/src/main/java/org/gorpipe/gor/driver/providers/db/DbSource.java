@@ -34,7 +34,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.gorserver.GorSource;
 import org.gorpipe.model.genome.files.gor.DbGenomicIterator;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

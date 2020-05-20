@@ -32,7 +32,7 @@ import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import gorsat.Iterators.NorInputSource;
 
 import java.io.IOException;

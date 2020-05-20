@@ -31,7 +31,7 @@ import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import org.gorpipe.model.gor.iterators.RefSeq;
 import org.gorpipe.model.gor.iterators.RefSeqFactory;
 import org.gorpipe.model.gor.iterators.RefSeqFromConfigFactory;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
 
 import java.io.IOException;

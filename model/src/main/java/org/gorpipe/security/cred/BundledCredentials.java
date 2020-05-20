@@ -23,7 +23,7 @@
 package org.gorpipe.security.cred;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

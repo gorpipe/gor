@@ -40,7 +40,6 @@ project(':model') {
         compileOnly 'com.google.auto.service:auto-service:1.0-rc6'
 
         compile project(':util:collection')
-        compile project(':util:string')
         compile project(':util:gorutil')
         compile project(':clientbase')
         compile project(':base:exception')

@@ -32,7 +32,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.model.util.Util;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import gorsat.Commands.CommandArguments;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
