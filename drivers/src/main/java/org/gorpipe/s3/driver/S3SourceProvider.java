@@ -24,7 +24,9 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.*;
+import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
@@ -37,6 +39,7 @@ import org.gorpipe.security.cred.Credentials;
 import java.io.IOException;
 import java.util.Set;
 
+@AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
     private final CredentialClientCache<S3Client> clientCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final S3Configuration s3Config;

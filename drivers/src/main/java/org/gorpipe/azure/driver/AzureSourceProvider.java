@@ -23,7 +23,6 @@
 package org.gorpipe.azure.driver;
 
 import com.google.auto.service.AutoService;
-import com.google.inject.Inject;
 import com.microsoft.azure.storage.StorageException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;

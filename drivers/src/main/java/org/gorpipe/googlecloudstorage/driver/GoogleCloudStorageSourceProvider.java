@@ -23,7 +23,6 @@
 package org.gorpipe.googlecloudstorage.driver;
 
 import com.google.auto.service.AutoService;
-import com.google.inject.Inject;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
