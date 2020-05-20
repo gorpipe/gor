@@ -426,7 +426,7 @@ public class UTestTableLock {
         String lockName = "LockRenew";
         BaseTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
 
-        long reserveTime = 1000;
+        long reserveTime = 4000;
 
         if (drlp != null) {
             drlp.set(null, Duration.ofMillis(reserveTime));
@@ -439,7 +439,7 @@ public class UTestTableLock {
 
             long startTime = System.currentTimeMillis();
             long initialReservedTo = lock.reservedTo();
-            while (startTime + 3 * reserveTime >= System.currentTimeMillis()) {
+            while (startTime + 2 * reserveTime >= System.currentTimeMillis()) {
                 Thread.sleep(reserveTime);
                 Assert.assertTrue("Lock not renewed!", lock.isValid());
             }
@@ -481,11 +481,11 @@ public class UTestTableLock {
         //debugWriteLock(tableLockClass, Duration.ofHours(10), table,  "CrashLockStandard", Duration.ofMillis(10));
         //main(new String[]{tableLockClass.getCanonicalName(), "WRITE", "100000000", "100", "CrashLockStandard", tableWorkDir.toString(), "W0", storyName});
 
-        Process p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(100), table, "CrashLockStandard", tableWorkDir, "W1", storyName, dataFileName);
+        Process p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(1000), table, "CrashLockStandard", tableWorkDir, "W1", storyName, dataFileName);
         Thread.sleep(4000); // Must wait a little while the external process starts.
 
         try {
-            debugReadLock(tableLockClass, Duration.ofMillis(10), null, table, "CrashLockStandard", Duration.ofMillis(10));
+            debugReadLock(tableLockClass, Duration.ofMillis(100), null, table, "CrashLockStandard", Duration.ofMillis(1000));
             // Should not be here.
             p.destroy(); // clean up.
             Assert.fail("Should not be able to get lock.");
@@ -495,14 +495,14 @@ public class UTestTableLock {
         p.destroy();
         Thread.sleep(3000);  // Again must wait while the process exits and cleans up.
         // Should clean up. Try getting the lock, get exception if fails.
-        debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockStandard", Duration.ofMillis(10));
+        debugWriteLock(tableLockClass, Duration.ofMillis(100), table, "CrashLockStandard", Duration.ofMillis(1000));
 
         // Finally some negative testing (to make sure the first half is not working by chance).
 
         p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(100), table, "CrashLockForce", tableWorkDir, "W2", storyName, dataFileName);
         Thread.sleep(4000); // Must wait a little while the external process starts.
         try {
-            debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockForce", Duration.ofMillis(10));
+            debugWriteLock(tableLockClass, Duration.ofMillis(100), table, "CrashLockForce", Duration.ofMillis(1000));
             // Should not be here.
             p.destroy(); // clean up.
             Assert.fail("Should not be able to get lock.");
@@ -513,7 +513,7 @@ public class UTestTableLock {
         Thread.sleep(3000);  // Again must wait while the process exits and cleans up.
         // Should not clean up. Try getting the lock, get exception if fails.
         try {
-            debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockForce", Duration.ofMillis(10));
+            debugWriteLock(tableLockClass, Duration.ofMillis(100), table, "CrashLockForce", Duration.ofMillis(1000));
             Assume.assumeTrue("Should not be able to get this lock as no clean up should have been performed.", false);
         } catch (AcquireLockException e) {
             // Ignore, should get this as no clean up was performed.

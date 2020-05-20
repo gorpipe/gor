@@ -128,6 +128,7 @@ dependency_scanning:
   tags:
     - iceland
   variables:
+    DS_DEFAULT_ANALYZERS: "gemnasium-maven"
     # There is no need to run tests or generate sphinx documentation for license management
     # analysis, however, the license management plugin calls the build task so we have to manually
     # disable tests and documentation generation.
