@@ -22,14 +22,8 @@
 
 package org.gorpipe.gor.driver;
 
-import com.google.inject.Injector;
-import org.gorpipe.gor.GorInjectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by stefan on 7.9.2016.
@@ -40,7 +34,6 @@ public class GorDriverFactory {
 
     private static final Logger log = LoggerFactory.getLogger(GorDriverFactory.class);
 
-    private static Map<GorDriver, Injector> lookup = new ConcurrentHashMap<>();
     private static GorDriver standardDriver;
 
     /**
@@ -52,40 +45,8 @@ public class GorDriverFactory {
      */
     public synchronized static GorDriver fromConfig() {
         if (standardDriver == null) {
-            standardDriver = fromConfig(null);
+            standardDriver = PluggableGorDriver.instance();
         }
         return standardDriver;
-    }
-
-    /**
-     * Constructs a GorDriver using the {@link GorModulesConfig} config interface, loaded from the 'gor.modules' prefix and
-     * using the supplied properties for overriding any values that are specified in it.
-     *
-     * @return a GorDriver configured via the ConfigManager using the prefix 'gor.modules'.
-     * @see #fromConfig()
-     */
-    public static GorDriver fromConfig(Properties props) {
-        Injector injector = GorInjectorFactory.fromConfig(props);
-        return withInjector(injector);
-    }
-
-    /**
-     * Constructs a GorDriver using the specified injector.
-     *
-     * @return a GorDriver configured via the given injector.
-     */
-    public static GorDriver withInjector(Injector injector) {
-        GorDriver driver = injector.getInstance(GorDriver.class);
-        lookup.put(driver, injector);
-        log.debug("Retrieving GOR driver [{}] using injector [{}]", driver.hashCode(), injector.hashCode());
-        return driver;
-    }
-
-    public static Injector getInjectorForDriver(GorDriver driver) {
-        return lookup.get(driver);
-    }
-
-    public static void clear() {
-        lookup.clear();
     }
 }

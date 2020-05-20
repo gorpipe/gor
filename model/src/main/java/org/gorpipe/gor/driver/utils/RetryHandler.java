@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.utils;
 
-import com.google.inject.Inject;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,6 @@ public class RetryHandler {
     private long retryInitialSleepMs;
     private long retryMaxSleepMs;
 
-    @Inject
     public RetryHandler(GorDriverConfig config) {
         this(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
     }

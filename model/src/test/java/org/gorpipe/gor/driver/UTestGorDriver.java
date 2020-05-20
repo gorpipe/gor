@@ -22,12 +22,16 @@
 
 package org.gorpipe.gor.driver;
 
+import gorsat.process.NorStreamIterator;
+import gorsat.process.NordIterator;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriver;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
@@ -72,6 +76,83 @@ public class UTestGorDriver {
         FileTestUtils.createLinesFile(workDir, 2000);
     }
 
+
+    @Test
+    public void gorDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gor");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void gorzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gorz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void gorgzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gor.gz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void norDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/nor/simple.nor");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void norzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/nor/simple.norz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void vcfDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/test.vcf");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void vcfgzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/test.vcf.gz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void bamDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/noindex.bam");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void cramDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/cram_query_sorted.cram");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void bgenDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/bgen/testfile1_chr1.bgen");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void parquetDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/parquet/dbsnp_test.parquet");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
 
     @Test
     public void testRelativeLinkFiles() {

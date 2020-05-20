@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.gor;
 
+import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.model.genome.files.binsearch.GorSeekableIterator;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
@@ -30,6 +31,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
+@AutoService(StreamSourceIteratorFactory.class)
 public class GorIteratorFactory implements StreamSourceIteratorFactory {
 
     @Override

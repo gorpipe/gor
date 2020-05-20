@@ -22,8 +22,12 @@
 
 package org.gorpipe.gor.driver;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.gor.driver.providers.stream.FileCache;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import com.google.inject.Inject;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -36,11 +40,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 import static org.gorpipe.gor.driver.meta.DataType.LINK;
 
@@ -52,7 +53,8 @@ public class PluggableGorDriver implements GorDriver {
 
     private GorDriverConfig config;
 
-    @Inject
+    private static PluggableGorDriver instance;
+
     PluggableGorDriver(Set<SourceProvider> initialSourceProviders, GorDriverConfig config) {
         if (initialSourceProviders != null) {
             for (SourceProvider provider : initialSourceProviders) {
@@ -60,6 +62,33 @@ public class PluggableGorDriver implements GorDriver {
             }
         }
         this.config = config;
+    }
+
+    public static PluggableGorDriver instance() {
+        if (instance == null) {
+            GorDriverConfig gorDriverConfig = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
+            FileCache cache = new FileCache(gorDriverConfig);
+
+            ServiceLoader<StreamSourceIteratorFactory> factoryServiceLoader = ServiceLoader.load(StreamSourceIteratorFactory.class);
+            Set<StreamSourceIteratorFactory> factories = new HashSet<>();
+            for(StreamSourceIteratorFactory sp: factoryServiceLoader) {
+                factories.add(sp);
+            }
+
+            ServiceLoader<SourceProvider> sourceProviders = ServiceLoader.load(SourceProvider.class);
+            Set<SourceProvider> set = new HashSet<>();
+            for(SourceProvider sp: sourceProviders) {
+                sp.setConfig(gorDriverConfig);
+                sp.setCache(cache);
+                if (sp instanceof StreamSourceProvider) {
+                    ((StreamSourceProvider) sp).setIteratorFactories(factories);
+                }
+                set.add(sp);
+            }
+
+            instance = new PluggableGorDriver(set, gorDriverConfig);
+        }
+        return instance;
     }
 
     private void register(SourceProvider provider) {

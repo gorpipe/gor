@@ -24,8 +24,6 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.*;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
@@ -39,12 +37,14 @@ import org.gorpipe.security.cred.Credentials;
 import java.io.IOException;
 import java.util.Set;
 
-@Singleton
 public class S3SourceProvider extends StreamSourceProvider {
     private final CredentialClientCache<S3Client> clientCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final S3Configuration s3Config;
 
-    @Inject
+    public S3SourceProvider() {
+        s3Config = null;
+    }
+
     public S3SourceProvider(GorDriverConfig config, S3Configuration s3Config, FileCache cache,
                             Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, cache, initialFactories);
