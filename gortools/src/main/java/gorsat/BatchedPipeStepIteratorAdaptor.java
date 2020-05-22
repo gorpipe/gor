@@ -549,6 +549,7 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
             }
         } else {
             closeSourceIterator();
+            pipeStep.securedFinish(null);
         }
 
         if (throwOnExit) {

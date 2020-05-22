@@ -248,7 +248,7 @@ object ParseUtilities {
     val pipeInstance = gorsat.process.PipeInstance.createGorIterator(context)
     pipeInstance.init(s)
 
-    val rs = pipeInstance.theIterator
+    val rs = pipeInstance.getRowSource
     var systemMessage = ""
     try {
       if (rs.hasNext) {

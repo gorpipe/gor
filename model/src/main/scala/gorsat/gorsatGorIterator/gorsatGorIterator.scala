@@ -26,68 +26,20 @@
 
 package gorsat.gorsatGorIterator
 
-import gorsat.Commands.{Analysis, CommandParseUtilities}
-import gorsat.DynIterator.DynamicRowSource
-import org.gorpipe.gor.{GorContext, GorSession}
-import org.gorpipe.model.genome.files.gor.{GorIterator, GorMonitor}
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.gor.GorIterator
 import org.gorpipe.model.gor.iterators.RowSource
 
 abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
-  val session = context.getSession
-  var theIterator : RowSource = _
-  var thePipeStep : Analysis = _
-  var theInputSource: RowSource = _
-  var combinedHeader : String = _
-  var theParams = ""
-  var usedFiles : List[String] = Nil
   var fixHeader : Boolean = true
   var isNorContext = false
 
-
+  def getRowSource: RowSource
+  def getUsedFiles: List[String]
   def processArguments(args : Array[String], executeNor : Boolean, forcedInputHeader : String = ""): RowSource
 
-  def scalaPipeStepInit(iparams : String, forcedInputHeader : String = "") {
-    if (theIterator != null) close()
-    val args = CommandParseUtilities.quoteSafeSplit(iparams + " -stdin",' ')
-    processArguments(args, isNorContext,forcedInputHeader)
-    theParams = iparams
-    theIterator = null
-  }
+  def scalaInit(iparams : String, forcedInputHeader : String = "")
 
-  def scalaInit(iparams : String, forcedInputHeader : String = "") {
-    if (theIterator != null) {
-      close()
-    }
-
-    val args = Array(iparams)
-    processArguments(args, isNorContext,forcedInputHeader)
-    theParams = iparams
-  }
-
-  override def init(params : String, gm : GorMonitor): Unit = { context.getSession.getSystemContext.setMonitor(gm); scalaInit(params) }
-
-  def seek(chr : String, pos : Int) {  // We must re-initialize if seek is applied
-    if (theIterator != null) close()
-    val dynIterator = new DynamicRowSource(theParams, context)
-    dynIterator.setPositionWithoutChrLimits(chr,pos)
-    theIterator = dynIterator
-  }
-
-  def getSession : GorSession = {
-    context.getSession
-  }
-
-  def getHeader : String = combinedHeader
-  def hasNext : Boolean = theIterator.hasNext
-  def next : String = theIterator.next().toString
-  def close() {
-    if (theIterator != null) {
-      theIterator.close()
-    }
-    if (context != null && context.getSession != null) context.getSession.close()
-  }
-
-  def getPipeStep : Analysis = thePipeStep
 }
 
 // ends gorsatGorIterator

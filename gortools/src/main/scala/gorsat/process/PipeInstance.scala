@@ -30,6 +30,7 @@ import java.util.Optional
 import gorsat.Analysis._
 import gorsat.Commands.CommandParseUtilities.{hasOption, rangeOfOption, stringValueOfOption}
 import gorsat.Commands.{Analysis, _}
+import gorsat.DynIterator.DynamicRowSource
 import gorsat.IteratorUtilities.validHeader
 import gorsat.Iterators.StdInputSourceIterator
 import gorsat.Monitors.{CancelMonitor, MemoryMonitor, TimeoutMonitor}
@@ -38,9 +39,9 @@ import gorsat._
 import gorsat.gorsatGorIterator.gorsatGorIterator
 import gorsat.process.GorJavaUtilities.CmdParams
 import gorsat.process.GorPipe.brsConfig
-import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorUserException}
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext}
+import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException, GorUserException}
+import org.gorpipe.gor.{GorContext, GorSession}
+import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext, GorMonitor}
 import org.gorpipe.model.gor.MemoryMonitorUtil
 import org.gorpipe.model.gor.iterators.RowSource
 import org.gorpipe.model.util.StringUtil
@@ -98,12 +99,80 @@ object PipeInstance {
   */
 class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
-  var range: GenomicRange.Range = GenomicRange.all
-  var firstCommand: Int = 0
-  var nowithin = false
-  var pipeSteps: Array[String] = _
+  private var theIterator : RowSource = _
+  private var usedFiles : List[String] = Nil
+  private var range: GenomicRange.Range = GenomicRange.all
+  private var firstCommand: Int = 0
+  private var nowithin = false
+  private var pipeSteps: Array[String] = _
+  private var theParams = ""
+  private val session = context.getSession
+  private var combinedHeader : String = _
+  private var isClosed: Boolean = false
+
+  var thePipeStep : Analysis = _
+  var theInputSource: RowSource = _
 
   PipeInstance.initialize()
+
+  override def init(params : String, gm : GorMonitor): Unit = {
+    context.getSession.getSystemContext.setMonitor(gm)
+    scalaInit(params)
+  }
+
+  override def getRowSource: RowSource = theIterator
+
+  override def getHeader : String = combinedHeader
+  override def getUsedFiles: List[String] = usedFiles
+
+  def createPipestep(iparams : String, forcedInputHeader : String = ""): Analysis = {
+    if (theIterator != null) close()
+    val args = CommandParseUtilities.quoteSafeSplit(iparams + " -stdin",' ')
+    processArguments(args, isNorContext,forcedInputHeader)
+    theParams = iparams
+    theIterator = null
+    thePipeStep
+  }
+
+  override def scalaInit(iparams : String, forcedInputHeader : String = "") {
+    if (theIterator != null) {
+      close()
+    }
+
+    val args = Array(iparams)
+    processArguments(args, isNorContext,forcedInputHeader)
+    theParams = iparams
+  }
+
+  override def hasNext : Boolean = {
+    if (isClosed) {
+      throw new GorSystemException("Iterator is closed", null)
+    }
+    theIterator.hasNext
+  }
+
+  override def next : String = {
+    if (isClosed) {
+      throw new GorSystemException("Iterator is closed", null)
+    }
+    theIterator.next().toString
+  }
+
+  def seek(chr : String, pos : Int) {  // We must re-initialize if seek is applied
+    if (theIterator != null) close()
+    val dynIterator = new DynamicRowSource(theParams, context)
+    dynIterator.setPositionWithoutChrLimits(chr,pos)
+    theIterator = dynIterator
+  }
+
+  override def close() {
+    if (theIterator != null) {
+      theIterator.close()
+      theIterator = null;
+    }
+    if (context != null && context.getSession != null) context.getSession.close()
+    isClosed = true
+  }
 
   /**
     * This method takes an argument string, a boolean flag (to execute as a Nor query),
@@ -115,6 +184,12 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     options.norContext = executeNor
     init(options.query, options.stdIn, forcedInputHeader)
   }
+
+  def getSession : GorSession = {
+    context.getSession
+  }
+
+  def getPipeStep : Analysis = thePipeStep
 
   def createFileReader(gorRoot: String): FileReader = {
     if (!StringUtil.isEmpty(gorRoot)) {
@@ -518,7 +593,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
         it.scalaInit(command)
         header = it.getHeader
       } else {
-        it.scalaPipeStepInit(command, leftHeader)
+        it.createPipestep(command, leftHeader)
         header = it.getHeader
       }
     } finally {

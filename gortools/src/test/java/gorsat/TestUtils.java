@@ -127,7 +127,7 @@ public class TestUtils {
     public static RowSource runGorPipeIterator(String query) {
         PipeInstance pipe = createPipeInstance(false);
         pipe.init(query, null);
-        return pipe.theIterator();
+        return pipe.getRowSource();
     }
 
 

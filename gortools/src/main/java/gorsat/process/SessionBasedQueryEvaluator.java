@@ -42,7 +42,7 @@ public class SessionBasedQueryEvaluator extends QueryEvaluator {
         List<String> result = new LinkedList<>();
         try (PipeInstance pipe = PipeInstance.createGorIterator(session.getGorContext())) {
             pipe.init(query, null);
-            RowSource iterator = pipe.theIterator();
+            RowSource iterator = pipe.getRowSource();
 
             while (iterator.hasNext()) {
                 result.add(iterator.next().otherCols());

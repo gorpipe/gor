@@ -22,6 +22,7 @@
 
 package gorsat.Commands
 
+import org.gorpipe.exceptions.GorSystemException
 import org.gorpipe.gor.GorContext
 import org.gorpipe.gor.stats.StatsCollector
 import org.gorpipe.model.genome.files.gor.Row
@@ -150,7 +151,10 @@ abstract class Analysis() extends Processor with Cloneable {
   }
 
   def process(r: Row) {
-    if (!wantsNoMore) nextProcessor.process(r)
+    if (alreadyFinished)
+      throw new GorSystemException("Analysis step already finished", null)
+    if (!wantsNoMore)
+      nextProcessor.process(r)
   }
 
   def finish() {}
