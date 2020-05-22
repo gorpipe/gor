@@ -153,7 +153,7 @@ abstract class Analysis() extends Processor with Cloneable {
   def process(r: Row) {
     if (alreadyFinished)
       throw new GorSystemException("Analysis step already finished", null)
-    if (!wantsNoMore)
+    if (!wantsNoMore && nextProcessor != null)
       nextProcessor.process(r)
   }
 

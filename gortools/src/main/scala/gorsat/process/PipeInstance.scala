@@ -165,6 +165,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     val dynIterator = new DynamicRowSource(theParams, context)
     dynIterator.setPositionWithoutChrLimits(chr,pos)
     theIterator = dynIterator
+    isClosed = false
   }
 
   override def close() {

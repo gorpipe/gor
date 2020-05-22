@@ -548,8 +548,8 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
                 Thread.currentThread().interrupt();
             }
         } else {
-            closeSourceIterator();
             pipeStep.securedFinish(null);
+            closeSourceIterator();
         }
 
         if (throwOnExit) {
