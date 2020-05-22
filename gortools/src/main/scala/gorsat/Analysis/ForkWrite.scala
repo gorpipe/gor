@@ -23,6 +23,7 @@
 package gorsat.Analysis
 
 import java.nio.file.{Files, Paths}
+import java.util.zip.Deflater
 
 import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
@@ -34,21 +35,22 @@ import org.gorpipe.model.gor.RowObj
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-case class ForkWriteOptions(remove: Boolean,
-                            columnCompress: Boolean,
-                            md5: Boolean,
-                            idx: GorIndexType,
-                            tags: Array[String],
-                            prefixFile: Option[String],
-                            compressionLevel: Int,
-                            useFolder: Boolean
+case class OutputOptions(remove: Boolean = false,
+                            columnCompress: Boolean = false,
+                            md5: Boolean = false,
+                            nor: Boolean = false,
+                            idx: GorIndexType = GorIndexType.NONE,
+                            tags: Array[String] = null,
+                            prefix: Option[String] = None,
+                            prefixFile: Option[String] = None,
+                            compressionLevel: Int = Deflater.BEST_SPEED,
+                            useFolder: Boolean = false
                            )
 
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,
                      inHeader: String,
-                     isNor: Boolean,
-                     options: ForkWriteOptions) extends Analysis {
+                     options: OutputOptions) extends Analysis {
 
   case class FileHolder(forkValue: String) {
     if (forkCol >= 0 && !options.useFolder && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
@@ -70,7 +72,6 @@ case class ForkWrite(forkCol: Int,
     var out: Output = _
   }
 
-  var nor = isNor || (forkCol == 0 && options.remove)
   var useFork: Boolean = forkCol >= 0
   var forkMap = mutable.Map.empty[String, FileHolder]
   val tagSet: mutable.Set[String] = scala.collection.mutable.Set()++options.tags
@@ -102,11 +103,13 @@ case class ForkWrite(forkCol: Int,
 
   def openFile(sh: FileHolder) {
     val name = sh.fileName
-    if (!sh.headerWritten) {
-      sh.out = OutFile(name, header, skipHeader = false, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile, options.compressionLevel)
+    val skipHeader = if (!sh.headerWritten) {
       sh.headerWritten = true
+      false
+    } else {
+      true
     }
-    else sh.out = OutFile(name, header, skipHeader = true, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile, options.compressionLevel)
+    sh.out = OutFile.driver(name, if(options.prefix.isDefined) options.prefix.get+header else header, skipHeader, options)
     sh.out.setup()
     sh.fileOpen = true
     openFiles += 1
@@ -158,7 +161,7 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  override def finish {
+  override def finish() {
     forkMap.values.foreach(sh => {
       if (sh.fileOpen) {
         if (sh.out != null) sh.out.finish()
@@ -172,7 +175,7 @@ case class ForkWrite(forkCol: Int,
       }
     })
     if (!somethingToWrite && !useFork) {
-      val out = OutFile(fullFileName, header, skipHeader = false, columnCompress = options.columnCompress, nor = nor, md5 = options.md5, options.idx, options.prefixFile)
+      val out = OutFile(fullFileName, header, skipHeader = false, columnCompress = options.columnCompress, nor = options.nor, md5 = options.md5, options.idx, options.prefixFile)
       out.setup()
       out.finish()
     }
