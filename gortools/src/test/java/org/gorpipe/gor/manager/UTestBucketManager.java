@@ -387,7 +387,7 @@ public class UTestBucketManager {
         buc.gracePeriodForDeletingBuckets = Duration.ofMillis(2000);
         buc.deleteBuckets(buckets[2]);
         Assert.assertTrue("Bucket file should not be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[2])));
-        Thread.sleep(2500);
+        Thread.sleep(5000);
         buc.cleanBucketFiles(lock, false);
         Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[2])));
     }

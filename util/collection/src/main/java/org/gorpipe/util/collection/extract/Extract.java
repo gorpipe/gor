@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -899,7 +900,37 @@ public class Extract {
      * @throws IOException
      */
     public static final String md5(Path path) throws IOException {
-        return digest(path, "MD5");
+        return Files.isDirectory(path) ? digestDir(path,"MD5") : digest(path, "MD5");
+    }
+
+    /**
+     * Query for the specified digest for the provided Path content
+     *
+     * @param path The Path object to work with
+     * @param type The type of digest to create
+     * @return The digest as HEX string
+     * @throws IOException
+     */
+    public static final String digestDir(Path path, String type) throws IOException {
+        try {
+            final MessageDigest md5 = MessageDigest.getInstance(type);
+            final byte[] bytes = new byte[8 * 1024];
+            Optional<IOException> ioException = Files.walk(path).parallel().filter(p -> !Files.isDirectory(p)).map(f -> {
+                try (InputStream in = java.nio.file.Files.newInputStream(f)) {
+                    int read;
+                    while ((read = in.read(bytes)) > 0) {
+                        md5.update(bytes, 0, read);
+                    }
+                } catch (IOException e) {
+                    return e;
+                }
+                return null;
+            }).filter(Objects::nonNull).findFirst();
+            if(ioException.isPresent()) throw ioException.get();
+            return hex(md5.digest());
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IOException("Did not find implementation of " + type + " hasing", ex);
+        }
     }
 
     /**

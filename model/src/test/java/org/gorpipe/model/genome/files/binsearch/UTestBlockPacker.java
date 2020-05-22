@@ -24,7 +24,7 @@ package org.gorpipe.model.genome.files.binsearch;
 
 import org.gorpipe.model.util.IntHashMap;
 import org.gorpipe.model.util.Util;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 import junit.framework.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

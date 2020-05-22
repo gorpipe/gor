@@ -33,7 +33,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.GenomicRange;
 import org.gorpipe.gor.table.PathUtils;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 
 import static org.gorpipe.gor.table.PathUtils.fixFileSchema;
 import static org.gorpipe.gor.table.PathUtils.relativize;

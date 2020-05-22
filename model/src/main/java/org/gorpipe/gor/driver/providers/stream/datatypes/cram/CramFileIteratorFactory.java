@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.cram;
 
+import com.google.auto.service.AutoService;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
@@ -30,6 +31,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
 import java.io.IOException;
 
+@AutoService(StreamSourceIteratorFactory.class)
 public class CramFileIteratorFactory implements StreamSourceIteratorFactory {
 
     @Override

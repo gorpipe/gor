@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver;
 
+import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
@@ -30,6 +31,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 public interface SourceProvider {
+
+    default void setConfig(GorDriverConfig config) {}
+    default void setCache(FileCache cache) {}
 
     /**
      * Get sources handled by this provider

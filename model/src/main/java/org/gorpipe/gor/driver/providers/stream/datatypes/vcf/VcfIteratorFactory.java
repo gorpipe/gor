@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
+import com.google.auto.service.AutoService;
 import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.gorpipe.gor.driver.adapters.OffsetStreamSourceSeekableFile;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
@@ -40,6 +41,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+@AutoService(StreamSourceIteratorFactory.class)
 public class VcfIteratorFactory implements StreamSourceIteratorFactory {
 
     @Override

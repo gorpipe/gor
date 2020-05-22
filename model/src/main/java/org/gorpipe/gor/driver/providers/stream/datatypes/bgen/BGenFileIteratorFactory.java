@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bgen;
 
+import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
@@ -30,6 +31,7 @@ import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 import java.io.IOException;
 
+@AutoService(StreamSourceIteratorFactory.class)
 public class BGenFileIteratorFactory implements StreamSourceIteratorFactory {
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) throws IOException {

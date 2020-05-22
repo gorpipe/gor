@@ -43,7 +43,7 @@ import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext}
 import org.gorpipe.model.gor.MemoryMonitorUtil
 import org.gorpipe.model.gor.iterators.RowSource
-import org.gorpipe.util.string.StringUtil
+import org.gorpipe.model.util.StringUtil
 import org.slf4j.LoggerFactory
 
 object PipeInstance {

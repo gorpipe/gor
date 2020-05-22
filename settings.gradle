@@ -13,7 +13,6 @@ include 'documentation'
 include 'gortools'
 include 'tools'
 include 'gordrivers'
-include 'util:string'
 include 'util:collection'
 include 'util:gorutil'
 

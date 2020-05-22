@@ -22,12 +22,15 @@
 
 package org.gorpipe.security.cred;
 
-import org.gorpipe.util.string.JsonUtil;
-import org.gorpipe.util.string.StringUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gorpipe.model.util.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -129,7 +132,15 @@ public class BundledCredentials implements CredentialsProvider {
     }
 
     public String toJson() {
-        return JsonUtil.toJson(toMap());
+        Writer writer = new StringWriter();
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            mapper.writeValue(writer, toMap());
+        } catch (IOException e) {
+            // Should not happen
+            throw new RuntimeException(e);
+        }
+        return writer.toString();
     }
 
     /**
@@ -185,7 +196,15 @@ public class BundledCredentials implements CredentialsProvider {
 
     private static BundledCredentials fromBase64String(String base64) {
         byte[] decoded = Base64.getUrlDecoder().decode(base64);
-        return new CredentialsParser().parseBundle(JsonUtil.parseJson(new String(decoded)));
+        return new CredentialsParser().parseBundle(parseJson(new String(decoded)));
+    }
+
+    private static Map<String, Object> parseJson(CharSequence json) throws IllegalArgumentException {
+        try {
+            return new ObjectMapper().readValue(json.toString(), HashMap.class);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot parse json string: " + json, e);
+        }
     }
 
     public String toBase64String() {

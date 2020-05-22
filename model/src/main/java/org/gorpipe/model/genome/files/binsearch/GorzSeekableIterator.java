@@ -24,6 +24,7 @@ package org.gorpipe.model.genome.files.binsearch;
 
 import com.github.luben.zstd.ZstdInputStream;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
@@ -66,7 +67,7 @@ public class GorzSeekableIterator extends GenomicIterator {
             this.filePath = file.getCanonicalPath();
             this.seekableIterator = new SeekableIterator(file, index,true);
         } catch (IOException e) {
-            throw new GorSystemException(e);
+            throw wrapIOException(e);
         }
         final byte[] headerBytes = this.seekableIterator.getHeaderBytes();
         int idx = 0;
@@ -98,10 +99,18 @@ public class GorzSeekableIterator extends GenomicIterator {
             try {
                 return seekFile(key);
             } catch (IOException e) {
-                throw new GorResourceException("Error reading gorz file: " + e.getMessage(), this.filePath, e);
+                throw wrapIOException(e);
             } catch (DataFormatException e) {
                 throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
+        }
+    }
+
+    private GorException wrapIOException(IOException e) {
+        if (e.getMessage().equals("Stale file handle")) {
+            return new GorSystemException("Stale file handle reading " + this.filePath, e);
+        } else {
+            return new GorResourceException("Error reading gorz file: " + e.getMessage(), this.filePath, e);
         }
     }
 
@@ -127,7 +136,7 @@ public class GorzSeekableIterator extends GenomicIterator {
             try {
                 loadBufferIterator();
             } catch (IOException e) {
-                throw new GorResourceException("Error reading gorz file: " + e.getMessage(), this.filePath, e);
+                throw wrapIOException(e);
             } catch (DataFormatException e) {
                 throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
