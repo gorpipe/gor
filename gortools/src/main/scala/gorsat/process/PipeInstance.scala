@@ -125,6 +125,8 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
   override def getHeader : String = combinedHeader
   override def getUsedFiles: List[String] = usedFiles
 
+  def getIterator: RowSource = theIterator
+
   def createPipestep(iparams : String, forcedInputHeader : String = ""): Analysis = {
     if (theIterator != null) close()
     val args = CommandParseUtilities.quoteSafeSplit(iparams + " -stdin",' ')
