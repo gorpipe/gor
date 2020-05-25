@@ -42,8 +42,8 @@ Options
 +-----------------+-----------------------------------------------------------------+
 | ``-m``          | Use MD5 encryption on the output file.                          |
 +-----------------+-----------------------------------------------------------------+
-| ``-i [type]``   | Write index file (.gori) with a .gorz file                      |
-|                 | Must state the type, which can be FULL or CHROM                 |
+| ``-i [type]``   | Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz |
+|                 | Must state the type, which can be FULL, CHROM or TABIX          |
 +-----------------+-----------------------------------------------------------------+
 | ``-l [level]``  | Compression level (0-9). Default 1.                             |
 +-----------------+-----------------------------------------------------------------+
@@ -51,7 +51,7 @@ Options
 |                 | Only valid with the -f option.                                  |
 +-----------------+-----------------------------------------------------------------+
 | ``-prefix hf``  | Takes in a text source containing prefix to be prepended to the |
-|                 | file written.                                                   |
+|                 | file written. Also support string in single quotes              |
 +-----------------+-----------------------------------------------------------------+
 
 Examples

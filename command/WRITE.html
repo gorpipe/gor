@@ -197,8 +197,8 @@
 <td><p>Use MD5 encryption on the output file.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">[type]</span></code></p></td>
-<td><p>Write index file (.gori) with a .gorz file
-Must state the type, which can be FULL or CHROM</p></td>
+<td><p>Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz
+Must state the type, which can be FULL, CHROM or TABIX</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">[level]</span></code></p></td>
 <td><p>Compression level (0-9). Default 1.</p></td>
@@ -209,7 +209,7 @@ Only valid with the -f option.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
 <td><p>Takes in a text source containing prefix to be prepended to the
-file written.</p></td>
+file written. Also support string in single quotes</p></td>
 </tr>
 </tbody>
 </table>
