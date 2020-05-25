@@ -23,7 +23,6 @@
 package org.gorpipe.gor.driver.providers.simple;
 
 import com.google.auto.service.AutoService;
-import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;

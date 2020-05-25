@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver;
 
-import org.apache.commons.collections.IteratorUtils;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
@@ -34,7 +33,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
-import org.gorpipe.util.gorutil.standalone.GorStandalone;
+import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

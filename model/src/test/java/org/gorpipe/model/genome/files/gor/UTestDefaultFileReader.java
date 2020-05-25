@@ -23,8 +23,6 @@
 package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.model.genome.files.gor.DefaultFileReader;
-import org.gorpipe.model.genome.files.gor.RacFile;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Before;
 import org.junit.Rule;

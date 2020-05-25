@@ -31,7 +31,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.util.gorutil.standalone.GorStandalone;
+import org.gorpipe.util.standalone.GorStandalone;
 import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

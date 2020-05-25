@@ -20,8 +20,9 @@
  *  END_COPYRIGHT
  */
 
-project(':external') {
+project(':util') {
     dependencies {
         compile project(':base')
+        testRuntimeOnly project(':test')
     }
 }

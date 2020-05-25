@@ -26,7 +26,7 @@ project(':drivers') {
         compileOnly 'com.google.auto.service:auto-service:1.0-rc6'
 
         compile project(':model')
-        compile project(':base:config')
+        compile project(':base')
 
         compile "com.google.cloud:google-cloud-storage:1.91.+"
         compile "com.amazonaws:aws-java-sdk-s3:1.11.+"

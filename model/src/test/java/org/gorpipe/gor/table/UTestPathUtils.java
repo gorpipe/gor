@@ -22,22 +22,15 @@
 
 package org.gorpipe.gor.table;
 
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**

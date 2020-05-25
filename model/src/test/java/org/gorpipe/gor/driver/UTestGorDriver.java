@@ -22,16 +22,10 @@
 
 package org.gorpipe.gor.driver;
 
-import gorsat.process.NorStreamIterator;
-import gorsat.process.NordIterator;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.GorDriver;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;

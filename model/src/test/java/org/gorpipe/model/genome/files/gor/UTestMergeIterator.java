@@ -24,10 +24,6 @@ package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.exceptions.GorDataException;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.GorOptions;
-import org.gorpipe.model.genome.files.gor.MergeIterator;
-import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.test.GorDictionarySetup;
 import org.junit.Assert;
 import org.junit.BeforeClass;

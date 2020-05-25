@@ -39,11 +39,8 @@ project(':model') {
         annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
         compileOnly 'com.google.auto.service:auto-service:1.0-rc6'
 
-        compile project(':util:collection')
-        compile project(':util:gorutil')
-        compile project(':clientbase')
-        compile project(':base:exception')
-        compile project(':base:config')
+        compile project(':util')
+        compile project(':base')
         compile project(':external')
 
         compile "com.github.samtools:htsjdk:2.19.+"
@@ -73,7 +70,7 @@ project(':model') {
         // Exclude slf4j bindings we dont want.
         runtime("org.postgresql:postgresql:42.2.7") { exclude group: 'org.slf4j', module: 'slf4j-simple' }
 
-        testCompile project(':base:test')
+        testCompile project(':test')
 
         testCompile "org.mockito:mockito-core:3.0.+"
         testCompile "org.scalatest:scalatest_2.12:3.0.8"

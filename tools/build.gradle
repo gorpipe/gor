@@ -22,7 +22,7 @@
 
 project(':tools') {
     dependencies {
-        compile project(':base:config')
+        compile project(':base')
         compile project(':gortools')
         compile project(':model')
         compile 'org.jline:jline:3.13.3'
@@ -30,7 +30,7 @@ project(':tools') {
         compile "com.fasterxml.jackson.core:jackson-databind:2.9.+"
         runtime project(':documentation')
         testCompile group: 'junit', name: 'junit', version: '4.+'
-        testCompile project(':base:test')
+        testCompile project(':test')
     }
 
     jar {

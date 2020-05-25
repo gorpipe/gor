@@ -24,7 +24,6 @@ package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.TableLog;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

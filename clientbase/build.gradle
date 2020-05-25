@@ -23,9 +23,8 @@
 project(':clientbase') {
 
     dependencies {
-        compile project(':base:logging')
-        compile project(':base:exception')
+        compile project(':base')
 
-        testCompile project(':base:test')
+        testCompile project(':test')
     }
 }

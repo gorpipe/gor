@@ -23,8 +23,6 @@
 package org.gorpipe.gor;
 
 import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.GorScriptBaseVisitor;
-import org.gorpipe.gor.GorScriptParser;
 import gorsat.Commands.CommandInfo;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.process.GorPipeCommands;

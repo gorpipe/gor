@@ -20,8 +20,8 @@
  *  END_COPYRIGHT
  */
 
-project(':external') {
+project(':test') {
     dependencies {
-        compile project(':base')
+        compile "commons-io:commons-io:2.6"
     }
 }

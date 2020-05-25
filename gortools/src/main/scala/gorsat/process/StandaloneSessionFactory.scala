@@ -30,7 +30,7 @@ import gorsat.QueryHandlers.GeneralQueryHandler
 import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor._
 import org.gorpipe.model.genome.files.gor.DriverBackedFileReader
-import org.gorpipe.util.gorutil.standalone.GorStandalone
+import org.gorpipe.util.standalone.GorStandalone
 
 /**
   * Factory class to create a session for standalone Sequence Miner.
