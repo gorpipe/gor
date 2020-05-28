@@ -20,7 +20,7 @@ public class UTestGorKing {
                 "\n" +
                 "create #values# = norrows 100 | rename #1 i | multimap -cartesian <(norrows #n# | rename #1 j) | calc gt mod(i+j,4) | group -gc i -lis -sc gt -s '' | rename #2 values;\n" +
                 "create #vars# = gorrows -p chr1:1-100 | select 1-2 | calc ref 'C' | calc alt 'A' | calc af random() | map -c pos [#values#] | calc bucket 'b1'\n" +
-                "| csvsel -tag PN -gc ref,alt,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -gc ref,alt,af [#bucket#] <(gorrows -p chr1:1-2 | group chrom | calc pn '' | top 0);\n" +
+                "| csvsel -tag PN -gc ref,alt,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -gc ref,alt,af [#bucket#] <(gorrows -p chr1:1-2 | group chrom | calc pn '' | top 0) | signature -timeres 100;\n" +
                 "\n" +
                 "create #king# = nor <(gor [#vars#] | king -gc af [#bucket#] [#pns1#] [#pns2#] -vs 1 /* -phithr -1.0 */) | select pn1- | signature -timeres 100;\n" +
                 "\n" +
