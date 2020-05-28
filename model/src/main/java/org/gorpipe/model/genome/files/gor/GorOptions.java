@@ -604,7 +604,7 @@ public class GorOptions {
             }
         } else {
             hasLocalDictonaryFile = true;
-            Dictionary.DictionaryLine sf = Dictionary.parseDictionaryLine(file, null);
+            Dictionary.DictionaryLine sf = Dictionary.parseDictionaryLine(file, null, file);
             addSourceRef(sf.fileRef.physical, sf.fileRef.logical, sf.fileRef.isAcceptedAbsoluteRef, projectContext,
                     sf.alias, sf.startChr, sf.startPos, sf.stopChr, sf.stopPos, sf.tags, allowBucketAccess, alltags);
         }

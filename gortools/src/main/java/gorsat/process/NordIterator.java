@@ -241,7 +241,7 @@ public class NordIterator extends RowSource {
 
             if (!entryPath.isAbsolute()) {
                 Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(Paths.get(this.projectRoot, this.nordFile), this.projectRoot);
-                Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference);
+                Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile);
 
                 if (reference.logical != null)
                     fileName = line.fileRef.logical;

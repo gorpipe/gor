@@ -25,6 +25,7 @@ package org.gorpipe.gor.table;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.model.util.Util;
@@ -67,11 +68,11 @@ import java.util.stream.Stream;
  * <p>
  * Reserved key values are:
  * <p>
- * fileformat      - Version of the file format.
- * created         - Creation date of the file
- * build           - Reference data build version.
- * columns         - Column definition for the gor files in the dictionary.
- * sourceColumn    - Name of the source column.
+ * FILE_FORMAT      - Version of the file format.
+ * CREATED         - Creation date of the file
+ * BUILD           - Reference data build version.
+ * COLUMNS         - Column definition for the gor files in the dictionary.
+ * SOURCE_COLUMNS    - Name of the source column.
  * <p>
  * Format of the header line is:
  * <p>
@@ -287,7 +288,7 @@ public class Dictionary {
             try (final Stream<String> stream = Files.newBufferedReader(gordPath).lines()) {
                 stream.map(String::trim)
                         .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
-                        .map(line -> parseDictionaryLine(line, this.dictFileParent))
+                        .map(line -> parseDictionaryLine(line, this.dictFileParent, path))
                         .filter(Objects::nonNull)
                         .forEach(dictLine ->
                                 processLineForCache(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
@@ -348,7 +349,7 @@ public class Dictionary {
         final ArrayList<Set<String>> bucketTagsList = new ArrayList<>();
         try (final Stream<String> lines = new BufferedReader(new FileReader(gordPath.toFile())).lines()) {
             numberOfLinesWithoutBuckets = (int) lines.map(String::trim)
-                    .filter(line -> !(line.isEmpty() || line.charAt(0) == '#')).map(line -> parseDictionaryLine(line, dictFileParent))
+                    .filter(line -> !(line.isEmpty() || line.charAt(0) == '#')).map(line -> parseDictionaryLine(line, dictFileParent, path))
                     .peek(dictLine -> {
                         if (dictLine != null) {
                             int bucketIdx = -1;
@@ -558,58 +559,64 @@ public class Dictionary {
         return filesToUse;
     }
 
-    static public DictionaryLine parseDictionaryLine(String line, FileReference dictFileParent) {
-        final ArrayList<String> parts = StringUtil.split(line);
-        final int length = parts.size();
-        if (length > 0) {
-            String file = parts.get(0).replace('\\', '/');
-            String bucketFileName = null;
-            final int pipeIdx = file.indexOf('|');
-            final String alias = length > 1 ? parts.get(1) : null;
-            boolean lineDeleted = false;
-            if (pipeIdx >= 0) { // If file bucket is encoded in the file name
-                if (pipeIdx == 0) {
-                    throw new GorDataException("Error Intializing Query. File " + file + " starts with pipe character");
-                }
-                final String bucket = file.substring(pipeIdx + 1);
-                if (bucket.toLowerCase().startsWith("d|")) {
-                    bucketFileName = bucket.substring(2);
-                    log.debug("Ignoring deleted file: {}", bucketFileName);
-                    lineDeleted = true;
-                } else {
-                    file = file.substring(0, pipeIdx);
-                    bucketFileName = bucket;
-                }
-            }
-
-            if (!lineDeleted) {
-                FileReference fileref = file.contains("://") ? resetFilePath(file, null) : resetFilePath(file, dictFileParent);
-                final Set<String> tags;
-                if (length > 2) {
-                    if (length >= 6) {
-                        // Support specification of the genomic range of each file
-                        final String startChr = parts.get(2);
-                        final int startPos = Integer.parseInt(parts.get(3));
-                        final String stopChr = parts.get(4);
-                        final int stopPos = Integer.parseInt(parts.get(5));
-                        // support both comma separated and tab separated tags
-                        tags = length < 7 ? tagset(alias)
-                                : tagset(parts.get(6).indexOf(',') >= 0 ? StringUtil.split(parts.get(6), ',') : parts.subList(6, parts.size()));
-
-                        return new DictionaryLine(fileref, bucketFileName, alias, startChr, startPos, stopChr, stopPos, tags, false, false);
+    static public DictionaryLine parseDictionaryLine(String line, FileReference dictFileParent, String dictPath) {
+        try {
+            final ArrayList<String> parts = StringUtil.split(line);
+            final int length = parts.size();
+            if (length > 0) {
+                String file = parts.get(0).replace('\\', '/');
+                String bucketFileName = null;
+                final int pipeIdx = file.indexOf('|');
+                final String alias = length > 1 ? parts.get(1) : null;
+                boolean lineDeleted = false;
+                if (pipeIdx >= 0) { // If file bucket is encoded in the file name
+                    if (pipeIdx == 0) {
+                        throw new GorDataException("Error Intializing Query. File " + file + " starts with pipe character");
+                    }
+                    final String bucket = file.substring(pipeIdx + 1);
+                    if (bucket.toLowerCase().startsWith("d|")) {
+                        bucketFileName = bucket.substring(2);
+                        log.debug("Ignoring deleted file: {}", bucketFileName);
+                        lineDeleted = true;
                     } else {
-                        throw new GorDataException("Error Initializing Query. Expected 4 columns for genomic range specification!");
+                        file = file.substring(0, pipeIdx);
+                        bucketFileName = bucket;
+                    }
+                }
+
+                if (!lineDeleted) {
+                    FileReference fileref = file.contains("://") ? resetFilePath(file, null) : resetFilePath(file, dictFileParent);
+                    final Set<String> tags;
+                    if (length > 2) {
+                        if (length >= 6) {
+                            // Support specification of the genomic range of each file
+                            final String startChr = parts.get(2);
+                            final int startPos = Integer.parseInt(parts.get(3));
+                            final String stopChr = parts.get(4);
+                            final int stopPos = Integer.parseInt(parts.get(5));
+                            // support both comma separated and tab separated tags
+                            tags = length < 7 ? tagset(alias)
+                                    : tagset(parts.get(6).indexOf(',') >= 0 ? StringUtil.split(parts.get(6), ',') : parts.subList(6, parts.size()));
+
+                            return new DictionaryLine(fileref, bucketFileName, alias, startChr, startPos, stopChr, stopPos, tags, false, false);
+                        } else {
+                            throw new GorDataException("Error Initializing Query. Expected 4 columns for genomic range specification!");
+                        }
+                    } else {
+                        // Add alias as tag on the file, if alias is specified
+                        tags = tagset(alias);
+                        return new DictionaryLine(fileref, bucketFileName, alias, null, -1, null, -1, tags, false, false);
                     }
                 } else {
-                    // Add alias as tag on the file, if alias is specified
-                    tags = tagset(alias);
-                    return new DictionaryLine(fileref, bucketFileName, alias, null, -1, null, -1, tags, false, false);
+                    return new DictionaryLine(null, bucketFileName, alias, null, -1, null, -1, null, false, true);
                 }
-            } else {
-                return new DictionaryLine(null, bucketFileName, alias, null, -1, null, -1, null, false, true);
             }
+            return null;
+        } catch (GorException ge) {
+            throw ge;
+        } catch (Exception e) {
+            throw new GorDataException(String.format("Error parsing dictionary %s, line: %s", dictPath, line), e);
         }
-        return null;
     }
 
     private static Set<String> tagset(String alias) {
