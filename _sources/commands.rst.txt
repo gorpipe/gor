@@ -110,6 +110,9 @@ Commands
    * - :ref:`JOIN`
      - Joins multiple sources (or a single source to itself) based on some defined overlap condition.
      - GOR
+   * - :ref:`KING`
+     - Calculates relationship statistics from a stream of horizontal genotypes.
+     - GOR
    * - :ref:`LEFTJOIN`
      - A special type of join that returns all rows from the left source along with data from the right if any matches.
      - GOR

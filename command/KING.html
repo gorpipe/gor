@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>KING &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="gor-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">Documentation</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>KING</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="king">
+<span id="id1"></span><h1>KING<a class="headerlink" href="#king" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>KING</strong> command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
+Bioinformatics, Vol. 26 no. 22 2010, pages 2867–2873).</p>
+<p>The left-input stream is of the same type as for <strong>CSVSEL</strong>, i.e. it must contain the columns <code class="docutils literal notranslate"><span class="pre">values</span></code> and <code class="docutils literal notranslate"><span class="pre">bucket</span></code>.
+The tag-bucket relation is used to define how the values for different tags are stored in the value column in each bucket.
+The tag selections specify which tags are selected and the calculation is carried out for each tag (PN) in the first
+tag list against each tag in the second tag list, for every variant in the left-input stream.  The left-input stream
+must include a column with the allele frequency, named AF.  Such column is most easily added to the horizontal genotype
+variant format with a <strong>VARJOIN</strong>.</p>
+<p>The output is a row for each tag-pair, using columns named PN1 and PN2.  Since the output is an aggregate over the genome
+is also includes dummy columns for Chrom and Pos with the values “ChrA” and 0, respectively.  The important columns are
+however PN1, PN2, IBS0, XX, tpq, kpq, Nhet, Nhom, NAai, NAaj, count, pi0, phi, and theta.  See the code examples
+and the KING paper for further details related to the <strong>KING</strong> command.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING tagbucketrelation tagselection1 tagselection2  [-<span class="no">gc</span> cols] [(-s sep | -vs charsize)]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns other than (chrom,pos).  NOTE, one of the must include AF</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">sep</span></code></p></td>
+<td><p>Specify separator for the elements in values.  Default to comma.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-vs</span> <span class="pre">size</span></code></p></td>
+<td><p>Use a fixed character size for values, e.g. rather than variable length separated with comma.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-pi0thr</span> <span class="pre">value</span></code></p></td>
+<td><p>Threshold value to filter output on pi0, e.g. to pass we must have pi0 &lt; value</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-phithr</span> <span class="pre">value</span></code></p></td>
+<td><p>Threshold value to filter output on phi, e.g. to pass we must have phi &gt; value</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-thetathr</span> <span class="pre">value</span></code></p></td>
+<td><p>Threshold value to filter output on theta, e.g. to pass we must have theta &gt; value</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>The following query:
+
+<span class="nd">gor</span> [#vars#] | king -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 #buckets#
+               &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn)
+               &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn)
+
+is equivalent to this query written withouth the KING command:
+
+<span class="nd">gor</span> #hvars# | csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,tpq,kpq -vs 1 -u 3 -tag <span class="na">PN</span> #buckets# &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn)
+| where value != &#39;3&#39;
+| multimap -c pn -h &lt;(<span class="nd">nor</span> [#rel#] | where part = &#39;#{col:part}&#39; | select id1,id2)
+| varjoin -norm -r -xl id2 -xr pn &lt;(<span class="nd">gor</span> #hgt#
+| where len(ref)=len(<span class="na">alt</span>)
+| varjoin -i -norm [#usedvars#]
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span> -vs 1 -u 3 -tag <span class="na">PN</span> #buckets# &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #rightpns# ) | select pn)
+| where value != &#39;3&#39;
+)
+| calc values = <span class="k">str</span>(value)+<span class="k">str</span>(valuex)
+| calc IBS0 if(values=&#39;02&#39; or values = &#39;20&#39;,1,0)
+| calc XX if(values=&#39;01&#39; or values = &#39;10&#39; or values = &#39;21&#39; or values = &#39;12&#39;,1,if(values=&#39;02&#39; or values = &#39;20&#39;,4,0))
+| calc Nhet if(values = &#39;11&#39;,1,0)
+| calc Nhom if(values = &#39;02&#39; or values = &#39;20&#39;,1,0)
+| calc NAai if(left(values,1)=&#39;1&#39;,1,0)
+| calc NAaj if(right(values,1)=&#39;1&#39;,1,0)
+| group genome -<span class="no">gc</span> pn,pnx -sum -fc IBS0,XX,tpq,kpq,Nhet,Nhom,NAai,NAaj
+
+The query that uses the KING command is MUCH faster when the <span class="na">PN</span>-list are large!
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> #r# = rename #1 <span class="na">PN</span> | replace #1 &#39;<span class="na">PN</span>&#39;+#1;
+<span class="nd">def</span> #n# = 100;
+<span class="nd">def</span> #bucksize# = 17;
+
+<span class="nd">create</span> #bucket# = norrows #n# | #r# | rownum | calc bucket &#39;b&#39;+<span class="k">str</span>(1+div(rownum, #bucksize# )) | hide rownum;
+<span class="nd">create</span> #dummybuck# = norrows #n# | #r# | calc bucket &#39;b1&#39;;
+<span class="nd">create</span> #pns# = norrows #n# | #r#;
+<span class="nd">create</span> #pns1# = <span class="nd">nor</span> [#pns#] | top 10;
+<span class="nd">create</span> #pns2# = <span class="nd">nor</span> [#pns#] | skip 10 | top 20;
+
+<span class="nd">create</span> #rel# = <span class="nd">nor</span> [#pns1#] | multimap -cartesian [#pns2#] | rename <span class="na">PN</span> id1 | rename PNx id2 | select id1,id2;
+
+<span class="nd">create</span> #values# = norrows 100 | rename #1 i | multimap -cartesian &lt;(norrows #n# | rename #1 j) | calc gt mod(i+j,4) | group -<span class="no">gc</span> i -lis -sc gt -s &#39;&#39; | rename #2 values;
+<span class="nd">create</span> #vars# = gorrows -<span class="no">p</span> chr1:1-100 | select 1-2 | calc ref &#39;C&#39; | calc <span class="na">alt</span> &#39;A&#39; | calc af random() | map -c <span class="na">pos</span> [#values#] | calc bucket &#39;b1&#39;
+| csvsel -tag <span class="na">PN</span> -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -<span class="no">gc</span> ref,<span class="na">alt</span>,af [#bucket#] &lt;(gorrows -<span class="no">p</span> chr1:1-2 | group chrom | calc pn &#39;&#39; | top 0);
+
+<span class="nd">create</span> #king# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | king -<span class="no">gc</span> af [#bucket#] [#pns1#] [#pns2#] -vs 1) | select pn1-;
+
+<span class="nd">nor</span> [#king#] | calc monozygotic if(phi &gt; pow(2.0,-1.5) and phi &lt; 0.1,1,0)
+| calc parent_offspring if(phi &gt; pow(2.0,-2.5) and phi &lt; pow(2.0,-1.5) and pi0 &lt; 0.1,1,0)
+| calc full_sib if(phi &gt; pow(2.0,-2.5) and phi &lt; pow(2.0,-1.5) and pi0 &gt; 0.1  and pi0 &lt; 0.365,1,0)
+| calc second_degree if(phi &gt; pow(2.0,-3.5) and phi &lt; pow(2.0,-2.5) and pi0 &gt; 0.365 and pi0 &lt; 1.0-pow(2,-1.5),1,0)
+| calc third_degree if(phi &gt; pow(2.0,-4.5) and phi &lt; pow(2.0,-3.5) and pi0 &gt; 1.0-pow(2,-1.5) and pi0 &lt; 1.0-pow(2,-2.5),1,0)
+
+The above query example shows how the parameters pi0 and phi (or theta) can be used in a relationship classifier.
+</pre></div>
+</div>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-136552918-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
+    
+   
+
+</body>
+</html>
