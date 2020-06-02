@@ -38,19 +38,14 @@ abstract class GorExecutionEngine{
     val listener = session.getEventLogger
 
     session.getGorContext.start("")
-    try{
-      iterator = createIterator(session)
+    iterator = createIterator(session)
 
-      val runner = createRunner(session)
+    val runner = createRunner(session)
 
-      if (runner != null) {
-        runner.run(iterator.theInputSource, iterator.thePipeStep)
-      }
-    } finally {
-      if (iterator != null) {
-        iterator.close()
-      }
+    if (runner != null) {
+      runner.run(iterator.theInputSource, iterator.thePipeStep)
     }
+
     session.getGorContext.end()
     listener.endSession()
   }
