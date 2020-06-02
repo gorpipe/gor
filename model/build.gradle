@@ -53,6 +53,7 @@ project(':model') {
         compile "com.github.luben:zstd-jni:1.4.4-3"
 
         compile "org.reflections:reflections:0.9.+"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.11.+"
 
         compile "commons-codec:commons-codec:1.13"
         compile "commons-io:commons-io:2.6"

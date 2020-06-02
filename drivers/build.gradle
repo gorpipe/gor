@@ -28,6 +28,7 @@ project(':drivers') {
         compile project(':model')
         compile project(':base')
 
+        compile "com.fasterxml.jackson.core:jackson-databind:2.11.+"
         compile "com.google.cloud:google-cloud-storage:1.91.+"
         compile "com.amazonaws:aws-java-sdk-s3:1.11.+"
         compile "com.microsoft.azure:azure-storage:8.3.+"
