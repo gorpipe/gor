@@ -38,7 +38,7 @@ import gorsat.Commands.Analysis
 
 import scala.collection.mutable
 
-object GorKing {
+object GorQueen {
 
   case class binaryHolder(bui : BucketInfo, af : Float) extends BinaryHolder
 
@@ -80,12 +80,21 @@ object GorKing {
     }
   }
 
-  case class KingState(session: GorSession,
+  def colIndexMove(n: Int, str: CharSequence, offset: Int, sah: SaHolder, bui : BucketInfo, oc : Int): Unit = {
+    val start = if (n == 0) offset else sah.seps(n - 1) + 1
+      if (str.charAt(start)=='1') { bui.IDX1(bui.IDX1size) = oc; bui.IDX1size += 1 }
+  }
+
+  def colIndexMoveFixed(n: Int, str: CharSequence, offset: Int, bui : BucketInfo, oc : Int, valSize: Int, sepSize: Int): Unit = {
+    val start = offset + n * (valSize + sepSize)
+    if (str.charAt(start)=='1') { bui.IDX1(bui.IDX1size) = oc; bui.IDX1size += 1 }
+  }
+
+  case class QueenState(session: GorSession,
                          lookupSignature: String,
                          buckCol: Int,
                          valCol: Int,
                          grCols: List[Int],
-                         afCol: Int,
                          sepVals: String,
                          valSize: Int,
                          uv: String) extends BinState {
@@ -160,7 +169,6 @@ object GorKing {
             }
           } else sh = singleColHolder
 
-          sh.af = r.colAsDouble(afCol).toFloat
           sh.buckRows(buckNo) = line
           val offset = if (useLineObject) 0 else r.sa(valCol - 1) + 1
           sh.offsetArray(buckNo) = offset
@@ -182,23 +190,40 @@ object GorKing {
         var outCol = 0
         try {
           r = null
+          bui.IDX1size = 0
           outCol = 0
-            while (outCol < bui.outputBucketPos.length) {
-              val buckNo = bui.outputBucketID(outCol)
-              val buckPos = bui.outputBucketPos(outCol)
-              r = sh.buckRows(buckNo)
-              val offset = sh.offsetArray(buckNo)
-              if (r == null) {
-                bui.GTS(outCol) = '3'
+          while (outCol < bui.outputBucketPos.length) {
+            val buckNo = bui.outputBucketID(outCol)
+            val buckPos = bui.outputBucketPos(outCol)
+            r = sh.buckRows(buckNo)
+            val offset = sh.offsetArray(buckNo)
+            if (r != null) {
+                if (valSize == -1) {
+                colIndexMove(buckPos, r, offset, sh.splitArr(buckNo), bui, outCol)
               } else {
-                  if (valSize == -1) {
-                  colCharMove(buckPos, r, offset, sh.splitArr(buckNo), bui.GTS, outCol)
-                } else {
-                    colCharMoveFixed(buckPos, r, offset, bui.GTS, outCol, valSize, sepSize)
-                  }
-              }
-              outCol += 1
+                  colIndexMoveFixed(buckPos, r, offset, bui, outCol, valSize, sepSize)
+                }
             }
+            outCol += 1
+          }
+          outCol = 0
+          while (outCol < bui.outputBucketPos2.length) {
+            val buckNo = bui.outputBucketID2(outCol)
+            val buckPos = bui.outputBucketPos2(outCol)
+            r = sh.buckRows(buckNo)
+            val offset = sh.offsetArray(buckNo)
+            if (r == null) {
+              bui.GTS2(outCol) = '3'
+            } else {
+              if (valSize == -1) {
+                colCharMove(buckPos, r, offset, sh.splitArr(buckNo), bui.GTS2, outCol)
+              } else {
+                colCharMoveFixed(buckPos, r, offset, bui.GTS2, outCol, valSize, sepSize)
+              }
+            }
+            outCol += 1
+          }
+
 
           theBinaryHolderRow.bH = binaryHolder(bui,af)
 
@@ -221,49 +246,47 @@ object GorKing {
     }
   }
 
-  case class KingFactory(session: GorSession,
+  case class QueenFactory(session: GorSession,
                            lookupSignature: String,
                            buckCol: Int,
                            valCol: Int,
                            grCols: List[Int],
-                           afCol: Int,
                            sepVal: String,
                            valSize: Int,
                            uv: String) extends BinFactory {
     def create: BinState =
-      KingState(session, lookupSignature, buckCol, valCol, grCols, afCol, sepVal, valSize, uv)
+      QueenState(session, lookupSignature, buckCol, valCol, grCols, sepVal, valSize, uv)
   }
 
   case class BucketInfo() {
     var outputBucketID: Array[Int] = _
     var outputBucketPos: Array[Int] = _
-    var idPairs: Array[(Int,Int)] = _
+    var outputBucketID2: Array[Int] = _
+    var outputBucketPos2: Array[Int] = _
     var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
     var outputTags: Array[String] = _
-    var GTS : Array[Char] = _
+    var outputTags2: Array[String] = _
+    var IDX1 : Array[Int] = _
+    var IDX1size : Int = 0
+    var GTS1length : Int = 0
+    var GTS2 : Array[Char] = _
   }
 
-  case class KingAggregate(val pi0thr: Float, val phithr: Float, val thetathr: Float, val t_pi0: Boolean, val t_phi: Boolean, val t_theta: Boolean, gm : GorMonitor) extends Analysis {
-    var IBS0: Array[Int] = _
-    var XX: Array[Int] = _
-    var Nhet: Array[Int] = _
-    var Nhom: Array[Int] = _
-    var NAai: Array[Int] = _
-    var NAaj: Array[Int] = _
-    var tpq: Array[Float] = _
-    var kpq: Array[Float] = _
+  case class QueenAggregate(val minSharing: Float, gm : GorMonitor) extends Analysis {
+    var share: Array[Int] = _
     var count: Array[Int] = _
     var needsInitialization: Boolean = true
     var bh: binaryHolder = _
-    var gtSize: Int = 0
+    var gtSize1: Int = 0
+    var gtSize2: Int = 0
     var gtPairSize: Int = 0
     var cancelled: Boolean = false
 
     override def isTypeInformationMaintained : Boolean = true
 
     override def setRowHeader(header: RowHeader): Unit = {
-      val columnNames: Array[String] = "Chrom\tPos\tPN1\tPN2\tIBS0\tXX\ttpq\tkpq\tNhet\tNhom\tNAai\tNAaj\tcount\tpi0\tphi\ttheta".split('\t')
-      val columnTypes: Array[String] = "S\tI\tS\tS\tI\tI\tD\tD\tI\tI\tI\tI\tI\tD\tD\tD".split('\t')
+      val columnNames: Array[String] = "Chrom\tPos\tPN1\tPN2\tavgSharing\tShare\tCount".split('\t')
+      val columnTypes: Array[String] = "S\tI\tS\tS\tD\tI\tI".split('\t')
       super.setRowHeader(RowHeader(columnNames,columnTypes))
     }
 
@@ -272,100 +295,62 @@ object GorKing {
       bh = r.bH.asInstanceOf[binaryHolder]
       if (needsInitialization) {
         needsInitialization = false
-        gtSize = bh.bui.GTS.length
-        gtPairSize = bh.bui.idPairs.length
-        IBS0 = new Array[Int](gtPairSize)
-        XX = new Array[Int](gtPairSize)
-        Nhet = new Array[Int](gtPairSize)
-        Nhom = new Array[Int](gtPairSize)
-        NAai = new Array[Int](gtPairSize)
-        NAaj = new Array[Int](gtPairSize)
-        tpq = new Array[Float](gtPairSize)
-        kpq = new Array[Float](gtPairSize)
+        gtSize1 = bh.bui.GTS1length
+        gtSize2 = bh.bui.GTS2.length
+        gtPairSize = gtSize1 * gtSize2
+        share = new Array[Int](gtPairSize)
         count = new Array[Int](gtPairSize)
       }
 
-      val af = bh.af
-      val tpqc = 2.0f*af*af*(1.0f-af)*(1.0f-af)
-      val kpqc = 2.0f*af*(1.0f-af)
-
-      var ai: Int = 0
-      while (ai < gtPairSize && !cancelled) {
-        val (pn1,pn2) = bh.bui.idPairs(ai)
-        val gt1 = bh.bui.GTS(pn1)
-        val gt2 = bh.bui.GTS(pn2)
-
-        if (gt1 != '3' && gt2 != '3') {
-          count(ai) += 1
-          tpq(ai) += tpqc
-          kpq(ai) += kpqc
-
-          if (gt1 == '0' && gt2 == '2' || gt1 == '2' && gt2 == '0') IBS0(ai) += 1
-          /*
-          | calc IBS0 if(values='02' or values = '20',1,0)
-          */
-          if (gt1 == '0' && gt2 == '1' || gt1 == '1' && gt2 == '0' || gt1 == '2' && gt2 == '1' || gt1 == '1' && gt2 == '2') {
-            XX(ai) += 1
-          }
-          else if (gt1 == '0' && gt2 == '2' || gt1 == '2' && gt2 == '0') {
-            XX(ai) += 4
-            Nhom(ai) += 1
-          }
-          /* else XX(ai) += 0
-          | calc XX if(values='01' or values = '10' or values = '21' or values = '12',1,if(values='02' or values = '20',4,0))
-          | calc Nhom if(values = '02' or values = '20',1,0)
-          */
-          if (gt1 == '1' && gt2 == '1') Nhet(ai) += 1
-          /*
-          | calc Nhet if(values = '11',1,0)
-           */
-          if (gt1 == '1') NAai(ai) += 1
-          /*
-          | calc NAai if(left(values,1)='1',1,0)
-          */
-          if (gt2 == '1') NAaj(ai) += 1
-          /*
-          | calc NAaj if(right(values,1)='1',1,0)
-          */
+      var i: Int = 0
+      while (i < bh.bui.IDX1size) {
+        val pni = bh.bui.IDX1(i)
+        var j: Int = 0
+        var ai = pni*gtSize2
+        while (j < gtSize2) {
+            val gt2 = bh.bui.GTS2(j)
+            if (gt2 == '1') share(ai) += 1
+            if (gt2 != '3') count(ai) += 1
+            ai += 1
+            j += 1
         }
-
-        if (ai % 1000 == 0 && gm != null && gm.isCancelled()) {
+        if (gm != null && gm.isCancelled()) {
           reportWantsNoMore
           cancelled = true
         }
-        ai += 1
+        i += 1
       }
     }
 
     override def finish: Unit = {
-      val skip_test = if (!t_pi0 && !t_phi && !t_theta) true else false
       if (!cancelled && !needsInitialization) {
-        var ai: Int = 0
-        while (ai < gtPairSize && !cancelled && !wantsNoMore) {
-          val (pn1,pn2) = bh.bui.idPairs(ai)
-          val PNi = bh.bui.outputTags(pn1)
-          val PNj = bh.bui.outputTags(pn2)
-          val pi0 = IBS0(ai)/tpq(ai)
-          val phi = 0.5f-XX(ai)/(4.0f*kpq(ai))
-          val theta = (Nhet(ai)-2.0f*Nhom(ai))/(NAai(ai)+NAaj(ai))
-          if (skip_test || (!t_pi0 || pi0 < pi0thr) && (!t_phi || phi > phithr) && (!t_theta || theta > thetathr) ) {
-            super.process(RowObj("chrA\t0\t" + PNi + '\t' + PNj + '\t' + IBS0(ai)
-              + '\t' + XX(ai) + '\t' + tpq(ai) + '\t' + kpq(ai) + '\t' + Nhet(ai)
-              + '\t' + Nhom(ai) + '\t' + NAai(ai) + '\t' + NAaj(ai) + '\t' + count(ai) + '\t' + pi0 + '\t' + phi + '\t' + theta))
+        var i: Int = 0
+        while (i < gtSize1 && !cancelled && !wantsNoMore) {
+          val PNi = bh.bui.outputTags(i)
+          var j: Int = 0
+          while (j < gtSize2) {
+            val PNj = bh.bui.outputTags2(j)
+            val ai = i*gtSize2+j
+            val avgSharing = if (count(ai) > 0) share(ai).toFloat/count(ai) else -1.0f
+            if (avgSharing >= minSharing ) {
+              super.process(RowObj("chrA\t0\t" + PNi + '\t' + PNj + '\t' + avgSharing
+                + '\t' + share(ai) + '\t' + count(ai)))
+            }
+            j += 1
           }
-          if (ai % 1000 == 0 && gm != null && gm.isCancelled()) {
+          if (gm != null && gm.isCancelled()) {
             reportWantsNoMore
             cancelled = true
           }
-          ai += 1
+          i += 1
         }
       }
     }
   }
 
-  case class KingAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, buckCol: Int, valCol: Int,
-                            grCols: List[Int], afCol : Int, sepVal: String, valSize: Int, uv: String, session: GorSession) extends
-    BinAnalysis(RegularRowHandler(1), BinAggregator(KingFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, buckCol, valCol, grCols, afCol, sepVal, valSize, uv), 2, 1)) {
+  case class QueenAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, fileName3: String, iteratorCommand3: String, iterator3: LineIterator, buckCol: Int, valCol: Int,
+                            grCols: List[Int], sepVal: String, valSize: Int, uv: String, session: GorSession) extends
+    BinAnalysis(RegularRowHandler(1), BinAggregator(QueenFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2 + "#" + fileName3 + "#" + iteratorCommand3, buckCol, valCol, grCols, sepVal, valSize, uv), 2, 1)) {
 
     val bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
     var bucketID: Int = -1
@@ -403,6 +388,8 @@ object GorKing {
 
     val outputOrderMap = scala.collection.mutable.Map.empty[String, Int]
     var outputCounter: Int = -1
+    val outputOrderMap2 = scala.collection.mutable.Map.empty[String, Int]
+    var outputCounter2: Int = -1
 
     def outputOrder(b: String): Int = outputOrderMap.get(b) match {
       case Some(x) => x;
@@ -411,12 +398,20 @@ object GorKing {
         outputOrderMap += (b -> outputCounter)
         outputCounter
     }
+    def outputOrder2(b: String): Int = outputOrderMap2.get(b) match {
+      case Some(x) => x;
+      case None =>
+        outputCounter2 += 1
+        outputOrderMap2 += (b -> outputCounter2)
+        outputCounter2
+    }
 
-    val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
+    val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2 + "#" + fileName3 + "#" + iteratorCommand3
 
     session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, f => {
       var l1 = Array.empty[String]
       var l2 = Array.empty[String]
+      var l3 = Array.empty[String]
 
       try {
         if (iteratorCommand1 != "") l1 = MapAndListUtilities.getStringArray(iteratorCommand1, iterator1, session)
@@ -425,41 +420,46 @@ object GorKing {
         if (iteratorCommand2 != "") l2 = MapAndListUtilities.getStringArray(iteratorCommand2, iterator2, session)
         else l2 = MapAndListUtilities.getStringArray(fileName2, session)
 
+        if (iteratorCommand3 != "") l3 = MapAndListUtilities.getStringArray(iteratorCommand3, iterator3, session)
+        else l3 = MapAndListUtilities.getStringArray(fileName3, session)
       } catch {
         case e: Exception =>
           iterator1.close()
           iterator2.close()
+          iterator3.close()
           throw e
       }
 
-      val bi = BucketInfo()
-      val gtPairSize = l2.length
-      bi.idPairs = new Array[(Int,Int)](gtPairSize)
-      var idPairCount = 0
-
       var tags: List[String] = Nil
+      var tags2: List[String] = Nil
       l2.foreach(x => {
-        val r = x.split("\t")
-        val id1 = outputOrder(r(0))
-        tags ::= r(0)
-        val id2 = outputOrder(r(1))
-        tags ::= r(1)
-        bi.idPairs(idPairCount) = (id1,id2)
-        idPairCount += 1
+        outputOrder(x)
+        tags ::= x
       })
-
+      l3.foreach(x => {
+        outputOrder2(x)
+        tags2 ::= x
+      })
+      val bi = BucketInfo()
       val outputSize = outputOrderMap.size
+      val outputSize2 = outputOrderMap2.size
       bi.outputBucketID = new Array[Int](outputSize)
       bi.outputBucketPos = new Array[Int](outputSize)
-
-      bi.GTS = new Array[Char](outputSize)
+      bi.outputBucketID2 = new Array[Int](outputSize2)
+      bi.outputBucketPos2 = new Array[Int](outputSize2)
+      val gtPairSize = outputSize * outputSize2
+      bi.GTS1length = outputSize
+      bi.IDX1 = new Array[Int](outputSize2)
+      bi.GTS2 = new Array[Char](outputSize2)
 
       val tagMap = outputOrderMap.clone()
+      val tagMap2 = outputOrderMap2.clone()
 
       l1.foreach(x => {
         val r = x.split("\t")
         val (tag, bid) = (r(0), r(1))
         tagMap.remove(tag)
+        tagMap2.remove(tag)
 
         val buckid = bucketID(bid)
         val buckpos = bucketOrder(bid, tag)
@@ -468,12 +468,18 @@ object GorKing {
           bi.outputBucketID(outputOrder(tag)) = buckid
           bi.outputBucketPos(outputOrder(tag)) = buckpos
         }
+        if (outputOrder2(tag) < outputSize2) {
+          bi.outputBucketID2(outputOrder2(tag)) = buckid
+          bi.outputBucketPos2(outputOrder2(tag)) = buckpos
+        }
       })
 
-      if (tagMap.nonEmpty) throw new GorDataException("There are tags in the tag-pair source which are not defined in the first tag/bucket input, including: " + tagMap.keys.toList.slice(0, 10).mkString(","))
+      if (tagMap.nonEmpty) throw new GorDataException("There are tags in the second input file which are not defined in the first tag/bucket input, including: " + tagMap.keys.toList.slice(0, 10).mkString(","))
+      if (tagMap2.nonEmpty) throw new GorDataException("There are tags in the third input file which are not defined in the first tag/bucket input, including: " + tagMap2.keys.toList.slice(0, 10).mkString(","))
 
       bi.bucketIDMap = bucketIDMap
       bi.outputTags = tags.reverse.toArray
+      bi.outputTags2 = tags2.reverse.toArray
       bi
     })
   }
