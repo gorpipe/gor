@@ -345,6 +345,8 @@ object GorQueen {
           i += 1
         }
       }
+      share = null
+      count = null
     }
   }
 

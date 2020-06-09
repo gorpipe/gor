@@ -345,6 +345,7 @@ object GorKing {
           val (pn1,pn2) = bh.bui.idPairs(ai)
           val PNi = bh.bui.outputTags(pn1)
           val PNj = bh.bui.outputTags(pn2)
+          // System.out.println("ai "+ai+" ("+pn1+","+pn2+") = ("+PNi+","+PNj+")")
           val pi0 = IBS0(ai)/tpq(ai)
           val phi = 0.5f-XX(ai)/(4.0f*kpq(ai))
           val theta = (Nhet(ai)-2.0f*Nhom(ai))/(NAai(ai)+NAaj(ai))
@@ -360,6 +361,15 @@ object GorKing {
           ai += 1
         }
       }
+      IBS0 = null
+      XX = null
+      Nhet = null
+      Nhom = null
+      NAai = null
+      NAaj = null
+      tpq = null
+      kpq = null
+      count = null
     }
   }
 
@@ -403,12 +413,14 @@ object GorKing {
 
     val outputOrderMap = scala.collection.mutable.Map.empty[String, Int]
     var outputCounter: Int = -1
+    var tags : List[String] = Nil
 
     def outputOrder(b: String): Int = outputOrderMap.get(b) match {
       case Some(x) => x;
       case None =>
         outputCounter += 1
         outputOrderMap += (b -> outputCounter)
+        tags ::= b
         outputCounter
     }
 
@@ -437,14 +449,12 @@ object GorKing {
       bi.idPairs = new Array[(Int,Int)](gtPairSize)
       var idPairCount = 0
 
-      var tags: List[String] = Nil
       l2.foreach(x => {
         val r = x.split("\t")
         val id1 = outputOrder(r(0))
-        tags ::= r(0)
         val id2 = outputOrder(r(1))
-        tags ::= r(1)
         bi.idPairs(idPairCount) = (id1,id2)
+        // System.out.println(idPairCount+" ("+id1+","+id2+") = ("+r(0)+","+r(1)+") ("+tags(id1)+","+tags(id2)+")")
         idPairCount += 1
       })
 
