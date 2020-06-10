@@ -88,6 +88,8 @@ public class GorSeekableIterator extends GenomicIterator {
             return RowObj.apply(this.iterator.getNextAsString());
         } catch (IOException e) {
             throw wrapIOException(e);
+        } catch (NumberFormatException e) {
+            throw new GorResourceException("Invalid row", this.filePath, e);
         }
     }
 
