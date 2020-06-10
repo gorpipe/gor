@@ -490,7 +490,15 @@ public class GorOptions {
             i.setTagFilter(new TagFilter(columnTags, ref.deletedTags, i.getHeader().split("\t").length - 1));
         }
         i.setSourceAlreadyInserted(ref.sourceAlreadyInserted);
-        i.setColnum(i.getHeader().split("\t").length - 2);
+
+        String header = i.getHeader();
+        if (!header.equals("")) {
+            int colnum = header.split("\t").length - 2;
+            if (colnum < 0) {
+                throw new GorResourceException("Not enough columns in file", ref.getName());
+            }
+            i.setColnum(colnum);
+        }
         if (chrname != null && !chrname.equals("")) {
             i = new BoundedIterator(i, chrname, begin, end);
         }
