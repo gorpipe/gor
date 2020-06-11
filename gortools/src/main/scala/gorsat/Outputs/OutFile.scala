@@ -36,6 +36,7 @@ import htsjdk.tribble.readers.{AsciiLineReader, AsciiLineReaderIterator}
 import htsjdk.tribble.util.LittleEndianOutputStream
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFCodec
+import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.model.genome.files.binsearch.GorIndexType
 import org.gorpipe.model.genome.files.gor.Row
 
@@ -118,16 +119,20 @@ object OutFile {
       }
     }
     val nameUpper = name.toUpperCase
-    if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
-      new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.idx, options.compressionLevel)
-    } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
-      new NorFileOut(name, header, skipHeader, append, options.md5)
-    } else if (nameUpper.endsWith(".PARQUET")) {
-      new GorParquetFileOut(name, header, options.nor)
-    } else if (options.nor) {
-      new CmdFileOut(name, header, skipHeader, append)
-    } else {
-      new OutFile(name, header, skipHeader, append, options.md5, options.idx, options.compressionLevel)
+    try {
+      if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
+        new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.idx, options.compressionLevel)
+      } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
+        new NorFileOut(name, header, skipHeader, append, options.md5)
+      } else if (nameUpper.endsWith(".PARQUET")) {
+        new GorParquetFileOut(name, header, options.nor)
+      } else if (options.nor) {
+        new CmdFileOut(name, header, skipHeader, append)
+      } else {
+        new OutFile(name, header, skipHeader, append, options.md5, options.idx, options.compressionLevel)
+      }
+    } catch {
+      case e: FileNotFoundException => throw new GorResourceException(s"Can't write to file", name, e)
     }
   }
 
