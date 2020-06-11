@@ -303,6 +303,9 @@ public class ConfigManager {
         // make the config maps supplied as parameters take precedence over the default ones
         allConfigs.addAll(Arrays.asList(configs));
 
+        // Add system envs.
+        allConfigs.add(System.getenv());
+
         // now add all the defaults
         allConfigs.addAll(loadDefaultConfigPropertiesForPrefix(prefix));
 
