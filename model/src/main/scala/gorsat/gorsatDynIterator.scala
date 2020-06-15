@@ -287,6 +287,13 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       val secondTabIndex = rawHeader.indexOf('\t', firstTabIndex + 1)
       rawHeader.substring(secondTabIndex + 1)
     }
+    def getIterator: Iterator[String] = {
+      val dns = this
+      new Iterator[String] {
+        override def hasNext: Boolean = dns.hasNext
+        override def next: String = dns.nextLine
+      }
+    }
   }
 
   class DynamicNorGorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) {

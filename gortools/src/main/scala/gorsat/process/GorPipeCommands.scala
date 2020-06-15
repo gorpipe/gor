@@ -187,6 +187,8 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.Adjust)
       addInfo(new gorsat.Commands.VerifyColType)
       addInfo(new gorsat.Commands.VarGroup)
+      addInfo(new gorsat.Commands.GtTranspose)
+      addInfo(new gorsat.Commands.King)
       addInfo(new gorsat.Commands.GtGen)
       addInfo(new gorsat.Commands.PrGtGen)
     }
