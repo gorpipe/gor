@@ -51,6 +51,7 @@ public class UTestPowerLookupTable {
 
         final PowerLookupTable refTable = PowerLookupTable.getLookupTable(x);
         tables.forEach(table -> Assert.assertSame(refTable, table));
+        es.shutdown();
     }
 
     @Test
