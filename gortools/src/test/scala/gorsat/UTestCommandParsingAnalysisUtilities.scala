@@ -391,4 +391,37 @@ class UTestCommandParsingAnalysisUtilities extends FunSuite{
     }
     assert(thrown != null)
   }
+
+  test("get char value of option") {
+    val opt = "-bestoption"
+    val args = Array("-badoption", "-goodoption", "-betteroption", "-bestoption", "+")
+    val value = CommandParseUtilities.charValueOfOption(args, opt)
+    assert(value == '+')
+  }
+
+  test("get char value of option - no value") {
+    val opt = "-bestoption"
+    val args = Array("-badoption", "-goodoption", "-betteroption", "-bestoption")
+    var success = false
+    try {
+      CommandParseUtilities.charValueOfOption(args, opt)
+    } catch {
+      case _: GorParsingException => success = true
+      case _ => //Bad
+    }
+    assert(success)
+  }
+
+  test("get char value of option - bad value") {
+    val opt = "-bestoption"
+    val args = Array("-badoption", "-goodoption", "-betteroption", "-bestoption", "hjalti")
+    var success = false
+    try {
+      CommandParseUtilities.charValueOfOption(args, opt)
+    } catch {
+      case _: GorParsingException => success = true
+      case _ => //Bad
+    }
+    assert(success)
+  }
 }

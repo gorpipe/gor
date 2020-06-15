@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GtGenAnalysis.{CoverageOverlap, GtGenAnalysis}
+import gorsat.Analysis.PrGtGenAnalysis.{AFANSourceAnalysis, LeftSourceAnalysis, RightSourceAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.IteratorUtilities
@@ -31,8 +31,8 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
-class GtGen extends CommandInfo("GTGEN",
-  CommandArguments("", "-tag -gc -maxseg", 2, 2),
+class PrGtGen extends CommandInfo("PRGTGEN",
+  CommandArguments("", "-tag -gl -gp -gc -maxseg -e -afc -af -cc -crc -ld -rd -anc -th -psep -osep", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -40,6 +40,7 @@ class GtGen extends CommandInfo("GTGEN",
     val leftHeader = forcedInputHeader
 
     val lhl = leftHeader.toLowerCase
+    val leftCols = lhl.split('\t')
 
     val PNCol = if (hasOption(args, "-tag")) {
       val pnCols: List[Int] = columnsOfOptionWithNil(args, "-tag", leftHeader, executeNor)
@@ -52,8 +53,47 @@ class GtGen extends CommandInfo("GTGEN",
       columnFromHeader("pn", lhl, executeNor)
     }
 
-    val gtCol: Int = columnFromHeader("gt", lhl, executeNor)
     val gcCols: List[Int] = columnsOfOptionWithNil(args, "-gc", leftHeader, executeNor).distinct
+
+    val gl = if (hasOption(args, "-gl")) {
+      columnOfOption(args, "-gl", leftHeader, executeNor)
+    } else leftCols.indexOf("gl")
+
+    val gp = if (hasOption(args, "-gp")) {
+      columnOfOption(args, "-gp", leftHeader, executeNor)
+    } else leftCols.indexOf("gp")
+
+    val cc = if (hasOption(args, "-cc")) {
+      columnOfOption(args, "-gp", leftHeader, executeNor)
+    } else leftCols.indexOf("callcopies")
+
+    val crc = if (hasOption(args, "-crc")) {
+      columnOfOption(args, "-crc", leftHeader, executeNor)
+    } else leftCols.indexOf("callratio")
+
+    val ld = if (hasOption(args, "-ld")) {
+      columnOfOption(args, "-ld", leftHeader, executeNor)
+    } else leftCols.indexOf("depth")
+
+    //Validate options
+    val gpAmbiguous = gp != -1 && !(gl == -1 && cc == -1 && crc == -1 && ld == -1)
+    val glCcAmbiguous = (gl != -1 && cc != -1) && !(gp == -1 && crc == -1 && ld == -1)
+    val glAmbiguous = (gl != -1) && !(cc == -1 && gp == -1 && crc == -1 && ld == -1)
+    val cdAmbiguous = (crc != -1 && ld != -1) && !(gp == -1 && gl == -1 && cc == -1)
+
+    if (gpAmbiguous || glCcAmbiguous || glAmbiguous || cdAmbiguous) {
+      throw new GorParsingException("Ambiguous parameters or header names. Please read the manual.")
+    }
+
+    val e = doubleValueOfOptionWithDefault(args, "-e", 0.0)
+
+    val af = doubleValueOfOptionWithDefault(args, "-af", 0.05)
+
+    val threshold = doubleValueOfOptionWithDefault(args, "-th", -1)
+
+    val pSep = if (hasOption(args, "-psep")) charValueOfOption(args, "-psep") else ';'
+    val writeOutTriplets = hasOption(args, "-osep")
+    val oSep = if (writeOutTriplets) charValueOfOption(args, "-osep") else ','
 
     var buckTagItCommand = ""
     var buckTagDNS: DynamicNorSource = null
@@ -79,6 +119,28 @@ class GtGen extends CommandInfo("GTGEN",
       throw new GorParsingException("buckettagfile must have 2 tab-delimited columns: Tag/PN (distinct), bucketID.\nThe relative position of tag in bucket specifies the csv order.\nCurrent header is: $buckTagHeader")
     }
 
+    val priorFile: String = iargs(1).trim
+    var priorSource: RowSource = null
+    var priorHeader = ""
+    if (iargs.length == 3) {
+      try {
+        val inputSource = new SourceProvider(priorFile, context, executeNor = executeNor, isNor = false)
+        priorSource = inputSource.source
+        priorHeader = inputSource.header
+      } catch {
+        case ex: Exception =>
+          if (priorSource != null) priorSource.close()
+          throw ex
+      }
+    }
+
+    val afc = if (iargs.length == 3) {
+      if (hasOption(args, "-afc")) intValueOfOption(args, "-afc") else columnFromHeader("AF", priorHeader, false)
+    } else -1
+    val anc = if (iargs.length == 3) {
+      if (hasOption(args, "-anc")) intValueOfOption(args, "-anc") else columnFromHeader("AN", priorHeader, false)
+    } else -1
+
     val segFile: String = iargs.last.trim
     var segSource: RowSource = null
     var rightHeader = ""
@@ -93,21 +155,29 @@ class GtGen extends CommandInfo("GTGEN",
     }
     val PNCol2 = if (hasOption(args, "-tag")) PNCol else columnFromHeader("pn", rightHeader.toLowerCase, executeNor)
 
-    val hcol = leftHeader.split("\t")
-    var outputHeader = hcol.slice(0, 2).mkString("\t") + "\t" + gcCols.map(hcol(_)).mkString("\t")
-    outputHeader += "\tBucket\tValues"
+    val rdIdx = if (hasOption(args, "-rd")) {
+      intValueOfOption(args, "-rd")
+    } else {
+      columnFromHeader("depth", rightHeader.toLowerCase, executeNor)
+    }
 
-    val bucketCol =  columnFromHeader("bucket", outputHeader.toLowerCase, executeNor)
+    val hcol = leftHeader.split("\t")
+    val outputHeader = hcol.slice(0, 2).mkString("\t") + "\t" + gcCols.map(hcol(_)).mkString("\t") + "\tAF\tBucket\tValues"
+
     var maxSegSize = 10000
     if (hasOption(args, "-maxseg")) maxSegSize = intValueOfOption(args, "-maxseg")
     val lookupSignature = buckTagFile + "#" + buckTagItCommand + "#" + segFile
 
     val combinedHeader = IteratorUtilities.validHeader(outputHeader)
-    val pipeStep: Analysis = {
-      GtGenAnalysis(buckTagFile, buckTagItCommand, buckTagDNS, gtCol, PNCol, gcCols, context, lookupSignature) | CoverageOverlap(segSource, bucketCol, PNCol2, maxSegSize, context, lookupSignature)
-    }
-
+    val pipeStep: Analysis =
+      if (iargs.length == 3) {
+        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, gl, gp, cc, crc, ld, PNCol, gcCols, af, e, tripSep = pSep) |
+          AFANSourceAnalysis(priorSource, context, lookupSignature, gcCols, afc, anc) |
+          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, sepOut = writeOutTriplets, outSep = oSep)
+      } else {
+        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, gl, gp, cc, crc, ld, PNCol, gcCols, af, e, tripSep = pSep) |
+          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, sepOut = writeOutTriplets, outSep = oSep)
+      }
     CommandParsingResult(pipeStep, combinedHeader)
   }
 }
-

@@ -190,6 +190,12 @@ object RowObj {
     new RowBase(x, numCols)
   }
 
+  def apply(x: CharSequence, bh: BinaryHolder): Row = {
+    val toReturn = StoR(x)
+    toReturn.bH = bh
+    toReturn
+  }
+
   def binary(chr: String, pos: Int, bH: BinaryHolder) = new RowBase(chr, pos, null, null, bH)
 
   def StoR(str: CharSequence): Row = {

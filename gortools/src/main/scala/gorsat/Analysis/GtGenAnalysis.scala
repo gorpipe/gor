@@ -26,7 +26,7 @@ import gorsat.Commands._
 import gorsat.Iterators.ChromBoundedIteratorSource
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.GorSession
+import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.iterators.{LineIterator, RowSource}
 import org.gorpipe.model.gor.{MemoryMonitorUtil, RowObj}
@@ -36,7 +36,7 @@ import scala.collection.mutable
 object GtGenAnalysis {
 
 
-  case class GtGenState(session: GorSession, lookupSignature: String, GtCol: Int, PNCol: Int, grCols: List[Int]) extends BinState {
+  case class GtGenState(context: GorContext, lookupSignature: String, GtCol: Int, PNCol: Int, grCols: List[Int]) extends BinState {
 
     case class ColHolder() {
       var buckValueCols: Array[mutable.StringBuilder] = _
@@ -68,7 +68,7 @@ object GtGenAnalysis {
     }
 
     def initialize(binInfo: BinInfo): Unit = {
-      tagi = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
+      tagi = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
       if (tagi == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
@@ -112,9 +112,9 @@ object GtGenAnalysis {
     }
   }
 
-  case class GtGenFactory(session: GorSession, lookupSignature: String, GtCol: Int, PNCol: Int, grCols: List[Int]) extends BinFactory {
+  case class GtGenFactory(context: GorContext, lookupSignature: String, GtCol: Int, PNCol: Int, grCols: List[Int]) extends BinFactory {
     def create: BinState =
-      GtGenState(session, lookupSignature, GtCol, PNCol, grCols)
+      GtGenState(context, lookupSignature, GtCol, PNCol, grCols)
   }
 
 
@@ -126,9 +126,9 @@ object GtGenAnalysis {
   }
 
 
-  case class GtGenAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, GtCol: Int, PNCol: Int,
-                           grCols: List[Int], session: GorSession) extends
-    BinAnalysis(RegularRowHandler(1), BinAggregator(GtGenFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, GtCol, PNCol, grCols), 2, 1)) {
+  case class GtGenAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, GtCol: Int, PNCol: Int,
+                           grCols: List[Int], context: GorContext, lookupSignature: String) extends
+    BinAnalysis(RegularRowHandler(1), BinAggregator(GtGenFactory(context, lookupSignature, GtCol, PNCol, grCols), 2, 1)) {
 
     val bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
     var bucketID: Int = -1
@@ -164,16 +164,12 @@ object GtGenAnalysis {
       }
     }
 
-
-    val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
-
-
-    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
+    context.getSession.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]
       val bi = TagInfo()
       try {
-        if (iteratorCommand1 != "") l1 = MapAndListUtilities.getStringArray(iteratorCommand1, iterator1, session)
-        else l1 = MapAndListUtilities.getStringArray(fileName1, session)
+        if (iteratorCommand1 != "") l1 = MapAndListUtilities.getStringArray(iteratorCommand1, iterator1, context.getSession)
+        else l1 = MapAndListUtilities.getStringArray(fileName1, context.getSession)
       } catch {
         case e: Exception =>
           iterator1.close()
@@ -203,15 +199,10 @@ object GtGenAnalysis {
 
   case class CovSEGinfo(start: Int, stop: Int, r : Row, var buckPos : Int, var values : mutable.StringBuilder)
 
-  case class TheSegOverlap(inRightSource: RowSource, bucketCol : Int, PNcol : Int, maxSegSize: Int, session: GorSession, lookupSignature : String) extends Analysis {
+  case class TheSegOverlap(inRightSource: RowSource, bucketCol : Int, PNcol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
 
     var tagi: TagInfo = _
 
-    val fuzzFactor = 0
-
-    val plain: Boolean = false
-    val inclusOnly: Boolean = false
-    val lstop = 2
     val rstop = 2
 
     var rightSource = new ChromBoundedIteratorSource(inRightSource)
@@ -231,8 +222,6 @@ object GtGenAnalysis {
 
     val valuesCol: Int = bucketCol +1
 
-    var ovlaps = 0
-
     case class GroupHolder() {
       val rowBuffer = new Array[myRowBufferType](2)
       rowBuffer(0) = new myRowBufferType
@@ -248,8 +237,7 @@ object GtGenAnalysis {
     if (!useGroup) groupMap += (-1 -> singleGroupHolder)
 
     def set_coverage(lSeg: CovSEGinfo, rSeg: CovSEGinfo) {
-      if (lSeg.values.charAt(rSeg.buckPos)=='4') lSeg.values.setCharAt(rSeg.buckPos, '0')
-      ovlaps += 1
+      if (lSeg.values.charAt(rSeg.buckPos) =='4') lSeg.values.setCharAt(rSeg.buckPos, '0')
     }
 
     def nested_process(lr: Row, next_lr: Row) {
@@ -262,7 +250,6 @@ object GtGenAnalysis {
       // Find overlap with right-rows in the buffer
 
       val lSeg = CovSEGinfo(leftStart, leftStop, lr, 0, new mutable.StringBuilder(lr.colAsString(valuesCol).toString)) // bucketPos is irrelevant for the left-row
-      ovlaps = 0
 
       var groupKeyLeft : Int = -1
 
@@ -274,18 +261,16 @@ object GtGenAnalysis {
           groupMap += (groupKeyLeft -> gr)
       }
 
-
       val nextBuffer = (gr.buffer + 1) % 2
       var nextBufferSize = 0
       var i = 0
       while (i < gr.bufferSize) {
         val rSeg = gr.rowBuffer(gr.buffer)(i)
         val rr = rSeg.r
-        var use_row_again = true
-        if (lr.chr == rr.chr && lSeg.start - fuzzFactor < rSeg.stop && lSeg.stop + fuzzFactor > rSeg.start) {
+        if (lr.chr == rr.chr && lSeg.start < rSeg.stop && lSeg.stop > rSeg.start) {
           set_coverage(lSeg, rSeg)
         }
-        if (!((rr.chr == lr.chr && rSeg.stop + fuzzFactor < lSeg.start) || rr.chr < lr.chr) && use_row_again) {
+        if (!(rr.chr == lr.chr && rSeg.stop < lSeg.start) || rr.chr < lr.chr) {
           if (gr.rowBuffer(nextBuffer).size <= nextBufferSize) gr.rowBuffer(nextBuffer) += gr.rowBuffer(gr.buffer)(i)
           else gr.rowBuffer(nextBuffer)(nextBufferSize) = gr.rowBuffer(gr.buffer)(i)
           gr.rowBuffer(gr.buffer)(i) = null
@@ -297,19 +282,17 @@ object GtGenAnalysis {
       gr.buffer = nextBuffer
       gr.bufferSize = nextBufferSize
 
-
       //##########
       // Check if we need to fetch more segments from the right-source, i.e. have we moved upwards with the left-source
       if (((maxLeftStop < leftStop && lastLeftChr == lr.chr) || lastLeftChr < lr.chr) &&
-        (lastRightChr < lr.chr || (lastRightChr == lr.chr && lastRightPos <= leftStop + fuzzFactor))) {
+        (lastRightChr < lr.chr || (lastRightChr == lr.chr && lastRightPos <= leftStop))) {
         if (lr.chr == lastSeekChr && !rightSource.hasNext) {
           /* do nothing */
-        }
-        else if (lr.chr > lastRightChr) {
-          rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
+        } else if (lr.chr > lastRightChr) {
+          rightSource.setPosition(lr.chr, (lr.pos - maxSegSize).max(0))
           lastSeekChr = lr.chr
-        } else if (lr.chr == lastRightChr && lr.pos - fuzzFactor - maxSegSize > lastRightPos) {
-          rightSource.moveToPosition(lr.chr, lr.pos - fuzzFactor - maxSegSize)
+        } else if (lr.chr == lastRightChr && lr.pos - maxSegSize > lastRightPos) {
+          rightSource.moveToPosition(lr.chr, lr.pos - maxSegSize)
           lastSeekChr = lr.chr
         }
         var keepOn = true
@@ -323,16 +306,14 @@ object GtGenAnalysis {
           var rightStart = 0
           var rightStop = 0
 
-
           rightStart = rr.pos
           try {
-              rightStop = rr.colAsInt(rstop)
+            rightStop = rr.colAsInt(rstop)
           } catch {
             case e: Exception =>
               val exception = new GorDataException(s"Illegal stop position in column #${rstop + 1} in the JOIN right-source : " + rr, e)
               throw exception
           }
-
 
           val rSeg = CovSEGinfo(rightStart, rightStop, rr, 0, null)  // The bucketPos value is set later.  No values from right
 
@@ -347,24 +328,20 @@ object GtGenAnalysis {
               gr = GroupHolder()
               groupMap += (groupKeyRight -> gr)
           }
-
-
-          val use_row_again = true
-          if (lr.chr == rr.chr && lSeg.start - fuzzFactor < rSeg.stop && lSeg.stop + fuzzFactor > rSeg.start && (!useGroup || groupKeyLeft == groupKeyRight)) {
+          if (lr.chr == rr.chr && lSeg.start < rSeg.stop && lSeg.stop > rSeg.start && (!useGroup || groupKeyLeft == groupKeyRight)) {
             set_coverage(lSeg, rSeg)
           }
 
           lastRightChr = rr.chr
           lastRightPos = rightStart // rr.pos
 
-          if (use_row_again && (next_lr != null && ((rr.chr == next_lr.chr && rightStop >= next_leftStart - fuzzFactor) || rr.chr >= next_lr.chr))) {
+          if (next_lr != null && ((rr.chr == next_lr.chr && rightStop >= next_leftStart) || rr.chr >= next_lr.chr)) {
             // Only insert row to buffer if overlap with next row
             if (gr.rowBuffer(gr.buffer).size <= gr.bufferSize) gr.rowBuffer(gr.buffer) += rSeg else gr.rowBuffer(gr.buffer)(gr.bufferSize) = rSeg
             gr.bufferSize += 1
           }
-          if (rr.chr > lr.chr || (rr.chr == lr.chr && rightStart > leftStop + fuzzFactor)) keepOn = false // Continue until there is no overlap with the left-seg
+          if (rr.chr > lr.chr || (rr.chr == lr.chr && rightStart > leftStop)) keepOn = false // Continue until there is no overlap with the left-seg
         }
-
       }
 
       //#######
@@ -383,7 +360,7 @@ object GtGenAnalysis {
           while (i < gr.bufferSize) {
             val rSeg = gr.rowBuffer(gr.buffer)(i)
             val rr = rSeg.r
-            if (!((rr.chr == lr.chr && rSeg.stop + fuzzFactor < lSeg.start) || rr.chr < lr.chr)) {
+            if (!((rr.chr == lr.chr && rSeg.stop < lSeg.start) || rr.chr < lr.chr)) {
               if (gr.rowBuffer(nextBuffer).size <= nextBufferSize) gr.rowBuffer(nextBuffer) += gr.rowBuffer(gr.buffer)(i)
               else gr.rowBuffer(nextBuffer)(nextBufferSize) = gr.rowBuffer(gr.buffer)(i)
               gr.rowBuffer(gr.buffer)(i) = null
@@ -421,20 +398,13 @@ object GtGenAnalysis {
     }
 
     override def setup(): Unit = {
-      tagi = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
+      tagi = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
       if (tagi == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
     }
   }
 
-
-
-  case class CoverageOverlap(rightSource: RowSource, bucketCol : Int, PNCol : Int, maxSegSize: Int, session: GorSession, lookupSignature : String) extends Analysis {
-    this | TheSegOverlap(rightSource, bucketCol, PNCol, maxSegSize, session, lookupSignature)
+  case class CoverageOverlap(rightSource: RowSource, bucketCol : Int, PNCol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
+    this | TheSegOverlap(rightSource, bucketCol, PNCol, maxSegSize, context, lookupSignature)
   }
 
-
-
-
-
 }
-
