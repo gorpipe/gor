@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -35,10 +36,13 @@ public class UTestPowerLookupTable {
         final ExecutorService es = Executors.newFixedThreadPool(numberOfThreads);
         final double x = 0.1;
 
-        final List<PowerLookupTable> tables = new ArrayList<>();
+        final List<PowerLookupTable> tables = Collections.synchronizedList(new ArrayList<>());
         final Future[] futures = new Future[numberOfThreads];
         for (int i = 0; i < numberOfThreads; ++i) {
-            futures[i] = es.submit(() -> tables.add(PowerLookupTable.getLookupTable(x)));
+            futures[i] = es.submit(() -> {
+                final PowerLookupTable plt = PowerLookupTable.getLookupTable(x);
+                tables.add(plt);
+            });
         }
 
         for (Future f : futures) {

@@ -1,8 +1,13 @@
 package gorsat.gtgen;
 
+import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
+import shapeless.ops.nat;
+
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class PowerLookupTable {
     private final double[] powers;
@@ -54,13 +59,13 @@ public class PowerLookupTable {
 
     static synchronized PowerLookupTable getLookupTable(double x) {
         final WeakReference<PowerLookupTable> ref = cache.get(x);
-        final PowerLookupTable cand;
         final PowerLookupTable toReturn;
-        if (ref == null || (cand = ref.get()) == null) {
+        final PowerLookupTable candidate;
+        if (ref == null || (candidate = ref.get()) == null) {
             toReturn = new PowerLookupTable(x, 100);
             cache.put(x, new WeakReference<>(toReturn));
         } else {
-            toReturn = cand;
+            toReturn = candidate;
         }
         return toReturn;
     }
