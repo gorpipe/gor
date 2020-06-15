@@ -33,25 +33,26 @@ public class UTestPowerLookupTable {
     @Test
     public void testPowerLookupTable_threadSafety() throws ExecutionException, InterruptedException {
         final int numberOfThreads = 10;
-        final ExecutorService es = Executors.newFixedThreadPool(numberOfThreads);
-        final double x = 0.1;
+        final ExecutorService es = Executors.newFixedThreadPool(numberOfThreads);;
+        try {
+            final double x = 0.1;
+            final List<PowerLookupTable> tables = Collections.synchronizedList(new ArrayList<>());
+            final Future[] futures = new Future[numberOfThreads];
+            for (int i = 0; i < numberOfThreads; ++i) {
+                futures[i] = es.submit(() -> {
+                    final PowerLookupTable plt = PowerLookupTable.getLookupTable(x);
+                    tables.add(plt);
+                });
+            }
 
-        final List<PowerLookupTable> tables = Collections.synchronizedList(new ArrayList<>());
-        final Future[] futures = new Future[numberOfThreads];
-        for (int i = 0; i < numberOfThreads; ++i) {
-            futures[i] = es.submit(() -> {
-                final PowerLookupTable plt = PowerLookupTable.getLookupTable(x);
-                tables.add(plt);
-            });
+            for (Future f : futures) {
+                f.get();
+            }
+            final PowerLookupTable refTable = PowerLookupTable.getLookupTable(x);
+            tables.forEach(table -> Assert.assertSame(refTable, table));
+        } finally {
+            es.shutdown();
         }
-
-        for (Future f : futures) {
-            f.get();
-        }
-
-        final PowerLookupTable refTable = PowerLookupTable.getLookupTable(x);
-        tables.forEach(table -> Assert.assertSame(refTable, table));
-        es.shutdown();
     }
 
     @Test
