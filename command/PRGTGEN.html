@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PRGTGEN &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="gor-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">Documentation</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>PRGTGEN</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="prgtgen">
+<span id="id1"></span><h1>PRGTGEN<a class="headerlink" href="#prgtgen" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>PRGTGEN</strong> command is a probabilistic version of <strong>GTGEN</strong>, i.e. it does the same but also does a simple joint
+variant calling and returns the genotypes in probabilistic form.</p>
+<p>The incoming stream is a gor stream containing genotypes, one pn per line. The genotypes can come in the following:
+i) Probabilistic: A triplet containing the probabilities of Ref-Ref, Ref-Alt, Alt-Alt. Should be stored in a column
+named GP. Can also be in a column called GL if the probabilities are in a log10 scale.
+ii) Call and genotype likelihood. The call should be stored as a single character and the genotype likelihood should be
+the difference between the probability of the called genotype and the second most likely one, in log10 scale, rounded
+to nearest integer. This number should be stored in a column named GL and the called genotype in a column named
+‘CallCopies’.
+iii) Raw: Then there should be one column called ‘depth’ containing the reading depth and another named ‘callratio’
+containing the call ratio.</p>
+<p>As input, there should be one tag-bucket source, a coverage source and optionally a gor source containing prior allele
+frequencies estimates and the number of samples behind that estimate.</p>
+<p>The coverage file should contain segments, a depth column and a pn column.</p>
+<p>The gor source containing the allele frequencies and the number of samples behind the estimates, should contain an AF
+column with the allele frequencies and an AN column with the number of samples. It should be interpreted as follows:
+The tag list from the tag-bucket file is thought of as coming from a larger collection of pns and the allele frequency
+given in the source should be thought of as having been estimated for some number of samples from the cohort, excluding
+the ones we are calling now.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | PRGTGEN tagbucketrelation coveragefile priorfile [ attributes ]
+</pre></div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>-gl -gp -afc -af -cc -crc -ld -rd -anc -threshold -psep -osep
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code>        | Grouping columns other than (chrom,pos)                                                            |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-tag</span> <span class="pre">tagcolname</span></code> | Override the default PN colunm name used to represent the tag value.                               |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-maxseg</span> <span class="pre">bpsize</span></code>  | The maximum span size of the coverage segments.  Defaults to 10000 (10kb).                         |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">error</span> <span class="pre">rate</span></code>   | The error rate of the reads.                                                                       |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-af</span> <span class="pre">allele</span> <span class="pre">freq</span></code> | A ‘global allele frequency’ assumed to have been used for computing the genotypes from the input.  |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-gl</span> <span class="pre">col</span></code>         | The GL col (either from i) or ii)). Is looked up by name if not given.                             |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-gp</span> <span class="pre">col</span></code>         | The GP col (from i)). Is looked up by name if not given.                                           |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-afc</span> <span class="pre">col</span></code>        | The allele frequency column in the prior source. Is looked up by name if not given.                |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-anc</span> <span class="pre">col</span></code>        | The allele number column in the prior source. Is looked up by name if not given.                   |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-cc</span> <span class="pre">col</span></code>         | The call copies column from ii) Looked up by name if not given.                                    |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-crc</span> <span class="pre">col</span></code>        | The call ratio column from iii) Looked up by name if not given.                                    |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-ld</span> <span class="pre">col</span></code>         | The depth column from the incoming source in ii). Looked up by name if not given.                  |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-rd</span> <span class="pre">col</span></code>         | The depth column from the prior source. Lookup up by name if not given.                            |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-th</span> <span class="pre">threshold</span></code>   | The threshold to use, if the genotypes should be written out as discrete genotypes. Giving the     |
+|                     | threshold indicates that the hard calls should be written out.                                     |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-psep</span> <span class="pre">separator</span></code> | The separator in the probability triplet. Default value is ‘;’. Must be a single character.        |
++———————+—————————————————————————————————-+
+| <code class="docutils literal notranslate"><span class="pre">-osep</span> <span class="pre">separator</span></code> | The separator to separate the genotypes, in case the triplets should we written out.               |
++———————+—————————————————————————————————-+
+Examples
+========</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example of creating horizontal variations stored in buckets */
+</pre></div>
+</div>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+    <!-- Theme Analytics -->
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-136552918-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
+    
+   
+
+</body>
+</html>
