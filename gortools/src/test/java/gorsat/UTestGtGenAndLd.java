@@ -22,7 +22,15 @@
 
 package gorsat;
 
+import com.google.common.io.Files;
+import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 
 public class UTestGtGenAndLd {
@@ -69,4 +77,26 @@ public class UTestGtGenAndLd {
         TestUtils.runGorPipe(testSetupGORQL + query);
     }
 
+    @Test
+    public void test_unknownPnInRightSource() throws IOException {
+        final File tmpDir = Files.createTempDir();
+        final File leftSource = new File(tmpDir, "leftFile.gor");
+        final BufferedWriter leftSourceWriter = new BufferedWriter(new FileWriter(leftSource));
+        leftSourceWriter.write("CHROM\tPOS\tPN\tGT\nchr1\t1\tPN1\t2\n");
+        leftSourceWriter.close();
+        final File rightSource = new File(tmpDir, "rightFile.gor");
+        final BufferedWriter rightSourceWriter = new BufferedWriter(new FileWriter(rightSource));
+        rightSourceWriter.write("CHROM\tPOS\tEND\tPN\nchr1\t1\t1\tPN2\n");
+        rightSourceWriter.close();
+        final File tbSource = new File(tmpDir, "tb.tsv");
+        final BufferedWriter tbWriter = new BufferedWriter(new FileWriter(tbSource));
+        tbWriter.write("PN1\tBUCKET1\n");
+        tbWriter.close();
+        final String query = "gor " + leftSource.getAbsolutePath() + " | gtgen " + tbSource.getAbsolutePath() + " " + rightSource.getAbsolutePath();
+        final String results = TestUtils.runGorPipe(query);
+        final String wanted = "CHROM\tPOS\tBucket\tValues\n" +
+                "chr1\t1\tBUCKET1\t2\n";
+        Assert.assertEquals(wanted, results);
+        FileUtils.deleteDirectory(tmpDir);
+    }
 }

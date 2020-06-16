@@ -94,7 +94,8 @@ class GtGen extends CommandInfo("GTGEN",
     val PNCol2 = if (hasOption(args, "-tag")) PNCol else columnFromHeader("pn", rightHeader.toLowerCase, executeNor)
 
     val hcol = leftHeader.split("\t")
-    var outputHeader = hcol.slice(0, 2).mkString("\t") + "\t" + gcCols.map(hcol(_)).mkString("\t")
+    var outputHeader = hcol.slice(0, 2).mkString("\t")
+    if (gcCols.nonEmpty) outputHeader += "\t" + gcCols.map(hcol(_)).mkString("\t")
     outputHeader += "\tBucket\tValues"
 
     val bucketCol =  columnFromHeader("bucket", outputHeader.toLowerCase, executeNor)

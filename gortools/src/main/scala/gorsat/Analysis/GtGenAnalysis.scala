@@ -319,17 +319,21 @@ object GtGenAnalysis {
 
           var groupKeyRight : Int = -1
 
-          val (bucketID,bucketPos) = tagi.tagBuckPosMap(rr.colAsString(PNcol).toString)
-          rSeg.buckPos = bucketPos
-          groupKeyRight = bucketID
-          groupMap.get(groupKeyRight) match {
-            case Some(x) => gr = x
-            case None =>
-              gr = GroupHolder()
-              groupMap += (groupKeyRight -> gr)
-          }
-          if (lr.chr == rr.chr && lSeg.start < rSeg.stop && lSeg.stop > rSeg.start && (!useGroup || groupKeyLeft == groupKeyRight)) {
-            set_coverage(lSeg, rSeg)
+          tagi.tagBuckPosMap.get(rr.colAsString(PNcol).toString) match {
+            case Some((bucketID, bucketPos)) => {
+              rSeg.buckPos = bucketPos
+              groupKeyRight = bucketID
+              groupMap.get(groupKeyRight) match {
+                case Some(x) => gr = x
+                case None =>
+                  gr = GroupHolder()
+                  groupMap += (groupKeyRight -> gr)
+              }
+              if (lr.chr == rr.chr && lSeg.start < rSeg.stop && lSeg.stop > rSeg.start && (!useGroup || groupKeyLeft == groupKeyRight)) {
+                set_coverage(lSeg, rSeg)
+              }
+            }
+            case None => //No match. Do nothing.
           }
 
           lastRightChr = rr.chr
