@@ -244,7 +244,7 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
   }
 
   test("Test all 4") {
-    val query4 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05 -osep ,"
+    val query4 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05 -osep \',\'"
     val results4 = TestUtils.runGorPipe(query4)
     val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
       "chr1\t1\tA\tC\t0.66615\tBucket1\t;;,;;,0.0013864;2.8113e-07;0.99861,;;,1.0000;7.0981e-12;5.3081e-26\n" +
@@ -333,8 +333,8 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     val segSource = new SourceProvider(segFile, context, false, false).source
 
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus5", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1)|
-      PrGtGenAnalysis.AFANSourceAnalysis(afSource, context, "ulus5", grCols = List(2,3), 4, 5) |
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus5", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1) |
+      PrGtGenAnalysis.AFANSourceAnalysis(afSource, context, "ulus5", grCols = List(2, 3), 4, 5) |
       PrGtGenAnalysis.RightSourceAnalysis(segSource, context, "ulus5", 4, 3, -1.0, 100) | as
 
     moreGorLines.iterator.map(RowObj(_)).foreach(lsa.process)
@@ -350,5 +350,26 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
       "chr5\t11\tA\tC\t0.20000\tBucket1\t~~~!~~~~~~\n" +
       "chr5\t11\tA\tC\t0.20000\tBucket2\t~~~~~~~~~!"
     assert(wanted == actual)
+  }
+
+  test("test - divergence") {
+    val query5 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05 -th 0.95 -maxit 0 -tol 0.0 | where bucket = 'Bucket1'"
+    val results5 = TestUtils.runGorPipe(query5)
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t.\tBucket1\t\n" +
+      "chr1\t1\tA\tG\t.\tBucket1\t\n" +
+      "chr1\t10\tA\tC\t.\tBucket1\t\n" +
+      "chr1\t11\tA\tC\t.\tBucket1\t\n"
+    assert(wanted == results5)
+  }
+
+  test("test - divergence 2") {
+    val query6 = s"gor $gorPath | where alt = 'C' | prgtgen $btPath $segPath -e 0.05 -maxit 0 -tol 0.0 | where bucket = 'Bucket1'"
+    val results6 = TestUtils.runGorPipe(query6)
+    val wanted = "CHROM\tPOS\tAF\tBucket\tValues\n" +
+      "chr1\t1\t.\tBucket1\t\n" +
+      "chr1\t10\t.\tBucket1\t\n" +
+      "chr1\t11\t.\tBucket1\t\n"
+    assert(wanted == results6)
   }
 }

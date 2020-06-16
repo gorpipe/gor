@@ -32,7 +32,7 @@ import org.gorpipe.gor.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PrGtGen extends CommandInfo("PRGTGEN",
-  CommandArguments("", "-tag -gl -gp -gc -maxseg -e -afc -af -cc -crc -ld -rd -anc -th -psep -osep", 2, 3),
+  CommandArguments("", "-tag -gl -gp -gc -maxseg -e -afc -af -cc -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -88,6 +88,9 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val e = doubleValueOfOptionWithDefault(args, "-e", 0.0)
 
     val af = doubleValueOfOptionWithDefault(args, "-af", 0.05)
+
+    val maxIt = intValueOfOptionWithDefault(args, "-maxit", 20)
+    val tol = doubleValueOfOptionWithDefault(args, "-tol", 1e-5)
 
     val threshold = doubleValueOfOptionWithDefault(args, "-th", -1)
 
@@ -162,7 +165,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     }
 
     val hcol = leftHeader.split("\t")
-    val outputHeader = hcol.slice(0, 2).mkString("\t") + "\t" + gcCols.map(hcol(_)).mkString("\t") + "\tAF\tBucket\tValues"
+    val outputHeader = hcol.slice(0, 2).mkString("\t") + (if (gcCols.nonEmpty) "\t" + gcCols.map(hcol(_)).mkString("\t") else "") + "\tAF\tBucket\tValues"
 
     var maxSegSize = 10000
     if (hasOption(args, "-maxseg")) maxSegSize = intValueOfOption(args, "-maxseg")
@@ -173,10 +176,10 @@ class PrGtGen extends CommandInfo("PRGTGEN",
       if (iargs.length == 3) {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, gl, gp, cc, crc, ld, PNCol, gcCols, af, e, tripSep = pSep) |
           AFANSourceAnalysis(priorSource, context, lookupSignature, gcCols, afc, anc) |
-          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, sepOut = writeOutTriplets, outSep = oSep)
+          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
       } else {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, gl, gp, cc, crc, ld, PNCol, gcCols, af, e, tripSep = pSep) |
-          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, sepOut = writeOutTriplets, outSep = oSep)
+          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
       }
     CommandParsingResult(pipeStep, combinedHeader)
   }

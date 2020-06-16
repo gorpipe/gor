@@ -227,7 +227,7 @@ object PrGtGenAnalysis {
   }
 
   case class RightSourceAnalysis(rightSource: RowSource, context: GorContext, lookupSignature: String,
-                                 depthCol: Int, pnCol: Int, threshold: Double, maxSegSize: Int,
+                                 depthCol: Int, pnCol: Int, threshold: Double, maxSegSize: Int, maxIt: Int = 20, tol: Double = 1e-5,
                                  tripSep: Char = ';', sepOut: Boolean = false, outSep: Char = ',') extends Analysis {
 
     val ti = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
@@ -247,7 +247,7 @@ object PrGtGenAnalysis {
       val gtGen = r_gh.gtGen
       join(r, gtGen)
 
-      val converged = gtGen.impute(gts, 1e-5, 10)
+      val converged = gtGen.impute(gts, tol, maxIt)
       writeOutRows(r, r_gh, gtGen, converged)
     }
 
