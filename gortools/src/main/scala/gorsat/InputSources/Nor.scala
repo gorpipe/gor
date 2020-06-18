@@ -78,9 +78,24 @@ object Nor
       } else if (inputParams.toUpperCase.contains(".YML")) {
         var nInputParams = context.getSession.getSystemContext.getReportBuilder.parse(inputParams)
         inputSource = new ServerNorGorSource(nInputParams,  context, true)
+      } else if (inputParams.toUpperCase.endsWith("PARQUET")) {
+        var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
+        extraFilterArgs += (if(hasOption(args, "-s")) " " + stringValueOfOption(args, "-s") else "")
+
+        if (CommandParseUtilities.hasOption(args, "-c")) {
+          val cols = CommandParseUtilities.stringValueOfOption(args, "-c")
+          context.setSortCols(cols)
+        }
+
+        if (hasOption(args, "-f")) {
+          val tags = stringValueOfOption(args, "-f")
+          inputSource = new ServerGorSource(inputParams + " -f " + tags + extraFilterArgs,  context, true)
+        } else if (hasOption(args, "-ff")) {
+          val tags = stringValueOfOption(args, "-ff")
+          inputSource = new ServerGorSource(inputParams + " -ff " + tags + extraFilterArgs,  context, true)
+        } else inputSource = new ServerGorSource(inputParams, context, true)
       } else if (inputParams.toUpperCase.endsWith("GOR") ||
         inputParams.toUpperCase.endsWith("GORZ") ||
-        inputParams.toUpperCase.endsWith("PARQUET")  ||
         (inputParams.toUpperCase.endsWith("GORD") &&
           !hasOption(args, "-asdict"))) {
 

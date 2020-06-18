@@ -28,6 +28,8 @@ import org.apache.parquet.example.data.Group;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.OriginalType;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -40,6 +42,19 @@ public class NorParquetLine extends ParquetLine {
         chr = "chrN";
         pos = 0;
         this.sortCols = sortCols;
+    }
+
+    @Override
+    public void writeRowToStream(OutputStream outputStream) throws IOException {
+        Type tp = group.getType().getFields().get(0);
+        String val = extractGroup(tp, group, 0, 0);
+        outputStream.write(val.getBytes());
+        for (int i = 1; i < numCols(); i++) {
+            outputStream.write('\t');
+            tp = group.getType().getFields().get(i);
+            val = extractGroup(tp, group, i, 0);
+            outputStream.write(val.getBytes());
+        }
     }
 
     @Override

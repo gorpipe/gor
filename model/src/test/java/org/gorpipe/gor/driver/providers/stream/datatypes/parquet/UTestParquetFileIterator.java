@@ -88,9 +88,9 @@ public class UTestParquetFileIterator {
             count++;
         }
         assertEquals(48, count);
-        assertEquals(NorParquetLine.class, lastRow.getClass());
+        assertEquals(lastRow.chr,"chrN");
         String expected = "chrY\t10069\tT\tA\trs111065272";
-        assertEquals(expected, lastRow.getAllCols().toString());
+        assertEquals(expected, lastRow.otherCols());
     }
 
     @Test(expected = GorSystemException.class)
