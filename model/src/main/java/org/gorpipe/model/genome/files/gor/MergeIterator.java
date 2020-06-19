@@ -75,7 +75,16 @@ public class MergeIterator extends GenomicIterator {
         insertSource = options.insertSource;
         gorMonitor = gm;
 
-        getHeaderFromSources(options);
+        try {
+            getHeaderFromSources(options);
+        } catch (Exception e) {
+            try {
+                doClose();
+            } catch (Exception inner) {
+                log.warn("Caught exception while closing when handling exception", inner);
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -160,10 +169,14 @@ public class MergeIterator extends GenomicIterator {
 
     @Override
     public void close() {
+        doClose();
+        isClosed = true;
+    }
+
+    private void doClose() {
         for (GenomicIterator it : sources) {
             it.close();
         }
-        isClosed = true;
     }
 
     private void getHeaderFromSources(GorOptions options) {

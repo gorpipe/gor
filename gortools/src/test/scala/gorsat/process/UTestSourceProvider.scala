@@ -27,7 +27,7 @@ import java.io.{File, PrintWriter}
 import gorsat.DynIterator
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class UTestSourceProvider extends FlatSpec {
@@ -65,6 +65,7 @@ class UTestSourceProvider extends FlatSpec {
     val context = new GenericSessionFactory().create().getGorContext
     val sp = SourceProvider("../tests/data/gor/genes.gor", context, executeNor = false, isNor = false)
     assert(sp.header == "Chrom\tgene_start\tgene_end\tGene_Symbol")
+    sp.source.close()
   }
 
   it should "populate header with a nested query" in {

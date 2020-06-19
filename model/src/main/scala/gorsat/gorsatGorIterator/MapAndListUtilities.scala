@@ -23,6 +23,8 @@
 package gorsat.gorsatGorIterator
 
 import java.nio.file.Files
+import java.util
+import java.util.stream.Collectors
 
 import org.gorpipe.model.genome.files.gor.FileReader
 import org.gorpipe.gor.GorSession
@@ -81,7 +83,14 @@ object MapAndListUtilities {
   }
 
   def getStringTraversable(filename: String, session: GorSession): Traversable[String] = {
-    session.getProjectContext.getFileReader.getReader(filename).lines().iterator().asScala.toTraversable
+    val reader = session.getProjectContext.getFileReader.getReader(filename)
+    try {
+      val lines = reader.lines()
+      val list = lines.collect(Collectors.toList[String])
+      list.asScala
+    } finally {
+      reader.close()
+    }
   }
 
   def getStringArray(filename: String, iterator: LineIterator, session: GorSession) : Array[String] = {

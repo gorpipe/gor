@@ -253,7 +253,12 @@ public class NordIterator extends RowSource {
             this.activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false);
 
             // Test header
-            getHeaderFromIterator(this.activeIterator);
+            try {
+                getHeaderFromIterator(this.activeIterator);
+            } catch (Exception e) {
+                close();
+                throw e;
+            }
             return true;
         } else {
             return false;

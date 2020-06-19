@@ -330,8 +330,8 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
         }
 
         public ReaderThread() {
-            initPipeStep();
             init();
+            initPipeStep();
         }
 
         private void init() {
@@ -395,7 +395,7 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
 
         public void offerBatch(RowBuffer current) throws InterruptedException {
             int count = 0;
-            while (!stopProcessing && !rowQueue.offer(current, batchOfferTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
+            while (didStart && !stopProcessing && !rowQueue.offer(current, batchOfferTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
                 if (count > numberOfPollsBeforeTimeout) {
                     throw new GorSystemException("BatchedIteratorAdaptor polling for too long " + timeout.getSeconds(), null);
                 }
@@ -548,8 +548,13 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
                 Thread.currentThread().interrupt();
             }
         } else {
-            pipeStep.securedFinish(null);
-            closeSourceIterator();
+            try {
+                pipeStep.securedFinish(null);
+            } catch (Exception e) {
+                setEx(e);
+            } finally {
+                closeSourceIterator();
+            }
         }
 
         if (throwOnExit) {

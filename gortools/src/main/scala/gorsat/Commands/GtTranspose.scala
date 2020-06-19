@@ -164,8 +164,9 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
   }
 
   def getMarkersForHeader(fileName: String, source: SourceProvider, session: GorSession): Array[String] = {
+    val reader = session.getProjectContext.getFileReader.getReader(fileName)
     val iterator = if (source.iteratorCommand == "") {
-      val (header, body) = session.getProjectContext.getFileReader.getReader(fileName).lines().iterator().asScala.span(_.startsWith("#"))
+      val (header, body) = reader.lines().iterator().asScala.span(_.startsWith("#"))
       if (header.nonEmpty) {
         body
       } else if (body.hasNext) {
@@ -176,14 +177,17 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
     } else {
       source.dynSource.asInstanceOf[DynamicNorSource].getIterator
     }
-    iterator.map(_.split('\t').mkString(":")).toArray
+    val result = iterator.map(_.split('\t').mkString(":")).toArray
+    reader.close()
+    result
   }
 
   def getHeaderAndMarkerToIdxMap(fileName: String, sourceProvider: SourceProvider, session: GorSession): (String, Map[String, Int]) = {
     if (sourceProvider.iteratorCommand == "") {
-      val (header, body) = session.getProjectContext.getFileReader.getReader(fileName).lines().iterator().asScala.span(_.startsWith("#"))
+      val reader = session.getProjectContext.getFileReader.getReader(fileName)
+      val (header, body) = reader.lines().iterator().asScala.span(_.startsWith("#"))
       val hashTagHeader = header.foldLeft("")((_, line) => line)
-      if (hashTagHeader != "") {
+      val result = if (hashTagHeader != "") {
         val lastHashtagIdx = hashTagHeader.iterator.takeWhile(_ == '#').size
         (hashTagHeader.substring(lastHashtagIdx), body.zipWithIndex.toMap)
       } else if (body.hasNext) {
@@ -191,6 +195,8 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
       } else {
         throw new GorDataException(s"No content in file $fileName")
       }
+      reader.close()
+      result
     } else {
       val dns = sourceProvider.dynSource.asInstanceOf[DynamicNorSource]
       val header = dns.getLineHeader

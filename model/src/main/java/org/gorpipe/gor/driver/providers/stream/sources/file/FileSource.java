@@ -22,12 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.file.Paths;
+
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -48,9 +45,14 @@ public class FileSource implements StreamSource {
 
     private final SourceReference sourceReference;
     private final File file;
-    private boolean isSubset;
+    private final boolean isSubset;
     private RandomAccessFile raf;
 
+    // For debugging purposes, set the system property 'gor.filereader.stacktrace' to true
+    // to keep track of the call stack when the 'raf' is opened. The call stack is then
+    // logged out if the file is closed during finalize.
+    private final boolean keepStackTraceForOpen = System.getProperty("gor.filereader.stacktrace", "false").equalsIgnoreCase("true");
+    private Error rafOpenedStackTrace;
 
     /**
      * Name of file.  This should be the full path to the file.
@@ -97,6 +99,9 @@ public class FileSource implements StreamSource {
 
     private void ensureOpen() throws FileNotFoundException {
         if (raf == null) {
+            if (keepStackTraceForOpen) {
+                rafOpenedStackTrace = new Error();
+            }
             raf = new RandomAccessFile(file, "r");
         }
     }
@@ -160,7 +165,14 @@ public class FileSource implements StreamSource {
     @Override
     protected void finalize() throws Throwable {
         if (raf != null) {
-            log.warn("Datasource closed via finalize method: " + file.getAbsolutePath());
+            String msg = "Datasource closed via finalize method: " + file.getAbsolutePath();
+            if (rafOpenedStackTrace != null) {
+                StringWriter sw = new StringWriter();
+                rafOpenedStackTrace.printStackTrace(new PrintWriter(sw));
+                log.warn("{}\nOpened at {}", msg, sw.toString());
+            } else {
+                log.warn(msg);
+            }
         }
         close();
     }

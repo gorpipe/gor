@@ -74,6 +74,7 @@ object PrGtGenAnalysis {
     override def finish(): Unit = {
       if (!this.isInErrorState) flush()
       ti.unregisterUser(this)
+      if (iterator != null) iterator.close()
     }
 
     val groupMap = mutable.Map.empty[String, GroupHolder]
@@ -443,6 +444,7 @@ object PrGtGenAnalysis {
     override def finish(): Unit = {
       ti.unregisterUser(this)
       if (ti.users.isEmpty) context.getSession.getCache.getObjectHashMap.remove(lookupSignature)
+      rightSource.close()
     }
 
     private def swapRowBuffers(): Unit = {
