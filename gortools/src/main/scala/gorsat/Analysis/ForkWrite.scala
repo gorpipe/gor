@@ -109,7 +109,7 @@ case class ForkWrite(forkCol: Int,
     } else {
       true
     }
-    sh.out = OutFile.driver(name, if(options.prefix.isDefined) options.prefix.get+header else header, skipHeader, options)
+    sh.out = OutFile.driver(name, header, skipHeader, options)
     sh.out.setup()
     sh.fileOpen = true
     openFiles += 1

@@ -24,17 +24,15 @@ package gorsat.Outputs
 
 import java.io._
 import java.nio.file.{Files, Path, Paths}
-import java.util.zip.{Deflater, GZIPOutputStream}
+import java.util.zip.Deflater
 
 import gorsat.Analysis.OutputOptions
 import gorsat.Commands.Output
 import gorsat.parquet.GorParquetFileOut
 import htsjdk.samtools.util.{BlockCompressedInputStream, BlockCompressedOutputStream, Md5CalculatingOutputStream}
-import htsjdk.tribble.index.Index
 import htsjdk.tribble.index.tabix.{TabixFormat, TabixIndexCreator}
 import htsjdk.tribble.readers.{AsciiLineReader, AsciiLineReaderIterator}
 import htsjdk.tribble.util.LittleEndianOutputStream
-import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFCodec
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.model.genome.files.binsearch.GorIndexType
@@ -82,25 +80,24 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
 
     if(idx == GorIndexType.TABIX) {
       val gp = Paths.get(name);
+
       val bcis = new BlockCompressedInputStream(Files.newInputStream(gp))
-      val tbi = new TabixIndexCreator(TabixFormat.VCF)
 
       val gpi = Paths.get(name+".tbi")
-      val outputStream = new LittleEndianOutputStream(new BlockCompressedOutputStream(gpi.toFile))
+      val tbi = new TabixIndexCreator(TabixFormat.VCF)
 
+      val outputStream = new LittleEndianOutputStream(new BlockCompressedOutputStream(gpi.toFile))
       val codec = new VCFCodec
-      val lineReader = new AsciiLineReader(bcis)
+      val lineReader = AsciiLineReader.from(bcis)
       val iterator = new AsciiLineReaderIterator(lineReader)
       codec.readActualHeader(iterator)
-      while ( {
-        iterator.hasNext
-      }) {
+      while (iterator.hasNext) {
         val position = iterator.getPosition
         val currentContext = codec.decode(iterator.next)
         tbi.addFeature(currentContext, position)
       }
-      iterator.close()
       val index = tbi.finalizeIndex(iterator.getPosition)
+      iterator.close()
       index.write(outputStream)
       outputStream.close()
     }
@@ -109,16 +106,30 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
 
 object OutFile {
 
-  def driver(name: String, header: String, skipHeader: Boolean, options: OutputOptions): Output = {
-    val append = skipHeader || {
-      options.prefixFile match {
-        case Some(prefixName) =>
-          writePrefix(prefixName, name)
-          true
-        case None => false
+  def driver(name: String, inheader: String, skipHeader: Boolean, options: OutputOptions): Output = {
+    val nameUpper = name.toUpperCase
+
+    var header = inheader
+    var append = skipHeader
+    if(options.prefix.isDefined) {
+      val pref = options.prefix.get
+      if(nameUpper.endsWith(".VCF") || nameUpper.endsWith(".VCF.GZ") || nameUpper.endsWith(".VCF.BGZ")) {
+        if(!inheader.startsWith("#")) header = "#"+inheader
+        header = pref + "\n" + header
+      } else {
+        header = pref + header
+      }
+    } else {
+      append = append || {
+        options.prefixFile match {
+          case Some(prefixName) =>
+            writePrefix(prefixName, name)
+            true
+          case None => false
+        }
       }
     }
-    val nameUpper = name.toUpperCase
+
     try {
       if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
         new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.idx, options.compressionLevel)

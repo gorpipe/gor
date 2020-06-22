@@ -43,7 +43,7 @@ project(':model') {
         compile project(':base')
         compile project(':external')
 
-        compile "com.github.samtools:htsjdk:2.19.+"
+        compile "com.github.samtools:htsjdk:2.22.+"
         compile "com.zaxxer:HikariCP:3.4.+"
         compile "commons-configuration:commons-configuration:1.10"
         compile "org.scala-lang.modules:scala-xml_2.12:1.0.+"
