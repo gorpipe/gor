@@ -61,6 +61,7 @@ public class GorShell {
     private boolean exit = false;
 
     public static class Settings {
+
         public boolean timingEnabled = false;
         public boolean fileCacheEnabled = true;
         public boolean requestStatsEnabled = false;
@@ -135,11 +136,19 @@ public class GorShell {
     }
 
     void create(String name, String stmt) {
-        settings.createStatements.put(name, stmt);
+        if (!stmt.equals("")) {
+            settings.createStatements.put(name, stmt);
+        } else {
+            settings.createStatements.remove(name);
+        }
     }
 
     void def(String name, String stmt) {
-        settings.defStatements.put(name, stmt);
+        if (!stmt.equals("")) {
+            settings.defStatements.put(name, stmt);
+        } else {
+            settings.defStatements.remove(name);
+        }
     }
 
     void script(String scriptName) {
@@ -216,6 +225,11 @@ public class GorShell {
         } catch (IOException e) {
             reportException(e);
         }
+    }
+
+    public void clearScript() {
+        settings.createStatements.clear();
+        settings.defStatements.clear();
     }
 
     void reportException(Exception e) {

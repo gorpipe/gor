@@ -40,6 +40,9 @@ public class ScriptCmd implements Runnable {
     @CommandLine.Option(names = "-s", description = "Saves the current script to the given file")
     private boolean save;
 
+    @CommandLine.Option(names = "-c", description = "Clears the current script")
+    private boolean clear;
+
     @Override
     public void run() {
         if (scriptFile != null) {
@@ -49,7 +52,11 @@ public class ScriptCmd implements Runnable {
                 parent.getShell().script(scriptFile);
             }
         } else {
-            parent.getShell().showScript();
+            if (clear) {
+                parent.getShell().clearScript();
+            } else {
+                parent.getShell().showScript();
+            }
         }
     }
 }
