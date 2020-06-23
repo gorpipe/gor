@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.function;
 
+import org.gorpipe.gor.ColumnValueProvider;
 import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.parser.ParseArith;
 import scala.Function1;
@@ -38,12 +39,7 @@ public class GorRowMapFunction implements Function<Row,Row>, Serializable {
         filter = new ParseArith(null);
         filter.setColumnNamesAndTypes(header, gortypes);
         calcType = filter.compileCalculation(query);
-
-        if (calcType.equals("String") ) func = filter.stringFunction();
-        else if (calcType.equals("Double") ) func = filter.doubleFunction();
-        else if( calcType.equals("Long") ) func = filter.longFunction();
-        else if (calcType.equals("Int") ) func = filter.intFunction();
-        else if( calcType.equals("Boolean") ) func = filter.booleanFunction();
+        func = filter.getCompiledStringFunction();
     }
 
     @Override
