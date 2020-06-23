@@ -241,7 +241,7 @@ public class NordIterator extends RowSource {
 
             if (!entryPath.isAbsolute()) {
                 Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(Paths.get(this.projectRoot, this.nordFile), this.projectRoot);
-                Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference);
+                Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile);
 
                 if (reference.logical != null)
                     fileName = line.fileRef.logical;
@@ -253,7 +253,12 @@ public class NordIterator extends RowSource {
             this.activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false);
 
             // Test header
-            getHeaderFromIterator(this.activeIterator);
+            try {
+                getHeaderFromIterator(this.activeIterator);
+            } catch (Exception e) {
+                close();
+                throw e;
+            }
             return true;
         } else {
             return false;

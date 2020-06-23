@@ -146,6 +146,8 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.CsvSel)
       addInfo(new gorsat.Commands.CsvCC)
       addInfo(new gorsat.Commands.GtGen)
+      addInfo(new gorsat.Commands.King)
+      addInfo(new gorsat.Commands.Queen)
       addInfo(new gorsat.Commands.Regression)
       addInfo(new PlinkRegression)
       addInfo(new PlinkAdjust)
@@ -185,6 +187,10 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.Adjust)
       addInfo(new gorsat.Commands.VerifyColType)
       addInfo(new gorsat.Commands.VarGroup)
+      addInfo(new gorsat.Commands.GtTranspose)
+      addInfo(new gorsat.Commands.King)
+      addInfo(new gorsat.Commands.GtGen)
+      addInfo(new gorsat.Commands.PrGtGen)
     }
   }
 }

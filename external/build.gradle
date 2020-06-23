@@ -22,6 +22,6 @@
 
 project(':external') {
     dependencies {
-        compile project(':base:exception')
+        compile project(':base')
     }
 }

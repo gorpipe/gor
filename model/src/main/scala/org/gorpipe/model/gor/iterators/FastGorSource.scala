@@ -27,7 +27,7 @@ import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
 import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.gor._
 import org.gorpipe.model.util.StringUtil
-import org.gorpipe.util.gorutil.standalone.GorStandalone
+import org.gorpipe.util.standalone.GorStandalone
 
 class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, executeNor: Boolean, gm: GorMonitor, minLogTime: Int, readAll: Boolean = true) extends TimedRowSource {
   private val useAdaptiveMTP = System.getProperty("gor.iterators.useAdaptiveMTP", "true").toBoolean //MTP = moveToPosition

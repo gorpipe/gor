@@ -39,7 +39,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.util.gorutil.standalone.GorStandalone;
+import org.gorpipe.util.standalone.GorStandalone;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.example.data.Group;
@@ -240,6 +240,7 @@ public class ParquetFileIterator extends GenomicIterator {
                 setHeader(newHeader);
             }
         }
+        if(nor) setHeader("ChromNOR\tposNOR\t"+super.getHeader());
     }
 
     private String getTypeName(Type type) {

@@ -201,6 +201,8 @@ object GeneralQueryHandler {
           case _: Exception => /* do nothing */
         }
         throw e
+    } finally {
+      theSource.close()
     }
   }
 

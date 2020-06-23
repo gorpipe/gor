@@ -31,7 +31,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.util.gorutil.standalone.GorStandalone;
+import org.gorpipe.util.standalone.GorStandalone;
 import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,7 +195,7 @@ public class DriverBackedFileReader extends FileReader {
 
     private BufferedReader readSource(DataSource source, String resolvedUrl) {
         try {
-            return new BufferedReader(new InputStreamReader(((StreamSource) source).open()));
+            return new SourceReader(source);
         } catch (IOException e) {
             String name = "";
             try {
@@ -204,6 +204,21 @@ public class DriverBackedFileReader extends FileReader {
                 // Do nothing
             }
             throw ExceptionUtilities.mapGorResourceException(name, resolvedUrl, e);
+        }
+    }
+
+    private static class SourceReader extends BufferedReader {
+        private final DataSource source;
+
+        SourceReader(DataSource source) throws IOException {
+            super(new InputStreamReader(((StreamSource) source).open()));
+            this.source = source;
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            source.close();
         }
     }
 

@@ -57,6 +57,7 @@ public class GorzSeekableIterator extends GenomicIterator {
     private final BufferIterator bufferIterator = new BufferIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
     private final ByteArrayWrapper rawDataHolder = new ByteArrayWrapper();
     private boolean firstBlock = true;
+    private boolean isClosed = false;
 
     public GorzSeekableIterator(StreamSourceSeekableFile file) {
         this(file, null);
@@ -91,6 +92,9 @@ public class GorzSeekableIterator extends GenomicIterator {
 
     @Override
     public boolean seek(String chr, int pos) {
+        if (isClosed) {
+            throw new GorSystemException("Iterator is closed", null);
+        }
         final StringIntKey key = new StringIntKey(chr, pos);
         this.bufferIterator.seek(key);
         if (this.bufferIterator.hasNext() && this.bufferIterator.getFirstKey().compareTo(key) < 0) {
@@ -127,11 +131,17 @@ public class GorzSeekableIterator extends GenomicIterator {
 
     @Override
     public boolean hasNext() {
+        if (isClosed) {
+            throw new GorSystemException("Iterator is closed", null);
+        }
         return this.bufferIterator.hasNext() || this.seekableIterator.hasNext();
     }
 
     @Override
     public Row next() {
+        if (isClosed) {
+            throw new GorSystemException("Iterator is closed", null);
+        }
         if (!this.bufferIterator.hasNext()) {
             try {
                 loadBufferIterator();
@@ -151,6 +161,7 @@ public class GorzSeekableIterator extends GenomicIterator {
 
     @Override
     public void close() {
+        isClosed = true;
         try {
             this.seekableIterator.close();
         } catch (IOException e) {

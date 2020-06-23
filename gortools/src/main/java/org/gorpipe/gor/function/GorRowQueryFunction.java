@@ -49,7 +49,7 @@ public class GorRowQueryFunction implements Function<Row, Stream<Row>>, AutoClos
 
     public String getHeader(String inputHeader) {
         PipeInstance pi = init(inputHeader);
-        return pi.combinedHeader();
+        return pi.getHeader();
     }
 
     public String getHeader() {

@@ -104,7 +104,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     aliases
   }
 
-  def execute(commands: Array[String]): String = {
+  def execute(commands: Array[String], validate: Boolean = true): String = {
     // Apply aliases to query, this replaces the def entries
     aliases = extractAliases(commands)
     var gorCommands = applyAliases(commands, aliases)
@@ -118,7 +118,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     val analyzer = new GorScriptAnalyzer(gorCommands.mkString(";"))
     eventLogger.tasks(analyzer.getTasks)
 
-    val gorCommand = processScript(gorCommands)
+    val gorCommand = processScript(gorCommands, validate)
 
     gorCommand
   }
@@ -137,7 +137,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     processedGorCommands
   }
 
-  private def processScript(igorCommands: Array[String]): String = {
+  private def processScript(igorCommands: Array[String], validate: Boolean): String = {
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
     // any left there is an error, something was not executed
@@ -219,7 +219,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
     // We'll need to validate the current execution and throw exception if there are still execution blocks available
     // IN the final execution list
-    postValidateExecution()
+    if(validate) postValidateExecution()
 
     gorCommand
   }

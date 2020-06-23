@@ -26,6 +26,7 @@ import org.apache.commons.configuration.*;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Configuration Management for system and application config.
@@ -39,7 +40,7 @@ import java.util.Iterator;
  * Note:
  * 1. Supports variables within property names, i.e. replaces variable in name with lookup value, i.e.
  * ${xxx}yyy will be someyyy if a property named xxx is defined to some.
- * 2.  This class is loosly based on SystemConfig from Sequence Miner.
+ * 2.  This class is loosely based on SystemConfig from Sequence Miner.
  *
  * @version $Id$
  */
@@ -96,7 +97,8 @@ public class ConfigUtil {
                 Iterator<String> keysIt = config.getKeys();
                 while (keysIt.hasNext()) {
                     String key = keysIt.next();
-                    System.setProperty(key, config.getString(key));
+                    List valueList = config.getList(key);
+                    System.setProperty(key, String.join(",", valueList));
                 }
             }
         } catch (Throwable ex) {

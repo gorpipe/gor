@@ -143,6 +143,26 @@ object CommandParseUtilities {
     args(index + 1)
   }
 
+  def charValueOfOption(args: Array[String], name: String): Char = {
+    val idx = indexOfOption(args, name) + 1
+    if (idx == 0) {
+      throw new GorParsingException(s"Value option $name is not found", name, "")
+    } else if (idx >= args.length) {
+      throw new GorParsingException(s"Value not found for option $name", name, "")
+    } else {
+      val s = args(idx)
+      val len = args(idx).length
+      if (len == 1) {
+        s.head
+      } else if (len == 3 && ((s(0) == '\'' && s(len - 1) == '\'') || (s(0) == '\"' || s(len - 1) == '\"'))) {
+        s(1)
+      } else {
+        throw new GorParsingException(s"Character option $name only takes one character as argument.\n" +
+          s"Current argument ${args(idx)} is invalid.", name, "")
+      }
+    }
+  }
+
   def stringArrayOfOption(args: Array[String], name: String): Array[String] = {
     var index = indexOfOption(args, name)
 

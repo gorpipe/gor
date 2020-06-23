@@ -25,5 +25,6 @@ package org.gorpipe.model.genome.files.binsearch;
 public enum GorIndexType {
     FULLINDEX,
     CHROMINDEX,
+    TABIX,
     NONE
 }

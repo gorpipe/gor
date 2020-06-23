@@ -38,7 +38,7 @@ public class GorRowFilterFunction<T extends Row> implements Predicate<T>, Functi
         ParseArith filter = new ParseArith(null);
         filter.setColumnNamesAndTypes(header, gortypes);
         filter.compileFilter(gorwhere);
-        booleanFunction = filter.booleanFunction();
+        booleanFunction = filter.getCompiledBooleanFunction();
     }
 
     @Override

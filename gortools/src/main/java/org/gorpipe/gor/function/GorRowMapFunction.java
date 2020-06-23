@@ -30,20 +30,14 @@ import java.io.Serializable;
 import java.util.function.Function;
 
 public class GorRowMapFunction implements Function<Row,Row>, Serializable {
-    transient ParseArith filter;
     public String calcType;
     Function1 func;
 
     public GorRowMapFunction(String query, String[] header, String[] gortypes) {
-        filter = new ParseArith(null);
+        ParseArith filter = new ParseArith(null);
         filter.setColumnNamesAndTypes(header, gortypes);
         calcType = filter.compileCalculation(query);
-
-        if (calcType.equals("String") ) func = filter.stringFunction();
-        else if (calcType.equals("Double") ) func = filter.doubleFunction();
-        else if( calcType.equals("Long") ) func = filter.longFunction();
-        else if (calcType.equals("Int") ) func = filter.intFunction();
-        else if( calcType.equals("Boolean") ) func = filter.booleanFunction();
+        func = filter.getCompiledStringFunction();
     }
 
     @Override

@@ -131,8 +131,8 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       itDyn = createGorIterator(context)
       itDyn.fixHeader = fixHeader
       itDyn.scalaInit(iteratorCommand)
-      usedFiles = itDyn.usedFiles
-      theSource = itDyn.theIterator
+      usedFiles = itDyn.getUsedFiles
+      theSource = itDyn.getRowSource
     }
     mustReCheck = false
     myHasNext = theSource.hasNext
@@ -191,8 +191,8 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     itDyn = createGorIterator(context)
     itDyn.fixHeader = fixHeader
     itDyn.scalaInit(modifiedCommand(iteratorCommand,seekChr,seekPos,-1,seekOnly = true))
-    usedFiles = itDyn.usedFiles
-    theSource = itDyn.theIterator
+    usedFiles = itDyn.getUsedFiles
+    theSource = itDyn.getRowSource
     seekedChr = seekChr
     seekedPos = seekPos
     mustReCheck = true
@@ -204,9 +204,9 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     itDyn = createGorIterator(context)
     itDyn.fixHeader = fixHeader
     itDyn.scalaInit(modifiedCommand(iteratorCommand,seekChr,seekPos,endPos,seekOnly = false))
-    usedFiles = itDyn.usedFiles
+    usedFiles = itDyn.getUsedFiles
 
-    theSource = itDyn.theIterator
+    theSource = itDyn.getRowSource
     seekedChr = seekChr
     seekedPos = seekPos
     mustReCheck = true
@@ -264,7 +264,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         nor = headerItDyn.isNorContext
         header = headerItDyn.getHeader
         headerFiles.setFormer(header)
-        headerFiles.setLatter(headerItDyn.usedFiles.toArray)
+        headerFiles.setLatter(headerItDyn.getUsedFiles.toArray)
 
         headerItDyn.close()
         setHeader(header)
@@ -286,6 +286,13 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       val firstTabIndex = rawHeader.indexOf('\t')
       val secondTabIndex = rawHeader.indexOf('\t', firstTabIndex + 1)
       rawHeader.substring(secondTabIndex + 1)
+    }
+    def getIterator: Iterator[String] = {
+      val dns = this
+      new Iterator[String] {
+        override def hasNext: Boolean = dns.hasNext
+        override def next: String = dns.nextLine
+      }
     }
   }
 

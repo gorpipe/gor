@@ -40,9 +40,8 @@ class Tee extends CommandInfo("TEE",
 
     context.getSession.setNorContext(executeNor)
     val teeIt = PipeInstance.createGorIterator(context)
-    teeIt.scalaPipeStepInit(outputPipeCmd,combinedHeader)
+    val teeStep = teeIt.createPipestep(outputPipeCmd,combinedHeader)
 
-    val teeStep = teeIt.getPipeStep
     val teeHeader = if (hasOption(args,"-h")) teeIt.getHeader else ""
 
     val pipeStep: Analysis = TeeAnalysis(teeStep | StdOut2(teeHeader))

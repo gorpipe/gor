@@ -33,6 +33,7 @@
    command/GROUP
    command/GTGEN
    command/GTLD
+   command/GTTRANSPOSE
    command/HIDE
    command/INSET
    command/JOIN

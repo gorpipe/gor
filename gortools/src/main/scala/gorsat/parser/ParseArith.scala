@@ -1082,6 +1082,54 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     outputType
   }
 
+  def getCompiledBooleanFunction(): ColumnValueProvider => Boolean = {
+    outputType.charAt(0) match {
+      case 'B' =>
+        if (runClassic) {
+          cvp: ColumnValueProvider => booleanFunction.apply(cvp)
+        } else {
+          cvp: ColumnValueProvider => calcLambda.evaluateBoolean(cvp)
+        }
+    }
+  }
+
+  def getCompiledStringFunction(): ColumnValueProvider => String = {
+    outputType.charAt(0) match {
+      case 'S' =>
+        if (runClassic) {
+          cvp: ColumnValueProvider => stringFunction.apply(cvp)
+        } else {
+          cvp: ColumnValueProvider => calcLambda.evaluateString(cvp)
+        }
+      case 'D' =>
+        if (runClassic) {
+          cvp: ColumnValueProvider => doubleFunction.apply(cvp).toString
+        } else {
+          cvp: ColumnValueProvider => calcLambda.evaluateDouble(cvp).toString
+        }
+      case 'L' =>
+        if (runClassic) {
+          cvp: ColumnValueProvider => longFunction.apply(cvp).toString
+        } else {
+          cvp: ColumnValueProvider => calcLambda.evaluateLong(cvp).toString
+        }
+      case 'I' =>
+        if (runClassic) {
+          cvp: ColumnValueProvider => intFunction.apply(cvp).toString
+        } else {
+          cvp: ColumnValueProvider => calcLambda.evaluateInt(cvp).toString
+        }
+      case 'B' =>
+        if (runClassic) {
+          cvp: ColumnValueProvider => booleanFunction.apply(cvp).toString
+        } else {
+          cvp: ColumnValueProvider => calcLambda.evaluateBoolean(cvp).toString
+        }
+      case _ =>
+        cvp: ColumnValueProvider => ""
+    }
+  }
+
   /**
     * Compiles the given string as an expression. If the compilation succeeds,
     * evalStringFunction, evealIntFunction, evalDoubleFunction, evalLongFunction or

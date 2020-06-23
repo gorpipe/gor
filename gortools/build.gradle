@@ -54,15 +54,16 @@ project(':gortools') {
     sourceSets.main.java.srcDirs = []
 
     dependencies {
-        compile project(':base:exception')
         compile project(':model')
-        compile project(':querydialogs')
-        compile project(':base:config')
+        compile project(':base')
 
+        compile "org.freemarker:freemarker:2.3.19"
+        compile "org.yaml:snakeyaml:1.25"
         compile "io.prometheus:simpleclient:0.6.+"
         compile "org.scala-lang:scala-compiler:2.12.+"
         compile "org.scala-lang.modules:scala-xml_2.12:1.0.+"
 
+        compile "com.fasterxml.jackson.core:jackson-databind:2.11.+"
         compile "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
         compile "org.scalanlp:breeze_2.12:0.13.+"
         compile "info.picocli:picocli:4.1.+"
@@ -73,7 +74,7 @@ project(':gortools') {
         runtime "org.scala-lang:scala-reflect:2.12.+"
         runtime project(":gordrivers")
 
-        testCompile project(':base:test')
+        testCompile project(':test')
         testCompile "org.mockito:mockito-core:3.0.+"
         testCompile "org.scalatest:scalatest_2.12:3.0.8"
         testCompile "org.scalacheck:scalacheck_2.12:1.13.+"

@@ -97,7 +97,7 @@ public class BamIterator extends GenomicIterator {
         this.samFileHeader = reader.getFileHeader();
         this.lookup = lookup;
         String[] txtHeader = new String[0];
-        String h = samFileHeader.getTextHeader();
+        String h = samFileHeader.getSAMString();
         if (h != null && h.length() > 0) {
             txtHeader = h.split("\n");
         }

@@ -25,9 +25,16 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 import org.gorpipe.model.genome.files.gor.NorParquetLine;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.hadoop.ParquetReader;
+import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.model.gor.RowObj;
 
 public class NorParquetRowReader extends ParquetRowReader {
     public NorParquetRowReader(ParquetReader<Group> reader, int[] sortCols, String part) {
         super(reader, (Group grp) -> new NorParquetLine(grp, sortCols), part);
+    }
+
+    @Override
+    public Row next() {
+        return RowObj.apply("chrN", 0, row.toString());
     }
 }

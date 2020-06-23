@@ -130,8 +130,8 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
         options.parseOptions(qra)
         gorpipe.processArguments(qra, executeNor = false)
 
-        if (gorpipe.theIterator != null) {
-          inputSource = gorpipe.theIterator
+        if (gorpipe.getRowSource != null) {
+          inputSource = gorpipe.getRowSource
         }
       } else {
         usedFiles ++= iargs.toList.filter(x => !x.startsWith("-"))

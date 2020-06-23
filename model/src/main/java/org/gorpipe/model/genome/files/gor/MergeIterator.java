@@ -59,6 +59,8 @@ public class MergeIterator extends GenomicIterator {
      */
     private boolean isPrimed = false;
 
+    private boolean isClosed = false;
+
     /**
      * Optional GorMonitor instance, so that cancelling can be done while priming
      */
@@ -73,7 +75,16 @@ public class MergeIterator extends GenomicIterator {
         insertSource = options.insertSource;
         gorMonitor = gm;
 
-        getHeaderFromSources(options);
+        try {
+            getHeaderFromSources(options);
+        } catch (Exception e) {
+            try {
+                doClose();
+            } catch (Exception inner) {
+                log.warn("Caught exception while closing when handling exception", inner);
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -119,6 +130,10 @@ public class MergeIterator extends GenomicIterator {
     public boolean hasNext() {
         incStat("hasNext");
 
+        if (isClosed) {
+            throw new GorSystemException("Iterator is closed", null);
+        }
+
         if (!isPrimed) {
             primeQueue(sources);
         }
@@ -129,12 +144,16 @@ public class MergeIterator extends GenomicIterator {
     public Row next() {
         incStat("next");
 
+        if (isClosed) {
+            throw new GorSystemException("Iterator is closed", null);
+        }
+
         if (!isPrimed) {
             primeQueue(sources);
         }
         RowFromIterator rowFromIterator = queue.poll();
-        if (rowFromIterator == null) {
-            return null;
+        if (rowFromIterator == null || rowFromIterator.row == null) {
+            throw new NoSuchElementException();
         }
 
         GenomicIterator source = rowFromIterator.source;
@@ -150,6 +169,11 @@ public class MergeIterator extends GenomicIterator {
 
     @Override
     public void close() {
+        doClose();
+        isClosed = true;
+    }
+
+    private void doClose() {
         for (GenomicIterator it : sources) {
             it.close();
         }

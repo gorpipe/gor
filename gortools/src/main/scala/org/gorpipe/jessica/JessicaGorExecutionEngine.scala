@@ -66,7 +66,7 @@ class JessicaGorExecutionEngine(
     val iterator = new PipeInstance(session.getGorContext)
     iterator.init(queryToExecute, pipeOptions.stdIn, "")
 
-    var header = iterator.combinedHeader
+    var header = iterator.getHeader
     if (containsWriteCommand(pipeOptions.query)) header = null
 
     // Add steps that return the output of the pipe

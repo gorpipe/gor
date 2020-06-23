@@ -104,7 +104,7 @@ public class QueryRunner extends Thread {
     }
 
     private void printHeader(PipeInstance pipe) {
-        String header = pipe.theIterator().getHeader();
+        String header = pipe.getHeader();
         if (gorSession.getNorContext() || pipe.isNorContext()) {
             header = skipFirstTwoColumns(header);
         }
@@ -112,17 +112,16 @@ public class QueryRunner extends Thread {
     }
 
     private void printRows(PipeInstance pipe) {
-        boolean isNor = gorSession.getNorContext() || pipe.isNorContext();
         numRows = 0;
         beforeLoopTime = System.currentTimeMillis();
-        while (pipe.theIterator().hasNext() && !gorMonitor.isCancelled()) {
-            Row row = pipe.theIterator().next();
+        while (pipe.hasNext() && !gorMonitor.isCancelled()) {
+            String rowAsString = pipe.next();
             if (displayResults) {
-                String rowAsString = isNor ? row.otherCols() : row.toString();
                 lineReader.printAbove(rowAsString);
             }
             numRows++;
         }
+        pipe.close();
         afterLoopTime = System.currentTimeMillis();
     }
 

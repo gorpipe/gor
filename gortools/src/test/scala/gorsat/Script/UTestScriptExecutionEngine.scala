@@ -22,14 +22,11 @@
 
 package gorsat.Script
 
-import org.gorpipe.exceptions.GorParsingException
 import gorsat.Commands.CommandParseUtilities
 import gorsat.DynIterator
 import gorsat.QueryHandlers.GeneralQueryHandler
-import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
 import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, PipeInstance}
 import org.gorpipe.exceptions.{GorException, GorParsingException}
-import org.gorpipe.gor.GorContext
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

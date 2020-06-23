@@ -36,7 +36,7 @@ public class OptionEvaluator {
     String getValue(String query, int column) {
         PipeInstance pipeInstance = new PipeInstance(context);
         pipeInstance.init(query, false, "");
-        RowSource iterator = pipeInstance.theIterator();
+        RowSource iterator = pipeInstance.getRowSource();
         if (iterator.hasNext()) {
             Row row = iterator.next();
             return row.stringValue(column - 1);
