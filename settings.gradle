@@ -1,12 +1,16 @@
 rootProject.name = 'gor'
 rootProject.buildFileName = "build.gradle"
 
-include 'base'
+include 'gorbase'
 include 'model'
 include 'documentation'
 include 'gortools'
 include 'tools'
-include 'drivers'
-include 'util'
+include 'gordrivers'
+include 'gorutil'
 include 'test'
 include 'external'
+
+project(":gorutil").projectDir = file("util")
+project(":gorbase").projectDir = file("base")
+project(":gordrivers").projectDir = file("drivers")
