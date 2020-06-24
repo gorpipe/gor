@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-project(':base') {
+project(':gorbase') {
     dependencies {
         compile "com.googlecode.json-simple:json-simple:1.1.+"
         compile "org.aeonbits.owner:owner:1.0.+"

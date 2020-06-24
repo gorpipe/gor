@@ -39,8 +39,8 @@ project(':model') {
         annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
         compileOnly 'com.google.auto.service:auto-service:1.0-rc6'
 
-        compile project(':util')
-        compile project(':base')
+        compile project(':gorutil')
+        compile project(':gorbase')
         compile project(':external')
 
         compile "com.github.samtools:htsjdk:2.22.+"

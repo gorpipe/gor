@@ -20,9 +20,9 @@
  *  END_COPYRIGHT
  */
 
-project(':util') {
+project(':gorutil') {
     dependencies {
-        compile project(':base')
+        compile project(':gorbase')
         testRuntimeOnly project(':test')
     }
 }

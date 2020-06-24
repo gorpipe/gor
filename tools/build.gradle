@@ -22,7 +22,7 @@
 
 project(':tools') {
     dependencies {
-        compile project(':base')
+        compile project(':gorbase')
         compile project(':gortools')
         compile project(':model')
         compile 'org.jline:jline:3.13.3'

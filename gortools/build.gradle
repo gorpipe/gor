@@ -55,7 +55,7 @@ project(':gortools') {
 
     dependencies {
         compile project(':model')
-        compile project(':base')
+        compile project(':gorbase')
 
         compile "org.freemarker:freemarker:2.3.19"
         compile "org.yaml:snakeyaml:1.25"
