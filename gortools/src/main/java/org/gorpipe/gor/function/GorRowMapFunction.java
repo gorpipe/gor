@@ -37,7 +37,11 @@ public class GorRowMapFunction implements Function<Row,Row>, Serializable {
         ParseArith filter = new ParseArith(null);
         filter.setColumnNamesAndTypes(header, gortypes);
         calcType = filter.compileCalculation(query);
-        func = filter.getCompiledStringFunction();
+        if (calcType.equals("String") ) func = filter.getStringFunction();
+        else if (calcType.equals("Double") ) func = filter.getDoubleFunction();
+        else if( calcType.equals("Long") ) func = filter.getLongFunction();
+        else if (calcType.equals("Int") ) func = filter.getIntFunction();
+        else if( calcType.equals("Boolean") ) func = filter.getBooleanFunction();
     }
 
     @Override
