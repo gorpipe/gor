@@ -1082,51 +1082,60 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     outputType
   }
 
+  def getBooleanFunction(): ColumnValueProvider => Boolean = {
+    if (runClassic) {
+      booleanFunction
+    } else {
+      calcLambda.evaluateBoolean
+    }
+  }
+
+  def getStringFunction(): ColumnValueProvider => String = {
+    if (runClassic) {
+      stringFunction
+    } else {
+      calcLambda.evaluateString
+    }
+  }
+
+  def getDoubleFunction(): ColumnValueProvider => Double = {
+    if (runClassic) {
+      doubleFunction
+    } else {
+      calcLambda.evaluateDouble
+    }
+  }
+
+  def getLongFunction(): ColumnValueProvider => Long = {
+    if (runClassic) {
+      longFunction
+    } else {
+      calcLambda.evaluateLong
+    }
+  }
+
+  def getIntFunction(): ColumnValueProvider => Int = {
+    if (runClassic) {
+      intFunction
+    } else {
+      calcLambda.evaluateInt
+    }
+  }
+
   def getCompiledBooleanFunction(): ColumnValueProvider => Boolean = {
     outputType.charAt(0) match {
-      case 'B' =>
-        if (runClassic) {
-          cvp: ColumnValueProvider => booleanFunction.apply(cvp)
-        } else {
-          cvp: ColumnValueProvider => calcLambda.evaluateBoolean(cvp)
-        }
+      case 'B' => getBooleanFunction()
     }
   }
 
   def getCompiledStringFunction(): ColumnValueProvider => String = {
     outputType.charAt(0) match {
-      case 'S' =>
-        if (runClassic) {
-          cvp: ColumnValueProvider => stringFunction.apply(cvp)
-        } else {
-          cvp: ColumnValueProvider => calcLambda.evaluateString(cvp)
-        }
-      case 'D' =>
-        if (runClassic) {
-          cvp: ColumnValueProvider => doubleFunction.apply(cvp).toString
-        } else {
-          cvp: ColumnValueProvider => calcLambda.evaluateDouble(cvp).toString
-        }
-      case 'L' =>
-        if (runClassic) {
-          cvp: ColumnValueProvider => longFunction.apply(cvp).toString
-        } else {
-          cvp: ColumnValueProvider => calcLambda.evaluateLong(cvp).toString
-        }
-      case 'I' =>
-        if (runClassic) {
-          cvp: ColumnValueProvider => intFunction.apply(cvp).toString
-        } else {
-          cvp: ColumnValueProvider => calcLambda.evaluateInt(cvp).toString
-        }
-      case 'B' =>
-        if (runClassic) {
-          cvp: ColumnValueProvider => booleanFunction.apply(cvp).toString
-        } else {
-          cvp: ColumnValueProvider => calcLambda.evaluateBoolean(cvp).toString
-        }
-      case _ =>
-        cvp: ColumnValueProvider => ""
+      case 'S' => getStringFunction()
+      case 'D' => cvp: ColumnValueProvider => getDoubleFunction().apply(cvp).toString
+      case 'L' => cvp: ColumnValueProvider => getLongFunction().apply(cvp).toString
+      case 'I' => cvp: ColumnValueProvider => getIntFunction().apply(cvp).toString
+      case 'B' => cvp: ColumnValueProvider => getBooleanFunction().apply(cvp).toString
+      case _ => _: ColumnValueProvider => ""
     }
   }
 
