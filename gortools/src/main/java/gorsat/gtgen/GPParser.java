@@ -9,7 +9,24 @@ import org.apache.commons.math3.util.FastMath;
  */
 public class GPParser {
 
+    private final static double[] plLookupTable;
+
+    static {
+        plLookupTable = new double[100];
+        for (int i = 0; i < plLookupTable.length; ++i) {
+            plLookupTable[i] = FastMath.pow(10, -0.1 * i);
+        }
+    }
+
     private GPParser() {
+    }
+
+    public static double[] plToGp(CharSequence plTriplet, char sep) {
+        final int[] gls = parseIntTriplet(plTriplet, sep);
+        final double x0 = gls[0] < 100 ? plLookupTable[gls[0]] : 0.0;
+        final double x1 = gls[1] < 100 ? plLookupTable[gls[1]] : 0.0;
+        final double x2 = gls[2] < 100 ? plLookupTable[gls[2]] : 0.0;
+        return new double[] {x0, x1, x2};
     }
 
     public static double[] glToGp(CharSequence glTriplet, char sep) {
@@ -113,6 +130,25 @@ public class GPParser {
             }
         }
         return is_negative ? -x : x;
+    }
+
+    /**
+     * The method does not do any validations so the the functionality is undefined if the input is bad.
+     *
+     * @param cs A triplet of integers, separated by sep.
+     * @param sep The separator.
+     * @return The triplet as int array.
+     */
+    public static int[] parseIntTriplet(CharSequence cs, char sep) {
+        int begin = 0;
+        int end = 0;
+        while (cs.charAt(end) != sep) end++;
+        final int x0 = parseInt(cs, begin, end);
+        begin = ++end;
+        while (cs.charAt(end) != sep) end++;
+        final int x1 = parseInt(cs, begin, end);
+        final int x2 = parseInt(cs, end + 1, cs.length());
+        return new int[] {x0, x1, x2};
     }
 
     /**

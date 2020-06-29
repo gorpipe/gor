@@ -35,7 +35,7 @@ abstract class TimedRowSource extends RowSource {
     var theNext : Row = null
     if (myNext != null && myNext.pos == seekPos && myNext.chr == seekChr) return
 
-    if( seekChr == myNext.chr ) {
+    if (myNext != null && seekChr == myNext.chr) {
       val avgSeekTimeMillis = getAvgSeekTimeMilliSecond
       var etaMillis = if( getAvgBasesPerMilliSecond > 0 ) (seekPos - myNext.pos) / getAvgBasesPerMilliSecond else 0.0
       var estRowNum = etaMillis * getAvgRowsPerMilliSecond

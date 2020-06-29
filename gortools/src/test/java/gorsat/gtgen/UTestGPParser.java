@@ -80,4 +80,45 @@ public class UTestGPParser {
         }
         Assert.assertTrue(success);
     }
+
+    @Test
+    public void test_plToGp() {
+        final double d = 1e-12;
+
+        final String pls1 = "0;10;20";
+        final double[] gps1 = {1.0, 0.1, 0.01};
+        Assert.assertArrayEquals(gps1, plToGp(pls1, ';'), d);
+
+        final String pls2 = "0;20;40";
+        final double[] gps2 = {1.0, 0.01, 0.0001};
+        Assert.assertArrayEquals(gps2, plToGp(pls2, ';'), d);
+
+        final String pls3 = "0;0;0";
+        final double[] gps3 = {1.0, 1.0, 1.0};
+        Assert.assertArrayEquals(gps3, plToGp(pls3, ';'), d);
+
+        final String pls4 = "100;0;0";
+        final double[] gps4 = {0, 1.0, 1.0};
+        Assert.assertArrayEquals(gps4, plToGp(pls4, ';'), d);
+
+        final String pls5 = "0;100;0";
+        final double[] gps5 = {1.0, 0.0, 1.0};
+        Assert.assertArrayEquals(gps5, plToGp(pls5, ';'), d);
+
+        final String pls6 = "0;0;100";
+        final double[] gps6 = {1.0, 1.0, 0.0};
+        Assert.assertArrayEquals(gps6, plToGp(pls6, ';'), d);
+    }
+
+    @Test
+    public void test_parseIntTriplet() {
+        final String triplet1 = "1,1,1";
+        final int[] ints1 = {1, 1, 1};
+        Assert.assertArrayEquals(ints1, parseIntTriplet(triplet1, ','));
+
+
+        final String triplet2 = "-1,-1,-1";
+        final int[] ints2 = {-1, -1, -1};
+        Assert.assertArrayEquals(ints2, parseIntTriplet(triplet2, ','));
+    }
 }

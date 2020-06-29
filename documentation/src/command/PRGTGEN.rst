@@ -11,13 +11,9 @@ The **PRGTGEN** command is a probabilistic version of **GTGEN**, i.e. it does th
 variant calling and returns the genotypes in probabilistic form.
 
 The incoming stream is a gor stream containing genotypes, one pn per line. The genotypes can come in the following:
-i) Probabilistic: A triplet containing the probabilities of Ref-Ref, Ref-Alt, Alt-Alt. Should be stored in a column
-named GP. Can also be in a column called GL if the probabilities are in a log10 scale.
-ii) Call and genotype likelihood. The call should be stored as a single character and the genotype likelihood should be
-the difference between the probability of the called genotype and the second most likely one, in log10 scale, rounded
-to nearest integer. This number should be stored in a column named GL and the called genotype in a column named
-'CallCopies'.
-iii) Raw: Then there should be one column called 'depth' containing the reading depth and another named 'callratio'
+i) Probabilistic: A triplet containing the probabilities of Ref-Ref, Ref-Alt, Alt-Alt. Can either be stored in a column
+named GP, in Phred scale in a column named PL or in logarithmic scale in a column named GL.
+ii) Raw: Then there should be one column called 'depth' containing the reading depth and another named 'callratio'
 containing the call ratio.
 
 As input, there should be one tag-bucket source, a coverage source and optionally a gor source containing prior allele
@@ -43,21 +39,23 @@ Options
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-gc cols``        | Grouping columns other than (chrom,pos)                                                            |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-tag tagcolname`` | Override the default PN colunm name used to represent the tag value.                               |
+| ``-pn pnColName``   | Override the default PN colunm name used to represent the tag value.                               |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-maxseg bpsize``  | The maximum span size of the coverage segments.  Defaults to 10000 (10kb).                         |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-e error rate``   | The error rate of the reads.                                                                       |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-af allele freq`` | A 'global allele frequency' assumed to have been used for computing the genotypes from the input.  |
+| ``-fp allele freq`` | A 'flat prior' assumed to have been used for computing the genotypes from the input.               |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-maxit mi``       | The maximum number of iterations. Default value is 20.                                             |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-tol tolerance``  | The tolerance. Default value is 1e-5.                                                              |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-gl col``         | The GL col (either from i) or ii)). Is looked up by name if not given.                             |
-+---------------------+----------------------------------------------------------------------------------------------------+
 | ``-gp col``         | The GP col (from i)). Is looked up by name if not given.                                           |
++---------------------+----------------------------------------------------------------------------------------------------+
+| ``-pl col``         | The PL col (from i)). Is looked up by name if not given.                                           |
++---------------------+----------------------------------------------------------------------------------------------------+
+| ``-gl col``         | The GL col (from i)). Is looked up by name if not given.                                           |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-afc col``        | The allele frequency column in the prior source. Is looked up by name if not given.                |
 +---------------------+----------------------------------------------------------------------------------------------------+
