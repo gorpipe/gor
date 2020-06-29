@@ -163,13 +163,9 @@
 <p>The <strong>PRGTGEN</strong> command is a probabilistic version of <strong>GTGEN</strong>, i.e. it does the same but also does a simple joint
 variant calling and returns the genotypes in probabilistic form.</p>
 <p>The incoming stream is a gor stream containing genotypes, one pn per line. The genotypes can come in the following:
-i) Probabilistic: A triplet containing the probabilities of Ref-Ref, Ref-Alt, Alt-Alt. Should be stored in a column
-named GP. Can also be in a column called GL if the probabilities are in a log10 scale.
-ii) Call and genotype likelihood. The call should be stored as a single character and the genotype likelihood should be
-the difference between the probability of the called genotype and the second most likely one, in log10 scale, rounded
-to nearest integer. This number should be stored in a column named GL and the called genotype in a column named
-‘CallCopies’.
-iii) Raw: Then there should be one column called ‘depth’ containing the reading depth and another named ‘callratio’
+i) Probabilistic: A triplet containing the probabilities of Ref-Ref, Ref-Alt, Alt-Alt. Can either be stored in a column
+named GP, in Phred scale in a column named PL or in logarithmic scale in a column named GL.
+ii) Raw: Then there should be one column called ‘depth’ containing the reading depth and another named ‘callratio’
 containing the call ratio.</p>
 <p>As input, there should be one tag-bucket source, a coverage source and optionally a gor source containing prior allele
 frequencies estimates and the number of samples behind that estimate.</p>
@@ -196,7 +192,7 @@ the ones we are calling now.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
 <td><p>Grouping columns other than (chrom,pos)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tag</span> <span class="pre">tagcolname</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-pn</span> <span class="pre">pnColName</span></code></p></td>
 <td><p>Override the default PN colunm name used to represent the tag value.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-maxseg</span> <span class="pre">bpsize</span></code></p></td>
@@ -205,8 +201,8 @@ the ones we are calling now.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">error</span> <span class="pre">rate</span></code></p></td>
 <td><p>The error rate of the reads.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-af</span> <span class="pre">allele</span> <span class="pre">freq</span></code></p></td>
-<td><p>A ‘global allele frequency’ assumed to have been used for computing the genotypes from the input.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-fp</span> <span class="pre">allele</span> <span class="pre">freq</span></code></p></td>
+<td><p>A ‘flat prior’ assumed to have been used for computing the genotypes from the input.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-maxit</span> <span class="pre">mi</span></code></p></td>
 <td><p>The maximum number of iterations. Default value is 20.</p></td>
@@ -214,38 +210,41 @@ the ones we are calling now.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tol</span> <span class="pre">tolerance</span></code></p></td>
 <td><p>The tolerance. Default value is 1e-5.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-gl</span> <span class="pre">col</span></code></p></td>
-<td><p>The GL col (either from i) or ii)). Is looked up by name if not given.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gp</span> <span class="pre">col</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-gp</span> <span class="pre">col</span></code></p></td>
 <td><p>The GP col (from i)). Is looked up by name if not given.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-afc</span> <span class="pre">col</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-pl</span> <span class="pre">col</span></code></p></td>
+<td><p>The PL col (from i)). Is looked up by name if not given.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-gl</span> <span class="pre">col</span></code></p></td>
+<td><p>The GL col (from i)). Is looked up by name if not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-afc</span> <span class="pre">col</span></code></p></td>
 <td><p>The allele frequency column in the prior source. Is looked up by name if not given.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-anc</span> <span class="pre">col</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-anc</span> <span class="pre">col</span></code></p></td>
 <td><p>The allele number column in the prior source. Is looked up by name if not given.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-cc</span> <span class="pre">col</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-cc</span> <span class="pre">col</span></code></p></td>
 <td><p>The call copies column from ii) Looked up by name if not given.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-crc</span> <span class="pre">col</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-crc</span> <span class="pre">col</span></code></p></td>
 <td><p>The call ratio column from iii) Looked up by name if not given.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ld</span> <span class="pre">col</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ld</span> <span class="pre">col</span></code></p></td>
 <td><p>The depth column from the incoming source in ii). Looked up by name if not given.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rd</span> <span class="pre">col</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-rd</span> <span class="pre">col</span></code></p></td>
 <td><p>The depth column from the prior source. Lookup up by name if not given.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-th</span> <span class="pre">threshold</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-th</span> <span class="pre">threshold</span></code></p></td>
 <td><p>The threshold to use, if the genotypes should be written out as discrete genotypes. Giving the
 threshold indicates that the hard calls should be written out.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-psep</span> <span class="pre">separator</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-psep</span> <span class="pre">separator</span></code></p></td>
 <td><p>The separator in the probability triplet. Default value is ‘;’. Must be a single character.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-osep</span> <span class="pre">separator</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-osep</span> <span class="pre">separator</span></code></p></td>
 <td><p>The separator to separate the genotypes, in case the triplets should we written out.</p></td>
 </tr>
 </tbody>
