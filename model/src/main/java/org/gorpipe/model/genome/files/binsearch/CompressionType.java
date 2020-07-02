@@ -23,6 +23,7 @@
 package org.gorpipe.model.genome.files.binsearch;
 
 public enum CompressionType {
+    NONE,
     ZLIB,
     ZSTD
 }

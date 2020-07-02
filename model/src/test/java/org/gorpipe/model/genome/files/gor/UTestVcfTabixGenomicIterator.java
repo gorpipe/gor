@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import gorsat.TestUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.tabix.TabixIndex;
@@ -54,6 +55,13 @@ public class UTestVcfTabixGenomicIterator {
         ti = IndexFactory.createTabixIndex(new File(path), new VCFCodec(), null);
         ti.write(tabixIndexPath);
         fi = new FileSource(ipath, null);
+    }
+
+    @Test
+    public void test() {
+        final String query = "gor -p chr2 ../tests/data/external/samtools/testTabixIndex.vcf.gz";
+        final String results = TestUtils.runGorPipe(query);
+        System.err.println(results);
     }
 
     @Test
