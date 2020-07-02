@@ -350,6 +350,7 @@ public class UTestBucketManager {
     }
 
     @Test
+    @Ignore("Reenable as part of GOP-1444")
     public void testCleaningOfDeletedBuckets() throws Exception {
         String name = "testCleaningOfDeletedBuckets";
 
