@@ -311,7 +311,6 @@ public class UTestVarJoin {
     // todo: add test span
     // todo: add test multi-allelic sharing (-as)
 
-    @Ignore("https://nextcode.atlassian.net/browse/GOP-254")
     @Test
     public void varjoinCaseMismatchInAlleles() {
         String[] leftLines = {
@@ -327,8 +326,9 @@ public class UTestVarJoin {
 
         String joinQuery = "gor %s | varjoin %s";
 
-        String[] expected = {
-                "Chrom\tPos\tRef\tAlt\tData\tPosx\tRefx\tAltx\tDatax\n"};
+        String[] expected = {"Chrom\tPos\tRef\tAlt\tData\tPosx\tRefx\tAltx\tDatax\n",
+                        "chr1\t1\ta\tc\tchr1 1\t1\tA\tC\tRight 1 chr1 1\n",
+                        "chr2\t23\tT\tC\tchr2 23\t23\tt\tc\tRight 1 chr2 23\n"};
 
         TestUtils.assertJoinQuery(leftLines, rightLines, joinQuery, expected);
     }
