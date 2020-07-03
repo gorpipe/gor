@@ -239,23 +239,22 @@ object GorCsvCC {
             }
             phenorow += 1
           }
-          if (!nextProcessor.wantsNoMore) {
-            var i = 0
-            while (i < maxPhenoStats) {
-              val pheno = bui.phenoMap(i)
-              var j = 0
-              while (j < 4.max(uc + 1)) {
-                if (!use_prob || use_threshold) {
-                  val counts = sh.phenoStatusCounter(i)(j)
-                  nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + counts))
-                } else {
-                  val counts = sh.phenoStatusFloatCounter(i)(j)
-                  nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + fd3.format(counts)))
-                }
-                j += 1
+          var i = 0
+          while (i < maxPhenoStats) {
+            val pheno = bui.phenoMap(i)
+            var j = 0
+            while (j < 4.max(uc + 1)) {
+              if (nextProcessor.wantsNoMore) return
+              if (!use_prob || use_threshold) {
+                val counts = sh.phenoStatusCounter(i)(j)
+                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + counts))
+              } else {
+                val counts = sh.phenoStatusFloatCounter(i)(j)
+                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + fd3.format(counts)))
               }
-              i += 1
+              j += 1
             }
+            i += 1
           }
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>

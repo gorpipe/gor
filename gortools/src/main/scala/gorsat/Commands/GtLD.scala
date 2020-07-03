@@ -37,9 +37,6 @@ class GtLD extends CommandInfo("GTLD",
     val binN = 100
     var leftHeader = forcedInputHeader
 
-    val doLeftJoin = true
-    val emptyString = ""
-
     val fuzzFactor = intValueOfOptionWithDefaultWithRangeCheck(args, "-f", 0, 0)
 
     if (!hasOption(args, "-calc") && !hasOption(args, "-sum")) {
@@ -105,44 +102,3 @@ class GtLD extends CommandInfo("GTLD",
   }
 
 }
-
-/*
-create #dummy# = nor <(norrows 1000 | sort -c rownum:n);
-
-create #buckets# = nor [#dummy#] | rename #1 PN | calc bucket 'b_'+str(div(PN,50)+1);
-
-create #loci# = gorrow chr1,1,2 | multimap -cartesian -h <(norrows 20000) | calc Npos #2+RowNum | select 1,Npos | sort genome | rename #2 Pos | calc ref 'G' |  calc alt 'C';
-
-create #gt# = gor [#loci#] | multimap -cartesian -h [#buckets#] | distloc 20000 | hide bucket | calc gt mod(PN,4) | where random()<0.05;
-
-create #cov# = gorrow chr1,0,3000 | multimap -cartesian -h [#buckets#] | where not(bucket='b_2');
-
-test 1:
-
-gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#]
-| csvsel -gc ref,alt -u 3 -vs 1 [#buckets#] <(nor [#buckets#] | select #1)
-| gtld -sum -calc -f 100
-| merge <(gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | gtld -sum -calc -f 100 )
-| group 1 -gc 3- -count | throwif allcount != 2 | where 2=3
-
-test 2:
-
-create yyy = gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | top 100
-| replace values fsvmap(values,1,'if(sin(pos)>0.5,"2","0")','') | gtld -sum -f 100;
-
-gor [yyy] | gtld -calc
-| merge <(gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | top 100
-| replace values fsvmap(values,1,'if(sin(pos)>0.5,"2","0")','') | gtld -sum -f 100 -calc)
-| group 1 -gc 3- -count | throwif allcount != 2 | where 2=3
-
-test 3:
-
-create yyy = gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | top 100
-| replace values fsvmap(values,1,'if(sin(pos)>0.5,"2","0")','') | gtld -sum -f 100;
-
-
-gor [yyy]  | replace LD_x11 3 | replace LD_x12 1| replace LD_x21 1 | replace LD_x22 3  | gtld -calc
-| throwif abs(ld_dp-0.5)>0.01 or abs(ld_r-0.5)>0.01 | where 2=3
-
-
-*/

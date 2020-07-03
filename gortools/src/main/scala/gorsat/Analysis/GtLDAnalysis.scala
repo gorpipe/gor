@@ -125,8 +125,7 @@ object GtLDAnalysis {
         (lastRightChr < lr.chr || (lastRightChr == lr.chr && lastRightPos <= leftStop + fuzzFactor))) {
         if (lr.chr == lastSeekChr && !rightSource.hasNext) {
           /* do nothing */
-        }
-        else if (lr.chr > lastRightChr) {
+        } else if (lr.chr > lastRightChr) {
           if (snpsnp || segsnp) rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor).max(0))
           else rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
           lastSeekChr = lr.chr
@@ -186,9 +185,7 @@ object GtLDAnalysis {
 
       }
       val lSeg = SEGinfo(leftStart, leftStop, lr)
-      var ovlaps = 0
 
-      var groupKeyLeft = null
       if (useGroup) {
         val groupKeyLeft = lr.selectedColumns(leq)
         groupMap.get(groupKeyLeft) match {
@@ -257,8 +254,6 @@ object GtLDAnalysis {
     override def finish {
       rightSource.close
     }
-
-
   }
 
   case class LDSnpJoinSnpOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
@@ -306,7 +301,7 @@ object GtLDAnalysis {
       }
       i += 1
     }
-    return LDstats(x11,x12,x21,x22)
+    LDstats(x11,x12,x21,x22)
   }
 
 
@@ -356,7 +351,7 @@ object GtLDAnalysis {
     val otherCols = iotherCols.toArray
     val noEquijoin = if (lreq == Nil) true else false
 
-    def initialize(bi: BinInfo) = {
+    def initialize(bi: BinInfo): Unit = {
       lRows = Nil
       rRows = Nil
     }
@@ -368,14 +363,17 @@ object GtLDAnalysis {
     }
 
     def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+      if (nextProcessor.wantsNoMore) return
       if (rRows.nonEmpty && lRows.length * rRows.length < 400) {
-        for (lr <- lRows.reverse) {
-          for (rr <- rRows.reverse) if (!nextProcessor.wantsNoMore && rr.pos - fuzz - 1 < lr.pos && lr.pos <= rr.pos + fuzz && (noEquijoin || rr.selectedColumns(req) == lr.selectedColumns(req))) {
-            val LDs = LDstatCalc(lr.colAsString(valuesCol).toString,rr.colAsString(valuesCol).toString)
-            val r = RowObj(lr.chr+"\t"+lr.pos+"\t"+lr.selectedColumns(otherCols)+"\t"+((rr.pos - lr.pos) - (if (rr.pos - lr.pos > 0) 1 else 0) + "\t"
-              + rr.pos+"\t"+rr.selectedColumns(otherCols))+"\t"
-              + LDs.x11 + "\t" + LDs.x12 + "\t" + LDs.x21 + "\t" + LDs.x22 )
-            nextProcessor.process(r)
+        for (lr <- lRows.reverse;
+             rr <- rRows.reverse) {
+          if (nextProcessor.wantsNoMore) return
+          if (rr.pos - fuzz - 1 < lr.pos && lr.pos <= rr.pos + fuzz && (noEquijoin || rr.selectedColumns(req) == lr.selectedColumns(req))) {
+              val LDs = LDstatCalc(lr.colAsString(valuesCol).toString,rr.colAsString(valuesCol).toString)
+              val r = RowObj(lr.chr+"\t"+lr.pos+"\t"+lr.selectedColumns(otherCols)+"\t"+((rr.pos - lr.pos) - (if (rr.pos - lr.pos > 0) 1 else 0) + "\t"
+                + rr.pos+"\t"+rr.selectedColumns(otherCols))+"\t"
+                + LDs.x11 + "\t" + LDs.x12 + "\t" + LDs.x21 + "\t" + LDs.x22 )
+              nextProcessor.process(r)
           }
         }
       } else if (lRows.nonEmpty && rRows.nonEmpty) {
@@ -396,7 +394,7 @@ object GtLDAnalysis {
     BinAnalysis(LDSelfJoinRowHandler(binSize, fuzz, binN), BinAggregator(LDSelfJoinFactory(missingSEG, fuzz, req, otherCols, valuesCol, useOnlyAsLeftVar), binN + 10, binN)) {
   }
 
-  def fd(d: Double) = (d formatted "%6.4f").replace(',', '.')
+  def fd(d: Double): String = (d formatted "%6.4f").replace(',', '.')
 
   case class LDcalculation(x11Col : Int) extends Analysis {
     val x12Col = x11Col+1
@@ -419,6 +417,4 @@ object GtLDAnalysis {
       super.process(r.rowWithAddedColumns(""+fd(Dm)+"\t"+fd(rcoeff)))
     }
   }
-
-
-  }
+}

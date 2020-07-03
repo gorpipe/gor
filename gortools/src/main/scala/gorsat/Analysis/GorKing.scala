@@ -22,21 +22,15 @@
 
 package gorsat.Analysis
 
-import java.lang
-
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler, RowHeader}
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import gorsat.process.GenotypeLookupUtilities
-import gorsat.process.GorJavaUtilities.VCFValue
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.{GorMonitor, Line, Row, RowBase}
+import org.gorpipe.model.genome.files.gor.{GorMonitor, Line, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.LineIterator
 import gorsat.Commands.Analysis
-
-import scala.collection.mutable
 
 object GorKing {
 
