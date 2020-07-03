@@ -25,9 +25,11 @@ package gorsat.Analysis
 import java.io.{BufferedWriter, File, FileWriter}
 import java.nio.file.Files
 
+import gorsat.Commands.PrGtGen
 import gorsat.TestUtils
 import gorsat.process.{GenericSessionFactory, SourceProvider}
 import org.apache.commons.io.FileUtils
+import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -100,7 +102,7 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
 
   test("test left source analysis") {
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "uniqueLookupSignature", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1) | as
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "uniqueLookupSignature", btPath, "", null, plCol = -1, glCol = -1, gpCol = 4, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1) | as
 
     lsa.process(RowObj("chr1\t1\tA\tC\t0.1;0.8;0.1\tPN3"))
     lsa.process(RowObj("chr1\t1\tA\tG\t0.0;0.9;0.1\tPN7"))
@@ -133,7 +135,7 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     val afSource = new SourceProvider(afanPath, context, false, false).source
 
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus2", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1)|
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus2", btPath, "", null, plCol = -1, glCol = -1, gpCol = 4, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1)|
       PrGtGenAnalysis.AFANSourceAnalysis(afSource, context, "ulus2", grCols = List(2,3), 4, 5) | as
 
     gorLines.iterator.take(4).map(RowObj(_)).foreach(lsa.process)
@@ -156,20 +158,20 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     val segSource = new SourceProvider(segPath, context, false, false).source
 
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus3", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), 0.05, 0.1)|
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus3", btPath, "", null, plCol = -1, glCol = -1, gpCol = 4, -1, -1, pnCol = 5, grCols = List(2, 3), 0.05, 0.1)|
       PrGtGenAnalysis.RightSourceAnalysis(segSource, context, "ulus3", 4, 3, -1.0, 100) | as
 
     gorLines.iterator.map(RowObj(_)).foreach(lsa.process)
     lsa.securedFinish(null)
 
-    val wanted = "chr1\t1\tA\tC\t0.66615\tBucket1\t    ~!  ~~\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket2\t  ~!      \n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket1\t    ~!  ~~\n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket2\t  ~!      \n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket1\t  !~    ~~\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket2\t        ~!\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket1\t  ~!      \n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket2\t        ~!"
+    val wanted = "chr1\t1\tA\tC\t0.66615\t3\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket2\t  ~!      \n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket2\t  ~!      \n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t  !~    ~~\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t        ~!\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t  ~!      \n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t        ~!"
     val actual = as.rows.mkString("\n")
     assert(wanted == actual)
   }
@@ -179,21 +181,21 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     val segSource = new SourceProvider(segPath, context, false, false).source
 
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus3", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), 0.05, 0.1)|
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus3", btPath, "", null, plCol = -1, glCol = -1, gpCol = 4, -1, -1, pnCol = 5, grCols = List(2, 3), 0.05, 0.1)|
       PrGtGenAnalysis.AFANSourceAnalysis(afSource, context, "ulus2", grCols = List(2,3), 4, 5) |
       PrGtGenAnalysis.RightSourceAnalysis(segSource, context, "ulus3", 4, 3, -1.0, 100) | as
 
     gorLines.iterator.map(RowObj(_)).foreach(lsa.process)
     lsa.securedFinish(null)
 
-    val wanted = "chr1\t1\tA\tC\t0.20053\tBucket1\t    E\\  ~~\n" +
-      "chr1\t1\tA\tC\t0.20053\tBucket2\t  |$      \n" +
-      "chr1\t1\tA\tG\t0.50034\tBucket1\t    ~!  ~~\n" +
-      "chr1\t1\tA\tG\t0.50034\tBucket2\t  `?      \n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket1\t  !~    ~~\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket2\t        ~!\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket1\t  ~!      \n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket2\t        ~!"
+    val wanted = "chr1\t1\tA\tC\t0.20053\t2003\tBucket1\t    E\\  ~~\n" +
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket2\t  |$      \n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket2\t  `?      \n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t  !~    ~~\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t        ~!\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t  ~!      \n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t        ~!"
     val actual = as.rows.mkString("\n")
     assert(wanted == actual)
   }
@@ -201,60 +203,60 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
   test("Test all") {
     val query = s"gor $gorPath | prgtgen -gc 3,4 $btPath $afanPath $segPath -e 0.05"
     val results = TestUtils.runGorPipe(query)
-    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
-      "chr1\t1\tA\tC\t0.20053\tBucket1\t    E\\  ~~\n" +
-      "chr1\t1\tA\tC\t0.20053\tBucket2\t  |$      \n" +
-      "chr1\t1\tA\tG\t0.50034\tBucket1\t    ~!  ~~\n" +
-      "chr1\t1\tA\tG\t0.50034\tBucket2\t  `?      \n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket1\t  !~    ~~\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket2\t        ~!\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket1\t  ~!      \n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket2\t        ~!\n"
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket1\t    E\\  ~~\n" +
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket2\t  |$      \n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket2\t  `?      \n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t  !~    ~~\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t        ~!\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t  ~!      \n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t        ~!\n"
     assert(wanted == results)
   }
 
   test("Test all 2") {
     val query2 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05"
     val results2 = TestUtils.runGorPipe(query2)
-    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket1\t    ~!  ~~\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket2\t  ~!      \n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket1\t    ~!  ~~\n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket2\t  ~!      \n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket1\t  !~    ~~\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket2\t        ~!\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket1\t  ~!      \n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket2\t        ~!\n"
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket2\t  ~!      \n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket2\t  ~!      \n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t  !~    ~~\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t        ~!\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t  ~!      \n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t        ~!\n"
     assert(wanted == results2)
   }
 
   test("Test all 3") {
     val query3 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05 -th 0.95"
     val results3 = TestUtils.runGorPipe(query3)
-    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket1\t33230\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket2\t32333\n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket1\t33230\n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket2\t32333\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket1\t31330\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket2\t33332\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket1\t32333\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket2\t33332\n"
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket1\t33230\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket2\t32333\n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket1\t33230\n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket2\t32333\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t31330\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t33332\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t32333\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t33332\n"
     assert(wanted == results3)
   }
 
   test("Test all 4") {
     val query4 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05 -osep \',\'"
     val results4 = TestUtils.runGorPipe(query4)
-    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket1\t;;,;;,0.0013864;2.8113e-07;0.99861,;;,1.0000;7.0981e-12;5.3081e-26\n" +
-      "chr1\t1\tA\tC\t0.66615\tBucket2\t;;,0.00017351;4.3980e-09;0.99983,;;,;;,;;\n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket1\t;;,;;,0.0000;0.0000;1.0000,;;,1.0000;1.2811e-12;5.3206e-26\n" +
-      "chr1\t1\tA\tG\t0.66667\tBucket2\t;;,0.0000;5.7028e-08;1.0000,;;,;;,;;\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket1\t;;,0.0000;1.0000;0.0000,;;,;;,1.0000;2.6595e-06;2.6586e-26\n" +
-      "chr1\t10\tA\tC\t0.49990\tBucket2\t;;,;;,;;,;;,0.00030788;0.0000;0.99969\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket1\t;;,0.0000;0.0000;1.0000,;;,;;,;;\n" +
-      "chr1\t11\tA\tC\t1.0000\tBucket2\t;;,;;,;;,;;,0.0000;2.6177e-10;1.0000\n"
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket1\t;;,;;,0.0013864;2.8113e-07;0.99861,;;,1.0000;7.0981e-12;5.3081e-26\n" +
+      "chr1\t1\tA\tC\t0.66615\t3\tBucket2\t;;,0.00017351;4.3980e-09;0.99983,;;,;;,;;\n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket1\t;;,;;,0.0000;0.0000;1.0000,;;,1.0000;1.2811e-12;5.3206e-26\n" +
+      "chr1\t1\tA\tG\t0.66667\t3\tBucket2\t;;,0.0000;5.7028e-08;1.0000,;;,;;,;;\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t;;,0.0000;1.0000;0.0000,;;,;;,1.0000;2.6595e-06;2.6586e-26\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t;;,;;,;;,;;,0.00030788;0.0000;0.99969\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t;;,0.0000;0.0000;1.0000,;;,;;,;;\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t;;,;;,;;,;;,0.0000;2.6177e-10;1.0000\n"
     assert(wanted == results4)
   }
 
@@ -289,7 +291,7 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     val segSource = new SourceProvider(segFile, context, false, false).source
 
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus4", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1)|
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus4", btPath, "", null, plCol = -1, glCol = -1, gpCol = 4, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1)|
       PrGtGenAnalysis.AFANSourceAnalysis(afSource, context, "ulus4", grCols = List(2,3), 4, 5) |
       PrGtGenAnalysis.RightSourceAnalysis(segSource, context, "ulus4", 4, 3, -1.0, 100) | as
 
@@ -297,14 +299,14 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     lsa.securedFinish(null)
 
     val actual = as.rows.map(_.toString).mkString("\n")
-    val wanted = "chr2\t1\tA\tC\t0.98999\tBucket1\t^~^~~!^~^~\n" +
-      "chr2\t1\tA\tC\t0.98999\tBucket2\t^~~!^~^~^~\n" +
-      "chr2\t1\tA\tG\t0.98999\tBucket1\t^~^~~!^~^~\n" +
-      "chr2\t1\tA\tG\t0.98999\tBucket2\t^~~!^~^~^~\n" +
-      "chr5\t10\tA\tC\t0.010001\tBucket1\t~~!~~~~~~~\n" +
-      "chr5\t10\tA\tC\t0.010001\tBucket2\t~~~~~~~~~g\n" +
-      "chr5\t11\tA\tC\t0.50000\tBucket1\t}~~!}~}~}~\n" +
-      "chr5\t11\tA\tC\t0.50000\tBucket2\t}~}~}~}~y&"
+    val wanted = "chr2\t1\tA\tC\t0.98999\t1000010\tBucket1\t^~^~~!^~^~\n" +
+      "chr2\t1\tA\tC\t0.98999\t1000010\tBucket2\t^~~!^~^~^~\n" +
+      "chr2\t1\tA\tG\t0.98999\t1000010\tBucket1\t^~^~~!^~^~\n" +
+      "chr2\t1\tA\tG\t0.98999\t1000010\tBucket2\t^~~!^~^~^~\n" +
+      "chr5\t10\tA\tC\t0.010001\t1000010\tBucket1\t~~!~~~~~~~\n" +
+      "chr5\t10\tA\tC\t0.010001\t1000010\tBucket2\t~~~~~~~~~g\n" +
+      "chr5\t11\tA\tC\t0.50000\t1000010\tBucket1\t}~~!}~}~}~\n" +
+      "chr5\t11\tA\tC\t0.50000\t1000010\tBucket2\t}~}~}~}~y&"
     assert(wanted == actual)
   }
 
@@ -333,7 +335,7 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     val segSource = new SourceProvider(segFile, context, false, false).source
 
     val as = AnalysisSink()
-    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus5", btPath, "", null, glCol = -1, gpCol = 4, -1, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1) |
+    val lsa = PrGtGenAnalysis.LeftSourceAnalysis(context, "ulus5", btPath, "", null, plCol = -1, glCol = -1, gpCol = 4, -1, -1, pnCol = 5, grCols = List(2, 3), error = 0.1) |
       PrGtGenAnalysis.AFANSourceAnalysis(afSource, context, "ulus5", grCols = List(2, 3), 4, 5) |
       PrGtGenAnalysis.RightSourceAnalysis(segSource, context, "ulus5", 4, 3, -1.0, 100) | as
 
@@ -341,35 +343,186 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     lsa.securedFinish(null)
 
     val actual = as.rows.map(_.toString).mkString("\n")
-    val wanted = "chr2\t1\tA\tC\t0.19876\tBucket1\t~~~~~\"~~~~\n" +
-      "chr2\t1\tA\tC\t0.19876\tBucket2\t~~~!~~~~~~\n" +
-      "chr2\t1\tA\tG\t0.20000\tBucket1\t~~~~~!~~~~\n" +
-      "chr2\t1\tA\tG\t0.20000\tBucket2\t~~~!~~~~~~\n" +
-      "chr5\t10\tA\tC\t0.14989\tBucket1\t~~!~~~~~~~\n" +
-      "chr5\t10\tA\tC\t0.14989\tBucket2\t~~~~~~~~~!\n" +
-      "chr5\t11\tA\tC\t0.20000\tBucket1\t~~~!~~~~~~\n" +
-      "chr5\t11\tA\tC\t0.20000\tBucket2\t~~~~~~~~~!"
+    val wanted = "chr2\t1\tA\tC\t0.19876\t10\tBucket1\t~~~~~\"~~~~\n" +
+      "chr2\t1\tA\tC\t0.19876\t10\tBucket2\t~~~!~~~~~~\n" +
+      "chr2\t1\tA\tG\t0.20000\t10\tBucket1\t~~~~~!~~~~\n" +
+      "chr2\t1\tA\tG\t0.20000\t10\tBucket2\t~~~!~~~~~~\n" +
+      "chr5\t10\tA\tC\t0.14989\t10\tBucket1\t~~!~~~~~~~\n" +
+      "chr5\t10\tA\tC\t0.14989\t10\tBucket2\t~~~~~~~~~!\n" +
+      "chr5\t11\tA\tC\t0.20000\t10\tBucket1\t~~~!~~~~~~\n" +
+      "chr5\t11\tA\tC\t0.20000\t10\tBucket2\t~~~~~~~~~!"
     assert(wanted == actual)
   }
 
   test("test - divergence") {
     val query5 = s"gor $gorPath | prgtgen -gc 3,4 $btPath $segPath -e 0.05 -th 0.95 -maxit 0 -tol 0.0 | where bucket = 'Bucket1'"
     val results5 = TestUtils.runGorPipe(query5)
-    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tBucket\tValues\n" +
-      "chr1\t1\tA\tC\t.\tBucket1\t\n" +
-      "chr1\t1\tA\tG\t.\tBucket1\t\n" +
-      "chr1\t10\tA\tC\t.\tBucket1\t\n" +
-      "chr1\t11\tA\tC\t.\tBucket1\t\n"
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t.\t.\tBucket1\t\n" +
+      "chr1\t1\tA\tG\t.\t.\tBucket1\t\n" +
+      "chr1\t10\tA\tC\t.\t.\tBucket1\t\n" +
+      "chr1\t11\tA\tC\t.\t.\tBucket1\t\n"
     assert(wanted == results5)
   }
 
   test("test - divergence 2") {
     val query6 = s"gor $gorPath | where alt = 'C' | prgtgen $btPath $segPath -e 0.05 -maxit 0 -tol 0.0 | where bucket = 'Bucket1'"
     val results6 = TestUtils.runGorPipe(query6)
-    val wanted = "CHROM\tPOS\tAF\tBucket\tValues\n" +
-      "chr1\t1\t.\tBucket1\t\n" +
-      "chr1\t10\t.\tBucket1\t\n" +
-      "chr1\t11\t.\tBucket1\t\n"
+    val wanted = "CHROM\tPOS\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\t.\t.\tBucket1\t\n" +
+      "chr1\t10\t.\t.\tBucket1\t\n" +
+      "chr1\t11\t.\t.\tBucket1\t\n"
     assert(wanted == results6)
+  }
+
+  test("test - parse gt cols") {
+    val args = Array("-gp", "3")
+    val leftHeader = "chrom\tpos\tgp\tgl\tpl"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, -1, 2, -1, -1))
+  }
+
+  test("test - parse gt cols 2") {
+    val args = Array("-gl", "4")
+    val leftHeader = "chrom\tpos\tgp\tgl\tpl"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, 3, -1, -1, -1))
+  }
+
+  test("test - parse gt cols 3") {
+    val args = Array("-pl", "5")
+    val leftHeader = "chrom\tpos\tgp\tgl\tpl"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (4, -1, -1, -1, -1))
+  }
+
+  test("test - parse gt cols 4") {
+    val args = Array("-crc", "3", "-ld", "4")
+    val leftHeader = "chrom\tpos\tcrc\tld"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, -1, -1, 2, 3))
+  }
+
+  test("test - parse gt cols 5") {
+    val args = Array("-gl", "5", "-crc", "3", "-ld", "4")
+    val leftHeader = "chrom\tpos\tcrc\tld"
+    val leftCols = leftHeader.split('\t')
+    var success = false
+    try {
+      PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+    } catch {
+      case _: GorParsingException => success = true
+      case _ => //
+    }
+    assert(success)
+  }
+
+  test("test - parse gt cols 6") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos"
+    val leftCols = leftHeader.split('\t')
+    var success = false
+    try {
+      PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+    } catch {
+      case _: GorParsingException => success = true
+      case _ => //
+    }
+    assert(success)
+  }
+
+  test("test - parse gt cols 7") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tpl"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (2, -1, -1, -1, -1))
+  }
+
+  test("test - parse gt cols 8") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tgl"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, 2, -1, -1, -1))
+  }
+
+  test("test - parse gt cols 9") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tgp"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, -1, 2, -1, -1))
+  }
+
+  test("test - parse gt cols 10") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tcallratio\tdepth"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, -1, -1, 2, 3))
+  }
+
+  test("test - parse gt cols 11") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tpl\tgp\tgl\tcallratio\tdepth"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (2, -1, -1, -1, -1))
+  }
+
+  test("test - parse gt cols 12") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tgp\tgl\tcallratio\tdepth"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, -1, 2, -1, -1))
+  }
+
+  test("test - parse gt cols 13") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tgl\tcallratio\tdepth"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, 2, -1, -1, -1))
+  }
+
+  test("test - parse gt cols 14") {
+    val args = Array[String]()
+    val leftHeader = "chrom\tpos\tcallratio\tdepth"
+    val leftCols = leftHeader.split('\t')
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, false)
+
+    assert((pl, gl, gp, crc, ld) == (-1, -1, -1, 2, 3))
+  }
+
+  test("test - input nested queries") {
+    val query = s"gor $gorPath | prgtgen -gc 3,4 <(nor $btPath) <(gor $afanPath) <(gor $segPath) -e 0.05"
+    val results = TestUtils.runGorPipe(query)
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n" +
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket1\t    E\\  ~~\n" +
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket2\t  |$      \n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket2\t  `?      \n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t  !~    ~~\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t        ~!\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t  ~!      \n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t        ~!\n"
+    assert(wanted == results)
   }
 }

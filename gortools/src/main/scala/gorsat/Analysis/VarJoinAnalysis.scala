@@ -123,8 +123,8 @@ object VarJoinAnalysis {
 
           var rightStart = 0
           var rightStop = 0
-          val rRef = rr.colAsString(rRefCol).toString
-          val rAlt = rr.colAsString(rAltCol).toString
+          val rRef = rr.colAsString(rRefCol).toString.toUpperCase()
+          val rAlt = rr.colAsString(rAltCol).toString.toUpperCase()
           rightStart = rr.pos
           rightStop = rightStart + rRef.length
           val rSeg = varSEGinfo(rightStart,rightStop,rr,rRef,rAlt)

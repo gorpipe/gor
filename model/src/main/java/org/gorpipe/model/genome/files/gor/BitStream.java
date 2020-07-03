@@ -65,85 +65,77 @@ public class BitStream {
         return this.nf.apply();
     }
 
-    abstract class NextFunction {
+    abstract static class NextFunction {
         abstract long apply();
     }
 
     private NextFunction getNextFunction() {
         if ((this.bits & 7) == 0) {
             switch (this.bits >>> 3) {
-                case 1:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            return array[idx++] & 0xff;
-                        }
-                    };
-                case 2:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8);
-                            idx += 2;
-                            return toReturn;
-                        }
-                    };
-                case 3:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
-                                    | ((array[idx + 2] & 0xffL) << 16);
-                            idx += 3;
-                            return toReturn;
-                        }
-                    };
-                case 4:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
-                                    | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24);
-                            idx += 4;
-                            return toReturn;
-                        }
-                    };
-                case 5:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
-                                    | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24)
-                                    | ((array[idx + 4] & 0xffL) << 32);
-                            idx += 5;
-                            return toReturn;
-                        }
-                    };
-                case 6:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
-                                    | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24)
-                                    | ((array[idx + 4] & 0xffL) << 32) | ((array[idx + 5] & 0xffL) << 40);
-                            idx += 6;
-                            return toReturn;
-                        }
-                    };
-                case 7:
-                    return new NextFunction() {
-                        @Override
-                        long apply() {
-                            final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
-                                    | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24)
-                                    | ((array[idx + 4] & 0xffL) << 32) | ((array[idx + 5] & 0xffL) << 40)
-                                    | ((array[idx + 6] & 0xffL) << 48);
-                            idx += 7;
-                            return toReturn;
-                        }
-                    };
-                default:
-                    throw new IllegalArgumentException();
+                case 1: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        return array[idx++] & 0xff;
+                    }
+                };
+                case 2: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8);
+                        idx += 2;
+                        return toReturn;
+                    }
+                };
+                case 3: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
+                                | ((array[idx + 2] & 0xffL) << 16);
+                        idx += 3;
+                        return toReturn;
+                    }
+                };
+                case 4: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
+                                | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24);
+                        idx += 4;
+                        return toReturn;
+                    }
+                };
+                case 5: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
+                                | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24)
+                                | ((array[idx + 4] & 0xffL) << 32);
+                        idx += 5;
+                        return toReturn;
+                    }
+                };
+                case 6: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
+                                | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24)
+                                | ((array[idx + 4] & 0xffL) << 32) | ((array[idx + 5] & 0xffL) << 40);
+                        idx += 6;
+                        return toReturn;
+                    }
+                };
+                case 7: return new NextFunction() {
+                    @Override
+                    long apply() {
+                        final long toReturn = (array[idx] & 0xffL) | ((array[idx + 1] & 0xffL) << 8)
+                                | ((array[idx + 2] & 0xffL) << 16) | ((array[idx + 3] & 0xffL) << 24)
+                                | ((array[idx + 4] & 0xffL) << 32) | ((array[idx + 5] & 0xffL) << 40)
+                                | ((array[idx + 6] & 0xffL) << 48);
+                        idx += 7;
+                        return toReturn;
+                    }
+                };
+                default: throw new IllegalArgumentException();
             }
         } else if ((bits & (bits - 1)) == 0) { //Is this.bits a power of two (less than eight)?
             return new NextFunction() {

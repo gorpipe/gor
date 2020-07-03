@@ -3,8 +3,8 @@ package gorsat.Analysis
 import gorsat.Commands.Analysis
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gtgen.GPParser.parseDoubleTriplet
-import gorsat.gtgen.GPParser.glCcToGp
 import gorsat.gtgen.GPParser.glToGp
+import gorsat.gtgen.GPParser.plToGp
 import gorsat.gtgen.GTGen
 import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.gor.Row
@@ -19,7 +19,7 @@ object PrGtGenAnalysis {
 
   case class LeftSourceAnalysis(context: GorContext, lookupSignature: String,
                                 fileName: String, iteratorCommand: String, iterator: LineIterator,
-                                glCol: Int, gpCol: Int, ccCol: Int, crCol: Int, dCol: Int, pnCol: Int, grCols: List[Int],
+                                plCol: Int, glCol: Int, gpCol: Int, crCol: Int, dCol: Int, pnCol: Int, grCols: List[Int],
                                 af: Double = 0.05, error: Double, tripSep: Char = ';') extends Analysis {
 
     val grColsArray = grCols.toArray
@@ -42,8 +42,8 @@ object PrGtGenAnalysis {
 
     lazy val getTriple = if (gpCol != -1) {
       (r: Row) => parseDoubleTriplet(r.colAsString(gpCol), tripSep)
-    } else if (glCol != -1 && ccCol != -1) {
-      (r: Row) => glCcToGp(r.colAsInt(glCol), r.colAsString(gpCol).charAt(0))
+    } else if (plCol != -1) {
+      (r: Row) => plToGp(r.colAsString(plCol), tripSep)
     } else {
       (r: Row) => glToGp(r.colAsString(glCol), tripSep)
     }
@@ -114,8 +114,7 @@ object PrGtGenAnalysis {
         val (tag, bucket) = (line.substring(0, tabIdx), line.substring(tabIdx + 1))
         val (bucketIdx, idxInBucket) = bucketToIdxAndCounter.get(bucket) match {
           case Some((idx, count)) => (idx, count)
-          case None =>
-            (bucketToIdxAndCounter.size, 0)
+          case None => (bucketToIdxAndCounter.size, 0)
         }
         tagBuckPosMap += (tag -> (bucketIdx, idxInBucket))
         bucketToIdxAndCounter += (bucket -> (bucketIdx, idxInBucket + 1))
@@ -123,11 +122,10 @@ object PrGtGenAnalysis {
       val numBuckets = bucketToIdxAndCounter.size
       val buckIdBuckName = new Array[String](numBuckets)
       val buckIdBuckSize = new Array[Int](numBuckets)
-      bucketToIdxAndCounter.foreach({
-        case (bucket, (idx, size)) =>
-          buckIdBuckName(idx) = bucket
-          buckIdBuckSize(idx) = size
-      })
+      for ((bucket, (idx, size)) <- bucketToIdxAndCounter) {
+        buckIdBuckName(idx) = bucket
+        buckIdBuckSize(idx) = size
+      }
       TagInfo(tagBuckPosMap, buckIdBuckName, buckIdBuckSize, l.length)
     }).asInstanceOf[TagInfo]
     ti.registerUser(this)
@@ -254,7 +252,7 @@ object PrGtGenAnalysis {
 
     private def writeOutRows(r: Row, r_gh: GroupHolder, gtGen: GTGen, converged: Boolean): Unit = {
       if (converged) {
-        val rowPrefix = r.toString + '\t' + "%5.5g".format(gtGen.getAF) + '\t'
+        val rowPrefix = r.toString + '\t' + "%5.5g\t%d".format(gtGen.getAF, gtGen.getAn) + '\t'
         var bucketIdx = 0
         val len = ti.buckIdBuckSize.length
         var sampleIdx: Int = 0
@@ -271,7 +269,7 @@ object PrGtGenAnalysis {
           bucketIdx += 1
         }
       } else {
-        val rowPrefix = r.toString + "\t.\t"
+        val rowPrefix = r.toString + "\t.\t.\t"
         ti.buckIdBuckName.foreach(bucket => super.process(RowObj(rowPrefix + bucket + "\t")))
       }
     }

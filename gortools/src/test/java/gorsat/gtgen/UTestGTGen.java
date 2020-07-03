@@ -211,4 +211,24 @@ public class UTestGTGen {
         final GTGen gtGen = new GTGen(0.0, 1);
         Assert.assertEquals(1, gtGen.getNumberOfSamples());
     }
+
+    @Test
+    public void test_getAn() {
+        final GTGen gtGen = new GTGen(0.0, 10);
+        Assert.assertEquals(0, gtGen.getAn());
+
+        gtGen.addData(0, 0, 1);
+        Assert.assertEquals(1, gtGen.getAn());
+
+
+        gtGen.addData(1, 0, 1);
+        Assert.assertEquals(2, gtGen.getAn());
+
+        gtGen.reset();
+        Assert.assertEquals(0, gtGen.getAn());
+
+        gtGen.addData(0, 1, 1);
+        gtGen.setPrior(0.01, 1000);
+        Assert.assertEquals(1001, gtGen.getAn());
+    }
 }

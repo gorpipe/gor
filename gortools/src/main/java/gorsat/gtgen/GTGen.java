@@ -79,6 +79,13 @@ public class GTGen {
     }
 
     /**
+     * Returns the number of samples which have coverage.
+     */
+    public int getAn() {
+        return this.hasPrior ? this.m + this.covCount : this.covCount;
+    }
+
+    /**
      * Indicates that our {@code n} samples are a part of a bigger cohort of {@code m + n} samples, and for the
      * {@code m} ones, excluding ours, the estimated allele frequency is {@code af}. The resulting allele frequency
      * will be the same as if we had called them all together at first.

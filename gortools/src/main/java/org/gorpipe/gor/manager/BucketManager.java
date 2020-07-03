@@ -155,7 +155,9 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             cleanTempFolders(bucketizeLock);
             int count = doBucketize(bucketizeLock, packLevel, maxBucketCount);
-            cleanBucketFiles(bucketizeLock, forceClean);
+
+            // TODO: Enable clean up again with issue GOP-1444
+            // cleanBucketFiles(bucketizeLock, forceClean);
             return count;
         } catch (IOException e) {
             throw new GorSystemException(e);
@@ -495,8 +497,11 @@ public class BucketManager<T extends BucketableTableEntry> {
             // Perform the deletion.
             if (bucketsToClean.size() > 0) {
                 try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
-                    deleteBuckets(trans.getLock(), true, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
+                    deleteBuckets(trans.getLock(), false, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
                     trans.commit();
+                    for (Path bucket : bucketsToClean) {
+                        log.warn("Bucket '{}' removed as it is not used", bucket);
+                    }
                 }
             }
         }

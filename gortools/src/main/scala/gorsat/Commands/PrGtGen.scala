@@ -32,7 +32,7 @@ import org.gorpipe.gor.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PrGtGen extends CommandInfo("PRGTGEN",
-  CommandArguments("", "-tag -gl -gp -gc -maxseg -e -afc -af -cc -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
+  CommandArguments("", "-pn -pl -gl -gp -gc -maxseg -e -afc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -42,11 +42,11 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val lhl = leftHeader.toLowerCase
     val leftCols = lhl.split('\t')
 
-    val PNCol = if (hasOption(args, "-tag")) {
-      val pnCols: List[Int] = columnsOfOptionWithNil(args, "-tag", leftHeader, executeNor)
+    val PNCol = if (hasOption(args, "-pn")) {
+      val pnCols: List[Int] = columnsOfOptionWithNil(args, "-pn", leftHeader, executeNor)
       if (pnCols == Nil || pnCols.length > 1) {
         throw new GorParsingException("Illegal -tag option: " +
-          stringValueOfOption(args, "-tag") + "\n\nPlease specify a single column for -tag.")
+          stringValueOfOption(args, "-pn") + "\n\nPlease specify a single column for -pn.")
       }
       pnCols.head
     } else {
@@ -55,39 +55,11 @@ class PrGtGen extends CommandInfo("PRGTGEN",
 
     val gcCols: List[Int] = columnsOfOptionWithNil(args, "-gc", leftHeader, executeNor).distinct
 
-    val gl = if (hasOption(args, "-gl")) {
-      columnOfOption(args, "-gl", leftHeader, executeNor)
-    } else leftCols.indexOf("gl")
-
-    val gp = if (hasOption(args, "-gp")) {
-      columnOfOption(args, "-gp", leftHeader, executeNor)
-    } else leftCols.indexOf("gp")
-
-    val cc = if (hasOption(args, "-cc")) {
-      columnOfOption(args, "-gp", leftHeader, executeNor)
-    } else leftCols.indexOf("callcopies")
-
-    val crc = if (hasOption(args, "-crc")) {
-      columnOfOption(args, "-crc", leftHeader, executeNor)
-    } else leftCols.indexOf("callratio")
-
-    val ld = if (hasOption(args, "-ld")) {
-      columnOfOption(args, "-ld", leftHeader, executeNor)
-    } else leftCols.indexOf("depth")
-
-    //Validate options
-    val gpAmbiguous = gp != -1 && !(gl == -1 && cc == -1 && crc == -1 && ld == -1)
-    val glCcAmbiguous = (gl != -1 && cc != -1) && !(gp == -1 && crc == -1 && ld == -1)
-    val glAmbiguous = (gl != -1) && !(cc == -1 && gp == -1 && crc == -1 && ld == -1)
-    val cdAmbiguous = (crc != -1 && ld != -1) && !(gp == -1 && gl == -1 && cc == -1)
-
-    if (gpAmbiguous || glCcAmbiguous || glAmbiguous || cdAmbiguous) {
-      throw new GorParsingException("Ambiguous parameters or header names. Please read the manual.")
-    }
+    val (pl, gl, gp, crc, ld) = PrGtGen.getGtCols(args, leftCols, leftHeader, executeNor)
 
     val e = doubleValueOfOptionWithDefault(args, "-e", 0.0)
 
-    val af = doubleValueOfOptionWithDefault(args, "-af", 0.05)
+    val fp = doubleValueOfOptionWithDefault(args, "-fp", 0.05)
 
     val maxIt = intValueOfOptionWithDefault(args, "-maxit", 20)
     val tol = doubleValueOfOptionWithDefault(args, "-tol", 1e-5)
@@ -165,7 +137,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     }
 
     val hcol = leftHeader.split("\t")
-    val outputHeader = hcol.slice(0, 2).mkString("\t") + (if (gcCols.nonEmpty) "\t" + gcCols.map(hcol(_)).mkString("\t") else "") + "\tAF\tBucket\tValues"
+    val outputHeader = hcol.slice(0, 2).mkString("\t") + (if (gcCols.nonEmpty) "\t" + gcCols.map(hcol(_)).mkString("\t") else "") + "\tAF\tAN\tBucket\tValues"
 
     var maxSegSize = 10000
     if (hasOption(args, "-maxseg")) maxSegSize = intValueOfOption(args, "-maxseg")
@@ -174,13 +146,64 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val combinedHeader = IteratorUtilities.validHeader(outputHeader)
     val pipeStep: Analysis =
       if (iargs.length == 3) {
-        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, gl, gp, cc, crc, ld, PNCol, gcCols, af, e, tripSep = pSep) |
+        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
           AFANSourceAnalysis(priorSource, context, lookupSignature, gcCols, afc, anc) |
           RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
       } else {
-        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, gl, gp, cc, crc, ld, PNCol, gcCols, af, e, tripSep = pSep) |
+        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
           RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
       }
     CommandParsingResult(pipeStep, combinedHeader)
+  }
+}
+
+object PrGtGen {
+
+  def getGtCols(args: Array[String], leftCols: Array[String], leftHeader: String, executeNor: Boolean): (Int, Int, Int, Int, Int) = {
+    val hasPl = hasOption(args, "-pl")
+    val hasGl = hasOption(args, "-gl")
+    val hasGp = hasOption(args, "-gp")
+    val hasCrcAndLd = hasOption(args, "-crc") && hasOption(args, "-ld")
+
+    var pl = -1
+    var gl = -1
+    var gp = -1
+    var crc = -1
+    var ld = -1
+
+    if (hasPl ^ hasGl ^ hasGp ^ hasCrcAndLd) {
+      if (hasPl) pl = columnOfOption(args, "-pl", leftHeader, executeNor)
+      if (hasGl) gl = columnOfOption(args, "-gl", leftHeader, executeNor)
+      if (hasGp) gp = columnOfOption(args, "-gp", leftHeader, executeNor)
+      if (hasCrcAndLd) {
+        crc = columnOfOption(args, "-crc", leftHeader, executeNor)
+        ld = columnOfOption(args, "-ld", leftHeader, executeNor)
+      }
+    } else if (!(hasPl || hasGl || hasGp || hasCrcAndLd)) {
+      pl = leftCols.indexOf("pl")
+      gl = leftCols.indexOf("gl")
+      gp = leftCols.indexOf("gp")
+      crc = leftCols.indexOf("callratio")
+      ld = leftCols.indexOf("depth")
+      if (pl != -1) {
+        gl = -1
+        gp = -1
+        crc = -1
+        ld = -1
+      } else if (gp != -1) {
+        gl = -1
+        crc = -1
+        ld = -1
+      } else if (gl != -1) {
+        crc = -1
+        ld = -1
+      } else if (ld == -1 || crc == -1) {
+        throw new GorParsingException(s"Missing genotype columns in header $leftHeader")
+      }
+    } else {
+      throw new GorParsingException("Ambiguous input parameters.")
+    }
+
+    (pl, gl, gp, crc, ld)
   }
 }
