@@ -24,6 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands._
 import gorsat.Iterators.ChromBoundedIteratorSource
+import gorsat.{PnBucketParsing, PnBucketTable}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.GorContext
@@ -44,7 +45,7 @@ object GtGenAnalysis {
 
     val useGroup: Boolean = if (grCols.nonEmpty) true else false
 
-    var tagi: TagInfo = _
+    var pbt: PnBucketTable = _
     var groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
     var singleColHolder = ColHolder()
     if (!useGroup) groupMap += ("theOnlyGroup" -> singleColHolder)
@@ -52,10 +53,10 @@ object GtGenAnalysis {
 
 
     def initColHolder(sh: ColHolder) {
-      sh.buckValueCols = new Array[mutable.StringBuilder](tagi.buckIDbuckSize.length)
+      sh.buckValueCols = new Array[mutable.StringBuilder](pbt.numberOfBuckets)
       var i = 0
-      while (i < tagi.buckIDbuckSize.length) {
-        val buckSize = tagi.buckIDbuckSize(i)
+      while (i < pbt.numberOfBuckets) {
+        val buckSize = pbt.buckIdxToBuckSize(i)
         sh.buckValueCols(i) = new mutable.StringBuilder(buckSize)
         sh.buckValueCols(i).setLength(buckSize)
         var j = 0
@@ -68,8 +69,8 @@ object GtGenAnalysis {
     }
 
     def initialize(binInfo: BinInfo): Unit = {
-      tagi = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
-      if (tagi == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      pbt = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[PnBucketTable]
+      if (pbt == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
     }
@@ -89,8 +90,10 @@ object GtGenAnalysis {
 
       val PNtag = r.colAsString(PNCol).toString
 
-      tagi.tagBuckPosMap.get(PNtag) match {
-        case Some((buckID, buckPos)) =>
+      pbt.pnToIdx.get(PNtag) match {
+        case Some(idx) =>
+          val buckID = pbt.getBucketIdxFromPn(idx)
+          val buckPos = pbt.getBucketPos(idx)
           sh.buckValueCols(buckID).setCharAt(buckPos, r.colAsString(GtCol).charAt(0)) // Set the GT into the values col
         case None =>
           if (PNtag != "") throw new GorDataException("No bucket information found for tag value: " + PNtag + "\n")
@@ -104,7 +107,7 @@ object GtGenAnalysis {
         val linestart: String = bi.chr + "\t" + (bi.sta + 1) + (if (useGroup) "\t" + key else "")
         var i = 0
         while (i < sh.buckValueCols.length) {
-          val line = linestart + '\t' + tagi.buckIDbuckName(i) + '\t' + sh.buckValueCols(i)
+          val line = linestart + '\t' + pbt.getBucketNameFromIdx(i) + '\t' + sh.buckValueCols(i)
           nextProcessor.process(RowObj(line))
           i += 1
         }
@@ -117,56 +120,12 @@ object GtGenAnalysis {
       GtGenState(context, lookupSignature, GtCol, PNCol, grCols)
   }
 
-
-  case class TagInfo() {
-    var tagBuckPosMap = scala.collection.mutable.Map.empty[String, (Int, Int)]
-    var buckIDbuckName: Array[String] = _
-    var buckIDbuckSize: Array[Int] = _
-    var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-  }
-
-
   case class GtGenAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, GtCol: Int, PNCol: Int,
                            grCols: List[Int], context: GorContext, lookupSignature: String) extends
     BinAnalysis(RegularRowHandler(1), BinAggregator(GtGenFactory(context, lookupSignature, GtCol, PNCol, grCols), 2, 1)) {
 
-    val bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var bucketID: Int = -1
-
-    def bucketID(b: String): Int = bucketIDMap.get(b) match {
-      case Some(x) => x;
-      case None =>
-        bucketID += 1
-        bucketIDMap += (b -> bucketID)
-        bucketID
-    }
-
-    case class BucketCounter() {
-      var c: Integer = -1
-    }
-
-    val bucketOrderMap = scala.collection.mutable.Map.empty[String, Int]
-    val bucketCounterMap = scala.collection.mutable.Map.empty[String, BucketCounter]
-
-    def bucketOrder(b: String, t: String): Int = {
-      val bc = bucketCounterMap.get(b) match {
-        case Some(x) => x;
-        case None =>
-          bucketCounterMap += (b -> BucketCounter())
-          bucketCounterMap(b)
-      }
-      bucketOrderMap.get("#bu:" + b + "#ta:" + t) match {
-        case Some(x) => x;
-        case None =>
-          bc.c += 1
-          bucketOrderMap += (("#bu:" + b + "#ta:" + t) -> bc.c)
-          bc.c
-      }
-    }
-
     context.getSession.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]
-      val bi = TagInfo()
       try {
         if (iteratorCommand1 != "") l1 = MapAndListUtilities.getStringArray(iteratorCommand1, iterator1, context.getSession)
         else l1 = MapAndListUtilities.getStringArray(fileName1, context.getSession)
@@ -175,24 +134,7 @@ object GtGenAnalysis {
           iterator1.close()
           throw e
       }
-
-      l1.foreach(x => {
-        val r = x.split("\t")
-        val (tag, bid) = (r(0), r(1))
-
-        val buckid = bucketID(bid)
-        val buckpos = bucketOrder(bid, tag)
-        bi.tagBuckPosMap += (tag -> (buckid, buckpos))
-      })
-      val numBuckets = bucketIDMap.keys.size
-      val buckIDbuckName = new Array[String](numBuckets)
-      val buckIDbuckSize = new Array[Int](numBuckets)
-      bucketIDMap.keys.foreach(k => buckIDbuckName(bucketIDMap(k)) = k)
-      bucketIDMap.keys.foreach(k => buckIDbuckSize(bucketIDMap(k)) = bucketCounterMap(k).c + 1)
-      bi.buckIDbuckName = buckIDbuckName
-      bi.buckIDbuckSize = buckIDbuckSize
-      bi.bucketIDMap = bucketIDMap
-      bi
+      PnBucketParsing.parse(l1)
     })
   }
 
@@ -201,7 +143,7 @@ object GtGenAnalysis {
 
   case class TheSegOverlap(inRightSource: RowSource, bucketCol : Int, PNcol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
 
-    var tagi: TagInfo = _
+    var pbt: PnBucketTable = _
 
     val rstop = 2
 
@@ -253,7 +195,7 @@ object GtGenAnalysis {
 
       var groupKeyLeft : Int = -1
 
-      groupKeyLeft = tagi.bucketIDMap(lr.colAsString(bucketCol).toString)
+      groupKeyLeft = pbt.buckNameToIdx(lr.colAsString(bucketCol).toString)
       groupMap.get(groupKeyLeft) match {
         case Some(x) => gr = x
         case None =>
@@ -319,10 +261,10 @@ object GtGenAnalysis {
 
           var groupKeyRight : Int = -1
 
-          tagi.tagBuckPosMap.get(rr.colAsString(PNcol).toString) match {
-            case Some((bucketID, bucketPos)) => {
-              rSeg.buckPos = bucketPos
-              groupKeyRight = bucketID
+          pbt.pnToIdx.get(rr.colAsString(PNcol).toString) match {
+            case Some(idx) => {
+              rSeg.buckPos = pbt.pnIdxToBuckPos(idx)
+              groupKeyRight = pbt.getBucketIdxFromPn(idx)
               groupMap.get(groupKeyRight) match {
                 case Some(x) => gr = x
                 case None =>
@@ -402,8 +344,8 @@ object GtGenAnalysis {
     }
 
     override def setup(): Unit = {
-      tagi = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
-      if (tagi == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      pbt = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[PnBucketTable]
+      if (pbt == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
     }
   }
 

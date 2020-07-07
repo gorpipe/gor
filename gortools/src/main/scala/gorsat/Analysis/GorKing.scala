@@ -31,6 +31,10 @@ import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.LineIterator
 import gorsat.Commands.Analysis
+import gorsat.{PnBucketParsing, PnBucketTable}
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 object GorKing {
 
@@ -126,7 +130,7 @@ object GorKing {
     def initialize(binInfo: BinInfo): Unit = {
       bui = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[BucketInfo]
       if (bui == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
-      maxUsedBuckets = bui.bucketIDMap.size
+      maxUsedBuckets = bui.numberOfBuckets
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
     }
@@ -140,7 +144,7 @@ object GorKing {
         line = r.toString
       }
 
-      bui.bucketIDMap.get(r.colAsString(buckCol).toString) match {
+      bui.buckNameToIdx.get(r.colAsString(buckCol).toString) match {
         case Some(buckNo) =>
           var sh: ColHolder = null
           if (useGroup) {
@@ -177,9 +181,9 @@ object GorKing {
         try {
           r = null
           outCol = 0
-            while (outCol < bui.outputBucketPos.length) {
-              val buckNo = bui.outputBucketID(outCol)
-              val buckPos = bui.outputBucketPos(outCol)
+            while (outCol < bui.numberOfPns) {
+              val buckNo = bui.getBucketIdxFromPn(outCol)
+              val buckPos = bui.getBucketPos(outCol)
               r = sh.buckRows(buckNo)
               val offset = sh.offsetArray(buckNo)
               if (r == null) {
@@ -202,7 +206,7 @@ object GorKing {
 
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>
-            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + bui.outputTags(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
+            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + bui.getPnNameFromIdx(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
         }
       }
       // cleanup
@@ -228,16 +232,12 @@ object GorKing {
       KingState(session, lookupSignature, buckCol, valCol, grCols, afCol, sepVal, valSize, uv)
   }
 
-  case class BucketInfo() {
-    var outputBucketID: Array[Int] = _
-    var outputBucketPos: Array[Int] = _
-    var idPairs: Array[(Int,Int)] = _
-    var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var outputTags: Array[String] = _
-    var GTS : Array[Char] = _
+  case class BucketInfo(pbt: PnBucketTable, idPairs: Array[(Int,Int)], GTS : Array[Char])
+    extends PnBucketTable(pbt.buckNameToIdx, pbt.buckIdxToName, pbt.buckIdxToBuckSize,
+      pbt.pnToIdx, pbt.pnIdxToName, pbt.pnIdxToBuckIdx, pbt.pnIdxToBuckPos) {
   }
 
-  case class KingAggregate(val pi0thr: Float, val phithr: Float, val thetathr: Float, val t_pi0: Boolean, val t_phi: Boolean, val t_theta: Boolean, gm : GorMonitor) extends Analysis {
+  case class KingAggregate(pi0thr: Float, phithr: Float, thetathr: Float, t_pi0: Boolean, t_phi: Boolean, t_theta: Boolean, gm : GorMonitor) extends Analysis {
     var IBS0: Array[Int] = _
     var XX: Array[Int] = _
     var Nhet: Array[Int] = _
@@ -337,8 +337,8 @@ object GorKing {
         var ai: Int = 0
         while (ai < gtPairSize && !cancelled && !wantsNoMore) {
           val (pn1,pn2) = bh.bui.idPairs(ai)
-          val PNi = bh.bui.outputTags(pn1)
-          val PNj = bh.bui.outputTags(pn2)
+          val PNi = bh.bui.getPnNameFromIdx(pn1)
+          val PNj = bh.bui.getPnNameFromIdx(pn2)
           // System.out.println("ai "+ai+" ("+pn1+","+pn2+") = ("+PNi+","+PNj+")")
           val pi0 = IBS0(ai)/tpq(ai)
           val phi = 0.5f-XX(ai)/(4.0f*kpq(ai))
@@ -371,56 +371,9 @@ object GorKing {
                             grCols: List[Int], afCol : Int, sepVal: String, valSize: Int, uv: String, session: GorSession) extends
     BinAnalysis(RegularRowHandler(1), BinAggregator(KingFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, buckCol, valCol, grCols, afCol, sepVal, valSize, uv), 2, 1)) {
 
-    val bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var bucketID: Int = -1
-
-    def bucketID(b: String): Int = bucketIDMap.get(b) match {
-      case Some(x) => x;
-      case None =>
-        bucketID += 1
-        bucketIDMap += (b -> bucketID)
-        bucketID
-    }
-
-    case class BucketCounter() {
-      var c: Integer = -1
-    }
-
-    val bucketOrderMap = scala.collection.mutable.Map.empty[String, Int]
-    val bucketCounterMap = scala.collection.mutable.Map.empty[String, BucketCounter]
-
-    def bucketOrder(b: String, t: String): Int = {
-      val bc = bucketCounterMap.get(b) match {
-        case Some(x) => x;
-        case None =>
-          bucketCounterMap += (b -> BucketCounter())
-          bucketCounterMap(b)
-      }
-      bucketOrderMap.get("#bu:" + b + "#ta:" + t) match {
-        case Some(x) => x;
-        case None =>
-          bc.c += 1
-          bucketOrderMap += (("#bu:" + b + "#ta:" + t) -> bc.c)
-          bc.c
-      }
-    }
-
-    val outputOrderMap = scala.collection.mutable.Map.empty[String, Int]
-    var outputCounter: Int = -1
-    var tags : List[String] = Nil
-
-    def outputOrder(b: String): Int = outputOrderMap.get(b) match {
-      case Some(x) => x;
-      case None =>
-        outputCounter += 1
-        outputOrderMap += (b -> outputCounter)
-        tags ::= b
-        outputCounter
-    }
-
     val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
 
-    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, f => {
+    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]
       var l2 = Array.empty[String]
 
@@ -438,47 +391,38 @@ object GorKing {
           throw e
       }
 
-      val bi = BucketInfo()
       val gtPairSize = l2.length
-      bi.idPairs = new Array[(Int,Int)](gtPairSize)
+      val idPairs = new Array[(Int,Int)](gtPairSize)
       var idPairCount = 0
+      val idNameToIdx = mutable.Map.empty[String, Int]
+      val tags = ArrayBuffer.empty[String]
 
       l2.foreach(x => {
-        val r = x.split("\t")
-        val id1 = outputOrder(r(0))
-        val id2 = outputOrder(r(1))
-        bi.idPairs(idPairCount) = (id1,id2)
+        val tabIdx = x.indexOf('\t')
+        val (r0, r1) = (x.substring(0, tabIdx), x.substring(tabIdx + 1))
+        val id1 = idNameToIdx.get(r0) match {
+          case Some(idx) => idx
+          case None =>
+            val idx = idNameToIdx.size
+            tags += r0
+            idNameToIdx += (r0 -> idx)
+            idx
+        }
+        val id2 = idNameToIdx.get(r1) match {
+          case Some(idx) => idx
+          case None =>
+            val idx = idNameToIdx.size
+            tags += r1
+            idNameToIdx += (r1 -> idx)
+            idx
+        }
+        idPairs(idPairCount) = (id1,id2)
         // System.out.println(idPairCount+" ("+id1+","+id2+") = ("+r(0)+","+r(1)+") ("+tags(id1)+","+tags(id2)+")")
         idPairCount += 1
       })
-
-      val outputSize = outputOrderMap.size
-      bi.outputBucketID = new Array[Int](outputSize)
-      bi.outputBucketPos = new Array[Int](outputSize)
-
-      bi.GTS = new Array[Char](outputSize)
-
-      val tagMap = outputOrderMap.clone()
-
-      l1.foreach(x => {
-        val r = x.split("\t")
-        val (tag, bid) = (r(0), r(1))
-        tagMap.remove(tag)
-
-        val buckid = bucketID(bid)
-        val buckpos = bucketOrder(bid, tag)
-
-        if (outputOrder(tag) < outputSize) {
-          bi.outputBucketID(outputOrder(tag)) = buckid
-          bi.outputBucketPos(outputOrder(tag)) = buckpos
-        }
-      })
-
-      if (tagMap.nonEmpty) throw new GorDataException("There are tags in the tag-pair source which are not defined in the first tag/bucket input, including: " + tagMap.keys.toList.slice(0, 10).mkString(","))
-
-      bi.bucketIDMap = bucketIDMap
-      bi.outputTags = tags.reverse.toArray
-      bi
+      val pbt = PnBucketParsing.parse(l1).filter(tags)
+      val GTS = new Array[Char](pbt.numberOfPns)
+      BucketInfo(pbt, idPairs, GTS)
     })
   }
 }

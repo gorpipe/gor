@@ -22,10 +22,11 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GorCsvSel.{BucketInfo, CsvSelAnalysis}
+import gorsat.Analysis.GorCsvSel.CsvSelAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.IteratorUtilities.validHeader
+import gorsat.PnBucketTable
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.GorContext
@@ -132,7 +133,7 @@ class CsvSel extends CommandInfo("CSVSEL",
         outputHeaderBuilder.append(stringValueOfOption(args, "-tag"))
         outputHeaderBuilder.append("\tvalue")
       } else if (toVCF) {
-        val tags = pipeStep.session.getCache.getObjectHashMap.get(pipeStep.lookupSignature).asInstanceOf[BucketInfo].outputTags
+        val tags = pipeStep.session.getCache.getObjectHashMap.get(pipeStep.lookupSignature).asInstanceOf[PnBucketTable].pnIdxToName
         outputHeaderBuilder.append("\tQUAL")
         outputHeaderBuilder.append("\tFILTER")
         outputHeaderBuilder.append("\tINFO")

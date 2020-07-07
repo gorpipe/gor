@@ -3,6 +3,7 @@ package gorsat.Commands
 import gorsat.Analysis.GtTransposeFactory
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
+import gorsat.PnBucketParsing
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
@@ -119,40 +120,21 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
   }
 
   def getBucketToPnIdxList(btArray: Array[String], pns: Array[String]): Map[String, (Array[Int], Array[Int])] = {
-    val pnToIdxMap: Map[String, Int] = pns.iterator.zipWithIndex.toMap
-    val map = mutable.Map.empty[String, (Int, ArrayBuffer[Int], ArrayBuffer[Int])]
-    btArray.foreach(line => {
-      val tabIdx = line.indexOf('\t')
-      val pn = line.substring(0, tabIdx)
-      val bucket = line.substring(tabIdx + 1)
-      var (pnIdx, pnAbsIds, pnRelIds) = map.get(bucket) match {
-        case Some((idx, l1, l2)) => {
-          map += (bucket -> (idx + 1, l1, l2))
-          (idx + 1, l1, l2)
-        }
-        case None => {
-          val toRet = (0, ArrayBuffer.empty[Int], ArrayBuffer.empty[Int])
-          map += (bucket -> toRet)
-          toRet
-        }
-      }
-      pnToIdxMap.get(pn) match {
-        case Some(idx) => {
-          pnAbsIds += idx
-          pnRelIds += pnIdx
-        }
-        case None => //Then we do not have to do anything
-      }
-    })
-    val builder = Map.newBuilder[String, (Array[Int], Array[Int])]
-    map.foreach({
-      case (bucket, (_, pnIdxList, pnOffsetList)) => {
-        if (pnIdxList.nonEmpty && pnOffsetList.nonEmpty) {
-          builder += (bucket -> (pnIdxList.toArray, pnOffsetList.toArray))
-        }
-      }
-    })
-    builder.result()
+    val pbt = PnBucketParsing.parse(btArray).indexByBucket().filter(pns)
+    val bucketToIdxLists = Array.tabulate(pbt.numberOfBuckets)(_ => (ArrayBuffer.empty[Int], ArrayBuffer.empty[Int]))
+    var pnAbsIdx = 0
+    while (pnAbsIdx < pbt.numberOfPns) {
+      val bucketIdx = pbt.pnIdxToBuckIdx(pnAbsIdx)
+      val bucketPos = pbt.pnIdxToBuckPos(pnAbsIdx)
+      val (absIds, relIdx) = bucketToIdxLists(bucketIdx)
+      absIds += pnAbsIdx
+      relIdx += bucketPos
+      pnAbsIdx += 1
+    }
+    for ((name, idx) <- pbt.buckNameToIdx) yield {
+      val (absIds, relIds) = bucketToIdxLists(idx)
+      (name, (absIds.toArray, relIds.toArray))
+    }
   }
 
   def getContAsStringArray(fileName: String, source: SourceProvider, session: GorSession): Array[String] = {

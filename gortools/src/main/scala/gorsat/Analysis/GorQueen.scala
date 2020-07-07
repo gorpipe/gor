@@ -22,21 +22,15 @@
 
 package gorsat.Analysis
 
-import java.lang
-
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler, RowHeader}
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import gorsat.process.GenotypeLookupUtilities
-import gorsat.process.GorJavaUtilities.VCFValue
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.{GorMonitor, Line, Row, RowBase}
+import org.gorpipe.model.genome.files.gor.{GorMonitor, Line, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.LineIterator
 import gorsat.Commands.Analysis
-
-import scala.collection.mutable
 
 object GorQueen {
 
@@ -240,9 +234,6 @@ object GorQueen {
       if (useGroup) {
         groupMap.clear()
       }
-
-
-
     }
   }
 
@@ -272,7 +263,7 @@ object GorQueen {
     var GTS2 : Array[Char] = _
   }
 
-  case class QueenAggregate(val minSharing: Float, gm : GorMonitor) extends Analysis {
+  case class QueenAggregate(minSharing: Float, gm : GorMonitor) extends Analysis {
     var share: Array[Int] = _
     var count: Array[Int] = _
     var needsInitialization: Boolean = true
@@ -410,7 +401,7 @@ object GorQueen {
 
     val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2 + "#" + fileName3 + "#" + iteratorCommand3
 
-    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, f => {
+    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]
       var l2 = Array.empty[String]
       var l3 = Array.empty[String]
@@ -449,7 +440,6 @@ object GorQueen {
       bi.outputBucketPos = new Array[Int](outputSize)
       bi.outputBucketID2 = new Array[Int](outputSize2)
       bi.outputBucketPos2 = new Array[Int](outputSize2)
-      val gtPairSize = outputSize * outputSize2
       bi.GTS1length = outputSize
       bi.IDX1 = new Array[Int](outputSize2)
       bi.GTS2 = new Array[Char](outputSize2)

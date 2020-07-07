@@ -1,6 +1,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
+import gorsat.{PnBucketParsing, PnBucketTable}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gtgen.GPParser.parseDoubleTriplet
 import gorsat.gtgen.GPParser.glToGp
@@ -56,7 +57,7 @@ object PrGtGenAnalysis {
       val gh = getGroupHolder(r)
       val pn = r.colAsString(pnCol).toString
       if (pn != "") { //If pn == "" then this is a dummy row for a rare variant.
-        val tagIdx = ti.getTagIdx(pn)
+        val tagIdx = ti.getPnIdx(pn)
         addToGtGen(r, tagIdx, gh.gtGen)
       }
     }
@@ -91,7 +92,7 @@ object PrGtGenAnalysis {
     }
 
     def getNewGroupHolder: GroupHolder = {
-      val gh = GroupHolder(new GTGen(error, ti.numberOfSamples))
+      val gh = GroupHolder(new GTGen(error, ti.numberOfPns))
       gh.gtGen.setAF(af)
       gh
     }
@@ -107,45 +108,19 @@ object PrGtGenAnalysis {
             throw e
         }
       }
-      val bucketToIdxAndCounter = mutable.Map.empty[String, (Int, Int)]
-      val tagBuckPosMap = new mutable.HashMap[String, (Int, Int)]
-      l.foreach(line => {
-        val tabIdx = line.indexOf('\t')
-        val (tag, bucket) = (line.substring(0, tabIdx), line.substring(tabIdx + 1))
-        val (bucketIdx, idxInBucket) = bucketToIdxAndCounter.get(bucket) match {
-          case Some((idx, count)) => (idx, count)
-          case None => (bucketToIdxAndCounter.size, 0)
-        }
-        tagBuckPosMap += (tag -> (bucketIdx, idxInBucket))
-        bucketToIdxAndCounter += (bucket -> (bucketIdx, idxInBucket + 1))
-      })
-      val numBuckets = bucketToIdxAndCounter.size
-      val buckIdBuckName = new Array[String](numBuckets)
-      val buckIdBuckSize = new Array[Int](numBuckets)
-      for ((bucket, (idx, size)) <- bucketToIdxAndCounter) {
-        buckIdBuckName(idx) = bucket
-        buckIdBuckSize(idx) = size
-      }
-      TagInfo(tagBuckPosMap, buckIdBuckName, buckIdBuckSize, l.length)
+      val pbt = PnBucketParsing.parse(l)
+      TagInfo(pbt)
     }).asInstanceOf[TagInfo]
     ti.registerUser(this)
   }
 
   case class GroupHolder(gtGen: GTGen) extends BinaryHolder
 
-  case class TagInfo(tagBuckPosMap: mutable.Map[String, (Int, Int)],
-                     buckIdBuckName: Array[String],
-                     buckIdBuckSize: Array[Int],
-                     numberOfSamples: Int) {
+  case class TagInfo(pbt: PnBucketTable)
+    extends PnBucketTable(pbt.buckNameToIdx, pbt.buckIdxToName, pbt.buckIdxToBuckSize,
+      pbt.pnToIdx, pbt.pnIdxToName, pbt.pnIdxToBuckIdx, pbt.pnIdxToBuckPos) {
 
-    val buckSums = buckIdBuckSize.scanLeft(0)((sum, curr) => sum + curr)
-
-    def getTagIdx(tag: String): Int = {
-      tagBuckPosMap.get(tag) match {
-        case Some((bucketIdx, pos)) => buckSums(bucketIdx) + pos
-        case None => throw new IllegalArgumentException("Unknown tag:\t" + tag)
-      }
-    }
+    val buckSums: Array[Int] = buckIdxToBuckSize.toIterator.take(numberOfBuckets - 1).scanLeft(0)((sum, curr) => sum + curr).toArray
 
     val users = mutable.Set.empty[AnyRef]
 
@@ -232,10 +207,10 @@ object PrGtGenAnalysis {
     val ti = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
     ti.registerUser(this)
 
-    val gts = new Array[Double](3 * ti.numberOfSamples)
+    val gts = new Array[Double](3 * ti.numberOfPns)
 
     case class SegmentRowWithDepthAndPn(chr: String, begin: Int, end: Int, depth: Int, pn: String) {
-      val pnIdx = ti.getTagIdx(pn)
+      val pnIdx = ti.getPnIdx(pn)
     }
 
     var currentRowBuffer = new ArrayBuffer[SegmentRowWithDepthAndPn]()
@@ -254,14 +229,14 @@ object PrGtGenAnalysis {
       if (converged) {
         val rowPrefix = r.toString + '\t' + "%5.5g\t%d".format(gtGen.getAF, gtGen.getAn) + '\t'
         var bucketIdx = 0
-        val len = ti.buckIdBuckSize.length
+        val len = ti.numberOfBuckets
         var sampleIdx: Int = 0
         while (bucketIdx < len) {
-          val bucketSize = ti.buckIdBuckSize(bucketIdx)
-          val bucketName = ti.buckIdBuckName(bucketIdx)
+          val bucketSize = ti.getBucketSize(bucketIdx)
+          val bucketName = ti.getBucketNameFromIdx(bucketIdx)
           val sb = new mutable.StringBuilder(getStringBuilderSizeHint(rowPrefix, bucketName, bucketSize))
           sb ++= rowPrefix
-          sb ++= ti.buckIdBuckName(bucketIdx)
+          sb ++= ti.getBucketNameFromIdx(bucketIdx)
           sb += '\t'
           writeGenotypes(sb, sampleIdx, sampleIdx + bucketSize, r_gh.gtGen)
           sampleIdx += bucketSize
@@ -270,7 +245,7 @@ object PrGtGenAnalysis {
         }
       } else {
         val rowPrefix = r.toString + "\t.\t.\t"
-        ti.buckIdBuckName.foreach(bucket => super.process(RowObj(rowPrefix + bucket + "\t")))
+        ti.buckIdxToName.foreach(bucket => super.process(RowObj(rowPrefix + bucket + "\t")))
       }
     }
 

@@ -25,6 +25,7 @@ package gorsat.Analysis
 import java.lang
 
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler}
+import gorsat.{PnBucketParsing, PnBucketTable}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.GenotypeLookupUtilities
 import gorsat.process.GorJavaUtilities.VCFValue
@@ -124,7 +125,7 @@ object GorCsvSel {
     }).mkString("")).slice(0, valSize) else uv
     var unknown: Boolean = if (uv != "") true else false
 
-    var bui: BucketInfo = _
+    var pbt: PnBucketTable = _
     var groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
     var singleColHolder = ColHolder()
     if (!useGroup) groupMap += ("theOnlyGroup" -> singleColHolder)
@@ -164,9 +165,9 @@ object GorCsvSel {
     var maxUsedBuckets = 0
 
     def initialize(binInfo: BinInfo): Unit = {
-      bui = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[BucketInfo]
-      if (bui == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
-      maxUsedBuckets = bui.bucketIDMap.size
+      pbt = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[PnBucketTable]
+      if (pbt == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      maxUsedBuckets = pbt.numberOfBuckets
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
     }
@@ -180,7 +181,7 @@ object GorCsvSel {
         line = r.toString
       }
 
-      bui.bucketIDMap.get(r.colAsString(buckCol).toString) match {
+      pbt.buckNameToIdx.get(r.colAsString(buckCol).toString) match {
         case Some(buckNo) =>
           var sh: ColHolder = null
           if (useGroup) {
@@ -223,7 +224,7 @@ object GorCsvSel {
               k += 1
             }
           }
-          val sa = if (toVCF) new Array[Int](6 + groupNum + bui.outputBucketPos.length) else new Array[Int](3 + groupNum)
+          val sa = if (toVCF) new Array[Int](6 + groupNum + pbt.numberOfPns) else new Array[Int](3 + groupNum)
           ladd.append(bi.chr)
           var i = 0
           sa(i) = ladd.length()
@@ -247,7 +248,7 @@ object GorCsvSel {
 
           if (toVCF) {
             if (!nextProcessor.wantsNoMore) {
-              if (outputRows) ladd.append(bui.outputTags.mkString(","))
+              if (outputRows) ladd.append(pbt.pnIdxToName.mkString(","))
               ladd.append('\t')
               ladd.append('.')
               sa(i) = ladd.length()
@@ -269,13 +270,13 @@ object GorCsvSel {
               sa(i) = ladd.length()
               i += 1
 
-              while (outCol < bui.outputBucketPos.length) {
-                val buckNo = bui.outputBucketID(outCol)
-                val buckPos = bui.outputBucketPos(outCol)
+              while (outCol < pbt.numberOfPns) {
+                val buckNo = pbt.getBucketIdxFromPn(outCol)
+                val buckPos = pbt.getBucketPos(outCol)
                 r = sh.buckRows(buckNo)
                 if (r == null) {
                   ladd.append('\t')
-                  ladd.append(bui.outputTags(outCol))
+                  ladd.append(pbt.getPnNameFromIdx(outCol))
                   ladd.append(unknownVal)
                 } else if(valSize == -1) {
                   val offset = sh.offsetArray(buckNo)
@@ -302,13 +303,13 @@ object GorCsvSel {
             }
           } else {
             ladd.append('\t')
-            while (outCol < bui.outputBucketPos.length && !nextProcessor.wantsNoMore) {
-              val buckNo = bui.outputBucketID(outCol)
-              val buckPos = bui.outputBucketPos(outCol)
+            while (outCol < pbt.numberOfPns && !nextProcessor.wantsNoMore) {
+              val buckNo = pbt.getBucketIdxFromPn(outCol)
+              val buckPos = pbt.getBucketPos(outCol)
               r = sh.buckRows(buckNo)
               if (r == null) {
                 if (unknown) {
-                  if (outputRows) nextProcessor.process(RowObj(String.join("\t", line, bui.outputTags(outCol), unknownVal)))
+                  if (outputRows) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), unknownVal)))
                   else {
                     if (outCol != 0 && sepSize != 0) ladd.append(sepval)
                     ladd.append(unknownVal)
@@ -321,7 +322,7 @@ object GorCsvSel {
                 if (valSize == -1) {
                   if (outputRows) {
                     val cs = colString(buckPos, r, offset, sh.splitArr(buckNo))
-                    if (!(hideSome && toHide.contains(cs))) nextProcessor.process(RowObj(String.join("\t", line, bui.outputTags(outCol), cs)))
+                    if (!(hideSome && toHide.contains(cs))) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), cs)))
                   }
                   else {
                     if (outCol != 0 && sepSize != 0) ladd.append(sepval)
@@ -330,7 +331,7 @@ object GorCsvSel {
                 } else {
                   if (outputRows) {
                     val csf = colStringFixed(buckPos, r, offset, valSize, sepSize)
-                    if (!(hideSome && toHide.contains(csf))) nextProcessor.process(RowObj(String.join("\t", line, bui.outputTags(outCol), csf)))
+                    if (!(hideSome && toHide.contains(csf))) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), csf)))
                   }
                   else {
                     if (outCol != 0 && sepSize != 0) ladd.append(sepval)
@@ -348,7 +349,7 @@ object GorCsvSel {
           }
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>
-            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + bui.outputTags(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
+            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + pbt.getPnNameFromIdx(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
         }
       }
       // cleanup
@@ -376,65 +377,13 @@ object GorCsvSel {
       CsvSelState(session, lookupSignature, buckCol, valCol, grCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv)
   }
 
-  case class BucketInfo() {
-    var outputBucketID: Array[Int] = _
-    var outputBucketPos: Array[Int] = _
-    var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var outputTags: Array[String] = _
-  }
-
   case class CsvSelAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, buckCol: Int, valCol: Int,
                             grCols: List[Int], sepVal: String, outputRows: Boolean, hideSome: Boolean, toHide: mutable.Set[String] = null, valSize: Int, toVCF: Boolean, vcfThreshold: Double, doseOption: Boolean, uv: String, session: GorSession) extends
     BinAnalysis(RegularRowHandler(1), BinAggregator(CsvSelFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, buckCol, valCol, grCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv), 2, 1)) {
 
-    val bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var bucketID: Int = -1
-
-    def bucketID(b: String): Int = bucketIDMap.get(b) match {
-      case Some(x) => x;
-      case None =>
-        bucketID += 1
-        bucketIDMap += (b -> bucketID)
-        bucketID
-    }
-
-    case class BucketCounter() {
-      var c: Integer = -1
-    }
-
-    val bucketOrderMap = scala.collection.mutable.Map.empty[String, Int]
-    val bucketCounterMap = scala.collection.mutable.Map.empty[String, BucketCounter]
-
-    def bucketOrder(b: String, t: String): Int = {
-      val bc = bucketCounterMap.get(b) match {
-        case Some(x) => x;
-        case None =>
-          bucketCounterMap += (b -> BucketCounter())
-          bucketCounterMap(b)
-      }
-      bucketOrderMap.get("#bu:" + b + "#ta:" + t) match {
-        case Some(x) => x;
-        case None =>
-          bc.c += 1
-          bucketOrderMap += (("#bu:" + b + "#ta:" + t) -> bc.c)
-          bc.c
-      }
-    }
-
-    val outputOrderMap = scala.collection.mutable.Map.empty[String, Int]
-    var outputCounter: Int = -1
-
-    def outputOrder(b: String): Int = outputOrderMap.get(b) match {
-      case Some(x) => x;
-      case None =>
-        outputCounter += 1
-        outputOrderMap += (b -> outputCounter)
-        outputCounter
-    }
-
     val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
 
-    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, f => {
+    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _=> {
         var l1 = Array.empty[String]
         var l2 = Array.empty[String]
 
@@ -450,38 +399,7 @@ object GorCsvSel {
             iterator2.close()
             throw e
         }
-
-        var tags: List[String] = Nil
-        l2.foreach(x => {
-          outputOrder(x)
-          tags ::= x
-        })
-        val bi = BucketInfo()
-        val outputSize = outputOrderMap.size
-        bi.outputBucketID = new Array[Int](outputSize)
-        bi.outputBucketPos = new Array[Int](outputSize)
-
-        val tagMap = outputOrderMap.clone()
-
-        l1.foreach(x => {
-          val r = x.split("\t")
-          val (tag, bid) = (r(0), r(1))
-          tagMap.remove(tag)
-
-          val buckid = bucketID(bid)
-          val buckpos = bucketOrder(bid, tag)
-
-          if (outputOrder(tag) < outputSize) {
-            bi.outputBucketID(outputOrder(tag)) = buckid
-            bi.outputBucketPos(outputOrder(tag)) = buckpos
-          }
-        })
-
-        if (tagMap.nonEmpty) throw new GorDataException("There are tags in the second input file which are not defined in the first tag/bucket input, including: " + tagMap.keys.toList.slice(0, 10).mkString(","))
-
-        bi.bucketIDMap = bucketIDMap
-        bi.outputTags = tags.reverse.toArray
-        bi
+        PnBucketParsing.parse(l1).filter(l2)
     })
   }
 }
