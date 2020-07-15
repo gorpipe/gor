@@ -22,11 +22,11 @@
 
 package gorsat.Iterators
 
+import java.io.{BufferedReader, InputStreamReader}
 import java.util
 import java.util.stream
+import java.util.zip.GZIPInputStream
 
-import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
 import org.gorpipe.gor.stats.StatsCollector
 import org.gorpipe.model.genome.files.gor.{FileReader, Row}
@@ -45,13 +45,20 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   var mustReCheck: Boolean = true
   var haveReadHeader: Boolean = false
   var myHeader: String = _
-  val useCSV: Boolean = fileName.toUpperCase.endsWith(".CSV")
+  val fileNameTUP = fileName.toUpperCase
+  val useCSV: Boolean = fileNameTUP.endsWith(".CSV") || fileNameTUP.endsWith(".CSV.GZ")
   var haveLoadedLines = false
-  val IGNORE_PATTERN = "##"
+  val filter = (s: String) => !s.startsWith("##")
 
 
-  val norRowSource: stream.Stream[String] = if (!readStdin) fileReader.iterateFile(fileName, maxWalkDepth, showModificationDate) else throw new GorParsingException("Stdin not supported in NOR context.")
-  val norRowIterator: util.Iterator[String] = norRowSource.filter(x => !x.startsWith(IGNORE_PATTERN)).iterator()
+  val norRowSource: stream.Stream[String] = if (!readStdin) {
+    if (fileNameTUP.endsWith(".GZ")) {
+      new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.openFile(fileName)))).lines()
+    } else {
+      fileReader.iterateFile(fileName, maxWalkDepth, showModificationDate)
+    }
+  } else throw new GorParsingException("Stdin not supported in NOR context.")
+  val norRowIterator: util.Iterator[String] = norRowSource.filter(filter(_)).iterator()
 
   override def hasNext: Boolean = {
     if (!haveReadHeader) {

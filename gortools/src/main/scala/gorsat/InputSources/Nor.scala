@@ -117,8 +117,11 @@ object Nor
       } else if (inputParams.toUpperCase.endsWith("NORD") && !hasOption(args, "-asdict")) {
         inputSource = createNordIterator(inputParams, args, context)
       } else {
-        if (inputParams.toUpperCase.endsWith("NORZ")) inputSource = new ServerGorSource(inputParams, context, true)
-        else inputSource = new NorInputSource(inputParams, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
+        if (inputParams.toUpperCase.endsWith("NORZ")) {
+          inputSource = new ServerGorSource(inputParams, context, true)
+        } else {
+          inputSource = new NorInputSource(inputParams, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
+        }
       }
 
       InputSourceParsingResult(inputSource, null, isNorContext = true)

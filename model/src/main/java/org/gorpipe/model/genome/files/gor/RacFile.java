@@ -23,44 +23,20 @@
 package org.gorpipe.model.genome.files.gor;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * RacFile allows random access read from a file
  *
  * @version $Id$
  */
-public abstract class RacFile {
-    /**
-     * Read from current file position, as many bytes as possible upto len-pos
-     *
-     * @param buf    The buffer to write the bytes into
-     * @param offset The offset in the buffer to write the first byte into
-     * @param len    The number of bytes to read from the file and write into the buffer
-     * @return The number of bytes read
-     */
-    public abstract int read(byte[] buf, int offset, int len);
-
-    /**
-     * Read from current file position, as many bytes as possible upto length of byte array
-     *
-     * @param buf The buffer to write the bytes into, first byte at index 0
-     * @return The number of bytes read
-     */
-    public int read(byte[] buf) {
-        return read(buf, 0, buf.length);
-    }
-
+public abstract class RacFile extends InputStream {
     /**
      * Set the current file position
      *
      * @param pos The position to set
      */
     public abstract void seek(long pos);
-
-    /**
-     * Close the random access file
-     */
-    public abstract void close();
 
     /**
      * Length of the random access file

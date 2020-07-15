@@ -53,6 +53,11 @@ public class GCRacFile extends RacFile {
     }
 
     @Override
+    public int read() throws IOException {
+        return this.file.read();
+    }
+
+    @Override
     public int read(byte[] buf, int offset, int len) {
         try {
             return file.read(buf, offset, len);

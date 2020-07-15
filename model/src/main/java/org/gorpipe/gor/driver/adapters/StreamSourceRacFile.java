@@ -47,6 +47,11 @@ public class StreamSourceRacFile extends RacFile {
     }
 
     @Override
+    public int read() throws IOException {
+        return this.delegate.read();
+    }
+
+    @Override
     public int read(byte[] buf, int offset, int len) {
         try {
             return delegate.read(buf, offset, len);
