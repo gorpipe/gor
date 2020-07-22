@@ -48,9 +48,14 @@ public class VcfGzGenomicIterator extends GenomicIterator {
     final GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
     private Line linebuf; // The linebuf to temporarily read the data into
     public String next;
-    public VcfGzTabixGenomicIterator.ChrNameSystem chrNameSystem;
+    public ChrNameSystem chrNameSystem;
 
     int len = 0;
+
+    public enum ChrNameSystem {
+        WITH_CHR_PREFIX,
+        WITHOUT_CHR_PREFIX,
+    }
 
     public VcfGzGenomicIterator(ChromoLookup lookup) {
         this.lookup = lookup;
@@ -86,9 +91,9 @@ public class VcfGzGenomicIterator extends GenomicIterator {
             if (line.startsWith(contig)) {
                 if (chrNameSystem == null) {
                     if (line.substring(contig.length()).startsWith("chr")) {
-                        chrNameSystem = VcfGzTabixGenomicIterator.ChrNameSystem.WITH_CHR_PREFIX;
+                        chrNameSystem = ChrNameSystem.WITH_CHR_PREFIX;
                     } else {
-                        chrNameSystem = VcfGzTabixGenomicIterator.ChrNameSystem.WITHOUT_CHR_PREFIX;
+                        chrNameSystem = ChrNameSystem.WITHOUT_CHR_PREFIX;
                     }
                 }
 

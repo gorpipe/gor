@@ -106,19 +106,24 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
 
 object OutFile {
 
+  def vcfHeader(prefix: String, header: String): String = {
+    prefix + "\n" + (if(header.startsWith("#")) header else "#"+header)
+  }
+
   def driver(name: String, inheader: String, skipHeader: Boolean, options: OutputOptions): Output = {
     val nameUpper = name.toUpperCase
+    val isVCF = nameUpper.endsWith(".VCF") || nameUpper.endsWith(".VCF.GZ") || nameUpper.endsWith(".VCF.BGZ")
 
-    var header = inheader
     var append = skipHeader
-    if(options.prefix.isDefined) {
+    val header = if(options.prefix.isDefined) {
       val pref = options.prefix.get
-      if(nameUpper.endsWith(".VCF") || nameUpper.endsWith(".VCF.GZ") || nameUpper.endsWith(".VCF.BGZ")) {
-        if(!inheader.startsWith("#")) header = "#"+inheader
-        header = pref + "\n" + header
+      if(isVCF) {
+        vcfHeader(pref, inheader)
       } else {
-        header = pref + header
+        pref + inheader
       }
+    } else if(options.prefixFile.isEmpty && isVCF) {
+      vcfHeader("##fileformat=VCFv4.2", inheader)
     } else {
       append = append || {
         options.prefixFile match {
@@ -128,6 +133,7 @@ object OutFile {
           case None => false
         }
       }
+      inheader
     }
 
     try {

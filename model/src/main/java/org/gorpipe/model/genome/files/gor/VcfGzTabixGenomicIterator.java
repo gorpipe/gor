@@ -22,37 +22,31 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.model.util.Util;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.model.util.StringUtil;
 import htsjdk.tribble.readers.TabixReader;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Simple genomic iterator for zipped vcf files, can not be seeked into
  */
 public class VcfGzTabixGenomicIterator extends GenomicIterator {
-    private int chrId = Integer.MIN_VALUE;
-    private int hgSeekIndex = -1;
     private TabixReader reader;
     private TabixReader.Iterator iterator;
     private Line linebuf;
     private int seekPos = -1;
-
-    public enum ChrNameSystem {
-        WITH_CHR_PREFIX,
-        WITHOUT_CHR_PREFIX,
-    }
-
-    private ChrNameSystem chrNameSystem;
+    private List<String> chrs;
+    private int hgSeekIndex = 0;
 
     private int[] columns; // Source columns to include
     GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
@@ -62,28 +56,17 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
         return lookup;
     }
 
-    public VcfGzTabixGenomicIterator(GenomicIterator.ChromoLookup lookup, StreamSource file, StreamSource idxfile, int cols[]) throws IOException {
-        init(lookup, new TabixReader(file.getName(), idxfile.getName(), new StreamSourceSeekableStream(file)), cols, StringIntKey.cmpLexico);
+    public VcfGzTabixGenomicIterator(GenomicIterator.ChromoLookup lookup, StreamSource file, StreamSource idxfile, int[] cols) throws IOException {
+        init(lookup, new TabixReader(file.getName(), idxfile.getName(), new StreamSourceSeekableStream(file)), cols);
     }
 
-    private void init(GenomicIterator.ChromoLookup lookup, TabixReader reader, int cols[], Comparator<StringIntKey> comparator) throws IOException {
+    private void init(GenomicIterator.ChromoLookup lookup, TabixReader reader, int[] cols) throws IOException {
         this.reader = reader;
         this.lookup = lookup;
         setColumns(cols);
 
-        Set<String> chrs = reader.getChromosomes();
-
-        String chrname = "";
-        if (chrs.size() > 0) {
-            // if we have a chromosome in the data, lets get it
-            chrname = chrs.iterator().next();
-        }
-
-        if (chrname.startsWith("chr")) {
-            chrNameSystem = ChrNameSystem.WITH_CHR_PREFIX;
-        } else {
-            chrNameSystem = ChrNameSystem.WITHOUT_CHR_PREFIX;
-        }
+        chrs = new ArrayList<>(reader.getChromosomes());
+        chrs.sort(Comparator.naturalOrder());
     }
 
     private void setColumns(int[] cols) throws IOException {
@@ -118,19 +101,14 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
     @Override
     public boolean seek(String chr, int pos) {
         seekPos = pos;
-        chrId = lookup.chrToId(chr); // Mark that a single chromosome seek
-        createIterator(chrId, Math.max(0, pos - 1));
+        hgSeekIndex = chrs.indexOf(chr);
+        iterator = reader.query(chr, Math.max(0, pos - 1), Integer.MAX_VALUE);
         return iterator != null;
     }
 
     @Override
     public boolean next(Line l) {
-        if (chrId == Integer.MIN_VALUE) {
-            hgSeekIndex = 0;
-            createIterator(ChrDataScheme.ChrLexico.order2id[hgSeekIndex], 0);
-            chrId = -1;
-        }
-
+        if (iterator == null) iterator = reader.query(chrs.get(hgSeekIndex), 0, Integer.MAX_VALUE);
         if (iterator != null) {
             try {
                 final String s = iterator.next();
@@ -165,32 +143,18 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
                 iterator = null;
 
                 if (hgSeekIndex >= 0) { // Is seeking through differently ordered data
-                    if (++hgSeekIndex >= ChrDataScheme.ChrLexico.order2id.length) {
+                    if (++hgSeekIndex >= chrs.size()) {
                         return false; // All human genome chromosomes have been read, so nothing more to return
                     }
-                    final int order = ChrDataScheme.ChrLexico.order2id[hgSeekIndex];
-                    createIterator(order, 0);
+                    iterator = reader.query(chrs.get(hgSeekIndex), 0, Integer.MAX_VALUE);
 
                     return next(l);
                 }
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                throw new GorSystemException(ex);
             }
         }
-
         return false;
-    }
-
-    private void createIterator(int chrId, int pos) {
-        assert chrId >= 0;
-
-        if (chrNameSystem == ChrNameSystem.WITHOUT_CHR_PREFIX) { // BAM data on hg chromsome names, use the hg name for the chromsome for the seek
-            String chr = ChromoCache.getHgName(chrId);
-            iterator = reader.query(chr, pos, Integer.MAX_VALUE);
-        } else if (chrNameSystem == ChrNameSystem.WITH_CHR_PREFIX) {
-            String chr = ChromoCache.getStdChrName(chrId);
-            iterator = reader.query(chr, pos, Integer.MAX_VALUE);
-        }
     }
 
     @Override

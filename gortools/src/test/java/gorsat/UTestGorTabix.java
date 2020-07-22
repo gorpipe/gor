@@ -238,4 +238,34 @@ public class UTestGorTabix {
             if(Files.exists(gpi2)) Files.delete(gpi2);
         }
     }
+
+    @Test
+    public void testVcfgzNonStandardChrom() throws IOException {
+        String vcfgorContent = "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+                "NC1\t9\t.\tAA\tC\t0.0\t.\t.\t.\tpn\n" +
+                "NC2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n" +
+                "NC3\t11\t.\tA\tC\t0.0\t.\t.\t.\tpn\n";;
+
+        Path p = Paths.get("vcf.gor");
+        Path gp = Paths.get("gor.vcf.gz");
+        Path gpi = Paths.get("gor.vcf.gz.tbi");
+        try {
+            Files.write(p, vcfgorContent.getBytes());
+            TestUtils.runGorPipe("gor vcf.gor | write gor.vcf.gz");
+            String vcfContent = TestUtils.runGorPipe("gor gor.vcf.gz");
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+                    "NC1\t9\t.\tAA\tC\t0.0\t.\t.\t.\tpn\n" +
+                    "NC2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n" +
+                    "NC3\t11\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfContent);
+
+            TestUtils.runGorPipe("gor vcf.gor | write -i TABIX -prefix '##fileformat=VCFv4.2' gor.vcf.gz");
+            String vcfTabixContent = TestUtils.runGorPipe("gor -p NC2 gor.vcf.gz");
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+                    "NC2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfTabixContent);
+        } finally {
+            if(Files.exists(p)) Files.delete(p);
+            if(Files.exists(gp)) Files.delete(gp);
+            if(Files.exists(gpi)) Files.delete(gpi);
+        }
+    }
 }

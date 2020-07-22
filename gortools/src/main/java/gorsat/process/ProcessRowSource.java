@@ -263,7 +263,7 @@ public class ProcessRowSource extends ProcessSource {
                 public boolean seek(String seekChr, int seekPos, int endPos) {
                     try {
                         reader.close();
-                        if (seekChr != null && this.chrNameSystem != VcfGzTabixGenomicIterator.ChrNameSystem.WITH_CHR_PREFIX)
+                        if (seekChr != null && this.chrNameSystem != VcfGzGenomicIterator.ChrNameSystem.WITH_CHR_PREFIX)
                             seekChr = seekChr.substring(3);
                         InputStream is1 = setRange(seekChr, seekPos, endPos == 0 ? 1 : endPos);
                         reader = new BufferedReader(new InputStreamReader(is1));
