@@ -102,6 +102,10 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
     public boolean seek(String chr, int pos) {
         seekPos = pos;
         hgSeekIndex = chrs.indexOf(chr);
+        if(hgSeekIndex==-1&&chr.startsWith("chr")) {
+            chr = chr.substring(3);
+            hgSeekIndex = chrs.indexOf(chr);
+        }
         iterator = reader.query(chr, Math.max(0, pos - 1), Integer.MAX_VALUE);
         return iterator != null;
     }
@@ -144,7 +148,7 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
 
                 if (hgSeekIndex >= 0) { // Is seeking through differently ordered data
                     if (++hgSeekIndex >= chrs.size()) {
-                        return false; // All human genome chromosomes have been read, so nothing more to return
+                        return false; // All chromosomes have been read, so nothing more to return
                     }
                     iterator = reader.query(chrs.get(hgSeekIndex), 0, Integer.MAX_VALUE);
 
