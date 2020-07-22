@@ -124,16 +124,16 @@ public class UTestDictionary {
         for (int i = 0; i < 81; ++i) tagList1.add("PN" + i);
         for (int i = 19; i < 100; ++i) tagList2.add("PN" + i);
 
-        Dictionary dictionary1 = new Dictionary(tmpFile.getPath(), true, tagList1, ".", "hjalti");
-        Dictionary dictionary2 = new Dictionary(tmpFile.getPath(), true, tagList1, ".", "hjalti");
-        Dictionary dictionary3 = new Dictionary(tmpFile.getPath(), true, tagList2, ".", "hjalti");
+        Dictionary dictionary1 = Dictionary.getDictionary(tmpFile.getPath(), ".", "hjalti");
+        Dictionary dictionary2 = Dictionary.getDictionary(tmpFile.getPath(), ".", "hjalti");
+        Dictionary dictionary3 = Dictionary.getDictionary(tmpFile.getPath(), ".", "hjalti");
 
         // Check the same query results in same file count.
-        Assert.assertEquals(tagList1.size(), dictionary1.getFiles().length);
-        Assert.assertEquals(dictionary1.getFiles().length, dictionary2.getFiles().length);
+        Assert.assertEquals(tagList1.size(), dictionary1.getSources(tagList1, true, false).length);
+        Assert.assertEquals(dictionary1.getSources(tagList1, true, false).length, dictionary2.getSources(tagList1, true, false).length);
 
         // Check if different tag list results in correct count.
-        Assert.assertEquals(tagList2.size(), dictionary3.getFiles().length);
+        Assert.assertEquals(tagList2.size(), dictionary3.getSources(tagList2, true, false).length);
     }
 
     @Test
@@ -152,16 +152,16 @@ public class UTestDictionary {
             fileWriter.write("file2.gor\ttagList2\tchr1\t-1\tchrN\t-1\t" + tagList2.stream().collect(Collectors.joining(",")) + "\n");
         }
 
-        Dictionary dictionary1 = new Dictionary(tmpFile.getPath(), true, tagList1, ".", "hjalti");
-        Dictionary dictionary2 = new Dictionary(tmpFile.getPath(), true, tagList1, ".", "hjalti");
-        Dictionary dictionary3 = new Dictionary(tmpFile.getPath(), true, tagList2, ".", "hjalti");
+        Dictionary dictionary1 = Dictionary.getDictionary(tmpFile.getPath(), "hjalti", ".");
+        Dictionary dictionary2 = Dictionary.getDictionary(tmpFile.getPath(), "hjalti", ".");
+        Dictionary dictionary3 = Dictionary.getDictionary(tmpFile.getPath(), "hjalti", ".");
 
         // Check the same query results in same file count.
-        Assert.assertEquals(1, dictionary1.getFiles().length);
-        Assert.assertEquals(dictionary1.getFiles().length, dictionary2.getFiles().length);
+        Assert.assertEquals(1, dictionary1.getSources(tagList1, true, false).length);
+        Assert.assertEquals(dictionary1.getSources(tagList1, true, false).length, dictionary2.getSources(tagList1, true, false).length);
 
         // Check if different tag list results in correct count.
-        Assert.assertEquals(1, dictionary3.getFiles().length);
+        Assert.assertEquals(1, dictionary3.getSources(tagList2, true, false).length);
     }
 
     @Test
@@ -172,31 +172,23 @@ public class UTestDictionary {
         tagList.add("tagL");
         tagList.add("tagA");
 
-        Dictionary dict1 = new Dictionary(gordFile.getPath(), true, tagList, ".", "hjalti");
-        Dictionary dict2 = new Dictionary(gordFile.getPath(), true, tagList, ".", "hjalti");
+        Dictionary dict1 = Dictionary.getDictionary(gordFile.getPath(), "hjalti", ".");
+        Dictionary dict2 = Dictionary.getDictionary(gordFile.getPath(), "hjalti", ".");
 
-        System.setProperty("gor.dictionary.cache.active", "false");
-        Dictionary dict3 = new Dictionary(gordFile.getPath(), true, tagList, ".", "hjalti");
-        System.setProperty("gor.dictionary.cache.active", "true");
 
-        List<Dictionary.DictionaryLine> res1 = Arrays.asList(dict1.getFiles());
-        List<Dictionary.DictionaryLine> res2 = Arrays.asList(dict2.getFiles());
-        List<Dictionary.DictionaryLine> res3 = Arrays.asList(dict3.getFiles());
+        List<Dictionary.DictionaryLine> res1 = Arrays.asList(dict1.getSources(tagList, true, false));
+        List<Dictionary.DictionaryLine> res2 = Arrays.asList(dict2.getSources(tagList, true, false));
 
         Assert.assertEquals(res1.size(), res2.size());
-        Assert.assertEquals(res2.size(), res3.size());
 
         String[] res1String = res1.stream().map(Dictionary.DictionaryLine::toPreciseString).sorted().toArray(String[]::new);
         String[] res2String = res2.stream().map(Dictionary.DictionaryLine::toPreciseString).sorted().toArray(String[]::new);
-        String[] res3String = res3.stream().map(Dictionary.DictionaryLine::toPreciseString).sorted().toArray(String[]::new);
 
         final int len = res1.size();
 
         for (int i = 0; i < len; ++i) {
             Assert.assertEquals(res1String[i], res2String[i]);
-            Assert.assertEquals(res2String[i], res3String[i]);
         }
-
     }
 
     @Test
@@ -253,16 +245,16 @@ public class UTestDictionary {
         dictionaryFileWriter.write("gorfile1.gor\ttag1\n");
         dictionaryFileWriter.close();
 
-        final Dictionary dict1 = new Dictionary(dictionaryFile, false, new HashSet<>(Collections.singletonList("tag1")), this.workDir.getRoot().getAbsolutePath(), "id1");
-        final Dictionary.DictionaryLine[] lines1 = dict1.getFiles();
+        final Dictionary dict1 = Dictionary.getDictionary(dictionaryFile,"id1", this.workDir.getRoot().getAbsolutePath());
+        final Dictionary.DictionaryLine[] lines1 = dict1.getSources(new HashSet<>(Collections.singletonList("tag1")), true, false);
         Assert.assertEquals(1, lines1.length);
 
         final FileWriter newDictionaryFileWriter = new FileWriter(dictionaryFile);
         newDictionaryFileWriter.write("gorfile1.gor\ttag1\ngorfile2.gor\ttag1\n");
         newDictionaryFileWriter.close();
 
-        final Dictionary dict2 = new Dictionary(dictionaryFile, false, new HashSet<>(Collections.singletonList("tag1")), this.workDir.getRoot().getAbsolutePath(), "id2");
-        final Dictionary.DictionaryLine[] lines2 = dict2.getFiles();
+        final Dictionary dict2 = Dictionary.getDictionary(dictionaryFile,"id2", this.workDir.getRoot().getAbsolutePath());
+        final Dictionary.DictionaryLine[] lines2 = dict2.getSources(new HashSet<>(Collections.singletonList("tag1")), true, false);
 
         Assert.assertEquals(2, lines2.length);
     }

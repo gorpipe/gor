@@ -598,17 +598,17 @@ public class UTestGenomicOrderedRows {
             final ArrayList<SourceRef> refsNoTags = new ArrayList<>();
             refsNoTags.add(new SourceRef(file1.getAbsolutePath(), "pn1", null, null));
             refsNoTags.add(new SourceRef(file2.getAbsolutePath(), "pn2", null, null));
-            GorOptions opt = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, asQueryTags("pn1"), false, false, null, refsNoTags, null,  null, ChrDataScheme.ChrLexico);
+            GorOptions opt = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, asQueryTags("pn1"), false, false, null, refsNoTags, null,  null);
             GenomicIterator source = opt.getIterator();
             Assert.assertEquals(3, countRemainingLines(source));
             source.close();
 
-            opt = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, asQueryTags("pn3"), false, false, null, refsNoTags, null,  null, ChrDataScheme.ChrLexico);
+            opt = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, asQueryTags("pn3"), false, false, null, refsNoTags, null,  null);
             source = opt.getIterator();
             Assert.assertFalse(source.hasNext());
             source.close();
 
-            opt = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, asQueryTags("pn1", "pn2"), false, false, null, refsNoTags, null,  null, ChrDataScheme.ChrLexico);
+            opt = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, asQueryTags("pn1", "pn2"), false, false, null, refsNoTags, null,  null);
             source = opt.getIterator();
             Assert.assertEquals(6, countRemainingLines(source));
             source.close();
@@ -616,14 +616,6 @@ public class UTestGenomicOrderedRows {
             file1.delete();
             file2.delete();
         }
-    }
-
-    private static Set<String> asSourceTags(String... values) {
-        final Set<String> tags = new LinkedHashSet();
-        for (String value : values) {
-            tags.add(value);
-        }
-        return tags;
     }
 
     private static Set<String> asQueryTags(String... values) {
@@ -754,7 +746,7 @@ public class UTestGenomicOrderedRows {
             list.add(new SourceRef(file2.getAbsolutePath(), "Second", null, null));
             list.add(new SourceRef(file3.getAbsolutePath(), "Third", null, null));
 
-            final GenomicIterator source = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, null, false, false, null, list, null,  null, ChrDataScheme.ChrLexico).getIterator();
+            final GenomicIterator source = new GorOptions(-1, 0, Integer.MAX_VALUE, true, 0, null, false, false, null, list, null,  null).getIterator();
             final String[] expected = {"chr1\t10\ta\t1\tFirst", "chr1\t11\ta\tr1\tSecond", "chr1\t12\ta\ts1\tThird", "chr1\t100\tb\t2\tFirst", "chr1\t100\tb\tr2\tSecond", "chr1\t100\tb\ts2\tThird", "chr1\t101\tc\tr3\tSecond", "chr1\t101\tc\ts3\tThird", "chr1\t102\tc\t3\tFirst", "chr1\t102\td\tr4\tSecond", "chr1\t104\td\t4\tFirst", "chr1\t104\td\ts4\tThird"};
 
             for (String line : expected) {

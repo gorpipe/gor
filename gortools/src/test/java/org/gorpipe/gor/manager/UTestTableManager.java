@@ -306,8 +306,8 @@ public class UTestTableManager {
         log.info("Time using table manager: {}", newTime);
 
         startTime = System.currentTimeMillis();
-        Dictionary d = new Dictionary(table.getPath().toString(), true, table.tagset("ABC1234"), ".", "", false);
-        Dictionary.DictionaryLine[] oldFiles = d.getFiles();
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("ABC1234"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
 
@@ -329,8 +329,8 @@ public class UTestTableManager {
         DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
 
         startTime = System.currentTimeMillis();
-        Dictionary d = new Dictionary(table.getPath().toString(), true, table.tagset("ABC1234"), ".", "", false);
-        Dictionary.DictionaryLine[] oldFiles = d.getFiles();
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("ABC1234"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
 
         startTime = System.currentTimeMillis();
@@ -714,6 +714,5 @@ public class UTestTableManager {
         table.reload();
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
     }
-
 }
     

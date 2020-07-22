@@ -40,7 +40,6 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -58,7 +57,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static gorsat.Commands.CommandParseUtilities.stringValueOfOption;
 import static gorsat.Commands.CommandParseUtilities.stringValueOfOptionWithDefault;
 
 /**
@@ -79,7 +77,7 @@ public class GorOptions {
     /**
      * True if we cache all the parsed lines of a dictionary once we have read it, and make a hash map from pn's to lines.
      */
-    private boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
     /**
      * The gorPipeSession
      */
@@ -156,11 +154,6 @@ public class GorOptions {
      * Chromosome Name to Id Cache
      */
     public final ChromoCache chrcache = new ChromoCache();
-
-    /**
-     * Chromsome name and ordering scheme to be used for output data
-     */
-    public final ChrDataScheme dataOutputScheme;
     
     public static class ProjectContext {
         public final String securityKey;
@@ -172,44 +165,25 @@ public class GorOptions {
         }
     }
 
-    /**
-     * @param files
-     * @param resmon
-     */
     public GorOptions(List<SourceRef> files, ResourceMonitor resmon) {
         this(-1, 0, Integer.MAX_VALUE, false, 0, null, false, false, null, files,
-                null, resmon, ChrDataScheme.ChrLexico);
+                null, resmon);
     }
 
-    /**
-     * @param files
-     */
     public GorOptions(List<SourceRef> files) {
         this(-1, 0, Integer.MAX_VALUE, false, 0, null, false, false, null,
-                 files, null,  null, ChrDataScheme.ChrLexico);
+                 files, null,  null);
     }
 
     /**
      * Construct GorOptions
-     *
-     * @param chromoOpt
-     * @param beginOpt
-     * @param endOpt
-     * @param insertSourceOpt
-     * @param columnTags
-     * @param silentTagFilter
-     * @param srcColName
-     * @param files
-     * @param commonRootOpt
-     * @param monitor
-     * @param outputScheme
      */
     public GorOptions(int chromoOpt, int beginOpt, int endOpt, boolean insertSourceOpt, int parallelBlocks,
                       final Set<String> columnTags, boolean silentTagFilter, boolean noLineFilter, String srcColName,
                       List<SourceRef> files, String commonRootOpt,
-                      ResourceMonitor monitor, ChrDataScheme outputScheme) {
+                      ResourceMonitor monitor) {
         this.chromo = chromoOpt;
-        this.chrname = 0 <= chromoOpt && chromoOpt < outputScheme.id2chr.length ? outputScheme.id2chr[chromoOpt] : null;
+        this.chrname = null;
         this.begin = beginOpt;
         this.end = endOpt;
         this.insertSource = insertSourceOpt;
@@ -225,7 +199,6 @@ public class GorOptions {
         }
         this.commonRoot = commonRootOpt;
         this.monitor = monitor;
-        this.dataOutputScheme = outputScheme;
     }
 
     static void checkFileNameIsRelativeToRoot(final String fileName) {
@@ -315,8 +288,6 @@ public class GorOptions {
         String srcColName = null;
         // Non null iff list of input files was read from a file
         String tagfile = null;
-        ChrDataScheme outputScheme = ChrDataScheme.ChrLexico;
-
 
         boolean silentTagFilter = CommandParseUtilities.hasOption(options, "-fs");
         boolean noLineFilter = CommandParseUtilities.hasOption(options, "-nf");
@@ -349,20 +320,6 @@ public class GorOptions {
                 srcColName = stringValueOfOptionWithDefault(options, "-s", null);
             } catch (GorParsingException gpe) {
                 srcColName = null;
-            }
-        }
-
-        if (CommandParseUtilities.hasOption(options, "-X")) {
-            String scheme = stringValueOfOption(options, "-X");
-            switch (scheme) {
-                case "LEX":
-                    outputScheme = ChrDataScheme.ChrLexico;
-                    break;
-                case "HG":
-                    outputScheme = ChrDataScheme.HG;
-                    break;
-                default:
-                    throw new GorParsingException(ERROR_INITIALIZING_QUERY + "Unknown output data scheme " + scheme, "-X", scheme);
             }
         }
 
@@ -419,9 +376,6 @@ public class GorOptions {
 
         // Resolve sources, must be done after all fields are populated
         ProjectContext projectContext = new ProjectContext(securityKey, commonRoot);
-
-        // Ensure input schemas are compatible if no output scheme is specified
-        this.dataOutputScheme = outputScheme;
 
         final HashSet<String> alltags = new HashSet<>(); // Collect all tags in parsed dictionary files into one set
         resolveSources(insertSourceOpt, iargs, projectContext, allowBucketAccess, alltags);
@@ -551,24 +505,6 @@ public class GorOptions {
         }
     }
 
-    private String getDefaultReferencePath() {
-        GorSession gps = this.getSession();
-
-        if (gps == null) return null;
-
-        String path = gps.getProjectContext().getReferenceBuild().getBuildPath();
-
-        if (StringUtils.isEmpty(path)) {
-            try {
-                String baseFile = "config/gor_config.txt";
-                String configPath = concatFolderFile(commonRoot, baseFile, baseFile, enforceResourceRelativeToRoot);
-                path = MapAndListUtilities.getSingleHashMap(configPath, false, false, gps).getOrDefault("buildPath", null);
-            } catch (Exception ex) { /* The reference can be emtpy, ok to return null from this method. */ }
-        }
-
-        return path;
-    }
-
     private void loadTagsFromIterator(GorContext context, Set<String> tags, String iteratorCommand) {
         try (RowSource dSource = new DynIterator.DynamicRowSource(iteratorCommand, context, true)) {
             while (dSource.hasNext()) {
@@ -615,7 +551,7 @@ public class GorOptions {
             if (file.equals("-")) {
                 files.add(SourceRef.STANDARD_IN);
             } else {
-                addSourceRef(file, projectContext, null, allowBucketAccess, alltags);
+                addSourceRef(file, projectContext, allowBucketAccess, alltags);
             }
         } else {
             hasLocalDictonaryFile = true;
@@ -740,13 +676,9 @@ public class GorOptions {
         return sb;
     }
 
-    private void addSourceRef(String file, ProjectContext projectContext, String alias, boolean allowBucketAccess, Set<String> alltags) {
-        // Add alias as tag on the file
-        final Set<String> tags = new HashSet<>();
-        if (alias != null) tags.add(alias);
-
+    private void addSourceRef(String file, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
         // A call to this can only take place at the end of a constructor, when all parameters have been set
-        addSourceRef(file, file, false, projectContext, alias, null, -1, null, -1, tags, allowBucketAccess, alltags);
+        addSourceRef(file, file, false, projectContext, null, null, -1, null, -1, null, allowBucketAccess, alltags);
     }
 
     private static String toNominalForm(String file) {
@@ -824,12 +756,10 @@ public class GorOptions {
 
     private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
-        String fileSignature = useDictionaryCache ? getFileSignature(fileName, null) : "";
-        fileSignature += "_" +  allowBucketAccess;
-        Dictionary gord = new Dictionary(fileName, allowBucketAccess, this.columnTags, commonRoot, fileSignature, hasTags, isSilentTagFilter, useDictionaryCache);
+        final Dictionary gord = Dictionary.getDictionary(fileName, getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);
         this.hasLocalDictonaryFile = true;
-        this.isDictionaryWithBuckets = gord.isDictionaryWithBuckets();
-        final Dictionary.DictionaryLine[] fileList = gord.getFiles().length == 0 && hasTags ? gord.getFallbackLinesForHeader() : gord.getFiles();
+        final Dictionary.DictionaryLine[] fileList = gord.getSources(this.columnTags, allowBucketAccess, isSilentTagFilter);
+        this.isDictionaryWithBuckets = gord.isDictionaryWithBuckets; //Arrays.stream(fileList).anyMatch(file -> file.sourceInserted);
         if (!hasTags && gord.getAnyBucketHasDeletedFile()) {
             if (this.columnTags == null) this.columnTags = new HashSet<>(gord.getValidTags());
             else this.columnTags.addAll(gord.getValidTags());
