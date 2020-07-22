@@ -26,10 +26,12 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorContext;
 import org.apache.commons.lang.ArrayUtils;
+import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * MergeIterator merges lines from multiple genomic iterators. All the iterators must have the same
@@ -88,6 +90,12 @@ public class MergeIterator extends GenomicIterator {
     }
 
     @Override
+    public GenomicIterator filter(RowFilter rf) {
+        this.sources = this.sources.stream().map(s -> s.filter(rf)).collect(Collectors.toList());
+        return this;
+    }
+
+    @Override
     public void setContext(GorContext context) {
         statsSenderName = "MergeIterator";
         super.setContext(context);
@@ -118,9 +126,10 @@ public class MergeIterator extends GenomicIterator {
 
         clearQueue();
         isPrimed = true;
-        for (GenomicIterator it : sources) {
+        for (int itIdx = 0; itIdx < this.sources.size(); ++itIdx) {
+            final GenomicIterator it = this.sources.get(itIdx);
             it.seek(chr, pos);
-            addNextToQueue(it);
+            addNextToQueue(itIdx);
         }
 
         return !queue.isEmpty();
@@ -135,7 +144,7 @@ public class MergeIterator extends GenomicIterator {
         }
 
         if (!isPrimed) {
-            primeQueue(sources);
+            primeQueue();
         }
         return !queue.isEmpty();
     }
@@ -149,15 +158,15 @@ public class MergeIterator extends GenomicIterator {
         }
 
         if (!isPrimed) {
-            primeQueue(sources);
+            primeQueue();
         }
         RowFromIterator rowFromIterator = queue.poll();
         if (rowFromIterator == null || rowFromIterator.row == null) {
             throw new NoSuchElementException();
         }
 
-        GenomicIterator source = rowFromIterator.source;
-        addNextToQueue(source);
+        final int itIdx = rowFromIterator.itIdx;
+        addNextToQueue(itIdx);
 
         return rowFromIterator.row;
     }
@@ -214,17 +223,14 @@ public class MergeIterator extends GenomicIterator {
         return true;
     }
 
-    private void primeQueue(List<GenomicIterator> sources) {
+    private void primeQueue() {
         isPrimed = true;
         clearQueue();
-        int index = 0;
-        for (GenomicIterator it : sources) {
+        for (int itIdx = 0; itIdx < this.sources.size(); ++itIdx) {
             if (gorMonitor != null && gorMonitor.isCancelled()) {
                 return;
             }
-            it.setSourceIndex(index);
-            index++;
-            addNextToQueue(it);
+            addNextToQueue(itIdx);
         }
     }
 
@@ -232,12 +238,13 @@ public class MergeIterator extends GenomicIterator {
         if (queue != null) {
             queue.clear();
         } else {
-            queue = new PriorityQueue<>(sources.size(), new RowComparator());
+            queue = new PriorityQueue<>(sources.size());
         }
     }
 
-    private void addNextToQueue(GenomicIterator it) {
-        while (it.hasNext()) {
+    private void addNextToQueue(int itIdx) {
+        final GenomicIterator it = this.sources.get(itIdx);
+        if (it.hasNext()) {
             Row r = it.next();
             if (r == null) {
                 String msg = String.format("Iterator next returned null after hasNext returned true (%s, %s)", it.getClass().getName(), it.getSourceName());
@@ -246,10 +253,7 @@ public class MergeIterator extends GenomicIterator {
             if (insertSource && !it.isSourceAlreadyInserted()) {
                 insertOptionalSourceColumn(r, it.getSourceName());
             }
-            if (it.isIncluded(r)) {
-                queue.add(new RowFromIterator(r, it));
-                break;
-            }
+            queue.add(new RowFromIterator(r, itIdx));
         }
     }
 
@@ -262,24 +266,22 @@ public class MergeIterator extends GenomicIterator {
         }
     }
 
-    class RowFromIterator {
-        Row row;
-        GenomicIterator source;
+    class RowFromIterator implements Comparable<RowFromIterator> {
+        final Row row;
+        final int itIdx;
 
-        RowFromIterator(Row r, GenomicIterator s) {
-            row = r;
-            source = s;
+        RowFromIterator(Row r, int itIdx) {
+            this.row = r;
+            this.itIdx = itIdx;
         }
-    }
 
-    class RowComparator implements Comparator<RowFromIterator> {
         @Override
-        public int compare(RowFromIterator o1, RowFromIterator o2) {
-            int chrCompare = o1.row.chr.compareTo(o2.row.chr);
+        public int compareTo(RowFromIterator rfi) {
+            int chrCompare = this.row.chr.compareTo(rfi.row.chr);
             if (chrCompare == 0) {
-                int posCompare = o1.row.pos - o2.row.pos;
+                int posCompare = this.row.pos - rfi.row.pos;
                 if (posCompare == 0) {
-                    return o1.source.getSourceIndex() - o2.source.getSourceIndex();
+                    return Integer.compare(this.itIdx, rfi.itIdx);
                 }
                 return posCompare;
             }

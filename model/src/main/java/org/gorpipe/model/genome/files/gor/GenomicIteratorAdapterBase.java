@@ -23,6 +23,7 @@
 package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.gor.GorSession;
+import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 
 /**
  * Abstract adapter base class for GenomicIterator to make it easier to
@@ -48,7 +49,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
 
         setColnum(it.getColnum());
         setSourceAlreadyInserted(it.isSourceAlreadyInserted());
-        setSourceIndex(it.getSourceIndex());
         setSourceName(it.getSourceName());
     }
 
@@ -61,17 +61,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     public void setSourceName(String sourceName) {
         super.setSourceName(sourceName);
         iterator.setSourceName(sourceName);
-    }
-
-    @Override
-    public int getSourceIndex() {
-        return iterator.getSourceIndex();
-    }
-
-    @Override
-    public void setSourceIndex(int sourceIndex) {
-        super.setSourceIndex(sourceIndex);
-        iterator.setSourceIndex(sourceIndex);
     }
 
     @Override
@@ -104,31 +93,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     @Override
     public String getHeader() {
         return iterator.getHeader();
-    }
-
-    @Override
-    public byte getTagStatus() {
-        return iterator.getTagStatus();
-    }
-
-    @Override
-    public void setTagStatus(byte tagStatus) {
-        iterator.setTagStatus(tagStatus);
-    }
-
-    @Override
-    public TagFilter getTagFilter() {
-        return iterator.getTagFilter();
-    }
-
-    @Override
-    public void setTagFilter(TagFilter tagFilter) {
-        iterator.setTagFilter(tagFilter);
-    }
-
-    @Override
-    public boolean isIncluded(Row r) {
-        return iterator.isIncluded(r);
     }
 
     @Override
@@ -169,6 +133,12 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     @Override
     public Row next() {
         return iterator.next();
+    }
+
+    @Override
+    public GenomicIterator filter(RowFilter rf) {
+        this.iterator = this.iterator.filter(rf);
+        return this;
     }
 
     @Override

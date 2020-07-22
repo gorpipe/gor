@@ -30,6 +30,8 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.table.Dictionary;
+import org.gorpipe.model.genome.files.gor.filters.InFilter;
+import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.model.util.Util;
 import org.gorpipe.model.util.StringUtil;
@@ -239,7 +241,6 @@ public class GorOptions {
     static boolean isPathConstraintWithInRoot(String ipath) {
         final String path = ipath.replace('\\', '/');
         final ArrayList<String> parts = StringUtil.split(path, '/');
-        final String[] outParts = new String[parts.size()];
         int last = 0;
         for (String part : parts) {
             if (part.equals(".")) {
@@ -251,11 +252,9 @@ public class GorOptions {
                     return false;
                 }
             } else {
-                outParts[last] = part;
                 last += 1;
             }
         }
-
         return true; // Path is constrained within the root
     }
 
@@ -485,9 +484,19 @@ public class GorOptions {
         }
         i.init(getSession());
         i.setSourceName(ref.getName());
-        i.setTagStatus(columnTags == null ? SourceRef.NO_TAG : ref.analyzeQueryTags(columnTags, insertSource));
-        if (!isNoLineFilter && i.getTagStatus() == SourceRef.POSSIBLE_TAG) {
-            i.setTagFilter(new TagFilter(columnTags, ref.deletedTags, i.getHeader().split("\t").length - 1));
+        final byte tagStatus = columnTags == null ? SourceRef.NO_TAG : ref.analyzeQueryTags(columnTags, insertSource);
+        if (!isNoLineFilter && tagStatus == SourceRef.POSSIBLE_TAG) {
+            final int tagColIdx = i.getHeader().split("\t").length - 1;
+            final RowFilter rf;
+            if (columnTags.size() > 0) {
+                final RowFilter inf = new InFilter(tagColIdx, this.columnTags);
+                if (ref.deletedTags != null && ref.deletedTags.size() > 0) {
+                    rf = inf.and(new InFilter(tagColIdx, ref.deletedTags).not());
+                } else {
+                    rf = inf;
+                }
+                i = i.filter(rf);
+            }
         }
         i.setSourceAlreadyInserted(ref.sourceAlreadyInserted);
 
@@ -502,7 +511,6 @@ public class GorOptions {
         if (chrname != null && !chrname.equals("")) {
             i = new BoundedIterator(i, chrname, begin, end);
         }
-
         return i;
     }
 
@@ -583,7 +591,6 @@ public class GorOptions {
     /**
      * Note must be called at the end of constructor when all fields have been set, or optionally from createFilter
      * as the second last thing in the constructor, and in that case the filter expression will be wrong
-     *
      */
     private void resolveSources(boolean isInsertSource, String[] fileList, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
         sourceName = String.join(":", fileList);
@@ -839,7 +846,6 @@ public class GorOptions {
                     dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos,
                     dictionaryLine.tags, deletedTags, dictionaryLine.sourceInserted,
                     projectContext.securityKey, projectContext.commonRoot));
-
         } else {
             addSourceRef(dictionaryLine.fileRef.physical, dictionaryLine.fileRef.logical, dictionaryLine.fileRef.isAcceptedAbsoluteRef, projectContext,
                     dictionaryLine.alias, dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos, dictionaryLine.tags, allowBucketAccess, alltags);

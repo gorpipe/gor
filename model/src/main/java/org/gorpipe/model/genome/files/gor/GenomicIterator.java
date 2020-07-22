@@ -24,6 +24,7 @@ package org.gorpipe.model.genome.files.gor;
 import org.gorpipe.gor.GorContext;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.gor.stats.StatsCollector;
+import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 
 import java.util.Iterator;
 
@@ -106,26 +107,17 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
 
     private String sourceName = "";
 
-    private int sourceIndex = 0;
     private boolean sourceAlreadyInserted;
 
     private static final int[][] DEFAULT_COLS = {{}, {2}, {2, 3}, {2, 3, 4}, {2, 3, 4, 5}, {2, 3, 4, 5, 6}}; // Default cols of common length
 
     private Line line;
 
-    private byte tagStatus = SourceRef.NO_TAG;
-
     private GorContext context = null;
     private StatsCollector statsCollector = null;
     private int statsSenderId = -1;
     String statsSenderName = "";
     String statsSenderAnnotation = "";
-
-    /**
-     * An optional tag filter that is used to look at the source column and only
-     * allow rows that come from a source listed in the tag filter.
-     */
-    private TagFilter tagFilter;
 
     public GorContext getContext() {
         return context;
@@ -176,14 +168,6 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
         this.sourceName = sourceName;
     }
 
-    public int getSourceIndex() {
-        return sourceIndex;
-    }
-
-    public void setSourceIndex(int sourceIndex) {
-        this.sourceIndex = sourceIndex;
-    }
-
     public boolean isSourceAlreadyInserted() {
         return sourceAlreadyInserted;
     }
@@ -200,27 +184,13 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
         this.colnum = colnum;
     }
 
-    public byte getTagStatus() {
-        return tagStatus;
-    }
-
-    public void setTagStatus(byte tagStatus) {
-        this.tagStatus = tagStatus;
-    }
-
-    public TagFilter getTagFilter() {
-        return tagFilter;
-    }
-
-    public void setTagFilter(TagFilter tagFilter) {
-        if(tagFilter!=null) {
-            pushdownFilter(tagFilter.toString());
-        }
-        this.tagFilter = tagFilter;
-    }
-
-    public boolean isIncluded(Row r) {
-        return tagFilter != null ? tagFilter.isIncluded(r) : true;
+    /**
+     * Returns an iterator on the elements from {@code this} which match the predicate in {@code rf}.
+     *
+     * Note: Once {@code filter} has been called {@code this} should not be used any further.
+     */
+    public GenomicIterator filter(RowFilter rf) {
+        return new FilteredIterator(this, rf);
     }
 
     /**
