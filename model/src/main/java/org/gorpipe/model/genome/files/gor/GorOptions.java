@@ -183,7 +183,7 @@ public class GorOptions {
                       List<SourceRef> files, String commonRootOpt,
                       ResourceMonitor monitor) {
         this.chromo = chromoOpt;
-        this.chrname = null;
+        this.chrname = 0 <= chromoOpt && chromoOpt < ChrDataScheme.ChrLexico.id2chr.length ? ChrDataScheme.ChrLexico.id2chr[chromoOpt] : null;;
         this.begin = beginOpt;
         this.end = endOpt;
         this.insertSource = insertSourceOpt;
