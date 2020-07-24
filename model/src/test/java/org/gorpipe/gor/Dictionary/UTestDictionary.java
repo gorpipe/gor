@@ -12,6 +12,7 @@
 
 package org.gorpipe.gor.Dictionary;
 
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.test.utils.FileTestUtils;
 import gorsat.TestUtils;
@@ -257,5 +258,22 @@ public class UTestDictionary {
         final Dictionary.DictionaryLine[] lines2 = dict2.getSources(new HashSet<>(Collections.singletonList("tag1")), true, false);
 
         Assert.assertEquals(2, lines2.length);
+    }
+
+    @Test
+    public void testEmptyDictionary() throws IOException {
+        final File dict = workDir.newFile("dict_with_deleted_entry.gord");
+        final BufferedWriter dictWriter = new BufferedWriter(new FileWriter(dict));
+        dictWriter.write("");
+        dictWriter.close();
+
+        final String query = "gor " + dict.getAbsolutePath();
+        boolean success = false;
+        try {
+            TestUtils.runGorPipe(query);
+        } catch (GorDataException e) {
+            success = e.getMessage().matches("Dictionary .* has no active lines.");
+        }
+        Assert.assertTrue(success);
     }
 }

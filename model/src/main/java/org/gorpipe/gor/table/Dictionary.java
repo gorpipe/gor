@@ -191,8 +191,11 @@ public class Dictionary {
         }
         if (toReturn.length == 0) {
             //Must return a dummy line.
-            final DictionaryLine dl = this.activeDictionaryLines[0];
-            return new DictionaryLine[] {dl};
+            if (this.activeDictionaryLines.length > 0) {
+                return new DictionaryLine[] {this.activeDictionaryLines[0]};
+            } else {
+                throw new GorDataException("Dictionary " + this.path + " has no active lines.");
+            }
         } else {
             return toReturn;
         }
@@ -378,7 +381,7 @@ public class Dictionary {
         final int singleFilesBucketCountThresholdRatio = 10;
         final int minNumberOfFilesToAccess = numberOfFilesWithoutBucket + numberOfBuckets; //No matter what, we have to open this many files.
 
-        /**
+        /*
          * We optimize the file list by replacing each file from a bucket with more than @threshold usage ratio (number of files we are going to use / total number of files in the bucket)
          * If we are still accessing more than @FILE_COUNT_THRESHOLD or @minNumberOfFilesToAccess many files or if the number of single files is more than @singleFilesBucketCountThresholdRatio times
          * the number of buckets we keep on with @threshold = half of what it was.
@@ -405,8 +408,8 @@ public class Dictionary {
         int cntIndividualFiles = 0;
         String bucket;
         int bucketIdx = -1;
-        for (int i = 0; i < fileListToOptimize.length; ++i) {
-            bucket = activeDictionaryLines[fileListToOptimize[i]].bucket;
+        for (int file_idx : fileListToOptimize) {
+            bucket = activeDictionaryLines[file_idx].bucket;
             if (bucket != null && replace[bucketIdx = bucketsToIdx.get(bucket)]) { // All files from this bucket will be replaced with the bucket
                 replace[bucketIdx] = false;
                 if (log.isTraceEnabled()) {
@@ -415,13 +418,13 @@ public class Dictionary {
                 filesToUse[filesToUseIdx++] = new DictionaryLine(new FileReference(resetBucketNames[bucketIdx]), null, null, null, -1, null, -1, bucketTagsArray[bucketIdx], true, false);
             } else if (bucket == null || include[bucketIdx]) { // all files from this bucket are to be included as they were
                 if (log.isTraceEnabled()) {
-                    log.trace("Include {}", activeDictionaryLines[fileListToOptimize[i]]);
+                    log.trace("Include {}", activeDictionaryLines[file_idx]);
                 }
-                filesToUse[filesToUseIdx++] = activeDictionaryLines[fileListToOptimize[i]];
+                filesToUse[filesToUseIdx++] = activeDictionaryLines[file_idx];
                 cntIndividualFiles++;
             } else { // else we skip the file since it is from a bucket that is going to be included
                 if (log.isTraceEnabled()) {
-                    log.trace("Skipping {} with idx {} from bucket {}", activeDictionaryLines[fileListToOptimize[i]], fileListToOptimize[i], bucket);
+                    log.trace("Skipping {} with idx {} from bucket {}", activeDictionaryLines[file_idx], file_idx, bucket);
                 }
             }
         }
@@ -430,10 +433,10 @@ public class Dictionary {
             for (int i = 0; i < numberOfBuckets; ++i) {
                 if (replace[i]) {
                     if (i > 0) sb.append(',');
-                    sb.append(resetBucketNames[i] + " (" + bucketUsedCounts[i] + ")");
+                    sb.append(resetBucketNames[i]).append(" (").append(bucketUsedCounts[i]).append(")");
                 }
             }
-            log.debug("Individual Files={}, Buckets={} for %d tags { {} }", cntIndividualFiles, numberOfBucketsToBeAccessed, numberOfFilesTakenFromBuckets, sb);
+            log.debug("Individual Files={}, Buckets={} for {} tags { {} }", cntIndividualFiles, numberOfBucketsToBeAccessed, numberOfFilesTakenFromBuckets, sb);
 
             if (log.isTraceEnabled()) {
                 log.trace("Files={} -> {}", filesToUse.length, Arrays.toString(filesToUse));
@@ -605,7 +608,7 @@ public class Dictionary {
         }
 
         public String toPreciseString() {
-            final String[] tagsArray = tags.toArray(new String[tags.size()]);
+            final String[] tagsArray = tags.toArray(new String[0]);
             Arrays.sort(tagsArray);
             return fileRef.physical + " " + bucket + " " + alias + " " + startChr + " " + startPos + " " + Arrays.toString(tagsArray);
         }
