@@ -59,6 +59,12 @@ public class RowBase extends Row implements Serializable {
         this(input, countColumns(input));
     }
 
+    public static Row getProgressRow(String chr, int pos) {
+        final Row toReturn = new RowBase(chr + "\t" + pos + "\tdummy");
+        toReturn.isProgress = true;
+        return toReturn;
+    }
+
     public RowBase(String chr, int pos, CharSequence allCols, int[] sa, RowObj.BinaryHolder bH) {
         this.chr = chr;
         this.pos = pos;

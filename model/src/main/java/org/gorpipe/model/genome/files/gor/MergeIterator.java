@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -73,12 +74,16 @@ public class MergeIterator extends GenomicIterator {
     }
 
     public MergeIterator(List<GenomicIterator> sources, GorOptions options, GorMonitor gm) {
+        this(sources, options.insertSource, options.sourceColName, gm);
+    }
+
+    public MergeIterator(List<GenomicIterator> sources, boolean insertSource, String sourceColName, GorMonitor gm) {
         this.sources = sources;
-        insertSource = options.insertSource;
+        this.insertSource = insertSource;
         gorMonitor = gm;
 
         try {
-            getHeaderFromSources(options);
+            getHeaderFromSources(insertSource, sourceColName);
         } catch (Exception e) {
             try {
                 doClose();
@@ -90,7 +95,7 @@ public class MergeIterator extends GenomicIterator {
     }
 
     @Override
-    public GenomicIterator filter(RowFilter rf) {
+    public GenomicIterator filter(Predicate<Row> rf) {
         this.sources = this.sources.stream().map(s -> s.filter(rf)).collect(Collectors.toList());
         return this;
     }
@@ -102,10 +107,10 @@ public class MergeIterator extends GenomicIterator {
         addStat("numSources", sources.size());
     }
 
-    private static String[] getHeaderWithOptionalSourceColumn(GorOptions options, GenomicIterator i) {
+    private static String[] getHeaderWithOptionalSourceColumn(boolean insertSource, String sourceColName, GenomicIterator i) {
         String[] header = i.getHeader().split("\t");
-        if (options.insertSource) {
-            String name = getSourceColumnName(options);
+        if (insertSource) {
+            String name = getSourceColumnName(sourceColName);
             if (i.isSourceAlreadyInserted()) {
                 header = (String[]) ArrayUtils.clone(header);
                 header[header.length - 1] = name;
@@ -116,8 +121,8 @@ public class MergeIterator extends GenomicIterator {
         return header;
     }
 
-    private static String getSourceColumnName(GorOptions options) {
-        return options.sourceColName != null ? options.sourceColName : DEFAULT_SOURCE_COLUMN_NAME;
+    private static String getSourceColumnName(String sourceColName) {
+        return sourceColName != null ? sourceColName : DEFAULT_SOURCE_COLUMN_NAME;
     }
 
     @Override
@@ -132,7 +137,7 @@ public class MergeIterator extends GenomicIterator {
             addNextToQueue(itIdx);
         }
 
-        return !queue.isEmpty();
+        return this.hasNext();
     }
 
     @Override
@@ -146,7 +151,18 @@ public class MergeIterator extends GenomicIterator {
         if (!isPrimed) {
             primeQueue();
         }
-        return !queue.isEmpty();
+        if (queue.size() > 0) {
+            if (queue.peek().row.isProgress) {
+                //The first row in the queue is a progress row.
+                final RowFromIterator rowFromIterator = queue.poll();
+                addNextToQueue(rowFromIterator.itIdx);
+                return hasNext();
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -188,10 +204,10 @@ public class MergeIterator extends GenomicIterator {
         }
     }
 
-    private void getHeaderFromSources(GorOptions options) {
+    private void getHeaderFromSources(boolean insertSource, String sourceColName) {
         String firstName = "";
         for (GenomicIterator it : this.sources) {
-            String[] headerWithOptionalSourceColumn = getHeaderWithOptionalSourceColumn(options, it);
+            String[] headerWithOptionalSourceColumn = getHeaderWithOptionalSourceColumn(insertSource, sourceColName, it);
             String header = getHeader();
             if (header.length() == 0) {
                 setHeader(String.join("\t",headerWithOptionalSourceColumn));

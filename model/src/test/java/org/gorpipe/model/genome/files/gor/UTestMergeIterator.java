@@ -22,21 +22,18 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 
 import org.gorpipe.test.GorDictionarySetup;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -47,10 +44,17 @@ public class UTestMergeIterator {
     private static int READ_TEST_DICT_NUM_FILES = 100;
     private static int READ_TEST_DICT_LINES_PER_TAG = 10;
     private static GorDictionarySetup dictForReadTest;
+    private static File tmpDir;
 
     @BeforeClass
     public static void setupClass() throws IOException {
         dictForReadTest = new GorDictionarySetup("readingFromDictionary", READ_TEST_DICT_NUM_FILES, 5, new int[]{1}, READ_TEST_DICT_LINES_PER_TAG, true);
+        tmpDir = Files.createTempDirectory("utestmergeiterator").toFile();
+    }
+
+    @AfterClass
+    public static void tearDown() throws IOException {
+        FileUtils.deleteDirectory(tmpDir);
     }
 
     @Test
@@ -382,6 +386,86 @@ public class UTestMergeIterator {
         assertContent("Chrom\tStart\tStop\tData\nchr1\t0\t100000000\t2\nchr1\t0\t100000000\t1\n", options);
     }
 
+    @Test
+    public void test_mergeWhenGetsDummyRows() {
+        final List<GenomicIterator> its = IntStream.range(0, 10).mapToObj(i -> getDummyIterator(2, 2)).collect(Collectors.toList());
+        final MergeIterator mit = new MergeIterator(its, false, "", null);
+        final String[] chrs = IntStream.rangeClosed(1, 22).mapToObj(i -> "chr" + i).sorted().toArray(String[]::new);
+        for (final String chr : chrs) {
+            for (int pos = 1; pos <= 2; ++pos) {
+                for (int itIdx = 0; itIdx < 10; ++itIdx) {
+                    Assert.assertTrue(mit.hasNext());
+                    Assert.assertEquals(chr + "\t" + pos + "\t1", mit.next().toString());
+                    Assert.assertTrue(mit.hasNext());
+                    Assert.assertEquals(chr + "\t" + pos + "\t2", mit.next().toString());
+                }
+            }
+        }
+
+        Assert.assertFalse(mit.hasNext());
+    }
+
+    @Test
+    public void test_mergeWhenGetsDummyRows_2() {
+        final List<GenomicIterator> its = IntStream.range(0, 10).mapToObj(i -> getDummyIterator(2, 2)).collect(Collectors.toList());
+        final MergeIterator mit = new MergeIterator(its, false, "", null);
+        Assert.assertTrue(mit.seek("chr3", 2));
+        Assert.assertEquals("chr3\t2\t1", mit.next().toString());
+        Assert.assertTrue(mit.seek("chr1", 3));
+        Assert.assertEquals("chr10\t1\t1", mit.next().toString());
+        Assert.assertTrue(mit.seek("chr17", 7));
+        Assert.assertEquals("chr18\t1\t1", mit.next().toString());
+    }
+
+    @Test
+    public void test_mergeWhenGetsDummyRows_realData() throws IOException {
+        final List<SourceRef> srs1 = writeSourceRefs(1);
+        final List<SourceRef> srs2 = writeSourceRefs(2);
+
+        final RangeMergeIterator rmit1 = new RangeMergeIterator(srs1);
+        final RangeMergeIterator rmit2 = new RangeMergeIterator(srs2);
+
+        final List<GenomicIterator> gits = Arrays.asList(rmit1, rmit2);
+
+        final MergeIterator mit = new MergeIterator(gits, false, "", null);
+        String lastChr = "";
+        int lastPos = 0;
+        while (mit.hasNext()) {
+            final Row next = mit.next();
+            final String nextChr = next.chr;
+            final int nextPos = next.pos;
+            final String blabla = next.colAsString(2).toString();
+            Assert.assertEquals("blablabla", blabla);
+            final int chrCmp = lastChr.compareTo(nextChr);
+            Assert.assertTrue(chrCmp < 0 || (chrCmp == 0 && lastPos <= nextPos));
+            lastChr = nextChr;
+            lastPos = nextPos;
+        }
+    }
+
+    @Test
+    public void test_mergeWhenGetsDummyRows_realData_2() throws IOException {
+        final List<SourceRef> srs1 = writeSourceRefs(5);
+        final List<SourceRef> srs2 = writeSourceRefs(7);
+
+        final RangeMergeIterator rmit1 = new RangeMergeIterator(srs1);
+        final RangeMergeIterator rmit2 = new RangeMergeIterator(srs2);
+
+        final List<GenomicIterator> gits = Arrays.asList(rmit1, rmit2);
+
+        final MergeIterator mit = new MergeIterator(gits, false, "", null);
+        Assert.assertTrue(mit.seek("chr1", 195436));
+        Assert.assertEquals("chr1\t195436\tblablabla", mit.next().toString());
+
+        Assert.assertTrue(mit.seek("chr8", 430644));
+        Assert.assertEquals("chr8\t430644\tblablabla", mit.next().toString());
+
+        Assert.assertTrue(mit.seek("chr5", 30818));
+        Assert.assertEquals("chr5\t30818\tblablabla", mit.next().toString());
+
+        Assert.assertFalse(mit.seek("chrX", 1));
+    }
+
     private String createGorFile(String header, String data) throws IOException {
         File file = File.createTempFile("UTestMergeIterator", ".gor");
         file.deleteOnExit();
@@ -428,4 +512,101 @@ public class UTestMergeIterator {
         }
     }
 
+    private static GenomicIterator getDummyIterator(int positions, int numPerPos) {
+        final String[] chromosomes = IntStream.rangeClosed(1, 22).mapToObj(i -> "chr" + i).sorted().toArray(String[]::new);
+        final Map<String, Integer> chrToIdx = new HashMap<>();
+        for (int i = 0; i < chromosomes.length; ++i) {
+            chrToIdx.put(chromosomes[i], i);
+        }
+
+        return new GenomicIterator() {
+            int chrIdx = 0;
+            int currPos = 1;
+            int currIdx = -1;
+
+            @Override
+            public boolean seek(String chr, int pos) {
+                this.chrIdx = chrToIdx.get(chr);
+                if (pos > positions) {
+                    this.currPos = 1;
+                    this.chrIdx++;
+                } else {
+                    this.currPos = pos;
+                }
+                this.currIdx = 0;
+                return this.hasNext();
+            }
+
+            @Override
+            public boolean hasNext() {
+                return this.chrIdx < chromosomes.length && this.currPos <= positions && this.currIdx <= numPerPos;
+            }
+
+            @Override
+            public Row next() {
+                final Row toReturn;
+                this.currIdx++;
+                if (this.currIdx == 0) {
+                    toReturn = RowBase.getProgressRow(chromosomes[this.chrIdx], this.currPos);
+                } else {
+                    toReturn = new RowBase(chromosomes[this.chrIdx] + "\t" + this.currPos + "\t" + this.currIdx);
+                }
+                if (this.currIdx == numPerPos) {
+                    this.currIdx = -1;
+                    this.currPos++;
+                    if (this.currPos > positions) {
+                        this.currPos = 1;
+                        this.chrIdx++;
+                    }
+                }
+                return toReturn;
+            }
+
+            @Override
+            public boolean next(Line line) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void close() {
+                //Do nothing.
+            }
+        };
+    }
+
+    private static List<SourceRef> writeSourceRefs(int seed) throws IOException {
+        final List<SourceRef> sourceRefs = new ArrayList<>();
+
+        final Random r = new Random(seed);
+        final String[] chromosomes = IntStream.rangeClosed(1, 10).mapToObj(chr -> "chr" + chr).sorted().toArray(String[]::new);
+        final int[] positions = IntStream.rangeClosed(1, 10).map(i -> r.nextInt(1_000_000)).toArray();
+        final int posCount = 10;
+        for (int i = 0; i < posCount; ++i) {
+            for (int j = i + 1; j < posCount; ++j) {
+                final String startChr = chromosomes[i];
+                final int startPos = positions[i];
+                final String stopChr = chromosomes[j];
+                final int stopPos = positions[j];
+                final File file = new File(tmpDir, startChr + "_" + startPos + "_" + stopChr + "_" + stopPos + "_" + seed + ".gor");
+                final BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+                bw.write("CHROM\tPOS\tBLABLABLA\n");
+                writeLinesOnChr(startChr, startPos, 1_000_000, bw, r);
+                for (int k = i + 1; k < j; ++k) {
+                    writeLinesOnChr(chromosomes[k], 1, 1_000_000, bw, r);
+                }
+                writeLinesOnChr(stopChr, 1, stopPos, bw, r);
+                bw.close();
+                sourceRefs.add(new SourceRef(file.getAbsolutePath(), null, null, null, startChr, startPos, stopChr, stopPos, null, false, null, null));
+            }
+        }
+        return sourceRefs;
+    }
+
+    public static void writeLinesOnChr(String chr, int begin, int end, BufferedWriter bw, Random r) throws IOException {
+        int pos = begin + r.nextInt(100_000);
+        while (pos < end) {
+            bw.write(chr + "\t" + pos + "\tblablabla\n");
+            pos += r.nextInt(100_000);
+        }
+    }
 }

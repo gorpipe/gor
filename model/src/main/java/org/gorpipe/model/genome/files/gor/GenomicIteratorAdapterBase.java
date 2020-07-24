@@ -23,7 +23,8 @@
 package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.filters.RowFilter;
+
+import java.util.function.Predicate;
 
 /**
  * Abstract adapter base class for GenomicIterator to make it easier to
@@ -44,9 +45,18 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
 
     GenomicIterator iterator;
 
-    public GenomicIteratorAdapterBase(GenomicIterator it) {
-        iterator = it;
+    protected GenomicIteratorAdapterBase() {
+    }
 
+    public GenomicIteratorAdapterBase(GenomicIterator it) {
+        this.setIterator(it);
+    }
+
+    protected void setIterator(GenomicIterator it) {
+        if (this.iterator != null) {
+            this.iterator.close();
+        }
+        iterator = it;
         setColnum(it.getColnum());
         setSourceAlreadyInserted(it.isSourceAlreadyInserted());
         setSourceName(it.getSourceName());
@@ -136,7 +146,7 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     }
 
     @Override
-    public GenomicIterator filter(RowFilter rf) {
+    public GenomicIterator filter(Predicate<Row> rf) {
         this.iterator = this.iterator.filter(rf);
         return this;
     }

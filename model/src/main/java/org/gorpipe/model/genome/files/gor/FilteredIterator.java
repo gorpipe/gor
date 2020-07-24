@@ -22,7 +22,7 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.filters.RowFilter;
+import java.util.function.Predicate;
 
 /**
  * A wrapper class which takes an iterator and filters its output.
@@ -30,11 +30,11 @@ import org.gorpipe.model.genome.files.gor.filters.RowFilter;
  * @author Hjalti Thor Isleifsson
  */
 class FilteredIterator extends GenomicIteratorAdapterBase {
-    private final RowFilter rf;
+    private final Predicate<Row> rf;
     private boolean myHasNext = false;
     private Row myNext = null;
 
-    FilteredIterator(GenomicIterator git, RowFilter rf) {
+    FilteredIterator(GenomicIterator git, Predicate<Row> rf) {
         super(git);
         this.rf = rf;
     }

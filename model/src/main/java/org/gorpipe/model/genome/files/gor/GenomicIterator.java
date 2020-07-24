@@ -24,9 +24,9 @@ package org.gorpipe.model.genome.files.gor;
 import org.gorpipe.gor.GorContext;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.gor.stats.StatsCollector;
-import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 /**
  * GenomicIterator is a seekable iterator on genomic ordered data. It assumes the data source contains
@@ -189,7 +189,7 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
      *
      * Note: Once {@code filter} has been called {@code this} should not be used any further.
      */
-    public GenomicIterator filter(RowFilter rf) {
+    public GenomicIterator filter(Predicate<Row> rf) {
         return new FilteredIterator(this, rf);
     }
 

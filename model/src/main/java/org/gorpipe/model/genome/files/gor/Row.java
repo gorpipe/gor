@@ -49,6 +49,11 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
     public int pos;
 
     /**
+     * Indicates that this is just a progress row.
+     */
+    public boolean isProgress = false;
+
+    /**
      * User data for analysis steps that need to provide extra data attached to the row, usually for
      * more efficient processing.
      */
