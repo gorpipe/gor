@@ -175,7 +175,7 @@ class PlinkThread implements Callable<Boolean> {
         if (exited && p.exitValue() != 0) {
             cleanupCoreDump();
             String errorString = processError.getBuffer().toString();
-            if (!errorString.contains("No variants remaining"))
+            if (!errorString.contains("No variants"))
                 throw new GorResourceException(errorString, "plink2 exited with value " + p.exitValue());
         }
         return writeResult(reslines, this.pgenPath);
