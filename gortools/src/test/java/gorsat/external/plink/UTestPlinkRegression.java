@@ -134,6 +134,25 @@ public class UTestPlinkRegression {
 
     @Ignore("Needs plink2 installed")
     @Test
+    public void testPlinkRegressionVcfPgor() throws IOException {
+        Path pg = Paths.get("vcf.gor");
+        Path pp = Paths.get("pheno.txt");
+        String regor = vcfheader + "chr1\t1\trs1\tA\tC\t.\t.\t.\tGT\t0/0\t0/1\t0/0\t0/1\t0/0\t0/1\t0/0\t0/1\t0/0\t0/1\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, pheno.getBytes());
+            String query = "pgor vcf.gor | plinkregression pheno.txt -vcf";
+            String res = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Regression results not correct", "CHROM\tPOS\tID\tREF\tALT\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tN\tADD\t9\t12\t1.60727\t1.54604\t0.122094\t.\tpheno\n", res);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
     public void testPlinkRegressionNorPheno() throws IOException {
         Path pg = Paths.get("reg.gor");
         Path pp = Paths.get("pheno.txt");
@@ -210,7 +229,7 @@ public class UTestPlinkRegression {
             Files.write(pp, (pheno+"k\t1\nl\t2\n").getBytes());
             String query = "gor <(reg.gor | plinkregression pheno.txt)";
             String results = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tSE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
                     "chr1\t1\trs1\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
                     "chr2\t2\trs2\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
                     "chr3\t3\trs3\tA\tC\tC\tY\tADD\t12\t168.997\t2.24178\t2.2883\t0.02212\t.\tpheno\n" +
@@ -236,7 +255,7 @@ public class UTestPlinkRegression {
             Files.write(pp, pheno.getBytes());
             String query = "gor reg.gor | plinkregression pheno.txt";
             String results = TestUtils.runGorPipe(query);
-            Assert.assertEquals("Wrong regression result", "CHROM\tPOS\tID\tREF\tALT\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tZ_STAT\tP\tPHENO\n", results);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
