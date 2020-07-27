@@ -129,9 +129,11 @@ public class ParquetFileIterator extends GenomicIterator {
 
     private String[] extractPartCol(String parquetPath) {
         java.nio.file.Path parentParquetPath = Paths.get(parquetPath).getParent();
-        String parentFolder = parentParquetPath.getFileName().toString();
-        String[] parentSplit = parentFolder.split("=");
-        if (parentSplit.length == 2) return parentSplit;
+        if(parentParquetPath!=null) {
+            String parentFolder = parentParquetPath.getFileName().toString();
+            String[] parentSplit = parentFolder.split("=");
+            if (parentSplit.length == 2) return parentSplit;
+        }
         return null;
     }
 
