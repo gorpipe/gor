@@ -402,10 +402,6 @@ public class GorOptions {
             theIterator.setSourceName(sourceName);
         }
 
-        if (chrname != null && !chrname.equals("")) {
-            theIterator = new BoundedIterator(theIterator, chrname, begin, end);
-        }
-
         theIterator.setContext(context);
         if (context != null) {
             context.iteratorCreated(toString());
