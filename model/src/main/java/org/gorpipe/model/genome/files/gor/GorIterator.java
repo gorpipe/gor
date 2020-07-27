@@ -60,7 +60,7 @@ public abstract class GorIterator implements AutoCloseable, Iterator<String> {
 
     private String command;
     private String commandWithValues;
-    private String securityKey = GorSecurityContext.shared.get(); // By default use application wide security context
+    private String securityKey;
 
     public final static String DEFAULT_COMMAND = "gor -p $chr:$pos_from-$pos_to $file | top $range";
 
