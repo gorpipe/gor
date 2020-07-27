@@ -28,9 +28,9 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.util.StringUtil;
 import org.gorpipe.model.util.Util;
 import org.gorpipe.util.collection.IntArray;
-import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

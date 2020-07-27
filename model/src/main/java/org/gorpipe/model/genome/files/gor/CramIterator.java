@@ -22,14 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
-import org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramFile;
-import org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramUtils;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.table.PathUtils;
-import org.gorpipe.model.util.StringUtil;
 import htsjdk.samtools.*;
 import htsjdk.samtools.cram.ref.CRAMReferenceSource;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -39,6 +31,14 @@ import htsjdk.samtools.util.SequenceUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
+import org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramFile;
+import org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramUtils;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +71,6 @@ public class CramIterator extends BamIterator {
     private int[] columns;
     GenomicIterator.ChromoLookup lookup;
     private String fileName;
-    private String buildPath = "";
     private String cramReferencePath = "";
     private CRAMFileReader cramFileReader;
     private ReferenceSequenceFile referenceSequenceFile;
@@ -168,7 +167,7 @@ public class CramIterator extends BamIterator {
             return;
         }
 
-        buildPath = session.getProjectContext().getReferenceBuild().getBuildPath();
+        String buildPath = session.getProjectContext().getReferenceBuild().getBuildPath();
 
         cramReferencePath = session.getProjectContext().getReferenceBuild().getCramReferencePath();
 

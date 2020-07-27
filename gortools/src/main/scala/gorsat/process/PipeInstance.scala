@@ -39,7 +39,7 @@ import gorsat._
 import gorsat.gorsatGorIterator.gorsatGorIterator
 import gorsat.process.GorJavaUtilities.CmdParams
 import gorsat.process.GorPipe.brsConfig
-import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException, GorUserException}
+import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
 import org.gorpipe.gor.{GorContext, GorSession}
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext, GorMonitor}
 import org.gorpipe.model.gor.MemoryMonitorUtil
@@ -171,7 +171,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
   override def close() {
     if (theIterator != null) {
       theIterator.close()
-      theIterator = null;
+      theIterator = null
     }
     if (context != null && context.getSession != null) context.getSession.close()
     isClosed = true
@@ -727,7 +727,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       val skip = cmdparams.skipLines()
       val allowerror = cmdparams.allowError()
       val server = cmdparams.useHttpServer()
-      var pip: RowSource = new ProcessIteratorAdaptor(context, command, cmdparams.getAliasName, inputSource, thePipeStep, combinedHeader, skipheader, skip, allowerror, executeNor)
+      val pip: RowSource = new ProcessIteratorAdaptor(context, command, cmdparams.getAliasName, inputSource, thePipeStep, combinedHeader, skipheader, skip, allowerror, executeNor)
       val newHeader = pip.getHeader
       if (newHeader != null) combinedHeader = validHeader(newHeader)
       (pip, newHeader)

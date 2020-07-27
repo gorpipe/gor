@@ -31,9 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.gorpipe.model.genome.files.binsearch.PositionCache.GB;
-import static org.gorpipe.model.genome.files.binsearch.PositionCache.MAX_NUMBER_OF_POS_PER_GB;
-import static org.gorpipe.model.genome.files.binsearch.PositionCache.getMaxNumberOfPos;
+import static org.gorpipe.model.genome.files.binsearch.PositionCache.*;
 
 public class UTestPositionCache {
     private static final Logger log = LoggerFactory.getLogger(UTestPositionCache.class);

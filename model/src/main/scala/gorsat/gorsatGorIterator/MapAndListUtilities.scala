@@ -23,10 +23,8 @@
 package gorsat.gorsatGorIterator
 
 import java.nio.file.Files
-import java.util
 import java.util.stream.Collectors
 
-import org.gorpipe.model.genome.files.gor.FileReader
 import org.gorpipe.gor.GorSession
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader}
 import org.gorpipe.model.gor.MemoryMonitorUtil
@@ -43,7 +41,7 @@ object MapAndListUtilities {
 
   def exists(filename: String, reader: FileReader): Boolean = {
 
-    if (filename == null) return false;
+    if (filename == null) return false
 
     reader match {
       case dbfr: DriverBackedFileReader => dbfr.resolveUrl(filename).exists()
@@ -126,7 +124,7 @@ object MapAndListUtilities {
         theMap
       case None =>
         try {
-          var colMap = new java.util.HashMap[String, String]()
+          val colMap = new java.util.HashMap[String, String]()
 
           val mmu: MemoryMonitorUtil =  new MemoryMonitorUtil(MemoryMonitorUtil.basicOutOfMemoryHandler)
 

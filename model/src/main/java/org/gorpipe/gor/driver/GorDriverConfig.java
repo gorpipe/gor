@@ -22,14 +22,15 @@
 
 package org.gorpipe.gor.driver;
 
-import java.time.Duration;
-import org.gorpipe.base.config.bytesize.ByteSize;
+import org.aeonbits.owner.Config;
 import org.gorpipe.base.config.annotations.ConfigComponent;
 import org.gorpipe.base.config.annotations.Documentation;
+import org.gorpipe.base.config.bytesize.ByteSize;
 import org.gorpipe.base.config.converters.ByteSizeConverter;
 import org.gorpipe.base.config.converters.DurationConverter;
 import org.gorpipe.base.config.converters.EnhancedBooleanConverter;
-import org.aeonbits.owner.Config;
+
+import java.time.Duration;
 
 /**
  * Created by stefan on 31.8.2016.

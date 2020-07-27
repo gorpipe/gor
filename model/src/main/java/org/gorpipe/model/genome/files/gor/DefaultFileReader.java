@@ -28,7 +28,10 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +73,7 @@ public class DefaultFileReader extends FileReader {
     private List<String> readlines(String file) throws IOException {
         try (BufferedReader br = new BufferedReader(new BufferedReader(new java.io.FileReader(file)))) {
             ArrayList<String> lines = new ArrayList<>();
-            String line = null;
+            String line;
             while ((line = br.readLine()) != null) {
                 lines.add(line);
             }
@@ -183,11 +186,11 @@ public class DefaultFileReader extends FileReader {
         return GorOptions.getFileSignature(file, securityContext);
     }
 
-    public static final String checkLink(String file) throws IOException {
+    public static String checkLink(String file) throws IOException {
         return checkLink(Paths.get(file));
     }
 
-    public static final String checkLink(Path lp) throws IOException {
+    public static String checkLink(Path lp) throws IOException {
         if (lp.endsWith(".link")) {
             final List<String> lines = Files.readAllLines(lp);
             if (!lines.isEmpty()) {

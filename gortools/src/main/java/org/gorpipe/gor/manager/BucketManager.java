@@ -22,6 +22,9 @@
 
 package org.gorpipe.gor.manager;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
@@ -29,9 +32,6 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +83,7 @@ public class BucketManager<T extends BucketableTableEntry> {
     private Class<? extends TableLock> lockType = DEFAULT_LOCK_TYPE;
     private Duration lockTimeout = DEFAULT_LOCK_TIMEOUT;
 
-    private BaseTable<T> table;
+    private final BaseTable<T> table;
 
     private int bucketSize;
     private int minBucketSize;
@@ -154,11 +154,10 @@ public class BucketManager<T extends BucketableTableEntry> {
             }
 
             cleanTempFolders(bucketizeLock);
-            int count = doBucketize(bucketizeLock, packLevel, maxBucketCount);
 
             // TODO: Enable clean up again with issue GOP-1444
             // cleanBucketFiles(bucketizeLock, forceClean);
-            return count;
+            return doBucketize(bucketizeLock, packLevel, maxBucketCount);
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
@@ -216,7 +215,7 @@ public class BucketManager<T extends BucketableTableEntry> {
      *
      * @return the list of bucketDirs for this table (relative to root or absolute).
      */
-    private final List<Path> getBucketDirs() {
+    private List<Path> getBucketDirs() {
         return bucketDirs;
     }
 
@@ -576,8 +575,6 @@ public class BucketManager<T extends BucketableTableEntry> {
     private Collection<Path> findBucketsToDelete(TableLock lock, BucketPackLevel packLevel, int unbucketizedCount) {
         lock.assertValid();
 
-        Set<Path> bucketsToDelete = new HashSet();
-
         // Count active files per bucket
         Map<Path, Integer> bucketCounts = new HashMap<>();
         table.selectAll().stream().filter(l -> l.hasBucket())
@@ -588,7 +585,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
         // Handle buckets were all files have beeen deleted.
 
-        bucketsToDelete.addAll(bucketCounts.keySet().stream()
+        Set<Path> bucketsToDelete = new HashSet(bucketCounts.keySet().stream()
                 .filter(k -> bucketCounts.get(k) == 0).collect(Collectors.toSet()));
 
 
@@ -611,7 +608,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             for (Map.Entry<Path, Integer> entry : bucketCounts.entrySet().stream()
                     .filter(e -> e.getValue() < getBucketSize())
-                    .sorted(Comparator.comparing(Map.Entry::getValue)).collect(Collectors.toList())) {
+                    .sorted(Map.Entry.comparingByValue()).collect(Collectors.toList())) {
                 if (totalSpaceLeftInNewBuckets <= 0) {
                     break;
                 }
@@ -680,7 +677,7 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     public static final class Builder<T extends BucketableTableEntry> {
-        private BaseTable<T> table;
+        private final BaseTable<T> table;
         private Duration lockTimeout = null;
         private Class<? extends TableLock> lockType = null;
         private int minBucketSize = -1;

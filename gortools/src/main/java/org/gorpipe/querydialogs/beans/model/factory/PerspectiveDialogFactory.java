@@ -23,18 +23,14 @@ package org.gorpipe.querydialogs.beans.model.factory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import freemarker.template.TemplateException;
 import org.gorpipe.model.genome.files.gor.FileReader;
 import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import org.gorpipe.model.genome.files.gor.ReportCommand;
 import org.gorpipe.model.genome.files.gor.RequiredColumn;
 import org.gorpipe.querydialogs.beans.ColumnGroup;
-import org.gorpipe.querydialogs.beans.model.factory.builder.DateArgumentBuilder;
-import org.gorpipe.querydialogs.beans.model.factory.builder.FileArgumentBuilder;
-import org.gorpipe.querydialogs.beans.model.factory.builder.NumberArgumentBuilder;
-import org.gorpipe.querydialogs.beans.model.factory.builder.StringArgumentBuilder;
-import org.gorpipe.querydialogs.beans.model.factory.builder.QueryArgumentBuilder;
-import freemarker.template.TemplateException;
 import org.gorpipe.querydialogs.beans.model.*;
+import org.gorpipe.querydialogs.beans.model.factory.builder.*;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -166,7 +162,7 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
         String chartScript = attributes.containsKey("chartScript") ? attributes.get("chartScript").toString() : null;
         String chartExec = attributes.containsKey("chart") ? attributes.get("chart").toString() : null;
         String chartColumns = attributes.containsKey("chartColumns") ? attributes.get("chartColumns").toString() : "";
-        boolean chartDF = attributes.containsKey("chartDF") ? Boolean.parseBoolean(attributes.get("chartDF").toString()) : false;
+        boolean chartDF = attributes.containsKey("chartDF") && Boolean.parseBoolean(attributes.get("chartDF").toString());
 
         final List<ReportCommand> reportCommands = getReportCommands(attributes);
         return new PerspectiveDialog(attributes, fileResolver, queryEval, dialogDescription, displayParams, type, query, chartScript,

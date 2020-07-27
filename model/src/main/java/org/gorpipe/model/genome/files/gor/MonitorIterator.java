@@ -23,7 +23,7 @@
 package org.gorpipe.model.genome.files.gor;
 
 public class MonitorIterator extends GenomicIterator {
-    private GenomicIterator iterator;
+    private final GenomicIterator iterator;
     private final ReadListener gorMonitor;
     private final long notifyIntervalMs;
     private long lastNotificationTimeMs;

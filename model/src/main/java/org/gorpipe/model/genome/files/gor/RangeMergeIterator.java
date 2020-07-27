@@ -25,7 +25,10 @@ package org.gorpipe.model.genome.files.gor;
 import org.gorpipe.exceptions.GorSystemException;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.stream.IntStream;
 
 /**

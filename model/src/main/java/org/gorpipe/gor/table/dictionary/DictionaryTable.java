@@ -22,17 +22,17 @@
 
 package org.gorpipe.gor.table.dictionary;
 
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Class representing GOR Dictionary

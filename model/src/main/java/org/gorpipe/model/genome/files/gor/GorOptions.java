@@ -21,6 +21,11 @@
  */
 package org.gorpipe.model.genome.files.gor;
 
+import gorsat.Commands.CommandArguments;
+import gorsat.Commands.CommandParseUtilities;
+import gorsat.Commands.GenomicRange;
+import gorsat.DynIterator;
+import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -33,13 +38,8 @@ import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.model.genome.files.gor.filters.InFilter;
 import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 import org.gorpipe.model.gor.iterators.RowSource;
-import org.gorpipe.model.util.Util;
 import org.gorpipe.model.util.StringUtil;
-import gorsat.Commands.CommandArguments;
-import gorsat.Commands.CommandParseUtilities;
-import gorsat.Commands.GenomicRange;
-import gorsat.DynIterator;
-import gorsat.gorsatGorIterator.MapAndListUtilities;
+import org.gorpipe.model.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -183,7 +183,7 @@ public class GorOptions {
                       List<SourceRef> files, String commonRootOpt,
                       ResourceMonitor monitor) {
         this.chromo = chromoOpt;
-        this.chrname = 0 <= chromoOpt && chromoOpt < ChrDataScheme.ChrLexico.id2chr.length ? ChrDataScheme.ChrLexico.id2chr[chromoOpt] : null;;
+        this.chrname = 0 <= chromoOpt && chromoOpt < ChrDataScheme.ChrLexico.id2chr.length ? ChrDataScheme.ChrLexico.id2chr[chromoOpt] : null;
         this.begin = beginOpt;
         this.end = endOpt;
         this.insertSource = insertSourceOpt;
@@ -664,12 +664,11 @@ public class GorOptions {
         return text.toString();
     }
 
-    private static StringBuilder appendWithSep(StringBuilder sb, String sep, String text) {
+    private static void appendWithSep(StringBuilder sb, String sep, String text) {
         if (sb.length() > 0) {
             sb.append(sep);
         }
         sb.append(text);
-        return sb;
     }
 
     private void addSourceRef(String file, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {

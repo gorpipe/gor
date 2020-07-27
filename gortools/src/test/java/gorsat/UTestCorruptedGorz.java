@@ -22,8 +22,8 @@
 
 package gorsat;
 
-import org.gorpipe.exceptions.GorResourceException;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.junit.*;
 
 import java.io.BufferedReader;

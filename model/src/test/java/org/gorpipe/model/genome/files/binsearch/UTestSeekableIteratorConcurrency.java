@@ -25,19 +25,15 @@ package org.gorpipe.model.genome.files.binsearch;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
-import org.gorpipe.model.genome.files.binsearch.SeekableIterator;
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

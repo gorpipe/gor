@@ -28,13 +28,13 @@ package org.gorpipe.gor;
 public class GorSession implements AutoCloseable {
 
     private boolean norContext;
-    private String requestId;
+    private final String requestId;
     private ProjectContext projectContext;
     private SystemContext systemContext;
     private GorSessionCache cache;
     private EventLogger eventLogger;
 
-    private GorContext gorContext = new GorContext(this);
+    private final GorContext gorContext = new GorContext(this);
 
     /**
      * Constructs a session object for gor for a gived request id.

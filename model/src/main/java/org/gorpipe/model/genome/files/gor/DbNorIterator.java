@@ -44,7 +44,6 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
     private ResultSetMetaData meta;
     private int rowNum = 0;
     private boolean rowWaiting = true;
-    private Pair<String, Object[]> sqlWithParams;
 
 
     /**
@@ -61,7 +60,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
         String sql = content.substring(5);
 
         // Replace scoping variables.
-        sqlWithParams = replaceConstants(sql, constants);
+        Pair<String, Object[]> sqlWithParams = replaceConstants(sql, constants);
 
         // Get db connection.
         try {
@@ -227,7 +226,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
         int cols = meta.getColumnCount();
         String sep = "";
         for (int i = 0; i < cols; i++) {
-            sb.append(sep + removeInvalidCharacters(rs.getString(i + 1)));
+            sb.append(sep).append(removeInvalidCharacters(rs.getString(i + 1)));
             sep = "\t";
         }
         return sb.toString();
@@ -242,7 +241,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
 
         String sep = "#";
         for (int i = 0; i < cols; i++) {
-            sb.append(sep + removeInvalidCharacters(meta.getColumnName(i + 1)));
+            sb.append(sep).append(removeInvalidCharacters(meta.getColumnName(i + 1)));
             sep = "\t";
         }
 

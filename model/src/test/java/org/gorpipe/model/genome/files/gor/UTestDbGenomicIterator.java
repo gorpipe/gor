@@ -22,7 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.*;
 import org.gorpipe.test.DbTests;
 import org.junit.BeforeClass;
 import org.junit.Ignore;

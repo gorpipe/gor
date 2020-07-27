@@ -25,11 +25,11 @@ package gorsat
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-import org.junit.{Assert, ComparisonFailure}
+import Regression.{LinearRegression, LogisticRegression}
 import org.junit.runner.RunWith
+import org.junit.{Assert, ComparisonFailure}
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import Regression.{LinearRegression, LogisticRegression}
 
 import scala.reflect.ClassTag
 

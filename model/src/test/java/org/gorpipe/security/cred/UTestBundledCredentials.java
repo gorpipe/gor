@@ -1,6 +1,5 @@
 package org.gorpipe.security.cred;
 
-import org.gorpipe.security.cred.Credentials;
 import org.junit.Assert;
 import org.junit.Test;
 

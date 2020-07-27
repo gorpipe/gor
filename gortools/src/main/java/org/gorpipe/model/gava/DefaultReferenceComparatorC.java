@@ -32,7 +32,7 @@ class DefaultReferenceComparatorC<T extends Comparable<T>> implements java.util.
     /**
      * The actual array.
      */
-    private T[] myActualArray;
+    private final T[] myActualArray;
 
     /**
      * Create a reference comparator with a given array.

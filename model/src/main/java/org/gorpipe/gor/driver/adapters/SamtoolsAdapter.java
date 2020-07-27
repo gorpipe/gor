@@ -22,13 +22,13 @@
 
 package org.gorpipe.gor.driver.adapters;
 
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import htsjdk.samtools.SamInputResource;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.seekablestream.SeekableStream;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
 import java.io.File;
 

@@ -22,15 +22,13 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GorKing.{BucketInfo, KingAggregate, KingAnalysis}
+import gorsat.Analysis.GorKing.{KingAggregate, KingAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.GorContext
-
-import scala.collection.mutable
 
 class King extends CommandInfo("KING",
   CommandArguments("", "-gc -vs -s -pi0thr -phithr -thetathr", 2),

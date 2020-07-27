@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.function;
 
+import gorsat.parser.ParseArith;
 import org.gorpipe.gor.ColumnValueProvider;
 import org.gorpipe.model.genome.files.gor.Row;
-import gorsat.parser.ParseArith;
 import scala.Boolean;
 import scala.Function1;
 

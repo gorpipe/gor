@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
+import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.VcfGzGenomicIterator;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 
 import java.io.IOException;
 

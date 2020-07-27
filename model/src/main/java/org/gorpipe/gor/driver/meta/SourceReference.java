@@ -22,14 +22,14 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -184,7 +184,7 @@ public class SourceReference {
      * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.
      */
     public static class Builder {
-        private String url;
+        private final String url;
         private String securityContext;
         private String commonRoot;
         private GenomicIterator.ChromoLookup lookup;

@@ -23,14 +23,14 @@
 package gorsat;
 
 import com.google.common.io.Files;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.gor.GorSessionFactory;
-import org.gorpipe.test.utils.FileTestUtils;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateModelException;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.GorSessionFactory;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 

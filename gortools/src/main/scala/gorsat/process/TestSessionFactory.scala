@@ -25,8 +25,8 @@ package gorsat.process
 import java.nio.file.Paths
 
 import gorsat.QueryHandlers.GeneralQueryHandler
-import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor._
+import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext}
 import org.gorpipe.model.util.StringUtil
 
@@ -79,7 +79,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
   }
 
   def createFileReader(gorRoot: String, securityContext: String = null): FileReader = {
-    val emptyGorRoot = StringUtil.isEmpty(gorRoot);
+    val emptyGorRoot = StringUtil.isEmpty(gorRoot)
     if (!emptyGorRoot || !StringUtil.isEmpty(securityContext)) {
       new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
     } else {

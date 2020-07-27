@@ -27,7 +27,6 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.Line;
-import org.gorpipe.model.genome.files.binsearch.GorzSeekableIterator;
 import org.junit.Assert;
 import org.junit.Test;
 

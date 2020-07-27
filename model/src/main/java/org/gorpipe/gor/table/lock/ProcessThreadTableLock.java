@@ -73,7 +73,7 @@ public abstract class ProcessThreadTableLock extends TableLock {
     }
 
     // Map of the process locks.
-    private static ConcurrentHashMap<String, TableLockData> lockMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, TableLockData> lockMap = new ConcurrentHashMap<>();
 
     protected Path lockPath;
     protected TableLockData lockData;

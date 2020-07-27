@@ -59,7 +59,7 @@ public class GLongHashMap implements Cloneable, Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj != null && obj instanceof GLongHashMap) && equals((GLongHashMap) obj);
+        return (obj instanceof GLongHashMap) && equals((GLongHashMap) obj);
     }
 
     @Override

@@ -22,11 +22,11 @@
 
 package org.gorpipe.gor.cli.render;
 
-import org.gorpipe.gor.GorSession;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.process.CLISessionFactory;
 import gorsat.process.PipeOptions;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.GorSession;
 import picocli.CommandLine;
 
 import java.io.File;

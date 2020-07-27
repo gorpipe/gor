@@ -1,13 +1,8 @@
 package gorsat.gtgen;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
-import shapeless.ops.nat;
-
 import java.lang.ref.WeakReference;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 public class PowerLookupTable {
     private final double[] powers;

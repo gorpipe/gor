@@ -22,11 +22,8 @@
 
 package org.gorpipe.gor.driver;
 
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.GorDriverFactory;
-import org.gorpipe.gor.driver.PluggableGorDriver;
-import org.gorpipe.gor.driver.meta.SourceReference;
 import gorsat.TestUtils;
+import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.junit.Assert;
 import org.junit.Test;

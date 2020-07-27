@@ -53,10 +53,10 @@ public class HTTPSource implements StreamSource {
     private static final Logger log = LoggerFactory.getLogger(HTTPSource.class);
 
     private final URL url;
-    private SourceReference sourceReference;
+    private final SourceReference sourceReference;
     private StreamSourceMetadata sourceMetadata;
 
-    private GorDriverConfig config;
+    private final GorDriverConfig config;
     private Boolean exists;
     private Long length;
 
@@ -240,7 +240,7 @@ public class HTTPSource implements StreamSource {
      * Automatically calls disconnect on urlconnection when stream is closed.
      * May help free up resources.
      */
-    private class AutoDisconnectingInputStream extends PositionAwareInputStream {
+    private static class AutoDisconnectingInputStream extends PositionAwareInputStream {
         private final HttpURLConnection urlConnection;
 
         AutoDisconnectingInputStream(InputStream in, HttpURLConnection urlc) {

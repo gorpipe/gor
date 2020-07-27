@@ -45,10 +45,10 @@ public class CredentialClientCache<ClientClass> {
     private final static Logger log = LoggerFactory.getLogger(CredentialClientCache.class);
 
     // Cache credential to client mapping
-    private Cache<Credentials, ClientClass> credToClient = createCache();
+    private final Cache<Credentials, ClientClass> credToClient = createCache();
 
     // Cache bundled credentials to lookup cache.  The lookup cache caches lookup_key (e.g. project/bucker) to credentials for that bundle.
-    private Cache<CredentialsProvider, Cache<Optional<String>, Optional<Credentials>>> bundleToLookupCache = createCache();
+    private final Cache<CredentialsProvider, Cache<Optional<String>, Optional<Credentials>>> bundleToLookupCache = createCache();
 
     private final String service;
     private final Function<Credentials, ClientClass> createClient;

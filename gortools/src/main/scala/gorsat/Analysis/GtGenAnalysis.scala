@@ -24,8 +24,8 @@ package gorsat.Analysis
 
 import gorsat.Commands._
 import gorsat.Iterators.ChromBoundedIteratorSource
-import gorsat.{PnBucketParsing, PnBucketTable}
 import gorsat.gorsatGorIterator.MapAndListUtilities
+import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.gor.Row

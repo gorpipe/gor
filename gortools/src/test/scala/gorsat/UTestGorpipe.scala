@@ -24,10 +24,9 @@ package gorsat
 
 import java.nio.file.Paths
 
-import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
-import org.gorpipe.test.SlowTests
 import process.{GenericSessionFactory, PipeInstance}
+import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.test.SlowTests
 import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

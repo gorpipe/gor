@@ -26,10 +26,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StatsCollector {
-    private Map<Integer, Map<String, Double>> statsPerSender = new HashMap<>();
-    private Map<Integer, String> senderNames = new HashMap<>();
-    private Map<Integer, String> senderAnnotations = new HashMap<>();
-    private Map<String, Integer> registeredNames = new HashMap<>();
+    private final Map<Integer, Map<String, Double>> statsPerSender = new HashMap<>();
+    private final Map<Integer, String> senderNames = new HashMap<>();
+    private final Map<Integer, String> senderAnnotations = new HashMap<>();
+    private final Map<String, Integer> registeredNames = new HashMap<>();
 
     public synchronized int registerSender(String senderName, String annotation) {
         String registeredName = senderName + ":" + annotation;

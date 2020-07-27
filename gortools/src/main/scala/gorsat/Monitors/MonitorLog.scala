@@ -22,8 +22,6 @@
 
 package gorsat.Monitors
 
-import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.genome.files.gor.Row
 import gorsat.Commands.Analysis
 import org.gorpipe.model.genome.files.gor.{GorMonitor, Row}
 

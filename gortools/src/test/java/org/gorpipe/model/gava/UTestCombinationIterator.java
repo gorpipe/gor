@@ -22,7 +22,6 @@
 
 package org.gorpipe.model.gava;
 
-import org.gorpipe.model.gava.CombinationIterator;
 import org.junit.Assert;
 import org.junit.Test;
 

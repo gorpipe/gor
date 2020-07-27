@@ -22,7 +22,6 @@
 
 package org.gorpipe.security.cred;
 
-import org.gorpipe.security.cred.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 

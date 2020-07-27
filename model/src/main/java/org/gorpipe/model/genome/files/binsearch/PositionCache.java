@@ -27,8 +27,11 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author hjaltii
@@ -100,7 +103,7 @@ public class PositionCache {
 
     private final long fileOffset;
     private final long fileSize;
-    private int maxNumberOfPos;
+    private final int maxNumberOfPos;
     private final String uniqueId;
     private boolean isIndexLoaded;
 

@@ -23,9 +23,6 @@
 package org.gorpipe.model.genome.files.gor;
 
 import gorsat.TestUtils;
-import org.gorpipe.model.genome.files.gor.BoundedIterator;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.GorOptions;
 import org.junit.Assert;
 import org.junit.Test;
 

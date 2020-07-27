@@ -22,12 +22,10 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
-import org.apache.commons.io.FileUtils;
-import org.gorpipe.model.genome.files.binsearch.SeekableIterator;
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;

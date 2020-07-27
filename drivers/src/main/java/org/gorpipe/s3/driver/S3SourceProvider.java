@@ -23,7 +23,10 @@
 package org.gorpipe.s3.driver;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.*;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.google.auto.service.AutoService;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;

@@ -48,7 +48,7 @@ public final class ReportCommand {
      * The command MD% digest.
      */
     public final String commandMd5Digest;
-    private List<RequiredColumn> requiredReportColumns;
+    private final List<RequiredColumn> requiredReportColumns;
     private Map<String, String> column2Placeholder;
 
     /**

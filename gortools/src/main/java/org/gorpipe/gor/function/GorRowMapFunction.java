@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.function;
 
-import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.parser.ParseArith;
+import org.gorpipe.model.genome.files.gor.Row;
 import scala.Function1;
 
 import java.io.Serializable;

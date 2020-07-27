@@ -12,6 +12,9 @@
 
 package org.gorpipe.gor.table.lock;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.BaseTable;
@@ -19,9 +22,6 @@ import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.TableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.test.IntegrationTests;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.NullOutputStream;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.slf4j.LoggerFactory;

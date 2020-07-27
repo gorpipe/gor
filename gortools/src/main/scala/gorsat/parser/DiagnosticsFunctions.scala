@@ -28,9 +28,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.sun.management.{OperatingSystemMXBean, UnixOperatingSystemMXBean}
+import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
 import gorsat.process.GorPipe
-import gorsat.parser.FunctionSignature._
 import org.gorpipe.exceptions.GorParsingException
 
 object DiagnosticsFunctions {

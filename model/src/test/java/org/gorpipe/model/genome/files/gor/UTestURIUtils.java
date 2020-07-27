@@ -22,7 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.URIUtils;
 import junit.framework.TestCase;
 
 import java.net.URI;

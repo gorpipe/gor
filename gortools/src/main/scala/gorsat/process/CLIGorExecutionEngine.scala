@@ -22,14 +22,10 @@
 
 package gorsat.process
 
-import java.io.File
-import java.nio.charset.Charset
-
 import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities
 import gorsat.MacroUtilities.replaceAllAliases
 import gorsat.Outputs.{NorStdOut, StdOut}
-import org.apache.commons.io.FileUtils
 import org.gorpipe.gor.{GorRunner, GorSession, RequestStats}
 
 /**

@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor;
 
+import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.gorpipe.client.FileCache;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -32,7 +33,6 @@ import org.gorpipe.model.gor.iterators.RefSeq;
 import org.gorpipe.model.gor.iterators.RefSeqFactory;
 import org.gorpipe.model.gor.iterators.RefSeqFromConfigFactory;
 import org.gorpipe.model.util.StringUtil;
-import gorsat.gorsatGorIterator.MapAndListUtilities;
 
 import java.io.IOException;
 import java.nio.file.Files;

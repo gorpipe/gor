@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.manager;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.PathUtils;
@@ -31,7 +32,6 @@ import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.SlowTests;
-import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;

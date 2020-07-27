@@ -21,11 +21,6 @@
  */
 package org.gorpipe.querydialogs.beans.model.factory;
 
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.querydialogs.beans.model.Argument;
-import org.gorpipe.querydialogs.beans.model.templating.DialogArgumentWrapper;
-import org.gorpipe.querydialogs.beans.model.templating.NetworkTemplateLoader;
-import org.gorpipe.querydialogs.beans.model.templating.SkipFirstMethodModel;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.cache.TemplateLoader;
@@ -35,6 +30,11 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
+import org.gorpipe.model.genome.files.gor.FileReader;
+import org.gorpipe.querydialogs.beans.model.Argument;
+import org.gorpipe.querydialogs.beans.model.templating.DialogArgumentWrapper;
+import org.gorpipe.querydialogs.beans.model.templating.NetworkTemplateLoader;
+import org.gorpipe.querydialogs.beans.model.templating.SkipFirstMethodModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +58,8 @@ public class Perspective {
      * The group name assigned to perspectives that don't define their own group names.
      */
     public static final String GLOBAL_GROUP = "[global]";
-    private static StringTemplateLoader TEMPLATE_LOADER;
-    private static Configuration TEMPLATE_CONFIG;
+    private static final StringTemplateLoader TEMPLATE_LOADER;
+    private static final Configuration TEMPLATE_CONFIG;
     private static final Logger logger = LoggerFactory.getLogger(Perspective.class);
 
     static {
@@ -305,7 +305,7 @@ public class Perspective {
     /**
      * Defines the type of view that should be selected by default when the perspective is activated.
      */
-    public static enum VIEW_TYPE {
+    public enum VIEW_TYPE {
         /**
          * Data is displayed with one record per line.
          */

@@ -31,7 +31,10 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.PriorityQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +42,7 @@ import static gorsat.external.plink.PlinkProcessAdaptor.PGEN_ENDING;
 import static gorsat.external.plink.PlinkProcessAdaptor.PVAR_ENDING;
 
 class PlinkThread implements Callable<Boolean> {
-    private List<String> plinkArgList = new ArrayList<>();
+    private final List<String> plinkArgList = new ArrayList<>();
     private final File projectRoot;
     private final Path tmpPath;
     private final boolean first;

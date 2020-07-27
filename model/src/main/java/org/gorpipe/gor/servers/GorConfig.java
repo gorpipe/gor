@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.servers;
 
+import org.aeonbits.owner.Config;
 import org.gorpipe.base.config.annotations.ConfigComponent;
 import org.gorpipe.base.config.annotations.Documentation;
-import org.aeonbits.owner.Config;
 
 /**
  * Configuration options for gor

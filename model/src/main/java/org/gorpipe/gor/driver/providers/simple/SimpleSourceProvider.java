@@ -23,12 +23,12 @@
 package org.gorpipe.gor.driver.providers.simple;
 
 import com.google.auto.service.AutoService;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 @AutoService(SourceProvider.class)
 public class SimpleSourceProvider implements SourceProvider {

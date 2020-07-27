@@ -211,7 +211,7 @@ public class FileTestUtils {
      * @param path The path to the folder.
      * @throws IOException on I/O error
      */
-    public static final void deleteFolder(Path path) throws IOException {
+    public static void deleteFolder(Path path) throws IOException {
         java.nio.file.Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -236,7 +236,7 @@ public class FileTestUtils {
      * @param src The File descriptior for the folder.
      * @return true if folder is deleted, else false.
      */
-    public static final boolean deleteFolder(File src) {
+    public static boolean deleteFolder(File src) {
         if (src != null) {
             deleteFolderContents(src);
             src.delete();
@@ -270,7 +270,7 @@ public class FileTestUtils {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < lines; i++) {
             String format = "%0" + digits + "d";
-            sb.append(String.format(format, i) + "\n");
+            sb.append(String.format(format, i)).append("\n");
         }
         return sb.toString();
     }

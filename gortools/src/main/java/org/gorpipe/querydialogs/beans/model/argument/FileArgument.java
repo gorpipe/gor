@@ -83,7 +83,7 @@ public class FileArgument extends Argument {
     private List<String> createFileFilterComponents(final String filterFileSuffixes) {
         List<String> tmpFileFilterComponents = new ArrayList<String>();
         if (filterFileSuffixes != null && filterFileSuffixes.length() > 0) {
-            final List<String> splits = Arrays.asList(filterFileSuffixes.split(filterFileSuffixes, ','));
+            final String[] splits = filterFileSuffixes.split(filterFileSuffixes, ',');
             for (String filterFileSuffix : splits) {
                 tmpFileFilterComponents.add("*." + filterFileSuffix.trim());
             }

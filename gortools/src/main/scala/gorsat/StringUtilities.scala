@@ -23,6 +23,7 @@
 package gorsat
 
 import java.security.MessageDigest
+
 import scala.math.BigInt
 
 object StringUtilities {

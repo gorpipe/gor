@@ -25,7 +25,8 @@ package org.gorpipe.model.util;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.util.collection.extract.Extract;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

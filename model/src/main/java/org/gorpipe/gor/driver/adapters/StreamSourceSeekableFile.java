@@ -22,10 +22,10 @@
 
 package org.gorpipe.gor.driver.adapters;
 
-import org.gorpipe.model.genome.files.gor.SeekableFile;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
+import org.gorpipe.model.genome.files.gor.SeekableFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

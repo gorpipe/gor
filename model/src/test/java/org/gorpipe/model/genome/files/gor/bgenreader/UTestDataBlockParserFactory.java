@@ -3,8 +3,9 @@ package org.gorpipe.model.genome.files.gor.bgenreader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.gorpipe.model.genome.files.gor.bgenreader.LayoutType.*;
 import static org.gorpipe.model.genome.files.gor.bgenreader.CompressionType.*;
+import static org.gorpipe.model.genome.files.gor.bgenreader.LayoutType.LAYOUT_ONE;
+import static org.gorpipe.model.genome.files.gor.bgenreader.LayoutType.LAYOUT_TWO;
 
 public class UTestDataBlockParserFactory {
 

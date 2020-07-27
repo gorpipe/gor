@@ -23,7 +23,6 @@
 package gorsat.parser;
 
 import gorsat.TestUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class UTestListZip {

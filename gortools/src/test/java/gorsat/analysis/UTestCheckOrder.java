@@ -22,8 +22,8 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.exceptions.GorDataException;
 import gorsat.Analysis.CheckOrder;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Test;
 

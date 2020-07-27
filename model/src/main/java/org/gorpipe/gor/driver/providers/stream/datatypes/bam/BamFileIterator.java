@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bam;
 
-import org.gorpipe.model.genome.files.gor.BamIterator;
 import org.gorpipe.gor.driver.adapters.SamtoolsAdapter;
+import org.gorpipe.model.genome.files.gor.BamIterator;
 
 /**
  * Extends BamIterator to provide an GenomicIterator using a Stream based Bamfile

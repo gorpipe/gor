@@ -23,10 +23,10 @@
 package org.gorpipe.gor.cli;
 
 import com.google.common.collect.Lists;
-import org.gorpipe.base.config.annotations.Documentation;
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.DefaultValue;
 import org.aeonbits.owner.Config.Key;
+import org.gorpipe.base.config.annotations.Documentation;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Method;
@@ -81,9 +81,9 @@ public class GorConfigDoc {
 }
 
 class Table {
-    private String header;
-    private List<String[]> rows = new LinkedList<>();
-    private List<Integer> colwidths = new LinkedList<>();
+    private final String header;
+    private final List<String[]> rows = new LinkedList<>();
+    private final List<Integer> colwidths = new LinkedList<>();
 
     Table(String header) {
         this.header = header;
@@ -126,7 +126,7 @@ class Table {
 
         try (Formatter formatter = new Formatter()) {
             for (String[] row : rows) {
-                formatter.format(format, (Object[]) row);
+                formatter.format(format, row);
             }
 
             return header + "\n" + formatter.out().toString();

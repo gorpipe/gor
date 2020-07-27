@@ -52,7 +52,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
 
     public static final int DEFAULT_NUMBER_WORKERS = 4;
 
-    private int workers;
+    private final int workers;
 
     public BucketCreatorGorPipe() {
         this(DEFAULT_NUMBER_WORKERS);
@@ -74,7 +74,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
                 gorPipeCommand,
                 "-cachedir", workTempDir.resolve("cache").toString(),
                 "-workers", String.valueOf(workers)};
-        log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", (Object[]) args);
+        log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", args);
 
         PrintStream oldOut = System.out;
 
@@ -86,7 +86,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
             System.setOut(newPrintStream);
             engine.execute();
         } catch (Exception e) {
-            log.error("Calling bucketize failed.  Command args: {} \"{}\" {} {} {} {} failed", (Object[]) args);
+            log.error("Calling bucketize failed.  Command args: {} \"{}\" {} {} {} {} failed", args);
             throw e;
         } finally {
 

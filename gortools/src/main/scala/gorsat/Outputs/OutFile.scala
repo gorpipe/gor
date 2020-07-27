@@ -79,7 +79,7 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
     out.close()
 
     if(idx == GorIndexType.TABIX) {
-      val gp = Paths.get(name);
+      val gp = Paths.get(name)
 
       val bcis = new BlockCompressedInputStream(Files.newInputStream(gp))
 

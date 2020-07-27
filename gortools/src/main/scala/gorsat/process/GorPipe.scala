@@ -26,8 +26,6 @@
 
 package gorsat.process
 
-import org.gorpipe.exceptions.ExceptionUtilities
-import org.gorpipe.model.genome.files.gor.DefaultFileReader
 import gorsat._
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
@@ -41,7 +39,6 @@ import scala.language.postfixOps
 
 object GorPipe extends GorPipeFirstOrderCommands {
 
-  private val logger = LoggerFactory.getLogger(this.getClass)
   private val consoleLogger = LoggerFactory.getLogger("console." + this.getClass)
 
   var version: String = getClass.getPackage.getImplementationVersion
@@ -74,7 +71,7 @@ object GorPipe extends GorPipeFirstOrderCommands {
       System.exit(0)
     }
 
-    GorLogbackUtil.initLog("gorpipe");
+    GorLogbackUtil.initLog("gorpipe")
 
     // Initialize config
     ConfigUtil.loadConfig("gor")

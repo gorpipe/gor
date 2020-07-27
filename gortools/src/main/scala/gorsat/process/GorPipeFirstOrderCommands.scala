@@ -23,13 +23,11 @@
 package gorsat.process
 
 import gorsat.Commands.CommandParseUtilities
-
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.language.postfixOps
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.model.genome.files.gor.FileReader
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.language.postfixOps
 
 trait GorPipeFirstOrderCommands {
 

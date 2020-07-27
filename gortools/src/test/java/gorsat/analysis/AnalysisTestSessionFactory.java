@@ -22,14 +22,14 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.gor.*;
-import org.gorpipe.gor.clients.LocalFileCacheClient;
-import org.gorpipe.model.genome.files.gor.DriverBackedFileReader;
-import org.gorpipe.model.gor.iterators.RefSeqRotatingFactory;
 import gorsat.QueryHandlers.GeneralQueryHandler;
 import gorsat.process.FreemarkerReportBuilder;
 import gorsat.process.GenericRunnerFactory;
 import gorsat.process.SessionBasedQueryEvaluator;
+import org.gorpipe.gor.*;
+import org.gorpipe.gor.clients.LocalFileCacheClient;
+import org.gorpipe.model.genome.files.gor.DriverBackedFileReader;
+import org.gorpipe.model.gor.iterators.RefSeqRotatingFactory;
 
 import java.nio.file.Paths;
 import java.util.UUID;

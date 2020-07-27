@@ -49,7 +49,7 @@ public class SeekableIterator implements AutoCloseable {
     private long bufferEndInFile = 0;
     private final long fileSize;
     private final BufferIterator bufferIterator;
-    private int offset;
+    private final int offset;
 
     /**
      * Creates a new instance of an iterator using {@code DEFAULT_COMPARATOR}

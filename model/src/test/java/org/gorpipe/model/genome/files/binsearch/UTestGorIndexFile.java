@@ -23,9 +23,6 @@
 package org.gorpipe.model.genome.files.binsearch;
 
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.model.genome.files.binsearch.GorIndexFile;
-import org.gorpipe.model.genome.files.binsearch.GorIndexType;
-import org.gorpipe.model.genome.files.binsearch.PositionCache;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

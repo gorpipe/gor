@@ -22,14 +22,14 @@
 
 package org.gorpipe.querydialogs.beans.model.templating;
 
-import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import freemarker.template.*;
+import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 
 import java.util.List;
 
 public class QueryEvalMethodModel implements TemplateMethodModel {
 
-    private QueryEvaluator queryEval;
+    private final QueryEvaluator queryEval;
 
     public QueryEvalMethodModel(QueryEvaluator queryEval) {
         this.queryEval = queryEval;

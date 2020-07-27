@@ -1,7 +1,8 @@
 package org.gorpipe.model.genome.files.gor.bgenreader;
 
 import static org.gorpipe.model.genome.files.gor.bgenreader.CompressionType.*;
-import static org.gorpipe.model.genome.files.gor.bgenreader.LayoutType.*;
+import static org.gorpipe.model.genome.files.gor.bgenreader.LayoutType.LAYOUT_ONE;
+import static org.gorpipe.model.genome.files.gor.bgenreader.LayoutType.LAYOUT_TWO;
 import static org.gorpipe.model.genome.files.gor.bgenreader.Utils.parseUnsignedInt;
 
 class HeaderBlockParser {

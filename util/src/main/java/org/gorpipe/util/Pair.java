@@ -83,7 +83,7 @@ public class Pair<X extends Serializable, Y extends Serializable> implements Ser
             String line;
             while ((line = br.readLine()) != null) {
                 // Allow empty lines and commented lines with #
-                if (line.length() > 0 && (line.length() == 0 || line.charAt(0) != '#')) {
+                if (line.length() > 0 && line.charAt(0) != '#') {
                     String[] tokens = line.split(separator);
                     if (tokens.length != 2) {
                         throw new GorSystemException("Expect 2 tokens to form a pair in " + fileName + " not " + tokens.length, null);

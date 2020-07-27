@@ -40,7 +40,7 @@ import java.io.InputStream;
  */
 public class CachedSourceWrapper extends WrappedStreamSource {
     private StreamSource delegate;
-    private FileCache cache;
+    private final FileCache cache;
 
     public CachedSourceWrapper(FileCache cache, StreamSource source) {
         super(source);

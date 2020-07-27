@@ -22,10 +22,10 @@
 
 package gorsat;
 
-import org.gorpipe.model.genome.files.gor.Row;
+import gorsat.Commands.Analysis;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
-import gorsat.Commands.Analysis;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
@@ -46,10 +46,10 @@ import java.util.stream.StreamSupport;
 public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliterator<Row> {
     private static final Logger log = LoggerFactory.getLogger(BatchedPipeStepIteratorAdaptor.class);
 
-    private Iterator<? extends Row> sourceIterator;
-    private Analysis pipeStep;
+    private final Iterator<? extends Row> sourceIterator;
+    private final Analysis pipeStep;
     private RowBuffer rowBuffer = null;
-    private Row endRow = RowObj.StoR("chrN\t-1");
+    private final Row endRow = RowObj.StoR("chrN\t-1");
     private final Duration timeTriggerBufferFlush;
     private final Duration batchOfferTimeout;
     private final Duration timeout;
@@ -66,13 +66,12 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
     private int avgCount = 0;
     private int bavgCount = 0;
 
-    private long est = Long.MAX_VALUE;
     private boolean nosplit = false;
     private String currentChrom;
-    private static Map<String,String> nextChromMap = new HashMap<>();
+    private static final Map<String,String> nextChromMap = new HashMap<>();
 
-    private BatchedReadSourceConfig brsConfig;
-    private boolean autoclose;
+    private final BatchedReadSourceConfig brsConfig;
+    private final boolean autoclose;
 
     public void setCurrentChrom(String chrom) {
         this.currentChrom = chrom;
@@ -177,6 +176,7 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
 
     @Override
     public long estimateSize() {
+        long est = Long.MAX_VALUE;
         return est;
     }
 
@@ -310,9 +310,9 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
      * Reads from the sourceIterator into a buffer
      */
     private class ReaderThread extends Thread {
-        private SynchronousQueue<RowBuffer> rowQueue = new SynchronousQueue<>();
-        private RowBuffer rowBuffer1 = new RowBuffer();
-        private RowBuffer rowBuffer2 = new RowBuffer(rowBuffer1);
+        private final SynchronousQueue<RowBuffer> rowQueue = new SynchronousQueue<>();
+        private final RowBuffer rowBuffer1 = new RowBuffer();
+        private final RowBuffer rowBuffer2 = new RowBuffer(rowBuffer1);
         private Analysis bufferedPipeStep;
         private BufferAdaptor bufferAdaptor;
         private boolean stopProcessing = false;
@@ -344,11 +344,10 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
         private void initPipeStep() {
             if (timeTriggerBufferFlush.getNano() < 0) {
                 bufferAdaptor = new BufferAdaptor(this);
-                bufferedPipeStep = pipeStep != null ? pipeStep.$bar(bufferAdaptor) : bufferAdaptor;
             } else {
                 bufferAdaptor = new TimeoutBufferAdaptor(this);
-                bufferedPipeStep = pipeStep != null ? pipeStep.$bar(bufferAdaptor) : bufferAdaptor;
             }
+            bufferedPipeStep = pipeStep != null ? pipeStep.$bar(bufferAdaptor) : bufferAdaptor;
             bufferedPipeStep.securedSetup(null);
         }
 
@@ -489,7 +488,7 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
         SpliteratorAdaptor spliteratorAdaptor = new SpliteratorAdaptor(action);
         Analysis bufferedPipeStep = pipeStep != null ? pipeStep.$bar(spliteratorAdaptor) : spliteratorAdaptor;
         Exception ex = null;
-        bufferedPipeStep.securedSetup(ex);
+        bufferedPipeStep.securedSetup(null);
         try {
             while (sourceIterator.hasNext() && !bufferedPipeStep.wantsNoMore()) {
                 Row r = sourceIterator.next();

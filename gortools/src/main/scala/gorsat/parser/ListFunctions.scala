@@ -102,7 +102,7 @@ object ListFunctions {
   }
 
   def cols2Listmap(owner: ParseArith, columnSelection: sFun, expression: sFun): sFun = {
-    cols2ListmapCustomSep(owner, columnSelection, expression, cvp => ",")
+    cols2ListmapCustomSep(owner, columnSelection, expression, _ => ",")
   }
 
 
@@ -111,7 +111,7 @@ object ListFunctions {
       try {
         ColumnSelection(owner.getHeader.toString, columnSelection(dummyCvp), owner.context, owner.executeNor)
       } catch {
-        case e: NullPointerException => throw new GorParsingException("COLS2LISTMAP expects a quoted column selection " +
+        case _: NullPointerException => throw new GorParsingException("COLS2LISTMAP expects a quoted column selection " +
           "expression")
       }
     }
@@ -120,7 +120,7 @@ object ListFunctions {
         val exprSrc = expression(dummyCvp)
         Cols2ListAnalysis.compileExpression(exprSrc, owner.getHeader)
       } catch {
-        case e: NullPointerException => throw new GorParsingException("COLS2LISTMAP expects a quoted expression")
+        case _: NullPointerException => throw new GorParsingException("COLS2LISTMAP expects a quoted expression")
       }
     }
 
@@ -136,7 +136,7 @@ object ListFunctions {
   }
 
   def cols2List(owner: ParseArith, columnSelection: sFun): sFun = {
-    cols2ListCustomSep(owner, columnSelection, cvp => ",")
+    cols2ListCustomSep(owner, columnSelection, _ => ",")
   }
 
   def cols2ListCustomSep(owner: ParseArith, columnSelection: sFun, sep: sFun): sFun = {
@@ -144,7 +144,7 @@ object ListFunctions {
       try {
         ColumnSelection(owner.getHeader.toString, columnSelection(dummyCvp), owner.context, owner.executeNor)
       } catch {
-        case e: NullPointerException => throw new GorParsingException("COLS2LIST expects a qouted column selection " +
+        case _: NullPointerException => throw new GorParsingException("COLS2LIST expects a qouted column selection " +
           "expression")
       }
     }
@@ -399,7 +399,7 @@ object ListFunctions {
     val filter = owner.createSubFilter()
     filter.compileFilter(ex3(dummyCvp))
     cvp =>
-      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex3(cvp))
+      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp))
 
   }
 
@@ -407,11 +407,11 @@ object ListFunctions {
     val filter = owner.createSubFilter()
     filter.compileFilter(ex3(dummyCvp))
     cvp =>
-      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex3(cvp), ex4(cvp))
+      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex4(cvp))
 
   }
 
-  def listZipFilterInner(cvp: ColumnValueProvider, filter: ParseArith, arg1: String, arg2: String, arg3: String,
+  def listZipFilterInner(cvp: ColumnValueProvider, filter: ParseArith, arg1: String, arg2: String,
                          delimiter: String = ","): String = {
     val buffer = new java.lang.StringBuilder()
 

@@ -23,7 +23,10 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;

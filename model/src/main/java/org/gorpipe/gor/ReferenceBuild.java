@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor;
 
-import org.gorpipe.model.util.StringUtil;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
+import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +42,8 @@ public class ReferenceBuild {
     private static final Logger log = LoggerFactory.getLogger(ReferenceBuild.class);
     private String version = "generic";
     private String buildPath = "";
-    private Map<String, Integer> buildSize;
-    private Map<String, Integer> buildSplit;
+    private final Map<String, Integer> buildSize;
+    private final Map<String, Integer> buildSplit;
     private String cramReferencePath;
 
     private final static String BUILDPATH_KEY = "buildPath";

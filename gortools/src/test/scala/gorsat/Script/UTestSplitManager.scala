@@ -22,7 +22,6 @@
 
 package gorsat.Script
 
-import org.gorpipe.gor.ReferenceBuildDefaults
 import gorsat.DynIterator
 import gorsat.process.{GenericSessionFactory, PipeInstance, PipeOptions, TestSessionFactory}
 import org.gorpipe.exceptions.GorParsingException

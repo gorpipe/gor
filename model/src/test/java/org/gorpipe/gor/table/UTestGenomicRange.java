@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.table;
 
-import org.gorpipe.gor.table.GenomicRange;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -22,9 +22,9 @@
 
 package gorsat;
 
-import org.gorpipe.exceptions.GorParsingException;
 import gorsat.Script.VirtualFileEntry;
 import gorsat.Script.VirtualFileManager;
+import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Test;
 

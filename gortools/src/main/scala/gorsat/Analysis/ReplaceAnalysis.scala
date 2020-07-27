@@ -22,10 +22,7 @@
 
 package gorsat.Analysis
 
-import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorSession
-import gorsat.Commands.Analysis
-import gorsat.Commands.{CommandParseUtilities, RowHeader}
+import gorsat.Commands.{Analysis, CommandParseUtilities, RowHeader}
 import gorsat.parser.ReplaceCvp
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
 import org.gorpipe.gor.GorContext

@@ -22,8 +22,8 @@
 
 package gorsat.parser
 
-import gorsat.parser.FunctionTypes.{bFun, dFun, iFun, lFun, sFun}
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes._
 import org.gorpipe.exceptions.GorDataException
 
 import scala.collection.mutable
@@ -143,7 +143,7 @@ object TypeConversionFunctions {
 
   def int2Long(ex: iFun): lFun = {
     cvp => {
-      ex(cvp).toInt
+      ex(cvp)
     }
   }
 

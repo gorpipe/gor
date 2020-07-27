@@ -22,9 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.GorOptions;
-import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Test;

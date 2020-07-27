@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -38,6 +37,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWra
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,7 @@ import java.util.Set;
 
 public abstract class StreamSourceProvider implements SourceProvider {
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<DataType, StreamSourceIteratorFactory> dataTypeToFactory = new HashMap<>();
+    private final Map<DataType, StreamSourceIteratorFactory> dataTypeToFactory = new HashMap<>();
     private FileCache cache;
     protected GorDriverConfig config;
 

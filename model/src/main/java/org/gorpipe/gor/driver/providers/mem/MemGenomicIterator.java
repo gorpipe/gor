@@ -41,7 +41,7 @@ public class MemGenomicIterator extends GenomicIterator {
     static final String[] COLS = {"Chromo", "Pos", "Col3", "Col4", "Col5"};
     final GenomicIterator.ChromoLookup lookup;
 
-    public MemGenomicIterator(GenomicIterator.ChromoLookup lookup, int lines, int columns[]) {
+    public MemGenomicIterator(GenomicIterator.ChromoLookup lookup, int lines, int[] columns) {
         this.lookup = lookup;
         this.lines = lines;
         this.columns = columns != null ? columns : new int[]{0, 1, 2, 3, 4};

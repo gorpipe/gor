@@ -61,15 +61,14 @@ public class StringArgumentBuilder extends ArgumentBuilder {
             formatter = new ValueFormatter((Map<Object, String>) attributes.get("format"));
         }
 
-        final boolean quoted = !attributes.containsKey("quoted") || ((Boolean) attributes.get("quoted")) == Boolean.TRUE;
+        final boolean quoted = !attributes.containsKey("quoted") || attributes.get("quoted") == Boolean.TRUE;
         final Boolean advanced = (Boolean) attributes.get("advanced");
         final Integer displayWidth = getDisplayWidth(attributes);
         final ArgumentType argType = attributes.containsKey("type") ? ArgumentType.valueOf(attributes.get("type").toString().trim().toUpperCase()) : ArgumentType.STRING;
         final Boolean singleSelection = (Boolean) attributes.get("single_selection");
 
-        final StringArgument argument = new StringArgument(argDescr, quoted, optional, defaultValue, allowed, valuesPath, formatter,
+        return new StringArgument(argDescr, quoted, optional, defaultValue, allowed, valuesPath, formatter,
                 operators, advanced, displayWidth, argType, singleSelection);
-        return argument;
     }
 
 }

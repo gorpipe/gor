@@ -41,7 +41,9 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.InflaterOutputStream;
 
@@ -50,9 +52,8 @@ public class GorzSeekableIterator extends GenomicIterator {
 
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
     private final String filePath;
-    private GorHeader header;
+    private final GorHeader header;
     private final Unzipper unzipper;
-    private byte beginOfBlockByte;
     private byte[] buffer;
     private final BufferIterator bufferIterator = new BufferIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
     private final ByteArrayWrapper rawDataHolder = new ByteArrayWrapper();
@@ -192,8 +193,8 @@ public class GorzSeekableIterator extends GenomicIterator {
         }
 
         if (this.firstBlock) {
-            this.beginOfBlockByte = in[idx];
-            final CompressionType type = (this.beginOfBlockByte & 0x02) == 0 ? CompressionType.ZLIB : CompressionType.ZSTD;
+            byte beginOfBlockByte = in[idx];
+            final CompressionType type = (beginOfBlockByte & 0x02) == 0 ? CompressionType.ZLIB : CompressionType.ZSTD;
             this.unzipper.setType(type);
             this.firstBlock = false;
         }
@@ -219,7 +220,7 @@ public class GorzSeekableIterator extends GenomicIterator {
     }
 
     class ColumnCompressedUnzipper extends Unzipper {
-        private byte[] buffer;
+        private final byte[] buffer;
         private byte[] lookupBytesCompressed7Bit;
         private final Map<Integer, Map<Integer, byte[]>> mapExtTable;
         private boolean lookupTableParsed = false;

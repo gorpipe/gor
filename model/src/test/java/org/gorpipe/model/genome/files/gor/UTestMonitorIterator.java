@@ -29,7 +29,8 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.gorpipe.model.IteratorTestUtilities.countRemainingLines;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class UTestMonitorIterator {
     public class TestMonitor extends GorMonitor {

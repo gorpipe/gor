@@ -38,7 +38,7 @@ public class GCRacFile extends RacFile {
     private static final Logger log = LoggerFactory.getLogger(GorFileReaderContext.class);
     final RandomAccessFile file;
     final String filename;
-    boolean open = false;
+    boolean open;
 
     /**
      * Construct GCRacFile that can read the specified file

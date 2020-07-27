@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.table;
 
-import org.gorpipe.exceptions.GorResourceException;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

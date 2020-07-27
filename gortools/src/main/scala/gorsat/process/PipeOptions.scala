@@ -24,7 +24,6 @@ package gorsat.process
 
 import java.util.UUID
 
-import org.gorpipe.model.genome.files.gor.FileReader
 import gorsat.Commands.CommandParseUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorParsingException

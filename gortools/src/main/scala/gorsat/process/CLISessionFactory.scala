@@ -26,8 +26,8 @@ import java.nio.file.Paths
 
 import gorsat.AnalysisUtilities
 import gorsat.QueryHandlers.GeneralQueryHandler
-import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor._
+import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext, GorParallelQueryHandler}
 import org.gorpipe.model.util.StringUtil
 

@@ -21,24 +21,21 @@
  */
 package org.gorpipe.model.genome.files.gor;
 
+import htsjdk.samtools.*;
+import htsjdk.samtools.SAMRecord.SAMTagAndValue;
+import htsjdk.samtools.util.CloseableIterator;
+import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.model.gor.RowObj;
+import org.gorpipe.model.util.ByteTextBuilder;
+import org.gorpipe.model.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
-import org.gorpipe.model.util.ByteTextBuilder;
-import org.gorpipe.model.util.Util;
-import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.model.gor.RowObj;
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecord.SAMTagAndValue;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.util.CloseableIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * GenomicIterator on top of BAM Files
@@ -493,7 +490,7 @@ public class BamIterator extends GenomicIterator {
 
         @Override
         public double colAsDouble(int colNum) {
-            return (double) reverseIntMap[colNum].applyAsInt(record);
+            return reverseIntMap[colNum].applyAsInt(record);
         }
 
         @Override
@@ -513,7 +510,7 @@ public class BamIterator extends GenomicIterator {
 
         @Override
         public double doubleValue(int col) {
-            return (double)reverseIntMap[col].applyAsInt(record);
+            return reverseIntMap[col].applyAsInt(record);
         }
 
         @Override
@@ -611,9 +608,8 @@ public class BamIterator extends GenomicIterator {
         }
 
         void resizeColumnMaps(int newsize) {
-            int newlen = newsize;
-            Function<SAMRecord, String>[] revStringMap = new Function[newlen];
-            ToIntFunction<SAMRecord>[] revIntMap = new ToIntFunction[newlen];
+            Function<SAMRecord, String>[] revStringMap = new Function[newsize];
+            ToIntFunction<SAMRecord>[] revIntMap = new ToIntFunction[newsize];
             for (int i = 0; i < reverseStringMap.length; i++) {
                 revStringMap[i] = reverseStringMap[i];
                 revIntMap[i] = reverseIntMap[i];

@@ -50,7 +50,7 @@ public class IndexCommand extends HelpOptions implements Runnable{
     private File[] files;
 
     private long pos = 0;
-    private byte[] buffer = new byte[10000000];
+    private final byte[] buffer = new byte[10000000];
     private int r = 0;
     private int i = 0;
     private int lastOffset;

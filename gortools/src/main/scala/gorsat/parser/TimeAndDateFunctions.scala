@@ -25,8 +25,8 @@ package gorsat.parser
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import gorsat.parser.FunctionTypes.{lFun, sFun}
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes.{lFun, sFun}
 
 object TimeAndDateFunctions {
   def register(functions: FunctionRegistry): Unit = {

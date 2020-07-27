@@ -43,11 +43,11 @@ public class BucketizeCommand extends CommandBucketizeOptions implements Runnabl
             description = "Directories to put the bucket files in, either absolute path or relative to the table dir.  " +
                     "The directories must exists and be writable.  Values are specified as comma separated list.  " +
                     "Dafault: .<table name>.buckets")
-    private List<String> bucketDirs = new ArrayList<>();
+    private final List<String> bucketDirs = new ArrayList<>();
 
     @CommandLine.Option(names = {"--max_bucket_count"},
             description = "Maximum number of buckets created in this call to bucketize.  No limit if less than 0. Default: " + BucketManager.DEFAULT_MAX_BUCKET_COUNT)
-    private int maxBucketCount = BucketManager.DEFAULT_MAX_BUCKET_COUNT;
+    private final int maxBucketCount = BucketManager.DEFAULT_MAX_BUCKET_COUNT;
 
     @Override
     public void run() {

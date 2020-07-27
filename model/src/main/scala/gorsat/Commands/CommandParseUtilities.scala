@@ -370,7 +370,7 @@ object CommandParseUtilities {
 
       if (forNor) col += 2
     } catch {
-      case e: Exception =>
+      case _: Exception =>
 
         if (columnNumberOrName.indexOf("[") > 0 && columnNumberOrName.indexOf("]") > columnNumberOrName.indexOf("[")) {
           try {
@@ -378,7 +378,7 @@ object CommandParseUtilities {
             name = columnNumberOrName.substring(0, b).toUpperCase
             offset = columnNumberOrName.substring(b + 1, e).toInt
           } catch {
-            case e: Exception => throw new GorParsingException(s"Column $columnNumberOrName has illegal offset.")
+            case _: Exception => throw new GorParsingException(s"Column $columnNumberOrName has illegal offset.")
           }
         } else {
           name = columnNumberOrName.toUpperCase
@@ -471,7 +471,7 @@ object CommandParseUtilities {
     try {
       columnIndices = columnsFromHeader(columns, header, forNor, ignoreNonExisting)
     } catch {
-      case gpe: GorParsingException =>
+      case _: GorParsingException =>
 
     }
 
@@ -643,11 +643,11 @@ object CommandParseUtilities {
     val trimmedCommand = command.trim()
     val ip = quoteSafeIndexOf(trimmedCommand, ">(")
     if (ip < 0) {
-      throw new GorParsingException("Bad nested process gorpipe command: " + trimmedCommand);
+      throw new GorParsingException("Bad nested process gorpipe command: " + trimmedCommand)
     }
     val ep = findEndBracketPos(ip + 2, trimmedCommand)
     if (ep < ip + 2 || ep < trimmedCommand.length - 1) {
-      throw new GorParsingException("Nested process gorpipe command not closed with a bracket: " + trimmedCommand);
+      throw new GorParsingException("Nested process gorpipe command not closed with a bracket: " + trimmedCommand)
     }
     trimmedCommand.slice(ip + 2, ep).trim
   }
@@ -660,11 +660,11 @@ object CommandParseUtilities {
     val trimmedCommand = command.trim()
     val ip = quoteSafeIndexOf(trimmedCommand, "<(")
     if (ip < 0) {
-      throw new GorParsingException("Bad nested gorpipe command: " + trimmedCommand);
+      throw new GorParsingException("Bad nested gorpipe command: " + trimmedCommand)
     }
     val ep = findEndBracketPos(ip + 2, trimmedCommand)
     if (ep < ip + 2 || ep < trimmedCommand.length - 1) {
-      throw new GorParsingException("Nested gorpipe command not closed with a bracket: " + trimmedCommand);
+      throw new GorParsingException("Nested gorpipe command not closed with a bracket: " + trimmedCommand)
     }
     trimmedCommand.slice(ip + 2, ep)
   }
@@ -964,7 +964,7 @@ object CommandParseUtilities {
         if (quotes.exists(x => x.quote == c)) {
           if (withinQuotes && (backSlashCount % 2) == 0) {
             if (c == quoteType) {
-              withinQuotes = false;
+              withinQuotes = false
               patternQuote = false
             }
           } else if (backSlashCount % 2 == 0) {
@@ -977,9 +977,9 @@ object CommandParseUtilities {
         if (withinQuotes && c == '\\') backSlashCount += 1 else backSlashCount = 0
 
         if (j == 0) {
-          wq = withinQuotes;
-          pq = patternQuote;
-          qt = quoteType;
+          wq = withinQuotes
+          pq = patternQuote
+          qt = quoteType
           bc = backSlashCount
         }
         if (c == searchString(j)) {

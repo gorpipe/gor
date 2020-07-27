@@ -22,10 +22,10 @@
 
 package gorsat.parser
 
-import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
-import org.scalatest.FlatSpec
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
 import org.junit.runner.RunWith
+import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])

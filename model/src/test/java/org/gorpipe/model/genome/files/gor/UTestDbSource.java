@@ -22,12 +22,11 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.gorpipe.model.genome.files.gor.DbSource;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class UTestDbSource {
 

@@ -34,16 +34,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class GorSessionCache {
 
-    private Map<String, Long> seekTimes = new ConcurrentHashMap<>();
-    private Map<String, String> headerMap = new HashMap<>();  // Synchronized on access.
-    private Map<String, Pair<String, String[]>> headerFileMap = new ConcurrentHashMap<>();
-    private Map<String, Pair<String, byte[]>> fileHeaderMap = new ConcurrentHashMap<>();
-    private Map<String, Map<String, String>> singleHashMaps = new HashMap<>();  // Synchronized on access
-    private Map<String, Map<String, String[]>> multiHashMaps = new HashMap<>(); // Synchronized on access
-    private Map<String, String[]> listMaps = new HashMap<>();   // Synchronized on access
-    private Map<String, Object> objectHashMap = new ConcurrentHashMap<>();
-    private Map<String, Integer> fileSegMap = new ConcurrentHashMap<>();
-    private Map<String, Set<String>> sets = new HashMap<>();  // Synchronized on access
+    private final Map<String, Long> seekTimes = new ConcurrentHashMap<>();
+    private final Map<String, String> headerMap = new HashMap<>();  // Synchronized on access.
+    private final Map<String, Pair<String, String[]>> headerFileMap = new ConcurrentHashMap<>();
+    private final Map<String, Pair<String, byte[]>> fileHeaderMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, String>> singleHashMaps = new HashMap<>();  // Synchronized on access
+    private final Map<String, Map<String, String[]>> multiHashMaps = new HashMap<>(); // Synchronized on access
+    private final Map<String, String[]> listMaps = new HashMap<>();   // Synchronized on access
+    private final Map<String, Object> objectHashMap = new ConcurrentHashMap<>();
+    private final Map<String, Integer> fileSegMap = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> sets = new HashMap<>();  // Synchronized on access
 
 
     public Map<String, Long> getSeekTimes() {

@@ -61,7 +61,7 @@ public class StringUtil {
      * @param s the string to check
      * @return true if the characters in the string are all digits
      */
-    public final static boolean isAllDigit(String s) {
+    public static boolean isAllDigit(String s) {
         for (int i = 0; i < s.length(); i++)
             if (!Character.isDigit(s.charAt(i)))
                 return false;

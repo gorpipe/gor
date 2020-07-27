@@ -32,8 +32,8 @@ import org.gorpipe.model.util.GLogGamma;
  */
 public class CombinationIterator {
 
-    private int n;
-    private int k;
+    private final int n;
+    private final int k;
     private boolean[] included;
     private int j; // Index of last not included.
     private int i; // Index of last included before j.

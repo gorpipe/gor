@@ -22,8 +22,8 @@
 
 package gorsat.parser
 
-import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
 
 object AlgebraicFunctions {
   def register(functions: FunctionRegistry): Unit = {

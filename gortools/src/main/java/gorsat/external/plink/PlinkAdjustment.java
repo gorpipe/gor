@@ -22,8 +22,8 @@
 
 package gorsat.external.plink;
 
-import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +42,12 @@ import java.util.stream.Stream;
 public class PlinkAdjustment implements Callable<Stream<Row>> {
     private static final Logger log = LoggerFactory.getLogger(PlinkAdjustment.class);
 
-    private String pheno;
-    private String test;
-    private String columns;
-    private String filepath;
-    private boolean sort;
-    private String[] plinkExecutable;
+    private final String pheno;
+    private final String test;
+    private final String columns;
+    private final String filepath;
+    private final boolean sort;
+    private final String[] plinkExecutable;
 
     public PlinkAdjustment(String[] plinkExecutable, Path filepath, String pheno, String test, String columns, boolean sort) {
         this.pheno = pheno;

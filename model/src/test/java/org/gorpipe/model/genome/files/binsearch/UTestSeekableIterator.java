@@ -22,18 +22,20 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
-import org.apache.commons.io.FileUtils;
-import org.gorpipe.model.genome.files.binsearch.PositionCache;
-import org.gorpipe.model.genome.files.binsearch.SeekableIterator;
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;

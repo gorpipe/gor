@@ -42,7 +42,7 @@ import java.io.Closeable;
 public class SharedFastaReferenceSource extends SharedCachedReferenceSource implements Closeable {
 
     private static final Log log = Log.getInstance(htsjdk.samtools.cram.ref.ReferenceSource.class);
-    private ReferenceSequenceFile rsFile;
+    private final ReferenceSequenceFile rsFile;
 
     public SharedFastaReferenceSource(final ReferenceSequenceFile rsFile, String referenceFileKey) {
         super(referenceFileKey);

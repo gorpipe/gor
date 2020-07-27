@@ -1,12 +1,10 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import gorsat.{PnBucketParsing, PnBucketTable}
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import gorsat.gtgen.GPParser.parseDoubleTriplet
-import gorsat.gtgen.GPParser.glToGp
-import gorsat.gtgen.GPParser.plToGp
+import gorsat.gtgen.GPParser.{glToGp, parseDoubleTriplet, plToGp}
 import gorsat.gtgen.GTGen
+import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.gor.GorContext
 import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj

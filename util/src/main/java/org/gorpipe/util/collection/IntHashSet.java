@@ -73,7 +73,7 @@ public class IntHashSet implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj != null && obj instanceof IntHashSet) && equals((IntHashSet) obj);
+        return (obj instanceof IntHashSet) && equals((IntHashSet) obj);
     }
 
     @Override

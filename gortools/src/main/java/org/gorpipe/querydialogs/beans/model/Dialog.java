@@ -21,20 +21,20 @@
  */
 package org.gorpipe.querydialogs.beans.model;
 
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.model.genome.files.gor.QueryEvaluator;
-import org.gorpipe.Constants;
-import org.gorpipe.util.collection.extract.Extract;
 import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.core.Environment;
 import freemarker.core.ParseException;
 import freemarker.template.*;
+import org.gorpipe.Constants;
+import org.gorpipe.model.genome.files.gor.FileReader;
+import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import org.gorpipe.querydialogs.beans.model.templating.DialogArgumentWrapper;
 import org.gorpipe.querydialogs.beans.model.templating.NetworkTemplateLoader;
 import org.gorpipe.querydialogs.beans.model.templating.QueryEvalMethodModel;
 import org.gorpipe.querydialogs.beans.model.templating.SkipFirstMethodModel;
+import org.gorpipe.util.collection.extract.Extract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,8 +157,8 @@ public class Dialog extends AbstractListBean {
     private boolean advancedArgumentsVisible;
     private boolean hasErrorMsgTemplate = false;
     private boolean hasLongRunningQuery = false;
-    private FileReader fileResolver;
-    private QueryEvaluator queryEval;
+    private final FileReader fileResolver;
+    private final QueryEvaluator queryEval;
     private boolean deferUpdates;
 
     public Dialog(Map<String, ? extends Object> attributes, FileReader fileResolver, QueryEvaluator queryEval, DialogDescription dialogDescription,

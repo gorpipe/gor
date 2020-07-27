@@ -23,8 +23,8 @@
 package org.gorpipe.security.cred;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.gorpipe.model.util.StringUtil;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class BundledCredentials implements CredentialsProvider {
 
     private final ConcurrentMap<String, ConcurrentMap<String, Credentials>> svcToLookupMap;
     private final ConcurrentMap<String, Credentials> serviceToDefaultMap;
-    private static BundledCredentials emptyCredentials = new BundledCredentials();
+    private static final BundledCredentials emptyCredentials = new BundledCredentials();
 
     private BundledCredentials(ConcurrentMap<String, ConcurrentMap<String, Credentials>> svcMap, ConcurrentMap<String, Credentials> defMap) {
         this.svcToLookupMap = svcMap;
@@ -242,19 +242,13 @@ public class BundledCredentials implements CredentialsProvider {
             return credentials1;
         }
 
-        ConcurrentMap<String, ConcurrentMap<String, Credentials>> svcToLookupMap1 = credentials1.svcToLookupMap;
-        ConcurrentMap<String, ConcurrentMap<String, Credentials>> svcToLookupMap2 = credentials2.svcToLookupMap;
-
         ConcurrentMap<String, ConcurrentMap<String, Credentials>> svcToLookupMapMerged = new ConcurrentHashMap<>();
-        svcToLookupMapMerged.putAll(svcToLookupMap1);
-        svcToLookupMapMerged.putAll(svcToLookupMap2);
-
-        ConcurrentMap<String, Credentials> serviceToDefaultMap1 = credentials1.serviceToDefaultMap;
-        ConcurrentMap<String, Credentials> serviceToDefaultMap2 = credentials2.serviceToDefaultMap;
+        svcToLookupMapMerged.putAll(credentials1.svcToLookupMap);
+        svcToLookupMapMerged.putAll(credentials2.svcToLookupMap);
 
         ConcurrentMap<String, Credentials> serviceToDefaultMapMerged = new ConcurrentHashMap<>();
-        serviceToDefaultMapMerged.putAll(serviceToDefaultMap1);
-        serviceToDefaultMapMerged.putAll(serviceToDefaultMap2);
+        serviceToDefaultMapMerged.putAll(credentials1.serviceToDefaultMap);
+        serviceToDefaultMapMerged.putAll(credentials2.serviceToDefaultMap);
 
         return new BundledCredentials(svcToLookupMapMerged, serviceToDefaultMapMerged);
     }

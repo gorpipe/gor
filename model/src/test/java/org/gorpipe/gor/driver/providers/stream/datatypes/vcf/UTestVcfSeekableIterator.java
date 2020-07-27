@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
@@ -7,7 +8,6 @@ import org.gorpipe.model.genome.files.binsearch.TestFileGenerator;
 import org.gorpipe.model.genome.files.binsearch.UTestSeekableGenomicIterator;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.Row;
-import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;

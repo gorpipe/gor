@@ -22,7 +22,7 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler, RowHeader}
+import gorsat.Commands.{Analysis, BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler, RowHeader}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.GorSession
@@ -30,7 +30,6 @@ import org.gorpipe.model.genome.files.gor.{GorMonitor, Line, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.LineIterator
-import gorsat.Commands.Analysis
 
 object GorQueen {
 

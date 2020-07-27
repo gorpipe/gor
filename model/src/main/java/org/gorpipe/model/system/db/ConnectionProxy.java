@@ -22,6 +22,9 @@
 
 package org.gorpipe.model.system.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.Wrapper;
@@ -29,8 +32,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Wrapper class to track connections that are leased out of the pool.
@@ -38,9 +39,9 @@ import org.slf4j.LoggerFactory;
 class ConnectionProxy implements Wrapper {
 
     private final static Logger log = LoggerFactory.getLogger(ConnectionProxy.class);
-    private Connection connection;
-    private Map<Connection, ConnectionInfo> connectionMap;
-    private StackTraceElement[] stackArray;
+    private final Connection connection;
+    private final Map<Connection, ConnectionInfo> connectionMap;
+    private final StackTraceElement[] stackArray;
 
     ConnectionProxy(
             Connection connection,

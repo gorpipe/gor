@@ -24,10 +24,10 @@
 // This file is generated from a Python script - do not modify!!!
 package gorsat.parser
 
+import gorsat.parser.FunctionTypes._
 import org.gorpipe.gor.ColumnValueProvider
-import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun, bFun}
-import org.scalatest.FunSuite
 import org.junit.runner.RunWith
+import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
     

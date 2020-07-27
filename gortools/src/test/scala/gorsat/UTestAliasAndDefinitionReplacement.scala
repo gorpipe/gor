@@ -22,10 +22,10 @@
 
 package gorsat
 
+import Commands.CommandParseUtilities
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import Commands.CommandParseUtilities
 
 @RunWith(classOf[JUnitRunner])
 class UTestAliasAndDefinitionReplacement extends FunSuite{

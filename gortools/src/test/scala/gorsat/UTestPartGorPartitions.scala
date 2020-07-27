@@ -22,10 +22,10 @@
 
 package gorsat
 
+import Macros.PartGor
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import Macros.PartGor
 
 @RunWith(classOf[JUnitRunner])
 class UTestPartGorPartitions extends FunSuite {

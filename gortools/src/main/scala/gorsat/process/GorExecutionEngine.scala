@@ -22,7 +22,6 @@
 
 package gorsat.process
 
-import org.gorpipe.gor.stats.StatsCollector
 import org.gorpipe.gor.{GorRunner, GorSession}
 
 /**

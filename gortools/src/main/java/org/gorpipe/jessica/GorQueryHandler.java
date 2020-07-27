@@ -22,9 +22,8 @@
 
 package org.gorpipe.jessica;
 
-import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.Commands.RowHeader;
-import org.gorpipe.jessica.PipeStepInfo;
+import org.gorpipe.model.genome.files.gor.Row;
 
 public interface GorQueryHandler {
     void setQuery(String input);

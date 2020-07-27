@@ -22,10 +22,11 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.cram;
 
-import java.io.IOException;
-import java.util.List;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Represents a Cram file source

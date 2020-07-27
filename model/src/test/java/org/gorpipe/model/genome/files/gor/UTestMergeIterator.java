@@ -24,7 +24,6 @@ package org.gorpipe.model.genome.files.gor;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
-
 import org.gorpipe.test.GorDictionarySetup;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -35,7 +34,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class UTestMergeIterator {
     @Rule

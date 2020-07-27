@@ -51,7 +51,7 @@ public class HelpCmd implements CommandLine.IHelpCommandInitializable2, Runnable
 
     @CommandLine.Parameters(paramLabel = "COMMAND", descriptionKey = "helpCommand.command",
             description = "The COMMAND to display the usage help message for.")
-    private String[] commands = new String[0];
+    private final String[] commands = new String[0];
 
     private CommandLine self;
     private PrintWriter outWriter;
@@ -108,7 +108,7 @@ public class HelpCmd implements CommandLine.IHelpCommandInitializable2, Runnable
         String[] helpFiles = {"gor_commands_help.txt", "gor_functions_help.txt"};
 
         for (String helpFileEntry : helpFiles) {
-            URI helpJarURL = null;
+            URI helpJarURL;
             try {
                 helpJarURL = this.getClass().getClassLoader().getResource(helpFileEntry).toURI();
             } catch (URISyntaxException e) {

@@ -22,7 +22,6 @@
 
 package gorsat.process;
 
-import org.gorpipe.model.gor.Pipes;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
@@ -34,6 +33,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.model.genome.files.gor.*;
+import org.gorpipe.model.gor.Pipes;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.*;
@@ -50,14 +50,14 @@ import java.util.stream.Collectors;
  * Created by sigmar on 12/02/16.
  */
 public class ProcessRowSource extends ProcessSource {
-    private StringBuilder errorStr = new StringBuilder();
+    private final StringBuilder errorStr = new StringBuilder();
     List<String> commands;
     private GenomicIterator it;
     boolean nor;
     private ProcessBuilder pb;
     private Process p;
     private Path fileroot = null;
-    private String filter;
+    private final String filter;
 
     public ProcessRowSource(String cmd, String type, boolean nor, GorSession session, GenomicRange.Range range, String filter) {
         this(CommandParseUtilities.quoteSafeSplit(cmd, ' '), type, nor, session, range, filter, Pipes.rowsToProcessBuffer());
@@ -546,7 +546,7 @@ public class ProcessRowSource extends ProcessSource {
         final ChromoCache lookupCache = new ChromoCache();
         final boolean addAnyChrToCache = true;
         final ChrDataScheme dataOutputScheme = ChrDataScheme.ChrLexico;
-        GenomicIterator.ChromoLookup lookup = new GenomicIterator.ChromoLookup() {
+        return new ChromoLookup() {
             @Override
             public final String idToName(int id) {
                 return lookupCache.toName(dataOutputScheme, id);
@@ -582,6 +582,5 @@ public class ProcessRowSource extends ProcessSource {
                 return lookupCache;
             }
         };
-        return lookup;
     }
 }

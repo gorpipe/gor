@@ -25,26 +25,26 @@ package gorsat.parser
 import scala.collection.mutable
 
 /**
-  * A FunctionRegistry is used to hold all the functions that can be used in an expression
-  * parsed by ParseArith.
-  * <br><br>
-  * The functions are registered under a case sensitive name - it is up to the parser
-  * to provide case insensitivity if that is desired.
-  * Essentially, any function can be registered with a simple register call, but
-  * at the time of writing only functions with 0 up to 4 arguments are supported.
-  * If more arguments are required at some point in the future, new variants
-  * of the register function need to be added.
-  * <br><br>
-  * Note that ParseArith expects functions to have a ParseArith reference as the first
-  * argument. Functions registered here can leave that out if they don't use it - the
-  * registry will create a wrapper that provides this argument and ignores it.
-  * <br><br>
-  * To register a function, call <br>`register("NAME", signature, func _)`<br><br>
-  * It is vital that the signature matches the function - a simple way to ensure that
-  * is to use the getSignature helpers from FunctionSignature. There are variants
-  * of getSignature for every possible combination of parameters recognized by the
-  * parser - using those to generate the signature ensures that it matches the function.
-  */
+ * A FunctionRegistry is used to hold all the functions that can be used in an expression
+ * parsed by ParseArith.
+ * <br><br>
+ * The functions are registered under a case sensitive name - it is up to the parser
+ * to provide case insensitivity if that is desired.
+ * Essentially, any function can be registered with a simple register call, but
+ * at the time of writing only functions with 0 up to 4 arguments are supported.
+ * If more arguments are required at some point in the future, new variants
+ * of the register function need to be added.
+ * <br><br>
+ * Note that ParseArith expects functions to have a ParseArith reference as the first
+ * argument. Functions registered here can leave that out if they don't use it - the
+ * registry will create a wrapper that provides this argument and ignores it.
+ * <br><br>
+ * To register a function, call <br>`register("NAME", signature, func _)`<br><br>
+ * It is vital that the signature matches the function - a simple way to ensure that
+ * is to use the getSignature helpers from FunctionSignature. There are variants
+ * of getSignature for every possible combination of parameters recognized by the
+ * parser - using those to generate the signature ensures that it matches the function.
+ */
 class FunctionRegistry {
   // Map of all function names, mapping the base name to a list of types
   private val allFunctions = mutable.Map[String, List[FunctionWrapper]]()
@@ -127,12 +127,12 @@ class FunctionRegistry {
 
 
   /**
-    * Look up a function wrapper based on the mangled name of a function. The mangled
-    * name has the signature of its argument types and return type appended to the
-    * function name.
-    * @param mangledName The mangled function name
-    * @return A function wrapper for the function
-    */
+   * Look up a function wrapper based on the mangled name of a function. The mangled
+   * name has the signature of its argument types and return type appended to the
+   * function name.
+   * @param mangledName The mangled function name
+   * @return A function wrapper for the function
+   */
   def lookupWrapper(mangledName: String): FunctionWrapper = {
     val baseName = mangledName.reverse.split("_", 2)(1).reverse
     val variants = allFunctions(baseName)
@@ -140,26 +140,26 @@ class FunctionRegistry {
   }
 
   /**
-    * Gets a list of the signature variants available for a function with the given name,
-    * or an empty list if no such function exists.
-    * @param name The name of the function
-    * @return A list (potentially empty) of strings, representing the function signatures
-    */
+   * Gets a list of the signature variants available for a function with the given name,
+   * or an empty list if no such function exists.
+   * @param name The name of the function
+   * @return A list (potentially empty) of strings, representing the function signatures
+   */
   def getVariants(name: String): List[String] = {
     allFunctions.getOrElse(name, List.empty).map(wrapper => wrapper.signature)
   }
 
   /**
-    * Gets a list of the signature variants available for a function with the given name,
-    * with the given return type or an empty list if no such function exists.
-    * <br><br>
-    * This function is similar to `getVariants`, except the list is filtered
-    * by the return type.
-    * @param name The name of the function
-    * @param returnType The string representation of the desired return type. See the constants
-    *                   in FunctionTypes.
-    * @return A list (potentially empty) of strings, representing the function signatures
-    */
+   * Gets a list of the signature variants available for a function with the given name,
+   * with the given return type or an empty list if no such function exists.
+   * <br><br>
+   * This function is similar to `getVariants`, except the list is filtered
+   * by the return type.
+   * @param name The name of the function
+   * @param returnType The string representation of the desired return type. See the constants
+   *                   in FunctionTypes.
+   * @return A list (potentially empty) of strings, representing the function signatures
+   */
   def getVariantsByReturnType(name: String, returnType: String): List[String] = {
     val all = getVariants(name)
     all.filter(x => x.split(FunctionTypes.ReturnSeparator)(1) == returnType)

@@ -22,12 +22,12 @@
 
 package gorsat;
 
-import org.gorpipe.gor.GorSessionFactory;
 import gorsat.Analysis.VaastAnalysis;
 import gorsat.Commands.CommandInfo;
 import gorsat.Commands.CommandParsingResult;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.GorPipeCommands;
+import org.gorpipe.gor.GorSessionFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

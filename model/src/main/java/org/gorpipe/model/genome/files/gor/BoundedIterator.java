@@ -30,10 +30,10 @@ import org.gorpipe.exceptions.GorSystemException;
  */
 public class BoundedIterator extends GenomicIteratorAdapterBase {
 
-    private String startChromosome;
-    private String stopChromosome;
-    private int startPosition;
-    private int stopPosition;
+    private final String startChromosome;
+    private final String stopChromosome;
+    private final int startPosition;
+    private final int stopPosition;
 
     private Row nextFromIterator;
     private boolean isOutOfRange = false;

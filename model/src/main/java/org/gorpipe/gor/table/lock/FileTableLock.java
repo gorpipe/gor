@@ -22,6 +22,12 @@
 
 package org.gorpipe.gor.table.lock;
 
+import org.apache.commons.io.FileUtils;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.BaseTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.channels.FileChannel;
@@ -31,11 +37,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.BaseTable;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Class to acquire named locks.  The locks are reentrant read write locks and can be used for both inter process and inter thread locking.

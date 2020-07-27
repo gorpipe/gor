@@ -25,5 +25,5 @@ package org.gorpipe.model.gor.iterators
 import org.gorpipe.gor.GorContext
 
 class SingleFileSource(file : String, gorRoot : String, context: GorContext)
-  extends SingleRowIteratorSource(new FastGorSource(file,gorRoot, context,false,null,Int.MaxValue,true))
+  extends SingleRowIteratorSource(new FastGorSource(file,gorRoot, context,false,null,Int.MaxValue))
 

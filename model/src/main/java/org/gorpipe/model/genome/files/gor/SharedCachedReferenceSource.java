@@ -25,11 +25,11 @@ package org.gorpipe.model.genome.files.gor;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
-import org.gorpipe.exceptions.GorDataException;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.cram.ref.CRAMReferenceSource;
 import htsjdk.samtools.util.StringUtil;
+import org.gorpipe.exceptions.GorDataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -59,7 +59,7 @@ public class IntHashMap implements Cloneable, Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj != null && obj instanceof IntHashMap) && equals((IntHashMap) obj);
+        return (obj instanceof IntHashMap) && equals((IntHashMap) obj);
     }
 
     @Override

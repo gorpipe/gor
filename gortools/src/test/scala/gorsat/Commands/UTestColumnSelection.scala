@@ -24,7 +24,6 @@ package gorsat.Commands
 
 import gorsat.Script.ScriptExecutionEngine
 import gorsat.process.{GenericSessionFactory, GorInputSources, GorPipeCommands}
-import org.gorpipe.gor.GorContext
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

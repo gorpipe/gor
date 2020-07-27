@@ -31,7 +31,7 @@ import java.util.Map;
 public interface EventLogger {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public class SessionInfo {
+    class SessionInfo {
         public String query;
         public String requestId;
         public long startedAt;

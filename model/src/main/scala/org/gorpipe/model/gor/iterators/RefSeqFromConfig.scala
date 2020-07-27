@@ -42,7 +42,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
   var lastKey: String = ""
   var lastBuff: Array[Byte] = _
   var noReferenceBuildFound = false
-  var filemap = new util.HashMap[String,Optional[RacFile]]
+  val filemap = new util.HashMap[String, Optional[RacFile]]
 
   override def close(): Unit = {
     filemap.entrySet().stream().forEach( f => f.getValue.ifPresent(f => f.close()) )

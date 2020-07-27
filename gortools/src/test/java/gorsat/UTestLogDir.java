@@ -27,7 +27,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 

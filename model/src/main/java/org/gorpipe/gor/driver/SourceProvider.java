@@ -22,10 +22,10 @@
 
 package org.gorpipe.gor.driver;
 
-import org.gorpipe.gor.driver.providers.stream.FileCache;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.driver.providers.stream.FileCache;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

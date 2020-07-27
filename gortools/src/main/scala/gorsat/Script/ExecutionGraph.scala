@@ -65,7 +65,7 @@ case class ExecutionGraph(gorCommands: Array[String]) {
         }
       })
       remainingBlocks.get("[" + block.groupName + "]") match {
-        case Some(eb) =>
+        case Some(_) =>
         case None =>
           noInterdependencies = noInterdependencies ++ List(block)
       }

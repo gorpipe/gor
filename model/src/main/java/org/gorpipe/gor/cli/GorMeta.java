@@ -38,9 +38,9 @@ import java.util.Map;
  * gor driver.
  */
 public class GorMeta {
-    private String file;
-    private boolean followLink;
-    private GorDriver gorDriver;
+    private final String file;
+    private final boolean followLink;
+    private final GorDriver gorDriver;
 
     public GorMeta(String file, boolean followLink) {
         this.file = file;

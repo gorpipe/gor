@@ -23,16 +23,16 @@
 package org.gorpipe.gor.driver;
 
 import org.gorpipe.base.config.ConfigManager;
-import org.gorpipe.gor.driver.providers.stream.FileCache;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.driver.providers.stream.FileCache;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +47,10 @@ import static org.gorpipe.gor.driver.meta.DataType.LINK;
 public class PluggableGorDriver implements GorDriver {
     private final static Logger log = LoggerFactory.getLogger(PluggableGorDriver.class);
 
-    private TreeMap<String, SourceType> protocolToSourceType = new TreeMap<>();
-    private Map<SourceType, SourceProvider> sourceTypeToSourceProvider = new HashMap<>();
+    private final TreeMap<String, SourceType> protocolToSourceType = new TreeMap<>();
+    private final Map<SourceType, SourceProvider> sourceTypeToSourceProvider = new HashMap<>();
 
-    private GorDriverConfig config;
+    private final GorDriverConfig config;
 
     private static PluggableGorDriver instance;
 
@@ -218,7 +218,7 @@ public class PluggableGorDriver implements GorDriver {
                 String url = source.getSourceReference().getUrl();
                 // prevent stackoverflow, some datasources don't support links (dbsource), need to check file ending
                 if (!url.endsWith(".link")) {
-                    SourceReference sourceRef = null;
+                    SourceReference sourceRef;
 
                     if (source.getSourceReference() instanceof IndexableSourceReference) {
                         sourceRef = new IndexableSourceReference(url + ".link", (IndexableSourceReference)source.getSourceReference());

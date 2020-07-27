@@ -2,20 +2,19 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.binsearch.GorZipLexOutputStream;
-import org.gorpipe.model.genome.files.gor.NorParquetLine;
-import org.gorpipe.model.genome.files.gor.ParquetLine;
-import org.gorpipe.model.genome.files.gor.Row;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import gorsat.Analysis.Select2;
 import gorsat.Outputs.ToList;
 import gorsat.TestUtils;
 import org.aeonbits.owner.util.Collections;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.gorpipe.model.genome.files.binsearch.GorZipLexOutputStream;
+import org.gorpipe.model.genome.files.gor.ParquetLine;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.collection.mutable.ListBuffer;
@@ -27,7 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class UTestParquetFileIterator {
 
@@ -54,8 +54,6 @@ public class UTestParquetFileIterator {
         String expected = "chrY\t10069\tT\tA\trs111065272";
         assertEquals(expected, lastRow.getAllCols().toString());
     }
-
-
 
     @Test
     public void shouldReadParquetData() {

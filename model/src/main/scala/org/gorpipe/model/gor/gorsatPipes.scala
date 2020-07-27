@@ -23,7 +23,7 @@
 package org.gorpipe.model.gor
 
 object Pipes {
-  var rowsToProcessBuffer = 10000
+  val rowsToProcessBuffer = 10000
   var newCoreBuffer = 500
   var teeCoreBuffer = 200
   var rowsIteratorBuffer = 200

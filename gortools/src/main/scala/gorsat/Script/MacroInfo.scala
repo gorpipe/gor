@@ -22,7 +22,6 @@
 
 package gorsat.Script
 
-import org.gorpipe.exceptions.GorParsingException
 import gorsat.Commands.CommandArguments
 import gorsat.Commands.CommandParseUtilities.validateCommandArguments
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}

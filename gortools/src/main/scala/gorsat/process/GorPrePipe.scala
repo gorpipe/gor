@@ -153,7 +153,6 @@ object GorPrePipe {
 
     val inputCommands = CommandParseUtilities.quoteSafeSplit(inputCommand, ';')
 
-    val sessionFactory = new GenericSessionFactory()
     val mainAliasMap:singleHashMap = new java.util.HashMap[String, String]()
 
     val engine = ScriptEngineFactory.create(session.getGorContext)
@@ -170,7 +169,7 @@ object GorPrePipe {
       outArray ++= aliases.asScala.map(x => "aliases\t" + x._1 + "\t" + x._2)
 
     } catch {
-      case e: Exception => /* nothing */
+      case _: Exception => /* nothing */
     }
 
     outArray

@@ -21,12 +21,12 @@
  */
 package org.gorpipe.querydialogs.beans.model.templating;
 
-import org.gorpipe.querydialogs.beans.model.Argument;
-import org.gorpipe.querydialogs.beans.model.argument.StringArgument;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.SimpleHash;
 import freemarker.template.TemplateModel;
 import freemarker.template.TemplateModelException;
+import org.gorpipe.querydialogs.beans.model.Argument;
+import org.gorpipe.querydialogs.beans.model.argument.StringArgument;
 
 /**
  * A wrapper for dialog arguments.

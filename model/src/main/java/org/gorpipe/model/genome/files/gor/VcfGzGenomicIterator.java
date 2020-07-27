@@ -22,15 +22,15 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.model.util.ByteTextBuilder;
-import org.gorpipe.util.collection.ByteArray;
-import org.gorpipe.model.util.NCGZIPInputStream;
-import org.gorpipe.model.util.Util;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.model.util.ByteTextBuilder;
+import org.gorpipe.model.util.NCGZIPInputStream;
 import org.gorpipe.model.util.StringUtil;
+import org.gorpipe.model.util.Util;
+import org.gorpipe.util.collection.ByteArray;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,17 +61,17 @@ public class VcfGzGenomicIterator extends GenomicIterator {
         this.lookup = lookup;
     }
 
-    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int cols[], StreamSource streamsource, boolean compressed) throws IOException {
+    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int[] cols, StreamSource streamsource, boolean compressed) throws IOException {
         this(lookup, file, cols, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
         this.streamSource = streamsource;
     }
 
-    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int cols[], BufferedReader reader) throws IOException {
+    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int[] cols, BufferedReader reader) throws IOException {
         this(lookup);
         init(file, cols, reader);
     }
 
-    public void init(String file, int cols[], BufferedReader reader) throws IOException {
+    public void init(String file, int[] cols, BufferedReader reader) throws IOException {
         this.reader = reader;
 //
 //    		// File is either normal gzip file or pgzip file, must use distinct classes for reading thoose.
@@ -84,7 +84,7 @@ public class VcfGzGenomicIterator extends GenomicIterator {
 //    		reader = new BufferedReader(new InputStreamReader(in), 16*1024);
 
         // Must iterate to the beginning of the file, ignoring commenting header lines
-        String line = null;
+        String line;
         String contig = "##contig=<ID=";
         String length = "length=";
         while ((line = reader.readLine()) != null && line.startsWith("##")) {

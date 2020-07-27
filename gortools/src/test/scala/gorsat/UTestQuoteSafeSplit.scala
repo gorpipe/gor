@@ -22,8 +22,8 @@
 
 package gorsat
 
-import Commands._
 import Commands.CommandParseUtilities._
+import Commands._
 import org.gorpipe.exceptions.GorParsingException
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite

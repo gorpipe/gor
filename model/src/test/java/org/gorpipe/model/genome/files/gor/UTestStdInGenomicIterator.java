@@ -22,9 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.SourceRef;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 

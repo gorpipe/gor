@@ -22,8 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.GorOptions;
-import org.gorpipe.model.genome.files.gor.SourceRef;
 import gorsat.TestUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,7 +30,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test parsing argument list into GorOptions

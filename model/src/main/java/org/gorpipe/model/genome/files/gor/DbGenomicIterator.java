@@ -22,20 +22,17 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.model.util.IntHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * DbGenomicIterator allows iterating genomic data in the database. It allows subclassing to enable
@@ -55,7 +52,7 @@ public class DbGenomicIterator extends GenomicIterator {
     private final String chrColName;
     private final String posColName;
     private final int[] columns;
-    private List<DbScope> dbScopes;
+    private final List<DbScope> dbScopes;
     private List<DbScope> dbScopesUsed;
     private boolean seekInitialized;
 

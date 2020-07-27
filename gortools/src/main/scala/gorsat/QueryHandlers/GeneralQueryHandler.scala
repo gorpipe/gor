@@ -26,8 +26,6 @@ import java.io.File
 import java.lang
 import java.nio.file.{Files, Paths}
 
-import org.gorpipe.exceptions.{GorException, GorSystemException}
-import org.gorpipe.model.genome.files.gor.GorParallelQueryHandler
 import gorsat.AnalysisUtilities
 import gorsat.AnalysisUtilities.writeList
 import gorsat.Commands.CommandParseUtilities

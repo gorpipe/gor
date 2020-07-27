@@ -22,15 +22,15 @@
 
 package gorsat.process;
 
+import gorsat.Commands.Analysis;
+import gorsat.Commands.CommandParseUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorContext;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.model.genome.files.gor.Row;
-import gorsat.Commands.Analysis;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
-import gorsat.Commands.CommandParseUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  */
 public class ProcessIteratorAdaptor extends RowSource {
     private static final Logger log = LoggerFactory.getLogger(ProcessIteratorAdaptor.class);
-    private static Pattern pattern = Pattern.compile("'(?:[^']|'')+'|[^ ]+");
+    private static final Pattern pattern = Pattern.compile("'(?:[^']|'')+'|[^ ]+");
 
     static String norprefix = "chrN\t0\t";
     static String norheaderprefix = "ChromNOR\tPosNOR\t";
@@ -58,21 +58,21 @@ public class ProcessIteratorAdaptor extends RowSource {
 
     private boolean mustReCheck = true;
     private boolean myHasNext = true;
-    private BufferedReader breader;
+    private final BufferedReader breader;
 
     private final Process proc;
     final InputStream is;
 
-    private boolean skipheader;
-    private boolean nor;
+    private final boolean skipheader;
+    private final boolean nor;
 
-    private String processName = "";
-    private StringBuilder errorStr = new StringBuilder();
-    private boolean allowerror;
-    private RowSource rowSource;
-    private OutThread outThread;
+    private String processName;
+    private final StringBuilder errorStr = new StringBuilder();
+    private final boolean allowerror;
+    private final RowSource rowSource;
+    private final OutThread outThread;
 
-    class ProcessAdaptor extends Analysis {
+    static class ProcessAdaptor extends Analysis {
         OutputStream os;
         Analysis pps;
 
@@ -132,11 +132,11 @@ public class ProcessIteratorAdaptor extends RowSource {
     }
 
     private class OutThread extends Thread {
-        private RowSource rs;
-        private Analysis processPipeStep;
-        private OutputStream os;
+        private final RowSource rs;
+        private final Analysis processPipeStep;
+        private final OutputStream os;
         private Throwable th = null;
-        private String header;
+        private final String header;
 
         OutThread(RowSource rs, Analysis processPipeStep, OutputStream os, String header) {
             this.rs = rs;

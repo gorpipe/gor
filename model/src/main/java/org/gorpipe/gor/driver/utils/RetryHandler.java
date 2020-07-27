@@ -37,8 +37,8 @@ import java.io.IOException;
  */
 public class RetryHandler {
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private long retryInitialSleepMs;
-    private long retryMaxSleepMs;
+    private final long retryInitialSleepMs;
+    private final long retryMaxSleepMs;
 
     public RetryHandler(GorDriverConfig config) {
         this(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());

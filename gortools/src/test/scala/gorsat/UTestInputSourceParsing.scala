@@ -27,7 +27,6 @@ import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.sql.DriverManager
 
-import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import Commands.CommandParseUtilities
 import process.{GenericSessionFactory, GorInputSources, GorPipeCommands, PipeInstance}
 import org.apache.commons.io.FileUtils

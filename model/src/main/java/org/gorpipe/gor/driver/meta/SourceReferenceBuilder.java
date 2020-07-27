@@ -28,7 +28,7 @@ import org.gorpipe.model.genome.files.gor.GenomicIterator;
  * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.
  */
 public class SourceReferenceBuilder {
-    private String url;
+    private final String url;
     private String securityContext;
     private String commonRoot;
     private GenomicIterator.ChromoLookup lookup;

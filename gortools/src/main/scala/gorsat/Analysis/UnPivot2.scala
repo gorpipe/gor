@@ -22,10 +22,8 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.Analysis
-import gorsat.Commands.RowHeader
+import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.gor.RowObj
 
 case class NamedColumn(index: Int, name: String)
 

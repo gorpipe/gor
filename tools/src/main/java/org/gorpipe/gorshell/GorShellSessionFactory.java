@@ -38,7 +38,7 @@ import java.util.UUID;
 public class GorShellSessionFactory extends GorSessionFactory {
 
     private String root = "";
-    private String cacheDir;
+    private final String cacheDir;
     private String configFile = "";
     private boolean fileCacheEnabled = true;
     private boolean requestStatsEnabled = false;

@@ -22,9 +22,9 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.model.gor.iterators.LineIterator;
 import gorsat.Analysis.MapLookup;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.model.gor.iterators.LineIterator;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

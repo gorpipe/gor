@@ -23,17 +23,16 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes.gor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GorHeader {
-    private List<String> columns = new ArrayList<>();
-    private List<String> types = new ArrayList<>();
+    private final List<String> columns = new ArrayList<>();
+    private final List<String> types = new ArrayList<>();
 
     public GorHeader() {}
     public GorHeader(String[] columns) {
-        for(String s: columns) {
-            this.columns.add(s);
-        }
+        Collections.addAll(this.columns, columns);
     }
 
     public String[] getColumns() {

@@ -2,7 +2,8 @@ package gorsat.gtgen;
 
 import java.util.Arrays;
 
-import static java.lang.Math.*;
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 /**
  * A class for running simple joint variant calling.

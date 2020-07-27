@@ -61,7 +61,7 @@ import java.io.InputStream;
 public class FullRangeWrapper extends WrappedStreamSource {
     private static final Logger log = LoggerFactory.getLogger(FullRangeWrapper.class);
 
-    private static int DEFAULT_SEEK_THRESHOLD = 1000;
+    private static final int DEFAULT_SEEK_THRESHOLD = 1000;
     private final int seekThreshold;
 
     PersistentInputStream fullRangeStream;

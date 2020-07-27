@@ -58,10 +58,10 @@ public class Db {
     }
 
     private static class ConnectionPoolImpl implements ConnectionPool {
-        private String poolKey;
-        private HikariDataSource ds;
-        private Map<Connection, ConnectionInfo> connectionMap;
-        private int retryTimeout;
+        private final String poolKey;
+        private final HikariDataSource ds;
+        private final Map<Connection, ConnectionInfo> connectionMap;
+        private final int retryTimeout;
 
 
         /**

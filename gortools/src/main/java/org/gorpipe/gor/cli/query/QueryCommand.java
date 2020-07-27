@@ -23,14 +23,14 @@
 package org.gorpipe.gor.cli.query;
 
 import ch.qos.logback.classic.Level;
-import org.gorpipe.gor.cli.HelpOptions;
-import org.gorpipe.model.genome.files.gor.DbSource;
-import org.gorpipe.model.util.ConfigUtil;
-import org.gorpipe.exceptions.ExceptionUtilities;
-import org.gorpipe.exceptions.GorException;
 import gorsat.process.CLIGorExecutionEngine;
 import gorsat.process.GorExecutionEngine;
 import gorsat.process.PipeOptions;
+import org.gorpipe.exceptions.ExceptionUtilities;
+import org.gorpipe.exceptions.GorException;
+import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.model.genome.files.gor.DbSource;
+import org.gorpipe.model.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -45,7 +45,7 @@ import java.util.UUID;
         header = "Execute a gor query, script or template")
 public class QueryCommand extends HelpOptions implements Runnable{
 
-    private static Logger consoleLogger = LoggerFactory.getLogger("console." + QueryCommand.class);
+    private static final Logger consoleLogger = LoggerFactory.getLogger("console." + QueryCommand.class);
 
     @CommandLine.Option(defaultValue = "false", names={"-t","--stacktrace"}, description = "Displays stack trace for errors.")
     private boolean showStackTrace;
@@ -60,19 +60,19 @@ public class QueryCommand extends HelpOptions implements Runnable{
     private File aliasFile;
 
     @CommandLine.Option(names={"-d","--cachedir"}, description = "Path to cache directory for the current gor query.")
-    private Path cacheDir = Paths.get(System.getProperty("java.io.tmpdir"));
+    private final Path cacheDir = Paths.get(System.getProperty("java.io.tmpdir"));
 
     @CommandLine.Option(defaultValue = "", names={"-p","--projectroot"}, description = "Sets the project root for the current gor query.")
     private Path projectRoot;
 
     @CommandLine.Option(names={"-r","--requestid"}, description = "Sets a request id for the current gor query, used to identify logs and errors.")
-    private String requestId = UUID.randomUUID().toString();
+    private final String requestId = UUID.randomUUID().toString();
 
     @CommandLine.Option(names={"-l","--loglevel"}, defaultValue = "warn", description = "Sets the log level to use for the current gor query. Available levels are none, debug, info, warn or error")
     private String logLevel;
 
     @CommandLine.Option(defaultValue = "0", names={"-w","--workers"}, description = "Number of workers to execute the current gor query.")
-    private int workers = 0;
+    private final int workers = 0;
 
     @CommandLine.Parameters(index = "0", arity = "1", paramLabel = "InputQuery", description = "Queries to execute. Queries can be direct gor query, files containing gor script or gor report template.")
     private String query;
@@ -139,12 +139,12 @@ public class QueryCommand extends HelpOptions implements Runnable{
 
     private String loadQuery(String query, boolean inputIsScript) {
 
+        String[] args;
         if (inputIsScript) {
-            String[] args = {"-script " + query};
-            return PipeOptions.getQueryFromArgs(args);
+            args = new String[]{"-script " + query};
         } else {
-            String[] args = {query};
-            return PipeOptions.getQueryFromArgs(args);
+            args = new String[]{query};
         }
+        return PipeOptions.getQueryFromArgs(args);
     }
 }

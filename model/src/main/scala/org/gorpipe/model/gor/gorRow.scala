@@ -86,7 +86,7 @@ object RowObj {
 
   def peekAtColumn(n: Int, str: CharSequence, sa: Array[Int]): Char = {
     val start = if (n == 0) 0 else sa(n - 1) + 1
-    return str.charAt(start);
+    str.charAt(start)
   }
 
   def colDouble(n: Int, str: CharSequence, sa: Array[Int]): Double = {

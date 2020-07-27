@@ -5,13 +5,15 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.io.FileReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;

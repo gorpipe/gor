@@ -2,7 +2,7 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.gor;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class UTestGorHeader {
     @Test

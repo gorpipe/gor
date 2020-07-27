@@ -74,7 +74,7 @@ public class GorIndexFile implements AutoCloseable{
         GorDriver gorDriver = GorDriverFactory.fromConfig();
         try (
                 StreamSource dataSource = (StreamSource) gorDriver.resolveDataSource(sourceRef);
-                InputStream inputStream = dataSource.open();
+                InputStream inputStream = dataSource.open()
         ) {
             new GorzReader(inputStream).invoke(this);
         }
@@ -112,8 +112,8 @@ public class GorIndexFile implements AutoCloseable{
     }
 
     private static class Loader {
-        private BufferedReader reader;
-        private PositionCache pc;
+        private final BufferedReader reader;
+        private final PositionCache pc;
         private String version;
 
         Loader(BufferedReader reader, PositionCache pc) {
@@ -166,10 +166,10 @@ public class GorIndexFile implements AutoCloseable{
     }
 
     private static class GorzReader {
-        private InputStream inputStream;
+        private final InputStream inputStream;
         private long posInFile = 0;
         private boolean eof = false;
-        private byte[] inputBuffer = new byte[64*1024];
+        private final byte[] inputBuffer = new byte[64*1024];
         private int posInBuffer = 0;
         private int bytesInBuffer = 0;
 

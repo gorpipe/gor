@@ -27,8 +27,8 @@ import java.util.UUID
 
 import gorsat.AnalysisUtilities
 import gorsat.QueryHandlers.GeneralQueryHandler
-import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor._
+import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.model.genome.files.gor.DriverBackedFileReader
 import org.gorpipe.util.standalone.GorStandalone
 

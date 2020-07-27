@@ -22,25 +22,32 @@
 
 package gorsat.external.plink;
 
+import org.apache.commons.io.FileUtils;
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.genome.files.gor.pgen.PGenWriter;
 import org.gorpipe.model.genome.files.gor.pgen.PGenWriterFactory;
-import org.gorpipe.model.genome.files.gor.Row;
-import org.gorpipe.base.config.ConfigManager;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.GorSession;
 import org.gorpipe.model.gor.RowObj;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.PriorityQueue;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This analysis class collects gor or vcf lines and writes them in batches to a temporary vcf files read by plink2 process
@@ -67,14 +74,14 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
     final Path writeDir;
     final PlinkArguments args;
 
-    private float threshold;
+    private final float threshold;
     private final String phenoFile;
     private final int refIdx, altIdx, rsIdIdx, valueIdx;
     private final boolean hardCalls;
     private String lastChr = "";
     private int lastPos = -1;
 
-    private String expectedHeader;
+    private final String expectedHeader;
     private boolean checkedHeaderFromPlink = false;
 
     public PlinkProcessAdaptor(GorSession session, PlinkArguments plinkArguments,

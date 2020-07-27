@@ -22,7 +22,7 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.{Analysis, BinInfo, BinState, Processor, RowHeader}
+import gorsat.Commands._
 import gorsat.StringUtilities
 import org.gorpipe.model.genome.files.gor.Row
 

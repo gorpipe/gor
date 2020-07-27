@@ -22,13 +22,13 @@
 
 package org.gorpipe.gor.driver.providers.mem;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.util.Util;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.gorserver.GorSource;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.util.Util;
 
 import java.io.IOException;
 

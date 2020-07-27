@@ -34,7 +34,7 @@ abstract class Analysis() extends Processor with Cloneable {
   var alreadyFinished = false
   var isInErrorState = false
   var rowHeader: RowHeader = _
-  var cloned : Analysis = null
+  var cloned : Analysis = _
   var isCloned = false
 
   private[this] var _statsCollector: StatsCollector = _
@@ -111,8 +111,8 @@ abstract class Analysis() extends Processor with Cloneable {
       pipeTo | to
     }
     else {
-      pipeTo = to;
-      nextProcessor = to;
+      pipeTo = to
+      nextProcessor = to
       to.from(this)
     }
     this

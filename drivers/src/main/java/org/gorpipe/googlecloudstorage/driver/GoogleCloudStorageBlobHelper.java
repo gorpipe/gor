@@ -31,7 +31,7 @@ import com.google.cloud.storage.StorageOptions;
  */
 public class GoogleCloudStorageBlobHelper {
     public static final String GOOGLECLOUDSTORAGEPREFIX = "gs://";
-    private static Storage googlecloudstorage = StorageOptions.getDefaultInstance().getService();
+    private static final Storage googlecloudstorage = StorageOptions.getDefaultInstance().getService();
 
     public static Storage getGoogleCloudStorage() {
         return googlecloudstorage;

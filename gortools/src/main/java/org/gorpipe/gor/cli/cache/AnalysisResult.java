@@ -29,9 +29,9 @@ import java.util.*;
 
 class AnalysisResult {
 
-    private Path cacheFolder;
-    private Map<String, Integer> extensionCountMap = new HashMap<>();
-    private List<String> fileList = new ArrayList<>();
+    private final Path cacheFolder;
+    private final Map<String, Integer> extensionCountMap = new HashMap<>();
+    private final List<String> fileList = new ArrayList<>();
 
     AnalysisResult(Path cacheFolder) {
         this.cacheFolder = cacheFolder;

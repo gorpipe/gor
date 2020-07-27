@@ -55,7 +55,7 @@ public class GorShell {
 
     final Terminal terminal;
     LineReader lineReader;
-    private CommandLine commandLine;
+    private final CommandLine commandLine;
     private QueryRunner runner = null;
     private String input = "";
     private boolean exit = false;

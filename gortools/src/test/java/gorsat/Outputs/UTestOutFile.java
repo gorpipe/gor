@@ -24,24 +24,17 @@ package gorsat.Outputs;
 
 import gorsat.Commands.Output;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.model.genome.files.binsearch.GorIndexType;
 import org.gorpipe.model.genome.files.gor.RowBase;
-import org.gorpipe.model.gor.RowObj;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import scala.None;
-import scala.Option;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.zip.Deflater;
-
-import static org.junit.Assert.*;
 
 public class UTestOutFile {
     @Rule

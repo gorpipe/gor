@@ -31,10 +31,10 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import org.gorpipe.model.genome.files.gor.URIUtils;
-import org.gorpipe.model.util.Util;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import org.gorpipe.model.genome.files.gor.URIUtils;
+import org.gorpipe.model.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,9 +213,8 @@ public class S3GenomicIteratorFactory {
         final Stream<String> stream;
         final int idx = file.indexOf('/');
         if (idx < 0) {
-            String bucketName = file;
 
-            ObjectListing listing = s3.listObjects(bucketName, "");
+            ObjectListing listing = s3.listObjects(file, "");
             List<S3ObjectSummary> summaries = listing.getObjectSummaries();
 
             while (listing.isTruncated()) {
@@ -239,8 +238,7 @@ public class S3GenomicIteratorFactory {
         String bucket = file.substring(file.indexOf("://") + 3, li);
         String key = file.substring(li + 1);
         ObjectMetadata om = s3.getObjectMetadata(bucket, key);
-        String md5 = om.getETag();
-        return md5;
+        return om.getETag();
     }
 
     RdaAWSCredentialsProvider rdaCredProvider;
@@ -375,7 +373,7 @@ class RdaAWSCredentialsProvider implements AWSCredentialsProvider {
         if (keystore != null) {
             log.debug("Loading AWS credentials from RDA keystore %s", keystore);
             Properties p = new Properties();
-            try (InputStream in = new FileInputStream(keystore);) {
+            try (InputStream in = new FileInputStream(keystore)) {
                 p.load(in);
                 accessKey = p.getProperty("access.key");
                 secretKey = p.getProperty("secret.key");

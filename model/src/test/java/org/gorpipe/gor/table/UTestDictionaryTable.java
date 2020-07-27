@@ -22,15 +22,16 @@
 
 package org.gorpipe.gor.table;
 
+import gorsat.TestUtils;
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.FileTableLock;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GenomicRange;
 import org.gorpipe.test.utils.FileTestUtils;
-import gorsat.TestUtils;
-import org.apache.commons.io.FileUtils;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;

@@ -22,10 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.db;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
@@ -38,6 +34,11 @@ import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+
 /**
  * Represents a data source accessed through a database.
  * <p>
@@ -46,12 +47,12 @@ import org.slf4j.LoggerFactory;
 public class DbSource implements GorSource {
     private static final Logger log = LoggerFactory.getLogger(DbSource.class);
 
-    private SourceReference sourceReference;
+    private final SourceReference sourceReference;
 
     private final String databaseSource;
     private String chrColName = "chromo";
     private String posColName = "pos";
-    private String tableName = null;
+    private String tableName;
 
     public DbSource(SourceReference sourceReference) {
         this.sourceReference = sourceReference;

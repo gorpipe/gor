@@ -21,13 +21,13 @@
  */
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.gor.iterators.RowSource;
-import org.gorpipe.test.IntegrationTests;
-import org.gorpipe.test.SlowTests;
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.GorDictionarySetup;
+import org.gorpipe.test.IntegrationTests;
+import org.gorpipe.test.SlowTests;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;

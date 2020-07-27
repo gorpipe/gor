@@ -22,11 +22,11 @@
 
 package org.gorpipe.gor.function;
 
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import gorsat.process.PipeOptions;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.model.genome.files.gor.Row;
 
 import java.io.Serializable;
 import java.util.function.Function;

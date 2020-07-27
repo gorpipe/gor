@@ -41,8 +41,8 @@ class SeqBasesGenomicIterator extends GenomicIterator {
     String chromoName;        // The name of the chromosome
     RandomAccessFile seqfile; // The current file being read
     int seqfileLength;  // The total length of the current file
-    int filePos = 0;    // The next position in the file to be queried
-    int bufFilePos = 0; // The file position of the first element in the buffer
+    int filePos;    // The next position in the file to be queried
+    int bufFilePos; // The file position of the first element in the buffer
     final int[] columns; // source columns to include
     final int[] columnMap; // map source columns into Line data columns
     final String path; // The path to the directory containing the sequence bases
@@ -51,7 +51,7 @@ class SeqBasesGenomicIterator extends GenomicIterator {
     final short BUF_SIZE = 1024 * 16;
     final byte[] buf = new byte[BUF_SIZE];
 
-    SeqBasesGenomicIterator(String path, ChromoLookup lookup, int columns[]) {
+    SeqBasesGenomicIterator(String path, ChromoLookup lookup, int[] columns) {
         this.path = path + '/';
         this.lookup = lookup;
         this.columns = columns != null ? columns : new int[]{0, 1, 2};

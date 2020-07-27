@@ -23,7 +23,6 @@
 package gorsat
 
 import Script.{ExecutionBlock, MacroParsingResult}
-import org.gorpipe.gor.GorContext
 import process.{GenericSessionFactory, _}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

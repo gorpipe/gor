@@ -1069,8 +1069,8 @@ public class BlockPacker {
         private long min = Long.MAX_VALUE;
         private long maxNegDiff = 0; // Maximum negative difference of two consequetive numbers, i.e. most negative difference
         private long maxPosDiff = 0; // Maximum positive difference of two consequetive numbers
-        private long[] keys = new long[257];
-        private GLongHashMap distincts = new GLongHashMap();
+        private final long[] keys = new long[257];
+        private final GLongHashMap distincts = new GLongHashMap();
 
         LongColType(Number[] data, ArrayList<String> org, boolean hasNull) {
             super(hasNull);
@@ -1089,7 +1089,7 @@ public class BlockPacker {
                             break;
                         }
                     }
-                    if (incr != Long.MAX_VALUE && incr < Integer.MAX_VALUE) { // Is there a increment pattern and can we encode it with int step size
+                    if (incr < Integer.MAX_VALUE) { // Is there a increment pattern and can we encode it with int step size
                         return createIncrEncoder(data[0].longValue() - incr, (int) incr);
                     }
                 }

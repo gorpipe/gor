@@ -36,8 +36,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class ParallelExecutor {
 
     private Throwable firstException;
-    private Thread[] threads;
-    private Function0<Unit>[] commands;
+    private final Thread[] threads;
+    private final Function0<Unit>[] commands;
 
     public ParallelExecutor(int workers, Function0<Unit>[] commands) {
         this.commands = commands;

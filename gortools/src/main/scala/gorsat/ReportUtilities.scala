@@ -24,9 +24,10 @@ package gorsat
 
 import java.nio.file.{Files, Paths}
 
-import collection.JavaConverters._
 import gorsat.Commands.CommandParseUtilities
 import org.gorpipe.gor.GorSession
+
+import scala.collection.JavaConverters._
 
 /**
   * Created by sigmar on 16/02/2017.

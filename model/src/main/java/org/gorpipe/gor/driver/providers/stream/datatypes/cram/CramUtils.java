@@ -22,13 +22,10 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.cram;
 
+import htsjdk.samtools.*;
+
 import java.util.Arrays;
 import java.util.List;
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMTag;
 
 public class CramUtils {
 

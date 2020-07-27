@@ -22,10 +22,10 @@
 
 package gorsat;
 
-import org.gorpipe.model.genome.files.gor.GorMonitor;
-import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.genome.files.gor.GorMonitor;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
@@ -44,8 +44,8 @@ import java.util.concurrent.TimeUnit;
 public class BatchedReadSource extends RowSource {
     private static final Logger log = LoggerFactory.getLogger(BatchedReadSource.class);
 
-    private Row endRow = RowObj.StoR("chrN\t-1");
-    private Iterator<? extends Row> sourceIterator;
+    private final Row endRow = RowObj.StoR("chrN\t-1");
+    private final Iterator<? extends Row> sourceIterator;
     private PollingThread readerThread;
     private final Duration timeTriggerBufferFlush;
     private final Duration batchOfferTimeout;
@@ -61,7 +61,7 @@ public class BatchedReadSource extends RowSource {
     private int avgCount;
     private int bavgCount = 0;
 
-    private GorMonitor gorMonitor;
+    private final GorMonitor gorMonitor;
 
     public void updateTimeMeasurement(long deltaTimeNs, RowBuffer current) {
         ++avgCount;

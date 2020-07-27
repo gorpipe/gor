@@ -22,8 +22,8 @@
 
 package gorsat.parser;
 
-import org.gorpipe.exceptions.GorDataException;
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Ignore;
 import org.junit.Test;
 

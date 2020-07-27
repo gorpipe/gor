@@ -10,7 +10,6 @@ import org.gorpipe.exceptions.{GorDataException, GorParsingException}
 import org.gorpipe.gor.{GorContext, GorSession}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class GtTranspose extends CommandInfo("GTTRANSPOSE",

@@ -22,11 +22,11 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.apache.parquet.schema.Type;
-import org.gorpipe.model.gor.RowObj;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.Type;
+import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class NorParquetLine extends ParquetLine {
-    private int[] sortCols;
+    private final int[] sortCols;
 
     public NorParquetLine(Group grp, int[] sortCols) {
         this.group = grp;

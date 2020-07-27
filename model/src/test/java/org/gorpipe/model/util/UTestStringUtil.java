@@ -25,7 +25,7 @@ package org.gorpipe.model.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
 
 /**
  * Tests for StringUtil.

@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.cli.manager;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.BaseTable;
-import org.apache.commons.lang.ArrayUtils;
 import picocli.CommandLine;
 
 import java.time.Duration;
@@ -41,7 +41,7 @@ public class DeleteCommand extends FilterOptions implements Runnable{
             arity="0..*",
             paramLabel = "FILE",
             description = "List of files to delete, given as absolute path or relative to the table dir.  Values are specified as comma separated list.  Alternative to using -f.")
-    private List<String> inputFiles = new ArrayList<>();
+    private final List<String> inputFiles = new ArrayList<>();
 
     @Override
     public void run() {

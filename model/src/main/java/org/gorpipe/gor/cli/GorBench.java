@@ -22,11 +22,11 @@
 
 package org.gorpipe.gor.cli;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Line;
 import org.gorpipe.gor.driver.GorDriver;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.Line;
 
 import java.util.ArrayList;
 import java.util.Arrays;

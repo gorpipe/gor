@@ -22,18 +22,18 @@
 
 package gorsat.process;
 
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.model.genome.files.gor.Row;
+import gorsat.Iterators.NorInputSource;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.table.Dictionary;
+import org.gorpipe.model.genome.files.gor.FileReader;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.model.util.StringUtil;
-import gorsat.Iterators.NorInputSource;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -71,7 +71,7 @@ import java.util.stream.Stream;
  */
 public class NordIterator extends RowSource {
 
-    private Map<String,String> properties = new HashMap<>();
+    private final Map<String,String> properties = new HashMap<>();
     private final boolean useFilter;
     private final Set<String> filterEntries;
     private final String nordFile;

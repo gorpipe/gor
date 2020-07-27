@@ -22,6 +22,10 @@
 
 package org.gorpipe.gor.table.lock;
 
+import org.gorpipe.gor.table.BaseTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.CharBuffer;
@@ -36,9 +40,6 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import org.gorpipe.gor.table.BaseTable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Class do acquire named locks.  The locks are reentrant can be used for both inter process and inter thread locking.
@@ -57,7 +58,7 @@ public class ExclusiveFileTableLock extends ProcessThreadTableLock {
     private static final long OLDEST_LOCK_DATE_POSSIBLE = 1388534400;  // Start of year 2014.
     private static final Duration EXCL_DEFAULT_RESERVE_LOCK_PERIOD = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.lock_period", "43200000"))); // 12 hours.
 
-    private Duration checkForLockPeriod = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.check_period", "100")));  // Time between check for lock (if waiting.)
+    private final Duration checkForLockPeriod = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.check_period", "100")));  // Time between check for lock (if waiting.)
 
     /**
      * Create lock

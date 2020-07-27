@@ -23,13 +23,15 @@
 package org.gorpipe.model.genome.files.binsearch;
 
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.binsearch.PositionCache;
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 @RunWith(Parameterized.class)
 public abstract class UTestSeekableGenomicIterator {

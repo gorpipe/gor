@@ -22,10 +22,10 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.util.Util;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.model.util.StringUtil;
+import org.gorpipe.model.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

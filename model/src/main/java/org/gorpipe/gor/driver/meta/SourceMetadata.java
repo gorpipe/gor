@@ -22,14 +22,15 @@
 
 package org.gorpipe.gor.driver.meta;
 
+import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.model.util.Util;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
-import org.gorpipe.model.util.Util;
-import org.gorpipe.gor.driver.DataSource;
 
 /**
  * Source metadata (name, timestamps etc).
@@ -39,8 +40,8 @@ public class SourceMetadata {
     private final String canonicalName;
     private final Long lastModified;
     private final String uniqueId;
-    private boolean isSubset;
-    private DataSource source;
+    private final boolean isSubset;
+    private final DataSource source;
 
     /**
      * @param canonicalName Canonical name of this source

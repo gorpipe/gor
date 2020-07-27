@@ -210,7 +210,7 @@ public class GorDictionarySetup {
 
         // Create data file
         Map<String, List<String>> data = GorDictionarySetup.createDataFilesMap(name, root, fileCount, chrs, rowsPerChr, "PN", true, sources);
-        this.dataFiles = data.values().stream().flatMap(l -> l.stream()).collect(Collectors.toList()).toArray(new String[0]);
+        this.dataFiles = data.values().stream().flatMap(Collection::stream).toArray(String[]::new);
 
         // Bucketize
 
@@ -293,7 +293,7 @@ public class GorDictionarySetup {
 
             String[] sourcesMultiTags = IntStream.range(1, 10 + 1).mapToObj(n -> String.format("PNMA%d", n)).toArray(size -> new String[size]);
             Map<String, List<String>> dataMultiTags = GorDictionarySetup.createDataFilesMap(name, null, 1, chrs, rowsPerChr, "PN", false, sourcesMultiTags);
-            this.dataFiles = (String[]) ArrayUtils.addAll(this.dataFiles, data.values().stream().flatMap(l -> l.stream()).collect(Collectors.toList()).toArray(new String[0]));
+            this.dataFiles = (String[]) ArrayUtils.addAll(this.dataFiles, data.values().stream().flatMap(Collection::stream).toArray(String[]::new));
 
             try (PrintWriter out = new PrintWriter(new FileOutputStream(this.dictionary.toFile(), true))) {
                 for (String dataFile : dataMultiTags.get("All")) {
@@ -308,7 +308,7 @@ public class GorDictionarySetup {
 
             String[] sourcesMultiTags2 = IntStream.range(1, 10 + 1).mapToObj(n -> String.format("PNMB%d", n)).toArray(size -> new String[size]);
             Map<String, List<String>> dataMultiTags2 = GorDictionarySetup.createDataFilesMap(name, null, 1, chrs, rowsPerChr, "PN", false, sourcesMultiTags2, true, false);
-            this.dataFiles = (String[]) ArrayUtils.addAll(this.dataFiles, data.values().stream().flatMap(l -> l.stream()).collect(Collectors.toList()).toArray(new String[0]));
+            this.dataFiles = (String[]) ArrayUtils.addAll(this.dataFiles, data.values().stream().flatMap(Collection::stream).toArray(String[]::new));
 
             try (PrintWriter out = new PrintWriter(new FileOutputStream(this.dictionary.toFile(), true))) {
                 for (String dataFile : dataMultiTags2.get("All")) {

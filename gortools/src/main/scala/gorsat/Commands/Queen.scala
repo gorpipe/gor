@@ -22,15 +22,13 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GorQueen.{BucketInfo, QueenAggregate, QueenAnalysis}
+import gorsat.Analysis.GorQueen.{QueenAggregate, QueenAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.GorContext
-
-import scala.collection.mutable
 
 class Queen extends CommandInfo("QUEEN",
   CommandArguments("", "-gc -vs -s -minSharing", 3),

@@ -25,10 +25,10 @@ package gorsat.Analysis
 import java.lang
 
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler}
-import gorsat.{PnBucketParsing, PnBucketTable}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.GenotypeLookupUtilities
 import gorsat.process.GorJavaUtilities.VCFValue
+import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.GorSession
 import org.gorpipe.model.genome.files.gor.{Line, Row, RowBase}

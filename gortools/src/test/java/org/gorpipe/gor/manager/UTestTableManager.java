@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.manager;
 
+import gorsat.TestUtils;
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.Dictionary;
@@ -31,8 +33,6 @@ import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.SlowTests;
-import gorsat.TestUtils;
-import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
@@ -55,7 +55,7 @@ import java.util.stream.IntStream;
 /**
  * Created by gisli on 18/08/16.
  */
-@Category(SlowTests.class)
+//@Category(SlowTests.class)
 public class UTestTableManager {
 
     private static final Logger log = LoggerFactory.getLogger(UTestTableManager.class);

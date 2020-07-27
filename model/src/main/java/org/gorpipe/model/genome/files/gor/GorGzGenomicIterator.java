@@ -22,15 +22,17 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
-import org.gorpipe.model.util.ByteTextBuilder;
-import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import htsjdk.tribble.readers.TabixReader;
 import htsjdk.tribble.readers.TabixReader.Iterator;
+import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.model.genome.files.binsearch.StringIntKey;
+import org.gorpipe.model.util.ByteTextBuilder;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Simple genomic iterator for zipped vcf files, can not be seeked into
@@ -45,19 +47,19 @@ public class GorGzGenomicIterator extends GenomicIterator {
     String filename;
     String firstChr;
 
-    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, String idxfile, int cols[]) throws IOException {
+    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, String idxfile, int[] cols) throws IOException {
         this(lookup, file, idxfile, cols, StringIntKey.cmpLexico);
     }
 
-    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, StreamSource file, StreamSource idxfile, int cols[]) throws IOException {
+    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, StreamSource file, StreamSource idxfile, int[] cols) throws IOException {
         init(lookup, new TabixReader(file.getName(), idxfile.getName(), new StreamSourceSeekableStream(file)), cols, StringIntKey.cmpLexico);
     }
 
-    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, String idxfile, int cols[], Comparator<StringIntKey> comparator) throws IOException {
+    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, String idxfile, int[] cols, Comparator<StringIntKey> comparator) throws IOException {
         init(lookup, new TabixReader(file, idxfile), cols, comparator);
     }
 
-    private void init(GenomicIterator.ChromoLookup lookup, TabixReader reader, int cols[], Comparator<StringIntKey> comparator) throws IOException {
+    private void init(GenomicIterator.ChromoLookup lookup, TabixReader reader, int[] cols, Comparator<StringIntKey> comparator) throws IOException {
         this.reader = reader;
         filename = reader.getSource();
         this.lookup = lookup;
@@ -112,8 +114,7 @@ public class GorGzGenomicIterator extends GenomicIterator {
     @Override
     public boolean seek(String chr, int pos) {
         iterator = reader.query(chr, pos, Integer.MAX_VALUE);
-        boolean ret = iterator != null;
-        return ret;
+        return iterator != null;
     }
 
     @Override

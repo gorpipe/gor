@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class SimpleSource implements DataSource {
     private static final Logger log = LoggerFactory.getLogger(SimpleSource.class);
 
-    private SourceReference sourceReference;
+    private final SourceReference sourceReference;
 
     public SimpleSource(SourceReference sourceReference) {
         this.sourceReference = sourceReference;

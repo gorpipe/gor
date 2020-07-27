@@ -4,14 +4,14 @@ import java.io.{BufferedWriter, File, FileWriter}
 import java.nio.file.Files
 
 import gorsat.Commands.Analysis
-import gorsat.{DynIterator, TestUtils}
 import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, PipeInstance}
+import gorsat.{DynIterator, TestUtils}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class UTestGtTransposeAnalysis extends FunSuite with BeforeAndAfter {

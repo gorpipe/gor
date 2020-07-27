@@ -29,13 +29,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 class StdInGenomicIterator extends GenomicIterator {
-    private byte[] buf;
+    private final byte[] buf;
     private int begin = 0;
     private int end = 0;
-    private int[] columns;
-    private int[] columnMap; // map source columns into Line data columns
+    private final int[] columns;
+    private final int[] columnMap; // map source columns into Line data columns
     private boolean hasMore = true;
-    private ChromoLookup lookup;
+    private final ChromoLookup lookup;
 
     StdInGenomicIterator(ChromoLookup lookup, int[] columns) {
         buf = new byte[1024 * 1024];
@@ -165,9 +165,6 @@ class StdInGenomicIterator extends GenomicIterator {
         // Start by checking first line, is it header line or data line
         int secColBegin = -1, secColLen = -1, colcnt = 1;
         for (int i = begin; i < end && buf[i] != '\n'; i++) {
-            if (i == end && end == buf.length - 1) {
-                throw new GorSystemException("Standard input header to big, must be less than " + buf.length + " bytes!", null);
-            }
             if (buf[i] == '\t') {
                 colcnt++;
                 if (secColLen == -1) {

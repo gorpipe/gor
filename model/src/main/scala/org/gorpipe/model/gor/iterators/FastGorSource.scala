@@ -29,7 +29,7 @@ import org.gorpipe.model.genome.files.gor._
 import org.gorpipe.model.util.StringUtil
 import org.gorpipe.util.standalone.GorStandalone
 
-class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, executeNor: Boolean, gm: GorMonitor, minLogTime: Int, readAll: Boolean = true) extends TimedRowSource {
+class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, executeNor: Boolean, gm: GorMonitor, minLogTime: Int) extends TimedRowSource {
   private val useAdaptiveMTP = System.getProperty("gor.iterators.useAdaptiveMTP", "true").toBoolean //MTP = moveToPosition
   var posSet: Boolean = false
   var gorSource: GenomicIterator = _
@@ -178,7 +178,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     var count = 0
     var modCounter = 0
     var seek = false
-    var startTime = System.nanoTime
+    val startTime = System.nanoTime
     var distLeft = dist
     while (!reachedPos && !seek && hasNext) {
       count += 1
@@ -241,7 +241,6 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     val measuredSeekTime = System.nanoTime - startTime
     if (soughtOnce) {
       if (soughtTwice) {
-        val oldEstSeekTime = estSeekTime
         estSeekTime = (expWCoef * measuredSeekTime + oneMinusExpWCoef * estSeekTime).toLong
       } else {
         soughtTwice = true

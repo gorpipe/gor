@@ -25,8 +25,8 @@ package org.gorpipe.model.system.db;
 import java.time.Instant;
 
 class ConnectionInfo {
-    private String poolKey;
-    private Instant leaseStart;
+    private final String poolKey;
+    private final Instant leaseStart;
 
     public ConnectionInfo(String poolKey, Instant leaseStart) {
         this.poolKey = poolKey;

@@ -97,6 +97,6 @@ object RowHeader {
   def apply(columns: Seq[ColumnHeader]): RowHeader = {
     val columnNames = columns.map(col => col.name).toArray
     val columnTypes = columns.map(col => col.tpe).toArray
-    new RowHeader(columnNames, columnTypes);
+    new RowHeader(columnNames, columnTypes)
   }
 }

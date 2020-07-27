@@ -27,7 +27,7 @@ import org.gorpipe.gor.table.BaseTable;
 import java.time.Duration;
 
 public class TableTransaction implements AutoCloseable {
-    private TableLock lock;
+    private final TableLock lock;
     private boolean shouldSave = false;
     private Runnable closeHook;
 

@@ -23,14 +23,14 @@
 package org.gorpipe.model.genome.files.gor;
 
 import gorsat.TestUtils;
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.tabix.TabixIndex;
 import htsjdk.variant.vcf.VCFCodec;
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.VcfGzTabixGenomicIterator;
-import org.junit.*;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;

@@ -22,12 +22,13 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.util.collection.extract.Extract;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import org.gorpipe.util.collection.extract.Extract;
 
 /**
  * ResourceMonitor implements resource usage monitoring service within the gor system. It allows

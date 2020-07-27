@@ -24,13 +24,13 @@ package gorsat
 
 import java.io.{File, PrintWriter}
 
+import gorsatGorIterator.MapAndListUtilities
+import process.GenericSessionFactory
+import org.gorpipe.model.gor.MemoryMonitorUtil
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.slf4j.LoggerFactory
-import gorsatGorIterator.MapAndListUtilities
-import org.gorpipe.model.gor.MemoryMonitorUtil
-import process.GenericSessionFactory
 
 import scala.util.Random
 

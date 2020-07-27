@@ -22,7 +22,6 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.genome.files.gor.Row;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;

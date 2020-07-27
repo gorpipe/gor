@@ -22,11 +22,11 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
-import org.gorpipe.model.genome.files.gor.ContigDataScheme;
-import org.gorpipe.model.genome.files.gor.SourceRef;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.model.genome.files.gor.ContigDataScheme;
+import org.gorpipe.model.genome.files.gor.SourceRef;
 
 import java.io.*;
 import java.util.*;
@@ -60,7 +60,7 @@ public class VcfFile extends StreamSourceFile {
         // Assume .vcf files start with lines
         long offset = -1;
         byte[] buf = new byte[8 * 1024];
-        int read = 0, pos = 0;
+        int read, pos = 0;
         int[] ret = null;
         int state = 1; // assume newline already encountered at the beginning
         while ((read = instream.read(buf)) != -1 && offset == -1) {

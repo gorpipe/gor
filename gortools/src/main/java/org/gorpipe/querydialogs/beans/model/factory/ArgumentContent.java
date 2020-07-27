@@ -113,7 +113,7 @@ public class ArgumentContent {
          */
         public final String storeFormat;
 
-        private Format(final String valueFormat, final String storeFormat) {
+        Format(final String valueFormat, final String storeFormat) {
             this.valueFormat = valueFormat;
             this.storeFormat = storeFormat;
         }

@@ -22,10 +22,9 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.Analysis
 import gorsat.AnalysisUtilities._
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Commands.CommandParsingResult
+import gorsat.Commands.{Analysis, CommandParsingResult}
 import gorsat.Iterators.ChromBoundedIteratorSource
 import gorsat.process.SourceProvider
 import gorsat.{Analysis, IteratorUtilities}

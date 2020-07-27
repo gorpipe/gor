@@ -26,7 +26,7 @@ import org.gorpipe.model.genome.files.gor.genotypeutilities.ValueColumnParsing;
 
 class ImputedRecordFactory extends VariantRecordFactory<BiAllelicHardCallsAndDosages> {
     private float[] dosages;
-    private float threshold;
+    private final float threshold;
 
     ImputedRecordFactory(float threshold) {
         this.threshold = threshold;

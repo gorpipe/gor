@@ -53,21 +53,21 @@ public class MultiInsertCommand extends CommandBucketizeOptions implements Runna
     @CommandLine.Option(names = {"-t", "--tags"},
             split=",",
             description = "Specify tags to use.  Values are specified as comma separated list, where length of the list must match the number of files and element i applies to the ith file.  Empty values are allowed.")
-    private List<String> tags = new ArrayList<>();;
+    private List<String> tags = new ArrayList<>();
 
     @CommandLine.Option(names = {"-a", "--aliases"},
             split=",",
             description = "Aliases to use.  Values are specified as comma separated list, where length of the list must match the number of files and element i applies to the ith file.  Empty values are allowed.")
-    private List<String> aliases = new ArrayList<>();;
+    private List<String> aliases = new ArrayList<>();
 
     @CommandLine.Option(names = {"-r", "-p", "--ranges"},
             split=",",
             description = "Specify range to use.  Values are specified as comma separated list, where length of the list must match the number of files and element i applies to the ith file.  Empty values are allowed.  Each values is specified as <chrom start>[:<poststart>][-[<chrom stop>:][<pos stop>]].")
-    private List<String> ranges = new ArrayList<>();;
+    private List<String> ranges = new ArrayList<>();
 
     @CommandLine.Option(names = {"-s", "--source"},
             description = "Column used for tag filtering. Defaults to 'PN'")
-    private String source = "PN";
+    private final String source = "PN";
 
     @Override
     public void run() {

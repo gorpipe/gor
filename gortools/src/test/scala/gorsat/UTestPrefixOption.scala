@@ -25,13 +25,14 @@ package gorsat
 import java.io._
 import java.nio.file.Files
 
-import scala.io.Source
 import org.gorpipe.model.genome.files.binsearch.GorIndexType
 import org.gorpipe.model.gor.RowObj
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfter, FunSuite}
+
+import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class UTestPrefixOption extends FunSuite with BeforeAndAfter {

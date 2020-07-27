@@ -22,13 +22,13 @@
 
 package org.gorpipe.gor.cli;
 
+import org.apache.commons.io.IOUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

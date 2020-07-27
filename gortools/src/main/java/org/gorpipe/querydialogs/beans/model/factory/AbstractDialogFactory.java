@@ -21,13 +21,13 @@
  */
 package org.gorpipe.querydialogs.beans.model.factory;
 
+import freemarker.template.TemplateException;
 import org.gorpipe.model.genome.files.gor.FileReader;
 import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import org.gorpipe.model.gor.Utilities;
 import org.gorpipe.querydialogs.beans.model.Argument;
 import org.gorpipe.querydialogs.beans.model.ArgumentType;
 import org.gorpipe.querydialogs.beans.model.Dialog;
-import freemarker.template.TemplateException;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -162,8 +162,8 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
                         if (val.containsKey(entry)) {
                             String value = val.get(entry).toString();
                             sval = sval.substring(0, i) + Utilities.makeTempFile(value, cacheDir) + sval.substring(u + 1);
-                            i = sval.indexOf("${", i + 1);
-                        } else i = sval.indexOf("${", i + 1);
+                        }
+                        i = sval.indexOf("${", i + 1);
                     }
                     if (found) val.put(skey, sval);
                 }

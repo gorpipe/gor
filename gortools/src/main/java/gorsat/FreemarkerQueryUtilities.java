@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import freemarker.template.TemplateException;
 import org.gorpipe.model.genome.files.gor.FileReader;
 import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import org.gorpipe.querydialogs.beans.model.Argument;
@@ -30,7 +31,6 @@ import org.gorpipe.querydialogs.beans.model.factory.ArgumentContent;
 import org.gorpipe.querydialogs.beans.model.factory.Perspective;
 import org.gorpipe.querydialogs.beans.model.factory.PerspectiveDialog;
 import org.gorpipe.querydialogs.beans.model.factory.PerspectiveDialogFactory;
-import freemarker.template.TemplateException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -105,7 +105,7 @@ public class FreemarkerQueryUtilities {
         int start = 0;
         int k = query.indexOf("${");
         while (k != -1) {
-            ret.append(query.substring(start, k));
+            ret.append(query, start, k);
             int n = query.indexOf('}', k + 6);
             if (n == -1) {
                 ret.append(query.substring(k));
@@ -113,7 +113,7 @@ public class FreemarkerQueryUtilities {
             } else if (perspectiveDialog.getArgumentMap().containsKey(query.substring(k + 2, n - 4))) {
                 ret.append(perspectiveDialog.getArgumentMap().get(query.substring(k + 2, n - 4)));
             } else {
-                ret.append(query.substring(k, n + 1));
+                ret.append(query, k, n + 1);
             }
             start = n + 1;
             k = query.indexOf("${", start);

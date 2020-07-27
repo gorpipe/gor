@@ -22,10 +22,10 @@
 
 package gorsat.process;
 
+import gorsat.BatchedReadSource;
 import gorsat.Commands.Processor;
 import org.gorpipe.gor.GorRunner;
 import org.gorpipe.model.gor.iterators.RowSource;
-import gorsat.BatchedReadSource;
 
 /**
  * This class handles the most basic gor pipe execution. This includes setup, process and finish phases.

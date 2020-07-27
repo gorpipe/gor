@@ -41,7 +41,7 @@ import java.util.*;
 public abstract class ArgumentBuilder {
     private static final Logger logger = LoggerFactory.getLogger(ArgumentBuilder.class);
     private static Map<String, String> pathMap = null;
-    private FileReader fileResolver;
+    private final FileReader fileResolver;
 
     public ArgumentBuilder(FileReader fileResolver) {
         this.fileResolver = fileResolver;

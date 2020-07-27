@@ -22,8 +22,8 @@
 
 package org.gorpipe.querydialogs.beans.model.templating;
 
-import org.gorpipe.model.genome.files.gor.FileReader;
 import freemarker.cache.TemplateLoader;
+import org.gorpipe.model.genome.files.gor.FileReader;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -34,7 +34,7 @@ import java.io.Reader;
  */
 public class NetworkTemplateLoader implements TemplateLoader {
     private String basePath;
-    private FileReader fileResolver;
+    private final FileReader fileResolver;
 
     /**
      * @param basePath path to directory relative to project root where template files can be found

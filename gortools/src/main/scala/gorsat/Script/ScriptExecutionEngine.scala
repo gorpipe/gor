@@ -419,7 +419,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         }
         getCreatedFiles.foreach(x => {
           if (x._2 != null) {
-            ScriptExecutionEngine.log.debug("runQueryHandler createdFiles: {} - {} - {}", x._1.toString, x._2.toString, "")
+            ScriptExecutionEngine.log.debug("runQueryHandler createdFiles: {} - {} - {}", x._1, x._2, "")
           }
         })
       }

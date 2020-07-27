@@ -24,11 +24,9 @@ package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Row;
-import org.junit.*;
+import org.junit.Test;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 

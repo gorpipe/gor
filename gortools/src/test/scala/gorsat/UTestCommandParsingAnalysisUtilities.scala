@@ -22,7 +22,6 @@
 
 package gorsat
 
-import Commands.CommandParseUtilities
 import Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
 import org.junit.runner.RunWith
@@ -395,7 +394,7 @@ class UTestCommandParsingAnalysisUtilities extends FunSuite{
   test("get char value of option") {
     val opt = "-bestoption"
     val args = Array("-badoption", "-goodoption", "-betteroption", "-bestoption", "+")
-    val value = CommandParseUtilities.charValueOfOption(args, opt)
+    val value = charValueOfOption(args, opt)
     assert(value == '+')
   }
 
@@ -404,7 +403,7 @@ class UTestCommandParsingAnalysisUtilities extends FunSuite{
     val args = Array("-badoption", "-goodoption", "-betteroption", "-bestoption")
     var success = false
     try {
-      CommandParseUtilities.charValueOfOption(args, opt)
+      charValueOfOption(args, opt)
     } catch {
       case _: GorParsingException => success = true
       case _ => //Bad
@@ -417,7 +416,7 @@ class UTestCommandParsingAnalysisUtilities extends FunSuite{
     val args = Array("-badoption", "-goodoption", "-betteroption", "-bestoption", "hjalti")
     var success = false
     try {
-      CommandParseUtilities.charValueOfOption(args, opt)
+      charValueOfOption(args, opt)
     } catch {
       case _: GorParsingException => success = true
       case _ => //Bad

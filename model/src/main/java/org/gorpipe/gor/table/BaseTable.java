@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.table;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
@@ -32,8 +34,6 @@ import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.GorOptions;
 import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.model.util.Util;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +83,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     protected ITableEntries<T> tableEntries;
 
-    private TableLog tableLog;
+    private final TableLog tableLog;
 
     protected BaseTable(Builder builder) {
         this(builder.path);

@@ -23,13 +23,13 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
 import com.google.auto.service.AutoService;
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.gorpipe.gor.driver.adapters.OffsetStreamSourceSeekableFile;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.gorpipe.model.genome.files.gor.ChrDataScheme;
 import org.gorpipe.model.genome.files.gor.ChromoCache;
 import org.gorpipe.model.genome.files.gor.ContigDataScheme;

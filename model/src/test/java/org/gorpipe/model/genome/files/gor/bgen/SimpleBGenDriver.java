@@ -1,6 +1,7 @@
 package org.gorpipe.model.genome.files.gor.bgen;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 

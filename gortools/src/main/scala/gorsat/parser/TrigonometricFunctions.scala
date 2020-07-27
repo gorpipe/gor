@@ -22,8 +22,8 @@
 
 package gorsat.parser
 
-import gorsat.parser.FunctionTypes.dFun
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes.dFun
 
 object TrigonometricFunctions {
   def register(functions: FunctionRegistry): Unit = {

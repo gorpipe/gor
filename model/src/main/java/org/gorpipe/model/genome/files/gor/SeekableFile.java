@@ -59,7 +59,7 @@ public abstract class SeekableFile implements AutoCloseable {
      * @return The total number of bytes read into the buffer, or -1 if there is no more data because the end of the file has been reached.
      * @throws IOException
      */
-    abstract public int read(byte b[], int off, int len) throws IOException;
+    abstract public int read(byte[] b, int off, int len) throws IOException;
 
     /**
      * Read as many bytes from the file as fit into the specified byte array and write into it starting at index 0
@@ -68,7 +68,7 @@ public abstract class SeekableFile implements AutoCloseable {
      * @return The total number of bytes read into the buffer, or -1 if there is no more data because the end of the file has been reached.
      * @throws IOException
      */
-    public int read(byte b[]) throws IOException {
+    public int read(byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
 

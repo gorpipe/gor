@@ -30,8 +30,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.*;
 import java.io.FileReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
 

@@ -22,13 +22,13 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroup;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.GroupType;
-import org.gorpipe.model.gor.RowObj;
-import org.apache.parquet.example.data.Group;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
+import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -112,8 +112,7 @@ public class ParquetLine extends Line {
     String extractGroup(Type tp, Group group, int colNum, int idx) {
         if (tp.isPrimitive()) {
             int size = group.getFieldRepetitionCount(colNum);
-            String ret = idx < size ? group.getValueToString(colNum, idx) : "";
-            return ret;
+            return idx < size ? group.getValueToString(colNum, idx) : "";
         } else {
             Group subgroup = group.getGroup(colNum, idx);
             List<Type> types = subgroup.getType().getFields();

@@ -22,10 +22,10 @@
 
 package org.gorpipe.gor.table;
 
-import org.gorpipe.util.collection.IntArray;
-import org.gorpipe.model.util.IntHashMap;
-import org.gorpipe.util.collection.IntHashSet;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.model.util.IntHashMap;
+import org.gorpipe.util.collection.IntArray;
+import org.gorpipe.util.collection.IntHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +40,8 @@ public class TableAccessOptimizer {
 
     private static final Logger log = LoggerFactory.getLogger(TableAccessOptimizer.class);
 
-    private BaseTable table;
-    private ArrayList<DictionaryEntry> lines = new ArrayList<>();
+    private final BaseTable table;
+    private final ArrayList<DictionaryEntry> lines = new ArrayList<>();
     public boolean hasBuckets = false;
 
     private boolean removeFirstIfMoreThan1 = false; // True if first element of files list should be removed if anything other is added
@@ -269,9 +269,9 @@ public class TableAccessOptimizer {
                     }
                     if (bucket < countsOriginal.length) {
                         totalFilesFromBuckets += countsOriginal[bucket];
-                        sb.append(entry.file + " (" + countsOriginal[bucket] + ")");
+                        sb.append(entry.file).append(" (").append(countsOriginal[bucket]).append(")");
                     } else {
-                        sb.append(entry.file + " (!!! Error: bucket not found in counts original !!!)");
+                        sb.append(entry.file).append(" (!!! Error: bucket not found in counts original !!!)");
                     }
                 }
                 log.debug("Individual Files={}, Buckets={} for {} tags { {} }", cntIndividualFiles, toBeReplaced.size(), totalFilesFromBuckets, sb);

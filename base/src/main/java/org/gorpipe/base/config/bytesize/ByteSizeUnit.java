@@ -144,7 +144,7 @@ public enum ByteSizeUnit {
         return map;
     }
 
-    private static Map<String, ByteSizeUnit> unitsMap = makeUnitsMap();
+    private static final Map<String, ByteSizeUnit> unitsMap = makeUnitsMap();
 
     /**
      * Parses a string representation of a byte size unit and returns the corresponding {@link ByteSizeUnit}.

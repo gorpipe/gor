@@ -1,17 +1,16 @@
 package org.gorpipe.gor.driver.utils;
 
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import com.google.common.base.Joiner;
-import org.gorpipe.gor.driver.GorDriver;
-import org.gorpipe.gor.driver.GorDriverFactory;
-import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
-import org.gorpipe.gor.driver.providers.stream.StreamUtils;
-import org.gorpipe.model.genome.files.gor.Row;
 import com.sun.management.UnixOperatingSystemMXBean;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.SystemUtils;
+import org.gorpipe.gor.driver.GorDriver;
+import org.gorpipe.gor.driver.GorDriverFactory;
+import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.driver.providers.stream.StreamUtils;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

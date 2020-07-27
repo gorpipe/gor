@@ -148,7 +148,7 @@ public class ChrDataScheme implements ContigDataScheme {
             if (chr == null) {
                 break;
             }
-            id2chrbytes[i] = chr == null ? null : chr.getBytes();
+            id2chrbytes[i] = chr.getBytes();
         }
         length = i;
     }

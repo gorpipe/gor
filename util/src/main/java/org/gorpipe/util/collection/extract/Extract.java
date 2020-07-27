@@ -134,7 +134,7 @@ public class Extract {
                 + ' ' + lpad(cal.get(Calendar.HOUR_OF_DAY)) + ':' + lpad(cal.get(Calendar.MINUTE)) + ':' + lpad(cal.get(Calendar.SECOND));
     }
 
-    private static final String lpad(int val) {
+    private static String lpad(int val) {
         return val < 10 ? "0" + val : String.valueOf(val);
     }
 
@@ -162,7 +162,7 @@ public class Extract {
         final int ms = (int) (duration - hdiff - mdiff - (sec * 1000));
         final StringBuilder sb = new StringBuilder();
         if (hours > 0) {
-            sb.append(hours + "h");
+            sb.append(hours).append("h");
         }
         if (hours > 0 || min > 0) {
             if (sb.length() > 0) {
@@ -270,9 +270,7 @@ public class Extract {
     @SafeVarargs
     static <T> ArrayList<T> arrayList(T... values) {
         ArrayList<T> ret = new ArrayList<T>();
-        for (T t : values) {
-            ret.add(t);
-        }
+        Collections.addAll(ret, values);
         return ret;
     }
 
@@ -291,9 +289,7 @@ public class Extract {
     @SafeVarargs
     public static <T> HashSet<T> set(T... values) {
         final HashSet<T> set = new HashSet<T>();
-        for (T v : values) {
-            set.add(v);
-        }
+        Collections.addAll(set, values);
         return set;
     }
 
@@ -868,7 +864,7 @@ public class Extract {
      * @param s The text string to digest
      * @return The digest as HEX string
      */
-    static final byte[] md5Bytes(String s) {
+    static byte[] md5Bytes(String s) {
         return md5Bytes(s.getBytes(Charset.forName("UTF-8")));
     }
 
@@ -878,7 +874,7 @@ public class Extract {
      * @param bytes The bytes
      * @return The digest as HEX string
      */
-    public static final String md5(byte[] bytes) {
+    public static String md5(byte[] bytes) {
         return Extract.hex(md5Bytes(bytes));
     }
 
@@ -888,7 +884,7 @@ public class Extract {
      * @param s The text string to digest
      * @return The digest as HEX string
      */
-    public static final String md5(String s) {
+    public static String md5(String s) {
         return md5(s.getBytes(Charset.forName("UTF-8")));
     }
 
@@ -899,7 +895,7 @@ public class Extract {
      * @return The digest as HEX string
      * @throws IOException
      */
-    public static final String md5(Path path) throws IOException {
+    public static String md5(Path path) throws IOException {
         return Files.isDirectory(path) ? digestDir(path,"MD5") : digest(path, "MD5");
     }
 
@@ -911,7 +907,7 @@ public class Extract {
      * @return The digest as HEX string
      * @throws IOException
      */
-    public static final String digestDir(Path path, String type) throws IOException {
+    public static String digestDir(Path path, String type) throws IOException {
         try {
             final MessageDigest md5 = MessageDigest.getInstance(type);
             final byte[] bytes = new byte[8 * 1024];
@@ -941,7 +937,7 @@ public class Extract {
      * @return The digest as HEX string
      * @throws IOException
      */
-    public static final String digest(Path path, String type) throws IOException {
+    public static String digest(Path path, String type) throws IOException {
         try {
             final MessageDigest md5 = MessageDigest.getInstance(type);
             final byte[] bytes = new byte[8 * 1024];

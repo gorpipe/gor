@@ -22,19 +22,19 @@
 
 package gorsat;
 
+import gorsat.Analysis.SortAnalysis;
+import gorsat.Analysis.TopN;
+import gorsat.Commands.Analysis;
+import gorsat.Iterators.PipeStepIteratorAdaptor;
+import gorsat.process.GenericSessionFactory;
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.gor.GorSessionFactory;
 import org.gorpipe.model.genome.files.gor.Row;
-import gorsat.Commands.Analysis;
 import org.gorpipe.model.gor.iterators.FastGorSource;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
-import gorsat.Analysis.SortAnalysis;
-import gorsat.Analysis.TopN;
-import gorsat.Iterators.PipeStepIteratorAdaptor;
-import gorsat.process.GenericSessionFactory;
-import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -117,7 +117,7 @@ public class UTestSortGenome {
     @Test
     public void testVcfGorOrder() {
         String curdir = new File(".").getAbsolutePath();
-        RowSource inputSource = new FastGorSource("../tests/data/external/samtools/test.vcf", curdir, null, false, null, 0, true);
+        RowSource inputSource = new FastGorSource("../tests/data/external/samtools/test.vcf", curdir, null, false, null, 0);
         Analysis analyser = new TopN(10);
         PipeStepIteratorAdaptor pit = new PipeStepIteratorAdaptor(inputSource, analyser, null);
 
@@ -137,7 +137,7 @@ public class UTestSortGenome {
     @Test
     public void testGorOrder() throws IOException {
         String curdir = new File(".").getAbsolutePath();
-        RowSource inputSource = new FastGorSource(orderGor.getCanonicalPath(), curdir, null, false, null, 0, true);
+        RowSource inputSource = new FastGorSource(orderGor.getCanonicalPath(), curdir, null, false, null, 0);
         String header = inputSource.getHeader();
         Path dir = Files.createTempDirectory("sorttest");
         GorSessionFactory factory = new GenericSessionFactory("", dir.toAbsolutePath().toString());

@@ -22,18 +22,16 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
-import org.gorpipe.RangedNumberFormatter;
+import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
-import org.apache.commons.lang.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.zip.InflaterOutputStream;

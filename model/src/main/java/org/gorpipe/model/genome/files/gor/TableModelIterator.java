@@ -32,8 +32,8 @@ import javax.swing.table.TableModel;
 public class TableModelIterator extends GenomicIterator {
     private final TableModel tableModel;
 
-    private int currentRowId = 0;
-    private GenomicIterator.ChromoLookup lookup;
+    private int currentRowId;
+    private final GenomicIterator.ChromoLookup lookup;
 
     private static class DefaultLookup {
         final ChromoCache chrcache = new ChromoCache();

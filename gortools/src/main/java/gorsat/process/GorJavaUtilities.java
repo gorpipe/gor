@@ -25,9 +25,9 @@ package gorsat.process;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.model.genome.files.gor.DbSource;
 import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +150,7 @@ public class GorJavaUtilities {
                     }
                 }
             }
-            myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1, myCommand.length());
+            myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1);
         }
         return myCommand;
     }
@@ -358,8 +358,7 @@ public class GorJavaUtilities {
         }
 
         if (projectRoot != null) {
-            Path projectWhiteListPath = projectRoot.resolve(whiteListFile);
-            return projectWhiteListPath;
+            return projectRoot.resolve(whiteListFile);
         }
 
         log.warn("Whitelist file {} is relative but no project root is defined!", whiteListFile);

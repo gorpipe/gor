@@ -22,9 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
-import java.io.*;
-import java.nio.file.Paths;
-
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -33,6 +30,9 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.nio.file.Paths;
 
 /**
  * Represents a data source accessed through file system.

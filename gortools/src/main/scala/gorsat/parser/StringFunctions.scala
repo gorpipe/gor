@@ -22,9 +22,9 @@
 
 package gorsat.parser
 
+import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{bFun, iFun, sFun}
 import gorsat.parser.ParseUtilities.string2wordString
-import gorsat.parser.FunctionSignature._
 
 object StringFunctions {
   def register(functions: FunctionRegistry): Unit = {

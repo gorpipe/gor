@@ -22,25 +22,28 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
-import java.io.*;
+import com.github.luben.zstd.ZstdOutputStream;
+import htsjdk.samtools.util.Md5CalculatingOutputStream;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.model.genome.files.sort.LexRow;
+import org.gorpipe.model.util.Util;
+import org.gorpipe.util.collection.ByteArray;
+import org.gorpipe.util.collection.ByteArrayWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
-
-import org.gorpipe.model.genome.files.gor.Row;
-import org.gorpipe.model.genome.files.sort.LexRow;
-import org.gorpipe.util.collection.ByteArray;
-import org.gorpipe.util.collection.ByteArrayWrapper;
-import org.gorpipe.model.util.Util;
-import com.github.luben.zstd.ZstdOutputStream;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.meta.DataType;
-import htsjdk.samtools.util.Md5CalculatingOutputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Writes data to the GOR Zip format  (gorz)
@@ -73,7 +76,7 @@ public class GorZipLexOutputStream extends OutputStream {
     private final LexRow chrColRow;
     private String lastChr = null;
 
-    class BufferInfo {
+    static class BufferInfo {
         byte[] keyInBytes; //the chr and pos fields of the last line in block as byte array.
         byte[] block; //Buffer to write data block to.
         int blockLen; //End of block data in block.

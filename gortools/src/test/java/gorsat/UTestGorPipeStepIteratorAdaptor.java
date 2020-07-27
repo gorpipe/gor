@@ -22,13 +22,13 @@
 
 package gorsat;
 
-import org.gorpipe.gor.GorContext;
-import org.gorpipe.gor.GorSessionFactory;
-import gorsat.Commands.Analysis;
-import org.gorpipe.model.gor.iterators.RowSource;
 import gorsat.Analysis.TopN;
+import gorsat.Commands.Analysis;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.ProcessIteratorAdaptor;
+import org.gorpipe.gor.GorContext;
+import org.gorpipe.gor.GorSessionFactory;
+import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;

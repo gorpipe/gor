@@ -22,19 +22,19 @@
 
 package org.gorpipe.gor.manager;
 
-import org.gorpipe.logging.GorLogbackUtil;
-import org.gorpipe.model.util.ConfigUtil;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GenomicRange;
-import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.lock.TableLock;
 import de.tototec.cmdoption.CmdCommand;
 import de.tototec.cmdoption.CmdOption;
 import de.tototec.cmdoption.CmdlineParser;
 import de.tototec.cmdoption.handler.AddToCollectionHandler;
 import de.tototec.cmdoption.handler.CmdOptionHandler;
 import org.apache.commons.lang.ArrayUtils;
+import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.GenomicRange;
+import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.lock.TableLock;
+import org.gorpipe.logging.GorLogbackUtil;
+import org.gorpipe.model.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

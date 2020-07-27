@@ -31,5 +31,4 @@ class ServerGorSource(options: String, context: GorContext, executeNor: Boolean,
     context,
     executeNor,
     context.getSession.getSystemContext.getMonitor,
-    500,
-    readAll))
+    500))

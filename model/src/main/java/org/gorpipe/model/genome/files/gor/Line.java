@@ -21,13 +21,13 @@
  */
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.model.gor.RowObj;
+import org.gorpipe.model.util.ByteTextBuilder;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-
-import org.gorpipe.model.util.ByteTextBuilder;
-import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.model.gor.RowObj;
 
 /**
  * Description of a data Line. Note we allow it to have public variables to simplify passing data between various code parts.
@@ -337,7 +337,7 @@ public class Line extends Row {
 
     @Override
     public double colAsDouble(int col) {
-        if (col == 1) return (double) pos;
+        if (col == 1) return pos;
         else return cols[col - 2].toDouble();
     }
 

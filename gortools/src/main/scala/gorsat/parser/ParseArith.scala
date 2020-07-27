@@ -80,7 +80,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
   setMode()
 
   private def setMode(): Unit = {
-    var mode = System.getenv("GOR_CALCMODE")
+    val mode = System.getenv("GOR_CALCMODE")
 
     mode match {
       case "classic" | null =>
@@ -314,7 +314,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     def apply(in: Input): ParseResult[String]
   } = new Parser[String] {
     def apply(in: Input): ParseResult[String] = name(in) match {
-      case Success(x, in1) => {
+      case Success(x, in1) =>
         val variableName = x.toUpperCase
         longVariableMap.get(variableName) match {
           case Some(_) =>
@@ -331,7 +331,6 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
             }
             Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
         }
-      }
       case Failure(msg, next) =>
         Failure(msg, next)
     }
@@ -348,7 +347,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     def apply(in: Input): ParseResult[String]
   } = new Parser[String] {
     def apply(in: Input): ParseResult[String] = name(in) match {
-      case Success(x, in1) => {
+      case Success(x, in1) =>
         val variableName = x.toUpperCase
         intVariableMap.get(variableName) match {
           case Some(_) =>
@@ -365,7 +364,6 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
             }
             Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
         }
-      }
       case Failure(msg, next) =>
         Failure(msg, next)
     }

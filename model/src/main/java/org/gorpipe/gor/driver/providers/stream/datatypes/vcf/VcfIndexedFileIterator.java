@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
-import org.gorpipe.model.genome.files.gor.VcfGzTabixGenomicIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
+import org.gorpipe.model.genome.files.gor.VcfGzTabixGenomicIterator;
 
 import java.io.IOException;
 

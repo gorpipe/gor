@@ -1,7 +1,7 @@
 package org.gorpipe.model.genome.files.gor.pgen;
 
-import org.gorpipe.model.gor.RowObj;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.model.gor.RowObj;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

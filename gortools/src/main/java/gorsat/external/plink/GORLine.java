@@ -31,12 +31,12 @@ import java.nio.file.Path;
  * This class merges gor lines from multiple BufferedReaders. Use with PriorityQueue.
  */
 public class GORLine implements Comparable<GORLine> {
-    private Path p;
+    private final Path p;
     private BufferedReader br;
     private String currentLine;
     private String currentChr;
     private int currentPos;
-    private String name;
+    private final String name;
     private String header;
 
     GORLine(String name, Path p) throws IOException {

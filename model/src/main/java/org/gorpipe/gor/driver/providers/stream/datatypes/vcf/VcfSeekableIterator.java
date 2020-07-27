@@ -177,7 +177,7 @@ public class VcfSeekableIterator extends GenomicIterator {
                     this.current = null;
                     this.reachedEnd = true;
                 } else {
-                    this.current = RowObj.apply(this.chr + next.substring(chrEnd, next.length()));
+                    this.current = RowObj.apply(this.chr + next.substring(chrEnd));
                 }
             } else {
                 this.current = null;

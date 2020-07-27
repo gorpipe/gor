@@ -22,9 +22,10 @@
 
 package org.gorpipe.gor.driver;
 
-import java.io.IOException;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+
+import java.io.IOException;
 
 public interface GorDriver extends SourceProvider {
 

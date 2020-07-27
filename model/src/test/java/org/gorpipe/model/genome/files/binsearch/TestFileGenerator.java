@@ -1,6 +1,5 @@
 package org.gorpipe.model.genome.files.binsearch;
 
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.util.collection.ByteArrayWrapper;
 

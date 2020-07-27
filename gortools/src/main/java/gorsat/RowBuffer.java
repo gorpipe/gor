@@ -37,12 +37,12 @@ public class RowBuffer implements Iterator<Row> {
     private static final int DEFAULT_MAX_BYTES_IN_BUFFER = Integer.parseInt(System.getProperty("gor.rowbuffer.max_bytes_buffered", "1073741824"));  // Default 1 GB
     private static final int NUM_LINES_TO_ESTIMATE_LINE_SIZE = Integer.parseInt(System.getProperty("gor.rowbuffer.lines_for_size_estimation", "100"));
 
-    private Row[] rowArray;
+    private final Row[] rowArray;
     private int count;
     private int idx;
     private RowBuffer next;
     private int capacity;
-    private int maxBytes;              // Maximum bytes used for buffering.
+    private final int maxBytes;              // Maximum bytes used for buffering.
     private int byteCount;             // Used bytes (or currently an estimate of the used bytes).
 
     private int estimatedAvgLineSize;

@@ -22,9 +22,6 @@
 
 package org.gorpipe.logging;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import ch.qos.logback.classic.LoggerContext;
 import org.gorpipe.base.logging.ProcessIdConverter;
 import org.slf4j.LoggerFactory;
@@ -32,13 +29,16 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 
 public class GorLogbackUtil {
 
-    private static org.slf4j.Logger logger = LoggerFactory.getLogger(GorLogbackUtil.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(GorLogbackUtil.class);
 
     @SuppressWarnings("unused")
     public static final Marker MARKER_AUDIT = MarkerFactory.getDetachedMarker("audit");

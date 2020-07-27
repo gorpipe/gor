@@ -26,7 +26,6 @@ import gorsat.Analysis.RegSelAnalysis;
 import gorsat.Commands.CommandParsingResult;
 import gorsat.Commands.RegSel;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class UTestRegSel {

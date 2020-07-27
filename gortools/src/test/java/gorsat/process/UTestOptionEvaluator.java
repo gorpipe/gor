@@ -27,8 +27,6 @@ import org.gorpipe.gor.GorContext;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class UTestOptionEvaluator {
     @Test
     public void getValue() {

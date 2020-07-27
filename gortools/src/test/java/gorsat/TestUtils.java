@@ -22,11 +22,11 @@
 
 package gorsat;
 
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.gor.iterators.RowSource;
 import com.sun.management.UnixOperatingSystemMXBean;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.process.*;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

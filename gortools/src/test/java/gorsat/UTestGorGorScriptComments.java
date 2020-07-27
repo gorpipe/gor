@@ -22,8 +22,8 @@
 
 package gorsat;
 
-import org.gorpipe.test.utils.FileTestUtils;
 import gorsat.Commands.CommandParseUtilities;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

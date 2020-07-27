@@ -39,7 +39,7 @@ public class DoubleArray implements Serializable, Cloneable {
     /**
      * Initialized empty array used in construction of empty array
      */
-    private static double[] EMPTY_ARRAY = new double[0];
+    private static final double[] EMPTY_ARRAY = new double[0];
 
     /**
      * The array holding them doubles

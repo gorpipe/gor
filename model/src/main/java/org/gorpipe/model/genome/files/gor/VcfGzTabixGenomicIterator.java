@@ -22,15 +22,15 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.model.util.ByteTextBuilder;
-import org.gorpipe.util.collection.ByteArray;
-import org.gorpipe.model.util.Util;
+import htsjdk.tribble.readers.TabixReader;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.model.util.StringUtil;
-import htsjdk.tribble.readers.TabixReader;
+import org.gorpipe.model.util.Util;
+import org.gorpipe.util.collection.ByteArray;
 
 import java.io.IOException;
 import java.util.ArrayList;

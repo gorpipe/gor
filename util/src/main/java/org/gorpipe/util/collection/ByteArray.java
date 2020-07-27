@@ -38,8 +38,8 @@ public class ByteArray {
      * The length of the Byte Array
      */
     public final int length;
-    private byte[] bytes;
-    private ByteOrder order;
+    private final byte[] bytes;
+    private final ByteOrder order;
     private int position;
 
     /**
@@ -487,7 +487,7 @@ public class ByteArray {
      * @param begin The starting position in the array for the value, inclusive
      * @return The integer value
      */
-    public static final int toInt(byte[] bytes, int begin) {
+    public static int toInt(byte[] bytes, int begin) {
         return toInt(bytes, begin, bytes.length, false);
     }
 
@@ -500,7 +500,7 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return The integer value
      */
-    public static final int toInt(byte[] bytes, int begin, int end) {
+    public static int toInt(byte[] bytes, int begin, int end) {
         return toInt(bytes, begin, end, false);
     }
 
@@ -512,7 +512,7 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return The integer value
      */
-    public static final int toInt(byte[] bytes, int begin, int end, boolean throwex) {
+    public static int toInt(byte[] bytes, int begin, int end, boolean throwex) {
         int nr = 0;
         final boolean isNegative = end > begin && bytes[begin] == '-';
         final boolean hasPlus = end > begin && bytes[begin] == '+';
@@ -539,7 +539,7 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return The long value
      */
-    public static final long toLong(byte[] bytes, int begin, int end) {
+    public static long toLong(byte[] bytes, int begin, int end) {
         long nr = 0;
         final boolean isNegative = end > begin && bytes[begin] == '-';
         for (int p = isNegative ? begin + 1 : begin; p < end; p++) {
@@ -559,7 +559,7 @@ public class ByteArray {
      * @param begin The starting position in the array for the value, inclusive
      * @return The long value
      */
-    public static final long toLongWithException(byte[] bytes, int begin) {
+    public static long toLongWithException(byte[] bytes, int begin) {
         return toLongWithException(bytes, begin, bytes.length);
     }
 
@@ -571,11 +571,11 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return The long value
      */
-    public static final long toLongWithException(byte[] bytes, int begin, int end) {
+    public static long toLongWithException(byte[] bytes, int begin, int end) {
         long nr = 0;
         final boolean isNegative = end > begin && bytes[begin] == '-';
         int p = isNegative ? begin + 1 : begin;
-        for (; p < end && bytes[p] >= '0' && bytes[p] <= '9'; ) {
+        while (p < end && bytes[p] >= '0' && bytes[p] <= '9') {
             nr = 10 * nr + (bytes[p++] - '0');
         }
         if (p == (isNegative ? begin + 1 : begin) || p < end) {
@@ -593,11 +593,11 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return The long value
      */
-    public static final long toLongCheckLen(byte[] bytes, int begin, int end) {
+    public static long toLongCheckLen(byte[] bytes, int begin, int end) {
         long nr = 0;
         final boolean isNegative = end > begin && bytes[begin] == '-';
         int p = isNegative ? begin + 1 : begin;
-        for (; p < end && bytes[p] >= '0' && bytes[p] <= '9'; ) {
+        while (p < end && bytes[p] >= '0' && bytes[p] <= '9') {
             nr = 10 * nr + (bytes[p++] - '0');
         }
         if (end != p) {
@@ -615,11 +615,11 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return The long value
      */
-    public static final boolean isLong(byte[] bytes, int begin, int end) {
+    public static boolean isLong(byte[] bytes, int begin, int end) {
         long nr = 0;
         final boolean isNegative = end > begin && bytes[begin] == '-';
         int p = isNegative ? begin + 1 : begin;
-        for (; p < end && bytes[p] >= '0' && bytes[p] <= '9'; ) {
+        while (p < end && bytes[p] >= '0' && bytes[p] <= '9') {
             nr = 10 * nr + (bytes[p++] - '0');
         }
         return p == end;
@@ -633,7 +633,7 @@ public class ByteArray {
      * @param end   The end position in the array for the value, exclusive
      * @return True if this is a legal double value, else false
      */
-    public static final boolean isDouble(byte[] bytes, int begin, int end) {
+    public static boolean isDouble(byte[] bytes, int begin, int end) {
         try {
             jdkToDouble(bytes, begin, end);
             return true;
@@ -655,7 +655,7 @@ public class ByteArray {
 
     private static final long MAX_VALUE_DIVIDE_10 = Long.MAX_VALUE / 10;
 
-    private static final boolean isWhitespace(byte ch) {
+    private static boolean isWhitespace(byte ch) {
         return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
     }
 
@@ -831,7 +831,7 @@ public class ByteArray {
      * @param bufLength The number of valid bytes in the buffer, i.e. the buffer length must be <= buffer.length
      * @return The int value
      */
-    public static final int parseChrId(byte[] buffer, int startPos, int bufLength) {
+    public static int parseChrId(byte[] buffer, int startPos, int bufLength) {
         int chrId = -1;
         int pos = startPos + 3;  // skip chr prefix
         byte chr = buffer[pos];
@@ -855,7 +855,7 @@ public class ByteArray {
      * @param startPos start position within buffer
      * @return The int value
      */
-    public static final int parseChrId(byte[] buffer, int startPos) {
+    public static int parseChrId(byte[] buffer, int startPos) {
         int chrId = -1;
         int pos = startPos + 3;  // skip chr prefix
         byte chr = buffer[pos];
@@ -877,7 +877,7 @@ public class ByteArray {
      * @param number   int value
      * @param intBytes a 4 byte buffer to write the number into
      */
-    public static final void intToBytes(byte[] intBytes, int number) {
+    public static void intToBytes(byte[] intBytes, int number) {
         ByteArray.writeInt(intBytes, 0, ByteOrder.BIG_ENDIAN, number);
     }
 
@@ -895,7 +895,7 @@ public class ByteArray {
         return sum;
     }
 
-    public static final int beginOfLine(byte[] buffer, int start, boolean forward) {
+    public static int beginOfLine(byte[] buffer, int start, boolean forward) {
         return beginOfLine(buffer, start, buffer.length, forward);
     }
 
@@ -906,7 +906,7 @@ public class ByteArray {
      * @param forward Whether to move forward or backward for next position
      * @return The start pos of a line within the buffer, 0 if start was outside the buffer or size of buffer if new line not found.
      */
-    public static final int beginOfLine(byte[] buffer, int start, int len, boolean forward) {
+    public static int beginOfLine(byte[] buffer, int start, int len, boolean forward) {
         if (start + 1 >= len || start < 0) { // Todo Check this condition.
             return 0;
         }
@@ -946,7 +946,7 @@ public class ByteArray {
      * @param start     The start to search for end of line
      * @return The end position of a line within the buffer
      */
-    public static final int endOfLine(byte[] buffer, int bufLength, int start) {
+    public static int endOfLine(byte[] buffer, int bufLength, int start) {
         byte eol = buffer[start];
         final int lengthminusone = bufLength - 1;
         while ((eol != '\n' && eol != '\r') && start < lengthminusone) {
@@ -966,7 +966,7 @@ public class ByteArray {
      * @param start  The start to search for end of line
      * @return The end position of a line within the buffer
      */
-    public static final int endOfLine(byte[] buffer, int start) {
+    public static int endOfLine(byte[] buffer, int start) {
         byte eol = buffer[start];
         final int lengthminusone = buffer.length - 1;
         while ((eol != '\n' && eol != '\r') && start < lengthminusone) {

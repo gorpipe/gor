@@ -99,14 +99,14 @@ object MemoryMonitorUtil {
   // You can specify the memory monitor limits either as MB or ratios of Xmx.
   // If both are specified the smaller MB number is used.
   var memoryMonitorMinFreeMemMB: Int = System.getProperty("gor.memoryMonitor.minFreeMemMB", "-1").toInt
-  var memoryMonitorMinFreeMemRatio: Float = System.getProperty("gor.memoryMonitor.minFreeMemRatio", "-1").toFloat
+  val memoryMonitorMinFreeMemRatio: Float = System.getProperty("gor.memoryMonitor.minFreeMemRatio", "-1").toFloat
 
   // Ratio of min free mem left when we try GC.
-  var memoryMonitorGCRatio: Float = System.getProperty("gor.memoryMonitor.gcRatio", "1.5").toFloat
-  var memoryMonitorMaxGCTimeRatio: Float = System.getProperty("gor.memoryMonitor.maxGCTimeRatio", "0.5").toFloat
-  var memoryMonitorRowsBetweenChecks: Int = System.getProperty("gor.memoryMonitor.rowsBetweenChecks", "10000").toInt
+  val memoryMonitorGCRatio: Float = System.getProperty("gor.memoryMonitor.gcRatio", "1.5").toFloat
+  val memoryMonitorMaxGCTimeRatio: Float = System.getProperty("gor.memoryMonitor.maxGCTimeRatio", "0.5").toFloat
+  val memoryMonitorRowsBetweenChecks: Int = System.getProperty("gor.memoryMonitor.rowsBetweenChecks", "10000").toInt
 
-  var memoryMonitorActive: Boolean = (memoryMonitorMinFreeMemMB > 0 || memoryMonitorMinFreeMemRatio > 0) && memoryMonitorRowsBetweenChecks > 0
+  val memoryMonitorActive: Boolean = (memoryMonitorMinFreeMemMB > 0 || memoryMonitorMinFreeMemRatio > 0) && memoryMonitorRowsBetweenChecks > 0
 
   def basicOutOfMemoryHandler(actualFreeMem: Long, args: List[_]) : Unit = {
     val logName = args.head

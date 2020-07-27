@@ -23,12 +23,10 @@
 package gorsat
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import org.scalatest.FunSuite
-import Regression.LogisticRegressionModel
-import Regression.WaldTest
+import Regression.{LogisticRegression, LogisticRegressionModel, WaldTest}
 import org.junit.Assert
-import Regression.LogisticRegression
 import org.junit.runner.RunWith
+import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])

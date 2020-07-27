@@ -22,12 +22,6 @@
 
 package gorsat;
 
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.manager.BucketManager;
-import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.test.GorDictionarySetup;
-import org.gorpipe.test.SlowTests;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Macros.PartGor;
 import gorsat.Script.ExecutionBlock;
@@ -35,6 +29,12 @@ import gorsat.Script.MacroInfo;
 import gorsat.Script.MacroParsingResult;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.GorPipeMacros;
+import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.manager.BucketManager;
+import org.gorpipe.gor.manager.TableManager;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.test.GorDictionarySetup;
+import org.gorpipe.test.SlowTests;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.experimental.categories.Category;

@@ -49,7 +49,7 @@ public abstract class ProcessLock {
     });
 
     // Duration of the locking period (the renew cycle), if null the period is infinite.
-    private Duration reserveLockPeriod;
+    private final Duration reserveLockPeriod;
     private ScheduledFuture<?> renewHandle = null;
     private Thread shutDonwHookThread;
 

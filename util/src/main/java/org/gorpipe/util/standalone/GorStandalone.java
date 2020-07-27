@@ -82,9 +82,6 @@ public class GorStandalone {
     }
 
     private static boolean isAbsolutePath(String leafPath) {
-        if ((leafPath.length() >= 2 && leafPath.charAt(1) == ':') || (leafPath.length() >= 1 && leafPath.charAt(0) == '/')) {
-            return true;
-        }
-        return false;
+        return (leafPath.length() >= 2 && leafPath.charAt(1) == ':') || (leafPath.length() >= 1 && leafPath.charAt(0) == '/');
     }
 }

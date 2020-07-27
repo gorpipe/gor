@@ -97,7 +97,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
       val tagsFound = bucketMap.keys.map(x => bucketMap(x)._1).fold(Nil)((t, x) => {
         x ::: t
       }).map(x => x -> true).toMap
-      val temp = tagSet.filter(x => tagsFound.get(x).isEmpty)
+      val temp = tagSet.filter(x => !tagsFound.contains(x))
       if (temp.nonEmpty) {
         throw new GorParsingException("Error in tag set - tags are not found in the dictionary: " + temp.slice(0, 100))
       }

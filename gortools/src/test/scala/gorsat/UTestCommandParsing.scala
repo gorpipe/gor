@@ -25,7 +25,6 @@ package gorsat
 import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Path}
 
-import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import Commands.CommandParseUtilities
 import process._
 import org.apache.commons.io.FileUtils

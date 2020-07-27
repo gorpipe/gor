@@ -22,7 +22,6 @@
 
 package org.gorpipe.model.genome.files.binsearch;
 
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
 import org.junit.Assert;
 import org.junit.Test;
 

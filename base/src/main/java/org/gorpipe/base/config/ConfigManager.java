@@ -59,9 +59,9 @@ public class ConfigManager {
 
     private static String configRootPath = null;
 
-    private static List<Map<?, ?>> globalProperties = new ArrayList<>();
+    private static final List<Map<?, ?>> globalProperties = new ArrayList<>();
 
-    private static ConcurrentHashMap<String, Config> prefixConfigMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Config> prefixConfigMap = new ConcurrentHashMap<>();
 
     // TODO: change to support multiple configRootPaths
     // env variable defined
@@ -332,12 +332,11 @@ public class ConfigManager {
     public static String[] getKeysForConfig(Class<? extends Config> clazz) {
         // Filter out any methods that do not have the @Key annotation,
         // get the value of each Key annotation and return as a String array
-        String keys[] = Arrays.stream(clazz.getDeclaredMethods())
+
+        return Arrays.stream(clazz.getDeclaredMethods())
                 .filter(m -> m.getAnnotation(Key.class) != null)
                 .map(m -> m.getAnnotation(Key.class).value())
                 .toArray(String[]::new);
-
-        return keys;
     }
 
     /**

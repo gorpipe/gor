@@ -30,7 +30,7 @@ package org.gorpipe.model.util;
  * @version $Id$
  */
 public class GLogGamma {
-    private static DoubleArray logGamma = new DoubleArray();
+    private static final DoubleArray logGamma = new DoubleArray();
 
 
     /**

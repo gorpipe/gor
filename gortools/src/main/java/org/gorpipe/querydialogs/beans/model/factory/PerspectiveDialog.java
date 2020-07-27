@@ -21,6 +21,7 @@
  */
 package org.gorpipe.querydialogs.beans.model.factory;
 
+import freemarker.template.TemplateException;
 import org.gorpipe.model.genome.files.gor.FileReader;
 import org.gorpipe.model.genome.files.gor.QueryEvaluator;
 import org.gorpipe.model.genome.files.gor.ReportCommand;
@@ -30,7 +31,6 @@ import org.gorpipe.querydialogs.beans.model.Dialog;
 import org.gorpipe.querydialogs.beans.model.DialogDescription;
 import org.gorpipe.querydialogs.beans.model.DialogType;
 import org.gorpipe.querydialogs.beans.model.argument.StringArgument;
-import freemarker.template.TemplateException;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -170,10 +170,7 @@ public class PerspectiveDialog extends Dialog {
      */
     public boolean checkIfLongRunningQuery() {
         final String longRunningMsg = determineLongRunningQuery();
-        if (longRunningMsg != null && longRunningMsg.length() > 0) {
-            return true;
-        }
-        return false;
+        return longRunningMsg != null && longRunningMsg.length() > 0;
     }
 
     public void setReportViewer(ReportViewer container) {

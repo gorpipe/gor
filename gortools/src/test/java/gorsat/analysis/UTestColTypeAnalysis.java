@@ -22,9 +22,9 @@
 
 package gorsat.analysis;
 
-import gorsat.Commands.Analysis;
 import gorsat.Analysis.ColTypeAnalysis;
 import gorsat.Analysis.InferColumnTypes;
+import gorsat.Commands.Analysis;
 import gorsat.Commands.RowHeader;
 import org.junit.Test;
 

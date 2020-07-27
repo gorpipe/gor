@@ -329,7 +329,7 @@ public abstract class Argument extends AbstractListBean {
                 if (line != null && line.length() > 0) {
                     if (checkForHeader && line.startsWith("#")) {
                         valuesHeader = (String[]) parseValue(line);
-                        valuesHeader[0] = valuesHeader[0].substring(1, valuesHeader[0].length());
+                        valuesHeader[0] = valuesHeader[0].substring(1);
                     } else {
                         values.add(parseValue(line));
                     }

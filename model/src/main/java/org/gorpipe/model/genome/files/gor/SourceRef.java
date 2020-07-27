@@ -295,7 +295,7 @@ public class SourceRef {
      * ALL_TAG if all the source tags exist in the query tags.
      * POSSIBLE_TAG in all other cases.
      */
-    public static final byte analyzeQueryTags(Set<String> tags, Set<String> queryTags, String alias, boolean aliasIsTag, Collection<String> deletedTags) {
+    public static byte analyzeQueryTags(Set<String> tags, Set<String> queryTags, String alias, boolean aliasIsTag, Collection<String> deletedTags) {
         if (tags == null || tags.isEmpty()) {
             if (aliasIsTag && alias != null) {
                 if (queryTags.contains(alias) && (deletedTags == null || !deletedTags.contains(alias))) return ALL_TAGS;

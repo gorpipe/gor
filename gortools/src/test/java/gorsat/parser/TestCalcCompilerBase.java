@@ -22,8 +22,8 @@
 
 package gorsat.parser;
 
-import org.gorpipe.gor.SyntaxChecker;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.gorpipe.gor.SyntaxChecker;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

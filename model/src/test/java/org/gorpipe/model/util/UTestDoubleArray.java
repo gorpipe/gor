@@ -23,7 +23,6 @@
 package org.gorpipe.model.util;
 
 
-import org.gorpipe.model.util.DoubleArray;
 import junit.framework.TestCase;
 
 /**

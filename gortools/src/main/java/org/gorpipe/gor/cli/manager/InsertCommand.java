@@ -51,7 +51,7 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
     @CommandLine.Option(names = {"-t", "--tags"},
             split=",",
             description = "Specify tags to use.  Values are specified as comma separated list.")
-    private List<String> tags = new ArrayList<>();
+    private final List<String> tags = new ArrayList<>();
 
     @CommandLine.Option(names = {"-a", "--alias"},
             description = "Aliases to use.")
@@ -63,7 +63,7 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
 
     @CommandLine.Option(names = {"-s", "--source"},
             description = "Column used for tag filtering. Defaults to 'PN'")
-    private String source = "PN";
+    private final String source = "PN";
 
     @CommandLine.Option(names = {"--tagskey"},
             description = "All tags must be unique. The usage of the same tag twice is disallowed. If used on a dictionary with multiple files using the same tag this option will result in an error.")

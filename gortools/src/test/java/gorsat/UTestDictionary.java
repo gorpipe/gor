@@ -22,13 +22,13 @@
 
 package gorsat;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.model.genome.files.gor.GorOptions;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

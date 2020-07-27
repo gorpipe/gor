@@ -31,5 +31,5 @@ public interface ReportViewer {
     /**
      * @param dialog The Report Form to create a report from and add to the viewmanager
      */
-    public void addReportToViewer(final PerspectiveDialog dialog);
+    void addReportToViewer(final PerspectiveDialog dialog);
 }

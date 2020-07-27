@@ -12,11 +12,11 @@
 
 package org.gorpipe.gor.Dictionary;
 
+import gorsat.TestUtils;
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.test.utils.FileTestUtils;
-import gorsat.TestUtils;
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

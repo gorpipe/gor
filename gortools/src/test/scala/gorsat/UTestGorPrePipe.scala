@@ -22,16 +22,14 @@
 
 package gorsat
 
-import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import org.scalatest.junit.JUnitRunner
-import process.GorPipeCommands
-import process.GorInputSources
-import process.GenericSessionFactory
 import Commands.CommandParseUtilities
 import Script.ScriptParsers
+import process.{GenericSessionFactory, GorInputSources, GorPipeCommands}
 import org.gorpipe.gor.GorSession
 import org.gorpipe.test.utils.FileTestUtils
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class UTestGorPrePipe extends FunSuite with BeforeAndAfterAll {

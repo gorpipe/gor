@@ -22,8 +22,8 @@
 
 package org.gorpipe.model.genome.files.gor;
 
-import org.gorpipe.exceptions.GorResourceException;
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.junit.Assert;
 import org.junit.Test;
 

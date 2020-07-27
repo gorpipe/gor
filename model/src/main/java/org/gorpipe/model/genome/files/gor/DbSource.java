@@ -22,6 +22,13 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.system.db.ConnectionPool;
+import org.gorpipe.model.system.db.Db;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,25 +38,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.model.system.db.ConnectionPool;
-import org.gorpipe.model.system.db.Db;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * DbSource abstract access to database source that are configured on installation time.

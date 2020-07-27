@@ -22,14 +22,14 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.ColumnValueProvider;
+import org.gorpipe.model.gor.RowObj;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.Writer;
-
-import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.gor.ColumnValueProvider;
-import org.gorpipe.model.gor.RowObj;
 
 /**
  * Row represents a single row from a genomic iterator. It is an abstract class, providing the interface

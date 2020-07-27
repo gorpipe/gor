@@ -22,18 +22,18 @@
 
 package org.gorpipe.gor.table.dictionary;
 
-import java.net.URI;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-
 import com.google.common.base.Splitter;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.GenomicRange;
 import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.model.util.StringUtil;
+
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static org.gorpipe.gor.table.PathUtils.fixFileSchema;
 import static org.gorpipe.gor.table.PathUtils.relativize;
@@ -45,7 +45,7 @@ import static org.gorpipe.gor.table.PathUtils.relativize;
  */
 public class DictionaryEntry extends BucketableTableEntry {
 
-    private boolean sourceInserted;
+    private final boolean sourceInserted;
 
     // Copy constructor.
     public DictionaryEntry(DictionaryEntry entry) {

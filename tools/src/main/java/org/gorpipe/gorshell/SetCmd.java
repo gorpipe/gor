@@ -65,7 +65,7 @@ public class SetCmd implements Runnable {
         private SetCmd parent;
 
         @CommandLine.Parameters(index = "0")
-        private
+        private final
         State state = State.OFF;
 
         @Override
@@ -83,7 +83,7 @@ public class SetCmd implements Runnable {
         private SetCmd parent;
 
         @CommandLine.Parameters(index = "0")
-        private
+        private final
         State state = State.OFF;
 
         @Override
@@ -101,7 +101,7 @@ public class SetCmd implements Runnable {
         private SetCmd parent;
 
         @CommandLine.Parameters(index = "0")
-        private
+        private final
         State state = State.OFF;
 
         @Override
@@ -119,7 +119,7 @@ public class SetCmd implements Runnable {
         private SetCmd parent;
 
         @CommandLine.Parameters(index = "0")
-        private
+        private final
         State state = State.OFF;
 
         @Override

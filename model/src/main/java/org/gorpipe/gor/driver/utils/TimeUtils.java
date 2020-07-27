@@ -34,11 +34,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * Created by stefan on 18.12.2015.
  */
 public class TimeUtils implements TimeAdjustable {
-    private static Logger log = LoggerFactory.getLogger(TimeUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(TimeUtils.class);
 
     private static TimeUtils instance;
 
-    private AtomicLong delta = new AtomicLong();
+    private final AtomicLong delta = new AtomicLong();
 
     /**
      * Prevent access to the constructor. Everyone should use the static singleton instance.

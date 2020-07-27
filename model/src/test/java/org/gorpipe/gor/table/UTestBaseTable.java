@@ -12,14 +12,14 @@
 
 package org.gorpipe.gor.table;
 
+import gorsat.TestUtils;
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.manager.BucketManager;
-import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.test.SlowTests;
-import gorsat.TestUtils;
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

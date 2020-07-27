@@ -29,7 +29,7 @@ import java.nio.file.Files;
 
 public class SharedChromSeqReferenceSource extends SharedCachedReferenceSource implements Closeable {
 
-    private String referencePath;
+    private final String referencePath;
 
     public SharedChromSeqReferenceSource(String path, String referenceKey) {
         super(referenceKey);

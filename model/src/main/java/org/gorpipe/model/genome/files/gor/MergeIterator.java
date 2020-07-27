@@ -22,15 +22,16 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorContext;
-import org.apache.commons.lang.ArrayUtils;
-import org.gorpipe.model.genome.files.gor.filters.RowFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -55,7 +56,7 @@ public class MergeIterator extends GenomicIterator {
      * of the of the source. Note that the source may already have the source column
      * added.
      */
-    private boolean insertSource;
+    private final boolean insertSource;
 
     /**
      * Set once queue has been primed.
@@ -67,7 +68,7 @@ public class MergeIterator extends GenomicIterator {
     /**
      * Optional GorMonitor instance, so that cancelling can be done while priming
      */
-    private GorMonitor gorMonitor;
+    private final GorMonitor gorMonitor;
 
     public MergeIterator(List<GenomicIterator> sources, GorOptions options) {
         this(sources, options, null);
@@ -282,7 +283,7 @@ public class MergeIterator extends GenomicIterator {
         }
     }
 
-    class RowFromIterator implements Comparable<RowFromIterator> {
+    static class RowFromIterator implements Comparable<RowFromIterator> {
         final Row row;
         final int itIdx;
 

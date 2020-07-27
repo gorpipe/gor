@@ -43,7 +43,7 @@ public final class IntArray implements Serializable, Iterable<Integer> {
     /**
      * Initialized empty array used in construction of empty array
      */
-    private static int[] EMPTY_ARRAY = new int[0];
+    private static final int[] EMPTY_ARRAY = new int[0];
 
     /**
      * The array holding them integers
@@ -827,7 +827,7 @@ public final class IntArray implements Serializable, Iterable<Integer> {
 
     static class IntArrayIterator implements Iterator<Integer> {
 
-        private IntArray theArray;
+        private final IntArray theArray;
         private int index = 0;
 
         public IntArrayIterator(IntArray theArray) {
