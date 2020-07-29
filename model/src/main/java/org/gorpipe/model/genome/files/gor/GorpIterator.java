@@ -31,7 +31,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -90,7 +89,7 @@ public class GorpIterator extends GenomicIteratorAdapterBase {
 
     private SourceRef parseLineToSourceRef(String line) {
         final String[] columns = line.split("\t");
-        final String sourcePath = this.parentDirectory.resolve(columns[0]).toString();
+        final String sourcePath = this.parentDirectory == null ? columns[0] : this.parentDirectory.resolve(columns[0]).toString();
         final String startChr = columns[1];
         final int startPos = Integer.parseInt(columns[2]);
         final String stopChr = columns[3];

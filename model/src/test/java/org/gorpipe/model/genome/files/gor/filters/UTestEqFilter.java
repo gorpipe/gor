@@ -26,6 +26,8 @@ import org.gorpipe.model.genome.files.gor.RowBase;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashSet;
+
 public class UTestEqFilter {
 
     @Test
@@ -39,5 +41,11 @@ public class UTestEqFilter {
         Assert.assertEquals(2, rf2.getColIdx());
         Assert.assertEquals("hjalti", rf2.getWantedValue());
         Assert.assertTrue(rf2.test(new RowBase("chr1\t1\thjalti")));
+    }
+
+    @Test
+    public void test_acceptProgress() {
+        final RowFilter rf = new EqFilter(10, "hjalti");
+        Assert.assertTrue(rf.test(RowBase.getProgressRow("chr1", 1)));
     }
 }

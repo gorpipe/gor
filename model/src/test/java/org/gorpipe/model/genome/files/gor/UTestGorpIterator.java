@@ -22,6 +22,7 @@
 
 package org.gorpipe.model.genome.files.gor;
 
+import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
@@ -155,5 +156,14 @@ public class UTestGorpIterator {
         Assert.assertEquals("chr1\t1\tprogress", git.next().toString());
         Assert.assertTrue(git.hasNext());
         Assert.assertEquals("chr1\t11868\t14412\tDDX11L1\t0", git.next().toString());
+    }
+
+    @Test
+    public void test_filterProgressRows() {
+        final GenomicIterator git = new GorpIterator(new FileSource(new SourceReference(gorpPath, null, tempDirPath, null, null, null)))
+                .filter(r -> !r.isProgress);
+        while (git.hasNext()) {
+            Assert.assertFalse(git.next().isProgress);
+        }
     }
 }

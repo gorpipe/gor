@@ -37,7 +37,7 @@ public class InFilter extends RowFilter {
 
     @Override
     public boolean test(Row r) {
-        return this.legalValues.contains(r.colAsString(this.colIdx).toString());
+        return r.isProgress || this.legalValues.contains(r.colAsString(this.colIdx).toString());
     }
 
     @Override

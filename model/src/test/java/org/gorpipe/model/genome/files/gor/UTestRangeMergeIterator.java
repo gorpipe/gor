@@ -397,6 +397,14 @@ public class UTestRangeMergeIterator {
         Assert.assertEquals("chr1\t10\tsource1", git.next().toString());
     }
 
+    @Test
+    public void test_filterProgressRows() {
+        final GenomicIterator git = new RangeMergeIterator(badSourceRefs).filter(r -> !r.isProgress);
+        while (git.hasNext()) {
+            Assert.assertFalse(git.next().isProgress);
+        }
+    }
+
     private static int compareKeys(String chr1, int pos1, String chr2, int pos2) {
         final int chrCmp = chr1.compareTo(chr2);
         if (chrCmp != 0) return chrCmp;

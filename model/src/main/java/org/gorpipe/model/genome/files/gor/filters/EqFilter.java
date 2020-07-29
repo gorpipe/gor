@@ -35,7 +35,7 @@ public class EqFilter extends RowFilter {
 
     @Override
     public boolean test(Row r) {
-        return this.wanted.equals(r.colAsString(this.colIdx).toString());
+        return r.isProgress || this.wanted.equals(r.colAsString(this.colIdx).toString());
     }
 
     @Override

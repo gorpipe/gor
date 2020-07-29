@@ -73,8 +73,9 @@ public class RangeMergeIterator extends GenomicIterator {
     private final Queue<Integer> waitingRows;
     private String waitingChr;
     private int waitingPos;
-    private boolean reportProgress = false;
+    private boolean mustReport = false;
     private boolean progressReported = false;
+    private Row progressRow;
     private Predicate<Row> rf;
 
     public RangeMergeIterator(List<SourceRef> references) {
@@ -127,10 +128,10 @@ public class RangeMergeIterator extends GenomicIterator {
                 do {
                     activateNextIterator();
                 } while (this.waitingIterators.size() > 0 && this.waitingChr.equals(oldChr) && this.waitingPos == oldPos);
-                this.reportProgress = mustActivateNew();
+                this.mustReport = mustActivateNew();
                 this.progressReported = false;
             } else {
-                this.reportProgress = true;
+                this.mustReport = true;
             }
         }
     }
@@ -295,15 +296,27 @@ public class RangeMergeIterator extends GenomicIterator {
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
-        return this.waitingRows.size() > 0 || this.reportProgress;
+        if (this.mustReport) {
+            this.progressRow = RowBase.getProgressRow(this.waitingChr, this.waitingPos);
+            if (this.rf == null || this.rf.test(this.progressRow)) {
+                return true;
+            } else {
+                this.mustReport = false;
+                this.progressReported = true;
+                this.progressRow = null;
+                return this.hasNext();
+            }
+        } else {
+            return this.waitingRows.size() > 0;
+        }
     }
 
     @Override
     public Row next() {
-        if (this.reportProgress) {
-            this.reportProgress = false;
+        if (this.mustReport) {
+            this.mustReport = false;
             this.progressReported = true;
-            return RowBase.getProgressRow(this.waitingChr, this.waitingPos);
+            return this.progressRow;
         } else if (this.waitingRows.isEmpty()) {
             throw new IllegalStateException("hasNext must be called before calling next.");
         } else {

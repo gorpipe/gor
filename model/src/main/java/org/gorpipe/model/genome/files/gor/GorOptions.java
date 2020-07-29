@@ -396,6 +396,9 @@ public class GorOptions {
             theIterator = new MergeIterator(genomicIterators, this, gm);
         } else {
             theIterator = genomicIterators.get(0);
+            if (theIterator instanceof RangeMergeIterator || theIterator instanceof GorpIterator) {
+                theIterator = theIterator.filter(r -> !r.isProgress);
+            }
         }
 
         if (sourceName != null) {
@@ -407,6 +410,9 @@ public class GorOptions {
             context.iteratorCreated(toString());
         }
 
+        if (chrname != null && !chrname.equals("")) {
+            theIterator = new BoundedIterator(theIterator, chrname, begin, end);
+        }
         return theIterator;
     }
 
@@ -457,9 +463,6 @@ public class GorOptions {
                 throw new GorResourceException("Not enough columns in file", ref.getName());
             }
             i.setColnum(colnum);
-        }
-        if (chrname != null && !chrname.equals("")) {
-            i = new BoundedIterator(i, chrname, begin, end);
         }
         return i;
     }

@@ -43,4 +43,10 @@ public class UTestInFilter {
         Assert.assertTrue(rf2.test(new RowBase("chr1\t1\thjalti")));
         Assert.assertEquals(1, ((InFilter) rf2).getLegalValues().size());
     }
+
+    @Test
+    public void test_acceptProgress() {
+        final RowFilter rf = new InFilter(10, new HashSet<>());
+        Assert.assertTrue(rf.test(RowBase.getProgressRow("chr1", 1)));
+    }
 }
