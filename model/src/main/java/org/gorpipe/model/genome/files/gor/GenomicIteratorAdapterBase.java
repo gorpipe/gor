@@ -152,6 +152,12 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     }
 
     @Override
+    public GenomicIterator select(int[] cols) {
+        this.iterator = this.iterator.select(cols);
+        return this;
+    }
+
+    @Override
     public boolean pushdownFilter(String where) {
         return iterator.pushdownFilter(where);
     }

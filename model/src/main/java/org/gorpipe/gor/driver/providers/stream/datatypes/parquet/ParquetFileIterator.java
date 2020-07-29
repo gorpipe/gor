@@ -109,8 +109,10 @@ public class ParquetFileIterator extends GenomicIterator {
 
     @Override
     public void init(GorSession gorSession) {
-        nor = gorSession.getNorContext();
-        gorSession.getGorContext().getSortCols().ifPresent(c -> this.sortCols = Arrays.stream(c.split(",")).mapToInt(Integer::parseInt).toArray());
+        if (gorSession != null) {
+            nor = gorSession.getNorContext();
+            gorSession.getGorContext().getSortCols().ifPresent(c -> this.sortCols = Arrays.stream(c.split(",")).mapToInt(Integer::parseInt).toArray());
+        }
         init();
     }
 

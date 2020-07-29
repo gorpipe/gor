@@ -285,6 +285,13 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
     }
 
     /**
+     * Returns an iterator whose rows are formed of a subset of the columns of the underlying iterator.
+     */
+    public GenomicIterator select(int[] cols) {
+        return new SelectIterator(this, cols);
+    }
+
+    /**
      * Sends the gor filter down to the source iterator
      * The source iterator pushdownFilter implementation
      * must parse the gor filter and translate it to corresponding

@@ -23,6 +23,7 @@
 package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class RowBase extends Row implements Serializable {
     }
 
     public static Row getProgressRow(String chr, int pos) {
-        final Row toReturn = new RowBase(chr + "\t" + pos + "\tdummy");
+        final Row toReturn = new RowBase(chr + "\t" + pos + "\tprogress");
         toReturn.isProgress = true;
         return toReturn;
     }

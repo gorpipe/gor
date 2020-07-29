@@ -155,7 +155,7 @@ public class UTestRangeMergeIterator {
         int count = 0;
         while (rmit.hasNext()) {
             final Row next = rmit.next();
-            if (next.toString().endsWith("dummy")) {
+            if (next.toString().endsWith("progress")) {
                 Assert.assertTrue(expectedDummyRows.hasNext());
                 Assert.assertEquals(expectedDummyRows.next(), next.toString());
             } else {
@@ -236,7 +236,7 @@ public class UTestRangeMergeIterator {
             final int nextPos = next.pos;
             final int cmp = compareKeys(chr, pos, nextChr, nextPos);
             Assert.assertTrue(cmp <= 0);
-            if (next.toString().endsWith("dummy")) {
+            if (next.toString().endsWith("progress")) {
                 lastDummy = true;
                 Assert.assertTrue(expectedDummyRows.hasNext());
                 Assert.assertEquals(expectedDummyRows.next(), next.toString());
@@ -340,7 +340,7 @@ public class UTestRangeMergeIterator {
         final List<SourceRef> myRefs = sourceRefs.stream().filter(sr -> sr.startChr.compareTo("chr1") > 0).collect(Collectors.toList());
         final RangeMergeIterator rmit = new RangeMergeIterator(myRefs);
         Assert.assertTrue(rmit.seek("chr1", 1));
-        Assert.assertEquals("chr10\t306220\tdummy", rmit.next().toString());
+        Assert.assertEquals("chr10\t306220\tprogress", rmit.next().toString());
         Assert.assertTrue(rmit.hasNext());
         Assert.assertEquals("chr10\t313611\tblablabla", rmit.next().toString());
         rmit.close();
@@ -352,9 +352,9 @@ public class UTestRangeMergeIterator {
         Assert.assertTrue(myRefs.addAll(emptySources));
         final RangeMergeIterator rmit = new RangeMergeIterator(myRefs);
         Assert.assertTrue(rmit.seek("chr1", 1));
-        Assert.assertEquals("chr10\t1\tdummy", rmit.next().toString());
+        Assert.assertEquals("chr10\t1\tprogress", rmit.next().toString());
         Assert.assertTrue(rmit.hasNext());
-        Assert.assertEquals("chr10\t306220\tdummy", rmit.next().toString());
+        Assert.assertEquals("chr10\t306220\tprogress", rmit.next().toString());
         Assert.assertTrue(rmit.hasNext());
         Assert.assertEquals("chr10\t313611\tblablabla", rmit.next().toString());
         rmit.close();
@@ -367,7 +367,7 @@ public class UTestRangeMergeIterator {
             Assert.assertTrue(git.hasNext());
             final Row r = git.next();
             Assert.assertTrue(r.isProgress);
-            Assert.assertEquals("chr1\t" + (i + 1) * 2 + "\tdummy", r.toString());
+            Assert.assertEquals("chr1\t" + (i + 1) * 2 + "\tprogress", r.toString());
         }
         for (int source_idx = 1; source_idx <= 10; ++source_idx) {
             Assert.assertTrue(git.hasNext());
@@ -382,15 +382,15 @@ public class UTestRangeMergeIterator {
 
         Assert.assertTrue(git.seek("chr1", 1));
         Assert.assertTrue(git.hasNext());
-        Assert.assertEquals("chr1\t2\tdummy", git.next().toString());
+        Assert.assertEquals("chr1\t2\tprogress", git.next().toString());
         Assert.assertTrue(git.hasNext());
-        Assert.assertEquals("chr1\t4\tdummy", git.next().toString());
+        Assert.assertEquals("chr1\t4\tprogress", git.next().toString());
         Assert.assertTrue(git.hasNext());
-        Assert.assertEquals("chr1\t6\tdummy", git.next().toString());
+        Assert.assertEquals("chr1\t6\tprogress", git.next().toString());
         Assert.assertTrue(git.hasNext());
-        Assert.assertEquals("chr1\t8\tdummy", git.next().toString());
+        Assert.assertEquals("chr1\t8\tprogress", git.next().toString());
         Assert.assertTrue(git.hasNext());
-        Assert.assertEquals("chr1\t10\tdummy", git.next().toString());
+        Assert.assertEquals("chr1\t10\tprogress", git.next().toString());
 
         Assert.assertTrue(git.seek("chr1", 10));
         Assert.assertTrue(git.hasNext());

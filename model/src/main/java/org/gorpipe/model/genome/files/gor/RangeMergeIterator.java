@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 /**
@@ -74,9 +75,13 @@ public class RangeMergeIterator extends GenomicIterator {
     private int waitingPos;
     private boolean reportProgress = false;
     private boolean progressReported = false;
+    private Predicate<Row> rf;
 
     public RangeMergeIterator(List<SourceRef> references) {
         this.numberOfSources = references.size();
+        if (this.numberOfSources == 0) {
+            throw new IllegalArgumentException("There must be at least one source");
+        }
         this.sources = references;
         this.iterators = new GenomicIterator[this.numberOfSources];
         this.rows = new Row[this.numberOfSources];
@@ -131,18 +136,28 @@ public class RangeMergeIterator extends GenomicIterator {
     }
 
     private void activateNextIterator() throws IOException {
-        if (this.waitingIterators.size() > 0) {
-            final int next = this.waitingIterators.poll();
-            final GenomicIterator nextIt = this.sources.get(next).iterate(new DefaultChromoLookup(), null, null);
-            if (nextIt.hasNext()) {
-                this.rows[next] = nextIt.next();
-                this.iterators[next] = nextIt;
-                this.waitingRows.add(next);
-            } else {
-                nextIt.close();
-            }
-            updateWaitingBound();
+        final int next = this.waitingIterators.poll();
+        final GenomicIterator nextIt = getIterator(next);
+        if (nextIt.hasNext()) {
+            this.rows[next] = nextIt.next();
+            this.iterators[next] = nextIt;
+            this.waitingRows.add(next);
+        } else {
+            nextIt.close();
         }
+        updateWaitingBound();
+    }
+
+    private GenomicIterator getIterator(int idx) throws IOException {
+        final GenomicIterator nextIt;
+        final GenomicIterator cand = this.sources.get(idx).iterate(new DefaultChromoLookup(), null, null);
+        if (this.rf == null) {
+            nextIt = cand;
+        } else {
+            nextIt = cand.filter(this.rf);
+        }
+        nextIt.init(null);
+        return nextIt;
     }
 
     private void readFromIterator(int idx) {
@@ -178,6 +193,33 @@ public class RangeMergeIterator extends GenomicIterator {
             final SourceRef thenRef = this.sources.get(then);
             this.waitingChr = thenRef.startChr;
             this.waitingPos = thenRef.startPos;
+        }
+    }
+
+    @Override
+    public String getHeader() {
+        final String candidateHeader = super.getHeader();
+        if (candidateHeader == null || candidateHeader.equals("")) {
+            final String toReturn;
+            if (this.waitingRows.isEmpty()) {
+                try {
+                    if (this.waitingIterators.isEmpty()) {
+                        final GenomicIterator git = this.getIterator(0);
+                        toReturn = git.getHeader();
+                        git.close();
+                    } else {
+                        this.activateNextIterator();
+                        toReturn = this.iterators[this.waitingRows.peek()].getHeader();
+                    }
+                } catch (IOException e) {
+                    throw new GorSystemException(e);
+                }
+            } else {
+                toReturn = this.iterators[this.waitingRows.peek()].getHeader();
+            }
+            return toReturn;
+        } else {
+            return candidateHeader;
         }
     }
 
@@ -225,7 +267,7 @@ public class RangeMergeIterator extends GenomicIterator {
 
             final GenomicIterator nextGIt;
             if (this.iterators[nextItIdx] == null) {
-                nextGIt = this.sources.get(nextItIdx).iterate(new DefaultChromoLookup(), null, null);
+                nextGIt = getIterator(nextItIdx);
             } else {
                 nextGIt = this.iterators[nextItIdx];
             }
@@ -284,6 +326,12 @@ public class RangeMergeIterator extends GenomicIterator {
                 git.close();
             }
         }
+    }
+
+    @Override
+    public GenomicIterator filter(Predicate<Row> rf) {
+        this.rf = rf;
+        return this;
     }
 
     private int compareToWaiting(String chr, int pos) {

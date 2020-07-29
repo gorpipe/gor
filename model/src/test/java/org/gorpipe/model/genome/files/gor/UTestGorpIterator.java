@@ -152,7 +152,7 @@ public class UTestGorpIterator {
         Assert.assertFalse(git.seek("chrZ", 0));
         Assert.assertTrue(git.seek("chr1", 0));
         Assert.assertTrue(git.hasNext());
-        Assert.assertEquals("chr1\t1\tdummy", git.next().toString());
+        Assert.assertEquals("chr1\t1\tprogress", git.next().toString());
         Assert.assertTrue(git.hasNext());
         Assert.assertEquals("chr1\t11868\t14412\tDDX11L1\t0", git.next().toString());
     }
