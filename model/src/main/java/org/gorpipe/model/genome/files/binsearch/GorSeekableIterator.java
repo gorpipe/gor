@@ -115,5 +115,10 @@ public class GorSeekableIterator extends GenomicIterator {
         this.header = new GorHeader(headerString.split("\t"));
         setHeader(headerString);
     }
+
+    @Override
+    protected void selectHeader(int[] cols) {
+        this.header = this.header.select(cols);
+    }
 }
 

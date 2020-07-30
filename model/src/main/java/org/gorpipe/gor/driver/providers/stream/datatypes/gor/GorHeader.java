@@ -51,6 +51,14 @@ public class GorHeader {
         types.add(tpe);
     }
 
+    public GorHeader select(int[] colIndices) {
+        final GorHeader toReturn = new GorHeader();
+        for (int idx : colIndices) {
+            toReturn.addColumn(this.columns.get(idx));
+        }
+        return toReturn;
+    }
+
     @Override
     public String toString() {
         return String.join(", ", columns);

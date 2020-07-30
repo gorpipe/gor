@@ -31,6 +31,7 @@ import org.apache.parquet.filter2.predicate.FilterPredicate;
 import org.apache.parquet.filter2.predicate.Operators;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.api.ReadSupport;
 import org.apache.parquet.hadoop.example.GroupReadSupport;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
@@ -434,5 +435,21 @@ public class ParquetFileIterator extends GenomicIterator {
             }
         }
         return false;
+    }
+
+    @Override
+    public GenomicIterator select(int[] cols) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("message gortable {\n");
+        final List<Type> fields = this.schema.getFields();
+        for (final int colIdx : cols) {
+            sb.append(fields.get(colIdx));
+            sb.append(";\n");
+        }
+        sb.append("}");
+        final String readSchema = sb.toString();
+        this.configuration.set(ReadSupport.PARQUET_READ_SCHEMA, readSchema);
+        this.selectHeader(cols);
+        return this;
     }
 }

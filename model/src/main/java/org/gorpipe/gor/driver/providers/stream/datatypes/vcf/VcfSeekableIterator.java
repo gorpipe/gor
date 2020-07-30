@@ -42,7 +42,7 @@ public class VcfSeekableIterator extends GenomicIterator {
     private static final Logger log = LoggerFactory.getLogger(VcfSeekableIterator.class);
 
     private final SeekableIterator seekableIterator;
-    private final GorHeader gh;
+    private GorHeader gh;
     private final Comparator<StringIntKey> comparator;
     private final ChrBoundedIterator chrIterator;
     private final ContigDataScheme dataScheme;
@@ -184,5 +184,10 @@ public class VcfSeekableIterator extends GenomicIterator {
                 this.reachedEnd = true;
             }
         }
+    }
+
+    @Override
+    protected void selectHeader(int[] cols) {
+        this.gh = this.gh.select(cols);
     }
 }

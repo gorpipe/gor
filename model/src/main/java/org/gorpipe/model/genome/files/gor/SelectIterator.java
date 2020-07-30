@@ -27,6 +27,7 @@ public class SelectIterator extends GenomicIteratorAdapterBase {
 
     public SelectIterator(GenomicIterator git, int[] cols) {
         super(git);
+        this.iterator.selectHeader(cols);
         this.cols = cols;
     }
 

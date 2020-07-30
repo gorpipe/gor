@@ -52,7 +52,7 @@ public class GorzSeekableIterator extends GenomicIterator {
 
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
     private final String filePath;
-    private final GorHeader header;
+    private GorHeader header;
     private final Unzipper unzipper;
     private byte[] buffer;
     private final BufferIterator bufferIterator = new BufferIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
@@ -284,5 +284,10 @@ public class GorzSeekableIterator extends GenomicIterator {
                 return BlockPacker.decode(this.buffer, 0, out, offset, this.mapExtTable);
             }
         }
+    }
+
+    @Override
+    protected void selectHeader(int[] cols) {
+        this.header = this.header.select(cols);
     }
 }

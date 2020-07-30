@@ -77,6 +77,7 @@ public class RangeMergeIterator extends GenomicIterator {
     private boolean progressReported = false;
     private Row progressRow;
     private Predicate<Row> rf;
+    private int[] cols;
 
     public RangeMergeIterator(List<SourceRef> references) {
         this.numberOfSources = references.size();
@@ -150,14 +151,14 @@ public class RangeMergeIterator extends GenomicIterator {
     }
 
     private GenomicIterator getIterator(int idx) throws IOException {
-        final GenomicIterator nextIt;
-        final GenomicIterator cand = this.sources.get(idx).iterate(new DefaultChromoLookup(), null, null);
-        if (this.rf == null) {
-            nextIt = cand;
-        } else {
-            nextIt = cand.filter(this.rf);
-        }
+        GenomicIterator nextIt = this.sources.get(idx).iterate(new DefaultChromoLookup(), null, null);
         nextIt.init(null);
+        if (this.rf != null) {
+            nextIt = nextIt.filter(this.rf);
+        }
+        if (this.cols != null) {
+            nextIt = nextIt.select(this.cols);
+        }
         return nextIt;
     }
 
@@ -201,27 +202,45 @@ public class RangeMergeIterator extends GenomicIterator {
     public String getHeader() {
         final String candidateHeader = super.getHeader();
         if (candidateHeader == null || candidateHeader.equals("")) {
-            final String toReturn;
             if (this.waitingRows.isEmpty()) {
-                try {
-                    if (this.waitingIterators.isEmpty()) {
-                        final GenomicIterator git = this.getIterator(0);
-                        toReturn = git.getHeader();
-                        git.close();
-                    } else {
-                        this.activateNextIterator();
-                        toReturn = this.iterators[this.waitingRows.peek()].getHeader();
-                    }
-                } catch (IOException e) {
-                    throw new GorSystemException(e);
-                }
+                return activateAndRead();
             } else {
-                toReturn = this.iterators[this.waitingRows.peek()].getHeader();
+                return this.iterators[this.waitingRows.peek()].getHeader();
             }
-            return toReturn;
         } else {
             return candidateHeader;
         }
+    }
+
+    private String activateAndRead() {
+        String toReturn;
+        try {
+            if (this.waitingIterators.isEmpty()) {
+                toReturn = getHeaderFromFirst();
+            } else {
+                toReturn = tryActivateAndThenGetHeader();
+            }
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
+        return toReturn;
+    }
+
+    private String tryActivateAndThenGetHeader() throws IOException {
+        this.activateNextIterator();
+        if (this.waitingRows.isEmpty()) {
+            //This may happen if the iterator does not return anything
+            return getHeaderFromFirst();
+        } else {
+            return this.iterators[this.waitingRows.peek()].getHeader();
+        }
+    }
+
+    private String getHeaderFromFirst() throws IOException {
+        final GenomicIterator git = this.getIterator(0);
+        final String toReturn = git.getHeader();
+        git.close();
+        return toReturn;
     }
 
     @Override
@@ -358,5 +377,12 @@ public class RangeMergeIterator extends GenomicIterator {
         } else {
             return Integer.compare(pos1, pos2);
         }
+    }
+
+    @Override
+    public GenomicIterator select(int[] cols) {
+        this.cols = cols;
+        super.selectHeader(cols);
+        return this;
     }
 }

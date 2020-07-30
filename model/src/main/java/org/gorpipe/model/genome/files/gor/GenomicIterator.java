@@ -23,10 +23,13 @@ package org.gorpipe.model.genome.files.gor;
 
 import org.gorpipe.gor.GorContext;
 import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.stats.StatsCollector;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * GenomicIterator is a seekable iterator on genomic ordered data. It assumes the data source contains
@@ -353,5 +356,13 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
      */
     public boolean pushdownTop(int limit) {
         return false;
+    }
+
+    protected void selectHeader(int[] cols) {
+        if (this.getHeader() != null && !this.getHeader().equals("")) {
+            final String[] headerCols = this.getHeader().split("\t");
+            this.header = Arrays.stream(cols).mapToObj(i -> headerCols[i]).collect(Collectors.joining("\t"));
+        }
+        this.colnum = cols.length;
     }
 }
