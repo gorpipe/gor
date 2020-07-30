@@ -69,6 +69,7 @@ project(':gortools') {
         compile "info.picocli:picocli:4.1.+"
         compile "de.tototec:de.tototec.cmdoption:0.6.+"
         compile "colt:colt:1.2.+"
+        compile 'info.picocli:picocli-shell-jline3:4.1.4'
 
         runtime project(':documentation')
         runtime "org.scala-lang:scala-reflect:2.12.+"
@@ -125,6 +126,12 @@ project(':gortools') {
                                               '-Dgor.querylimits.writequota.mb=0',
                                               '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
+
+            'gorshell'   : ['className'     : 'org.gorpipe.gorshell.GorShell',
+                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
+                                               '-Dgor.querylimits.writequota.mb=0',
+                                               '-Dgor.querylimits.timeout.seconds=0',
+                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
 
             'gor'       : ['className'     : 'org.gorpipe.gor.cli.GorCLI',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
