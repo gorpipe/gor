@@ -127,7 +127,7 @@ public class GorCommand {
                 if (startOfComment >= 0) {
                     nestedCount++;
                 } else {
-                    startOfComment = i;
+                    if(cmd.length() <= i+2 || cmd.charAt(i + 2) != '+') startOfComment = i;
                 }
             } else if (ch1 == '*' && ch2 == '/') {
                 if (nestedCount > 0) {

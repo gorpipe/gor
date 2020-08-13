@@ -45,4 +45,11 @@ public class UTestGorCommand extends TestCase {
         assertEquals(gc.posWithComment(18), 79);
     }
 
+    /**
+     * Test SQL hints mechanism
+     */
+    public void testGetWithoutCommentsWithSqlHints() {
+        GorCommand gc = new GorCommand("gor /*+ BROADCAST(a) */ /* this is /*inner*/first comment /* Nested */ */c:/data/test./* comment*/gor");
+        assertEquals(gc.getWithoutComments(), "gor /*+ BROADCAST(a) */ c:/data/test.gor");
+    }
 }
