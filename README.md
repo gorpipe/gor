@@ -7,7 +7,9 @@ GORpipe is a tool based on a genomic ordered relational architecture and allows 
 ## Prerequisites
 
 Before setting up GORpipe you need to have Java JDK or JRE version 8 or higher set up on your computer. 
-For example Open JDK (https://openjdk.java.net/install/).
+For example Open JDK (https://openjdk.java.net/install/). To check your Java version, open up a terminal and enter:
+
+    java -version
 
 Alternatively Oracle distributions can also be used (https://www.oracle.com/java/technologies/javase-downloads.html).
 
@@ -21,7 +23,7 @@ Then running GOR without setting up test data can be done by generating GOR rows
 
     ./gor-scripts-<version>/bin/gorpipe "gor <(gorrows -p chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian <(norrows 100 | group -lis -sc #1))"  
 
-Note: Substitute <version> with the actual latest version number (e.g. gor-scripts-2.8.1). 
+Note: Substitute \<version\> with the actual latest version number (e.g. gor-scripts-2.9.0). 
         
 ## Setting up test data (Optional)
 
@@ -56,8 +58,58 @@ This will start an interactive shell session where queries can be executed:
 
     gor gor-test-data/gor/dbsnp_test.gor | top 10
         
-For a list of GOR input sources, pipe commands and other details, simply type `help` within the GOR shell.
+For a list of GOR input sources, pipe commands and other details, simply type `help` within the GOR shell.    
 
+## Setting up reference data (Optional)
+
+Go to into the gor-scripts folder (gor-scripts-\<version\>/) and download the reference data found at:
+
+    https://s3.amazonaws.com/wuxinextcode-sm-public/data/standalone-project-data.tar.gz
+    
+If using a command line, this can be accomplished using `wget`
+
+    wget https://s3.amazonaws.com/wuxinextcode-sm-public/data/standalone-project-data.tar.gz
+
+Since this is a large dataset (~9gb), this download could take a few minutes. After that extract the package
+and a folder called `ref` should be created.
+
+Note that the file standalone-project-data.tar.gz will remain in the folder. You may want to delete it afterwards. 
+
+Now GORpipe & GORshell need to be configured in order to use this reference data next time they are started up.
+This is done by replacing the config file found at config/gor_config.txt with:
+
+    https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_config.txt
+    
+If using `wget` this can be accomplished with:
+
+    wget -O config/gor_config.txt https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_config.txt
+    
+To use aliases for the reference files, replace the default alias file found at config/gor_aliases.txt with:
+                                                          
+    https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_aliases.txt
+
+If using `wget` this can be accomplished with:
+
+    wget -O config/gor_aliases.txt https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_aliases.txt
+    
+To test the reference data, using aliases, try the following query while being within the gor-scripts folder
+
+    ./bin/gorpipe "gor #genes# | top 10" -aliases config/gor_aliases.txt
+   
+The results should be as follows:
+
+    Chrom	gene_start	gene_end	Gene_Symbol
+    chr1	11868	14412	DDX11L1
+    chr1	14362	29806	WASH7P
+    chr1	29553	31109	MIR1302-10
+    chr1	34553	36081	FAM138A
+    chr1	52472	54936	OR4G4P
+    chr1	62947	63887	OR4G11P
+    chr1	69090	70008	OR4F5
+    chr1	89294	133566	RP11-34P13.7
+    chr1	89550	91105	RP11-34P13.8
+    chr1	131024	134836	CICP27
+    
 ## Setting environment variables
 
 For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths: 
