@@ -27,6 +27,8 @@ import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 
 case class ColTypeAnalysis() extends Analysis {
+  override def isTypeInformationNeeded: Boolean = true
+
   override def process(r: Row) {
     if (r.numCols == 2) {
       super.process(r)
