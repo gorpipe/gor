@@ -149,7 +149,7 @@ artifactory_publish:
     - .build_with_cache
     - .on-semver-tag-only
   stage: publish
-  script: ./gradlew -Partifactory_repo=libs-staging-local -Partifactory_user=${ARTIFACTORY_USER} -Partifactory_password=${ARTIFACTORY_PASSWORD} artifactoryPublish -x test -x slowTest -x integrationTest
+  script: ./gradlew -Partifactory_repo=libs-staging-local -Partifactory_user=${NEW_ARTIFACTORY_USER} -Partifactory_password=${NEW_ARTIFACTORY_PASSWORD} artifactoryPublish -x test -x slowTest -x integrationTest
 
 
 # TODO:  The trigger starts the gor-services with wrong variables.  Needs some tuning.
