@@ -60,7 +60,7 @@ build:
   stage: build
   script: ./gradlew classes
   tags:
-    - iceland
+    - gitlab-build-01
   cache:
     policy: pull-push
 
@@ -71,7 +71,7 @@ build:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   tags:
-    - iceland
+    - gitlab-build-01
   artifacts:
     reports:
       junit:
@@ -101,9 +101,6 @@ code_quality:
   extends:
     - .on-releasable-or-release-branch-only
   stage: test
-  # Code quality fails on the iceland runners!
-  #tags:       
-  #  - iceland
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
@@ -126,7 +123,7 @@ license_scanning:
 dependency_scanning:
   stage: test
   tags:
-    - iceland
+    - gitlab-build-01
   variables:
     DS_DEFAULT_ANALYZERS: "gemnasium-maven"
     # There is no need to run tests or generate sphinx documentation for license management
@@ -144,7 +141,7 @@ publish:
   stage: publish
   script: ./gradlew publish -x test -x slowTest -x integrationTest
   tags:
-    - iceland
+    - gitlab-build-01
 
 
 artifactory_publish:
