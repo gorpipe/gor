@@ -31,7 +31,8 @@ import java.lang.management.ManagementFactory;
 import java.time.Duration;
 
 /**
- * Class do acquire named locks.  The locks are reentrant read write locks and can be used for both interprocess and interthread locking.
+ * Class do acquire named locks.  The locks are read write locks and can be used for both interprocess
+ * and inter-thread locking.  The lock might or might not be reentrent.
  * <p>
  * Note:
  * 1. Should work both between threads and processes and machines.
@@ -48,6 +49,8 @@ public abstract class TableLock implements AutoCloseable {
     protected final String name;
     protected final String id;
     protected boolean shared = false;
+
+    private Thread shutDownHookThread;
 
     /**
      * Factory method to create new read locks.
@@ -108,6 +111,11 @@ public abstract class TableLock implements AutoCloseable {
     public TableLock(BaseTable table, String name) {
         this.name = name;
         this.id = String.format("tablelock-%s-%s-%s", table.getFolderPath().toString(), table.getName(), name);
+
+        // Add shutdown hook to do as we can to clean up.
+        this.shutDownHookThread = new Thread(() -> release());
+        Runtime.getRuntime().addShutdownHook(this.shutDownHookThread);
+        log.trace("Added shutdown hook for process lock {}.", this);
     }
 
     /**
@@ -140,6 +148,16 @@ public abstract class TableLock implements AutoCloseable {
      */
     public void release() {
         doRelease();
+
+        if (this.shutDownHookThread != null) {
+            try {
+                Runtime.getRuntime().removeShutdownHook(this.shutDownHookThread);
+                this.shutDownHookThread = null;
+            } catch (IllegalStateException ise) {
+                // Ignore, happens if we are in 'shutdown'.  No easy way to detect.
+            }
+            log.trace("Removed shutdown hook for process lock {}.", this);
+        }
     }
 
     /**

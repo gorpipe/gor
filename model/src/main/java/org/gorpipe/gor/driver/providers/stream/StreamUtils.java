@@ -63,9 +63,6 @@ public class StreamUtils {
             if (read > 0) {
                 totalread += read;
             }
-            if (totalread < length) {
-                log.warn("readToBuffer did not read everything - {} left to read", length - totalread);
-            }
         } while (read > 0);
         if (totalread > 0) {
             return totalread;

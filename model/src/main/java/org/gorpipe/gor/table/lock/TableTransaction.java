@@ -116,9 +116,12 @@ public class TableTransaction implements AutoCloseable {
     }
 
     public void close() {
-        if (closeHook != null) {
-            closeHook.run();
+        try {
+            if (closeHook != null) {
+                closeHook.run();
+            }
+        } finally {
+            lock.release();
         }
-        lock.release();
     }
 }

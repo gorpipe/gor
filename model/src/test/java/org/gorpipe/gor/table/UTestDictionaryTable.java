@@ -26,7 +26,7 @@ import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.gor.table.lock.FileTableLock;
+import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  */
 public class UTestDictionaryTable {
 
-    private static final Class DEFAULT_TEST_LOCK_TYPE = FileTableLock.class;
+    private static final Class DEFAULT_TEST_LOCK_TYPE = ExclusiveFileTableLock.class;
     private static Path tableWorkDir;
     private static String gort1;
     private File genesSmall;

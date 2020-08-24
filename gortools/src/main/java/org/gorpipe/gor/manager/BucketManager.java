@@ -420,10 +420,9 @@ public class BucketManager<T extends BucketableTableEntry> {
                 + RandomStringUtils.random(8, true, true)
                 + (ext.length() > 0 ? "." + ext : ""));
 
-        try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
-            log.trace("Creating temp table {}", tempTablePath);
-            Files.copy(table.getPath(), tempTablePath);
-        }
+        log.trace("Creating temp table {}", tempTablePath);
+        Files.copy(table.getPath(), tempTablePath);
+
         return initTempTable(tempTablePath);
     }
 

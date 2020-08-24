@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by gisli on 17/01/2017.
  */
-public abstract class ProcessLock {
+public abstract class RenewableLockHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessLock.class);
+    private static final Logger log = LoggerFactory.getLogger(RenewableLockHelper.class);
 
     public static final Duration DEFAULT_RESERVE_LOCK_PERIOD = Duration.ZERO;  // Zero means there will be no lock update thread.
 
@@ -50,15 +50,16 @@ public abstract class ProcessLock {
 
     // Duration of the locking period (the renew cycle), if null the period is infinite.
     private final Duration reserveLockPeriod;
+    private long reservedTo;
     private ScheduledFuture<?> renewHandle = null;
-    private Thread shutDonwHookThread;
 
-    public ProcessLock() {
+    public RenewableLockHelper() {
         this(DEFAULT_RESERVE_LOCK_PERIOD);
     }
 
-    public ProcessLock(Duration reserveLockPeriod) {
+    public RenewableLockHelper(Duration reserveLockPeriod) {
         this.reserveLockPeriod = reserveLockPeriod;
+        reservedTo = calcExpirationTime();
         // Start a renew thread, but only if we the period more than 0.
         if (reserveLockPeriod != null && !reserveLockPeriod.isZero() && !reserveLockPeriod.isNegative()) {
             // The renew period must be a little shorter than the reserve period to make sure we renew before expiration.
@@ -67,6 +68,7 @@ public abstract class ProcessLock {
             this.renewHandle = scheduler.scheduleAtFixedRate(() -> {
                 try {
                     renew();
+                    reservedTo = calcExpirationTime();
                 } catch (Throwable t) {
                     log.error("Could not renew lock because of an exception!", t);
                     // Could not renew the lock, the state of this process is unknown and we should exit.  Users of the lock need to use
@@ -77,15 +79,6 @@ public abstract class ProcessLock {
                 }
             }, periodMS, periodMS, TimeUnit.MILLISECONDS);
         }
-
-        // Add shutdown hook to do as we can to clean up.
-        this.shutDonwHookThread = new Thread(() -> release());
-        Runtime.getRuntime().addShutdownHook(this.shutDonwHookThread);
-        log.trace("Added shutdown hook for process lock {}.", this);
-    }
-
-    synchronized public boolean isValid() {
-        return reservedTo() >= System.currentTimeMillis();
     }
 
     public abstract void renew();
@@ -96,18 +89,12 @@ public abstract class ProcessLock {
             this.renewHandle.cancel(true);
 
         }
-        if (this.shutDonwHookThread != null) {
-            try {
-                Runtime.getRuntime().removeShutdownHook(this.shutDonwHookThread);
-                this.shutDonwHookThread = null;
-            } catch (IllegalStateException ise) {
-                // Ignore, happens if we are in 'shutdown'.  No easy way to detect.
-            }
-            log.trace("Removed shutdown hook for process lock {}.", this);
-        }
+
     }
 
-    public abstract long reservedTo();
+    public long reservedTo() {
+        return reservedTo;
+    }
 
     synchronized protected long calcExpirationTime() {
         if (reserveLockPeriod != null && !reserveLockPeriod.isZero() && !reserveLockPeriod.isNegative()) {
