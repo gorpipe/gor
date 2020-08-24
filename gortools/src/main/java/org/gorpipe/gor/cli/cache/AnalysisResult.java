@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.cli.cache;
 
-import org.gorpipe.gor.util.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 
 import java.nio.file.Path;
 import java.util.*;

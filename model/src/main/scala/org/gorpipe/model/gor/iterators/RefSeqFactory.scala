@@ -22,7 +22,7 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.session.GenericFactory
+import org.gorpipe.gor.GenericFactory
 
 abstract class RefSeqFactory extends GenericFactory[RefSeq]{
 }

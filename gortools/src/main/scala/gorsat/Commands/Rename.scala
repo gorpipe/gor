@@ -23,9 +23,9 @@
 package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Rename extends CommandInfo("RENAME",
   CommandArguments("-s", "", 2, -1, ignoreIllegalArguments = true),

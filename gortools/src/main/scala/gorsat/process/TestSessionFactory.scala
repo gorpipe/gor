@@ -25,10 +25,10 @@ package gorsat.process
 import java.nio.file.Paths
 
 import gorsat.QueryHandlers.GeneralQueryHandler
+import org.gorpipe.gor._
 import org.gorpipe.gor.clients.LocalFileCacheClient
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorFileReaderContext}
-import org.gorpipe.gor.session.{GorSession, ProjectContext, SystemContext}
-import org.gorpipe.gor.util.StringUtil
+import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext}
+import org.gorpipe.model.util.StringUtil
 
 /**
   * Factory method tho create session used for tests

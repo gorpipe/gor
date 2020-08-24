@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import gorsat.Analysis.CalcAnalysis
 import gorsat.Commands.CommandParseUtilities.validateColumn
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Calc extends CommandInfo("CALC",
   CommandArguments("", "", 2, -1, ignoreIllegalArguments = true),

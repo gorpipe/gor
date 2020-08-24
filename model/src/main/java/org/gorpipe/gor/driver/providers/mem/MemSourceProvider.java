@@ -30,7 +30,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

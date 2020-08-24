@@ -22,7 +22,7 @@
 
 package org.gorpipe.gorshell;
 
-import org.gorpipe.gor.binsearch.PositionCache;
+import org.gorpipe.model.genome.files.binsearch.PositionCache;
 import picocli.CommandLine;
 
 @CommandLine.Command(

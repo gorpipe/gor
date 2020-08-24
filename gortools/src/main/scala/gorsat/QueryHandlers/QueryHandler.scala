@@ -22,6 +22,6 @@
 
 package gorsat.QueryHandlers
 
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class QueryHandler(context: GorContext) extends GeneralQueryHandler(context, false)

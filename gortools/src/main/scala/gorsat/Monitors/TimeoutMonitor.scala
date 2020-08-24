@@ -24,7 +24,7 @@ package gorsat.Monitors
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.custom.GorTimeoutException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.util.collection.extract.Extract
 
 case class TimeoutMonitor() extends Analysis {

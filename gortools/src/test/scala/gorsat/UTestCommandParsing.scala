@@ -29,7 +29,7 @@ import Commands.CommandParseUtilities
 import process._
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}

@@ -24,7 +24,7 @@ package org.gorpipe.gor.driver.providers.stream;
 
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.util.Util;
+import org.gorpipe.model.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -25,9 +25,9 @@ package gorsat.Commands
 import gorsat.Analysis.GorPileup._
 import gorsat.Analysis.InRange
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Pileup extends CommandInfo("PILEUP",
   CommandArguments(" -nf -df -sex -gt -depth", "-p -i -q -bq -gc -mprob -span", 0, 0),

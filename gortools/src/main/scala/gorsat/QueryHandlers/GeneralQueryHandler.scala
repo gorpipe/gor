@@ -26,19 +26,18 @@ import java.io.File
 import java.lang
 import java.nio.file.{Files, Paths}
 
-import gorsat.Utilities.AnalysisUtilities.writeList
+import gorsat.AnalysisUtilities
+import gorsat.AnalysisUtilities.writeList
 import gorsat.Commands.CommandParseUtilities
 import gorsat.DynIterator.DynamicRowSource
 import gorsat.Outputs.OutFile
 import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, runCommand}
-import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.ParallelExecutor
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
-import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.GorParallelQueryHandler
-import org.gorpipe.gor.monitor.GorMonitor
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.binsearch.GorIndexType
+import org.gorpipe.model.genome.files.gor.{GorMonitor, GorParallelQueryHandler}
 import org.slf4j.LoggerFactory
 
 

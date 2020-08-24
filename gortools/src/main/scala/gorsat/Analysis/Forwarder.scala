@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, Processor}
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 case class Forwarder(target: Processor) extends Analysis {
   override def process(r: Row): Unit = {

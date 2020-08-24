@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.DistLocAnalysis
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class DistLoc extends CommandInfo("DISTLOC",
   CommandArguments("", "", 0, 1),

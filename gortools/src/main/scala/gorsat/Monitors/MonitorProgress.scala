@@ -23,8 +23,7 @@
 package gorsat.Monitors
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.monitor.GorMonitor
+import org.gorpipe.model.genome.files.gor.{GorMonitor, Row}
 
 case class MonitorProgress(milliSec : Int, gm : GorMonitor) extends Analysis {
   var m = 0L

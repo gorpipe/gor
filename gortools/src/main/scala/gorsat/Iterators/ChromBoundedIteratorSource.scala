@@ -22,7 +22,7 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.model.gor.iterators.{RowSource, SingleRowIteratorSource}
 
 class ChromBoundedIteratorSource(protected val theIteratorx: RowSource) extends SingleRowIteratorSource(theIteratorx) {
   var nextHasNext = true

@@ -22,15 +22,15 @@
 
 package org.gorpipe.gorshell;
 
-import gorsat.process.*;
 import org.gorpipe.client.FileCache;
 import org.gorpipe.gor.*;
 import org.gorpipe.gor.clients.LocalFileCacheClient;
 import org.gorpipe.gor.clients.NoCacheFileCacheClient;
-import org.gorpipe.gor.session.*;
-import org.gorpipe.gor.model.DefaultEventLogger;
-import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.model.genome.files.gor.DriverBackedFileReader;
 import gorsat.QueryHandlers.GeneralQueryHandler;
+import gorsat.process.FreemarkerReportBuilder;
+import gorsat.process.GenericRunnerFactory;
+import gorsat.process.SessionBasedQueryEvaluator;
 
 import java.nio.file.Paths;
 import java.util.UUID;

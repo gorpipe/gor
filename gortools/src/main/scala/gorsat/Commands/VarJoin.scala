@@ -25,12 +25,11 @@ package gorsat.Commands
 import gorsat.Analysis.SortAnalysis
 import gorsat.Analysis.VarJoinAnalysis.{ParameterHolder, SegVarJoinSegOverlap, SegVarJoinSegOverlapInclusOnly}
 import gorsat.Commands.CommandParseUtilities._
+import gorsat.IteratorUtilities
 import gorsat.Iterators.{EatStdInputSource, StdInputSourceIterator}
-import gorsat.Utilities.IteratorUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorConstants
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.{GorConstants, GorContext}
 import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable.ListBuffer

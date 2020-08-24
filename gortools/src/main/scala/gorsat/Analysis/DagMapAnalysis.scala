@@ -24,8 +24,8 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import gorsat.gorsatGorIterator.{FileLineIterator, MapAndListUtilities}
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 import org.slf4j.LoggerFactory

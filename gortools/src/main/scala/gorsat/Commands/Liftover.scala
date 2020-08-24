@@ -23,10 +23,10 @@
 package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import gorsat.process.PipeInstance
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 
 class Liftover extends CommandInfo("LIFTOVER",

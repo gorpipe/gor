@@ -22,7 +22,7 @@
 
 package gorsat.external.plink;
 
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.genome.files.gor.Row;
 
 import java.util.Iterator;
 import java.util.stream.Stream;

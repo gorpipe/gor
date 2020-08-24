@@ -22,8 +22,8 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.genome.files.gor.Row
 
 case class ChromRowHandler(session: GorSession) extends RowHandler {
   val binIDgen = RegularBinIDgen(1)

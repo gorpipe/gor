@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.DistinctRows
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Distinct extends CommandInfo("DISTINCT",
   CommandArguments("", "", 0, 0),

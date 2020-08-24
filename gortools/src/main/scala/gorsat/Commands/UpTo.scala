@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.UpToAnalysis
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class UpTo extends CommandInfo("UPTO",
   CommandArguments("", "", 1, -1, ignoreIllegalArguments = true),

@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 case class CheckOrder(message: String = "") extends Analysis {
   var n = 0L

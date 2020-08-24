@@ -7,7 +7,7 @@ import gorsat.Commands.Analysis
 import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, PipeInstance}
 import gorsat.{DynIterator, TestUtils}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

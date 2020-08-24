@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.gor.Row
 
 /**
   * Passes rows on until the filtering expression returns true.

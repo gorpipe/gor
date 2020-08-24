@@ -25,8 +25,9 @@ package gorsat.gorsatGorIterator
 import java.nio.file.Files
 import java.util.stream.Collectors
 
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader}
+import org.gorpipe.model.gor.MemoryMonitorUtil
 import org.gorpipe.model.gor.iterators.LineIterator
 
 import scala.collection.JavaConverters._

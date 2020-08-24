@@ -23,7 +23,7 @@
 package gorsat.parser
 
 import gorsat.process.GenericSessionFactory
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 import org.scalatest._
 

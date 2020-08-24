@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.function;
 
-import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.model.RowBase;
+import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.model.genome.files.gor.RowBase;
 
 import java.io.Serializable;
 import java.util.HashMap;

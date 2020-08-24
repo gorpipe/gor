@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.JoinAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class LeftJoin extends CommandInfo("LEFTJOIN",
   CommandArguments("-snpsnp -snpseg -segseg -segsnp -varseg -segvar -stdin -r -l -i -ic -ir -t -c -n -m -h -xcis",

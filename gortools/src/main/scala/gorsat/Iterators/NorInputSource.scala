@@ -28,8 +28,8 @@ import java.util.stream
 import java.util.zip.GZIPInputStream
 
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.model.{FileReader, Row}
 import org.gorpipe.gor.stats.StatsCollector
+import org.gorpipe.model.genome.files.gor.{FileReader, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.RowSource
 

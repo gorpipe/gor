@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.ValidateColumnsAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class ValidateColumns extends CommandInfo("VALIDATECOLUMNS",
   CommandArguments("", "-n", 0, 1),

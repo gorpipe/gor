@@ -22,7 +22,7 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.model.FileReader
+import org.gorpipe.model.genome.files.gor.FileReader
 
 class RefSeqFromConfigFactory(path: String, reader: FileReader) extends RefSeqFactory {
   override def create(): RefSeq = new RefSeqFromConfig(path, reader)

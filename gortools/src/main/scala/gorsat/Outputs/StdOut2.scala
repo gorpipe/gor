@@ -23,7 +23,7 @@
 package gorsat.Outputs
 
 import gorsat.Commands.Output
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 case class StdOut2(header: String = null) extends Output {
   def setup {

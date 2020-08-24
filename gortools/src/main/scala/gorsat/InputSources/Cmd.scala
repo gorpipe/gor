@@ -22,12 +22,12 @@
 
 package gorsat.InputSources
 
+import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Commands._
-import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{GorJavaUtilities, ProcessRowSource}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.{GorContext, GorSession}
 
 object Cmd {
 

@@ -18,7 +18,7 @@ import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.gor.util.ByteTextBuilder;
+import org.gorpipe.model.util.ByteTextBuilder;
 import org.gorpipe.test.SlowTests;
 import org.junit.Assert;
 import org.junit.Before;

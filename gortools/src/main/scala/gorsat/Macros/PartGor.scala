@@ -24,11 +24,11 @@ package gorsat.Macros
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script.{ExecutionBlock, MacroInfo, MacroParsingResult}
-import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.gorsatGorIterator.MapAndListUtilities
+import gorsat.{AnalysisUtilities, MacroUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
-import org.gorpipe.gor.model.FileReader
-import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.{GorContext, GorSession}
+import org.gorpipe.model.genome.files.gor.FileReader
 
 import scala.collection.mutable
 

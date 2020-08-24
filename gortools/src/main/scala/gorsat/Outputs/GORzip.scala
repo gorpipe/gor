@@ -25,8 +25,8 @@ package gorsat.Outputs
 import java.util.zip.Deflater
 
 import gorsat.Commands.Output
-import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.binsearch.{GorIndexType, GorZipLexOutputStream}
+import org.gorpipe.model.genome.files.gor.Row
 
 /**
   * @param fileName Name of the file to be written.

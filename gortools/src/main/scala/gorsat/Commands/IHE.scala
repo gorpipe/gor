@@ -25,9 +25,9 @@ package gorsat.Commands
 import gorsat.Analysis.IheAnalysis
 import gorsat.Analysis.IheAnalysis.ColumnOptions
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class IHE extends CommandInfo("IHE",
   CommandArguments("", "", 0, 0),

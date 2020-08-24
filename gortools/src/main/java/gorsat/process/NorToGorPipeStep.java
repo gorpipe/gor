@@ -23,7 +23,7 @@
 package gorsat.process;
 
 import gorsat.Commands.Analysis;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.genome.files.gor.Row;
 
 import java.util.Arrays;
 

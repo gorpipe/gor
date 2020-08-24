@@ -28,7 +28,7 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 @AutoService(SourceProvider.class)
 public class SimpleSourceProvider implements SourceProvider {

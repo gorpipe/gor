@@ -26,7 +26,7 @@ import gorsat.Commands.CommandParseUtilities.{hasOption, rangeOfOption, stringVa
 import gorsat.Commands._
 import gorsat.Iterators.CountingGorRowIterator
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Gorrows() extends InputSourceInfo("GORROWS", CommandArguments("","-p -segment -step", 0, 0)) {
 

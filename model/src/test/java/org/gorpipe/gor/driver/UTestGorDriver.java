@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.nanohttpd.protocols.http.TestFileHttpServer;

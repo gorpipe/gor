@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.mem;
 
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.Line;
 
 import java.util.Arrays;
 

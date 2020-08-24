@@ -26,7 +26,7 @@ import gorsat.Analysis.TeeAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Outputs.StdOut2
 import gorsat.process.PipeInstance
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Tee extends CommandInfo("TEE",
   CommandArguments("-h", " ", 1, 1),

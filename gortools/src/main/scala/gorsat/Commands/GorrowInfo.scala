@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 
 class GorrowInfo extends CommandInfo("GORROW",

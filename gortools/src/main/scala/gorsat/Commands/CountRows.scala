@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.CountRows.CountRowsAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 
 class CountRows extends CommandInfo("COUNTROWS",

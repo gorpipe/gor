@@ -27,7 +27,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.GenomicRange;
 import org.gorpipe.gor.table.PathUtils;
-import org.gorpipe.gor.util.StringUtil;
+import org.gorpipe.model.util.StringUtil;
 
 import java.net.URI;
 import java.nio.file.Path;

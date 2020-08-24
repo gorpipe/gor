@@ -23,7 +23,7 @@
 package gorsat.Script
 
 import gorsat.QueryHandlers.{GeneralQueryHandler, QueryHandler}
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 /**
   * Static method to create an instance of ScriptExecutionEngine based on the current configuration represented in

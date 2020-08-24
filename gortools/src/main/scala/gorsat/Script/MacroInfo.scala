@@ -25,7 +25,7 @@ package gorsat.Script
 import gorsat.Commands.CommandArguments
 import gorsat.Commands.CommandParseUtilities.validateCommandArguments
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 /**
   * Base class for script macros. Each macro supports a CommandArguments class describing valid inputs and options.

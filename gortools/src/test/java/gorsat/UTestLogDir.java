@@ -22,7 +22,6 @@
 
 package gorsat;
 
-import gorsat.Utilities.StringUtilities;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

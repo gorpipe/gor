@@ -24,7 +24,7 @@ package gorsat.parser;
 
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.ColumnValueProvider;
+import org.gorpipe.gor.ColumnValueProvider;
 
 interface TypedCalcLambda {
     static GorParsingException getIncompatibleTypes() {

@@ -23,9 +23,9 @@
 package gorsat.Monitors
 
 import gorsat.Commands.Analysis
-import gorsat.gorsatGorIterator.MemoryMonitorUtil
 import org.gorpipe.exceptions.custom.GorLowMemoryException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.model.gor.MemoryMonitorUtil
 
 case class MemoryMonitor(logname: String,
                          minFreeMemMB: Int = MemoryMonitorUtil.memoryMonitorMinFreeMemMB,

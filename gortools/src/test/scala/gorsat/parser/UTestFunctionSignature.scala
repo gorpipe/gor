@@ -25,7 +25,7 @@
 package gorsat.parser
 
 import gorsat.parser.FunctionTypes._
-import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.ColumnValueProvider
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

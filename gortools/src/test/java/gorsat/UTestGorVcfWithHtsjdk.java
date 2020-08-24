@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.AfterClass;
 import org.junit.Assert;

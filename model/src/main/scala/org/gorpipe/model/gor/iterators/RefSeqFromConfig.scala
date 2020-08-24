@@ -29,7 +29,7 @@ import java.util.Optional
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, RacFile}
+import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, RacFile}
 import org.slf4j.{Logger, LoggerFactory}
 
 class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {

@@ -24,10 +24,10 @@ package gorsat.Commands
 
 import gorsat.Analysis.VaastAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Gava extends CommandInfo("GAVA",
   CommandArguments("-recessive -dominant -noMaxAlleleCounts -protective -debug", "-caselist -casefile -ctrllist -ctrlfile -grouping -bailout -casepene -ctrlpene -maxAf", 1, 1),

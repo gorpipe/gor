@@ -26,7 +26,7 @@ import java.util
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analysis, val theHeader: String) extends RowSource {

@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 
 case class CigarSegsAnalysis(cigarCol: Int, grCols: Array[Int]) extends Analysis {

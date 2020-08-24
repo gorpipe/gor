@@ -23,7 +23,7 @@
 package org.gorpipe.gor.driver.adapters;
 
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.RacFile;
+import org.gorpipe.model.genome.files.gor.RacFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

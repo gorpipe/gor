@@ -24,8 +24,8 @@ package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.gor.Row
 
 case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: String, header: String)
   extends Analysis with Filtering

@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 
 case class WithIn(chr: String, start: Int, stop: Int) extends Analysis {

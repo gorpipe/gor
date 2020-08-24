@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Commands.Select.parseArguments
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class ColumnSort extends CommandInfo("COLUMNSORT",
   CommandArguments("-s -t -sort", "", 1, -1, ignoreIllegalArguments = true),

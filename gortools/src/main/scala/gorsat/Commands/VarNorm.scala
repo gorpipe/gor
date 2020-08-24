@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Analysis.{SortAnalysis, VarNormAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class VarNorm extends CommandInfo("VARNORM",
   CommandArguments("-seg -left -right -trim", "-span", 2, 2),

@@ -25,11 +25,11 @@ package gorsat.Commands
 import gorsat.Analysis.GorCsvSel.CsvSelAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import gorsat.PnBucketTable
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 import scala.collection.mutable
 

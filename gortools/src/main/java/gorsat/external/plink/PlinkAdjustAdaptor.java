@@ -25,7 +25,7 @@ package gorsat.external.plink;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.genome.files.gor.Row;
 
 import java.io.IOException;
 import java.io.Writer;

@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 case class TopN(maxLines: Int) extends Analysis {
   var m = 0

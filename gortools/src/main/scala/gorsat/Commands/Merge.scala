@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import gorsat.Analysis.MergeSources
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Merge extends CommandInfo("MERGE",
   CommandArguments("-u -s -i", "-e", 1, 1),

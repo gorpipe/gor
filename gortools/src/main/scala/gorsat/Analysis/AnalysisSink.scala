@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 /**
   * Helper class for testing analysis steps. Put this at the end of a pipe so you can examine the resulting

@@ -26,9 +26,8 @@ import gorsat.Commands.{Analysis, BinAggregator, BinAnalysis, BinFactory, BinInf
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.{Line, Row}
-import org.gorpipe.gor.monitor.GorMonitor
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.genome.files.gor.{GorMonitor, Line, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.LineIterator

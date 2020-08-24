@@ -22,7 +22,7 @@
 
 package gorsat.Analysis
 
-import gorsat.Utilities.AnalysisUtilities.ParameterHolder
+import gorsat.AnalysisUtilities.ParameterHolder
 import gorsat.Commands.Analysis
 import org.gorpipe.model.gor.iterators.RowSource
 

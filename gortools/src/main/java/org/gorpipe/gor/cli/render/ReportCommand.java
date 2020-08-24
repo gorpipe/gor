@@ -22,12 +22,12 @@
 
 package org.gorpipe.gor.cli.render;
 
-import gorsat.Utilities.AnalysisUtilities;
+import gorsat.AnalysisUtilities;
 import gorsat.Commands.CommandParseUtilities;
-import gorsat.Utilities.MacroUtilities;
+import gorsat.MacroUtilities;
 import gorsat.process.CLISessionFactory;
 import gorsat.process.PipeOptions;
-import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.GorSession;
 import picocli.CommandLine;
 
 import java.util.Map;

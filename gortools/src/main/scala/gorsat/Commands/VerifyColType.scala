@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 import gorsat.Analysis.VerifyColTypeAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class VerifyColType extends CommandInfo(
   "VERIFYCOLTYPE",

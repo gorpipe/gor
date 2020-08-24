@@ -29,11 +29,11 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.binsearch.StringIntKey;
-import org.gorpipe.gor.model.ChrDataScheme;
-import org.gorpipe.gor.model.ChromoCache;
-import org.gorpipe.gor.model.ContigDataScheme;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.model.genome.files.binsearch.StringIntKey;
+import org.gorpipe.model.genome.files.gor.ChrDataScheme;
+import org.gorpipe.model.genome.files.gor.ChromoCache;
+import org.gorpipe.model.genome.files.gor.ContigDataScheme;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 import java.io.IOException;
 import java.io.InputStream;

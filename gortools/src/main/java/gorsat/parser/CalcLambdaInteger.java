@@ -23,7 +23,7 @@
 package gorsat.parser;
 
 import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.model.ColumnValueProvider;
+import org.gorpipe.gor.ColumnValueProvider;
 
 public class CalcLambdaInteger extends CalcLambdaNumeric implements IntegerType {
     private CvpIntegerLambda lambda;

@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.WaitAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Wait extends CommandInfo("WAIT",
   CommandArguments("", "", 1, 1),

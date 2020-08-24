@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Analysis.{MergeGenotypes, SortAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class VarMerge extends CommandInfo("VARMERGE",
   CommandArguments("-seg -nonorm", "-span", 2, 2),

@@ -4,7 +4,7 @@ import java.lang
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 
 abstract class GtTransposeAnalysis(pns: Array[String], bucketToPnIdxList: Map[String, (Array[Int], Array[Int])],

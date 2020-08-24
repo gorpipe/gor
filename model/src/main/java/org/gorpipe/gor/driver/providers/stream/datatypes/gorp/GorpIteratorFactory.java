@@ -27,8 +27,8 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.GorpIterator;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.GorpIterator;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class GorpIteratorFactory implements StreamSourceIteratorFactory {

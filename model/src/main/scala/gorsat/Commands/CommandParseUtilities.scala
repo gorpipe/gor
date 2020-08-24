@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Commands.GenomicRange.Range
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.GorCommand
+import org.gorpipe.model.genome.files.gor.GorCommand
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer

@@ -23,8 +23,8 @@
 package gorsat.Script
 
 import gorsat.Commands.CommandParseUtilities
+import gorsat.MacroUtilities
 import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
-import gorsat.Utilities.MacroUtilities
 import org.gorpipe.exceptions.GorParsingException
 import org.slf4j.{Logger, LoggerFactory}
 

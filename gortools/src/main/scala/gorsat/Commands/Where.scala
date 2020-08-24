@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.WhereAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Where extends CommandInfo("WHERE",
   CommandArguments("", "", 1, -1, ignoreIllegalArguments = true),

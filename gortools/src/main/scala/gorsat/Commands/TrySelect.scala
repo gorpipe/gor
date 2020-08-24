@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Commands.Select.parseArguments
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class TrySelect extends CommandInfo("TRYSELECT",
   CommandArguments("-s -sort", "", 1, -1, ignoreIllegalArguments = true),

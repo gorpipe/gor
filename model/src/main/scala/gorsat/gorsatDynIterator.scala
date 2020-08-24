@@ -28,8 +28,8 @@ package gorsat
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.{GorContext, GorSession}
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.iterators.{LineIterator, RowSource, TimedRowSource}
 import org.gorpipe.model.gor.{Pipes, RowObj}
 import org.gorpipe.util.Pair

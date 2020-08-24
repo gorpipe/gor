@@ -26,7 +26,7 @@ import gorsat.Analysis.VarCountState.VarCountAggregate
 import gorsat.Analysis.{CigarVarSegs, PhaseReadVariants, SortAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Variants extends CommandInfo("VARIANTS",
   CommandArguments("-count", "-gc -readlength -bpmergedist", 0, 0),

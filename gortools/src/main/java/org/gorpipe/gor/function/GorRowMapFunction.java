@@ -23,7 +23,7 @@
 package org.gorpipe.gor.function;
 
 import gorsat.parser.ParseArith;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.genome.files.gor.Row;
 import scala.Function1;
 
 import java.io.Serializable;

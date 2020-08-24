@@ -27,7 +27,7 @@ import gorsat.Commands.CommandInfo;
 import gorsat.Commands.CommandParsingResult;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.GorPipeCommands;
-import gorsat.process.GorSessionFactory;
+import org.gorpipe.gor.GorSessionFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

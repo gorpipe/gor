@@ -22,12 +22,11 @@
 
 package gorsat.process
 
+import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities
-import gorsat.Utilities.MacroUtilities.replaceAllAliases
+import gorsat.MacroUtilities.replaceAllAliases
 import gorsat.Outputs.{NorStdOut, StdOut}
-import gorsat.Utilities.AnalysisUtilities
-import org.gorpipe.gor.session.{GorRunner, GorSession}
-import org.gorpipe.gor.RequestStats
+import org.gorpipe.gor.{GorRunner, GorSession, RequestStats}
 
 /**
   * Execution engine for GOR running as command line. This class takes as input the command line options, construct a

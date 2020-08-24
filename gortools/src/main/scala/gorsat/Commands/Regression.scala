@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import gorsat.Analysis.{LinearRegressionAnalysis, LogisticRegressionAnalysis}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Regression extends CommandInfo("REGRESSION",
   CommandArguments("-logistic -linear -imp", "-covar -s", 1, 1),

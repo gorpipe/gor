@@ -23,7 +23,7 @@
 package gorsat.parser;
 
 import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.gor.model.ColumnValueProvider;
+import org.gorpipe.gor.ColumnValueProvider;
 
 class TestCalcCompilerCVP implements ColumnValueProvider {
     private final ColumnValue[] columns;

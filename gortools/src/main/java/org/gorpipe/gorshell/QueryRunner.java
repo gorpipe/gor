@@ -23,9 +23,10 @@
 package org.gorpipe.gorshell;
 
 import gorsat.process.PipeInstance;
-import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.GorSession;
 import org.gorpipe.gor.RequestStats;
-import org.gorpipe.gor.monitor.GorMonitor;
+import org.gorpipe.model.genome.files.gor.GorMonitor;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.jline.reader.LineReader;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStyle;

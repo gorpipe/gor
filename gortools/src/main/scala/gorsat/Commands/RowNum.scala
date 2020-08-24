@@ -23,8 +23,8 @@
 package gorsat.Commands
 
 import gorsat.Analysis.RowNumAnalysis
-import gorsat.Utilities.IteratorUtilities.validHeader
-import org.gorpipe.gor.session.GorContext
+import gorsat.IteratorUtilities.validHeader
+import org.gorpipe.gor.GorContext
 
 class RowNum extends CommandInfo("ROWNUM",
   CommandArguments("", "", 0, 0),

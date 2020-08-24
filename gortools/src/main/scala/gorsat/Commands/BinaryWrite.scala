@@ -26,7 +26,7 @@ import gorsat.Analysis.{BGenWriteAnalysis, PGenWriteAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class BinaryWrite extends CommandInfo("BINARYWRITE",
   CommandArguments("-imp -gv", "-threshold", 1),

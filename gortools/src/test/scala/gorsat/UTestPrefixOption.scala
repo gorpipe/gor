@@ -25,7 +25,7 @@ package gorsat
 import java.io._
 import java.nio.file.Files
 
-import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.model.genome.files.binsearch.GorIndexType
 import org.gorpipe.model.gor.RowObj
 import org.junit.Assert
 import org.junit.runner.RunWith

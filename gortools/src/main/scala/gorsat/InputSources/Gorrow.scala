@@ -25,8 +25,8 @@ package gorsat.InputSources
 import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
 import gorsat.Iterators.RowListIterator
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.GorContext
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.RowObj
 
 class Gorrow() extends InputSourceInfo("GORROW", CommandArguments("","", 1, 1)) {

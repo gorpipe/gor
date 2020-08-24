@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.CheckOrder
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class VerifyOrder extends CommandInfo("VERIFYORDER",
   CommandArguments("", "", 0, 0),

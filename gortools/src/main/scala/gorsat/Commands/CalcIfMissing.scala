@@ -23,8 +23,8 @@
 package gorsat.Commands
 
 import gorsat.Analysis.CalcAnalysis
-import gorsat.Utilities.IteratorUtilities.validHeader
-import org.gorpipe.gor.session.GorContext
+import gorsat.IteratorUtilities.validHeader
+import org.gorpipe.gor.GorContext
 
 import scala.collection.mutable.ArrayBuffer
 

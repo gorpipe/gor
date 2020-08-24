@@ -31,9 +31,8 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
-import org.gorpipe.gor.model.*;
-import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.GorSession;
+import org.gorpipe.model.genome.files.gor.*;
 import org.gorpipe.model.gor.Pipes;
 import org.gorpipe.model.gor.RowObj;
 

@@ -22,12 +22,12 @@
 
 package gorsat.Analysis
 
-import gorsat.Utilities.AnalysisUtilities.ParameterHolder
+import gorsat.AnalysisUtilities.ParameterHolder
 import gorsat.Commands._
 import gorsat.Iterators.RowListIterator
 import gorsat.process.GenericGorRunner
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 
 import scala.collection.mutable.ListBuffer

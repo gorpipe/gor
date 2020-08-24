@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.ColNumAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 
 class ColNum extends CommandInfo("COLNUM",

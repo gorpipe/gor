@@ -23,10 +23,9 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.monitor.GorMonitor
-import org.gorpipe.gor.session.GorSession
-import org.gorpipe.gor.gava.VariantAssociation
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.gava.VariantAssociation
+import org.gorpipe.model.genome.files.gor.{GorMonitor, Row}
 import org.gorpipe.model.gor.RowObj
 
 case class VaastAnalysis(session: GorSession, caseList : List[String], ctrlList : List[String], maxIterations : Int) extends Analysis {

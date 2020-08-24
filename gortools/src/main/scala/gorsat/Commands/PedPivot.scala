@@ -25,10 +25,10 @@ package gorsat.Commands
 import gorsat.Analysis.PivotAnalysis.PivotAnalysis
 import gorsat.Analysis.{PedigreeLookup, Select2}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
-import gorsat.Utilities.IteratorUtilities
+import gorsat.IteratorUtilities
+import gorsat.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class PedPivot extends CommandInfo("PEDPIVOT",
   CommandArguments("-v -a", "-gc -e", 2, 2),

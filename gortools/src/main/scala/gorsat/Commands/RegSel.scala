@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.RegSelAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class RegSel extends CommandInfo(
   "REGSEL",

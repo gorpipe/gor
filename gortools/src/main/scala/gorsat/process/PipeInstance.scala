@@ -31,20 +31,20 @@ import gorsat.Analysis._
 import gorsat.Commands.CommandParseUtilities.{hasOption, rangeOfOption, stringValueOfOption}
 import gorsat.Commands.{Analysis, _}
 import gorsat.DynIterator.DynamicRowSource
+import gorsat.IteratorUtilities.validHeader
 import gorsat.Iterators.StdInputSourceIterator
 import gorsat.Monitors.{CancelMonitor, MemoryMonitor, TimeoutMonitor}
 import gorsat.Script.{ScriptEngineFactory, ScriptParsers}
-import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat._
-import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
+import gorsat.gorsatGorIterator.gorsatGorIterator
 import gorsat.process.GorJavaUtilities.CmdParams
 import gorsat.process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorFileReaderContext}
-import org.gorpipe.gor.monitor.GorMonitor
-import org.gorpipe.gor.session.{GorContext, GorSession}
-import org.gorpipe.gor.util.StringUtil
+import org.gorpipe.gor.{GorContext, GorSession}
+import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext, GorMonitor}
+import org.gorpipe.model.gor.MemoryMonitorUtil
 import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.model.util.StringUtil
 import org.slf4j.LoggerFactory
 
 object PipeInstance {

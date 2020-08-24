@@ -23,7 +23,7 @@
 package gorsat.external.plink;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

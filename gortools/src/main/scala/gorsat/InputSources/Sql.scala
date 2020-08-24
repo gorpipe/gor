@@ -22,12 +22,12 @@
 
 package gorsat.InputSources
 
+import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Commands.{CommandArguments, InputSourceInfo, InputSourceParsingResult}
-import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.{GorContext, GorSession}
 
 object Sql {
 

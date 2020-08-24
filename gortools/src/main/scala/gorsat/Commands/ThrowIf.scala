@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.ThrowIfAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class ThrowIf extends CommandInfo("THROWIF",
   CommandArguments("", "", 1, -1, ignoreIllegalArguments = true),

@@ -22,7 +22,7 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 trait LineIterator extends java.util.Iterator[Row] {
   def nextLine : String

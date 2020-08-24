@@ -23,7 +23,7 @@
 package org.gorpipe.model.gor
 
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.{Row, RowBase}
+import org.gorpipe.model.genome.files.gor.{Row, RowBase}
 
 object RowObj {
 

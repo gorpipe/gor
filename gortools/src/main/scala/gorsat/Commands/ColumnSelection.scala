@@ -22,9 +22,9 @@
 
 package gorsat.Commands
 
-import gorsat.Utilities.IteratorUtilities
+import gorsat.IteratorUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 /**
   * ColumnSelection represents a selection of columns from the given header. The selection can be specified

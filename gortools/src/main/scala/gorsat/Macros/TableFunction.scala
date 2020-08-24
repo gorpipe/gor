@@ -24,7 +24,7 @@ package gorsat.Macros
 
 import gorsat.Commands.CommandArguments
 import gorsat.Script._
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 /**
   * Macro which expands report builder (*.yml) files into gor script.

@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
 
 case class SegProjAnalysis(grCols: List[Int], maxSeg: Int, fuzzfac: Int, sumColumns: List[Int], header: String,
                            session: GorSession, outgoingHeader: RowHeader) extends Analysis {

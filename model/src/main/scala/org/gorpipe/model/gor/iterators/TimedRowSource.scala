@@ -22,7 +22,7 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 abstract class TimedRowSource extends RowSource {
   var myHasNext: Boolean = false

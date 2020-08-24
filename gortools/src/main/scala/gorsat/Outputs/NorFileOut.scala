@@ -26,7 +26,7 @@ import java.io.{File, OutputStream}
 
 import gorsat.Commands.Output
 import htsjdk.samtools.util.Md5CalculatingOutputStream
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 /**
   * @param name Name of the file to be written.

@@ -24,8 +24,8 @@ package gorsat.Commands
 
 import gorsat.Analysis.UnPivot2
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
-import org.gorpipe.gor.session.GorContext
+import gorsat.IteratorUtilities.validHeader
+import org.gorpipe.gor.GorContext
 
 class UnPivot extends CommandInfo("UNPIVOT",
   CommandArguments("", "", 1, 1),

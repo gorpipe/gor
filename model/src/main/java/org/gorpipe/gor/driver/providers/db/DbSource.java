@@ -28,9 +28,9 @@ import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.gorserver.GorSource;
-import org.gorpipe.gor.model.DbGenomicIterator;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.util.StringUtil;
+import org.gorpipe.model.genome.files.gor.DbGenomicIterator;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,7 +129,7 @@ public class DbSource implements GorSource {
     @Override
     public boolean exists() {
         if (tableName != null) {
-            final org.gorpipe.gor.model.DbSource dbsource = org.gorpipe.gor.model.DbSource.lookup(databaseSource);
+            final org.gorpipe.model.genome.files.gor.DbSource dbsource = org.gorpipe.model.genome.files.gor.DbSource.lookup(databaseSource);
             if (dbsource == null) {
                 log.warn("Database not found: {}", databaseSource);
                 return false;
@@ -154,7 +154,7 @@ public class DbSource implements GorSource {
     public SourceMetadata getSourceMetadata() {
         long timestamp = System.currentTimeMillis();
         if (tableName != null) {
-            final org.gorpipe.gor.model.DbSource dbsource = org.gorpipe.gor.model.DbSource.lookup(databaseSource);
+            final org.gorpipe.model.genome.files.gor.DbSource dbsource = org.gorpipe.model.genome.files.gor.DbSource.lookup(databaseSource);
             if (dbsource != null) {
                 timestamp = dbsource.queryDefaultTableChange(tableName);
             }

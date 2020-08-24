@@ -25,8 +25,8 @@ package gorsat.Commands
 import gorsat.Analysis.{CheckOrder, SortAnalysis, SortGenome}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.gor.Row
 
 class Sort extends CommandInfo("SORT",
   CommandArguments("", "-c", 0, 1),

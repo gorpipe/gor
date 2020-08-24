@@ -24,12 +24,11 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import gorsat.Iterators.ChromBoundedIteratorSource
-import gorsat.gorsatGorIterator.MemoryMonitorUtil
 import gorsat.parser.ParseUtilities.{allelesFoundVCF, varSignature}
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.iterators.RowSource
-import org.gorpipe.model.gor.RowObj
+import org.gorpipe.model.gor.{MemoryMonitorUtil, RowObj}
 
 object VarJoinAnalysis {
   case class ParameterHolder(ic : Boolean, ir : Boolean)

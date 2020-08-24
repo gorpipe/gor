@@ -23,7 +23,7 @@
 package gorsat.process;
 
 import gorsat.TestUtils;
-import org.gorpipe.gor.session.GorContext;
+import org.gorpipe.gor.GorContext;
 import org.junit.Assert;
 import org.junit.Test;
 

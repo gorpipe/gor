@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.driver.pgen.PGenWriterFactory
+import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.model.genome.files.gor.pgen.PGenWriterFactory
 
 case class PGenWriteAnalysis(fileName: String, imputed: Boolean, threshold: Float, group: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, valueIdx: Int) extends Analysis {
 

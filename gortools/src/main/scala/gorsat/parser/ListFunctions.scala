@@ -29,7 +29,7 @@ import gorsat.Commands.ColumnSelection
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{bFun, dFun, iFun, sFun}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.ColumnValueProvider
 
 import scala.collection.mutable
 

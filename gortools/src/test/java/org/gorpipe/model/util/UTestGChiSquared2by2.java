@@ -22,7 +22,6 @@
 
 package org.gorpipe.model.util;
 
-import org.gorpipe.gor.util.GChiSquared2by2;
 import org.junit.Assert;
 import org.junit.Test;
 

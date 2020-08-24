@@ -22,7 +22,7 @@
 
 package gorsat.parser;
 
-import org.gorpipe.gor.model.ColumnValueProvider;
+import org.gorpipe.gor.ColumnValueProvider;
 
 public interface CvpBooleanLambda {
     boolean evaluate(ColumnValueProvider cvp);

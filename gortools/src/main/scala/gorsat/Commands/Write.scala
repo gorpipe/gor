@@ -27,8 +27,8 @@ import java.util.zip.Deflater
 import gorsat.Analysis.{ForkWrite, OutputOptions}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.binsearch.GorIndexType
 
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -d", "-f -i -t -l -prefix", 1),

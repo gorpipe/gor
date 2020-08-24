@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.ColTypeAnalysis
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class ColType extends CommandInfo(
   "COLTYPE",

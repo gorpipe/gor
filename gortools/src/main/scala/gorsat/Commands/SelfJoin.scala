@@ -24,8 +24,8 @@ package gorsat.Commands
 
 import gorsat.Analysis.SelfJoinAnalysis.SelfJoinAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Utilities.IteratorUtilities.validHeader
-import org.gorpipe.gor.session.GorContext
+import gorsat.IteratorUtilities.validHeader
+import org.gorpipe.gor.GorContext
 
 class SelfJoin extends CommandInfo("SELFJOIN",
   CommandArguments("-h", "-f -x", 0, 0),

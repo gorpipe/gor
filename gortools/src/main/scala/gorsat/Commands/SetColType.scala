@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Analysis.SetColTypeAnalysis
 import gorsat.Commands.CommandParseUtilities.columnsFromHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class SetColType() extends CommandInfo(
   "SETCOLTYPE",

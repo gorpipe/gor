@@ -22,13 +22,13 @@
 
 package gorsat.parser
 
-import gorsat.Utilities.StringUtilities
+import gorsat.StringUtilities
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes._
 import gorsat.parser.ParseUtilities.{eval, system}
 import gorsat.process.GorJavaUtilities.CmdParams
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.ColumnValueProvider
 
 object CalcFunctions {
   /**

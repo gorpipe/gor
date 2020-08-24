@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Commands.Select.parseArguments
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class TryHide extends CommandInfo("TRYHIDE",
   CommandArguments("-sort", "", 1, -1, ignoreIllegalArguments = true),

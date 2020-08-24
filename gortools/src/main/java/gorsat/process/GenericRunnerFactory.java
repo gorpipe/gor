@@ -23,8 +23,8 @@
 package gorsat.process;
 
 
-import org.gorpipe.gor.session.GorRunner;
-import org.gorpipe.gor.session.GorRunnerFactory;
+import org.gorpipe.gor.GorRunner;
+import org.gorpipe.gor.GorRunnerFactory;
 
 /**
  * Factory method for creating an instance of the GenericGorRunner class.

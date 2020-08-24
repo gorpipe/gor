@@ -25,10 +25,10 @@ package gorsat.Commands
 import gorsat.Analysis.GorKing.{KingAggregate, KingAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class King extends CommandInfo("KING",
   CommandArguments("", "-gc -vs -s -pi0thr -phithr -thetathr", 2),

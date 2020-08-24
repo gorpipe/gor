@@ -23,7 +23,7 @@
 package gorsat.Commands
 import gorsat.Analysis.Cols2ListAnalysis
 import gorsat.Commands.CommandParseUtilities.{replaceSingleQuotes, stringValueOfOptionWithDefault}
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class Cols2List extends CommandInfo(
   "COLS2LIST",

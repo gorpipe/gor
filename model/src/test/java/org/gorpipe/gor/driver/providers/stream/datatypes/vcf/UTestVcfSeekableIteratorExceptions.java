@@ -3,8 +3,8 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.model.genome.files.gor.Line;
 import org.junit.Assert;
 import org.junit.Test;
 

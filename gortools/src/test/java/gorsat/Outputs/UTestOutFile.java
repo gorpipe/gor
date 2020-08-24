@@ -24,7 +24,7 @@ package gorsat.Outputs;
 
 import gorsat.Commands.Output;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.model.RowBase;
+import org.gorpipe.model.genome.files.gor.RowBase;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

@@ -26,8 +26,8 @@
 
 package gorsat.gorsatGorIterator
 
-import org.gorpipe.gor.model.GorIterator
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
+import org.gorpipe.model.genome.files.gor.GorIterator
 import org.gorpipe.model.gor.iterators.RowSource
 
 abstract class gorsatGorIterator(context: GorContext) extends GorIterator {

@@ -22,11 +22,11 @@
 
 package gorsat.Analysis
 
-import gorsat.Utilities.AnalysisUtilities.{ParameterHolder, SEGinfo, distSegSeg}
+import gorsat.AnalysisUtilities.{ParameterHolder, SEGinfo, distSegSeg}
 import gorsat.Commands.Analysis
 import gorsat.Iterators.ChromBoundedIteratorSource
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.RowSource
 

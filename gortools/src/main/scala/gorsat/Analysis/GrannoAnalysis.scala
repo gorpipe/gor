@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands._
-import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.GorSession
+import org.gorpipe.model.genome.files.gor.Row
 
 object GrannoAnalysis {
 

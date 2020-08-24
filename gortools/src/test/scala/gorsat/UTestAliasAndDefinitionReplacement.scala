@@ -23,7 +23,6 @@
 package gorsat
 
 import Commands.CommandParseUtilities
-import gorsat.Utilities.MacroUtilities
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

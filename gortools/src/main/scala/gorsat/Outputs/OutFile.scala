@@ -35,8 +35,8 @@ import htsjdk.tribble.readers.{AsciiLineReader, AsciiLineReaderIterator}
 import htsjdk.tribble.util.LittleEndianOutputStream
 import htsjdk.variant.vcf.VCFCodec
 import org.gorpipe.exceptions.GorResourceException
-import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.binsearch.GorIndexType
+import org.gorpipe.model.genome.files.gor.Row
 
 /**
   * @param name Name of the file to be written.

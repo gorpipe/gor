@@ -25,8 +25,8 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.ContigDataScheme;
-import org.gorpipe.gor.model.SourceRef;
+import org.gorpipe.model.genome.files.gor.ContigDataScheme;
+import org.gorpipe.model.genome.files.gor.SourceRef;
 
 import java.io.*;
 import java.util.*;

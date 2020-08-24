@@ -23,7 +23,7 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.model.genome.files.gor.DbSource;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;

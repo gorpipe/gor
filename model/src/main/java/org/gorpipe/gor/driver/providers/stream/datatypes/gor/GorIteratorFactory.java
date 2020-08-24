@@ -28,8 +28,8 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.binsearch.GorSeekableIterator;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.model.genome.files.binsearch.GorSeekableIterator;
+import org.gorpipe.model.genome.files.gor.GenomicIterator;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class GorIteratorFactory implements StreamSourceIteratorFactory {

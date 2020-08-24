@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
+import org.gorpipe.model.genome.files.gor.Row
 
 case class ExpandBamFlag(flagCol : Int) extends Analysis {
   val extraCols = new StringBuilder(21)

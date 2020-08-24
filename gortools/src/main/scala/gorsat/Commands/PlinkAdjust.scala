@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 import gorsat.external.plink.PlinkAdjustAdaptor
-import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.GorContext
 
 class PlinkAdjust extends CommandInfo("PLINKADJUSTMENT",
   CommandArguments("", "", 0, -1, ignoreIllegalArguments = true),
