@@ -23,7 +23,8 @@
 package gorsat.Monitors
 
 import gorsat.Commands.Analysis
-import org.gorpipe.model.genome.files.gor.{GorMonitor, Row}
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.monitor.GorMonitor
 
 case class CancelMonitor(gm : GorMonitor) extends Analysis {
   override def process(r : Row) {

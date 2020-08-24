@@ -23,7 +23,7 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.model.util.IntHashMap;
+import org.gorpipe.gor.util.IntHashMap;
 import org.gorpipe.util.collection.IntArray;
 import org.gorpipe.util.collection.IntHashSet;
 import org.slf4j.Logger;

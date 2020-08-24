@@ -26,8 +26,7 @@ import java.lang
 
 import gorsat.Commands.{Analysis, ColumnSelection, RowHeader}
 import gorsat.parser.ParseArith
-import org.gorpipe.gor.ColumnValueProvider
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.{ColumnValueProvider, Row}
 import org.gorpipe.model.gor.RowObj
 
 /**

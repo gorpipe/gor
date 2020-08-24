@@ -24,12 +24,13 @@ package gorsat.process
 
 import java.nio.file.Paths
 
-import gorsat.AnalysisUtilities
 import gorsat.QueryHandlers.GeneralQueryHandler
+import gorsat.Utilities.AnalysisUtilities
 import org.gorpipe.gor._
 import org.gorpipe.gor.clients.LocalFileCacheClient
-import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext, GorParallelQueryHandler}
-import org.gorpipe.model.util.StringUtil
+import org.gorpipe.gor.model._
+import org.gorpipe.gor.session.{EventLogger, GorSession, ProjectContext, SystemContext}
+import org.gorpipe.gor.util.StringUtil
 
 /**
   * Factory class to create session which relates to running gor in a command line. The session is created based on

@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import gorsat.Utilities.IteratorUtilities;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class UTestHeaderFlags {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(UTestHeaderFlags.class);
     /**
-     * If an excluded char becomes included after the initial state in {@link gorsat.IteratorUtilities#validHeader(String)}
+     * If an excluded char becomes included after the initial state in {@link gorsat.Utilities.IteratorUtilities#validHeader(String)}
      * this test will throw an exception.
      * Creates a temporary nor file with excluded escape characters in the first data row and no header flag '#'.
      * The test then runs nor -h on this file and tests if the metacharacters are correctly
@@ -62,7 +63,7 @@ public class UTestHeaderFlags {
     }
 
     /**
-     * This tests that {@link gorsat.IteratorUtilities#validHeader(String)} correctly handles reserved keywords
+     * This tests that {@link gorsat.Utilities.IteratorUtilities#validHeader(String)} correctly handles reserved keywords
      * and repeated reserved keywords in Nor headers.
      *
      * @throws Exception

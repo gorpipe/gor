@@ -24,7 +24,7 @@ package gorsat.process
 
 import gorsat.Commands.CommandParseUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import org.gorpipe.model.genome.files.gor.FileReader
+import org.gorpipe.gor.model.FileReader
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.language.postfixOps

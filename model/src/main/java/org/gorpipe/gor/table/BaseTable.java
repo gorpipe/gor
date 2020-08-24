@@ -30,10 +30,10 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.GorOptions;
-import org.gorpipe.model.util.ByteTextBuilder;
-import org.gorpipe.model.util.Util;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GorOptions;
+import org.gorpipe.gor.util.ByteTextBuilder;
+import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -22,11 +22,12 @@
 
 package gorsat.parser
 
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 
 /**
   * A forwarding column value provider. When the special column value ReplaceColumn is used the value is
   * looked up using the column currently set as the <i>replaceCol</i>
+ *
   * @param cvp The ColumnValueProvider used for actual lookup
   */
 case class ReplaceCvp(cvp: ColumnValueProvider) extends ColumnValueProvider {

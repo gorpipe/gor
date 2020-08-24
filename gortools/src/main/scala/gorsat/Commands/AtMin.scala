@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class AtMin extends CommandInfo("ATMIN",
   CommandArguments("-last", "-gc", 1, 2),

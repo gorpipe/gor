@@ -22,8 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.cram;
 
-import org.gorpipe.model.genome.files.gor.CramIterator;
-
 import java.io.IOException;
 
 /**

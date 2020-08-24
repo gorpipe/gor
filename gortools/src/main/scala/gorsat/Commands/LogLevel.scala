@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.LogLevelAnalysis
 import gorsat.Commands.CommandParseUtilities.stringValueOfOptionWithDefault
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class LogLevel extends CommandInfo("LOGLEVEL",
   CommandArguments("", "-label", 1, 1),

@@ -23,10 +23,10 @@
 package gorsat.process;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
-import org.gorpipe.model.genome.files.gor.DbSource;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

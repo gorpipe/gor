@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 abstract class BinAnalysis(rowHandler: RowHandler, binAggregator: BinAggregator) extends Analysis {
   override def setup {

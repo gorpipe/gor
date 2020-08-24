@@ -24,7 +24,7 @@ package org.gorpipe.gor.driver.providers.db;
 
 import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.model.util.StringUtil;
+import org.gorpipe.gor.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;

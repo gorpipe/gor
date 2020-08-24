@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.{CigarVarSegs, SortAnalysis}
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Bases extends CommandInfo("BASES",
   CommandArguments("-count", "-gc -readlength", 0, 0),

@@ -22,8 +22,7 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.gor.iterators.{FastGorSource, SingleRowIteratorSource}
+import org.gorpipe.gor.session.GorContext
 
 class ServerGorSource(options: String, context: GorContext, executeNor: Boolean, readAll: Boolean = false)
   extends SingleRowIteratorSource(new FastGorSource(options,

@@ -23,7 +23,7 @@
 package org.gorpipe.model.gor.iterators
 
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.model.genome.files.gor.{GenomicIterator, Line, Row}
+import org.gorpipe.gor.model.{GenomicIterator, Line, Row}
 import org.gorpipe.model.gor.Pipes
 
 abstract class RowSource extends GenomicIterator with AutoCloseable {

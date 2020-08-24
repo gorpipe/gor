@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.iterators.RefSeq
 
 case class AddFlankingSeqs(session: GorSession, l : Int, rCols : Array[Int], outgoingHeader: RowHeader) extends Analysis {

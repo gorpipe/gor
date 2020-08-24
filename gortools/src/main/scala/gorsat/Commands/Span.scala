@@ -24,8 +24,8 @@ package gorsat.Commands
 
 import gorsat.Analysis.{CheckOrder, ChopSegment, ProjectSegments, SortAnalysis}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
-import org.gorpipe.gor.{GorContext, GorSession}
+import gorsat.Utilities.IteratorUtilities.validHeader
+import org.gorpipe.gor.session.{GorContext, GorSession}
 
 import scala.collection.mutable.ListBuffer
 

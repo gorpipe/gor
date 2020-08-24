@@ -23,9 +23,9 @@
 package gorsat;
 
 import gorsat.Commands.Analysis;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.model.Row;
 
 import java.io.IOException;
 import java.io.InputStream;

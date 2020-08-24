@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 
 case class SegHistAnalysis(maxCount: Int, session: GorSession) extends Analysis {

@@ -23,7 +23,7 @@
 package gorsat.gorsatGorIterator
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.model.genome.files.gor.{FileReader, Row}
+import org.gorpipe.gor.model.{FileReader, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 

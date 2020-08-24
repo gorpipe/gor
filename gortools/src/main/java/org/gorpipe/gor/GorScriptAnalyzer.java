@@ -23,10 +23,11 @@
 package org.gorpipe.gor;
 
 import gorsat.Commands.CommandParseUtilities;
-import gorsat.MacroUtilities;
+import gorsat.Utilities.MacroUtilities;
 import gorsat.Script.ExecutionBlock;
 import gorsat.Script.ExecutionGraph;
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.gor.session.GorScriptTask;
 
 import java.util.*;
 

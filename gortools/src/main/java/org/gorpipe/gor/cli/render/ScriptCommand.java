@@ -26,7 +26,7 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.process.CLISessionFactory;
 import gorsat.process.PipeOptions;
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.session.GorSession;
 import picocli.CommandLine;
 
 import java.io.File;

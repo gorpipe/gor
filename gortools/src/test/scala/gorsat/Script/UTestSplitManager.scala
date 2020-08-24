@@ -25,7 +25,8 @@ package gorsat.Script
 import gorsat.DynIterator
 import gorsat.process.{GenericSessionFactory, PipeInstance, PipeOptions, TestSessionFactory}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.{GorContext, ReferenceBuildDefaults}
+import org.gorpipe.gor.reference.ReferenceBuildDefaults
+import org.gorpipe.gor.session.GorContext
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner

@@ -26,7 +26,7 @@ import gorsat.Commands.Analysis
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.GorSession
+import org.gorpipe.gor.session.GorSession
 
 abstract class RegressionAnalysis[T: Manifest](lookUpSignature: String, session: GorSession, valCol: Int, sepVal: Option[String], imputed: Boolean, phenoFile: String, covarFile: Option[String]) extends Analysis {
 

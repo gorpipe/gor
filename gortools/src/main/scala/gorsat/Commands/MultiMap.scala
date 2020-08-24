@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Commands.MapCommand.processArgumentsMapAndMultiMap
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class MultiMap extends CommandInfo("MULTIMAP",
   CommandArguments("-b -h -e -cis -not -cartesian", "-c -m -n", 1, 1),

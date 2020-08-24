@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.VarGroupAnalysis
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class VarGroup extends CommandInfo("VARGROUP",
   CommandArguments("", "-sep -gc", 0, 0),

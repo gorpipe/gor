@@ -25,9 +25,9 @@ package gorsat.Commands
 import gorsat.Analysis.GroupAnalysis
 import gorsat.Analysis.GtLDAnalysis.{LDSelfJoinAnalysis, LDcalculation}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities
+import gorsat.Utilities.IteratorUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class GtLD extends CommandInfo("GTLD",
   CommandArguments("-sum -calc", "-f", 0, 0),

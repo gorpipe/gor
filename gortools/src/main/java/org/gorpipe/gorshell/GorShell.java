@@ -31,7 +31,7 @@ import gorsat.process.GorPipeMacros;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.logging.GorLogbackUtil;
-import org.gorpipe.model.util.ConfigUtil;
+import org.gorpipe.gor.util.ConfigUtil;
 import org.jline.builtins.Completers;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;

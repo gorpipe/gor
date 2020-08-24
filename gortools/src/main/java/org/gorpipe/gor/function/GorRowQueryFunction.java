@@ -25,8 +25,8 @@ package org.gorpipe.gor.function;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import gorsat.process.PipeOptions;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.model.Row;
 
 import java.io.Serializable;
 import java.util.function.Function;

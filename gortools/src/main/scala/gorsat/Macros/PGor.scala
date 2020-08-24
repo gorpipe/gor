@@ -25,7 +25,7 @@ package gorsat.Macros
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 /***
   * PGOR macro used to preprocess standalone pgor commands into create statement plus gor query. Also performs expansion

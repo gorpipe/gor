@@ -23,7 +23,7 @@
 package gorsat.parser
 
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner

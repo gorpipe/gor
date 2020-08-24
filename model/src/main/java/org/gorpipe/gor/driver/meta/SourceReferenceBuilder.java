@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 
 /**
  * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.

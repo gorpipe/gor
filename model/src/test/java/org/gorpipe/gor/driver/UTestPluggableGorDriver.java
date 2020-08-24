@@ -24,7 +24,7 @@ package org.gorpipe.gor.driver;
 
 import gorsat.TestUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
 import org.junit.Test;
 

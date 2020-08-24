@@ -24,8 +24,8 @@ package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
 
 case class WhereAnalysis(context: GorContext, executeNor: Boolean, paramString: String, header: String,
                          ignoreFilterError: Boolean = false)

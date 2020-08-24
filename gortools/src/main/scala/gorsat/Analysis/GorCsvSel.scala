@@ -30,8 +30,8 @@ import gorsat.process.GenotypeLookupUtilities
 import gorsat.process.GorJavaUtilities.VCFValue
 import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.{Line, Row, RowBase}
+import org.gorpipe.gor.model.{Line, Row, RowBase}
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 

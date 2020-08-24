@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.genome.files.gor.bgen.BGenWriterFactory
+import org.gorpipe.gor.driver.bgen.BGenWriterFactory
+import org.gorpipe.gor.model.Row
 
 case class BGenWriteAnalysis(fileName: String, group: Boolean, imputed: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, varIdIdx: Int, valueIdx: Int) extends Analysis {
   val output = BGenWriterFactory.getBGenWriter(fileName, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valueIdx)

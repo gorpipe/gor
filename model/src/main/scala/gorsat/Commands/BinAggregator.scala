@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 
 case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int) {

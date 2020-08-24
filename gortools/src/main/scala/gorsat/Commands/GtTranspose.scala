@@ -7,7 +7,7 @@ import gorsat.PnBucketParsing
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
-import org.gorpipe.gor.{GorContext, GorSession}
+import org.gorpipe.gor.session.{GorContext, GorSession}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer

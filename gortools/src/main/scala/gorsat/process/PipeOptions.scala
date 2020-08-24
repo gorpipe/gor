@@ -27,7 +27,7 @@ import java.util.UUID
 import gorsat.Commands.CommandParseUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.model.genome.files.gor.DefaultFileReader
+import org.gorpipe.gor.model.DefaultFileReader
 
 object PipeOptions {
   def parseInputArguments(args:Array[String]) : PipeOptions = {

@@ -22,9 +22,9 @@
 
 package gorsat.process;
 
-import gorsat.ReportUtilities;
-import org.gorpipe.gor.GorReportBuilder;
-import org.gorpipe.gor.GorSession;
+import gorsat.Utilities.ReportUtilities;
+import org.gorpipe.gor.session.GorReportBuilder;
+import org.gorpipe.gor.session.GorSession;
 
 /**
  * Report builder class for building freemarker based reports via yml files.

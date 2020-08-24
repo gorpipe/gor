@@ -29,8 +29,8 @@ import gorsat.Iterators.{MultiFileSource, RowArrayIterator}
 import gorsat.Outputs.OutFile
 import gorsat.process.{GenericGorRunner, GenericSessionFactory}
 import org.gorpipe.exceptions.custom.GorWriteQuotaExceededException
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.iterators.RowSource
 
 case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.SortInfo], div: Int = 1) extends Analysis {

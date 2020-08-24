@@ -27,13 +27,13 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.Dictionary;
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
-import org.gorpipe.model.util.StringUtil;
+import org.gorpipe.gor.util.StringUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;

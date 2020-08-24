@@ -23,9 +23,9 @@
 package gorsat.Commands
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.stats.StatsCollector
-import org.gorpipe.model.genome.files.gor.Row
 
 abstract class Analysis() extends Processor with Cloneable {
   var pipeTo: Analysis = _

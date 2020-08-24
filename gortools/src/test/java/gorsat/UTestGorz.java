@@ -23,7 +23,7 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.model.genome.files.binsearch.GorZipLexOutputStream;
+import org.gorpipe.gor.binsearch.GorZipLexOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 

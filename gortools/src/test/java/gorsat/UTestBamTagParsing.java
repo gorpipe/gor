@@ -22,10 +22,10 @@
 
 package gorsat;
 
-import org.gorpipe.model.genome.files.gor.BamIterator;
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Line;
+import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
+import org.gorpipe.gor.model.DefaultChromoLookup;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.Line;
 import org.junit.Assert;
 import org.junit.Test;
 

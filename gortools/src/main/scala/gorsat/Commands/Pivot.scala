@@ -24,10 +24,10 @@ package gorsat.Commands
 
 import gorsat.Analysis.PivotAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.mutable.ListBuffer
 

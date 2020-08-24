@@ -25,7 +25,7 @@ package gorsat.parser
 import java.util.NoSuchElementException
 
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 
 /**
   * A column value provider for a list column with fixed size items. The value functions are overridden

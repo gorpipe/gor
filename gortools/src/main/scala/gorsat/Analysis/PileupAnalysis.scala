@@ -24,8 +24,8 @@ package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularBinIDgen, RowHandler}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.RefSeq

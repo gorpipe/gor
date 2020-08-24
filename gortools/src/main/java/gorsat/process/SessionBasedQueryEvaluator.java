@@ -22,8 +22,8 @@
 
 package gorsat.process;
 
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.QueryEvaluator;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.model.gor.iterators.RowSource;
 
 import java.util.LinkedList;

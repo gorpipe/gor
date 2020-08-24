@@ -23,11 +23,11 @@
 package gorsat.Macros
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
-import gorsat.MacroUtilities
 import gorsat.Script.{ExecutionBlock, MacroInfo, MacroParsingResult, ScriptParsers}
+import gorsat.Utilities.MacroUtilities
 import gorsat.process.{GorInputSources, GorPipeMacros, SourceProvider}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 /**
   * PArallel macro is used to create generic paralisation of gor commands. Parallel takes in a split file or nested

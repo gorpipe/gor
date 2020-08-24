@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.external.plink.{PlinkArguments, PlinkProcessAdaptor, PlinkVcfProcessAdaptor}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",

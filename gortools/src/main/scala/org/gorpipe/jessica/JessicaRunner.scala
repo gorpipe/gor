@@ -24,8 +24,8 @@ package org.gorpipe.jessica
 
 import gorsat.Commands.{CommandParseUtilities, RowHeader}
 import gorsat.process.{PipeInstance, PipeOptions}
+import org.gorpipe.gor.model.Row
 import org.gorpipe.jessica
-import org.gorpipe.model.genome.files.gor.Row
 
 class JessicaRunner extends GorQueryHandler {
   var exception: Throwable = _

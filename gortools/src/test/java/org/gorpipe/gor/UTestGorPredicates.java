@@ -26,7 +26,7 @@ import org.gorpipe.gor.function.GorRowFilterFunction;
 import org.gorpipe.gor.function.GorRowInferFunction;
 import org.gorpipe.gor.function.GorRowMapFunction;
 import org.gorpipe.gor.function.GorRowQueryFunction;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.junit.Assert;
 import org.junit.Ignore;

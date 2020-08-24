@@ -24,7 +24,7 @@ package gorsat.parser
 
 import java.util.NoSuchElementException
 
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 
 /** A column value provider for a list column. The value functions are overridden to recognize
   * special columns, for getting an individual item from the list, or the index of the current

@@ -22,12 +22,12 @@
 
 package gorsat.Analysis
 
-import gorsat.AnalysisUtilities.{ParameterHolder, SEGinfo}
+import gorsat.Utilities.AnalysisUtilities.{ParameterHolder, SEGinfo}
 import gorsat.Commands._
 import gorsat.Iterators.{ChromBoundedIteratorSource, RowListIterator}
 import gorsat.process.GenericGorRunner
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.RowSource

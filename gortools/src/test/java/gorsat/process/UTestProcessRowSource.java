@@ -22,7 +22,6 @@
 
 package gorsat.process;
 
-import org.gorpipe.gor.GorSessionFactory;
 import org.junit.Assert;
 import org.junit.Test;
 

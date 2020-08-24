@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.UntilAnalysis
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 
 class Until extends CommandInfo("UNTIL",

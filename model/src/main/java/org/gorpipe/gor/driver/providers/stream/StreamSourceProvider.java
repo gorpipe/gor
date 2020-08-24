@@ -37,7 +37,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWra
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.driver.utils.RetryHandler;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

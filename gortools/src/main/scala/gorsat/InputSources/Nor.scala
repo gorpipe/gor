@@ -22,13 +22,13 @@
 
 package gorsat.InputSources
 
-import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NorInputSource, ServerGorSource, ServerNorGorSource}
+import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.NordIterator
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 object Nor

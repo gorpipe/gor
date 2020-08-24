@@ -34,7 +34,7 @@ import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.logging.GorLogbackUtil;
-import org.gorpipe.model.util.ConfigUtil;
+import org.gorpipe.gor.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
