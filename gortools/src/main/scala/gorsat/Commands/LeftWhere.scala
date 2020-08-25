@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.LeftWhereAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class LeftWhere extends CommandInfo("LEFTWHERE",
   CommandArguments("", "-e", 2, -1, ignoreIllegalArguments = true),

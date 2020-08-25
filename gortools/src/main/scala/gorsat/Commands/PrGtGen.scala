@@ -25,10 +25,10 @@ package gorsat.Commands
 import gorsat.Analysis.PrGtGenAnalysis.{AFANSourceAnalysis, LeftSourceAnalysis, RightSourceAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.IteratorUtilities
+import gorsat.Utilities.IteratorUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PrGtGen extends CommandInfo("PRGTGEN",

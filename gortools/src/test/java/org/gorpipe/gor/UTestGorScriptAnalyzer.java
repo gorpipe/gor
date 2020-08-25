@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor;
 
+import org.gorpipe.gor.session.GorScriptTask;
 import org.junit.Assert;
 import org.junit.Test;
 

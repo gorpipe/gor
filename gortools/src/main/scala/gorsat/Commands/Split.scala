@@ -24,8 +24,8 @@ package gorsat.Commands
 
 import gorsat.Analysis.{ColumnSplit, MultiColumnSplit}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
-import org.gorpipe.gor.GorContext
+import gorsat.Utilities.IteratorUtilities.validHeader
+import org.gorpipe.gor.session.GorContext
 
 class Split extends CommandInfo("SPLIT",
   CommandArguments("", "-s -e", 1, 1),

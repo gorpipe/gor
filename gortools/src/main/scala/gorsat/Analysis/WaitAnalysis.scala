@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class WaitAnalysis(time: Int) extends Analysis {
   override def isTypeInformationMaintained: Boolean = true

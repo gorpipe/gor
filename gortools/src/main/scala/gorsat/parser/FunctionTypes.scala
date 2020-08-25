@@ -22,7 +22,7 @@
 
 package gorsat.parser
 
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 
 object FunctionTypes {
   type sFun = ColumnValueProvider => String

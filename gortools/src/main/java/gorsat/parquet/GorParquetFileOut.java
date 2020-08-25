@@ -8,7 +8,7 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.function.GorRowInferFunction;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.Row;
 
 import java.io.IOException;
 

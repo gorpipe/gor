@@ -30,7 +30,7 @@ import gorsat.DynIterator._
 import gorsat.Iterators.ServerGorSource
 import gorsat.process.PipeOptions
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.Pipes
 import org.gorpipe.model.gor.iterators.RowSource
 

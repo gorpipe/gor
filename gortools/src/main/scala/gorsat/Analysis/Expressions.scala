@@ -24,7 +24,8 @@ package gorsat.Analysis
 import gorsat.Commands.RowHeader
 import gorsat.parser.ParseArith
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
-import org.gorpipe.gor.{ColumnValueProvider, GorContext}
+import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.session.GorContext
 
 /**
   * A trait that adds an array of expressions and their types. Useful for Analysis steps that work with

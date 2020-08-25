@@ -24,8 +24,8 @@ package gorsat.Commands
 
 import gorsat.Analysis.ExpandBamFlag
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
-import org.gorpipe.gor.GorContext
+import gorsat.Utilities.IteratorUtilities.validHeader
+import org.gorpipe.gor.session.GorContext
 
 class BAMFlag extends CommandInfo("BAMFLAG",
   CommandArguments("-v -h", "", 0, 0),

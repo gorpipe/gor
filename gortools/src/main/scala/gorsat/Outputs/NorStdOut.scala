@@ -23,7 +23,7 @@
 package gorsat.Outputs
 
 import gorsat.Commands.Output
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class NorStdOut(header: String = null) extends Output {
   val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(System.out), 1024 * 100)

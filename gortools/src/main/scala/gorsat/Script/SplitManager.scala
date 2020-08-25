@@ -27,7 +27,7 @@ import gorsat.DynIterator.DynamicRowSource
 import gorsat.Script.SplitManager.{MAXIMUM_NUMBER_OF_SPLITS, WHERE_SPLIT_WINDOW}
 import gorsat.process.GorPipeCommands
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.JavaConverters._
 

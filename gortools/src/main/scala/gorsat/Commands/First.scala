@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.TopN
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class First extends CommandInfo("FIRST",
   CommandArguments("", "", 0, 1),

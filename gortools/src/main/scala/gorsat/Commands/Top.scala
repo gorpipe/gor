@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.TopN
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Top extends CommandInfo("TOP",
   CommandArguments("", "", 0, 1),

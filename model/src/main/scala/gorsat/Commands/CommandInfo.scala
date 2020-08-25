@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities.validateCommandArguments
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 

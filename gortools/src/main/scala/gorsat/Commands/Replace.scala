@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Analysis.ReplaceAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 
 class Replace extends CommandInfo("REPLACE",

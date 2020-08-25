@@ -23,14 +23,14 @@
 package gorsat;
 
 import freemarker.template.TemplateException;
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.model.genome.files.gor.QueryEvaluator;
-import org.gorpipe.querydialogs.beans.model.Argument;
-import org.gorpipe.querydialogs.beans.model.ArgumentType;
-import org.gorpipe.querydialogs.beans.model.factory.ArgumentContent;
-import org.gorpipe.querydialogs.beans.model.factory.Perspective;
-import org.gorpipe.querydialogs.beans.model.factory.PerspectiveDialog;
-import org.gorpipe.querydialogs.beans.model.factory.PerspectiveDialogFactory;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.model.QueryEvaluator;
+import org.gorpipe.querydialogs.Argument;
+import org.gorpipe.querydialogs.ArgumentType;
+import org.gorpipe.querydialogs.factory.ArgumentContent;
+import org.gorpipe.querydialogs.factory.Perspective;
+import org.gorpipe.querydialogs.factory.PerspectiveDialog;
+import org.gorpipe.querydialogs.factory.PerspectiveDialogFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;

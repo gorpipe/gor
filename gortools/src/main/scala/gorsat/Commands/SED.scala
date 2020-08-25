@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.ColSed
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class SED extends CommandInfo("SED",
   CommandArguments("-i -f", "-c", 2, 2),

@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import org.gorpipe.gor.GorConstants
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class ToList(groupCols: Int, withCount: Boolean = false) extends Analysis {
   var lastKey: String = GorConstants.FIRST_POSSIBLE_CHROMOSOME_VALUE

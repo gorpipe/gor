@@ -24,7 +24,7 @@ package gorsat.process;
 
 import gorsat.BatchedReadSource;
 import gorsat.Commands.Processor;
-import org.gorpipe.gor.GorRunner;
+import org.gorpipe.gor.session.GorRunner;
 import org.gorpipe.model.gor.iterators.RowSource;
 
 /**

@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.driver;
 
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.junit.Test;
 

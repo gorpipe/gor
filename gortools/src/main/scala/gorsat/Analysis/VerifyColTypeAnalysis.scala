@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class VerifyColTypeAnalysis() extends Analysis {
   private var rowCounter = 0

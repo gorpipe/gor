@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 
 /**
  * Created by sigmar on 20/05/16.

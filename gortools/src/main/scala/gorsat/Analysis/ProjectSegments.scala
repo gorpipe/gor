@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.gor.GorConstants
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable.Map

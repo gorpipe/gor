@@ -24,6 +24,7 @@ package org.gorpipe.gor;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.session.ProjectContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

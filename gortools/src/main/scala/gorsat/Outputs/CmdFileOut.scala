@@ -23,7 +23,7 @@
 package gorsat.Outputs
 
 import gorsat.Commands.Output
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 /**
   * @param name Name of the file to be written.

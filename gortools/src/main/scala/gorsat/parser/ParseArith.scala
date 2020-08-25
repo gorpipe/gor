@@ -29,7 +29,9 @@ import gorsat.Commands.RowHeader
 import gorsat.parser.FunctionTypes._
 import gorsat.parser.ParseUtilities._
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.{ColumnValueProvider, GorContext, SyntaxChecker}
+import org.gorpipe.gor.SyntaxChecker
+import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.{RefSeq, RowSource}
 
 import scala.collection.mutable

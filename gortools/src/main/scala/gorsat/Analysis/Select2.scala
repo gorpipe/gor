@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class Select2(columns: Int*) extends Analysis {
   val colArray = columns.map(x => x - 1).toArray

@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands._
-import gorsat.StringUtilities
-import org.gorpipe.model.genome.files.gor.Row
+import gorsat.Utilities.StringUtilities
+import org.gorpipe.gor.model.Row
 
 import scala.collection.mutable.ArrayBuffer
 

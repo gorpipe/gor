@@ -27,11 +27,11 @@
 package gorsat.process
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
-import gorsat.MacroUtilities._
 import gorsat.Script.{ScriptEngineFactory, ScriptParsers, SplitManager}
+import gorsat.Utilities.MacroUtilities._
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
-import org.gorpipe.gor.GorSession
+import org.gorpipe.gor.session.GorSession
 
 import scala.collection.JavaConverters._
 

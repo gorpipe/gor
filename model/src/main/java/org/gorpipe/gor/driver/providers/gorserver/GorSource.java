@@ -23,7 +23,7 @@
 package org.gorpipe.gor.driver.providers.gorserver;
 
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 
 import java.io.IOException;
 

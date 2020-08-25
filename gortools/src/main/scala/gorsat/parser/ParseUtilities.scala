@@ -29,9 +29,9 @@ package gorsat.parser
 import java.util.Locale
 
 import org.gorpipe.exceptions.{GorDataException, GorParsingException, GorSystemException}
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.{GChiSquared2by2, GFisherExact2by2}
 import org.gorpipe.model.gor.iterators.RefSeq
-import org.gorpipe.model.util.{GChiSquared2by2, GFisherExact2by2}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable

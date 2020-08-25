@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.BugN
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Bug extends CommandInfo("BUG",
   CommandArguments("", "", 0, 1),

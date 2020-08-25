@@ -24,8 +24,10 @@ package gorsat;
 
 import com.sun.management.UnixOperatingSystemMXBean;
 import gorsat.Commands.CommandParseUtilities;
+import gorsat.Utilities.AnalysisUtilities;
+import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
-import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.slf4j.Logger;

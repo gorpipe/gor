@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 /**
   * A pipe step to infer column types by looking at column values for some number of rows.

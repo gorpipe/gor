@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.JoinAnalysis
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 
 class Join extends CommandInfo("JOIN",

@@ -31,9 +31,9 @@ import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
 import gorsat.process.GorPipeMacros;
 import org.gorpipe.logging.GorLogbackUtil;
-import org.gorpipe.model.genome.files.binsearch.GorIndexFile;
-import org.gorpipe.model.genome.files.binsearch.GorIndexType;
-import org.gorpipe.model.util.ConfigUtil;
+import org.gorpipe.gor.binsearch.GorIndexFile;
+import org.gorpipe.gor.binsearch.GorIndexType;
+import org.gorpipe.gor.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

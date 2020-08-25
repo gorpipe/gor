@@ -23,7 +23,7 @@
 package org.gorpipe.jessica;
 
 import gorsat.Commands.RowHeader;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.Row;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

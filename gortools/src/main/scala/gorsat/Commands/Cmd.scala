@@ -24,11 +24,11 @@ package gorsat.Commands
 
 import java.util.Optional
 
-import gorsat.AnalysisUtilities
+import gorsat.Utilities.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.process.ProcessIteratorAdaptor
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.gor.Utilities.makeTempFile
+import gorsat.Utilities.Utilities.makeTempFile
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 object Cmd {

@@ -2,8 +2,8 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.gor;
 
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;

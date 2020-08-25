@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bgen;
 
-import org.gorpipe.model.genome.files.gor.bgenreader.BGenIterator;
+import org.gorpipe.gor.driver.bgenreader.BGenIterator;
 
 public class BGenFileIterator extends BGenIterator {
     BGenFileIterator(BGenFile bGenFile) {

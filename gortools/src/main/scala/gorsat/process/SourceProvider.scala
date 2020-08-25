@@ -24,10 +24,12 @@ package gorsat.process
 
 import gorsat.Commands.CommandParseUtilities
 import gorsat.DynIterator.{DynamicNorSource, DynamicRowSource}
-import gorsat.{DynIterator, IteratorUtilities, Iterators}
+import gorsat.Iterators.SingleFileSource
+import gorsat.Utilities.IteratorUtilities
+import gorsat.{DynIterator, Iterators}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.gor.iterators.{RowSource, SingleFileSource}
+import org.gorpipe.gor.session.GorContext
+import org.gorpipe.model.gor.iterators.RowSource
 
 /**
   * SourceProvider simplifies access to sources used by various commands, where the source can be either

@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Analysis.{AdjustAnalysis, AdjustOptions}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Adjust extends CommandInfo("ADJUST",
   CommandArguments("-gcc -qq -bh -by -ss -sd -holm -bonf", "-gc -pc", 0, 0),

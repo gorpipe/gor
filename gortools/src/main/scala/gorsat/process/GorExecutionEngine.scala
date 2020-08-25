@@ -22,7 +22,7 @@
 
 package gorsat.process
 
-import org.gorpipe.gor.{GorRunner, GorSession}
+import org.gorpipe.gor.session.{GorRunner, GorSession}
 
 /**
   * Base class used to execute gor queries. Supports user created session, iterator and runner. All resources are

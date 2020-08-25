@@ -22,16 +22,18 @@
 
 package gorsat.Script
 
-import gorsat.AnalysisUtilities.getSignature
+import gorsat.Utilities.AnalysisUtilities.getSignature
 import gorsat.Commands.CommandParseUtilities
-import gorsat.MacroUtilities._
+import gorsat.Utilities.MacroUtilities._
 import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
+import gorsat.Utilities.{AnalysisUtilities, MacroUtilities, StringUtilities}
 import gorsat.process.{GorPipeMacros, GorPrePipe, PipeInstance}
-import gorsat.{AnalysisUtilities, DynIterator, MacroUtilities, StringUtilities}
+import gorsat.DynIterator
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
-import org.gorpipe.gor.{GorContext, GorScriptAnalyzer, GorSession}
-import org.gorpipe.model.genome.files.gor.GorParallelQueryHandler
+import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.GorScriptAnalyzer
+import org.gorpipe.gor.model.GorParallelQueryHandler
 import org.slf4j.{Logger, LoggerFactory}
 
 object ScriptExecutionEngine {
@@ -77,8 +79,8 @@ object ScriptExecutionEngine {
 /**
   * Class to execute gor scripts. Scripts are executed with the supplied query handler.
   *
-  * @param queryHandler         Remote query handler
-  * @param context              Current gor pipe session
+  * @param queryHandler Remote query handler
+  * @param context      Current gor pipe session
   */
 class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
                             localQueryHandler: GorParallelQueryHandler,
@@ -92,15 +94,15 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
   private val eventLogger = context.getSession.getEventLogger
 
-  def getCreatedFiles : Map[String, String] = {
+  def getCreatedFiles: Map[String, String] = {
     virtualFileManager.getCreatedFiles
   }
 
-  def getVirtualFiles : List[(String,String)] = {
+  def getVirtualFiles: List[(String, String)] = {
     Nil
   }
 
-  def getAliases : singleHashMap = {
+  def getAliases: singleHashMap = {
     aliases
   }
 
@@ -175,7 +177,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
         virtualFileManager.addRange(activeExecutionBlocks)
 
-        activeExecutionBlocks.foreach {newExecutionBlock =>
+        activeExecutionBlocks.foreach { newExecutionBlock =>
           // Get the command to finally execute
           val commandToExecute = newExecutionBlock._2.query
 
@@ -219,15 +221,15 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
     // We'll need to validate the current execution and throw exception if there are still execution blocks available
     // IN the final execution list
-    if(validate) postValidateExecution()
+    if (validate) postValidateExecution()
 
     gorCommand
   }
 
   private def preValidateExecution(): Unit = {
     var externalVirtualRelation: List[String] = Nil
-    executionBlocks.values.foreach{block =>
-      MacroUtilities.virtualFiles(block.query).foreach{relation =>
+    executionBlocks.values.foreach { block =>
+      MacroUtilities.virtualFiles(block.query).foreach { relation =>
         if (MacroUtilities.isExternalVirtFile(relation)) {
           externalVirtualRelation ::= relation
         }

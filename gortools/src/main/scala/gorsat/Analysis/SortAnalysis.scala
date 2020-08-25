@@ -23,9 +23,9 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Processor, _}
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.genome.files.gor.Row.SortInfo
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.Row.SortInfo
+import org.gorpipe.gor.session.GorSession
 
 case class SortAnalysis(header: String,
                         session: GorSession,

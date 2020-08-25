@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class ValidateColumnsAnalysis(headerCount:Int, message: String = "", testOnNthRow:Long = 10000L) extends Analysis {
   var counter = 0L

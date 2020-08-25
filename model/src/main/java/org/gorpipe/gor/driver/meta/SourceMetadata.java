@@ -23,7 +23,7 @@
 package org.gorpipe.gor.driver.meta;
 
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.model.util.Util;
+import org.gorpipe.gor.util.Util;
 
 import java.io.IOException;
 import java.text.DateFormat;

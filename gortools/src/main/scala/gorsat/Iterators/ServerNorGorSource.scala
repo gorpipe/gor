@@ -22,8 +22,8 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.RowObj
 
 class ServerNorGorSource(options: String, context: GorContext, executeNor: Boolean, readAll: Boolean = false)

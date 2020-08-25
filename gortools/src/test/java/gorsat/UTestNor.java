@@ -24,7 +24,7 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.junit.Test;

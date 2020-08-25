@@ -28,8 +28,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.DefaultChromoLookup;
+import org.gorpipe.gor.model.GenomicIterator;
 
 import java.io.IOException;
 import java.util.Arrays;
