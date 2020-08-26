@@ -56,6 +56,46 @@ public abstract class Constants {
     }
 
     /**
+     * Replace all occurances of the constants found the the specified text using default Constants, if set
+     *
+     * @param text
+     * @return The text after replacement
+     */
+    public static String replaceConstantsInText(String text) {
+        return isSet() ? get().replaceConstantsInTextx(text) : text;
+    }
+
+    /**
+     * Replace all occurances of the constants found the the specified text
+     *
+     * @param text
+     * @return The text after replacement
+     */
+    public String replaceConstantsInTextx(String text) {
+        String t = text.replace("#{project-id}", String.valueOf(projectId()));
+        t = t.replace("#{project}", projectName());
+        t = t.replace("#{user}", userName());
+        return t;
+    }
+
+    /**
+     * Check if project has changed.
+     *
+     * @param oldProjectName old project name
+     * @return <code>true</code> if project has changed, otherwise <code>false</code>
+     */
+    public static boolean projectChanged(final String oldProjectName) {
+        boolean configChanged = false;
+        if (Constants.isSet()) {
+            final String constantsProjectName = Constants.get().projectName();
+            if (!constantsProjectName.equals(oldProjectName)) {
+                configChanged = true;
+            }
+        }
+        return configChanged;
+    }
+
+    /**
      * @return The current project name
      */
     abstract public String projectName();
@@ -65,4 +105,8 @@ public abstract class Constants {
      */
     abstract public String userName();
 
+    /**
+     * @return The current project id
+     */
+    abstract public int projectId();
 }
