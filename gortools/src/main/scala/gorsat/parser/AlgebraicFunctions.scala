@@ -72,13 +72,17 @@ object AlgebraicFunctions {
 
   def minString(ex1: sFun, ex2: sFun): sFun = {
     cvp => {
-      if (ex1(cvp) < ex2(cvp)) ex1(cvp) else ex2(cvp)
+      val s1 = ex1(cvp)
+      val s2 = ex2(cvp)
+      if (s1 < s2) s1 else s2
     }
   }
 
   def maxString(ex1: sFun, ex2: sFun): sFun = {
     cvp => {
-      if (ex1(cvp) > ex2(cvp)) ex1(cvp) else ex2(cvp)
+      val s1 = ex1(cvp)
+      val s2 = ex2(cvp)
+      if (s1 > s2) s1 else s2
     }
   }
 
@@ -126,7 +130,8 @@ object AlgebraicFunctions {
 
   def sqr(ex: dFun): dFun = {
     cvp => {
-      ex(cvp) * ex(cvp)
+      val d = ex(cvp)
+      d * d
     }
   }
 
@@ -150,7 +155,8 @@ object AlgebraicFunctions {
 
   def abs(ex: dFun): dFun = {
     cvp => {
-      if (ex(cvp) < 0.0) -ex(cvp) else ex(cvp)
+      val d = ex(cvp)
+      if (d < 0.0) -d else d
     }
   }
 
@@ -168,7 +174,8 @@ object AlgebraicFunctions {
 
   def absInt(ex: iFun): iFun = {
     cvp => {
-      if (ex(cvp) < 0) -ex(cvp) else ex(cvp)
+      val i = ex(cvp)
+      if (i < 0) -i else i
     }
   }
 

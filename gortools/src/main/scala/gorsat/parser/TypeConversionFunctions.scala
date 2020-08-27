@@ -59,9 +59,10 @@ object TypeConversionFunctions {
 
   def isInt(ex1: sFun): bFun = {
     cvp => {
-      var b = if (ex1(cvp) == "") false else true
+      val str = ex1(cvp)
+      var b = if (str == "") false else true
       try {
-        ex1(cvp).toInt
+        str.toInt
       } catch {
         case _: Exception => b = false
       }
@@ -71,9 +72,10 @@ object TypeConversionFunctions {
 
   def isLong(ex1: sFun): bFun = {
     cvp => {
-      var b = if (ex1(cvp) == "") false else true
+      val str = ex1(cvp)
+      var b = if (str == "") false else true
       try {
-        ex1(cvp).toLong
+        str.toLong
       } catch {
         case _: Exception => b = false
       }
@@ -83,9 +85,10 @@ object TypeConversionFunctions {
 
   def isFloat(ex1: sFun): bFun = {
     cvp => {
-      var b = if (ex1(cvp) == "") false else true
+      val str = ex1(cvp)
+      var b = if (str == "") false else true
       try {
-        ex1(cvp).toDouble
+        str.toDouble
       } catch {
         case _: Exception => b = false
       }

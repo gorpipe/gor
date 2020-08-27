@@ -106,13 +106,16 @@ object StringFunctions {
 
   def mid(ex1: sFun, ex2: iFun, ex3: iFun): sFun = {
     cvp => {
-      ex1(cvp).substring(ex2(cvp), (ex2(cvp) + ex3(cvp)).min(ex1(cvp).length))
+      val s1 = ex1(cvp)
+      val s2 = ex2(cvp)
+      s1.substring(s2, (s2 + ex3(cvp)).min(s1.length))
     }
   }
 
   def substr(ex1: sFun, ex2: iFun, ex3: iFun): sFun = {
     cvp => {
-      ex1(cvp).substring(ex2(cvp), ex3(cvp).min(ex1(cvp).length))
+      val s1 = ex1(cvp)
+      s1.substring(ex2(cvp), ex3(cvp).min(s1.length))
     }
   }
 
@@ -132,13 +135,15 @@ object StringFunctions {
 
   def left(ex1: sFun, ex2: iFun): sFun = {
     cvp => {
-      ex1(cvp).substring(0, ex2(cvp).min(ex1(cvp).length))
+      val s1 = ex1(cvp)
+      s1.substring(0, ex2(cvp).min(s1.length))
     }
   }
 
   def right(ex1: sFun, ex2: iFun): sFun = {
     cvp => {
-      ex1(cvp).substring(0.max(ex1(cvp).length - ex2(cvp)))
+      val s1 = ex1(cvp)
+      s1.substring(0.max(s1.length - ex2(cvp)))
     }
   }
 
