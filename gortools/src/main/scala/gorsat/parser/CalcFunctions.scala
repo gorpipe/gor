@@ -126,7 +126,8 @@ object CalcFunctions {
     cvp => {
       if (!mapDefined) {
         mapDefined = true
-        val slist = ex2(cvp).split(",",-1).map(_.trim)
+        val s2 = ex2(cvp)
+        val slist = s2.split(",",-1).map(_.trim)
         if (slist.length < 2) throw new GorParsingException("The map parameter needs at least two values. Example: ...|calc x DECODE(col,'a,1')")
         val n = slist.length/2
         var i = 0
@@ -136,9 +137,10 @@ object CalcFunctions {
         }
         if (slist.length > 2*n) elseValue = slist.last
       }
-      myMap.get(ex1(cvp)) match {
+      val s1 = ex1(cvp)
+      myMap.get(s1) match {
         case Some(x) => x
-        case None => if (elseValue != null) elseValue else ex1(cvp)
+        case None => if (elseValue != null) elseValue else s1
       }
     }
   }
