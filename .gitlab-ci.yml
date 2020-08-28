@@ -9,6 +9,11 @@ variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
   RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
+  # Vars for build resources
+  KUBERNETES_CPU_REQUEST: 4
+  KUBERNETES_CPU_LIMIT: 6
+  KUBERNETES_MEMORY_REQUEST: 2Gi
+  KUBERNETES_MEMORY_LIMIT: 4Gi
 
 .on-branches:
   rules:
