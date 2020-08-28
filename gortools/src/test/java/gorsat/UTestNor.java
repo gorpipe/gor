@@ -33,14 +33,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 
 /**
  * Created by sigmar on 25/06/15.
  */
 public class UTestNor {
+
     /**
      * Test noring a filesystem
-     *
      */
     @Test
     public void testNorFileSystem() {
@@ -61,28 +62,28 @@ public class UTestNor {
     public void testNorWithEmptyLines() throws IOException {
         File tempFile = File.createTempFile("norrows", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset)null);
+        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset) null);
 
         int count1 = TestUtils.runGorPipeCount(String.format("nor %s", tempFile));
         int count2 = TestUtils.runGorPipeCount(String.format("nor %s -i", tempFile));
 
         Assert.assertTrue(count1 != count2);
         Assert.assertEquals("We should receive all 6 lines", 6, count1);
-        Assert.assertEquals( "We should not get the empty line here, only 2 lines", 2, count2);
+        Assert.assertEquals("We should not get the empty line here, only 2 lines", 2, count2);
     }
 
     @Test
     public void testNorWithEmptyLinesInNestedQuery() throws IOException {
         File tempFile = File.createTempFile("norrows_nested", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset)null);
+        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset) null);
 
         int count1 = TestUtils.runGorPipeCount(String.format("nor <(nor %s)", tempFile));
         int count2 = TestUtils.runGorPipeCount(String.format("nor <(nor %s -i)", tempFile));
 
         Assert.assertTrue(count1 != count2);
         Assert.assertEquals("We should receive all 6 lines", 6, count1);
-        Assert.assertEquals( "We should not get the empty line here, only 2 lines", 2, count2);
+        Assert.assertEquals("We should not get the empty line here, only 2 lines", 2, count2);
     }
 
     @Test
@@ -138,6 +139,13 @@ public class UTestNor {
         }
     }
 
+    @Test
+    public void testNorWithGorRoot() throws IOException {
+        String gorRoot = Paths.get("../").toFile().getCanonicalPath();
+        String[] args = new String[]{"nor tests -r| top 10", "-gorroot", gorRoot};
+        String results = TestUtils.runGorPipe(args);
+        Assert.assertFalse(results.contains(gorRoot));
+    }
 
     private int getDepthRangeFromIterator(RowSource iterator) {
         int minDepth = Integer.MAX_VALUE;
@@ -161,7 +169,7 @@ public class UTestNor {
     @Test
     public void testNorLongRowsFewColumns() throws IOException {
         int[] lineSizes = {1, 16, 64, 128};
-        for (int sz: lineSizes) {
+        for (int sz : lineSizes) {
             int length = sz * 1000;
             String filePath = createTestFileLongLinesFewColumns(length);
 
@@ -176,7 +184,7 @@ public class UTestNor {
     @Test
     public void testNorLongRowsManyColumns() throws IOException {
         int[] lineSizes = {1, 16, 64, 128};
-        for (int sz: lineSizes) {
+        for (int sz : lineSizes) {
             int length = sz * 1000;
             String filePath = createTestFileLongLinesManyColumns(length);
 
@@ -195,7 +203,7 @@ public class UTestNor {
         PrintWriter outputWriter = new PrintWriter(tempFile);
         outputWriter.println("#Col1\tCol2\tCol3");
 
-        int columnLength = (length-3) / 3;
+        int columnLength = (length - 3) / 3;
         String col1 = StringUtils.repeat("a", columnLength);
         String col2 = StringUtils.repeat("b", columnLength);
         String col3 = StringUtils.repeat("c", columnLength);
