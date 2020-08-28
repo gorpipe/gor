@@ -52,6 +52,8 @@ before_script:
 .build_with_cache:
   extends: .on-branches
   image: "$JAVA_BUILDER_IMAGE"
+  tags:
+    - gitlab-build-01
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
@@ -64,8 +66,6 @@ build:
   extends: .build_with_cache
   stage: build
   script: ./gradlew classes
-  tags:
-    - gitlab-build-01
   cache:
     policy: pull-push
 
@@ -75,8 +75,6 @@ build:
   stage: test
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
-  tags:
-    - gitlab-build-01
   artifacts:
     reports:
       junit:
@@ -106,6 +104,8 @@ code_quality:
   extends:
     - .on-releasable-or-release-branch-only
   stage: test
+  tags:
+    - gitlab-build-01
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
@@ -145,8 +145,6 @@ publish:
     - .on-releasable-or-semver-tag-only
   stage: publish
   script: ./gradlew publish -x test -x slowTest -x integrationTest
-  tags:
-    - gitlab-build-01
 
 
 artifactory_publish:
