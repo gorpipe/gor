@@ -9,6 +9,11 @@ variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
   RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
+  # Vars for build resources
+  KUBERNETES_CPU_REQUEST: 4
+  KUBERNETES_CPU_LIMIT: 6
+  KUBERNETES_MEMORY_REQUEST: 2Gi
+  KUBERNETES_MEMORY_LIMIT: 4Gi
 
 .on-branches:
   rules:
@@ -47,6 +52,8 @@ before_script:
 .build_with_cache:
   extends: .on-branches
   image: "$JAVA_BUILDER_IMAGE"
+  tags:
+    - gitlab-build-01
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
@@ -59,8 +66,6 @@ build:
   extends: .build_with_cache
   stage: build
   script: ./gradlew classes
-  tags:
-    - gitlab-build-01
   cache:
     policy: pull-push
 
@@ -70,8 +75,6 @@ build:
   stage: test
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
-  tags:
-    - gitlab-build-01
   artifacts:
     reports:
       junit:
@@ -101,6 +104,8 @@ code_quality:
   extends:
     - .on-releasable-or-release-branch-only
   stage: test
+  tags:
+    - gitlab-build-01
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
@@ -140,8 +145,6 @@ publish:
     - .on-releasable-or-semver-tag-only
   stage: publish
   script: ./gradlew publish -x test -x slowTest -x integrationTest
-  tags:
-    - gitlab-build-01
 
 
 artifactory_publish:
