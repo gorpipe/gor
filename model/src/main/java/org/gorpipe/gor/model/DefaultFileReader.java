@@ -142,7 +142,7 @@ public class DefaultFileReader extends FileReader {
                 }
                 String filename = fileNamePath.toString();
                 int li = filename.lastIndexOf('.');
-                Path rel = root != null && !Strings.isNullOrEmpty(root.toString()) && x.isAbsolute() ? root.relativize(x) : x;
+                Path rel = root != null && !Strings.isNullOrEmpty(root.toString()) && x.isAbsolute() ? root.relativize(x).normalize() : x;
                 String line = filename + "\t" + (Files.isSymbolicLink(x) ? 0 : Files.size(x)) + "\t" + Files.isDirectory(x) + "\t" + filename.substring(li == -1 ? filename.length() : li + 1) + "\t" + rel.toString() + "\t" + rel.toString().chars().filter(y -> y == '/').count();
 
                 if (showModificationDate) {
