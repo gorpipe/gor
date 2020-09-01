@@ -25,20 +25,73 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 /**
  * Created by sigmar on 25/06/15.
  */
 public class UTestNor {
+
+    @Rule
+    public TemporaryFolder projectDir = new TemporaryFolder();
+
+    @Rule
+    public TemporaryFolder symbolicTarget = new TemporaryFolder();
+
+    private ProjectContext projectContext;
+
+    private static String NOR_RESULTS_USER_DATA =
+            "ChromNOR\tPosNOR\tFilename\tFilesize\tIsDir\tFiletype\tFilepath\tFiledepth\n" +
+                    "chrN\t0\tuser_data\t96\ttrue\t\tuser_data\t0\n" +
+                    "chrN\t0\ttest.gor\t96\tfalse\tgor\tuser_data/test.gor\t1\n";
+
+    private static String NOR_RESULTS_SHARED =
+            "ChromNOR\tPosNOR\tFilename\tFilesize\tIsDir\tFiletype\tFilepath\tFiledepth\n" +
+                    "chrN\t0\tshared\t0\ttrue\t\tshared\t0\n" +
+                    "chrN\t0\ttest.gor\t96\tfalse\tgor\tshared/test.gor\t1\n";
+
+
+    @Before
+    public void setUp() throws IOException {
+        ArrayList<String> locations = new ArrayList<>();
+        locations.add("user_data");
+
+        projectContext = new ProjectContext.Builder()
+                .setRoot(projectDir.getRoot().getCanonicalPath())
+                .setWriteLocations(locations)
+                .build();
+        createSymbolicLink();
+    }
+
+    private void createSymbolicLink() throws IOException {
+        String userDataFolder = projectContext.getRealProjectRoot() + "/user_data";
+        File dir = new File(userDataFolder);
+        dir.mkdir();
+        FileTestUtils.createTempFile(dir, "test.gor",
+                "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                        "chr1\t10179\tC\tCC\trs367896724\n" +
+                        "chr1\t10250\tA\tC\trs199706086");
+        Path link = Paths.get(projectContext.getRealProjectRoot() + "/shared");
+        Path target = Paths.get(userDataFolder);
+        Files.createSymbolicLink(link, target);
+    }
+
 
     /**
      * Test noring a filesystem
@@ -142,9 +195,19 @@ public class UTestNor {
     @Test
     public void testNorWithGorRoot() throws IOException {
         String gorRoot = Paths.get("../").toFile().getCanonicalPath();
-        String[] args = new String[]{"nor tests -r| top 10", "-gorroot", gorRoot};
+        String[] args = new String[]{"nor -r tests | top 10", "-gorroot", gorRoot};
         String results = TestUtils.runGorPipe(args);
         Assert.assertFalse(results.contains(gorRoot));
+    }
+
+    @Test
+    public void testNorWithGorRootSymbolic() {
+        String[] args1 = new String[]{"nor -r shared | top 10", "-gorroot", projectContext.getRealProjectRoot()};
+        String[] args2 = new String[]{"nor -r user_data | top 10", "-gorroot", projectContext.getRealProjectRoot()};
+        String results1 = TestUtils.runGorPipe(args1);
+        String results2 = TestUtils.runGorPipe(args2);
+        Assert.assertEquals(NOR_RESULTS_SHARED, results1);
+        Assert.assertEquals(NOR_RESULTS_USER_DATA, results2);
     }
 
     private int getDepthRangeFromIterator(RowSource iterator) {

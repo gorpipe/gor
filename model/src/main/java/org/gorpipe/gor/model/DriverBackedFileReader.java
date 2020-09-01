@@ -166,12 +166,11 @@ public class DriverBackedFileReader extends FileReader {
         if (source.getSourceType() == FileSourceType.FILE) {
             File f = new File(getResolvedUrl(source));
             if (f.isDirectory()) {
-                Path path = f.toPath();
                 Path root = commonRoot != null ? Paths.get(commonRoot) : null;
+                Path path = commonRoot != null ? Paths.get(root.toString(), file) : f.toPath();
                 return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
             }
         }
-
         return readAndClose(source);
     }
 
