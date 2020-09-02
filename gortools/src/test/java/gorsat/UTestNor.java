@@ -56,17 +56,6 @@ public class UTestNor {
 
     private ProjectContext projectContext;
 
-    private static String NOR_RESULTS_USER_DATA =
-            "ChromNOR\tPosNOR\tFilename\tFilesize\tIsDir\tFiletype\tFilepath\tFiledepth\n" +
-                    "chrN\t0\tuser_data\t96\ttrue\t\tuser_data\t0\n" +
-                    "chrN\t0\ttest.gor\t96\tfalse\tgor\tuser_data/test.gor\t1\n";
-
-    private static String NOR_RESULTS_SHARED =
-            "ChromNOR\tPosNOR\tFilename\tFilesize\tIsDir\tFiletype\tFilepath\tFiledepth\n" +
-                    "chrN\t0\tshared\t0\ttrue\t\tshared\t0\n" +
-                    "chrN\t0\ttest.gor\t96\tfalse\tgor\tshared/test.gor\t1\n";
-
-
     @Before
     public void setUp() throws IOException {
         ArrayList<String> locations = new ArrayList<>();
@@ -202,12 +191,13 @@ public class UTestNor {
 
     @Test
     public void testNorWithGorRootSymbolic() {
-        String[] args1 = new String[]{"nor -r shared | top 10", "-gorroot", projectContext.getRealProjectRoot()};
-        String[] args2 = new String[]{"nor -r user_data | top 10", "-gorroot", projectContext.getRealProjectRoot()};
+        String gorRoot = projectContext.getRealProjectRoot();
+        String[] args1 = new String[]{"nor -r shared | top 10", "-gorroot", gorRoot};
+        String[] args2 = new String[]{"nor -r user_data | top 10", "-gorroot", gorRoot};
         String results1 = TestUtils.runGorPipe(args1);
         String results2 = TestUtils.runGorPipe(args2);
-        Assert.assertEquals(NOR_RESULTS_SHARED, results1);
-        Assert.assertEquals(NOR_RESULTS_USER_DATA, results2);
+        Assert.assertFalse(results1.contains(gorRoot));
+        Assert.assertFalse(results2.contains(gorRoot));
     }
 
     private int getDepthRangeFromIterator(RowSource iterator) {
@@ -215,7 +205,7 @@ public class UTestNor {
         int maxDepth = Integer.MIN_VALUE;
         while (iterator.hasNext()) {
             Row row = iterator.next();
-            int depth = row.colAsInt(7);
+            int depth = row.colAsInt(8);
 
             if (depth < minDepth)
                 minDepth = depth;
