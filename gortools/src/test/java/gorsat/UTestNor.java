@@ -205,7 +205,7 @@ public class UTestNor {
         int maxDepth = Integer.MIN_VALUE;
         while (iterator.hasNext()) {
             Row row = iterator.next();
-            int depth = row.colAsInt(7);
+            int depth = row.colAsInt(8);
 
             if (depth < minDepth)
                 minDepth = depth;
