@@ -40,7 +40,7 @@ public class DeleteBucketCommand extends ManagerOptions implements Runnable{
             arity = "0..*",
             paramLabel = "BUCKET",
             description = "Buckets to delete, absolute path or relative to the table dir.  Values are specified as comma separated list.")
-    private final List<String> argsBuckets = new ArrayList<>();
+    private List<String> argsBuckets = new ArrayList<>();
 
     @Override
     public void run() {

@@ -43,7 +43,7 @@ public class SelectCommand extends FilterOptions implements Runnable{
             arity="0..*",
             paramLabel = "FILE",
             description = "List of files to delete, given as absolute path or relative to the table dir.  Values are specified as comma separated list.  Alternative to using -f.")
-    private final List<String> inputFiles = new ArrayList<>();
+    private List<String> inputFiles = new ArrayList<>();
 
     @Override
     public void run() {

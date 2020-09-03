@@ -67,7 +67,7 @@ public class MultiInsertCommand extends CommandBucketizeOptions implements Runna
 
     @CommandLine.Option(names = {"-s", "--source"},
             description = "Column used for tag filtering. Defaults to 'PN'")
-    private final String source = "PN";
+    private String source = "PN";
 
     @Override
     public void run() {

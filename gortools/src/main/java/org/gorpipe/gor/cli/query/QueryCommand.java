@@ -60,19 +60,19 @@ public class QueryCommand extends HelpOptions implements Runnable{
     private File aliasFile;
 
     @CommandLine.Option(names={"-d","--cachedir"}, description = "Path to cache directory for the current gor query.")
-    private final Path cacheDir = Paths.get(System.getProperty("java.io.tmpdir"));
+    private Path cacheDir = Paths.get(System.getProperty("java.io.tmpdir"));
 
     @CommandLine.Option(defaultValue = "", names={"-p","--projectroot"}, description = "Sets the project root for the current gor query.")
     private Path projectRoot;
 
     @CommandLine.Option(names={"-r","--requestid"}, description = "Sets a request id for the current gor query, used to identify logs and errors.")
-    private final String requestId = UUID.randomUUID().toString();
+    private String requestId = UUID.randomUUID().toString();
 
     @CommandLine.Option(names={"-l","--loglevel"}, defaultValue = "warn", description = "Sets the log level to use for the current gor query. Available levels are none, debug, info, warn or error")
     private String logLevel;
 
     @CommandLine.Option(defaultValue = "0", names={"-w","--workers"}, description = "Number of workers to execute the current gor query.")
-    private final int workers = 0;
+    private int workers = 0;
 
     @CommandLine.Parameters(index = "0", arity = "1", paramLabel = "InputQuery", description = "Queries to execute. Queries can be direct gor query, files containing gor script or gor report template.")
     private String query;
