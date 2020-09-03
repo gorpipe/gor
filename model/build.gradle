@@ -64,8 +64,8 @@ project(':model') {
         compile 'org.apache.parquet:parquet-column:1.11.0'
         compile 'org.apache.parquet:parquet-hadoop:1.11.0'
 
-        compile 'org.apache.hadoop:hadoop-common:3.2.1'
-        compile 'org.apache.hadoop:hadoop-mapreduce-client-core:3.2.1'
+        compile 'org.apache.hadoop:hadoop-common:3.3.0'
+        compile 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
 
         runtime "org.xerial:sqlite-jdbc:3.28.+"
         // Exclude slf4j bindings we dont want.
