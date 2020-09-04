@@ -338,6 +338,15 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
     }
 
     /**
+     * Pushes down external command.
+     * @param cmd
+     * @return if the selection step is successfully pushed down
+     */
+    public boolean pushdownCmd(String cmd) {
+        return false;
+    }
+
+    /**
      * Pushes down arbitrary gor command (many-to-many, flatMap) to the source iterator.
      * The source iterator pushdownGor implementation
      * must parse the gor command and translate it to corresponding

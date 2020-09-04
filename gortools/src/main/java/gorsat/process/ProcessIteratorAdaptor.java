@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -47,7 +48,7 @@ import java.util.regex.Pattern;
 /**
  * Created by sigmar on 03/11/15.
  */
-public class ProcessIteratorAdaptor extends RowSource {
+public class ProcessIteratorAdaptor extends RowSource implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(ProcessIteratorAdaptor.class);
     private static final Pattern pattern = Pattern.compile("'(?:[^']|'')+'|[^ ]+");
 
@@ -69,7 +70,7 @@ public class ProcessIteratorAdaptor extends RowSource {
     private String processName;
     private final StringBuilder errorStr = new StringBuilder();
     private final boolean allowerror;
-    private final RowSource rowSource;
+    private final Iterator<Row> rowSource;
     private final OutThread outThread;
 
     static class ProcessAdaptor extends Analysis {
@@ -132,13 +133,13 @@ public class ProcessIteratorAdaptor extends RowSource {
     }
 
     private class OutThread extends Thread {
-        private final RowSource rs;
+        private final Iterator<Row> rs;
         private final Analysis processPipeStep;
         private final OutputStream os;
         private Throwable th = null;
         private final String header;
 
-        OutThread(RowSource rs, Analysis processPipeStep, OutputStream os, String header) {
+        OutThread(Iterator<Row> rs, Analysis processPipeStep, OutputStream os, String header) {
             this.rs = rs;
             this.processPipeStep = processPipeStep;
             this.os = os;
@@ -160,7 +161,9 @@ public class ProcessIteratorAdaptor extends RowSource {
                     processPipeStep.process(row);
                 }
             } finally {
-                rs.close();
+                if(rs instanceof RowSource) {
+                    ((RowSource)rs).close();
+                }
             }
         }
 
@@ -187,7 +190,7 @@ public class ProcessIteratorAdaptor extends RowSource {
         }
     }
 
-    public ProcessIteratorAdaptor(GorContext context, String cmd, String alias, RowSource rs, Analysis an, String header, boolean skipheader, Optional<String> skip, boolean allowerror, boolean nor) throws IOException {
+    public ProcessIteratorAdaptor(GorContext context, String cmd, String alias, Iterator<Row> rs, Analysis an, String header, boolean skipheader, Optional<String> skip, boolean allowerror, boolean nor) throws IOException {
         this.skipheader = skipheader;
         this.nor = nor;
         this.allowerror = allowerror;
@@ -343,7 +346,9 @@ public class ProcessIteratorAdaptor extends RowSource {
     @Override
     public void setPosition(String seekChr, int seekPos) {
         mustReCheck = true;
-        rowSource.setPosition(seekChr, seekPos);
+        if(rowSource instanceof RowSource) {
+            ((RowSource)rowSource).setPosition(seekChr, seekPos);
+        }
     }
 
     @Override

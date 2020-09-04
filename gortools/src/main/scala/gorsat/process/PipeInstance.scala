@@ -272,6 +272,8 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
             pushdown = pushdownTop(fullCommand.substring(4).trim)
           } else if (command.equals("WRITE")) {
             pushdown = pushdownWrite(fullCommand.substring(6).trim)
+          } else if (command.equals("CMD")) {
+            pushdown = pushdownCmd(fullCommand.substring(4).trim)
           } else {
             pushdown = theInputSource.pushdownGor(fullCommand)
           }
@@ -452,6 +454,10 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
   def pushdownWrite(filename: String): Boolean = {
     theInputSource.pushdownWrite(filename)
+  }
+
+  def pushdownCmd(filename: String): Boolean = {
+    theInputSource.pushdownCmd(filename)
   }
 
   def fixGorString(gorString: String): String = {
