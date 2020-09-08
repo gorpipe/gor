@@ -23,10 +23,11 @@
 package gorsat.parser
 
 import java.text.SimpleDateFormat
+import java.time.Duration
 import java.util.Date
 
 import gorsat.parser.FunctionSignature._
-import gorsat.parser.FunctionTypes.{lFun, sFun}
+import gorsat.parser.FunctionTypes.{iFun, lFun, sFun}
 
 object TimeAndDateFunctions {
   def register(functions: FunctionRegistry): Unit = {
@@ -35,6 +36,26 @@ object TimeAndDateFunctions {
     functions.register("EDATE", getSignatureLong2String(edate), edate _)
     functions.register("EDATE", getSignatureLongString2String(edateWithFormat), edateWithFormat _)
     functions.register("DATE", getSignatureString2String(date), date _)
+    functions.register("DAYDIFF", getSignatureStringStringString2Long(daydiff), daydiff _)
+    functions.register("YEARDIFF", getSignatureStringStringString2Long(yeardiff), yeardiff _)
+  }
+
+  def yeardiff(format: sFun, date1: sFun, date2: sFun): lFun = {
+    cvp => {
+      val dateFormat = new SimpleDateFormat(format(cvp))
+      val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
+      val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
+      Duration.between(parsedDate1, parsedDate2).toDays / 365
+    }
+  }
+
+  def daydiff(format: sFun, date1: sFun, date2: sFun): lFun = {
+    cvp => {
+      val dateFormat = new SimpleDateFormat(format(cvp))
+      val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
+      val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
+      Duration.between(parsedDate1, parsedDate2).toDays
+    }
   }
 
   def date(ex: sFun): sFun = {

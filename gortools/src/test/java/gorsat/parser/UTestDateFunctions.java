@@ -81,4 +81,40 @@ public class UTestDateFunctions {
         long epoch = Long.parseLong(epochAsString);
         Assert.assertEquals(1497571200000L, epoch);
     }
+
+    @Test
+    public void testDaydiffSameDate() {
+        String result = TestUtils.getCalculated("daydiff('dd/MM/yyyy', '16/06/2017', '16/06/2017')");
+        Assert.assertEquals("0", result);
+    }
+
+    @Test
+    public void testDaydiffFirstDateEarlier() {
+        String result = TestUtils.getCalculated("daydiff('dd/MM/yyyy', '16/06/2017', '18/06/2017')");
+        Assert.assertEquals("2", result);
+    }
+
+    @Test
+    public void testDaydiffFirstDateLater() {
+        String result = TestUtils.getCalculated("daydiff('dd/MM/yyyy', '23/06/2017', '18/06/2017')");
+        Assert.assertEquals("-5", result);
+    }
+
+    @Test
+    public void testYeardiffSameDate() {
+        String result = TestUtils.getCalculated("yeardiff('dd/MM/yyyy', '16/06/2017', '16/06/2017')");
+        Assert.assertEquals("0", result);
+    }
+
+    @Test
+    public void testYeardiffFirstDateEarlier() {
+        String result = TestUtils.getCalculated("yeardiff('dd/MM/yyyy', '16/06/2015', '18/06/2017')");
+        Assert.assertEquals("2", result);
+    }
+
+    @Test
+    public void testYeardiffFirstDateLater() {
+        String result = TestUtils.getCalculated("yeardiff('dd/MM/yyyy', '23/06/2022', '18/06/2017')");
+        Assert.assertEquals("-5", result);
+    }
 }
