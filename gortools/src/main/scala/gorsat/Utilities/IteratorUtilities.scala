@@ -185,7 +185,7 @@ object IteratorUtilities {
 
   def validHeader(header: String): String = {
     val cols = header.split("\t", -1)
-    val badSymbols: List[Char] = List('.','\\', '/', '*', '+', '-','\'','$',';',',')
+    val badSymbols: List[Char] = List('\\', '/', '*', '+', '-','\'','$',';',',')
     val usedCols: mutable.HashSet[String] = mutable.HashSet()
 
     //replacing escape characters
