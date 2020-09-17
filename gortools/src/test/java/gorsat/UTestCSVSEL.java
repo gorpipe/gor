@@ -71,6 +71,27 @@ public class UTestCSVSEL {
     }
 
     @Test
+    public void basicNor() {
+        String[] contents = {
+                "#Ref\tAlt\tBucket\tValues",
+                "G\tA\tbucket1\ta,b,c,d",
+                "G\tA\tbucket2\te,f,g,h"
+        };
+
+        String expected = "ChromNOR\tPosNOR\tvalues\n" +
+                "chrN\t0\tc,f\n";
+
+        final String queryFormat = "nor %s | csvsel -s ',' %s %s";
+
+        final File tagBucketFile = TestUtils.createTsvFile("UTestCsvSel", BASIC_TAGBUCKET);
+        final File tagsFile = TestUtils.createTsvFile("UTestCsvSel", BASIC_TAGS);
+        final File dataFile = TestUtils.createTsvFile("UTestCsvSel", contents);
+        final String query = String.format(queryFormat, dataFile.getAbsolutePath(), tagBucketFile.getAbsolutePath(), tagsFile.getAbsolutePath());
+        final String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
     public void spaceSeparator() {
         String[] contents = {
                 "Chrom\tPos\tRef\tAlt\tBucket\tValues",

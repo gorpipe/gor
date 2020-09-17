@@ -35,7 +35,7 @@ import scala.collection.mutable
 
 class CsvSel extends CommandInfo("CSVSEL",
   CommandArguments("-dose -vcf", "-gc -vs -s -tag -u -hide -threshold", 2),
-  CommandOptions(gorCommand = true, cancelCommand = true))
+  CommandOptions(gorCommand = true, norCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
     if(!(hasOption(args, "-s") || hasOption(args, "-vs"))) {
