@@ -150,7 +150,7 @@ public class Dialog extends AbstractListBean {
     private String baseChartExec;
     private String baseChartScript;
     private String baseChartColumns;
-    private boolean baseChartDF;
+    private ChartDataType baseChartDF;
     private String interpolatedQuery;
     private String interpolatedChart;
     private String[] chartColumns;
@@ -162,7 +162,7 @@ public class Dialog extends AbstractListBean {
     private boolean deferUpdates;
 
     public Dialog(Map<String, ? extends Object> attributes, FileReader fileResolver, QueryEvaluator queryEval, DialogDescription dialogDescription,
-                  DialogType type, String query, String chartScript, String chartExec, String chartColumns, boolean chartDF,
+                  DialogType type, String query, String chartScript, String chartExec, String chartColumns, ChartDataType chartDF,
                   List<Argument> arguments, String errorMsgTemplate, String longRunningQueryTemplate, String version, String packageVersion, String gitSHA)
             throws TemplateException {
         this.fileResolver = fileResolver;
@@ -328,12 +328,12 @@ public class Dialog extends AbstractListBean {
         firePropertyChange(PROPERTY_BASE_CHARTSCRIPT, oldChartScript, chartScript);
     }
 
-    public boolean getBaseChartDF() {
+    public ChartDataType getBaseChartDF() {
         return baseChartDF;
     }
 
-    public void setBaseChartDF(boolean chartDF) {
-        boolean oldChartDF = this.baseChartDF;
+    public void setBaseChartDF(ChartDataType chartDF) {
+        ChartDataType oldChartDF = this.baseChartDF;
         this.baseChartDF = chartDF;
         firePropertyChange(PROPERTY_BASE_CHARTDF, oldChartDF, chartDF);
     }

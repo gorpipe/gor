@@ -161,7 +161,7 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
         String chartScript = attributes.containsKey("chartScript") ? attributes.get("chartScript").toString() : null;
         String chartExec = attributes.containsKey("chart") ? attributes.get("chart").toString() : null;
         String chartColumns = attributes.containsKey("chartColumns") ? attributes.get("chartColumns").toString() : "";
-        boolean chartDF = attributes.containsKey("chartDF") && Boolean.parseBoolean(attributes.get("chartDF").toString());
+        ChartDataType chartDF = attributes.containsKey("chartDF") ? ChartDataType.valueOf(attributes.get("chartDF").toString()) : ChartDataType.PLAINTEXT;
 
         final List<ReportCommand> reportCommands = getReportCommands(attributes);
         return new PerspectiveDialog(attributes, fileResolver, queryEval, dialogDescription, displayParams, type, query, chartScript,

@@ -25,10 +25,8 @@ import freemarker.template.TemplateException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.gor.model.ReportCommand;
-import org.gorpipe.querydialogs.Argument;
+import org.gorpipe.querydialogs.*;
 import org.gorpipe.querydialogs.Dialog;
-import org.gorpipe.querydialogs.DialogDescription;
-import org.gorpipe.querydialogs.DialogType;
 import org.gorpipe.querydialogs.argument.StringArgument;
 
 import java.awt.*;
@@ -62,7 +60,7 @@ public class PerspectiveDialog extends Dialog {
 
     public PerspectiveDialog(Map<String, ? extends Object> attributes, FileReader fileResolver, QueryEvaluator queryEval, DialogDescription dialogDescription,
                              PerspectiveDialogDisplayParams displayParams, DialogType type, String query, String chartScript, String chartExec,
-                             String chartColumns, boolean chartDF, List<Argument> arguments, String htmlTemplate, List<? extends Object> initialColumns,
+                             String chartColumns, ChartDataType chartDF, List<Argument> arguments, String htmlTemplate, List<? extends Object> initialColumns,
                              List<Perspective> perspectives, List<ColumnGroup> columnGroups, List<ReportCommand> reportCommands,
                              String errorMsgTemplate, String writePath, String longRunningQueryTemplate,
                              String version, String packageVersion, String gitSHA) throws TemplateException {
