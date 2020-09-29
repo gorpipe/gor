@@ -142,6 +142,12 @@ public class BucketManager<T extends BucketableTableEntry> {
      * @return buckets created.
      */
     public int bucketize(BucketPackLevel packLevel, int maxBucketCount, List<Path> bucketDirs, boolean forceClean) {
+        if (!table.isBucketize()) {
+            log.info("Bucketize - Bucketize called on {} but as the table is marked not bucketize so nothing was done.",
+                    table.getPath());
+            return 0;
+        }
+
         if (bucketDirs != null && !bucketDirs.isEmpty()) {
             setBucketDirs(bucketDirs);
         }

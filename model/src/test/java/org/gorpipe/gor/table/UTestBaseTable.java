@@ -605,6 +605,45 @@ public class UTestBaseTable {
         String[] result = TestUtils.runGorPipeLines("gor -f ABC1234 " + gordFile.toString());
         Assert.assertEquals("Optimizer failed if line readded - wrong number of lines", 2, result.length);  // Header + 1 line.
     }
+
+    @Test
+    public void testInferShouldBucketizeFromFile() {
+        Assert.assertTrue(BaseTable.inferShouldBucketizeFromFile("x.gor"));
+        Assert.assertTrue(BaseTable.inferShouldBucketizeFromFile("x.gorz"));
+        Assert.assertTrue(BaseTable.inferShouldBucketizeFromFile("/a/c/b/x.gor"));
+
+        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.bam"));
+        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.cram"));
+        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("/a/b/c.bam"));
+
+        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y"));
+        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile(""));
+        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.vcf"));
+    }
+
+    @Test
+    public void testInferBucketizeFromInsertTrue() throws IOException {
+        gordFile = workDirPath.resolve("dict.gord");
+
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
+
+        afile = Files.write(workDirPath.resolve("a.gor"), "chromo\tpos\tdata\n1\t1000\tx\n".getBytes());
+        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").build());
+
+        Assert.assertTrue(dict.isBucketize());
+    }
+
+    @Test
+    public void testInferBucketizeFromInsertFalse() throws IOException {
+        gordFile = workDirPath.resolve("dict.gord");
+
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
+
+        afile = Files.write(workDirPath.resolve("a.tsv"), "chromo\tpos\tdata\n1\t1000\tx\n".getBytes());
+        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").build());
+
+        Assert.assertFalse(dict.isBucketize());
+    }
     
     private void setupSimpleDict() throws Exception {
         gordFile = workDirPath.resolve("dict.gord");

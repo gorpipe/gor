@@ -26,6 +26,16 @@ import org.gorpipe.gor.table.BaseTable;
 
 import java.time.Duration;
 
+/**
+ * Class to handle transactions on tables.
+ *
+ * The transaction gets a lock on the table, reloads it and if this is write transactions it will save the table on
+ * a commit.
+ *
+ * NOTE: When a transaction is created it reloads the table from disk, removing any changes to the table rows and
+ *       meta data.  So when using transactions on existing tables, first create the transaction and then change
+ *       the table.  For new tables changes made to the table before the transaction are saved.
+ */
 public class TableTransaction implements AutoCloseable {
     private final TableLock lock;
     private boolean shouldSave = false;

@@ -46,14 +46,14 @@ public class GorDictionarySetup {
     public String[] dataFiles;
     public Path[] bucketFiles;
 
-    public static Map<String, List<String>> createDataFilesMap(String name, Path path, int fileCount, int[] chrs, int rowsPerChr, String sourceColumn,
+    public static Map<String, List<String>>  createDataFilesMap(String name, Path path, int fileCount, int[] chrs, int rowsPerChr, String sourceColumn,
                                                                boolean oneSourcePerFile, String[] sources) throws IOException {
-        return createDataFilesMap(name, path, fileCount, chrs, rowsPerChr, sourceColumn, oneSourcePerFile, sources, false, false, 0);
+        return createDataFilesMap(name, path, fileCount, chrs, rowsPerChr, sourceColumn, oneSourcePerFile, sources, false, false, 0, "gor");
     }
 
     public static Map<String, List<String>> createDataFilesMap(String name, Path path, int fileCount, int[] chrs, int rowsPerChr, String sourceColumn,
                                                                boolean oneSourcePerFile, String[] sources, boolean addSource, boolean writeFileToJoinWith) throws IOException {
-        return createDataFilesMap(name, path, fileCount, chrs, rowsPerChr, sourceColumn, oneSourcePerFile, sources, addSource, writeFileToJoinWith, 0);
+        return createDataFilesMap(name, path, fileCount, chrs, rowsPerChr, sourceColumn, oneSourcePerFile, sources, addSource, writeFileToJoinWith, 0, "gor");
     }
 
     /**
@@ -70,11 +70,13 @@ public class GorDictionarySetup {
      * @param addSource        add source column to data row.
      * @param writeFileToJoinWith  ??
      * @param sizeOfLargeData if larger than 0, then a new field (LargeData) is added to file (after RandomData) where each field contains random data of the given size)
+     * @param type            file einding for the data.
      * @return map with files per alias.
      * @throws IOException
      */
     public static Map<String, List<String>> createDataFilesMap(String name, Path path, int fileCount, int[] chrs, int rowsPerChr, String sourceColumn,
-                                                               boolean oneSourcePerFile, String[] sources, boolean addSource, boolean writeFileToJoinWith, int sizeOfLargeData) throws IOException {
+                                                               boolean oneSourcePerFile, String[] sources, boolean addSource,
+                                                               boolean writeFileToJoinWith, int sizeOfLargeData, String type) throws IOException {
         Map<String, List<String>> data = new HashMap<>();
         Random random = new Random(314);   // Want use the same sequence of random data.
         int sourceIndex = 0;
@@ -85,7 +87,7 @@ public class GorDictionarySetup {
             sourceIndex++;
 
             String fileNamePrefix = String.format("%s_datafile_%d_%s", name, i + 1, oneSourcePerFile ? source : "");
-            Path dataFilePath = path != null ? Files.createFile(path.resolve(fileNamePrefix + ".gor")) : Files.createTempFile(fileNamePrefix, ".gor");
+            Path dataFilePath = path != null ? Files.createFile(path.resolve(fileNamePrefix + "." + type)) : Files.createTempFile(fileNamePrefix, "." + type);
             dataFilePath.toFile().deleteOnExit();
 
             // If we multiple sources per file, we can't map single source to a list files, so we map all to "All".
@@ -123,7 +125,7 @@ public class GorDictionarySetup {
                 }
             }
             if (writeFileToJoinWith) {
-                Path joinFilePath = path != null ? Files.createTempFile(path, "_joinFile", ".gor") : Files.createTempFile("_joinFile", ".gor");
+                Path joinFilePath = path != null ? Files.createTempFile(path, "_joinFile", "." + type) : Files.createTempFile("_joinFile", "." + type);
                 try (PrintWriter joinFileWriter = new PrintWriter(joinFilePath.toFile())) {
                     lines.sort((line1, line2) -> {
                         int cmp = Integer.toString(line1[0]).compareTo(Integer.toString(line2[0]));

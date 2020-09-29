@@ -63,6 +63,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
     public static final boolean DEFAULT_USE_HISTORY = true;
+    private static final boolean DEFAULT_BUCKETIZE = true;
 
     private final Path path;            // Path to the table (currently absolute instead of real for compatibility with older code).
     private final Path folderPath;      // Path to the table folder.  The table folder is hidden folder that sits next to the
@@ -80,6 +81,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private boolean useHistory = DEFAULT_USE_HISTORY;
     private boolean hasUniqueTags = false;    //True if we don't want to allow double entries of the same tag
     private boolean validateFiles = DEFAULT_VALIDATE_FILES;
+    private Boolean bucketize = true;
 
     protected ITableEntries<T> tableEntries;
 
@@ -238,6 +240,14 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.validateFiles = validateFiles;
     }
 
+    public boolean isBucketize() {
+        return bucketize != null ? bucketize : DEFAULT_BUCKETIZE;
+    }
+
+    public void setBucketize(boolean bucketize) {
+        this.bucketize = bucketize;
+    }
+
     public boolean isHasUniqueTags() {
         return this.hasUniqueTags;
     }
@@ -325,6 +335,8 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             }
             // Validate the new file.
             if (validateFiles) {
+                // Validate file existence.
+                log.trace("Start validating file");
                 try {
                     if (isLocal(line.getContentReal())) {
                         if (!Files.exists(Paths.get(fixFileSchema(line.getContentReal())))) {
@@ -342,7 +354,15 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
                     throw new GorDataException(String.format("Entry %s can not be verified!", line.getContentReal()), ex);
                 }
 
+                // Validate file columns.
                 updateValidateHeader(line);
+
+                // Update bucketize
+                if (bucketize == null) {
+                    bucketize = inferShouldBucketizeFromFile(line.getContentReal());
+                }
+
+                log.trace("Done validating file");
             }
 
             this.tableEntries.insert(line, hasUniqueTags);
@@ -541,6 +561,8 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
         hasUniqueTags = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY,  Boolean.toString(hasUniqueTags)));
+
+        bucketize = getBooleanConfigTableProperty(TableHeader.HEADER_BUCKETIZE_KEY, null);
     }
 
     /**
@@ -569,6 +591,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.header.setProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(this.useHistory));
         this.header.setProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(this.validateFiles));
         this.header.setProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY, Boolean.toString(this.hasUniqueTags));
+
+        if (bucketize != null) {
+            this.header.setProperty(TableHeader.HEADER_BUCKETIZE_KEY, Boolean.toString(this.bucketize));
+        }
 
         doSave();
         if (useHistory) {
@@ -733,6 +759,25 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         } else {
             return System.getProperty(key, def);
         }
+    }
+
+    public Boolean getBooleanConfigTableProperty(String key, Boolean def) {
+        String configValue = getConfigTableProperty(key, null);
+        return configValue != null ? Boolean.valueOf(configValue) : def;
+    }
+
+    public static boolean inferShouldBucketizeFromFile(String fileName) {
+        String type = FilenameUtils.getExtension(fileName);
+
+        if ("gor".equalsIgnoreCase(type) || "gorz".equalsIgnoreCase(type)) {
+            return true;
+        }
+        
+        if ("bam".equalsIgnoreCase(type) || "cram".equalsIgnoreCase(type)) {
+            return false;
+        }
+
+        return false;
     }
 
     protected abstract static class Builder<B extends Builder<B>> {

@@ -530,7 +530,27 @@ public class UTestBucketManager {
         log.debug("Test {} done", name);
     }
 
-    // Utils
+    @Test
+    public void testBucketizeSetFalse() throws Exception {
+        String name = "testBucketizeNotSet";
+
+        Path dataDir = workDirPath.resolve("data");
+        Files.createDirectory(dataDir);
+        String[] sources = IntStream.range(1, 150).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
+        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
+                name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
+
+        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        table.setBucketize(false);
+
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(10);
+        buc.setBucketSize(50);
+
+        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, -1);
+
+        Assert.assertEquals("Wrong number of buckets created", 0, bucketsCreated);
+    }
 
     private BaseTable<DictionaryEntry> createTable(Path path) {
         return new DictionaryTable.Builder<>(path).useHistory(true)
