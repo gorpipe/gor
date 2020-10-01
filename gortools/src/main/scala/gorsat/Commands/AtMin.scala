@@ -25,7 +25,7 @@ package gorsat.Commands
 import org.gorpipe.gor.session.GorContext
 
 class AtMin extends CommandInfo("ATMIN",
-  CommandArguments("-last", "-gc", 1, 2),
+  CommandArguments("-last -ordered", "-gc", 1, 2),
   CommandOptions( gorCommand = true, norCommand = true, memoryMonitorCommand = true, verifyCommand = true))
 {
 

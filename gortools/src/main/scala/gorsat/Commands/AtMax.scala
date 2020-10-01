@@ -25,7 +25,7 @@ package gorsat.Commands
 import org.gorpipe.gor.session.GorContext
 
 class AtMax extends CommandInfo("ATMAX",
-  CommandArguments("-last", "-gc", 1, 2),
+  CommandArguments("-last -ordered", "-gc", 1, 2),
   CommandOptions(gorCommand = true, norCommand = true, memoryMonitorCommand = true, verifyCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs:Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {

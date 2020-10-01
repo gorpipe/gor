@@ -31,7 +31,7 @@ import org.gorpipe.gor.session.GorContext
 import scala.collection.mutable.ListBuffer
 
 class Group extends CommandInfo("GROUP",
-  CommandArguments("-count -cdist -min -med -max -dis -set -lis -avg -std -sum -h", "-gc -sc -ac -ic -fc -len -steps " +
+  CommandArguments("-count -cdist -min -med -max -dis -set -lis -avg -std -sum -h -ordered", "-gc -sc -ac -ic -fc -len -steps " +
     "-s", 0, 1),
   CommandOptions(gorCommand = true, norCommand = true, memoryMonitorCommand = true, verifyCommand = true,
     cancelCommand = true, ignoreSplitCommand = true)) {
@@ -74,6 +74,8 @@ class Group extends CommandInfo("GROUP",
     if (hasOption(args, "-avg")) useAvg = true
     if (hasOption(args, "-std")) useStd = true
     if (hasOption(args, "-sum")) useSum = true
+
+    val assumeOrdered = hasOption(args, "-ordered")
 
     if (hasOption(args, "-len")) setLen = intValueOfOptionWithRangeCheck(args, "-len", 10, 1000000)
 
@@ -196,8 +198,12 @@ class Group extends CommandInfo("GROUP",
         pipeStep = GroupAnalysis.SlideAggregate(slideSteps, binSize, useCount, useCdist, useMax, useMin, useMed,
           useDis, useSet, useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
       } else {
-        pipeStep = GroupAnalysis.Aggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
-          useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+        pipeStep = if (assumeOrdered)
+          GroupAnalysis.OrderedAggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
+            useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+          else
+          GroupAnalysis.Aggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
+            useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
       }
     }
 

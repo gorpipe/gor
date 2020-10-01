@@ -85,6 +85,25 @@ object GrannoAnalysis {
     }
   }
 
+  case class OrderedAggregate(binSize: Int, useCount: Boolean, useCdist: Boolean, useMax: Boolean, useMin: Boolean,
+                       useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean, useAvg: Boolean,
+                       useStd: Boolean, useSum: Boolean,
+                       acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
+                       sepVal: String, outgoingHeader: RowHeader) extends
+    BinAnalysis(GroupingColumnRowHandler(binSize, grCols.toArray), BinAggregator(
+      AggregateFactory(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg, useStd,
+        useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2, 1))
+  {
+    override def isTypeInformationMaintained: Boolean = true
+
+    override def setRowHeader(header: RowHeader): Unit = {
+      rowHeader = header
+      if (pipeTo != null) {
+        pipeTo.setRowHeader(outgoingHeader.propagateTypes(rowHeader))
+      }
+    }
+  }
+
   case class ChromAggregate(session: GorSession, useCount: Boolean, useCdist: Boolean, useMax: Boolean,
                             useMin: Boolean,
                             useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean, useAvg: Boolean,

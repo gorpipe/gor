@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GrannoAnalysis.{Aggregate, ChromAggregate, GenomeAggregate}
+import gorsat.Analysis.GrannoAnalysis.{Aggregate, ChromAggregate, GenomeAggregate, OrderedAggregate}
 import gorsat.Analysis.RangeAggregate
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Utilities.IteratorUtilities.validHeader
@@ -33,7 +33,7 @@ import scala.collection.mutable.ListBuffer
 
 
 class Granno extends CommandInfo("GRANNO",
-  CommandArguments("-range -count -cdist -min -med -max -dis -set -lis -avg -std -sum -h", "-gc -ac -sc -ic -fc -len " +
+  CommandArguments("-range -count -cdist -min -med -max -dis -set -lis -avg -std -sum -h -ordered", "-gc -ac -sc -ic -fc -len " +
     "-s", 0, 1),
   CommandOptions(gorCommand = true, norCommand = true, memoryMonitorCommand = true, verifyCommand = true,
     cancelCommand = true, ignoreSplitCommand = true)) {
@@ -49,6 +49,8 @@ class Granno extends CommandInfo("GRANNO",
     if (!executeNor && iargs.length < 1) {
       throw new GorParsingException("Too few input arguments supplied for granno.")
     }
+
+    val assumeOrdered = hasOption(args, "-ordered")
 
     var useCount = false
     var useCdist = false
@@ -168,8 +170,12 @@ class Granno extends CommandInfo("GRANNO",
         pipeStep = GenomeAggregate(useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
           useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
       } else {
-        pipeStep = Aggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
-          useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+        pipeStep = if (assumeOrdered)
+          OrderedAggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
+            useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+        else
+          Aggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
+            useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
       }
     }
 

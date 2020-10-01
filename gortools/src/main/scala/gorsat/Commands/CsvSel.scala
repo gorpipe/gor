@@ -54,7 +54,7 @@ class CsvSel extends CommandInfo("CSVSEL",
       sepVal = ""
     }
 
-    val uv = stringValueOfOptionWithDefault(args, "-u","")
+    val uv = stringValueOfOptionWithDefault(args, "-u","3")
 
     val outputRows = hasOption(args, "-tag")
 
