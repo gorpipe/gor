@@ -59,7 +59,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
 
     private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_FILES_VALIDATE", "true"));
-    private static final String DEFAULT_SOURCE_COLUMN = "PN";
+    private static final String DEFAULT_SOURCE_COLUMN = "Source";
     private static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
     public static final boolean DEFAULT_USE_HISTORY = true;
@@ -77,7 +77,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     protected String securityContext;
 
     protected final TableHeader header;                // Header info.
-    private String tagColumn = DEFAULT_SOURCE_COLUMN;     // Name of the files tag column (source column).
+    private String sourceColumn = DEFAULT_SOURCE_COLUMN;     // Name of the files tag column (source column).
     private boolean useHistory = DEFAULT_USE_HISTORY;
     private boolean hasUniqueTags = false;    //True if we don't want to allow double entries of the same tag
     private boolean validateFiles = DEFAULT_VALIDATE_FILES;
@@ -89,8 +89,8 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     protected BaseTable(Builder builder) {
         this(builder.path);
-        if (builder.tagColumn != null) {
-            setTagColumn(builder.tagColumn);
+        if (builder.sourceColumn != null) {
+            setSourceColumn(builder.sourceColumn);
         }
         if (builder.validateFiles != null) {
             setValidateFiles(builder.validateFiles);
@@ -168,12 +168,12 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         return this.header.getColumns();
     }
 
-    public String getTagColumn() {
-        return this.tagColumn;
+    public String getSourceColumn() {
+        return this.sourceColumn;
     }
 
-    public void setTagColumn(String tagColumn) {
-        this.tagColumn = tagColumn;
+    public void setSourceColumn(String sourceColumn) {
+        this.sourceColumn = sourceColumn;
     }
 
     public Path getRootPath() {
@@ -557,7 +557,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         // the reload will replace the set values.  If the table has never been saved we keep the set values (we
         // do this for backward compatibility with TableManager, as it is probably more correct to use the default
         // values if the table has never been saved).
-        tagColumn = getConfigTableProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY,  tagColumn);
+        sourceColumn = getConfigTableProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, sourceColumn);
         validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
         hasUniqueTags = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY,  Boolean.toString(hasUniqueTags)));
@@ -587,7 +587,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     public void save() {
         initialize();
 
-        this.header.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, this.tagColumn);
+        this.header.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, this.sourceColumn);
         this.header.setProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(this.useHistory));
         this.header.setProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(this.validateFiles));
         this.header.setProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY, Boolean.toString(this.hasUniqueTags));
@@ -783,7 +783,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     protected abstract static class Builder<B extends Builder<B>> {
         protected Path path;
         protected Boolean useHistory;
-        protected String tagColumn;
+        protected String sourceColumn;
         protected String securityContext;
         protected Boolean validateFiles;
         protected Boolean uniqueTags;
@@ -797,8 +797,8 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             return (B) this;
         }
 
-        public B tagColumn(String tagColumn) {
-            this.tagColumn = tagColumn;
+        public B sourceColumn(String sourceColumn) {
+            this.sourceColumn = sourceColumn;
             return self();
         }
 

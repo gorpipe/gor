@@ -209,14 +209,14 @@ public class UTestDictionaryTable {
         String tableName = "gortable_create_options";
         File gordFile = new File(tableWorkDir.toFile(), tableName + ".gord");
         String dataFileName = Paths.get("../tests/data/gor/genes.gor").toAbsolutePath().toString();
-        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).tagColumn("PNA").useHistory(true).embeddedHeader(true).build();
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).sourceColumn("PNA").useHistory(true).embeddedHeader(true).build();
 
         dict.insert(dataFileName);
         dict.save();
         
         Assert.assertTrue("BaseTable file was not created", gordFile.exists());
         Assert.assertTrue("History folder was not created", new File(dict.getFolderPath().toFile(), BaseTable.HISTORY_DIR_NAME).exists());
-        Assert.assertEquals("Source column not set correctly", "PNA", dict.getTagColumn());
+        Assert.assertEquals("Source column not set correctly", "PNA", dict.getSourceColumn());
 
         dataFileName = genesSmall.getCanonicalPath();
         dict.insert(dataFileName);
@@ -226,7 +226,7 @@ public class UTestDictionaryTable {
         // Test turn off history.
         String tableNameNoHist = "gortable_create_options_no_hist";
         File gordFileNoHist = new File(tableWorkDir.toFile(), tableNameNoHist + ".gord");
-        DictionaryTable dictNoHist = new DictionaryTable.Builder<>(gordFileNoHist.toPath()).tagColumn("PNA").useHistory(false).build();
+        DictionaryTable dictNoHist = new DictionaryTable.Builder<>(gordFileNoHist.toPath()).sourceColumn("PNA").useHistory(false).build();
 
         dictNoHist.insert(dataFileName);
         dictNoHist.save();

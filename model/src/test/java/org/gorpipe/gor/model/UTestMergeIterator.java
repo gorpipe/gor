@@ -63,7 +63,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("../tests/data/gor/dbsnp_test.gor");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options) ) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null) ) {
             String[] header = mi.getHeader().split("\t");
             assertEquals(5, header.length);
             assertEquals("Chrom", header[0]);
@@ -79,7 +79,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("-s Source ../tests/data/gor/dbsnp_test.gor");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             String[] header = mi.getHeader().split("\t");
             assertEquals(6, header.length);
             assertEquals("Chrom", header[0]);
@@ -96,7 +96,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("../tests/data/gor/dbsnp_test.gor");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             assertTrue(mi.hasNext());
         }
     }
@@ -106,7 +106,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("../tests/data/gor/dbsnp_test.gor");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             // todo next doesn't work without a hasNext call first
             mi.hasNext();
 
@@ -127,7 +127,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("1.mem 2.mem 3.mem 4.mem 5.mem");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             String[] header = mi.getHeader().split("\t");
             assertEquals(5, header.length);
             assertEquals("Chromo", header[0]);
@@ -143,7 +143,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("-s From 1.mem 2.mem 3.mem 4.mem 5.mem");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             String[] header = mi.getHeader().split("\t");
             assertEquals(6, header.length);
             assertEquals("Chromo", header[0]);
@@ -162,7 +162,7 @@ public class UTestMergeIterator {
         List<GenomicIterator> genomicIterators = options.getIterators();
 
         thrown.expect(GorDataException.class);
-        new MergeIterator(genomicIterators, options);
+        new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null);
     }
 
     @Test
@@ -170,7 +170,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("1.mem 2.mem 3.mem 4.mem 5.mem");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             assertTrue(mi.hasNext());
         }
     }
@@ -180,7 +180,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("1.mem 2.mem 3.mem 4.mem 5.mem");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             // todo next doesn't work without a hasNext call first
             mi.hasNext();
 
@@ -201,7 +201,7 @@ public class UTestMergeIterator {
     public void multipleFilesSeek() throws IOException {
         GorOptions options = GorOptions.createGorOptions("1.mem 2.mem 3.mem 4.mem 5.mem");
         List<GenomicIterator> genomicIterators = options.getIterators();
-        try(MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try(MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             mi.seek("chr1", 100);
 
             int counter = 0;
@@ -488,7 +488,7 @@ public class UTestMergeIterator {
 
     private void assertLineCount(int expected, GorOptions options) throws IOException {
         List<GenomicIterator> genomicIterators = options.getIterators();
-        try (MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try (MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             int counter = 0;
             while (mi.hasNext()) {
                 mi.next();
@@ -502,7 +502,7 @@ public class UTestMergeIterator {
     private void assertContent(String expected, GorOptions options) throws IOException {
         StringBuffer buffer = new StringBuffer();
         List<GenomicIterator> genomicIterators = options.getIterators();
-        try (MergeIterator mi = new MergeIterator(genomicIterators, options)) {
+        try (MergeIterator mi = new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null)) {
             buffer.append(String.join("\t", mi.getHeader()));
             buffer.append('\n');
             while (mi.hasNext()) {

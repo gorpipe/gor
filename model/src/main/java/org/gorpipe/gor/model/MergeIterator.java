@@ -71,14 +71,6 @@ public class MergeIterator extends GenomicIterator {
      */
     private final GorMonitor gorMonitor;
 
-    public MergeIterator(List<GenomicIterator> sources, GorOptions options) {
-        this(sources, options, null);
-    }
-
-    public MergeIterator(List<GenomicIterator> sources, GorOptions options, GorMonitor gm) {
-        this(sources, options.insertSource, options.sourceColName, gm);
-    }
-
     public MergeIterator(List<GenomicIterator> sources, boolean insertSource, String sourceColName, GorMonitor gm) {
         this.sources = sources;
         this.insertSource = insertSource;

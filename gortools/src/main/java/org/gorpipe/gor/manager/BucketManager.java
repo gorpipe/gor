@@ -442,7 +442,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         if (path.toString().toLowerCase().endsWith(".gord")) {
             return new DictionaryTable.Builder<>(path)
                     .useHistory(table.isUseHistory())
-                    .tagColumn(table.getTagColumn())
+                    .sourceColumn(table.getSourceColumn())
                     .securityContext(table.getSecurityContext())
                     .validateFiles(table.isValidateFiles())
                     .build();

@@ -38,6 +38,8 @@ import org.gorpipe.gor.monitor.GorMonitor;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.Dictionary;
+import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.model.gor.iterators.RowSource;
@@ -119,7 +121,7 @@ public class GorOptions {
     /**
      * The name of the output column with the source field
      */
-    public final String sourceColName;
+    public String sourceColName;
     /**
      * The common root that was prepended to each source name
      */
@@ -286,7 +288,7 @@ public class GorOptions {
         this.context = context;
         this.session = context != null ? context.getSession() : null;
         boolean insertSourceOpt = false;
-        String srcColName = null;
+
         // Non null iff list of input files was read from a file
         String tagfile = null;
 
@@ -318,9 +320,9 @@ public class GorOptions {
         if (CommandParseUtilities.hasOption(options, "-s")) {
             insertSourceOpt = true;
             try {
-                srcColName = stringValueOfOptionWithDefault(options, "-s", null);
+                this.sourceColName = stringValueOfOptionWithDefault(options, "-s", null);
             } catch (GorParsingException gpe) {
-                srcColName = null;
+                log.debug("Error parsing -s", gpe);
             }
         }
 
@@ -349,8 +351,6 @@ public class GorOptions {
         commonRoot = commonRootOpt;
 
         loadTagFiles(context, iargs, tagfile);
-
-        this.sourceColName = srcColName;
 
         if (CommandParseUtilities.hasOption(options, "-p")) {
             // Need to get the last range if multiple ranges are given
@@ -394,7 +394,7 @@ public class GorOptions {
 
         GenomicIterator theIterator;
         if(genomicIterators.size() > 1 || insertSource) {
-            theIterator = new MergeIterator(genomicIterators, this, gm);
+            theIterator = new MergeIterator(genomicIterators, insertSource, sourceColName, gm);
         } else {
             theIterator = genomicIterators.get(0);
             if (theIterator instanceof RangeMergeIterator || theIterator instanceof GorpIterator) {
@@ -766,6 +766,13 @@ public class GorOptions {
         for (Dictionary.DictionaryLine line : fileList) {
             subProcessOfProcessDictionary(line, allowBucketAccess, projectContext, alltags,
                     gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
+        }
+
+        if (sourceColName == null) {
+            // Note:  if multiple dicts or dicts and files the first dict with source column defined will
+            //        determine the source column name.
+            DictionaryTable table = new DictionaryTable(Paths.get(fileName));
+            sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
         }
     }
 

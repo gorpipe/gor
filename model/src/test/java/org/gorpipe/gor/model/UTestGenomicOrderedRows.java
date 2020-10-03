@@ -28,6 +28,7 @@ import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.test.SlowTests;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -265,52 +266,36 @@ public class UTestGenomicOrderedRows {
     }
 
     /**
-     * Test that -s parameter produces an extra column at the end of the row, as per change on 2012-09-02 by gfg and hakon
-     */
-    @Test
-    public void testSourceAsFirstExtraColumn() {
-        for (String rowString : TestUtils.runGorPipeLinesNoHeader("gor -s foo 1.mem | top 10")) {
-            String[] row = rowString.split("\t");
-            Assert.assertEquals(6, row.length);
-            Assert.assertEquals("1.mem", row[5].trim());
-        }
-    }
-
-    /**
      * Test that source name as 3 column works correctly, i.e. #3 column is source column and can correctly be used in expressions
      */
     @Test
     public void testSourceColumn() {
-
-        // When inserting source name, all column indexes must be increesed by one, so third column in source is #4 (since #3 is now the source name)
         try (RowSource iterator = TestUtils.runGorPipeIterator("1.mem -s MyStuff | top 10")) {
             int cnt = 0;
             while (iterator.hasNext()) {
                 Row row = iterator.next();
                 Assert.assertEquals("chr1", row.chr);
                 Assert.assertEquals(cnt, row.pos);
-                Assert.assertEquals("1.mem", row.colAsString(5).toString());
                 Assert.assertEquals("data1", row.colAsString(2).toString());
                 Assert.assertEquals(cnt % 5, row.colAsInt(3));
-                cnt++;
-            }
-            Assert.assertEquals(10, cnt);
-        }
-
-        try (RowSource iterator = TestUtils.runGorPipeIterator("1.mem -s MyStuff | top 10")) {
-            int cnt = 0;
-            while (iterator.hasNext()) {
-                Row row = iterator.next();
-                Assert.assertEquals("chr1", row.chr);
-                Assert.assertEquals(cnt, row.pos);
                 Assert.assertEquals("1.mem", row.colAsString(5).toString());
-                Assert.assertEquals("data1", row.colAsString(2).toString());
                 cnt++;
             }
             Assert.assertEquals(10, cnt);
         }
     }
 
+    private void testSourceColumnHelper(String baseQuery, String[] expectedHeader, String lastColumnValue) {
+        try (RowSource iterator = TestUtils.runGorPipeIterator(String.format("%s | top 1", baseQuery))) {
+            String[] header = iterator.getGorHeader().getColumns();
+            Assert.assertEquals(expectedHeader, header);
+            while (iterator.hasNext()) {
+                Row row = iterator.next();
+                Assert.assertEquals(lastColumnValue, row.colAsString(row.numCols()).toString());
+            }
+        }
+    }
+    
     /**
      * Test single pos filtering
      */

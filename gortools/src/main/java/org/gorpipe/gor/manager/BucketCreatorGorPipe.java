@@ -115,7 +115,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
                     .collect(Collectors.joining(","));
             if (tags.length() > 0) {
                 sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | write -c %s;%n",
-                        bucket, table.getPath(), table.getTagColumn(), tags,
+                        bucket, table.getPath(), table.getSourceColumn(), tags,
                         table.getSecurityContext() != null ? table.getSecurityContext() : "",
                         tempRootDir.resolve(bucket.toString())));
             }
