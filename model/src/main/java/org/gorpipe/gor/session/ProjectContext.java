@@ -242,6 +242,10 @@ public class ProjectContext {
         return this.aliasFile;
     }
 
+    public String getGorConfigFile() {
+        return this.configFile;
+    }
+
     public String getRoot() {
         return this.root;
     }
