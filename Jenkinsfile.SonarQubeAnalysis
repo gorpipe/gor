@@ -15,8 +15,7 @@ node {
 
     def gradleOpts = "-g ${gradleHome} --console=plain"
 
-
-    withCredentials([usernamePassword(credentialsId: 'ArtifactoryBuild', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_PASSWORD'),
+    withCredentials([usernamePassword(credentialsId: 'ArtifactorySonarQube', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_PASSWORD'),
                      string(credentialsId: 'GOR_SONARQUBE_API_KEY', variable: 'SONARQUBE_LOGIN'),]) {
         gradleOpts += " -Partifactory_user=${ARTIFACTORY_USER} -Partifactory_password=${ARTIFACTORY_PASSWORD}"
         gradleOpts += " -Dsonar.login=${SONARQUBE_LOGIN}"
