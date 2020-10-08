@@ -34,6 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Created by sigmar on 02/05/16.
@@ -75,6 +79,22 @@ public class UTestGorMerge {
                 String next = pi.next().toString();
                 Assert.assertEquals("Merging with nor failed", 7, next.split("\t").length);
             }
+        }
+    }
+
+    @Test
+    public void testMergeWithNestedNor() throws IOException {
+        String fileCont = "#A\tB\nC\tD\nE\tF\n";
+        Path p = Paths.get("test.tsv");
+        String query = "nor <(nor test.tsv | merge test.tsv)";
+        Files.write(p, fileCont.getBytes());
+        try (RowSource pi = TestUtils.runGorPipeIterator(query)) {
+            while (pi.hasNext()) {
+                String next = pi.next().toString();
+                Assert.assertEquals("Merging with nor failed", 4, next.split("\t").length);
+            }
+        } finally {
+            Files.deleteIfExists(p);
         }
     }
 

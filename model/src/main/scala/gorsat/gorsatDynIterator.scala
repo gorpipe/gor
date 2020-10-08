@@ -231,7 +231,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     if (itDyn != null) itDyn.close() // calls theSource.close
   }
 
-  override def getHeader : String = {
+  def getContextHeader(norContext : Boolean) : String = {
     var header = super.getHeader
     if (header != "") return header
     val i = iteratorCommand.indexOf("<(")
@@ -253,13 +253,17 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         var headerItDyn: gorsatGorIterator = null
         headerItDyn = createGorIterator(context.createNestedContext(null, null, "getHeader"))
         headerItDyn.fixHeader = fixHeader
-        var iteratorCommand2 = iteratorCommand
-        if (iteratorCommand2.contains(" -seek ")) {
-          val largs = CommandParseUtilities.quoteSafeSplit(iteratorCommand2, ' ')
-          val chrpos = CommandParseUtilities.stringValueOfOption(largs, "-seek")
-          iteratorCommand2 = iteratorCommand2.replace("-seek " + chrpos, "")
+        val mcmd = if (norContext) {
+          iteratorCommand
+        } else {
+          var iteratorCommand2 = iteratorCommand
+          if (iteratorCommand2.contains(" -seek ")) {
+            val largs = CommandParseUtilities.quoteSafeSplit(iteratorCommand2, ' ')
+            val chrpos = CommandParseUtilities.stringValueOfOption(largs, "-seek")
+            iteratorCommand2 = iteratorCommand2.replace("-seek " + chrpos, "")
+          }
+          modifiedCommand(iteratorCommand2, "chr1", 0, -1, seekOnly = false, getHeader = true)
         }
-        val mcmd = modifiedCommand(iteratorCommand2, "chr1", 0, -1, seekOnly = false, getHeader = true)
         headerItDyn.scalaInit(mcmd)
         nor = headerItDyn.isNorContext
         header = headerItDyn.getHeader
@@ -274,6 +278,10 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     header
   }
 
+  override def getHeader : String = {
+    getContextHeader(false)
+  }
+
   def getLineHeader : String = {
     getHeader
   }
@@ -281,6 +289,9 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
 
   class DynamicNorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) with LineIterator {
     override def nextLine : String = { super.next().otherCols }
+    override def getHeader : String = {
+      getContextHeader(true)
+    }
     override def getLineHeader : String = {
       val rawHeader = super.getHeader
       val firstTabIndex = rawHeader.indexOf('\t')
