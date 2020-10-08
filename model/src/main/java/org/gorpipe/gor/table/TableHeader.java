@@ -86,13 +86,29 @@ public class TableHeader {
     }
 
     /**
+     * Check if proper table header.
+     *
+     * @return true if the table header (heador for the dict filee) is a proper header otherwise false.
+     * Header is proper if it has defined at least 2 columns and they are not dummy.
+     */
+    public boolean isProperTableHeader() {
+        return this.tableColumns != null && this.tableColumns.length > 1 && !this.tableColumns[1].equalsIgnoreCase("col2");
+    }
+
+    /**
      * Get header property.
      *
      * @param key name of the property.
      * @return the header property identifed with <key>
      */
     public String getProperty(String key) {
-        return this.headerProps.get(key);
+        if (HEADER_SOURCE_COLUMN_KEY.equals(key) && !headerProps.containsKey(HEADER_SOURCE_COLUMN_KEY) && isProperTableHeader()) {
+            // Special treatment for source column.  It it si missing from standard probs and the header is good
+            // we retreive it from the standard column heading.
+            return tableColumns[1];
+        } else {
+            return headerProps.get(key);
+        }
     }
 
     /**
@@ -166,15 +182,15 @@ public class TableHeader {
             String[] lineSplit = line.split("=", 2);
             String propName = StringUtils.strip(lineSplit[0], "\t\n #");
             if (propName.equals(HEADER_COLUMNS_KEY)) {
-                setColumns(lineSplit[1].trim().split(",", -1));
+                setColumns(lineSplit[1].trim().split("[\t,]", -1));
             } else {
                 setProperty(propName, lineSplit[1].trim());
             }
             return true;
         } else if (line.startsWith("#")) {
-            String columnsString = StringUtils.strip(line, "\t\n #");
+            String columnsString = StringUtils.strip(line, "\n #");
             if (columnsString.length() > 0) {
-                this.tableColumns = columnsString.split(",", -1);
+                this.tableColumns = columnsString.split("[\t,]", -1);
             }
             return true;
         } else {
@@ -212,7 +228,7 @@ public class TableHeader {
         for (Map.Entry<String, String> entry : this.headerProps.entrySet()) {
             sb.append(String.format("## %s = %s%n", entry.getKey(), entry.getValue()));
         }
-        sb.append(String.format("# %s%n", String.join(",", this.tableColumns)));
+        sb.append(String.format("# %s%n", String.join("\t", this.tableColumns)));
 
         return sb.toString();
     }

@@ -644,7 +644,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             // Create the header.
             this.header.setProperty(TableHeader.HEADER_FILE_FORMAT_KEY, "1.0");
             this.header.setProperty(TableHeader.HEADER_CREATED_KEY, new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
-            this.header.setTableColumns(new String[]{"File", "Alias", "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"});
+            this.header.setTableColumns(new String[]{"File", DEFAULT_SOURCE_COLUMN, "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"});
         }
     }
 

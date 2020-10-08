@@ -243,6 +243,15 @@ public class UTestBaseTable {
     }
 
     @Test
+    public void testSourceColumnDefaultNotBucketizedNoMetaHeaderLine() throws Exception {
+        prepareDictGordFileWithHeader();
+
+        String[] result;
+        result = TestUtils.runGorPipeLines("gor -Y " + gordFile.toString());
+        Assert.assertEquals("Source col name incorrect - default not bucketized", "chromo\tpos\tdata\ttag\tExtraSpecial\n", result[0]);
+    }
+
+    @Test
     public void testSourceColumnDefaultBucketized() throws Exception {
         prepareTableGordFile();
 
@@ -258,6 +267,15 @@ public class UTestBaseTable {
         String[] result;
         result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - bucketized", "chromo\tpos\tdata\ttag\tSource\n", result[0]);
+    }
+
+    @Test
+    public void testSourceColumnDefaultBucketizedNoMetaHeaderLine() throws Exception {
+        prepareDictGordFileWithHeader();
+
+        String[] result;
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
+        Assert.assertEquals("Source col name incorrect - bucketized", "chromo\tpos\tdata\ttag\tExtraSpecial\n", result[0]);
     }
 
     @Test
@@ -447,7 +465,6 @@ public class UTestBaseTable {
         String[] result;
         result = TestUtils.runGorPipeLines("gor -Y -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tSpecial\n", result[0]);
-
     }
 
     @Test
@@ -457,7 +474,15 @@ public class UTestBaseTable {
         String[] result;
         result = TestUtils.runGorPipeLines("gor -Y -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tSource\n", result[0]);
+    }
 
+    @Test
+    public void testSourceColumnDefaultNotBucketizedWithEmptyFilteringNoMetaWithHeader() throws Exception {
+        prepareDictGordFileWithHeader();
+
+        String[] result;
+        result = TestUtils.runGorPipeLines("gor -Y -p chr99 " + gordFile.toString());
+        Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tExtraSpecial\n", result[0]);
     }
 
     @Test
@@ -467,7 +492,6 @@ public class UTestBaseTable {
         String[] result;
         result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result bucketized", "chromo\tpos\tdata\ttag\tSpecial\n", result[0]);
-
     }
 
     @Test
@@ -477,7 +501,15 @@ public class UTestBaseTable {
         String[] result;
         result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result bucketized", "chromo\tpos\tdata\ttag\tSource\n", result[0]);
+    }
 
+    @Test
+    public void testSourceColumnDefaultBucketizedWithEmptyFilteringNoMetaWithHeader() throws Exception {
+        prepareDictGordFileWithHeader();
+
+        String[] result;
+        result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
+        Assert.assertEquals("Source col name incorrect - empty result bucketized", "chromo\tpos\tdata\ttag\tExtraSpecial\n", result[0]);
     }
 
     @Test
@@ -487,7 +519,6 @@ public class UTestBaseTable {
         String[] result;
         result = TestUtils.runGorPipeLines("gor -Y -p chr99 -s PAX " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tPAX\n", result[0]);
-
     }
 
     @Test
@@ -524,6 +555,14 @@ public class UTestBaseTable {
     private void prepareDictGordFile() throws IOException {
         prepareTableGordFile();
         Files.delete(workDirPath.resolve(".dict").resolve("header"));
+    }
+
+    private void prepareDictGordFileWithHeader() throws IOException {
+        prepareTableGordFile();
+        Files.delete(workDirPath.resolve(".dict").resolve("header"));
+        String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");
+        content = "#Content\tExtraSpecial\n" + content;
+        FileUtils.writeStringToFile(gordFile.toFile(), content, "utf8");
     }
 
 
