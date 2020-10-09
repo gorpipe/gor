@@ -15,18 +15,14 @@ The ``-d`` option can be used to write the fork files to directories instead of 
 
 The ``-r`` option can be used to eliminate the fork column from the output, since it is already represented in the filenames.
 
-The ``-c`` and ``-m`` options are used to encrypt the output of the WRITE command. ``-c`` tells the command to use column store compression for the output and ``-m`` is used to encrypt the files with the MD5 algorithm.
-
-The ``-i`` option writes an index file containing the file position of each chromosome. This option requires a type to be set, which can be FULL or CHROM.
-
-The ``-l`` option selects the compression level to be used by the deflater. Default: 1 (BEST_SPEED)
+The ``-c`` tells the command to use column store compression for the output.
 
 Usage
 =====
 
 .. code-block:: gor
 
-	gor ... | write filename [-f forkCol] [-r] [-c] [-m] [-i]
+	gor ... | write filename [-f forkCol] [-d] [-r] [-c] [-m] [-i type]
 
 Options
 =======
@@ -40,18 +36,20 @@ Options
 +-----------------+-----------------------------------------------------------------+
 | ``-c``          | Use column store compression for the output.                    |
 +-----------------+-----------------------------------------------------------------+
-| ``-m``          | Use MD5 encryption on the output file.                          |
+| ``-m``          | Create MD5 sum file along with the output file.                 |
 +-----------------+-----------------------------------------------------------------+
-| ``-i [type]``   | Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz |
+| ``-i type``     | Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz |
 |                 | Must state the type, which can be FULL, CHROM or TABIX          |
 +-----------------+-----------------------------------------------------------------+
-| ``-l [level]``  | Compression level (0-9). Default 1.                             |
+| ``-l level``    | Compression level (0-9). Default 1.                             |
 +-----------------+-----------------------------------------------------------------+
-| ``-t '[tags]'`` | List of tags which write ensures a file will be created.        |
+| ``-t 'tags'``   | List of tags which write ensures a file will be created.        |
 |                 | Only valid with the -f option.                                  |
 +-----------------+-----------------------------------------------------------------+
 | ``-prefix hf``  | Takes in a text source containing prefix to be prepended to the |
 |                 | file written. Also support string in single quotes              |
++-----------------+-----------------------------------------------------------------+
+| ``-noheader``   | Don't write a header lines.  Not valid with gor/gorz/nor/norz.  |
 +-----------------+-----------------------------------------------------------------+
 
 Examples

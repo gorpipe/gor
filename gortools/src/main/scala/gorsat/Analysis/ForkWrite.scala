@@ -44,7 +44,8 @@ case class OutputOptions(remove: Boolean = false,
                             prefix: Option[String] = None,
                             prefixFile: Option[String] = None,
                             compressionLevel: Int = Deflater.BEST_SPEED,
-                            useFolder: Boolean = false
+                            useFolder: Boolean = false,
+                            skipHeader: Boolean = false
                            )
 
 case class ForkWrite(forkCol: Int,
@@ -103,12 +104,12 @@ case class ForkWrite(forkCol: Int,
 
   def openFile(sh: FileHolder) {
     val name = sh.fileName
-    val skipHeader = if (!sh.headerWritten) {
+    val skipHeader = options.skipHeader || (if (!sh.headerWritten) {
       sh.headerWritten = true
       false
     } else {
       true
-    }
+    })
     sh.out = OutFile.driver(name, header, skipHeader, options)
     sh.out.setup()
     sh.fileOpen = true

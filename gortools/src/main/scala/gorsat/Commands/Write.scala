@@ -22,16 +22,18 @@
 
 package gorsat.Commands
 
+import java.nio.file.Paths
 import java.util.zip.Deflater
 
 import gorsat.Analysis.{ForkWrite, OutputOptions}
 import gorsat.Commands.CommandParseUtilities._
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.session.GorContext
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -d", "-f -i -t -l -prefix", 1),
+  CommandArguments("-r -c -m -d -noheader", "-f -i -t -l -prefix", 1),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -48,6 +50,7 @@ class Write extends CommandInfo("WRITE",
     var idx = GorIndexType.NONE
     var compressionLevel = Deflater.BEST_SPEED
     var useFolder = false
+    var skipHeader = false
 
     if (hasOption(args, "-f")) forkCol = columnOfOption(args, "-f", forcedInputHeader, executeNor)
     remove = hasOption(args, "-r")
@@ -83,6 +86,12 @@ class Write extends CommandInfo("WRITE",
       case "TABIX" => idx = GorIndexType.TABIX
     }
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder)), forcedInputHeader.split("\t").slice(0,2).mkString("\t"))
+    skipHeader = hasOption(args, "-noheader")
+    val fileType = FilenameUtils.getExtension(fileName)
+    if (skipHeader && List("gor", "gorz", "nor", "norz").contains(fileType)) {
+      throw new GorParsingException("Option -noheader (skip header) is not valid with gor/gorz/nor/norz")
+    }
+
+    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader)), forcedInputHeader.split("\t").slice(0,2).mkString("\t"))
   }
 }

@@ -65,6 +65,9 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
 
   def setup {
     if (header != null & !skipHeader) {
+      if (!header.startsWith("#")) {
+        out.write("#")
+      }
       out.write(header + "\n")
     }
   }

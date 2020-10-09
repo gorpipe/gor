@@ -51,7 +51,7 @@ class UTestPrefixOption extends FunSuite with BeforeAndAfter {
     val headerFileCont = List("##This is header line", "##This is another header line")
     val headerFilePath = writeContentToFile("header.tsv", headerFileCont)
 
-    val inputFileCont = Array("CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
+    val inputFileCont = Array("#CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
 
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
@@ -122,7 +122,7 @@ class UTestPrefixOption extends FunSuite with BeforeAndAfter {
     val headerFileCont = List("##Headerline1", "##Headerline2")
     val headerFilePath = writeContentToFile("header.tsv", headerFileCont)
 
-    val inputFileCont = List("CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
+    val inputFileCont = List("#CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
     val inputFilePath = writeContentToFile("input.gor", inputFileCont)
 
     val outputFilePath = tmpFolder.getAbsoluteFile + "/output.vcf"

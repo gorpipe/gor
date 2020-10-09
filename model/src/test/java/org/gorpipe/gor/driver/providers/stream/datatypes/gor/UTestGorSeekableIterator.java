@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes.gor;
 
+import gorsat.TestUtils;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.GenomicIterator;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -57,14 +59,15 @@ public class UTestGorSeekableIterator {
         PATHOLOGICAL_GOR_FILE = writeFile("pathological.gor",5, 10, BIG_NUMBER, true);
     }
 
-    private static String writeFile(String fileName, int posPerChr, int linesPerKey, int maxColLen, boolean skipNewLine) throws IOException {
+    private static String writeFile(String fileName, int posPerChr, int linesPerKey, int maxColLen,
+                                    boolean skipNewLine, boolean useHashForHeader) throws IOException {
         final Random r = new Random(SEED);
         final byte[] buffer = new byte[maxColLen];
         Arrays.fill(buffer, (byte) 'a');
         final File file = tf.newFile(fileName);
         final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
         bos.write("## This is a comment\n## A second line of comments\n".getBytes());
-        bos.write("CHROM\tPOS\tNUMBER\tSOME_COL\n".getBytes());
+        bos.write(((useHashForHeader ? "#" : "") + "CHROM\tPOS\tNUMBER\tSOME_COL\n").getBytes());
         for (String chr : CHROMOSOMES) {
             for (int pos = 1; pos <= posPerChr; ++pos) {
                 for (int num = 0; num < linesPerKey; ++num) {
@@ -81,6 +84,12 @@ public class UTestGorSeekableIterator {
         bos.close();
         return file.getAbsolutePath();
     }
+
+    private static String writeFile(String fileName, int posPerChr, int linesPerKey, int maxColLen,
+                                    boolean skipNewLine) throws IOException {
+        return writeFile(fileName, posPerChr, linesPerKey, maxColLen, skipNewLine, false);
+    }
+
 
     private GenomicIterator getGenomicIterator(String filename) {
         Path path = Paths.get(filename);
@@ -104,7 +113,7 @@ public class UTestGorSeekableIterator {
     }
 
     @Test
-    public void getHeader_WhenFileIsGor() {
+    public void getHeader_gor() {
         GenomicIterator iterator = getGenomicIterator(GOR_FILE);
         String[] header = iterator.getHeader().split("\t");
         assertEquals(4, header.length);
@@ -115,18 +124,7 @@ public class UTestGorSeekableIterator {
     }
 
     @Test
-    public void getHeader_WhenFileIsGorz() {
-        GenomicIterator iterator = getGenomicIterator(GORZ_FILE);
-        String[] header = iterator.getHeader().split("\t");
-        assertEquals(4, header.length);
-        assertEquals("Chrom", header[0]);
-        assertEquals("gene_start", header[1]);
-        assertEquals("gene_end", header[2]);
-        assertEquals("Gene_Symbol", header[3]);
-    }
-
-    @Test
-    public void getHeader_noHashtag() throws IOException {
+    public void getHeader_gorNoHashtag() throws IOException {
         String contents = "Chrom\tPos\tCategory\tValue\n" +
                 "chr1\t1\t1\t1\n" +
                 "chr1\t2\t1\t2\n";
@@ -141,7 +139,7 @@ public class UTestGorSeekableIterator {
     }
 
     @Test
-    public void getHeader_withHashtag() throws IOException {
+    public void getHeader_gorWithHashtag() throws IOException {
         String contents = "#Chrom\tPos\tCategory\tValue\n" +
                 "chr1\t1\t1\t1\n" +
                 "chr1\t2\t1\t2\n";
@@ -156,7 +154,7 @@ public class UTestGorSeekableIterator {
     }
 
     @Test
-    public void getHeader_withComments() throws IOException {
+    public void getHeader_gorWithComments() throws IOException {
         String contents = "## This is a comment\n" +
                 "## A second line of comment\n" +
                 "#Chrom\tPos\tCategory\tValue\n" +
@@ -173,6 +171,82 @@ public class UTestGorSeekableIterator {
     }
 
     @Test
+    public void getHeader_gorz() {
+        GenomicIterator iterator = getGenomicIterator(GORZ_FILE);
+        String[] header = iterator.getHeader().split("\t");
+        assertEquals(4, header.length);
+        assertEquals("Chrom", header[0]);
+        assertEquals("gene_start", header[1]);
+        assertEquals("gene_end", header[2]);
+        assertEquals("Gene_Symbol", header[3]);
+    }
+
+    @Test
+    public void getHeader_gorzWithHashtag() throws IOException {
+        String prefix = "#";
+        Path tempFile = Files.createTempFile(tf.getRoot().toPath(), "data", ".gorz").toAbsolutePath();
+        TestUtils.runGorPipeCount(String.format("gor %s | write -prefix '%s' %s", GORZ_FILE, prefix, tempFile));
+
+        GenomicIterator iterator = getGenomicIterator(tempFile.toString());
+        String[] header = iterator.getHeader().split("\t");
+        assertEquals(4, header.length);
+        assertEquals("Chrom", header[0]);
+        assertEquals("gene_start", header[1]);
+        assertEquals("gene_end", header[2]);
+        assertEquals("Gene_Symbol", header[3]);
+    }
+
+    @Test
+    public void getHeader_gorzWithComments() throws IOException {
+        String prefix = "## This is a comment\\n" +
+                "## A second line of comment\\n" +
+                "#";
+        Path tempFile = Files.createTempFile(tf.getRoot().toPath(), "data", ".gorz").toAbsolutePath();
+        TestUtils.runGorPipeCount(String.format("gor %s | write -prefix '%s' %s", GORZ_FILE, prefix, tempFile));
+
+        GenomicIterator iterator = getGenomicIterator(tempFile.toString());
+        String[] header = iterator.getHeader().split("\t");
+        assertEquals(4, header.length);
+        assertEquals("Chrom", header[0]);
+        assertEquals("gene_start", header[1]);
+        assertEquals("gene_end", header[2]);
+        assertEquals("Gene_Symbol", header[3]);
+    }
+
+    @Test
+    public void getHeader_norz() throws IOException {
+        GenomicIterator iterator = getGenomicIterator("../tests/data/nor/simple.norz");
+        String header = iterator.getHeader();
+        assertEquals("ChromNOR\tPosNOR\tChrom\tgene_start\tgene_end\tGene_Symbol", header);
+    }
+
+    @Test
+    public void getHeader_norzWithHashtag() throws IOException {
+        String prefix = "#";
+        Path tempFile = Files.createTempFile(tf.getRoot().toPath(), "data", ".norz").toAbsolutePath();
+        TestUtils.runGorPipeCount(String.format("nor %s | write -prefix '%s' %s",
+                "../tests/data/nor/simple.norz", prefix, tempFile));
+
+        GenomicIterator iterator = getGenomicIterator(tempFile.toString());
+        String header = iterator.getHeader();
+        assertEquals("ChromNOR\tPosNOR\tChrom\tgene_start\tgene_end\tGene_Symbol", header);
+    }
+
+    @Test
+    public void getHeader_norzWithComments() throws IOException {
+        String prefix = "## This is a comment\\n" +
+                "## A second line of comment\\n" +
+                "#";
+        Path tempFile = Files.createTempFile(tf.getRoot().toPath(), "data", ".norz").toAbsolutePath();
+        TestUtils.runGorPipeCount(String.format("nor %s | write -prefix '%s' %s",
+                "../tests/data/nor/simple.norz", prefix, tempFile));
+
+        GenomicIterator iterator = getGenomicIterator(tempFile.toString());
+        String header = iterator.getHeader();
+        assertEquals("ChromNOR\tPosNOR\tChrom\tgene_start\tgene_end\tGene_Symbol", header);
+    }
+
+    @Test
     public void next_ReturningRow_WhenFileIsGor_GetFirstLineOnly() {
         GenomicIterator iterator = getGenomicIterator(GOR_FILE);
 
@@ -183,7 +257,6 @@ public class UTestGorSeekableIterator {
         assertNotNull(r);
         assertEquals("chr1\t11868\t14412\tDDX11L1", r.getAllCols().toString());
     }
-
 
     @Test
     public void next_ReturningRow_WhenFileIsGorz_GetFirstLineOnly() {

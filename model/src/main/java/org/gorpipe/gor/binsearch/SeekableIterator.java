@@ -26,6 +26,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * A binary search iterator for a text file whose lines are ordered as defined by {@code comparator}.
@@ -112,7 +113,11 @@ public class SeekableIterator implements AutoCloseable {
                 return nextAsBytes;
             }
             if (nextAsBytes[0] != '#' || nextAsBytes[1] != '#') {
-                return nextAsBytes;
+                if (nextAsBytes[0] == '#') {
+                    return Arrays.copyOfRange(nextAsBytes, 1, nextAsBytes.length);
+                } else {
+                    return nextAsBytes;
+                }
             }
         }
         return new byte[0];

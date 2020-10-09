@@ -107,7 +107,7 @@ public class UTestOutFile {
 
         List<String> allLines = Files.readAllLines(outputFile.toPath());
         Assert.assertEquals(1, allLines.size());
-        Assert.assertEquals(header, allLines.get(0));
+        Assert.assertEquals( "#" + header, allLines.get(0));
     }
 
     @Test
@@ -121,11 +121,11 @@ public class UTestOutFile {
 
         List<String> allLines = Files.readAllLines(outputFile.toPath());
         Assert.assertEquals(1, allLines.size());
-        Assert.assertEquals(header, allLines.get(0));
+        Assert.assertEquals("#" +header, allLines.get(0));
 
         List<String> md5Lines = Files.readAllLines(md5File.toPath());
         Assert.assertEquals(1, md5Lines.size());
-        Assert.assertEquals("eeada059f302e61b9be88237bc393101", md5Lines.get(0));
+        Assert.assertEquals("79ac361264a6fc8ceab934dc3623ef12", md5Lines.get(0));
     }
 
     @Test
@@ -154,7 +154,7 @@ public class UTestOutFile {
 
         List<String> allLines = Files.readAllLines(outputFile.toPath());
         Assert.assertEquals(2, allLines.size());
-        Assert.assertEquals(header, allLines.get(0));
+        Assert.assertEquals("#" + header, allLines.get(0));
         Assert.assertEquals(rowContents, allLines.get(1));
     }
 
@@ -171,12 +171,12 @@ public class UTestOutFile {
 
         List<String> allLines = Files.readAllLines(outputFile.toPath());
         Assert.assertEquals(2, allLines.size());
-        Assert.assertEquals(header, allLines.get(0));
+        Assert.assertEquals("#" + header, allLines.get(0));
         Assert.assertEquals(rowContents, allLines.get(1));
 
         List<String> md5Lines = Files.readAllLines(md5File.toPath());
         Assert.assertEquals(1, md5Lines.size());
-        Assert.assertEquals("8f4475a78f0736b3fe9ab4316b92a4b7", md5Lines.get(0));
+        Assert.assertEquals("3c566357cdb15fd593ff741cf1777923", md5Lines.get(0));
     }
 
     @Test
