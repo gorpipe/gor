@@ -64,15 +64,15 @@ public class NorParquetLine extends ParquetLine {
     }
 
     @Override
-    public CharSequence getAllCols() {
+    StringBuilder getAllColumns() {
         StringBuilder sb = new StringBuilder();
-        int c = group.getFieldRepetitionCount(0);
-        String val = c > 0 ? group.getValueToString(0, 0) : "";
+        Type tp = group.getType().getFields().get(0);
+        String val = extractGroup(tp, group, 0, 0);
         sb.append(val);
-        for( int i = 1; i < numCols(); i++ ) {
+        for (int i = 1; i < numCols(); i++) {
             sb.append('\t');
-            c = group.getFieldRepetitionCount(i);
-            val = c > 0 ? group.getValueToString(i, 0) : "";
+            tp = group.getType().getFields().get(i);
+            val = extractGroup(tp, group, i, 0);
             sb.append(val);
         }
         return sb;

@@ -109,19 +109,22 @@ public class ParquetLine extends Line {
         return PrimitiveType.PrimitiveTypeName.BINARY;
     }
 
-    String extractGroup(Type tp, Group group, int colNum, int idx) {
-        if (tp.isPrimitive()) {
-            int size = group.getFieldRepetitionCount(colNum);
-            return idx < size ? group.getValueToString(colNum, idx) : "";
-        } else {
-            Group subgroup = group.getGroup(colNum, idx);
-            List<Type> types = subgroup.getType().getFields();
-            return IntStream.range(0, types.size()).mapToObj(i -> {
-                Type st = types.get(i);
-                int repcount = subgroup.getFieldRepetitionCount(i);
-                return IntStream.range(0, repcount).mapToObj(k -> extractGroup(st, subgroup, i, k)).collect(Collectors.joining(","));
-            }).collect(Collectors.joining(","));
+    String extractGroup(Type tp, Group thegroup, int colNum, int idx) {
+        int size = thegroup.getFieldRepetitionCount(colNum);
+        if(idx < size) {
+            if (tp.isPrimitive()) {
+                return thegroup.getValueToString(colNum, idx);
+            } else {
+                Group subgroup = thegroup.getGroup(colNum, idx);
+                List<Type> types = subgroup.getType().getFields();
+                return IntStream.range(0, types.size()).mapToObj(i -> {
+                    Type st = types.get(i);
+                    int repcount = subgroup.getFieldRepetitionCount(i);
+                    return IntStream.range(0, repcount).mapToObj(k -> extractGroup(st, subgroup, i, k)).collect(Collectors.joining(","));
+                }).collect(Collectors.joining(","));
+            }
         }
+        return "";
     }
 
     @Override
@@ -177,7 +180,7 @@ public class ParquetLine extends Line {
         }
     }
 
-    private StringBuilder getAllColumns() {
+    StringBuilder getAllColumns() {
         StringBuilder sb = new StringBuilder();
         sb.append(chr);
         sb.append('\t');
