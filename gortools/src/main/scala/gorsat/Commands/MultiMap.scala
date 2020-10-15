@@ -26,7 +26,7 @@ import gorsat.Commands.MapCommand.processArgumentsMapAndMultiMap
 import org.gorpipe.gor.session.GorContext
 
 class MultiMap extends CommandInfo("MULTIMAP",
-  CommandArguments("-b -h -e -cis -not -cartesian", "-c -m -n", 1, 1),
+  CommandArguments("-b -h -e -cis -not -cartesian -ordered", "-c -m -n", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {

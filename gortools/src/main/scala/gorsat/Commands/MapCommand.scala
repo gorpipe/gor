@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.{MapLookup, MultiMapLookup}
+import gorsat.Analysis.{MapLookup, MultiMapLookup, OrderedMapAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities.validHeader
@@ -34,7 +34,7 @@ import scala.collection.mutable.ListBuffer
 
 object MapCommand {
   class Map extends CommandInfo("MAP",
-    CommandArguments("-b -h -e -cis -not -cartesian -l", "-c -m -n", 1, 1),
+    CommandArguments("-b -h -e -cis -not -cartesian -l -ordered", "-c -m -n", 1, 1),
     CommandOptions(gorCommand = true, norCommand = true)) {
     override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
       processArgumentsMapAndMultiMap(context, argString, iargs, args,executeNor,  forcedInputHeader)
@@ -49,6 +49,13 @@ object MapCommand {
     var iteratorCommand = ""
     var rightHeader = ""
     var dsource: DynamicNorSource = null
+    val assumeOrdered = hasOption(args, "-ordered")
+    val cartesian = hasOption(args, "-cartesian")
+
+    if (assumeOrdered && cartesian) {
+      throw new GorParsingException("-ordered and -cartesian options can not be used together")
+    }
+
     try {
       var rightFile = iargs(0).trim
       // Read a TSV file via nested quer to handle # in header properly
@@ -69,7 +76,6 @@ object MapCommand {
       val hCols = rightHeader.split("\t", -1).length
       val mh = rightHeader
 
-      val cartesian = hasOption(args, "-cartesian")
       val skipEmpty = hasOption(args, "-e")
 
       var mCols: List[Int] = columnsOfOptionWithNil(args, "-c", inputHeader, executeNor)
@@ -156,7 +162,12 @@ object MapCommand {
 
       combinedHeader = validHeader(combinedHeader)
 
-      if (hasOption(args, "-l") && !(cartesian && actualOutCols.length == 1) || (cartesian && actualOutCols.length > 1)) {
+      val multipleRows = hasOption(args, "-l")
+      if (assumeOrdered) {
+        pipeStep = OrderedMapAnalysis(context.getSession, dsource, mCols.toArray, negate,
+          caseInsensitive, actualOutCols.toArray, missingVal, returnMissing, inSet, inSetCol, skipEmpty, multipleRows)
+      }
+      else if (multipleRows && !(cartesian && actualOutCols.length == 1) || (cartesian && actualOutCols.length > 1)) {
         pipeStep = MultiMapLookup(context.getSession, iteratorCommand, dsource, mapFileName, mCols.toArray,
           caseInsensitive, actualOutCols.toArray, missingVal, returnMissing, cartesian)
       }
