@@ -81,12 +81,14 @@ case class VarGroupAnalysis(refCol: Int, altCol: Int, valCol: Int, grCols: List[
   }
 
   private def flushRow: Unit = {
-    val ref = lastRow.colAsString(refCol)
-    val groupId = () => lastRow.selectedColumns(grColsArray)
-    val addAlts = (sb: StringBuilder) => sb.append(lastRow.colAsString(altCol))
-    val valueCol = mapBiAllelic(lastRow.colAsString(valCol).toString)
-    val rowToProcess = getRow(ref, groupId, addAlts, valueCol)
-    super.process(rowToProcess)
+    if(lastRow!=null) {
+      val ref = lastRow.colAsString(refCol)
+      val groupId = () => lastRow.selectedColumns(grColsArray)
+      val addAlts = (sb: StringBuilder) => sb.append(lastRow.colAsString(altCol))
+      val valueCol = mapBiAllelic(lastRow.colAsString(valCol).toString)
+      val rowToProcess = getRow(ref, groupId, addAlts, valueCol)
+      super.process(rowToProcess)
+    }
   }
 
   private def flushColHolders = {
