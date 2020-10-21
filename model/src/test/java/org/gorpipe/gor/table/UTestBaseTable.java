@@ -549,7 +549,7 @@ public class UTestBaseTable {
         dict.save();
 
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(2).build();
-        man.bucketize(dict.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, -1, null);
+        man.bucketize(dict.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
     }
 
     private void prepareDictGordFile() throws IOException {

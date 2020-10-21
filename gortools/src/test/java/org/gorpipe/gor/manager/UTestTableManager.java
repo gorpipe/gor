@@ -205,7 +205,7 @@ public class UTestTableManager {
         DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
 
         // Bucketize in process.
-        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1"}, ".");
+        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100"}, ".");
 
         // Wait for the thread to get the bucketize lock (so we are waiting for getting inValid lock).
         testTableManagerUtil.waitForBucketizeToStart(table, p);
@@ -264,13 +264,13 @@ public class UTestTableManager {
         buc.setBucketSize(100);
 
         // Bucketize in process.
-        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1"}, ".");
+        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "10"}, ".");
 
         // Wait for the thread to get the bucketize lock (so we are waiting for getting inValid lock).
         testTableManagerUtil.waitForBucketizeToStart(table, p);
 
         // Bucketize in main - should return immediately.
-        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1000);
 
         // Wait for the thread and print out stuff.
         log.debug(testTableManagerUtil.waitForProcessPlus(p));
@@ -548,7 +548,7 @@ public class UTestTableManager {
         table.insert(entries[0]);
         table.save();
         
-        if (bucketize) man.bucketize(table.getPath(), pack, 1, -1, null);
+        if (bucketize) man.bucketize(table.getPath(), pack, 1, 1000, null);
         TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " | select 1-6");
         TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " -f " + pns[0] + " | select 1-6");
 
@@ -576,7 +576,7 @@ public class UTestTableManager {
             }
             table.save();
 
-            if (bucketize) man.bucketize(table.getPath(), pack, 1, -1, null);
+            if (bucketize) man.bucketize(table.getPath(), pack, 1, 1000, null);
 
             table.reload();
 

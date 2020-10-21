@@ -150,7 +150,7 @@ public class UTestBucketManager {
         
         // Initial bucketize.
 
-        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1000);
 
         Assert.assertEquals("Wrong number of buckets created", 4, bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
@@ -311,7 +311,7 @@ public class UTestBucketManager {
             String dictContent = FileUtils.readFileToString(dictPath.toFile(), Charset.defaultCharset());
             Assert.assertEquals("Incorrect line count in dictionary", fileCount, Arrays.stream(dictContent.split("\n")).filter(l -> !l.startsWith("#")).count());
 
-            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
+            buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1000);
 
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             Assert.assertEquals("Not correct number of buckets created", 10, Files.list(resolve(table.getRootPath(), bucketDir)).filter(p -> p.toString().endsWith(".gorz")).count());
@@ -375,7 +375,7 @@ public class UTestBucketManager {
         buc.deleteBuckets(buckets[0]);
         Assert.assertTrue("Bucket file should not be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[0])));
         TableLock lock = new NoTableLock(table, table.getName());
-        lock.lock(false, Duration.ofMillis(100000));
+        lock.lock(false, Duration.ofMillis(10000));
         buc.cleanBucketFiles(lock, true);
         Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[0])));
 
@@ -435,7 +435,7 @@ public class UTestBucketManager {
 
             List<Path> buckets = table.filter().get().stream().map(l -> l.getBucketPath()).distinct().filter(b -> b != null).collect(Collectors.toList());
             buc.deleteBuckets(buckets.toArray(new Path[buckets.size()]));
-            bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
+            bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1000);
             Assert.assertEquals("Wrong number of buckets", fileCount / buc.getBucketSize(), bucketsCreated);
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             buckets = table.filter().get().stream().map(l -> Paths.get(l.getBucket())).distinct().collect(Collectors.toList());
@@ -547,7 +547,7 @@ public class UTestBucketManager {
         buc.setMinBucketSize(10);
         buc.setBucketSize(50);
 
-        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL,1000);
 
         Assert.assertEquals("Wrong number of buckets created", 0, bucketsCreated);
     }
@@ -569,7 +569,7 @@ public class UTestBucketManager {
         List<Path> buckets = table.filter().get().stream().map(l -> l.getBucketPath()).filter(p -> p != null).distinct().collect(Collectors.toList());
         buc.deleteBuckets(buckets.toArray(new Path[buckets.size()]));
         buc.setBucketDirs(bucketDirs);
-        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1000);
         Assert.assertEquals("Wrong number of buckets", fileCount / buc.getBucketSize(), bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
         buckets = table.filter().get().stream().map(l -> l.getBucketPath()).distinct().collect(Collectors.toList());

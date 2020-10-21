@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table;
 
+import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
@@ -680,8 +681,12 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      */
     private TableHeader parseHeaderFromLine(T line) {
         TableHeader newHeader = new TableHeader();
-        String args = line.getContentReal() + (securityContext != null ? " " + securityContext : "");
-        GorOptions gorOptions = GorOptions.createGorOptions(args);
+        List<String> args = new ArrayList<>();
+        args.add(line.getContentReal());
+        if (securityContext != null) {
+            args.addAll(Arrays.asList(CommandParseUtilities.quoteSafeSplit(securityContext, ' ')));
+        }
+        GorOptions gorOptions = GorOptions.createGorOptions(null, args.toArray(new String[0]));
         try(GenomicIterator source = gorOptions.getIterator()) {
             newHeader.setColumns(source.getHeader().split("\t"));
         }

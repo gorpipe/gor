@@ -63,7 +63,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
     public static final int DEFAULT_MIN_BUCKET_SIZE = 20;
     public static final int DEFAULT_BUCKET_SIZE = 100;
-    public static final int DEFAULT_MAX_BUCKET_COUNT = -1;
+    public static final int DEFAULT_MAX_BUCKET_COUNT = 3;
     public static final BucketPackLevel DEFAULT_BUCKET_PACK_LEVEL = BucketPackLevel.CONSOLIDATE;
     static final String BUCKET_FILE_PREFIX = "bucket"; // Use to identify which files are bucket files.
 
@@ -73,6 +73,7 @@ public class BucketManager<T extends BucketableTableEntry> {
     public static final String HEADER_MIN_BUCKET_SIZE_KEY = "GOR_TABLE_MIN_BUCKET_SIZE";
     public static final String HEADER_BUCKET_SIZE_KEY = "GOR_TABLE_BUCKET_SIZE";
     public static final String HEADER_BUCKET_DIRS_KEY = "GOR_TABLE_BUCKET_DIRS";
+    public static final String HEADER_BUCKET_MAX_BUCKETS = "GOR_TABLE_BUCKET_MAX_BUCKETS";
 
     protected Duration gracePeriodForDeletingBuckets = Duration.ofHours(24);
 
@@ -124,7 +125,7 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     public void bucketize() {
-        bucketize(DEFAULT_BUCKET_PACK_LEVEL, DEFAULT_MAX_BUCKET_COUNT, null, false);
+        bucketize(DEFAULT_BUCKET_PACK_LEVEL, -1, null, false);
     }
 
     public int bucketize(BucketPackLevel packLevel, int maxBucketCount) {
@@ -135,7 +136,8 @@ public class BucketManager<T extends BucketableTableEntry> {
      * Bucketize the given table.
      *
      * @param packLevel      pack level to use (see BucketPackLevel).
-     * @param maxBucketCount Maximum number of buckets to generate on this call.
+     * @param maxBucketCount Maximum number of buckets to generate on this call, 0 or less means not set in which
+     *                       case we read it from the table, if its not set on the table we use default.
      * @param bucketDirs     array of directories to bucketize to, ignored if null.  The dirs are absolute
      *                       or relative to the table dir.
      * @param forceClean     Should we force clean bucket files (if force clean we ignoring grace periods).
@@ -160,6 +162,10 @@ public class BucketManager<T extends BucketableTableEntry> {
             }
 
             cleanTempFolders(bucketizeLock);
+            
+            if (maxBucketCount <= 0) {
+                maxBucketCount = Integer.parseInt(table.getConfigTableProperty(HEADER_BUCKET_MAX_BUCKETS, Integer.toString(DEFAULT_MAX_BUCKET_COUNT)));
+            }
 
             // TODO: Enable clean up again with issue GOP-1444
             // cleanBucketFiles(bucketizeLock, forceClean);
