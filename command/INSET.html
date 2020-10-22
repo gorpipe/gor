@@ -160,7 +160,8 @@
             
   <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="inset">
 <span id="id1"></span><h1>INSET<a class="headerlink" href="#inset" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#inset"><span class="std std-ref">INSET</span></a> command only passes rows where the column value is found in the setfile, unless the option <code class="docutils literal notranslate"><span class="pre">-b</span></code> is used. The setfile must be a single column file or a &lt;(nor … ) expression.</p>
+<p>The <a class="reference internal" href="#inset"><span class="std std-ref">INSET</span></a> command only passes rows where the column value is found in the setfile, unless the option <code class="docutils literal notranslate"><span class="pre">-b</span></code> is
+used. The setfile must be a single column file or a &lt;(nor … ) expression.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">INSET</span> setfile.txt -c <span class="na">PN</span>
@@ -171,8 +172,8 @@
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
+<col style="width: 16%" />
+<col style="width: 84%" />
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">column</span></code></p></td>
@@ -190,8 +191,14 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-not</span></code></p></td>
 <td><p>Negate the condition, i.e. NOTINSET.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
+<td><p>Assume the data is ordered for the columns on which the lookup is based.</p></td>
+</tr>
 </tbody>
 </table>
+<p>The -ordered flag can reduce the memory usage significantly, especially when the number of lines in the map file is
+high. Note that there are no checks to see if the order is correct - only use this option
+if the input stream and the map file is correctly ordered.</p>
 </div>
 </div>
 
