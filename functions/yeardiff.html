@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ATMAX &mdash; GOR Open Source v.2.0 documentation</title>
+  <title>YEARDIFF &mdash; GOR Open Source v.2.0 documentation</title>
   
 
   
@@ -141,7 +141,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>ATMAX</li>
+      <li>YEARDIFF</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -158,53 +158,19 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="atmax">
-<span id="id1"></span><h1>ATMAX<a class="headerlink" href="#atmax" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#atmax"><span class="std std-ref">ATMAX</span></a> command allows you to select a single row based on a maximum value of a defined column. Note that the column needs to be a number.</p>
-<p>Using <strong>ATMAX</strong> in a nor query will give an error if <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter is used.</p>
+  <div class="section" id="yeardiff">
+<span id="id1"></span><h1>YEARDIFF<a class="headerlink" href="#yeardiff" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>YEARDIFF</strong> function calculates the difference, in years, between two given dates.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | ATMAX binsize column [ attributes ]
-</pre></div>
-</div>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | ATMAX column [ attributes ]
-</pre></div>
-</div>
-</div>
-<div class="section" id="options">
-<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-last</span></code></p></td>
-<td><p>Returns the last value for multiple possible maximums.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
-<td><p>Grouping columns (other than bin).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
-<td><p>Assume the grouping columns are ordered.</p></td>
-</tr>
-</tbody>
-</table>
-<p>Use <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">=</span> <span class="pre">chrom</span></code> to aggregate for a whole chromosome and <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">=</span> <span class="pre">genome</span></code> to aggregate for the entire genome. Note, that the column must be a numeric column.</p>
-<p>When using ATMAX in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
-significantly. Note that there are no checks to see if the order is correct - only use this option if the input
-stream is correctly ordered.</p>
+<p><code class="docutils literal notranslate"><span class="pre">yeardiff(format,</span> <span class="pre">date1,</span> <span class="pre">date2)</span> <span class="pre">:</span> <span class="pre">num</span></code></p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | atmax 1000 gene_start
+<p>The following example adds a column <code class="docutils literal notranslate"><span class="pre">x</span></code> with the value 3.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>... | <span class="nb">CALC</span> x daydiff(&#39;dd/MM/yyyy&#39;, &#39;16/06/2014&#39;, &#39;18/06/2017&#39;) | ...
 </pre></div>
 </div>
-<p>Returns a row with the maximum gene_start value over 1000 base pairs.</p>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | atmax chrom value_column -last -<span class="no">gc</span> date
-</pre></div>
-</div>
-<p>Returns a row with the maximum value_column value per chromosome. Group rows by the date column, each group is represented with a single row. If multiple maximums exist take the last one found.</p>
 </div>
 </div>
 

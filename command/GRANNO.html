@@ -243,8 +243,14 @@ with the -gc option) extends.  Groups that extend beyond the specified range wil
 properly aggregated and annotations of row belonging to those group may be incorrect.
 A special binsize value, “gene”, can be used to denote 3Mbp in conjunction with the range option.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
+<td><p>Assume the grouping columns are ordered.</p></td>
+</tr>
 </tbody>
 </table>
+<p>When using GRANNO in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
+significantly. Note that there are no checks to see if the order is correct - only use this option if the input
+stream is correctly ordered.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>

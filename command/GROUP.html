@@ -236,6 +236,9 @@ Defaults to 10000 chars.</p></td>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">'sep'</span></code></p></td>
 <td><p>The separator for elements in lists and sets.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
+<td><p>Assume the grouping columns are ordered.</p></td>
+</tr>
 </tbody>
 </table>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">-ic</span></code> and <code class="docutils literal notranslate"><span class="pre">-fc</span></code> explicitly define columns of either integer type or floating point type, while the <code class="docutils literal notranslate"><span class="pre">-sc</span></code>
@@ -260,6 +263,9 @@ options <code class="docutils literal notranslate"><span class="pre">-sc</span><
 </table>
 <p>Ensure that there are no spaces between the numbers. Use SELECT to pick a subset of columns from the output.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">=</span> <span class="pre">chrom</span></code> to aggregate for a whole chromosome and <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">=</span> <span class="pre">genome</span></code> to aggregate for the entire genome.</p>
+<p>When using GROUP in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
+significantly. Note that there are no checks to see if the order is correct - only use this option if the input
+stream is correctly ordered.</p>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>Group columns a and b on each chromosome and counting the number of groups.</p>

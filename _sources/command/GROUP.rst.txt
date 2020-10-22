@@ -67,6 +67,8 @@ Options
 +-------------------+----------------------------------------------------------------------+
 | ``-s 'sep'``      | The separator for elements in lists and sets.                        |
 +-------------------+----------------------------------------------------------------------+
+| ``-ordered``      | Assume the grouping columns are ordered.                             |
++-------------------+----------------------------------------------------------------------+
 
 Attributes ``-ic`` and ``-fc`` explicitly define columns of either integer type or floating point type, while the ``-sc``
 attribute defines it as a string type. Any column defined with the ``-gc`` option and is a part of the following aggregation
@@ -83,6 +85,10 @@ options ``-sc``, ``-ic`` or ``-fc`` will result in an error
 Ensure that there are no spaces between the numbers. Use SELECT to pick a subset of columns from the output.
 
 Use ``binsize = chrom`` to aggregate for a whole chromosome and ``binsize = genome`` to aggregate for the entire genome.
+
+When using GROUP in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
+significantly. Note that there are no checks to see if the order is correct - only use this option if the input
+stream is correctly ordered.
 
 Examples
 --------

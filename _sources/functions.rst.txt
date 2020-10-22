@@ -577,6 +577,9 @@ Date Functions
      - The current time in a specific format, defined by a string of characters that represent time units.
        Example: 'dd/MM/yyyy'. Uses the Java SimpleDateFormat class for formatting.
      - :ref:`date`
+   * - ``DAYDIFF(string, string, string) : int``
+     - The difference, in days, between two dates.
+     - :ref:`daydiff`
    * - ``EDATE(long) : string``
      - A specific time, indicated by a timestamp, in the format 'yyyy-MM-dd HH:mm:ss'.
      - :ref:`edate`
@@ -590,6 +593,9 @@ Date Functions
      - A timestamp of a specific time, indicated with a specified format.
        The format is defined in the same way as with date(string) and edate(long, string). Example: epoch('16/06/2017','dd/MM/yyyy').
      - :ref:`epoch`
+   * - ``YEARDIFF(string, string, string) : int``
+     - The difference, in years, between two dates.
+     - :ref:`yeardiff`
 
 
 
