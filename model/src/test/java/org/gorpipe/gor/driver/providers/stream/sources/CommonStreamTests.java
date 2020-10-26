@@ -263,7 +263,8 @@ public abstract class CommonStreamTests {
         String name = getDataName(emptyFile);
         StreamSource fs = createSource(name);
 
-        Assert.assertEquals(expectedTimeStamp(emptyFile), fs.getSourceMetadata().getLastModified().longValue());
+        // Divide by 1000 so this works on OSX too.
+        Assert.assertEquals(expectedTimeStamp(emptyFile)/1000, fs.getSourceMetadata().getLastModified().longValue()/1000);
     }
 
     protected long expectedTimeStamp(File file) throws IOException {
