@@ -176,6 +176,20 @@ class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
     assert(wanted == actual)
   }
 
+  test("Test with parameters") {
+    val actual = TestUtils.runGorPipe("gor "+gorPath+" | prgtgen "+btPath+" "+afanPath+" "+segPath+" -gc ref,alt")
+    val wanted = "CHROM\tPOS\tREF\tALT\tAF\tAN\tBucket\tValues\n"+
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket1\t    E\\  ~~\n" +
+      "chr1\t1\tA\tC\t0.20053\t2003\tBucket2\t  |$      \n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket1\t    ~!  ~~\n" +
+      "chr1\t1\tA\tG\t0.50034\t1003\tBucket2\t  `?      \n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket1\t  !~    ~~\n" +
+      "chr1\t10\tA\tC\t0.49990\t3\tBucket2\t        ~!\n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket1\t  ~!      \n" +
+      "chr1\t11\tA\tC\t1.0000\t2\tBucket2\t        ~!\n"
+    assert(wanted == actual)
+  }
+
   test("Go through all") {
     val afSource = new SourceProvider(afanPath, context, false, false).source
     val segSource = new SourceProvider(segPath, context, false, false).source

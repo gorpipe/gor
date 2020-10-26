@@ -32,7 +32,7 @@ import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PrGtGen extends CommandInfo("PRGTGEN",
-  CommandArguments("", "-pn -pl -gl -gp -gc -maxseg -e -afc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
+  CommandArguments("", "-pn -pl -gl -gp -gc -prgc -maxseg -e -afc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -97,11 +97,13 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val priorFile: String = iargs(1).trim
     var priorSource: RowSource = null
     var priorHeader = ""
+    var prgcCols: List[Int] = List(2,3)
     if (iargs.length == 3) {
       try {
         val inputSource = new SourceProvider(priorFile, context, executeNor = executeNor, isNor = false)
         priorSource = inputSource.source
         priorHeader = inputSource.header
+        if(hasOption(args,"-prgc")) prgcCols = columnsOfOption(args, "-prgc", priorHeader, executeNor).distinct
       } catch {
         case ex: Exception =>
           if (priorSource != null) priorSource.close()
@@ -147,7 +149,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val pipeStep: Analysis =
       if (iargs.length == 3) {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
-          AFANSourceAnalysis(priorSource, context, lookupSignature, gcCols, afc, anc) |
+          AFANSourceAnalysis(priorSource, context, lookupSignature, prgcCols, afc, anc) |
           RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
       } else {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |

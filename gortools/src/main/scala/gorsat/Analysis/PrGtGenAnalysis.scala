@@ -95,7 +95,7 @@ object PrGtGenAnalysis {
       gh
     }
 
-    val ti = context.getSession.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
+    val pbtable: PnBucketTable = context.getSession.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       val l = {
         try {
           if (iteratorCommand != "") MapAndListUtilities.getStringArray(iteratorCommand, iterator, context.getSession)
@@ -108,7 +108,10 @@ object PrGtGenAnalysis {
       }
       val pbt = PnBucketParsing.parse(l)
       TagInfo(pbt)
-    }).asInstanceOf[TagInfo]
+    }).asInstanceOf[PnBucketTable]
+    val ti: TagInfo = (if(!pbtable.isInstanceOf[TagInfo]) context.getSession.getCache.getObjectHashMap.compute(lookupSignature, (_, _) => {
+      TagInfo(pbtable)
+    }) else pbtable).asInstanceOf[TagInfo]
     ti.registerUser(this)
   }
 

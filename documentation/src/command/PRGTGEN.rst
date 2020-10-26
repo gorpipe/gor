@@ -32,12 +32,14 @@ Usage
 
 .. code-block:: gor
 
-    gor ... | PRGTGEN tagbucketrelation coveragefile priorfile [ attributes ]
+    gor ... | PRGTGEN tagbucketrelation [optional: priorfile] coveragefile [ attributes ]
 
 Options
 =======
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-gc cols``        | Grouping columns other than (chrom,pos)                                                            |
++---------------------+----------------------------------------------------------------------------------------------------+
+| ``-prgc cols``      | Grouping columns for prior input other than (chrom,pos)                                                            |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-pn pnColName``   | Override the default PN colunm name used to represent the tag value.                               |
 +---------------------+----------------------------------------------------------------------------------------------------+
