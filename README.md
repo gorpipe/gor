@@ -6,7 +6,7 @@ GORpipe is a tool based on a genomic ordered relational architecture and allows 
 
 ## Prerequisites
 
-Before setting up GORpipe you need to have Java JDK or JRE version 8 or higher set up on your computer. 
+Before setting up GORpipe you need to have Java JDK or JRE version 11 or higher set up on your computer. 
 For example Open JDK (https://openjdk.java.net/install/). To check your Java version, open up a terminal and enter:
 
     java -version
