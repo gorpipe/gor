@@ -276,8 +276,8 @@ public class NordIterator extends RowSource {
         if (getHeader().isEmpty()) {
             setHeader(iteratorHeader);
             headerSize = iteratorHeader.split("\t").length;
-        } else if (iteratorHeader.split("\t").length != headerSize) {
-            throw new GorDataException("Header lengths do not match between dictionary files for: " + activeEntry.getTag());
+        } else if (!iteratorHeader.equalsIgnoreCase(getHeader())) {
+            throw new GorDataException("Headers do not match between dictionary files for: " + activeEntry.getTag());
         }
     }
 

@@ -534,4 +534,16 @@ public class UTestNorDictionary {
         Assert.assertTrue(lines[100].contains("\tSource_9"));
     }
 
+    @Test
+    public void testNordFilesWithMismatchingHeaders() throws IOException {
+        File fileA = FileTestUtils.createTempFile(workDir.getRoot(), "a.tsv",
+                "#pheno\tn_cases\nCAT\t500");
+        File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
+                "#phento\tsex\nCAT\tfemale");
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+                "a.tsv\tAA\nb.tsv\tBB");
+
+        expected.expect(GorDataException.class);
+        TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+    }
 }
