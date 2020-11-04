@@ -1,1 +1,50 @@
-# Default gor_aliases
+[GENES	Gene and exon related file macros]
+#gdismap#	ref/ensgenes/ensgenes_disease.map	Map of genesymbols to Disease Lists
+#gmap#	ref/ensgenes/ensgenes.map	Map of genesymbols to Aliaslist,Parlogs,Omim Ids and GO terms
+#GeneDetails#	ref/ensgenes/ensgenes.gorz	Ensembl 68 gene list
+#genes#	ref/genes.gorz	Ensembl 68 gene list with only one entry per GENE_SYMBOL,chrom
+#exons#	ref/ensgenes/ensgenes_exons.gorz	Ensembl 68 exons
+-------------------------
+[Annotation	Annotation file macros ]
+#1000G#	ref/1000G.gorz	Variations reported in the 1000 Genome
+#dbNSFP#	ref/dbnsfp.gorz	Annotation from dbNSFP
+#dbNSFPmax#	ref/dbnsfp_max.gorz	Summary annotations from dbNSFP
+
+#wgsVEP#	source/anno/vep_v85/vep_single_wgs.gord	VEP summary annotations (max per gene) for whole genome
+#VEP#	source/anno/vep_v85/vep_single_wgs.gord	VEP summary annotations (max per gene)
+#VEPall#	source/anno/vep_v85/vep_multi_wgs.gord	VEP detail annotations (per ensembl transcript)
+#VEPref#	source/anno/vep_v85/vepref_multi_wgs.gord	VEP detail annotations  (per refseq transcript)
+
+#alleleFreq#	ref/freq_max.gorz	Allele frequencies
+
+
+#dbSNP#	ref/dbsnp/dbsnp.gorz	dbSNP 137,from ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz
+#EVS#	ref/evs_anno.gorz	HLBI Exome Sequencing Project (ESP),Exome Variant Server, in allele frequencies in varjoin format, The current EVS data release (ESP6500SI) is taken from 6503 samples, 1)The INDEL calls for the ESP6500 are included.    2) The SNP calls for chromosome Y are added.   3) The bulk download-able files under the "Downloads" tab include both the SNPs and the INDELs. Sequences were aligned to NCBI build 37 human genome reference using BWA. PCR Duplicates were removed using Picard. Alignments were recalibrated using GATK. Lane-level indel realignments and base alignment quality (BAQ) adjustments were applied.
+#EVSfreq#	ref/evs_freq.gorz	HLBI Exome Sequencing Project (ESP),Exome Variant Server, full table, The current EVS data release (ESP6500SI) is taken from 6503 samples, 1)The INDEL calls for the ESP6500 are included.    2) The SNP calls for chromosome Y are added.   3) The bulk download-able files under the "Downloads" tab include both the SNPs and the INDELs. Sequences were aligned to NCBI build 37 human genome reference using BWA. PCR Duplicates were removed using Picard. Alignments were recalibrated using GATK. Lane-level indel realignments and base alignment quality (BAQ) adjustments were applied.
+#HGMD#	ref/hgmd/hgmd_hgmd.gorz	Hgmd variants
+#ClinicalGenes#	ref/clinical_genes.gorz	Disease Genes based on variants from HGMD,ClinVar, and OMIM
+#ClinicalVars#	ref/clinical_variants.gorz	Clinical variants from HGMD, ClinVar, and OMIM
+[Regions	Genomic regions]
+#repeat_regions#	ref/simplerepeats.gorz	Simple repeats and homopolymers
+--------------------------
+[Subjects	Data related to the project subjects]
+#wgsVars#	source/var/wgs_varcalls.gord -s PN	All WGS variants within the project
+#wesVars#	source/var/wes_varcalls.gord -s PN	All WES variants within the project +/ 1000bp
+#wgsCov#	source/cov/wgs_cov.gord -s PN	WGS coverage histogram for all regions per PN
+#GoodCov#	source/cov/wgs_goodcov.gord -s PN	Regions with good coverage
+#geneCovHist#	source/cov/gene_coverage.gord -s PN	The gene coverage historgram per PN
+#geneCovOutlier#	source/cov/gene_cov.gord -s PN	The gene coverage and outlier analysis per PN.
+#varcomments#	config/varcomments.tsv	Comments made about sequence variants, e.g. clinical significance.
+#rangecomments#	db://rda:rda.v_ranged_variant_annotations	Comments about genomic ranges.
+--------------------------
+[Variations	]
+#1000G#	ref/1000G.gorz	Variations reported in the 1000 Genome
+-----------------------------
+[RNA ]
+#genesfpkm#	source/cufflinks/genes.fpkm_tracking.gord -s PN	Fragments Per Kilobase of transcript per Million mapped reads for genes.
+#isoformsfpkm#	source/cufflinks/isoforms.fpkm_tracking.gord -s PN	Fragments Per Kilobase of transcript per Million mapped reads for isoforms.
+-----------------------------
+[Command_macros	Various command macros that take parameters]
+[XML	To solve XML parsing problems]
+lessth	<
+largerth	>

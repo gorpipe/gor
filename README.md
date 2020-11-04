@@ -70,29 +70,15 @@ If using a command line, this can be accomplished using `wget`
 
     wget https://s3.amazonaws.com/wuxinextcode-sm-public/data/standalone-project-data.tar.gz
 
-Since this is a large dataset (~9gb), this download could take a few minutes. After that extract the package
+Since this is a large dataset (~9gb), this download could take a few minutes. After that extract the package via:
+
+    tar -xvf standalone-project-data.tar.gz
+
 and a folder called `ref` should be created.
 
 Note that the file standalone-project-data.tar.gz will remain in the folder. You may want to delete it afterwards. 
-
-Now GORpipe & GORshell need to be configured in order to use this reference data next time they are started up.
-This is done by replacing the config file found at config/gor_config.txt with:
-
-    https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_config.txt
     
-If using `wget` this can be accomplished with:
-
-    wget -O config/gor_config.txt https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_config.txt
-    
-To use aliases for the reference files, replace the default alias file found at config/gor_aliases.txt with:
-                                                          
-    https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_aliases.txt
-
-If using `wget` this can be accomplished with:
-
-    wget -O config/gor_aliases.txt https://s3.amazonaws.com/wuxinextcode-sm-public/data/gor_aliases.txt
-    
-To test the reference data, using aliases, try the following query while being within the gor-scripts folder
+To test the reference data, using aliases, try the following query while being within the gor-scripts folder:
 
     ./bin/gorpipe "gor #genes# | top 10" -aliases config/gor_aliases.txt
    
@@ -109,6 +95,42 @@ The results should be as follows:
     chr1	89294	133566	RP11-34P13.7
     chr1	89550	91105	RP11-34P13.8
     chr1	131024	134836	CICP27
+
+## Setting up Phecode gwas data (Optional)
+
+Go to into the gor-scripts folder (gor-scripts-\<version\>/) and download the Phecode gwas data found at:
+
+    https://s3.amazonaws.com/wuxinextcode-sm-public/data/standalone-project-phecode-gwas-data.tar.gz
+    
+If using a command line, this can be accomplished using `wget`
+
+    wget https://s3.amazonaws.com/wuxinextcode-sm-public/data/standalone-project-phecode-gwas-data.tar.gz
+
+Since this is a large dataset (~10gb), this download could take a few minutes. After that extract the package via:
+
+    tar -xvf standalone-project-phecode-gwas-data.tar.gz
+
+and a folder called `phecode_gwas` should be created.
+
+Note that the file standalone-project-phecode-gwas-data.tar.gz will remain in the folder. You may want to delete it afterwards.
+
+To test this data, the GOR dictionary for the data, `Phecode_adjust_f2.gord` can be queried via for example:
+
+    ./bin/gorpipe "gor phecode_gwas/Phecode_adjust_f2.gord | top 10"
+    
+The results should be as follows:
+
+    CHROM	POS	REF	ALT	pVal_mm	OR_mm	CASE_info	GC	QQ	BONF	HOLM	Source
+    chr1	11008	C	G	7.0e-09	1.3071212318082575	11/520/7230	0.065424	0.24246	0.11973	0.090699	218.1
+    chr1	11008	C	G	6.6e-22	4.444107087017232	4/60/248	0.23978	0.35578	1.1289e-14	7.2724e-15	282.5
+    chr1	11012	C	G	7.0e-09	1.3071212318082575	11/520/7230	0.065424	0.24246	0.11973	0.090699	218.1
+    chr1	11012	C	G	6.6e-22	4.444107087017232	4/60/248	0.23978	0.35578	1.1289e-14	7.2724e-15	282.5
+    chr1	13116	T	G	3.7e-10	0.1992753733291237	0/9/272	0.44383	0.46853	0.0063285	0.0033634	282.5
+    chr1	13118	A	G	3.7e-10	0.1992753733291237	0/9/272	0.44383	0.46853	0.0063285	0.0033634	282.5
+    chr1	13273	G	C	4.9e-08	0.1156812360571759	0/3/261	0.50503	0.50293	0.83810	0.41659	282.5
+    chr1	14464	A	T	8.1e-06	4.3201606068833875	2/12/23	1.2298e-10	1.2424e-05	1.0000	1.0000	362.8
+    chr1	14464	A	T	7.8e-08	0.22233506547729875	0/8/278	0.51155	0.50681	1.0000	0.65797	282.5
+    chr1	15211	T	G	3.9e-15	0.2678814996572006	29/38/16	0.33692	0.41018	6.6706e-08	3.9344e-08	282.5
     
 ## Setting environment variables
 
