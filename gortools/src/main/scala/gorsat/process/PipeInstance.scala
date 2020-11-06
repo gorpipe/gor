@@ -118,6 +118,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
   override def init(params : String, gm : GorMonitor): Unit = {
     context.getSession.getSystemContext.setMonitor(gm)
     scalaInit(params)
+    isClosed = false
   }
 
   override def getRowSource: RowSource = theIterator
