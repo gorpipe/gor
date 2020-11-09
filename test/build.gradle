@@ -20,8 +20,12 @@
  *  END_COPYRIGHT
  */
 
+plugins {
+    id 'gor.java-library'
+}
+
 project(':test') {
     dependencies {
-        compile "commons-io:commons-io:2.6"
+        implementation "commons-io:commons-io:2.6"
     }
 }

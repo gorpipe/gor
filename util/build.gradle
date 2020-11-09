@@ -20,9 +20,18 @@
  *  END_COPYRIGHT
  */
 
+plugins {
+    id 'gor.java-library'
+}
+
 project(':util') {
     dependencies {
-        compile project(':base')
+        implementation project(':base')
+
+        implementation "commons-lang:commons-lang:2.6"
+
         testRuntimeOnly project(':test')
+
+        testImplementation 'org.slf4j:slf4j-api:1.7.+'
     }
 }

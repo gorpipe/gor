@@ -19,25 +19,22 @@
  *
  *  END_COPYRIGHT
  */
+plugins {
+    id 'gor.java-library'
+}
 
 project(':base') {
     dependencies {
-        compile "com.googlecode.json-simple:json-simple:1.1.+"
-        compile "org.aeonbits.owner:owner:1.0.+"
-        compile "com.googlecode.json-simple:json-simple:1.1.+"
-        compile "commons-io:commons-io:2.6"
-        compile "commons-lang:commons-lang:2.6"
-        compile('net.logstash.logback:logstash-logback-encoder:6.2') {
-            // This library pulls jackson-databind:2.9.2 which is not compatible with jesque (which wants 2.8.).
-            exclude group: "com.fasterxml.jackson.core"
-        }
-        compile 'org.slf4j:jul-to-slf4j:1.7.+'
-        compile 'org.slf4j:slf4j-api:1.7.+'
-        compile 'ch.qos.logback:logback-classic:1.2.+' // Must be compile dependency due to Logback Metrics collection.
-        compile "ch.qos.logback:logback-core:1.2.+"
-        compile 'org.fusesource.jansi:jansi:1.18' // Needs to be included for Windows
-        runtime 'org.slf4j:jcl-over-slf4j:1.7.+'
-        runtime 'org.slf4j:log4j-over-slf4j:1.7.+'
-        testCompile project(':test')
+        implementation "com.googlecode.json-simple:json-simple:1.1.+"
+        implementation "org.aeonbits.owner:owner:1.0.+"
+        implementation "commons-io:commons-io:2.6"
+        implementation "commons-lang:commons-lang:2.6"
+        implementation 'org.slf4j:slf4j-api:1.7.+'
+        implementation 'ch.qos.logback:logback-classic:1.2.+' // Must be compile dependency due to Logback Metrics collection.
+        implementation "ch.qos.logback:logback-core:1.2.+"
+        implementation 'org.fusesource.jansi:jansi:1.18' // Needs to be included for Windows
+        implementation 'org.slf4j:jcl-over-slf4j:1.7.+'
+
+        testImplementation project(':test')
     }
 }

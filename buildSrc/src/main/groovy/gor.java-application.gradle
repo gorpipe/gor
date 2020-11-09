@@ -1,0 +1,63 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+plugins {
+    id "gor.java-internal-library"
+    id 'application'
+}
+
+ext {
+    /**
+     * Utility method to update script task with info from params and project.
+     */
+    updateScriptTask = { projectName, scriptName, params, task, project ->
+        task.mainClassName = params.className
+        task.applicationName = scriptName
+        task.outputDir = new File(project.buildDir, 'scripts')
+        // Ideally we like to set the classpath as this, but as we currently have a lot of dependencies the class path
+        // will be to long (change this back if the class path becomes shorter)
+        // task.classpath = project.jar.outputs.files + project.configurations.runtime
+        // The task replaces APP_HOME with the linux or windows var.
+        task.classpath = files('__APP_HOME__/lib/*')
+        task.defaultJvmOpts = params.containsKey('defaultJvmOpts') ? params.defaultJvmOpts : []
+        task.optsEnvironmentVar = projectName + "_" + scriptName.toUpperCase() + "_OPTS"
+
+        // Use custom template for the unix start script.
+        task.unixStartScriptGenerator.template = resources.text.fromFile("${rootDir}/gradle/unixStartScript.txt")
+
+        task.doLast {
+            // Need to replace our __APP_HOME__ .
+            task.unixScript.text = task.unixScript.text.replace('__APP_HOME__', '${APP_HOME}')
+            task.windowsScript.text = task.windowsScript.text.replace('__APP_HOME__', '%~dp0..')
+            // We currently only support setting the XMX for unix.
+            task.unixScript.text = task.unixScript.text.replace('XMX_RATIO=""', 'XMX_RATIO="' + (params.containsKey('xmxRatio') ? params.xmxRatio : '') + '"')
+        }
+
+        project.applicationDistribution.into("bin") {
+            from(task)
+            fileMode = 0755
+        }
+    }
+}
+
+// Generally we are not interestd in the archvies.
+tasks.distZip.enabled = false
+tasks.distTar.enabled = false

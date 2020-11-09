@@ -44,7 +44,10 @@ class GenerateGorToolsHelpTask extends DefaultTask {
     @OutputFile
     File outputFile
 
+    @Input
     String header
+
+    @Input
     String helpText
 
     @TaskAction

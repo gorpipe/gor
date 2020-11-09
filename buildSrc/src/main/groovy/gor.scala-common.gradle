@@ -20,21 +20,27 @@
  *  END_COPYRIGHT
  */
 
-project(':documentation') {
-    apply plugin: 'maven-publish'
+plugins {
+    id "gor.common"
+    id "scala"
+}
 
-    publishing {
-        publications {
-            mavenDocumentationJar(MavenPublication) {
-                artifactId getProjectFullName()
-                groupId getCustomGroupId()
-                artifact jar
-                pom.withXml{updateDependenciesNode(asNode().appendNode('dependencies'), configurations)}
-            }
-        }
+// See: https://github.com/gradle/gradle/issues/6854
+configurations.all {
+    if (name.startsWith("incrementalScalaAnalysis")) {
+        extendsFrom = []
     }
+}
 
-    artifactoryPublish {
-        publications ('mavenDocumentationJar')
-    }
+compileScala {options.encoding = "UTF-8"}
+compileTestScala {options.encoding = "UTF-8"}
+
+// To build mixed java scala projects, the scala plugin can handle both java and scala code so
+// we add the java source dir to scala plugin and remove all src dirs from the java plugin.
+sourceSets.main.scala.srcDir "src/main/java"
+sourceSets.main.java.srcDirs = []
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.metaClass.useAnt = false
+    scalaCompileOptions.additionalParameters = ["-Xno-patmat-analysis"]
 }

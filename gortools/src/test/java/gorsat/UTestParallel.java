@@ -26,7 +26,7 @@ import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UTestParallel {
+public class    UTestParallel {
 
     @Test
     public void testNorParallelQuery() {

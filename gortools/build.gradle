@@ -19,73 +19,73 @@
  *
  *  END_COPYRIGHT
  */
-
 plugins {
+    id 'gor.java-library'
+    id 'gor.java-application'
     id 'antlr'
+    id 'gor.scala-common'
 }
 
 project(':gortools') {
-    apply plugin: 'antlr'
-    apply plugin: 'scala'
-    // See: https://github.com/gradle/gradle/issues/6854
-    configurations.all {
-        if (name.startsWith("incrementalScalaAnalysis")) {
-            extendsFrom = []
-        }
-    }
-
-    idea {
-        module {
-            // Not using generatedSourceDirs because of
-            // https://discuss.gradle.org/t/support-for-intellij-2016/15294/8
-            sourceDirs += file("${projectDir}/build/generated/source/proto/main/java")
-            sourceDirs += file("${projectDir}/build/generated/source/proto/main/grpc")
-        }
-    }
 
     generateGrammarSource {
         arguments += ["-visitor"]
     }
 
-    // To build mixed java scala projects, the scala plugin can handle both java and scala code so
-    // we add the java source dir to scala plugin and remove all src dirs from the java plugin.
-    sourceSets.main.scala.srcDirs "src/main/java"
     sourceSets.main.scala.srcDirs file("${projectDir}/build/generated-src/antlr/main")
-    sourceSets.main.java.srcDirs = []
 
     dependencies {
-        compile project(':model')
-        compile project(':base')
+        implementation project(':model')
+        implementation project(':base')
+        implementation project(':util')
 
-        compile "org.freemarker:freemarker:2.3.19"
-        compile "org.yaml:snakeyaml:1.25"
-        compile "io.prometheus:simpleclient:0.6.+"
-        compile "org.scala-lang:scala-compiler:2.12.+"
-        compile "org.scala-lang.modules:scala-xml_2.12:1.0.+"
-
-        compile "com.fasterxml.jackson.core:jackson-databind:2.11.+"
-        compile "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
-        compile "org.scalanlp:breeze_2.12:0.13.+"
-        compile "info.picocli:picocli:4.1.+"
-        compile "de.tototec:de.tototec.cmdoption:0.6.+"
-        compile "colt:colt:1.2.+"
-        compile 'info.picocli:picocli-shell-jline3:4.1.4'
+        implementation "org.freemarker:freemarker:2.3.19"
+        implementation "org.yaml:snakeyaml:1.25"
+        implementation "org.scala-lang:scala-compiler:2.12.+"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.11.+"
+        implementation "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
+        implementation "org.scalanlp:breeze_2.12:0.13.+"
+        implementation "info.picocli:picocli:4.1.+"
+        implementation "de.tototec:de.tototec.cmdoption:0.6.+"
+        implementation "colt:colt:1.2.+"
+        implementation 'info.picocli:picocli-shell-jline3:4.1.4'
+        implementation "commons-io:commons-io:2.6"
+        implementation "commons-lang:commons-lang:2.6"
+        implementation "com.github.samtools:htsjdk:2.22.+"
+        implementation "org.aeonbits.owner:owner:1.0.+"
+        implementation 'org.apache.parquet:parquet-common:1.11.0'
+        implementation 'org.apache.parquet:parquet-column:1.11.0'
+        implementation 'org.apache.parquet:parquet-hadoop:1.11.0'
+        implementation 'org.apache.hadoop:hadoop-common:3.3.0'
+        implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
+        implementation "org.reflections:reflections:0.9.12"
+        implementation 'ch.qos.logback:logback-classic:1.2.+'
+        implementation('net.logstash.logback:logstash-logback-encoder:6.2')
+        implementation "io.prometheus:simpleclient:0.6.+"
 
         runtime project(':documentation')
-        runtime "org.scala-lang:scala-reflect:2.12.+"
         runtime project(":drivers")
 
-        testCompile project(':test')
-        testCompile "org.mockito:mockito-core:3.0.+"
-        testCompile "org.scalatest:scalatest_2.12:3.0.8"
-        testCompile "org.scalacheck:scalacheck_2.12:1.13.+"
-        testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
+        runtime "org.scala-lang:scala-reflect:2.12.+"
+
+        testImplementation project(':test')
+        testImplementation project(':util')
+
+        testImplementation "org.mockito:mockito-core:3.0.+"
+        testImplementation "org.scalatest:scalatest_2.12:3.0.8"
+        testImplementation "org.scalacheck:scalacheck_2.12:1.13.+"
+        testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
+        testImplementation "commons-io:commons-io:2.6"
+        testImplementation "commons-lang:commons-lang:2.6"
+        testImplementation "com.google.guava:guava:27.0-jre"
+        testImplementation 'org.slf4j:slf4j-api:1.7.+'
+        testImplementation 'ch.qos.logback:logback-classic:1.2.+'
+        testImplementation "com.github.samtools:htsjdk:2.22.+"
 
         testRuntime "org.apache.derby:derby:10.14.+"
 
         antlr("org.antlr:antlr4:4.7")
     }
-
 
     // Tests
 
@@ -108,7 +108,6 @@ project(':gortools') {
     }
 
     // Distribution
-    apply plugin: 'application'
 
     distributions {
         main {
@@ -160,8 +159,17 @@ project(':gortools') {
 
 
     mainClassName = "dummy-not-used"
+
+    tasks.distZip.enabled = true
+    tasks.distZip.archiveClassifier = "dist"
+
+    publishing {
+        publications {
+            mavenJavaLibModule(MavenPublication) {
+                artifact distZip
+                artifact sourcesJar
+            }
+        }
+    }
 }
 
-if (file("build.deploy.gradle").exists()) {
-    apply from: "build.deploy.gradle"
-}

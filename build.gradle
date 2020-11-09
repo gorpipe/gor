@@ -19,27 +19,22 @@
  *
  *  END_COPYRIGHT
  */
-
 // Configure the build script repositories and dependencies, must be defined in the top level gradle file.
 buildscript {
     repositories {
+        if (project.hasProperty('useMavenLocal')) {
+            mavenLocal()
+        }
         jcenter()
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath "kr.motd.gradle:sphinx-gradle-plugin:2.6.1"
-        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8.0.1969"
-        classpath "org.jacoco:org.jacoco.agent:0.8.5"
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.10.0"
-        classpath "org.owasp:dependency-check-gradle:5.3.0"  // Can not be updated to 5. unless we update SonarQube.
-        classpath "de.undercouch:gradle-download-task:4.0.4"
-
-        // The following plugins are support plugins that don't effect the build directly.
-        // Therefore, we can set them to the meta-version 'latest.release'
-        classpath "com.adarshr:gradle-test-logger-plugin:latest.release"
-        classpath "com.netflix.nebula:gradle-lint-plugin:latest.release"
         classpath "gradle.plugin.com.gitlab.stfs.gradle.dependencygraph:gradle-dependency-graph-plugin:latest.release"
+
+        // TODO:  Do we use those:
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.10.0"
+        classpath 'de.undercouch:gradle-download-task:4.0.4'
 
         // For GitLab licences scanning
         classpath "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:latest.release"
@@ -47,230 +42,35 @@ buildscript {
 }
 
 plugins {
-    id "com.github.ben-manes.versions" version "0.28.0"
+    id 'idea'
+    id "org.ajoberstar.grgit" version "3.1.1"
+    id "kr.motd.sphinx" version "2.9.0" apply false 
+
+    // Plugins not applied everywhere.
+    id "com.jfrog.artifactory" version "4.10.0" apply false
+    id "org.sonarqube" version "3.0" apply false
+    id "com.github.hierynomus.license" version "0.15.0" apply false
+    id "com.google.protobuf" version "0.8.13" apply false
+    id 'com.github.johnrengelman.shadow' version '6.1.0' apply false
+
+    // The following plugins are support plugins that don't effect the build directly.
+    id 'nebula.lint' version "16.9.1"
+    id "com.autonomousapps.dependency-analysis" version "0.64.0"
+    id "com.adarshr.test-logger" version "2.1.1" apply false
+    id "org.owasp.dependencycheck" version "6.0.2"  apply false
+    id "com.github.ben-manes.versions" version "0.28.0" apply false
+    // TODO: Add   classpath "gradle.plugin.com.gitlab.stfs.gradle.dependencygraph:gradle-dependency-graph-plugin:latest.release"
 }
-
-
-description = """GOR Gradle build script"""
-version = new File("${rootDir}/VERSION").text.trim()
-
-apply from: "${rootDir}/gradle/util.gradle"
 
 apply plugin: "com.gitlab.stfs.gradle.dependency-graph-plugin"
 
-dependencyGraph {
-    // Use this block if you want to override configuration for the dependency graph that is generated
-
-    //outputFile = project.layout.buildDirectory.file('reports/dependencyGraph/dependencyGraph.dot')
-
-    //includeExtDeps = false
-    //includeExtDepsVersion = true
-
-    //extDepDotStyle = "[shape=ellipse, fillcolor=gray80, style=\"rounded,filled\"]"
-    //prjDepDotStyle = "[shape=box, fillcolor=\"\", style=\"\"]"
+ext {
+    // Get the git SHA to use in manifests. Do this on top level to avoid executing many times in subprojects.
+    gitSHA = grgit.head().id
 }
 
-allprojects {
-    apply plugin: "idea"
-    
-    apply plugin: 'nebula.lint'
-    gradleLint {
-        rules = ['all-dependency']
-        alwaysRun = false
-    }
-}
-
-configure(allLeafProjects()) {
-    version = rootProject.version
-
-    apply plugin: "java"
-
-    apply plugin: "com.adarshr.test-logger"
-
-    apply plugin: "jacoco"
-
-    apply plugin: "com.github.hierynomus.license"
-    licenseMain.onlyIf { rootProject.file('LICENSE ').exists() }
-    licenseTest.onlyIf { rootProject.file('LICENSE ').exists() }
-
-    dependencyLocking {
-        lockAllConfigurations()
-    }
-
-    // -----------------------------------------------------
-    // Set source dirs, configurations, dependencies and repos
-    // -----------------------------------------------------
-
-    // Common repositories, dependencies and jar.
-    repositories {
-        mavenLocal()
-        jcenter()
-        mavenCentral()
-    }
-    
-    jar {
-        manifest manifestTemplate
-        baseName = getProjectFullName()
-    }
-
-    // Copy resources also from the source folder (in addition to the default
-    // resource folder).
-    sourceSets.main.resources {
-        srcDirs = ["src/main/resources", "src/main/scala", "src/main/java"];
-        exclude "**/*.java"
-    }
-
-
-    configurations.all {
-        // cache dynamic versions for 10 minutes
-        resolutionStrategy.cacheDynamicVersionsFor 10 * 60, 'seconds'
-        // don't cache changing modules at all
-        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-
-        // See http://buransky.com/programming/exclude-log4j-to-use-slf4j-with-logback-in-a-gradle-project/
-        // Need to exclude the slf4j-simple as we are using another bindings.
-        exclude group: 'org.slf4j', module: 'slf4j-simple'
-        exclude group: "org.slf4j", module: "slf4j-log4j12"
-        exclude group: "log4j", module: "log4j"
-        // Exclude commons-logging for allprojects(we'll use the slf4j bridges)
-        exclude module: 'commons-logging'
-    }
-    
-    // Common repositories
-    dependencies {
-        testCompile 'junit:junit:4.12'
-    }
-
-    // -----------------------------------------------------
-    // Common tests setup.
-    // -----------------------------------------------------
-
-    tasks.withType(Test) {
-        // Read properties from config file.
-        Properties props = new Properties()
-        props.load(new FileInputStream("${project.rootDir}/tests/config/unittest.sysproperties"))
-        systemProperties = props
-
-        // Set logback config file.
-        systemProperty 'logback.configurationFile', new File("${project.rootDir}/tests/config/logback-test.xml").absolutePath
-
-        // Should test failures be ignored?
-        ignoreFailures = false
-
-        // What parameters should be logged out
-        testLogging {
-            events "failed", "passed", "skipped", "standardError", "standardOut"
-            showExceptions = false
-            showCauses = false
-            showStackTraces = false
-            showStandardStreams = false
-
-            debug {
-                events "failed", "passed", "skipped", "standardError", "standardOut"
-                exceptionFormat "full"
-            }
-
-            info.events = debug.events
-            info.exceptionFormat = debug.exceptionFormat
-
-            afterSuite { desc, result ->
-                if (!desc.parent) {
-                    def res = "${result.resultType} " +
-                            "(${result.testCount} tests, " +
-                            "${result.successfulTestCount} successes, " +
-                            "${result.failedTestCount} failures, " +
-                            "${result.skippedTestCount} skipped)"
-                    println(res)
-                }
-            }
-        }
-    }
-
-    test {
-        onlyIf { ! Boolean.getBoolean('skip.tests') }
-
-        useJUnit {
-            excludeCategories 'org.gorpipe.test.IntegrationTests'
-            excludeCategories 'org.gorpipe.test.SlowTests'
-            excludeCategories 'org.gorpipe.test.LoadTests'
-            excludeCategories 'org.gorpipe.test.DbTests'
-        }
-
-        reports {
-            junitXml.enabled = true
-            html.enabled = true
-        }
-    }
-
-    task slowTest(type: Test) {
-        onlyIf { ! Boolean.getBoolean('skip.tests') }
-
-        useJUnit {
-            includeCategories 'org.gorpipe.test.SlowTests'
-        }
-
-        reports.html.setDestination(new File("$buildDir/reports/slowTests"))
-    }
-
-    task dbTest(type: Test) {
-        onlyIf { ! Boolean.getBoolean('skip.tests') }
-
-        useJUnit {
-            includeCategories 'org.gorpipe.test.DbTests'
-        }
-
-        reports.html.setDestination(new File("$buildDir/reports/dbTests"))
-    }
-
-    // See: https://github.com/junit-team/junit/wiki/Categories
-    task integrationTest(type: Test) {
-        onlyIf { ! Boolean.getBoolean('skip.tests') }
-        
-        useJUnit {
-            includeCategories 'org.gorpipe.test.IntegrationTests'
-        }
-
-        reports.html.setDestination(new File("$buildDir/reports/integrationTests"))
-    }
-
-    jacocoTestReport {
-        reports {
-            xml.enabled true
-        }
-    }
-
-    // -----------------------------------------------------
-    // Common additional tasks.
-    // -----------------------------------------------------
-
-    // Helper task to print out dependencies.
-    task allDeps(type: DependencyReportTask) {}
-
-    // Builds sources to be distributed with jars (Maven).
-    task sourcesJar(type: Jar) {
-        baseName = getProjectFullName()
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    // Builds java doc jar to be distributed with jars (Maven).
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        baseName = getProjectFullName()
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
-    tasks.withType(Zip) {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
-
-    tasks.withType(ScalaCompile) {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-        scalaCompileOptions.additionalParameters = ["-Xno-patmat-analysis"]
-    }
-}
-
-if (file("build.deploy.gradle").exists()) {
-    apply from: "build.deploy.gradle"
+gradleLint {
+    rules = ['all-dependency', 'duplicate-dependency-class']
+    //criticalRules = ['unused-dependency']
+    alwaysRun = false
 }

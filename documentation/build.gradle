@@ -21,6 +21,10 @@ import org.gorpipe.gradle.GenerateGorToolsHelpTask
  *
  *  END_COPYRIGHT
  */
+plugins {
+    id 'gor.java-library'
+    id "kr.motd.sphinx"
+}
 
 project(':documentation') {
 
@@ -83,6 +87,3 @@ project(':documentation') {
     }
 }
 
-if (file("build.deploy.gradle").exists()) {
-    apply from: "build.deploy.gradle"
-}

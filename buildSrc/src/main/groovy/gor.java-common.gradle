@@ -1,0 +1,267 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+
+// Configure the build script repositories and dependencies, must be defined in the top level gradle file.
+
+plugins {
+    id 'gor.common'
+    id 'java-library'
+
+    id 'jacoco'
+    id "org.sonarqube"
+    id 'nebula.lint'
+    id "com.github.hierynomus.license"
+    id "org.owasp.dependencycheck"
+    id 'com.github.ben-manes.versions'
+    id "com.adarshr.test-logger"
+}
+
+// -----------------------------------------------------
+// Constants
+// -----------------------------------------------------
+
+ext {
+    gorArtifactGroupId = 'com.wuxinextcode.gor'
+}
+
+// -----------------------------------------------------
+// Set  repos, source dirs, configurations
+// -----------------------------------------------------
+
+// Common repositories, dependencies and jar.
+repositories {
+    if (project.hasProperty('useMavenLocal')) {
+        mavenLocal()
+    }
+    jcenter {
+        content {
+            excludeGroupByRegex "com\\.(wuxi)?nextcode.*"
+        }
+    }
+    mavenCentral{
+        content {
+            excludeGroupByRegex "com\\.(wuxi)?nextcode.*"
+        }
+    }
+    maven {
+        name "gitlab-maven"
+        url uri("https://gitlab.com/api/v4/groups/2443025/-/packages/maven")
+        credentials(HttpHeaderCredentials) {
+            name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
+            value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
+        }
+        authentication {
+            header(HttpHeaderAuthentication)
+        }
+    }
+}
+
+// Copy resources also from the source folder (in addition to the default
+// resource folder).
+sourceSets.main.resources {
+    srcDirs = ["src/main/resources", "src/main/scala", "src/main/java"];
+    exclude "**/*.java"
+}
+
+configurations {
+    // New configurations, for most part behaves like implementation. We use to mark
+    // internal libraries that should be merged when publishing libraries. See: java-library.
+    internal 
+    implementation.extendsFrom(internal)
+
+    all {
+        // cache dynamic versions for 10 minutes
+        resolutionStrategy.cacheDynamicVersionsFor 10 * 60, 'seconds'
+        // don't cache changing modules at all
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+
+        // See http://buransky.com/programming/exclude-log4j-to-use-slf4j-with-logback-in-a-gradle-project/
+        // Need to exclude the slf4j-simple as we are using another bindings.
+        // TODO: Do we still need this.
+        exclude group: 'org.slf4j', module: 'slf4j-simple'
+        exclude group: "org.slf4j", module: "slf4j-log4j12"
+        exclude group: "log4j", module: "log4j"
+        // Exclude commons-logging for allprojects(we'll use the slf4j bridges)
+        exclude module: 'commons-logging'
+    }
+}
+
+compileJava {options.encoding = "UTF-8"}
+compileTestJava {options.encoding = "UTF-8"}
+
+// -----------------------------------------------------
+// Packaging
+// -----------------------------------------------------
+
+ext {
+    manifestTemplate = {
+        attributes 'Implementation-Title': getProjectFullName(),
+                'Implementation-Version': project.version + " (git SHA " + gitSHA + ")",
+                'Built-By': System.getProperty('user.name'),
+                'Built-JDK': System.getProperty('java.version'),
+                'Provider': 'gradle',
+                'Git-SHA': gitSHA
+    }
+}
+
+
+
+// -----------------------------------------------------
+// Common tests setup.
+// -----------------------------------------------------
+
+// Common repositories
+dependencies {
+    testImplementation 'junit:junit:4.12'
+}
+
+tasks.withType(Test) {
+    // Read properties from config file.
+    Properties props = new Properties()
+    props.load(new FileInputStream("${project.rootDir}/tests/config/unittest.sysproperties"))
+    systemProperties = props
+
+    // Set logback config file.
+    systemProperty 'logback.configurationFile', new File("${project.rootDir}/tests/config/logback-test.xml").absolutePath
+
+    // Should test failures be ignored?
+    ignoreFailures = false
+
+    maxHeapSize = "1024m"
+
+    // What parameters should be logged out
+    testLogging {
+        events "failed", "passed", "skipped", "standardError", "standardOut"
+        showExceptions = false
+        showCauses = false
+        showStackTraces = false
+        showStandardStreams = false
+
+        debug {
+            events "failed", "passed", "skipped", "standardError", "standardOut"
+            exceptionFormat "full"
+        }
+
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) {
+                def res = "${result.resultType} " +
+                        "(${result.testCount} tests, " +
+                        "${result.successfulTestCount} successes, " +
+                        "${result.failedTestCount} failures, " +
+                        "${result.skippedTestCount} skipped)"
+            }
+        }
+    }
+
+    reports {
+        junitXml.enabled = true
+        html.enabled = true
+    }
+}
+
+test {
+    useJUnit {
+        excludeCategories 'org.gorpipe.test.IntegrationTests'
+        excludeCategories 'org.gorpipe.test.SlowTests'
+        excludeCategories 'org.gorpipe.test.LoadTests'
+        excludeCategories 'org.gorpipe.test.DbTests'
+    }
+}
+
+task slowTest(type: Test) {
+    useJUnit {
+        includeCategories 'org.gorpipe.test.SlowTests'
+    }
+
+    reports.html.setDestination(new File("$buildDir/reports/slowTests"))
+}
+
+task dbTest(type: Test) {
+    onlyIf { ! Boolean.getBoolean('skip.tests') }
+
+    useJUnit {
+        includeCategories 'org.gorpipe.test.DbTests'
+    }
+
+    reports.html.setDestination(new File("$buildDir/reports/dbTests"))
+}
+
+// See: https://github.com/junit-team/junit/wiki/Categories
+task integrationTest(type: Test) {
+    useJUnit {
+        includeCategories 'org.gorpipe.test.IntegrationTests'
+    }
+
+    reports.html.setDestination(new File("$buildDir/reports/integrationTests"))
+}
+
+task generateTestReport(type:Exec) {
+    commandLine 'python','tests/scripts/genReport.py'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+// -----------------------------------------------------
+// Common additional tasks.
+// -----------------------------------------------------
+
+// Helper task to print out dependencies.
+task allDeps(type: DependencyReportTask) {}
+
+dependencyCheck {
+    format='ALL'
+}
+
+dependencyGraph {
+    // Use this block if you want to override configuration for the dependency graph that is generated
+    //outputFile = project.layout.buildDirectory.file('reports/dependencyGraph/dependencyGraph.dot')
+    //includeExtDeps = false
+    //includeExtDepsVersion = true
+    //extDepDotStyle = "[shape=ellipse, fillcolor=gray80, style=\"rounded,filled\"]"
+    //prjDepDotStyle = "[shape=box, fillcolor=\"\", style=\"\"]"
+}
+
+dependencyLocking {
+    lockAllConfigurations()
+}
+
+licenseMain.onlyIf { rootProject.file('LICENSE ').exists() }
+licenseTest.onlyIf { rootProject.file('LICENSE ').exists() }
+
+
+sonarqube {
+    properties {
+        // Setting the following properties in the Jenkins.SonarQubeAnalysis file.
+        //property "sonar.dependencyCheck.xmlReportPath", "build/reports/dependency-check-report.xml"
+        //property "sonar.dependencyCheck.htmlReportPath", "build/reports/dependency-check-report.html"
+    }
+}
+
+
+

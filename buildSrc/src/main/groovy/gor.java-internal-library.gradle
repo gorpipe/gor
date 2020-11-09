@@ -20,25 +20,29 @@
  *  END_COPYRIGHT
  */
 
-project(':gortools') {
-    apply plugin: 'maven-publish'
+plugins {
+    id 'gor.java-common'
+}
 
-    publishing {
-        publications {
-            mavenJar(MavenPublication) {
+jar {
+    manifest manifestTemplate
+    archiveBaseName = getProjectFullName()
+}
 
-                artifactId getProjectFullName()
-                groupId getCustomGroupId()
-                artifact jar
-                artifact sourcesJar
-                pom.withXml{updateDependenciesNode(asNode().appendNode('dependencies'), configurations)}
-            }
+// Builds sources to be distributed with jars (Maven).
+task sourcesJar(type: Jar) {
+    archiveBaseName = getProjectFullName()
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
 
-            mavenDistZip(MavenPublication) {
-                artifactId getProjectFullName() + "-dist"
-                groupId getCustomGroupId()
-                artifact distZip
-            }
-        }
-    }
+// Builds java doc jar to be distributed with jars (Maven).
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveBaseName = getProjectFullName()
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+tasks.withType(Zip) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

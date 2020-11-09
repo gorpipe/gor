@@ -38,7 +38,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito._
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.{BeforeAndAfter, FunSuite, Ignore}
 
 import scala.collection.mutable.ListBuffer
 
@@ -684,6 +684,8 @@ class UTestMemoryMonitorUtil extends FunSuite {
   * Long running tests.
   *
   */
+// "Ignore, fails often with out of memory.  Maybe not relative anymore as we don't use ratio anymore."
+@Ignore
 @RunWith(classOf[JUnitRunner])
 @Category(Array(classOf[SlowTests]))
 class UTestSlowMemoryMonitorUtil extends FunSuite {

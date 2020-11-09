@@ -1,0 +1,76 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+
+import com.nextcode.gradle.*
+
+plugins {
+    id "gor.java-internal-library"
+    id "com.jfrog.artifactory"
+    id 'maven-publish'
+}
+
+publishing {
+    publications {
+        mavenJavaLibModule(MavenPublication) {
+            from components.java
+            artifactId = getCustomProjectId()
+            groupId = getCustomGroupId()
+        }
+    }
+    repositories {
+        maven {
+            name "gitlab-gor-maven"
+            url uri("https://gitlab.com/api/v4/projects/17033400/packages/maven")
+            credentials(HttpHeaderCredentials) {
+                name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
+                value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
+            }
+            authentication {
+                header(HttpHeaderAuthentication)
+            }
+        }
+    }
+}
+
+artifactory {
+    contextUrl = artifactory_contextUrl
+    publish {
+        repository {
+            repoKey = artifactory_repo // The Artifactory repository key to publish to
+            username = project.hasProperty('artifactory_user') ? artifactory_user : "" // The publisher user name
+            password = project.hasProperty('artifactory_password') ? artifactory_password : "" // The publisher password
+        }
+        defaults {
+            // Reference to Gradle publications defined in the build script.
+            // This is how we tell the Artifactory Plugin which artifacts should be
+            // published to Artifactory.
+            publications('mavenJavaLibModule')
+            publishArtifacts = true
+            // Properties to be attached to the published artifacts.
+            //properties = ['qa.level': 'basic', 'dev.team' : 'core']
+            // Publish generated POM files to Artifactory (true by default)
+            publishPom = true
+        }
+    }
+    clientConfig.timeout = 1200 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
+}
+
