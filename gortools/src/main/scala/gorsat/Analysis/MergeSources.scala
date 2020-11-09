@@ -27,7 +27,7 @@ import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.RowSource
 
-case class MergeSources(rightSource : RowSource, empty : String, addRightLeft : Boolean, ilCols : Array[Int], irCols : Array[Int], same : Boolean) extends Analysis {
+case class MergeSources(rightSource : RowSource, empty : String, addRightLeft : Boolean, ilCols : Array[Int], irCols : Array[Int], same : Boolean, sortInfo: Array[Row.SortInfo]) extends Analysis {
   var lastRightRow : Row = _
   val rCols = irCols
   val lCols = ilCols
@@ -72,13 +72,13 @@ case class MergeSources(rightSource : RowSource, empty : String, addRightLeft : 
   override def setup { val dummy = rightSource.hasNext }
 
   override def process(lr : Row) {
-    if (lastRightRow != null && lastRightRow.advancedCompare(lr, null) < 0) {
+    if (lastRightRow != null && lastRightRow.advancedCompare(lr, sortInfo) < 0) {
       outputRightRow(lastRightRow); lastRightRow = null
     }
     var tryOutputFromRight = lastRightRow == null
     while (tryOutputFromRight && !wantsNoMore && rightSource.hasNext) {
       val rr = rightSource.next()
-      if (rr.advancedCompare(lr, null) < 0) outputRightRow(rr) else {
+      if (rr.advancedCompare(lr, sortInfo) < 0) outputRightRow(rr) else {
         lastRightRow = rr; tryOutputFromRight = false
       }
     }

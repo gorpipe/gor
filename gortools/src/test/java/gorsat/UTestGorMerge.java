@@ -109,4 +109,39 @@ public class UTestGorMerge {
             }
         }
     }
+
+    @Test
+    public void testMergeNorWithNorFileAndSortColumns() throws IOException {
+        File leftFile = FileTestUtils.createTempFile(workDir.getRoot(), "left.tsv",
+                "#First\tSecond\tThird\n" +
+                        "0000000000\tMWFTR\tAA\n" +
+                        "0000000000\tH\tCJHA\n" +
+                        "0000000000\tAHGDK\tEVZ\n" +
+                        "0000000000\tVAW\tGUEBV\n" +
+                        "0000000000\tTSO\tGYNEB\n");
+        File rightFile = FileTestUtils.createTempFile(workDir.getRoot(), "right.tsv",
+                "#First\tSecond\tThird\n" +
+                        "0000000000\tMVNJ\tB\n" +
+                        "0000000000\tXT\tBC\n" +
+                        "0000000000\tLZFG\tBK\n" +
+                        "0000000000\tHV\tLUR\n" +
+                        "0000000000\tPB\tRN");
+
+        String query = String.format("nor %s | merge -c First,Third %s", leftFile.getAbsoluteFile(), rightFile.getAbsoluteFile());
+        String result = TestUtils.runGorPipe(query);
+
+        String expected = "ChromNOR\tPosNOR\tFirst\tSecond\tThird\n" +
+                "chrN\t0\t0000000000\tMWFTR\tAA\n" +
+                "chrN\t0\t0000000000\tMVNJ\tB\n" +
+                "chrN\t0\t0000000000\tXT\tBC\n" +
+                "chrN\t0\t0000000000\tLZFG\tBK\n" +
+                "chrN\t0\t0000000000\tH\tCJHA\n" +
+                "chrN\t0\t0000000000\tAHGDK\tEVZ\n" +
+                "chrN\t0\t0000000000\tVAW\tGUEBV\n" +
+                "chrN\t0\t0000000000\tTSO\tGYNEB\n" +
+                "chrN\t0\t0000000000\tHV\tLUR\n" +
+                "chrN\t0\t0000000000\tPB\tRN\n";
+
+        Assert.assertEquals(expected, result);
+    }
 }
