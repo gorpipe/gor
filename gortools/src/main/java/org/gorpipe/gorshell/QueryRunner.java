@@ -40,6 +40,7 @@ public class QueryRunner extends Thread {
     private boolean timingEnabled = false;
     private boolean fileCacheEnabled = true;
     private boolean requestStatsEnabled = false;
+    private GorShellSessionFactory sessionFactory;
 
     private long startTime;
     private GorSession gorSession;
@@ -51,23 +52,17 @@ public class QueryRunner extends Thread {
     private boolean displayResults = true;
     private String configFile;
 
-    QueryRunner(String query, LineReader lineReader, Thread owner) {
+    QueryRunner(String query, LineReader lineReader, Thread owner, GorShellSessionFactory sessionFactory) {
         this.query = query;
         this.lineReader = lineReader;
         this.ownerThread = owner;
         this.gorMonitor = new GorMonitor();
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
     public void run() {
         startTime = System.currentTimeMillis();
-
-        String cwd = System.getProperty("user.dir");
-        GorShellSessionFactory sessionFactory = new GorShellSessionFactory(cwd);
-        sessionFactory.setFileCacheEnabled(fileCacheEnabled);
-        sessionFactory.setRequestStatsEnabled(requestStatsEnabled);
-        sessionFactory.setConfigFile(configFile);
-
         gorSession = sessionFactory.create();
         gorSession.getSystemContext().setMonitor(gorMonitor);
         gorSession.getEventLogger().query(query);
@@ -140,8 +135,8 @@ public class QueryRunner extends Thread {
 
     private String skipFirstTwoColumns(String header) {
         int firstTab = header.indexOf('\t');
-        int secondTab = header.indexOf('\t', firstTab+1);
-        header = header.substring(secondTab+1);
+        int secondTab = header.indexOf('\t', firstTab + 1);
+        header = header.substring(secondTab + 1);
         return header;
     }
 

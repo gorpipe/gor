@@ -53,12 +53,13 @@ import java.util.Map;
 
 public class GorShell {
 
-    final Terminal terminal;
+    Terminal terminal;
     LineReader lineReader;
-    private final CommandLine commandLine;
+    private CommandLine commandLine;
     private QueryRunner runner = null;
     private String input = "";
     private boolean exit = false;
+    public GorShellSessionFactory sessionFactory;
 
     public static class Settings {
 
@@ -73,8 +74,12 @@ public class GorShell {
 
     private Settings settings = new Settings();
 
-    private GorShell() throws IOException {
-        terminal = TerminalBuilder.builder().jansi(false).build();
+    public GorShell(GorShellSessionFactory sessionFactory) {
+        try {
+            terminal = TerminalBuilder.builder().jansi(false).build();
+        } catch (IOException e) {
+            exit();
+        }
 
         DefaultParser parser = new DefaultParser();
         parser.setEscapeChars(null);
@@ -99,6 +104,11 @@ public class GorShell {
         String historyFile = System.getProperty("user.home") + File.separator + ".gorshell_history";
         lineReader.setVariable(LineReader.HISTORY_FILE, historyFile);
         lineReader.setOpt(LineReader.Option.CASE_INSENSITIVE);
+
+        this.sessionFactory = sessionFactory;
+        this.sessionFactory.setFileCacheEnabled(settings.fileCacheEnabled);
+        this.sessionFactory.setRequestStatsEnabled(settings.requestStatsEnabled);
+        this.sessionFactory.setConfigFile(settings.configFile);
     }
 
     public static void main(String[] args) throws IOException {
@@ -107,7 +117,8 @@ public class GorShell {
         ConfigUtil.loadConfig("gor");
         PipeInstance.initialize();
 
-        GorShell gorShell = new GorShell();
+        String cwd = System.getProperty("user.dir");
+        GorShell gorShell = new GorShell(new GorShellSessionFactory(cwd));
         gorShell.run();
     }
 
@@ -236,7 +247,7 @@ public class GorShell {
         lineReader.printAbove(e.toString());
     }
 
-    private void run() throws IOException {
+    public void run() throws IOException {
         loadSettings();
         lineReader.getHistory().load();
 
@@ -363,7 +374,7 @@ public class GorShell {
 
     private void runQuery(String script) {
         resetRunner();
-        runner = new QueryRunner(script, lineReader, Thread.currentThread());
+        runner = new QueryRunner(script, lineReader, Thread.currentThread(), sessionFactory);
         runner.setTimingEnabled(settings.timingEnabled);
         runner.setFileCacheEnabled(settings.fileCacheEnabled);
         runner.setRequestStatsEnabled(settings.requestStatsEnabled);
