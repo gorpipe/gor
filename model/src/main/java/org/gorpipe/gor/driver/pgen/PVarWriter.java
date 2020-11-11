@@ -25,17 +25,29 @@ package org.gorpipe.gor.driver.pgen;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 class PVarWriter implements AutoCloseable {
     private final String fileName;
     private BufferedWriter writer;
     private boolean first = true;
+    private Map<String,String> chrToNum;
 
     PVarWriter(String fileName) {
         this.fileName = fileName;
+        chrToNum = new HashMap<>();
+        IntStream.range(1,23).forEach(i -> chrToNum.put("chr"+i,""+i));
+        chrToNum.put("chrX",Integer.toString(chrToNum.size()+1));
+        chrToNum.put("chrY",Integer.toString(chrToNum.size()+1));
+        chrToNum.put("chrXY",Integer.toString(chrToNum.size()+1));
+        chrToNum.put("chrMT",Integer.toString(chrToNum.size()+1));
+        chrToNum.put("chrM",Integer.toString(chrToNum.size()));
     }
 
-    void write(CharSequence chr, int pos, CharSequence rsId, CharSequence ref, CharSequence alt) throws IOException {
+    void write(String chr, int pos, CharSequence rsId, CharSequence ref, CharSequence alt) throws IOException {
         if (this.first) {
             this.writer = new BufferedWriter(new FileWriter(this.fileName));
             this.writer.write("#CHROM\tID\tPOS\tALT\tREF\n");
@@ -52,17 +64,13 @@ class PVarWriter implements AutoCloseable {
         }
     }
 
-    static CharSequence getChrNum(CharSequence chr) {
-        if (chr.charAt(3) > '9') { //chr = X, Y, XY, MT
-            if (chr.length() == 5) {
-                if (chr.charAt(4) == 'Y') return "25";
-                else return "26";
-            } else {
-                if (chr.charAt(3) == 'X') return "23";
-                else return "24";
-            }
+    public String getChrNum(String chr) {
+        if(chrToNum.containsKey(chr)) {
+            return chrToNum.get(chr);
         } else {
-            return chr.subSequence(3, chr.length());
+            String ret = Integer.toString(chrToNum.size());
+            chrToNum.put(chr, ret);
+            return ret;
         }
     }
 }

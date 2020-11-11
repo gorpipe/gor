@@ -10,8 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.IntStream;
 
-import static org.gorpipe.gor.driver.pgen.PVarWriter.getChrNum;
-
 public class UTestPVarWriter {
 
     @Rule
@@ -19,14 +17,16 @@ public class UTestPVarWriter {
 
     @Test
     public void testGetChrNum() {
-        IntStream.rangeClosed(1, 26).forEach(chrNum -> {
+        PVarWriter pVarWriter = new PVarWriter("");
+        IntStream.rangeClosed(1, 27).forEach(chrNum -> {
             String chrString;
             if (chrNum < 23) chrString = "chr" + chrNum;
             else if (chrNum == 23) chrString = "chrX";
             else if (chrNum == 24) chrString = "chrY";
             else if (chrNum == 25) chrString = "chrXY";
-            else chrString = "chrMT";
-            Assert.assertEquals(chrNum, Integer.parseInt(getChrNum(chrString).toString()));
+            else if (chrNum == 26) chrString = "chrMT";
+            else chrString = "Unknown";
+            Assert.assertEquals(chrNum, Integer.parseInt(pVarWriter.getChrNum(chrString)));
         });
     }
 
