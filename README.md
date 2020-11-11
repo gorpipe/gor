@@ -24,6 +24,9 @@ Then running GOR without setting up test data can be done by generating GOR rows
     ./gor-scripts-<version>/bin/gorpipe "gor <(gorrows -p chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian <(norrows 100 | group -lis -sc #1))"  
 
 Note: Substitute \<version\> with the actual latest version number (e.g. gor-scripts-2.9.0). 
+
+Optional: A version of GORpipe (GORspark) including an integration with Apache Spark can be setup by downloading the latest 
+release from https://github.com/gorpipe/gor-spark/releases. This release is much larger (~270MB) than the regular GORpipe release since it contains Apache Spark libraries. 
         
 ## Setting up test data (Optional)
 
@@ -47,6 +50,10 @@ The results should be as follows:
     chr12   60545   A       T       rs570991495
     chr13   19020013        C       T       rs181615907
     chr13   19020145        G       T       rs28970552
+
+If the GORspark version was setup the following query should work as well the results the same as above:
+
+    ./gor-scripts-<version>/bin/gorpipe "select * from gor-test-data/gor/dbsnp_test.gor limit 10" 
 
 ## Setting up an interactive shell for GORpipe
 
