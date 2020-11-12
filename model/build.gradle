@@ -33,13 +33,15 @@ project(':model') {
         implementation project(':base')
         implementation project(':util')
 
+        // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
+        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
+
         annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
         implementation 'com.google.auto.service:auto-service:1.0-rc6'
         implementation "org.aeonbits.owner:owner:1.0.+"
         implementation "commons-configuration:commons-configuration:1.10"
         implementation "com.github.samtools:htsjdk:2.22.+"
         implementation "com.github.luben:zstd-jni:1.4.4-3"  // TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
-        implementation("org.scala-lang.modules:scala-parser-combinators_2.12:1.0.7")
         implementation "com.zaxxer:HikariCP:3.4.+"
         implementation "com.fasterxml.jackson.core:jackson-databind:2.11.+"
         implementation 'org.apache.parquet:parquet-common:1.11.0'
