@@ -1,10 +1,10 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.amazonaws:aws-java-sdk-core:1.11.898
-com.amazonaws:aws-java-sdk-kms:1.11.898
-com.amazonaws:aws-java-sdk-s3:1.11.898
-com.amazonaws:jmespath-java:1.11.898
+com.amazonaws:aws-java-sdk-core:1.11.899
+com.amazonaws:aws-java-sdk-kms:1.11.899
+com.amazonaws:aws-java-sdk-s3:1.11.899
+com.amazonaws:jmespath-java:1.11.899
 com.fasterxml.jackson.core:jackson-annotations:2.11.3
 com.fasterxml.jackson.core:jackson-core:2.11.3
 com.fasterxml.jackson.core:jackson-databind:2.11.3
@@ -56,6 +56,8 @@ org.apache.httpcomponents:httpclient:4.5.13
 org.apache.httpcomponents:httpcore:4.4.13
 org.checkerframework:checker-compat-qual:2.5.5
 org.postgresql:postgresql:42.2.7
+org.scala-lang.modules:scala-parser-combinators_2.12:1.0.7
+org.scala-lang:scala-library:2.12.4
 org.slf4j:slf4j-api:1.7.12
 org.threeten:threetenbp:1.4.4
 org.tukaani:xz:1.8
