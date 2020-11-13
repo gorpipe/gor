@@ -245,7 +245,7 @@ public class ParquetFileIterator extends GenomicIterator {
                 setHeader(newHeader);
             }
         }
-        if(nor) setHeader("ChromNOR\tposNOR\t"+super.getHeader());
+        if(nor) setHeader("ChromNOR\tPosNOR\t"+super.getHeader());
     }
 
     private String getTypeName(Type type) {
