@@ -47,7 +47,6 @@ plugins {
     id "kr.motd.sphinx" version "2.9.0" apply false 
 
     // Plugins not applied everywhere.
-    id "com.jfrog.artifactory" version "4.10.0" apply false
     id "org.sonarqube" version "3.0" apply false
     id "com.github.hierynomus.license" version "0.15.0" apply false
     id "com.google.protobuf" version "0.8.13" apply false
