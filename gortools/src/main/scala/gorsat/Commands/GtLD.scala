@@ -79,15 +79,15 @@ class GtLD extends CommandInfo("GTLD",
       pipeStep = LDSelfJoinAnalysis(binsize, missingSEG, fuzzFactor, req, otherCols, valuesCol, useOnlyAsLeftVar, binN)
       if (bucketCol >= 0 || hasOption(args, "-calc")) {
         aggrUsed = true
-        pipeStep |= GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false, useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols, Nil, gcCols, 10000, ",", null)
+        pipeStep |= getGroupPipestep(gcCols, icCols)
       }
     }
     if (hasOption(args, "-calc")) {
       if (hasOption(args, "-sum") && !aggrUsed) {
-        pipeStep |= GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false, useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols, Nil, gcCols, 10000, ",", null)
+        pipeStep |= getGroupPipestep(gcCols, icCols)
       }
       if (!hasOption(args, "-sum")) {
-        pipeStep = GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false, useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols, Nil, gcCols, 10000, ",", null)
+        pipeStep = getGroupPipestep(gcCols, icCols)
         // Here we add pipeStep |= calc LD and R
       }
       val x11Col = combinedHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "LD_X11" )
@@ -101,4 +101,9 @@ class GtLD extends CommandInfo("GTLD",
     CommandParsingResult(pipeStep, combinedHeader)
   }
 
+  private def getGroupPipestep(gcCols: List[Int], icCols: List[Int]) = {
+    GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false,
+      useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols,
+      Nil, gcCols, 10000, truncate = false, ",", null)
+  }
 }

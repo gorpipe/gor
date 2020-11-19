@@ -23,9 +23,11 @@
 package gorsat;
 
 import com.google.common.collect.Iterables;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -45,6 +47,9 @@ public class UTestGroup {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -314,7 +319,7 @@ public class UTestGroup {
                 "chr1\t0\t250000000\tbingo1,bingo2,bingo3,bing...\n";
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
-        final String query = String.format("gor %s | group chrom -sc Data -set -len 25", file.getAbsolutePath());
+        final String query = String.format("gor %s | group chrom -sc Data -set -len 25 -truncate", file.getAbsolutePath());
         final String result = TestUtils.runGorPipe(query);
         Assert.assertEquals(expected, result);
     }
@@ -341,7 +346,85 @@ public class UTestGroup {
                 "chr1\t0\t250000000\t12341,12342,12343,12344,1...\n";
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
-        final String query = String.format("gor %s | group chrom -ic Data -set -len 25", file.getAbsolutePath());
+        final String query = String.format("gor %s | group chrom -ic Data -set -len 25 -truncate", file.getAbsolutePath());
+        final String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void list() throws IOException {
+        String contents = "Chrom\tPos\tData\n" +
+                "chr1\t1\tbingo1\n" +
+                "chr1\t1\tbongo1\n" +
+                "chr1\t1\tbingo1\n" +
+                "chr1\t1\tbongo1\n" +
+                "chr1\t1\tbongo2\n" +
+                "chr1\t1\tbongo3\n" +
+                "chr1\t1\tbongo4\n" +
+                "chr1\t1\tbongo5\n" +
+                "chr1\t1\tbongo6\n" +
+                "chr1\t1\tbingo2\n" +
+                "chr1\t1\tbingo3\n" +
+                "chr1\t1\tbingo4\n" +
+                "chr1\t1\tbingo5\n" +
+                "chr1\t1\tbingo6\n";
+
+        String expected = "Chrom\tbpStart\tbpStop\tlis_Data\n" +
+                "chr1\t0\t250000000\tbingo1,bongo1,bingo1,bongo1,bongo2,bongo3,bongo4,bongo5,bongo6,bingo2,bingo3,bingo4,bingo5,bingo6\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | group chrom -sc Data -lis", file.getAbsolutePath());
+        final String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void listTooLongThrowsError() throws IOException {
+        String contents = "Chrom\tPos\tData\n" +
+                "chr1\t1\tbingo1\n" +
+                "chr1\t1\tbongo1\n" +
+                "chr1\t1\tbingo1\n" +
+                "chr1\t1\tbongo1\n" +
+                "chr1\t1\tbongo2\n" +
+                "chr1\t1\tbongo3\n" +
+                "chr1\t1\tbongo4\n" +
+                "chr1\t1\tbongo5\n" +
+                "chr1\t1\tbongo6\n" +
+                "chr1\t1\tbingo2\n" +
+                "chr1\t1\tbingo3\n" +
+                "chr1\t1\tbingo4\n" +
+                "chr1\t1\tbingo5\n" +
+                "chr1\t1\tbingo6\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | group chrom -sc Data -lis -len 25", file.getAbsolutePath());
+        thrown.expect(GorDataException.class);
+        TestUtils.runGorPipe(query);
+    }
+
+    @Test
+    public void listTooLongTruncated() throws IOException {
+        String contents = "Chrom\tPos\tData\n" +
+                "chr1\t1\tbingo1\n" +
+                "chr1\t1\tbongo1\n" +
+                "chr1\t1\tbingo1\n" +
+                "chr1\t1\tbongo1\n" +
+                "chr1\t1\tbongo2\n" +
+                "chr1\t1\tbongo3\n" +
+                "chr1\t1\tbongo4\n" +
+                "chr1\t1\tbongo5\n" +
+                "chr1\t1\tbongo6\n" +
+                "chr1\t1\tbingo2\n" +
+                "chr1\t1\tbingo3\n" +
+                "chr1\t1\tbingo4\n" +
+                "chr1\t1\tbingo5\n" +
+                "chr1\t1\tbingo6\n";
+
+        String expected = "Chrom\tbpStart\tbpStop\tlis_Data\n" +
+                "chr1\t0\t250000000\tbingo1,bongo1,bingo1,bong...\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | group chrom -sc Data -lis -len 25 -truncate", file.getAbsolutePath());
         final String result = TestUtils.runGorPipe(query);
         Assert.assertEquals(expected, result);
     }

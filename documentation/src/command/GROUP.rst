@@ -57,6 +57,9 @@ Options
 | ``-len number``   | Specify the maximum column length of a set and a list.               |
 |                   | Defaults to 10000 chars.                                             |
 +-------------------+----------------------------------------------------------------------+
+| ``-truncate``     | Truncate the list or set if it exceeds the maximum length rather     |
+|                   | than throwing an exception.                                          |
++-------------------+----------------------------------------------------------------------+
 | ``-avg``          | Calculate the avg of all numeric columns.                            |
 +-------------------+----------------------------------------------------------------------+
 | ``-std``          | Calculate the std of all numeric columns.                            |
