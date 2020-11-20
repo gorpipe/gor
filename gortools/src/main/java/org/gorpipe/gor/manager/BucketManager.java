@@ -161,14 +161,13 @@ public class BucketManager<T extends BucketableTableEntry> {
                 return 0;
             }
 
-            cleanTempFolders(bucketizeLock);
-            
             if (maxBucketCount <= 0) {
                 maxBucketCount = Integer.parseInt(table.getConfigTableProperty(HEADER_BUCKET_MAX_BUCKETS, Integer.toString(DEFAULT_MAX_BUCKET_COUNT)));
             }
 
-            // TODO: Enable clean up again with issue GOP-1444
-            // cleanBucketFiles(bucketizeLock, forceClean);
+            cleanTempBucketFolders(bucketizeLock);
+            cleanOldBucketFiles(bucketizeLock, forceClean);
+
             return doBucketize(bucketizeLock, packLevel, maxBucketCount);
         } catch (IOException e) {
             throw new GorSystemException(e);
@@ -176,13 +175,23 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     /**
-     * Delete the given bucket.
+     * Delete the given buckets.
      *
      * @param buckets   list of buckets to be deleted.
      */
     public void deleteBuckets(Path... buckets) {
+        deleteBuckets(false, buckets);
+    }
+    
+    /**
+     * Delete the given buckets.
+     *
+     * @param force         should grace period be ignored.
+     * @param buckets   list of buckets to be deleted.
+     */
+    public void deleteBuckets(boolean force, Path... buckets) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
-            deleteBuckets(trans.getLock(), false, buckets);
+            deleteBuckets(trans.getLock(), force, buckets);
             trans.commit();
         } catch (IOException e) {
             throw new GorSystemException(e);
@@ -461,41 +470,56 @@ public class BucketManager<T extends BucketableTableEntry> {
         lock.assertValid();
 
         // Delete bucket files.
-        for (Path bucket : buckets) {
-            Path bucketFile = resolve(table.getRootPath(), bucket);
-            if (Files.exists(bucketFile)) {
-                long lastAccessTime = Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
-                log.trace("Checking bucket file CTM {} LAT {} GPFDB {}", System.currentTimeMillis(),
-                        lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
-                if (System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis() || force) {
-                    log.debug("Deleting bucket file {}", bucketFile);
-                    Files.delete(bucketFile);
-                }
-            }
-        }
+        deleteBucketFiles(force, buckets);
 
         // Remove the files from the bucket.
         table.removeFromBucket(table.filter().buckets(buckets).includeDeleted().get());
     }
 
     /**
+     * Delete the given bucket files.  Bucketfiles accessed within the grace period are not deleted
+     * unless the force=true.
+     *
+     * @param force         should grace period be ignored.
+     * @param buckets       array of bucket paths to delete.
+     * @throws IOException
+     */
+    private void deleteBucketFiles(boolean force, Path... buckets) throws IOException {
+        for (Path bucket : buckets) {
+            Path bucketFile = resolve(table.getRootPath(), bucket);
+            if (Files.exists(bucketFile)) {
+                long lastAccessTime = Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
+                log.trace("Checking bucket file CTM {} LAT {} GPFDB {}", System.currentTimeMillis(),
+                        lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
+                if (force || System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()) {
+                    log.debug("Deleting bucket file {}", bucketFile);
+                    Files.delete(bucketFile);
+                }
+            }
+        }
+    }
+
+    /**
      * Cleans up bucketFiles that are not in use and have not been accessed for a given period of time.
      * <p>
-     * TODO:  We are not handling changed bucket dirs very well, i.e. if we remove bucket dir from the list of bucket dirs because we
-     * don't want add more files to that directory it will not be included in the cleaning.  Hard to changes this until we add
-     * the bucket dirs to the table header (then we can keep two lists).  Note, not enough to check the directories in use in
-     * the file as we remove them from the gord file before actual delete the files (because of the delayed delete).
+     *
+     * Notes:
+     *  1. We only manage bucketdirs that are listed in the table meta data and are in use.  So if we stop using a
+     *     folder and there are no buckets there listed in the table then we need to manage it manually.
      *
      * @param bucketizeLock  the bucketize lock to use.
      * @param force force cleaning, ignoring grace periods.
      */
-    protected void cleanBucketFiles(TableLock bucketizeLock, boolean force) throws IOException {
+    protected void cleanOldBucketFiles(TableLock bucketizeLock, boolean force) throws IOException {
         if (!bucketizeLock.isValid()) {
             log.debug("Bucketization in progress, will skip cleaning bucket files.");
             return;
         }
 
-        for (Path bucketDir : getBucketDirs()) {
+        Set<Path> allBucketDirs = new HashSet<>(getBucketDirs());
+        allBucketDirs.addAll(table.getBuckets().stream().map(b -> b.getParent()).collect(Collectors.toSet()));
+
+        for (Path bucketDir : allBucketDirs) {
             Path fullPathBucketDir = resolve(table.getRootPath(), bucketDir);
 
             if (!Files.exists(fullPathBucketDir)) {
@@ -504,14 +528,12 @@ public class BucketManager<T extends BucketableTableEntry> {
             }
             List<Path> bucketsToClean = collectBucketsToClean(fullPathBucketDir, force);
 
-            // Perform the deletion.
+            // Perform the deletion., safest to use the deleteBuckets table methods.
             if (bucketsToClean.size() > 0) {
-                try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
-                    deleteBuckets(trans.getLock(), false, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
-                    trans.commit();
-                    for (Path bucket : bucketsToClean) {
-                        log.warn("Bucket '{}' removed as it is not used", bucket);
-                    }
+                //deleteBucketFiles(force, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
+                deleteBuckets(force, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
+                for (Path bucket : bucketsToClean) {
+                    log.warn("Bucket '{}' removed as it is not used", bucket);
                 }
             }
         }
@@ -543,9 +565,11 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     /**
-     * Cleans up temp folders from old bucketization runs that might have been left behind.
+     * Cleans up bucket folders.
+     *  1. Temp files from old bucketization runs that might have been left behind.
+     *  2. Buckets that are not used any more.
      */
-    void cleanTempFolders(TableLock bucketizeLock) {
+    void cleanTempBucketFolders(TableLock bucketizeLock) {
         if (!bucketizeLock.isValid()) {
             log.debug("Bucketization in progress, will skip cleaning bucket files.");
             return;
@@ -642,7 +666,7 @@ public class BucketManager<T extends BucketableTableEntry> {
                 .filter(l -> !l.hasBucket()
                         || (!l.isDeleted()
                             && relBucketsToDelete != null
-                            && relBucketsToDelete.contains(l.getBucketReal())))
+                            && relBucketsToDelete.contains(Paths.get(l.getBucketReal()))))
                 .collect(Collectors.toList());
 
         int bucketCreateCount = (int) Math.ceil((double) lines2bucketize.size() / getBucketSize());

@@ -300,14 +300,13 @@ public class UTestTableManager {
         long startTime = System.currentTimeMillis();
         log.info("Time select all: {}", startTime);
         table.reloadForce();
-        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("ABC1234"), false);
-
+        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap(    "PN100"), false);
         long newTime = System.currentTimeMillis() - startTime;
-        log.info("Time using table manager: {}", newTime);
+        log.info("Time using table manager (filter by tag): {}", newTime);
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
-        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("ABC1234"), true, false);
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN100"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
 
@@ -326,16 +325,16 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+            DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
-        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("ABC1234"), true, false);
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN515218"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
 
         startTime = System.currentTimeMillis();
         table.reloadForce();
-        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("ABC1234"), false);
+        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("PN515218"), false);
         long newTime = System.currentTimeMillis() - startTime;
 
         log.info("Time using table manager: {}", newTime);
@@ -352,10 +351,10 @@ public class UTestTableManager {
         String name = "testSelectFromLargeDictionary";
 
         long startTime = 0;
-        String tags = "PN1000,PN10000,PN500000,PN900000";
+        String tags = "PN345789,PN620307,PN580941";
 
         startTime = System.currentTimeMillis();
-        String res = TestUtils.runGorPipe("nor -asdict ../../testing/misc_data/1m/1m.gord | where (#2 == 'PN1000' or #2 == 'PN10000' or #2 == 'PN500000' or #2 == 'PN900000')");
+        String res = TestUtils.runGorPipe("nor -asdict ../../testing/data/1m/1m.gord | where (#2 == 'PN345789' or #2 == 'PN620307' or #2 == 'PN580941')");
         long gorpipeTime = System.currentTimeMillis() - startTime;
         log.info("Filtering lines with gorpipe from large dict: {}", gorpipeTime);
 
@@ -364,7 +363,7 @@ public class UTestTableManager {
         man.setBucketSize(100);
 
         startTime = System.currentTimeMillis();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         List<DictionaryEntry> entries = table.filter().tags(tags.split(",")).get();
         long tableLoadAndTagFilterTime = System.currentTimeMillis() - startTime;
         log.info("Filtering entries with dictionary table by tags from large dict: {}", tableLoadAndTagFilterTime);
@@ -380,6 +379,16 @@ public class UTestTableManager {
         }
         long tableEntryFilterTime = System.currentTimeMillis() - startTime;
         log.info("Filtering entries with dictionary table by key from large dict (already loaded): {}", tableEntryFilterTime);
+
+        startTime = System.currentTimeMillis();
+        entries = table.filter().files(entries.stream().map(e -> e.getContent()).toArray(String[]::new)).get();
+        long tableEntryFilterFilesTime = System.currentTimeMillis() - startTime;
+        log.info("Filtering entries with dictionary table by file from large dict (already loaded): {}", tableEntryFilterFilesTime);
+
+        startTime = System.currentTimeMillis();
+        entries = table.filter().tags(tags.split(",")).get();
+        long tableFilesFilterTime = System.currentTimeMillis() - startTime;
+        log.info("Filtering entries with dictionary table by tags from large dict (already loaded): {}", tableTagFilterTime);
     }
 
     @Ignore
@@ -389,7 +398,7 @@ public class UTestTableManager {
         String name = "testDeleteFromLargeDictionary";
 
         Path gord = workDirPath.resolve("deleteFrom1m.gord");
-        Files.copy(Paths.get("../../testing/misc_data/1m/1m.gord"), gord);
+        Files.copy(Paths.get("../../testing/data/1m/1m.gord"), gord);
 
         long startTime = 0;
         String tags = "PN1000,PN10000,PN500000,PN900000";
@@ -413,7 +422,7 @@ public class UTestTableManager {
         log.info("Deleting entries from dictionary from large dict (already loaded): {}", tableDeleteTime);
     }
 
-   /* @Ignore
+    @Ignore
     // Will ignore this for has we don't have access to the large dictionary yet.  Update and enable when we have access to 1m line dict.
     @Test
     public void testSignatureOfLargeDictionaryFewTags() throws Exception {
@@ -421,9 +430,9 @@ public class UTestTableManager {
         String[] tags = new String[]{"PN1000", "PN10000", "PN500000", "PN900000"};
 
         TableManager man = new TableManager();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         long startTime = System.currentTimeMillis();
-        String s1 = table.getSignatureCand(tags);
+        String s1 = table.getSignature(tags);
         long t1 = System.currentTimeMillis() - startTime;
         log.info("Signature (few tags, table not loaded, directly from bytes): {}", t1);
 
@@ -439,7 +448,7 @@ public class UTestTableManager {
 
         Assert.assertEquals("Signature is diffrerent", s1, s2);
         Assert.assertEquals("Signature is diffrerent", s1, s3);
-    }*/
+    }
 
     @Ignore
     // Will ignore this for has we don't have access to the large dictionary yet.  Update and enable when we have access to 1m line dict.
@@ -448,7 +457,7 @@ public class UTestTableManager {
         String name = "testSignatureOfLargeDictionaryManyTags";
 
         TableManager man = new TableManager();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         Random r = new Random();
         String[] tags = table.getAllActiveTags().stream().filter(t -> r.nextFloat() > 0.9).collect(Collectors.toList()).toArray(new String[0]);  // Randomly pick 10% of the tags..
 
@@ -567,7 +576,7 @@ public class UTestTableManager {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            activeEntries.add(entries[i]);
+            activeEntries.add(entries[i]);                                          
 
             if (i > 0 && i % 3 == 0) {
                 // Remove every third pn.
