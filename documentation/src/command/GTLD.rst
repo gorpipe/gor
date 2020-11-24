@@ -80,6 +80,48 @@ An example of this is shown below:
 	| varjoin -r -e 0 <(gor myleftvars.gor | select 1-4 | calc useonlyasleftvar 1)
 	| GTLD -sum -calc -f #maxlddist#
 
+
+This scripts demonstrates how to test the caluclation of D from first principles by
+simulating haplotypes of biallelic SNPs in disequilibrium and genotypes based on HWE
+
+.. code-block:: gor
+
+    def #pns# = 100000;
+    def #p# = 0.3;
+    def #q# = 0.02;
+    def #D# = 0.1; /* Should ideally be smaller than all of: p*q, (1-p)*(1-q), (1-p)*q, p*(1-q) */
+
+    nor <(gor <(norrows #pns#  | calc p #p# | calc q #q# | calc D #D#
+    | calc h1 if(random()<p,if(random()<(p*q+D)/p,'0_0','0_1'),if(random()<((1-p)*q-D)/(1-p),'1_0','1_1'))
+    | calc h2 if(random()<p,if(random()<(p*q+D)/p,'0_0','0_1'),if(random()<((1-p)*q-D)/(1-p),'1_0','1_1'))
+    | colsplit h1 2 snp_f -s '_'
+    | colsplit h2 2 snp_m -s '_'
+    | calc gt1 decode(snp_f_1+'_'+snp_m_1,'0_0,0,0_1,1,1_0,1,1_1,2')
+    | calc gt2 decode(snp_f_2+'_'+snp_m_2,'0_0,0,0_1,1,1_0,1,1_1,2')
+    | group -lis -sc gt1,gt2 -s '' -len 1000000
+    | calc values lis_gt1+','+lis_gt2
+    | hide lis_*
+    | split values
+    | rownum
+    | rename rownum pos
+    | calc chrom 'chr1'
+    | calc ref 'A'
+    | calc alt 'T'
+    )
+    | select chrom,pos,ref,alt,values
+    | gtld -sum -f 100 | gtld -calc /* can also be written as single GTLD -sum -calc */
+    )
+    | multimap -cartesian <(norrows #pns# | calc p #p# | calc q #q# | calc D #D#
+    | calc h1 if(random()<p,if(random()<(p*q+D)/p,'0_0','0_1'),if(random()<((1-p)*q-D)/(1-p),'1_0','1_1'))
+    | group -gc h1 -count
+    | replace allcount float(allcount)/#pns#
+    | pivot h1 -v 0_0,0_1,1_0,1_1 -e 0
+    | calc De #1*#4-#2*#3
+    | select De)
+    | select distance,LD_D-LD_r,De
+    | throwif distance = 0 and abs(ld_Dp-1.0)>0.01
+    | throwif abs(distance) = 1 and abs(LD_D - De)>0.01
+
 Related commands
 ----------------
 
