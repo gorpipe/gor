@@ -59,7 +59,7 @@ class GtLD extends CommandInfo("GTLD",
       leftHeader = leftHeader.split("\t").slice(0, 2).mkString("\t") + "\t" + otherCols.map(allCols(_)).mkString("\t")
       combinedHeader = leftHeader + "\tdistance\t" + leftHeader.split("\t").slice(1, leftHeader.length).mkString("\t")
 
-      combinedHeader += "\tLD_x11\tLD_x12\tLD_x21\tLD_x22"
+      combinedHeader += "\tLD_g00\tLD_g10\tLD_g20\tLD_g01\tLD_g11\tLD_g21\tLD_g02\tLD_g12\tLD_g22"
       combinedHeader = IteratorUtilities.validHeader(combinedHeader)
     }
 
@@ -90,12 +90,12 @@ class GtLD extends CommandInfo("GTLD",
         pipeStep = getGroupPipestep(gcCols, icCols)
         // Here we add pipeStep |= calc LD and R
       }
-      val x11Col = combinedHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "LD_X11" )
-      if (x11Col < 0) {
-        throw new GorParsingException("For the -calc option the input must have the columns LD_x11,LD_x12,LD_x21, and LD_x22.  You need to apply -sum as well.")
+      val g00Col = combinedHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "LD_G00" )
+      if (g00Col < 0) {
+        throw new GorParsingException("For the -calc option the input must have the columns LD_g00, g10, g20, g01, ..., and LD_g22.  You need to apply -sum as well.")
       }
-      pipeStep |= LDcalculation(x11Col)
-      combinedHeader += "\tLD_Dp\tLD_r"
+      pipeStep |= LDcalculation(g00Col)
+      combinedHeader += "\tLD_D\tLD_Dp\tLD_r"
     }
 
     CommandParsingResult(pipeStep, combinedHeader)
