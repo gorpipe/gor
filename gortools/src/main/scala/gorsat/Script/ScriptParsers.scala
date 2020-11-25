@@ -65,14 +65,14 @@ object ScriptParsers {
     * @param splitOption  Payload from -split option
     * @return  Returns the split options
     */
-  def splitOptionParser(splitOption: String): (String, String, String) = { // Returns the Split option (for case-sensitive replace), split size and split overlap.
-    val comReg = """.*\-((?i)\Qsplit\E[ ]+)([0-9:]*).*""".r
+  def splitOptionParser(splitOption: String): (String, String, String, Boolean) = { // Returns the Split option (for case-sensitive replace), split size and split overlap.
+    val comReg = """.*\-((?i)\Qspli\E[\S]+[ ]+)([0-9:]*).*""".r
     try {
       val comReg(cmd, al) = splitOption
       if (al.contains(":")) {
         val x = al.split(':')
-        (cmd, x(0), x(1))
-      } else if( al.length == 0 ) {
+        (cmd, x(0), x(1), false)
+      } else if( al.isEmpty ) {
         var a = CommandParseUtilities.quoteSafeSplit(splitOption, ' ')
         var i = 0
         while( !a(i).contains("-split") ) i += 1
@@ -80,13 +80,14 @@ object ScriptParsers {
           a = CommandParseUtilities.quoteSafeSplit(a(i).substring(2,a(i).length-1), ' ')
           i = 0
         }
-        (cmd, a(i+1), "")
+        val zbased = a(i).equals("-splitzero")
+        (cmd, a(i+1), "", zbased)
       } else {
-        (cmd, al, "")
+        (cmd, al, "", false)
       }
     } catch {
       case _: Exception =>
-        ("", "", "")
+        ("", "", "", false)
     }
   }
 

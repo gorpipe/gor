@@ -47,11 +47,11 @@ public class UTestPgor {
         String exp = "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
                 "chr22\t16062156\t16063236\tLA16c-4G1.3\n" +
                 "chr22\t16076051\t16076172\tLA16c-4G1.4\n";
-        String res = TestUtils.runGorPipe("pgor -split <(gor -p chr22 ../tests/data/gor/genes.gor | top 2) ../tests/data/gor/genes.gor | signature -timeres 1");
+        String res = TestUtils.runGorPipe("pgor -splitzero <(gor -p chr22 ../tests/data/gor/genes.gor | top 2) ../tests/data/gor/genes.gor | signature -timeres 1");
         Assert.assertEquals("pgor nested split does not provide correct results", exp, res);
 
         res = TestUtils.runGorPipe("create split = gor -p chr22 ../tests/data/gor/genes.gor | top 2;" +
-                "pgor -split <(gor [split]) ../tests/data/gor/genes.gor | signature -timeres 1");
+                "pgor -splitzero <(gor [split]) ../tests/data/gor/genes.gor | signature -timeres 1");
         Assert.assertEquals("pgor nested split does not provide correct results", exp, res);
     }
 
@@ -73,7 +73,7 @@ public class UTestPgor {
     @Test
     public void testPgorWithLateExpansion() {
         String query = "create splits = gor ../tests/data/gor/genes.gor | select 1-3 | top 10 | signature -timeres 1;" +
-                "create xxx = pgor -split <(gor [splits]) ../tests/data/gor/genes.gor;" +
+                "create xxx = pgor -splitzero <(gor [splits]) ../tests/data/gor/genes.gor;" +
                 "gor [xxx]";
 
         String[] lines = TestUtils.runGorPipeLines(query);
