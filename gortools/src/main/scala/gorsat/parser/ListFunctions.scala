@@ -665,7 +665,7 @@ object ListFunctions {
     case class CountHolder(var count : Int)
     var groupCount = scala.collection.mutable.HashMap.empty[String, CountHolder]
     cvp => {
-      ex1(cvp).split(ex2(cvp)).foreach( x => {
+      ex1(cvp).split(ex2(cvp),-1).foreach( x => {
           groupCount.get(x) match {
             case Some(x) => x.count += 1
             case None =>
