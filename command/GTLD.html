@@ -228,6 +228,45 @@ The following query calculate LD in a single gene:</p>
 | GTLD -sum -calc -<span class="no">f</span> #maxlddist#
 </pre></div>
 </div>
+<p>This scripts demonstrates how to test the caluclation of D from first principles by
+simulating haplotypes of biallelic SNPs in disequilibrium and genotypes based on HWE</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> #pns# = 100000;
+<span class="nd">def</span> #<span class="no">p</span># = 0.3;
+<span class="nd">def</span> #q# = 0.02;
+<span class="nd">def</span> #D# = 0.1; /* Should ideally be smaller than all of: <span class="no">p</span>*q, (1-<span class="no">p</span>)*(1-q), (1-<span class="no">p</span>)*q, <span class="no">p</span>*(1-q) */
+
+<span class="nd">nor</span> &lt;(<span class="nd">gor</span> &lt;(norrows #pns#  | calc <span class="no">p</span> #<span class="no">p</span># | calc q #q# | calc D #D#
+| calc h1 if(random()&lt;<span class="no">p</span>,if(random()&lt;(<span class="no">p</span>*q+D)/<span class="no">p</span>,&#39;0_0&#39;,&#39;0_1&#39;),if(random()&lt;((1-<span class="no">p</span>)*q-D)/(1-<span class="no">p</span>),&#39;1_0&#39;,&#39;1_1&#39;))
+| calc h2 if(random()&lt;<span class="no">p</span>,if(random()&lt;(<span class="no">p</span>*q+D)/<span class="no">p</span>,&#39;0_0&#39;,&#39;0_1&#39;),if(random()&lt;((1-<span class="no">p</span>)*q-D)/(1-<span class="no">p</span>),&#39;1_0&#39;,&#39;1_1&#39;))
+| colsplit h1 2 snp_f -s &#39;_&#39;
+| colsplit h2 2 snp_m -s &#39;_&#39;
+| calc gt1 decode(snp_f_1+&#39;_&#39;+snp_m_1,&#39;0_0,0,0_1,1,1_0,1,1_1,2&#39;)
+| calc gt2 decode(snp_f_2+&#39;_&#39;+snp_m_2,&#39;0_0,0,0_1,1,1_0,1,1_1,2&#39;)
+| group -lis -sc gt1,gt2 -s &#39;&#39; -len 1000000
+| calc values lis_gt1+&#39;,&#39;+lis_gt2
+| hide lis_*
+| split values
+| rownum
+| rename rownum <span class="na">pos</span>
+| calc chrom &#39;chr1&#39;
+| calc ref &#39;A&#39;
+| calc <span class="na">alt</span> &#39;T&#39;
+)
+| select chrom,<span class="na">pos</span>,ref,<span class="na">alt</span>,values
+| gtld -sum -<span class="no">f</span> 100 | gtld -calc /* can also be written as single GTLD -sum -calc */
+)
+| multimap -cartesian &lt;(norrows #pns# | calc <span class="no">p</span> #<span class="no">p</span># | calc q #q# | calc D #D#
+| calc h1 if(random()&lt;<span class="no">p</span>,if(random()&lt;(<span class="no">p</span>*q+D)/<span class="no">p</span>,&#39;0_0&#39;,&#39;0_1&#39;),if(random()&lt;((1-<span class="no">p</span>)*q-D)/(1-<span class="no">p</span>),&#39;1_0&#39;,&#39;1_1&#39;))
+| group -<span class="no">gc</span> h1 -<span class="no">count</span>
+| replace allcount <span class="k">float</span>(allcount)/#pns#
+| pivot h1 -v 0_0,0_1,1_0,1_1 -e 0
+| calc De #1*#4-#2*#3
+| select De)
+| select <span class="na">distance</span>,LD_D-LD_r,De
+| throwif <span class="na">distance</span> = 0 and abs(ld_Dp-1.0)&gt;0.01
+| throwif abs(<span class="na">distance</span>) = 1 and abs(LD_D - De)&gt;0.01
+</pre></div>
+</div>
 <div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
