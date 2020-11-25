@@ -222,6 +222,18 @@ public class UTestGorMapMultimap {
     }
 
     @Test
+    public void testMapLookupCacheWithSameSignature() {
+        String query = "create xxx = gor ../tests/data/gor/genes.gor | top 1" +
+                "| inset -c gene_symbol <(nor -h ../tests/data/gor/genes.gor | top 1 | select gene_symbol,1-) -b -cis " +
+                "| map -c gene_symbol <(nor -h ../tests/data/gor/genes.gor | top 1 |select gene_symbol,1-) -m 0; gor [xxx] | select 1,2,Gene_Symbolx";
+
+        String res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Wrong result from inset/map query", res,
+                "Chrom\tgene_start\tGene_Symbolx\n" +
+                "chr1\t11868\tDDX11L1\n");
+    }
+
+    @Test
     public void testMapCartesianSingleColumn() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | multimap -cartesian <(nor " + mapJoin.getCanonicalPath() + " | select #1)";
         int count = TestUtils.runGorPipeCount(query);

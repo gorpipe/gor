@@ -115,7 +115,7 @@ object MapAndListUtilities {
 
   def getSingleHashMap(filename: String, iterator: LineIterator, caseInsensitive: Boolean, ic: Int,
                        oc: Array[Int], asSet: Boolean, skipEmpty: Boolean, session: GorSession): singleHashMap =  {
-    val extFilename = "map" + filename + ic + oc.mkString(",")
+    val extFilename = "map" + filename + ic + oc.mkString(",") + asSet
     val ocl = oc.length
     syncGetSingleHashMap(extFilename, session) match {
       case Some(theMap) =>
