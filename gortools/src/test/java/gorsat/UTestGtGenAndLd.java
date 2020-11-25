@@ -63,7 +63,7 @@ public class UTestGtGenAndLd {
         String query = "create yyy = " + basicGtGen + basicGtLd + ";" +
                 "gor [yyy] | gtld -calc" +
                 " | merge <(" + basicGtGen + basicGtLd + " -calc) " +
-                " | group 1 -gc 3- -count | throwif allcount != 1 | where 2=3";
+                " | group 1 -gc 3- -count | throwif allcount != 2 | where 2=3";
 
         TestUtils.runGorPipe(testSetupGORQL + query);
     }
