@@ -170,7 +170,7 @@ object GroupAnalysis {
       for (key <- groupMap.keys.toList.sorted) {
         val sh = groupMap(key)
         val lineBuilder = new mutable.StringBuilder
-        lineBuilder.append(bi.key)
+        lineBuilder.append(bi.chr)
         lineBuilder.append('\t')
         if (useSegment) {
           lineBuilder.append(bi.sta)
@@ -447,7 +447,7 @@ object GroupAnalysis {
                              truncate: Boolean, sepVal: String, outgoingHeader: RowHeader) extends
     BinAnalysis(GenomeRowHandler(), BinAggregator(
       AggregateFactory(1, true, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg, useStd,
-        useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2, 1)) {
+        useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2, 1, useKeyForChrom = true)) {
 
     override def isTypeInformationMaintained: Boolean = outgoingHeader != null
 
