@@ -33,7 +33,7 @@ import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.LineIterator
 
-import scala.collection.mutable
+import scala.collection.{JavaConverters, mutable}
 import scala.collection.mutable.ArrayBuffer
 
 object GorKing2 {
@@ -394,7 +394,9 @@ object GorKing2 {
           }
           val grsize = (pns1.length / 100).max(1) // split for max 100 threads
           val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._2))
-          pns1groups.foreach(x => process_group(x, pns2))
+          val jpns1groups = JavaConverters.seqAsJavaList(pns1groups.toSeq)
+          jpns1groups.parallelStream().forEach(x => process_group(x, pns2))
+          //pns1groups.foreach(x => process_group(x, pns2))
           gtbarray = Array.ofDim[Byte](1,1) /* Free the memory */
         }
       }
