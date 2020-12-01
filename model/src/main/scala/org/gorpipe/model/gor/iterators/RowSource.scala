@@ -28,7 +28,6 @@ import org.gorpipe.model.gor.Pipes
 
 abstract class RowSource extends GenomicIterator with AutoCloseable {
   var bufferSize: Int = Pipes.rowsToProcessBuffer
-  private var ex : Throwable = _
   var parent : RowSource = _
 
   def getParent : RowSource = parent
@@ -46,19 +45,8 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
   def terminateReading() { /* do nothing */ }
   def getBufferSize : Int = bufferSize
   def setBufferSize( bs : Int ) { bufferSize = bs }
-  def isBuffered = false
 
   def getGorHeader: GorHeader = null
-
-  def setEx(throwable: Throwable) : Unit = {
-    if (ex == null || throwable == null) {
-      ex = throwable
-    }
-  }
-
-  def getEx: Throwable = {
-    ex
-  }
 
   override def clone(): RowSource = {
     val rs = new RowSource {
@@ -68,7 +56,7 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
       override def close(): Unit = ???
     }
     rs.bufferSize = bufferSize
-    rs.ex = ex
+    rs.setEx(this.getEx)
     rs.parent = parent
     rs
   }

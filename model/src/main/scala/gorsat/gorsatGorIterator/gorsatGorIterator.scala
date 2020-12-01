@@ -26,7 +26,7 @@
 
 package gorsat.gorsatGorIterator
 
-import org.gorpipe.gor.model.GorIterator
+import org.gorpipe.gor.model.{GenomicIterator, GorIterator}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
@@ -36,7 +36,7 @@ abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
 
   def getRowSource: RowSource
   def getUsedFiles: List[String]
-  def processArguments(args : Array[String], executeNor : Boolean, forcedInputHeader : String = ""): RowSource
+  def processArguments(args : Array[String], executeNor : Boolean, forcedInputHeader : String = ""): GenomicIterator
 
   def scalaInit(iparams : String, forcedInputHeader : String = "")
 

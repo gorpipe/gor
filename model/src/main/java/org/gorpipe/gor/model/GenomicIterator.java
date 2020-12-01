@@ -105,6 +105,7 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
 
 
     }
+    private Throwable ex = null;
     private String header = "";
     private int colnum = 0;
 
@@ -373,5 +374,19 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
             this.header = Arrays.stream(cols).mapToObj(i -> headerCols[i]).collect(Collectors.joining("\t"));
         }
         this.colnum = cols.length;
+    }
+
+    public void setEx(Throwable throwable) {
+        if (ex == null || throwable == null) {
+            ex = throwable;
+        }
+    }
+
+    public Throwable getEx() {
+        return ex;
+    }
+
+    public boolean isBuffered() {
+        return false;
     }
 }

@@ -120,6 +120,33 @@ public class GorJavaUtilities {
         }
     }
 
+    public static String[] splitResourceHints(String query, String validStart) {
+        int i = query.indexOf("/*+");
+        String[] ret = new String[] {query,null};
+        if (i!=-1) {
+            int e = query.indexOf("*/",i+3);
+            String hints = query.substring(i+3,e).trim();
+            List<String> resourceHints = new ArrayList<>();
+            List<String> sqlHints = new ArrayList<>();
+            String[] hintSplit = hints.split("[ ]+");
+            Arrays.asList(hintSplit).forEach(hint -> {
+                if (hint.startsWith(validStart)) {
+                    resourceHints.add(hint);
+                } else {
+                    sqlHints.add(hint);
+                }
+            });
+            if (resourceHints.size()>0) ret[1] = String.join(" ", resourceHints);
+            if (sqlHints.size()==0) {
+                query = query.substring(0,i) + query.substring(e+2);
+            } else {
+                query = query.substring(0,i+3) + String.join(" ", sqlHints) + query.substring(e);
+            }
+            ret[0] = query;
+        }
+        return ret;
+    }
+
     public static String createMapString(Map<String,String> createMap) {
         return createMap.entrySet().stream().map(e -> "create "+e.getKey()+" = "+e.getValue()).collect(Collectors.joining("; ","",""));
     }

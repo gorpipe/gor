@@ -24,6 +24,7 @@ package gorsat.process;
 
 import gorsat.BatchedReadSource;
 import gorsat.Commands.Processor;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorRunner;
 import org.gorpipe.model.gor.iterators.RowSource;
 
@@ -33,7 +34,7 @@ import org.gorpipe.model.gor.iterators.RowSource;
 public class GenericGorRunner extends GorRunner {
 
     @Override
-    public void run(RowSource iterator, Processor processor) {
+    public void run(GenomicIterator iterator, Processor processor) {
         if (processor != null) {
             runProcessorHelper(iterator, processor);
         } else {
@@ -43,8 +44,8 @@ public class GenericGorRunner extends GorRunner {
         }
     }
 
-    private void runProcessorHelper(RowSource iterator, Processor processor) {
-        RowSource brs = iterator.isBuffered() ? iterator : new BatchedReadSource(iterator, GorPipe.brsConfig());
+    private void runProcessorHelper(GenomicIterator iterator, Processor processor) {
+        GenomicIterator brs = iterator.isBuffered() ? iterator : new BatchedReadSource(iterator, GorPipe.brsConfig());
         try {
             processor.rs_$eq(iterator);
             processor.securedSetup(null);

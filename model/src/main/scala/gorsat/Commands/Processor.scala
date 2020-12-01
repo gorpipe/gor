@@ -22,13 +22,12 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.model.Row
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 
 abstract class Processor {
   var wantsNoMore: Boolean = false
   var pipeFrom: Processor
-  var rs: RowSource = _
+  var rs: GenomicIterator = _
 
   def reportWantsNoMore()
 

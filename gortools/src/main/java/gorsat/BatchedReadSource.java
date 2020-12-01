@@ -24,6 +24,7 @@ package gorsat;
 
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.monitor.GorMonitor;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
@@ -214,7 +215,7 @@ public class BatchedReadSource extends RowSource {
         }
     }
 
-    public BatchedReadSource(RowSource sourceIterator, BatchedReadSourceConfig brsConfig) {
+    public BatchedReadSource(GenomicIterator sourceIterator, BatchedReadSourceConfig brsConfig) {
         this(sourceIterator,brsConfig,null,null);
     }
 
