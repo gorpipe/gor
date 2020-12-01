@@ -63,7 +63,7 @@ case class FixedWidthGtTransposeAnalysis(pns: Array[String], bucketToPnIdxList: 
                                          cols: Boolean, width: Int)
   extends GtTransposeAnalysis(pns, bucketToPnIdxList, markerToIdxMap, bCol, vCol, colIndices, cols) {
 
-  val pnIdxToGtArray = Array.ofDim[Char](pnCount, markerCount * width)
+  val pnIdxToGtArray = Array.fill[Char](pnCount, markerCount * width)(' ')
 
   override def handleGenotypes(values: CharSequence, pnAbsIds: Array[Int], pnRelIds: Array[Int], markerIdx: Int): Unit = {
     var i = 0
@@ -102,7 +102,7 @@ case class SepGtTransposeAnalysis(pns: Array[String], bucketToPnIdxList: Map[Str
                                   bCol: Int, vCol: Int, colIndices: Array[Int], cols: Boolean, sep: Char)
   extends GtTransposeAnalysis(pns, bucketToPnIdxList, markerToIdxMap, bCol, vCol, colIndices, cols) {
 
-  val pnIdxToGtArray = Array.ofDim[CharSequence](pnCount, markerCount)
+  val pnIdxToGtArray = Array.fill[CharSequence](pnCount, markerCount)("")
 
   override def handleGenotypes(values: CharSequence, pnAbsIds: Array[Int], pnRelIds: Array[Int], markerIdx: Int): Unit = {
     var valueIdx = 0
