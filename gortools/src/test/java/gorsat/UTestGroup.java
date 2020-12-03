@@ -319,7 +319,7 @@ public class UTestGroup {
                 "chr1\t0\t250000000\tbingo1,bingo2,bingo3,bing...\n";
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
-        final String query = String.format("gor %s | group chrom -sc Data -set -len 25 -truncate", file.getAbsolutePath());
+        final String query = String.format("gor %s | group chrom -sc Data -set -len 25", file.getAbsolutePath());
         final String result = TestUtils.runGorPipe(query);
         Assert.assertEquals(expected, result);
     }
@@ -346,7 +346,7 @@ public class UTestGroup {
                 "chr1\t0\t250000000\t12341,12342,12343,12344,1...\n";
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
-        final String query = String.format("gor %s | group chrom -ic Data -set -len 25 -truncate", file.getAbsolutePath());
+        final String query = String.format("gor %s | group chrom -ic Data -set -len 25", file.getAbsolutePath());
         final String result = TestUtils.runGorPipe(query);
         Assert.assertEquals(expected, result);
     }
@@ -397,7 +397,7 @@ public class UTestGroup {
                 "chr1\t1\tbingo6\n";
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
-        final String query = String.format("gor %s | group chrom -sc Data -lis -len 25", file.getAbsolutePath());
+        final String query = String.format("gor %s | group chrom -sc Data -lis -len 25 -notruncate", file.getAbsolutePath());
         thrown.expect(GorDataException.class);
         TestUtils.runGorPipe(query);
     }
@@ -424,7 +424,7 @@ public class UTestGroup {
                 "chr1\t0\t250000000\tbingo1,bongo1,bingo1,bong...\n";
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
-        final String query = String.format("gor %s | group chrom -sc Data -lis -len 25 -truncate", file.getAbsolutePath());
+        final String query = String.format("gor %s | group chrom -sc Data -lis -len 25", file.getAbsolutePath());
         final String result = TestUtils.runGorPipe(query);
         Assert.assertEquals(expected, result);
     }
