@@ -12,6 +12,7 @@ The :ref:`SELECT` command allows you to choose which columns to show from the so
 
 When selecting in GOR, genomic ordered relational data is expected, so it is mandatory to have a ``CHROM`` and ``POS`` as the first two columns. However, when the SELECT statement is used in NOR, you can choose whatever columns you want.  If columns other than the first two (e.g. ``#1`` and ``#2``) are selected to become the first two columns, care must be taken to ensure that proper genomic order is preserved (see discussion on the ``-ir`` option in the :ref:`JOIN` command).
 
+See also the :ref:`SELWHERE` command.
 
 Usage
 =====

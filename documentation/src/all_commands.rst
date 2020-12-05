@@ -67,6 +67,7 @@
    command/SEGPROJ
    command/SEGSPAN
    command/SELECT
+   command/SELWHERE
    command/SEQ
    command/SETCOLTYPE
    command/SIGNATURE
