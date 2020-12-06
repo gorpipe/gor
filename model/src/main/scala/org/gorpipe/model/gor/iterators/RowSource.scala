@@ -39,7 +39,7 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
   def getCurrentBatchSize = 0
   def getCurrentBatchLoc = 0
   def getCurrentBatchRow( i : Int ) : Row = null
-  def setPosition(seekChr: String, seekPos : Int) { seek(seekChr, seekPos) }
+  def setPosition(seekChr: String, seekPos : Int)
   def moveToPosition(seekChr: String, seekPos : Int, maxReads: Int = 10000): Unit = setPosition(seekChr, seekPos)
   def close()
   def terminateReading() { /* do nothing */ }
@@ -47,19 +47,6 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
   def setBufferSize( bs : Int ) { bufferSize = bs }
 
   def getGorHeader: GorHeader = null
-
-  override def clone(): RowSource = {
-    val rs = new RowSource {
-      /**
-       * Close the data source, releasing all resources (typically files).
-       */
-      override def close(): Unit = ???
-    }
-    rs.bufferSize = bufferSize
-    rs.setEx(this.getEx)
-    rs.parent = parent
-    rs
-  }
 
   override def next(line: Line): Boolean = {
     if( hasNext ) {
@@ -70,5 +57,8 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
     false
   }
 
-  override def seek(seekChr: String, seekPos: Int) = false
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
+    setPosition(seekChr, seekPos)
+    true
+  }
 }
