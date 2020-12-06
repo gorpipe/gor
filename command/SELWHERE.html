@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SELECT &mdash; GOR Open Source v.2.0 documentation</title>
+  <title>SELWHERE &mdash; GOR Open Source v.2.0 documentation</title>
   
 
   
@@ -141,7 +141,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>SELECT</li>
+      <li>SELWHERE</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -158,31 +158,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="select">
-<span id="id1"></span><h1>SELECT<a class="headerlink" href="#select" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#select"><span class="std std-ref">SELECT</span></a> command allows you to choose which columns to show from the source by entering a comma-delimited list.</p>
-<p>When selecting in GOR, genomic ordered relational data is expected, so it is mandatory to have a <code class="docutils literal notranslate"><span class="pre">CHROM</span></code> and <code class="docutils literal notranslate"><span class="pre">POS</span></code> as the first two columns. However, when the SELECT statement is used in NOR, you can choose whatever columns you want.  If columns other than the first two (e.g. <code class="docutils literal notranslate"><span class="pre">#1</span></code> and <code class="docutils literal notranslate"><span class="pre">#2</span></code>) are selected to become the first two columns, care must be taken to ensure that proper genomic order is preserved (see discussion on the <code class="docutils literal notranslate"><span class="pre">-ir</span></code> option in the <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a> command).</p>
-<p>See also the <a class="reference internal" href="SELWHERE.html#selwhere"><span class="std std-ref">SELWHERE</span></a> command.</p>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="selwhere">
+<span id="id1"></span><h1>SELWHERE<a class="headerlink" href="#selwhere" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#selwhere"><span class="std std-ref">SELWHERE</span></a> command allows you to choose which columns to show from the source by by evaluating an expression referring to the column index (starting from 1), or the column name.
+The expression is evaluated for each column - if the expression returns true, the column is included.</p>
+<p>When selecting in GOR, genomic ordered relational data is expected, so it is mandatory to have a <code class="docutils literal notranslate"><span class="pre">CHROM</span></code> and <code class="docutils literal notranslate"><span class="pre">POS</span></code> as the first two columns. However, when the SELWHERE statement is used in NOR, you can choose whatever columns you want.  If columns other than the first two are selected to become the first two columns, care must be taken to ensure that proper genomic order is preserved (see discussion on the <code class="docutils literal notranslate"><span class="pre">-ir</span></code> option in the <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a> command).</p>
+<p>See also the <a class="reference internal" href="SELECT.html#select"><span class="std std-ref">SELECT</span></a> command.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">SELECT</span> &lt; columns &gt;
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | SELWHERE &lt; expression &gt;
 </pre></div>
 </div>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>The following example shows a SELECT command that includes many different types of notation.</p>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">SELECT</span> 1,2,#3-#5,Cola,7-Colb,Info*,Cola[+1]-Colg[-1],Colm-
+<p>The following example shows a SELWHERE command that selects column based on an expression.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | SELWHERE colnum &lt;= 2 or <span class="k">int</span>(right(colname,4)) &lt; 300
 </pre></div>
 </div>
-<p>Included in this SELECT are: columns 1, 2, 3 through to 5, a column named <code class="docutils literal notranslate"><span class="pre">Cola</span></code>, columns from 7 up to <code class="docutils literal notranslate"><span class="pre">Colb,</span> <span class="pre">any</span> <span class="pre">column</span> <span class="pre">starting</span> <span class="pre">with</span> <span class="pre">``Info</span></code>,the column right after <code class="docutils literal notranslate"><span class="pre">Cola</span></code> up to the column right before <code class="docutils literal notranslate"><span class="pre">Colg</span></code>, and from <code class="docutils literal notranslate"><span class="pre">Colm</span></code> onwards to the end of the column list.</p>
-<p>Frequently, the SELECT command is used to limit the number of columns returned by the query. In the following example, we are retrieving only those columns that define the variant calls from the whole genome sequencing variants table:</p>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>  <span class="nd">gor</span> source/var/wgs_varcalls.gord
-| select chrom,<span class="na">pos</span>,<span class="na">reference</span>,<span class="na">call</span>
-| distinct
-| top 100
-</pre></div>
-</div>
+<p>Included in this selection are the first two columns (chrom and pos), as well as columns where the numeric value of the last four characters in the column name is less than 300.</p>
 </div>
 </div>
 
