@@ -35,7 +35,7 @@ import org.gorpipe.model.gor.iterators.RowSource
   * SourceProvider simplifies access to sources used by various commands, where the source can be either
   * a file or a nested query.
   */
-class SourceProvider(inputSource: String, context: GorContext, executeNor: Boolean, isNor: Boolean) {
+case class SourceProvider(inputSource: String, context: GorContext, executeNor: Boolean, isNor: Boolean) {
 
   var iteratorCommand = ""
   var usedFiles = Array.empty[String]
@@ -50,24 +50,23 @@ class SourceProvider(inputSource: String, context: GorContext, executeNor: Boole
   }
 
   private def handleFile(): Unit = {
+    source = if (executeNor) {
+      if (inputSource.endsWith(".gorz") || inputSource.endsWith(".gor")) {
+        new Iterators.ServerNorGorSource(inputSource, context, executeNor)
+      } else {
+        new Iterators.NorInputSource(inputSource, context.getSession.getProjectContext.getFileReader, false, true, 0,
+          false, false)
+      }
+    } else {
+      new SingleFileSource(inputSource, context.getSession.getProjectContext.getRoot, context)
+    }
+
+    usedFiles +: inputSource
+
     if (isNor) {
       header = IteratorUtilities.getFirstLine(inputSource, context.getSession)
-      usedFiles +: inputSource
     } else {
-      source = if (executeNor) {
-        if (inputSource.endsWith(".gorz") || inputSource.endsWith(".gor")) {
-          new Iterators.ServerNorGorSource(inputSource, context, executeNor)
-        } else {
-          new Iterators.NorInputSource(inputSource, context.getSession.getProjectContext.getFileReader, false, true, 0,
-            false, false)
-        }
-      } else {
-        new SingleFileSource(inputSource, context.getSession.getProjectContext.getRoot, context)
-      }
-      usedFiles ++= Array(inputSource)
-
       header = source.getHeader
-      usedFiles +: inputSource
     }
   }
 
@@ -82,9 +81,6 @@ class SourceProvider(inputSource: String, context: GorContext, executeNor: Boole
 
   private def inferSource(): DynamicRowSource = {
     if (isNor) {
-      if (!iteratorCommand.toUpperCase.trim.startsWith("NOR")) {
-        throw new GorParsingException("Nested queries in this context must be defined using the NOR command.")
-      }
       new DynamicNorSource(iteratorCommand, context)
     } else {
       new DynamicRowSource(iteratorCommand, context)

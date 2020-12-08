@@ -83,8 +83,8 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
       case e: Exception => throw e
     } finally {
       if (btSource.dynSource != null) btSource.dynSource.close()
-      if (pnSource.dynSource != null) pnSource.dynSource.close()
-      if (markerSource.dynSource != null) markerSource.dynSource.close()
+      if (pnSource != null && pnSource.dynSource != null) pnSource.dynSource.close()
+      if (markerSource != null && markerSource.dynSource != null) markerSource.dynSource.close()
     }
   }
 
@@ -92,7 +92,7 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
     val name = {
       val cand = arg.trim
       val candTUC = cand.toUpperCase
-      if ((candTUC.endsWith(".NORZ") || candTUC.endsWith(".TSV") || candTUC.endsWith(".NOR")) && !(cand.slice(0, 2) == "<(")) {
+      if (!(cand.slice(0, 2) == "<(")) {
         "<(nor " + cand + " )"
       } else cand
     }
@@ -144,46 +144,36 @@ class GtTranspose extends CommandInfo("GTTRANSPOSE",
     }
   }
 
-  def getMarkersForHeader(fileName: String, source: SourceProvider, session: GorSession): Array[String] = {
-    val reader = session.getProjectContext.getFileReader.getReader(fileName)
-    val iterator = if (source.iteratorCommand == "") {
-      val (header, body) = reader.lines().iterator().asScala.span(_.startsWith("#"))
-      if (header.nonEmpty) {
-        body
-      } else if (body.hasNext) {
-        body.drop(1)
-      } else {
-        throw new GorDataException(s"No content in file $fileName")
-      }
+  def getMarkersForHeader(fileName: String, sourceProvider: SourceProvider, session: GorSession): Array[String] = {
+    val buffer = ArrayBuffer[String]()
+    val iterator = if (sourceProvider.iteratorCommand == "") {
+      sourceProvider.source
     } else {
-      source.dynSource.asInstanceOf[DynamicNorSource].getIterator
+      sourceProvider.dynSource
     }
-    val result = iterator.map(_.split('\t').mkString(":")).toArray
-    reader.close()
-    result
+
+    while (iterator.hasNext()) {
+      val row = iterator.next()
+      val str = row.otherCols()
+      buffer.append(str.split('\t').mkString("_"))
+    }
+    buffer.toArray
   }
 
   def getHeaderAndMarkerToIdxMap(fileName: String, sourceProvider: SourceProvider, session: GorSession): (String, Map[String, Int]) = {
-    if (sourceProvider.iteratorCommand == "") {
-      val reader = session.getProjectContext.getFileReader.getReader(fileName)
-      val (header, body) = reader.lines().iterator().asScala.span(_.startsWith("#"))
-      val hashTagHeader = header.foldLeft("")((_, line) => line)
-      val result = if (hashTagHeader != "") {
-        val lastHashtagIdx = hashTagHeader.iterator.takeWhile(_ == '#').size
-        (hashTagHeader.substring(lastHashtagIdx), body.zipWithIndex.toMap)
-      } else if (body.hasNext) {
-        (body.next, body.zipWithIndex.toMap)
-      } else {
-        throw new GorDataException(s"No content in file $fileName")
-      }
-      reader.close()
-      result
+    val iterator = if (sourceProvider.iteratorCommand == "") {
+      sourceProvider.source
     } else {
-      val dns = sourceProvider.dynSource.asInstanceOf[DynamicNorSource]
-      val header = dns.getLineHeader
-      val lineIterator = dns.getIterator
-      val map = lineIterator.zipWithIndex.toMap
-      (header, map)
+      sourceProvider.dynSource
     }
+    var counter = 0
+    var map = Map[String, Int]()
+    while (iterator.hasNext()) {
+      val s = iterator.next().otherCols()
+      map = map + (s -> counter)
+      counter += 1
+    }
+
+    (sourceProvider.header, map)
   }
 }

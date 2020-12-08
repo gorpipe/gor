@@ -262,7 +262,7 @@ class UTestGtTransposeAnalysis extends FunSuite with BeforeAndAfter {
     val allRows = TestUtils.runGorPipe(query).split("\n")
     val header = allRows.head
     val results = allRows.tail
-    assert(header == "CHROM\tPOS\tPN\tchr1:1:A:C\tchr1:2:A:C")
+    assert(header == "CHROM\tPOS\tPN\tchr1_1_A_C\tchr1_2_A_C")
     assert(wantedRows.length == results.length)
     results zip wantedRows foreach {
       case (actualLine, wantedLine) => assert(actualLine == wantedLine)
@@ -288,7 +288,7 @@ class UTestGtTransposeAnalysis extends FunSuite with BeforeAndAfter {
     val allRows = TestUtils.runGorPipe(query).split("\n")
     val header = allRows.head
     val results = allRows.tail
-    assert(header == "CHROM\tPOS\tPN\tchr1:1:A:C\tchr1:2:A:C")
+    assert(header == "CHROM\tPOS\tPN\tchr1_1_A_C\tchr1_2_A_C")
     assert(wantedRows.length == results.length)
     results zip wantedRows foreach {
       case (actualLine, wantedLine) => assert(actualLine == wantedLine)

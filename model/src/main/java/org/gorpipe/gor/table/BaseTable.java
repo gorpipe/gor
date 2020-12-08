@@ -336,41 +336,43 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             }
             // Validate the new file.
             if (validateFiles) {
-                // Validate file existence.
-                log.trace("Start validating file");
-                try {
-                    if (isLocal(line.getContentReal())) {
-                        if (!Files.exists(Paths.get(fixFileSchema(line.getContentReal())))) {
-                            throw new GorDataException(String.format("Local entry %s does not exists!", line.getContentReal()));
-                        }
-                    } else {
-                        // Remote.
-                        SourceReference sourceRef = new SourceReferenceBuilder(line.getContentReal()).securityContext(securityContext).build();
-                        DataSource ds = GorDriverFactory.fromConfig().getDataSource(sourceRef);
-                        if ((ds == null || !ds.exists()) && securityContext != null) {
-                            throw new GorDataException(String.format("Remote entry %s does not exists!", line.getContentReal()));
-                        }
-                    }
-                } catch (IOException ex) {
-                    throw new GorDataException(String.format("Entry %s can not be verified!", line.getContentReal()), ex);
-                }
-
-                // Validate file columns.
-                updateValidateHeader(line);
-
-                // Update bucketize
-                if (bucketize == null) {
-                    bucketize = inferShouldBucketizeFromFile(line.getContentReal());
-                }
-
-                log.trace("Done validating file");
+                validateFile(line);
             }
 
-            this.tableEntries.insert(line, hasUniqueTags);
-            if (useHistory) {
-                tableLog.logAfter(TableLog.LogAction.INSERT, "", line);
-            }
+            this.tableEntries.insert(line, isHasUniqueTags());
+            logAfter(TableLog.LogAction.INSERT, "", line);
         }
+    }
+
+    private void validateFile(T line) {
+        // Validate file existence.
+        log.trace("Start validating file");
+        try {
+            if (isLocal(line.getContentReal())) {
+                if (!Files.exists(Paths.get(fixFileSchema(line.getContentReal())))) {
+                    throw new GorDataException(String.format("Local entry %s does not exists!", line.getContentReal()));
+                }
+            } else {
+                // Remote.
+                SourceReference sourceRef = new SourceReferenceBuilder(line.getContentReal()).securityContext(securityContext).build();
+                DataSource ds = GorDriverFactory.fromConfig().getDataSource(sourceRef);
+                if ((ds == null || !ds.exists()) && securityContext != null) {
+                    throw new GorDataException(String.format("Remote entry %s does not exists!", line.getContentReal()));
+                }
+            }
+        } catch (IOException ex) {
+            throw new GorDataException(String.format("Entry %s can not be verified!", line.getContentReal()), ex);
+        }
+
+        // Validate file columns.
+        updateValidateHeader(line);
+
+        // Update bucketize
+        if (bucketize == null) {
+            bucketize = inferShouldBucketizeFromFile(line.getContentReal());
+        }
+
+        log.trace("Done validating file");
     }
 
     @SafeVarargs
@@ -392,9 +394,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     public void delete(Collection<T> lines) {
         for (T line : lines) {
             tableEntries.delete(line, true);
-            if (useHistory) {
-                tableLog.logAfter(TableLog.LogAction.DELETE, "", line);
-            }
+            logAfter(TableLog.LogAction.DELETE, "", line);
         }
     }
 
@@ -428,14 +428,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
                     String bucket = lineToRemoveFrom.getBucket();
                     if (lineToRemoveFrom.isDeleted()) {
                         tableEntries.delete(lineToRemoveFrom, false);
-                        if (useHistory) {
-                            tableLog.logAfter(TableLog.LogAction.DELETE, bucket, lineToRemoveFrom);
-                        }
+                        logAfter(TableLog.LogAction.DELETE, bucket, lineToRemoveFrom);
                     } else {
                         lineToRemoveFrom.setBucket("");
-                        if (useHistory) {
-                            tableLog.logAfter(TableLog.LogAction.REMOVEFROMBUCKET, bucket, lineToRemoveFrom);
-                        }
+                        logAfter(TableLog.LogAction.REMOVEFROMBUCKET, bucket, lineToRemoveFrom);
                     }
                 }
             }
@@ -539,7 +535,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      */
     public void reload() {
         // Loading is split into this method and getRawlines (but we can have update in between) will that affect us?? Do we need lock (and update metadata here)
-        // but we definitly need it for getRawLines.
+        // but we definitely need it for getRawLines.
 
         updateFolderMetadata();
 
@@ -606,7 +602,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     protected abstract void doSave();
 
     /**
-     * Initalize the gor dictionary if it does not exists.
+     * Initialize the gor dictionary if it does not exists.
      */
     public void initialize() {
         log.trace("Initialize {}", getName());
@@ -637,7 +633,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
                 // Ignore, some one else created it.
                 log.trace("Table history directory {} already exists", this.historyDir);
             } catch (IOException e) {
-                throw new GorSystemException("Could not create table hostory directory: " + this.historyDir, e);
+                throw new GorSystemException("Could not create table history directory: " + this.historyDir, e);
             }
         }
 
@@ -711,19 +707,14 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
                             line.getContentRelative(), lineToUpdate.getBucket(), bucketLogical));
                 }
                 lineToUpdate.setBucket(bucketLogical);
-                if (useHistory) {
-                    tableLog.logAfter(TableLog.LogAction.ADDTOBUCKET, bucketLogical, line);
-                }
-
+                logAfter(TableLog.LogAction.ADDTOBUCKET, bucketLogical, line);
             } else {
                 // No line found, must have been deleted.  To be able to use the bucket we must add a new line.
                 T newDeletedLine = (T) TableEntry.copy(line);
                 newDeletedLine.setDeleted(true);
                 newDeletedLine.setBucket(bucketLogical);
                 tableEntries.insert(newDeletedLine, false);
-                if (useHistory) {
-                    tableLog.logAfter(TableLog.LogAction.INSERT, bucketLogical, line);
-                }
+                logAfter(TableLog.LogAction.INSERT, bucketLogical, line);
             }
         }
     }
@@ -783,6 +774,13 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         }
 
         return false;
+    }
+
+    // Util method.
+    protected void logAfter(TableLog.LogAction action, String argument, TableEntry entry) {
+        if (useHistory) {
+            tableLog.logAfter(action, argument, entry);
+        }
     }
 
     protected abstract static class Builder<B extends Builder<B>> {
@@ -847,17 +845,17 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
          * @return return new filter on files.
          */
         public TableFilter files(String... val) {
-            this.files = val != null ? Arrays.stream(val).map(f -> relativize(rootUri, f)).toArray(String[]::new) : null;
+            this.files = val != null ? Arrays.stream(val).map(f -> resolve(rootUri, f)).toArray(String[]::new) : null;
             return this;
         }
 
         /**
          * Filter for files names (content)
-         * @param val file names to filte by, absolute or relative to the table.
+         * @param val file names to filter by, absolute or relative to the table.
          * @return return new filter on files.
          */
         public TableFilter files(URI... val) {
-            this.files = val != null ? Arrays.stream(val).map(f -> relativize(rootUri, f.toString())).toArray(String[]::new) : null;
+            this.files = val != null ? Arrays.stream(val).map(f -> resolve(rootUri, f.toString())).toArray(String[]::new) : null;
             return this;
         }
 
@@ -873,12 +871,12 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         }
 
         public TableFilter buckets(String... val) {
-            this.buckets = val != null ? Arrays.stream(val).map(b -> relativize(rootUri, b)).toArray(String[]::new) : null;
+            this.buckets = val != null ? Arrays.stream(val).map(b -> resolve(rootUri, b)).toArray(String[]::new) : null;
             return this;
         }
 
         public TableFilter buckets(Path... val) {
-            this.buckets = val != null ? Arrays.stream(val).map(b -> relativize(rootUri, b.toString())).toArray(String[]::new) : null;
+            this.buckets = val != null ? Arrays.stream(val).map(b -> resolve(rootUri, b.toString())).toArray(String[]::new) : null;
             return this;
         }
 
@@ -909,23 +907,42 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
          * @return <true> if the line matches the filter otherwise <false>.
          */
         protected boolean match(T l) {
-           return ((!l.isDeleted() || includeDeleted || buckets != null)
-                            && ((files == null && tags == null && buckets == null && chrRange == null)
-                            ||
-                            ((files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentRelative())))
-                                    && (tags == null || (l.getTags().length == 0 && tags.length == 0)
-                                        || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(l.getTags(), t)) : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(l.getTags(), t))))
-                                    && (buckets == null || (!l.hasBucket() && buckets.length == 0) ||
-                                        (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucket()))))
-                                    && (chrRange == null || (l.getRange() != null && chrRange.equals(l.getRange().format())))
-                            )
-                    )
-           );
+           return matchIncludeLine(l)
+                   && (matchIsNoFilter()
+                       || (matchFiles(l) && matchTags(l) && matchBuckets(l) && matchRange(l)));
+        }
+
+        private boolean matchIncludeLine(T l) {
+            return !l.isDeleted() || includeDeleted || buckets != null;
+        }
+
+        private boolean matchIsNoFilter() {
+            return files == null && tags == null && buckets == null && chrRange == null;
+        }
+
+        private boolean matchFiles(T l) {
+            return files == null || Stream.of(files).anyMatch(
+                    f -> f.equals(l.getContentReal())
+            );
+        }
+
+        private boolean matchBuckets(T l) {
+            return buckets == null || (!l.hasBucket() && buckets.length == 0) ||
+                    (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal())));
+        }
+
+        private boolean matchTags(T l) {
+            return tags == null || (l.getTags().length == 0 && tags.length == 0)
+                    || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(l.getTags(), t)) : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(l.getTags(), t)));
+        }
+
+        private boolean matchRange(T l) {
+            return chrRange == null || (l.getRange() != null && chrRange.equals(l.getRange().format()));
         }
 
         public List<T> get() {
             log.debug("Selecting lines from dictionary {}", getName());
-            // Set intial candiates for search (this also forces load if not loaded and populates the tagHashToLines index)
+            // Set initial candidates for search (this also forces load if not loaded and populates the tagHashToLines index)
             List<T> lines2Search = getEntries(tags);
 
             return lines2Search.stream().filter(this::match)

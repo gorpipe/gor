@@ -376,7 +376,7 @@ public class UTestBucketManager {
         Assert.assertTrue("Bucket file should not be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[0])));
         TableLock lock = new NoTableLock(table, table.getName());
         lock.lock(false, Duration.ofMillis(10000));
-        buc.cleanBucketFiles(lock, true);
+        buc.cleanOldBucketFiles(lock, true);
         Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[0])));
 
         // Delete one bucket, no grace period (use BucketManager).
@@ -389,7 +389,7 @@ public class UTestBucketManager {
         buc.deleteBuckets(buckets[2]);
         Assert.assertTrue("Bucket file should not be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[2])));
         Thread.sleep(5000);
-        buc.cleanBucketFiles(lock, false);
+        buc.cleanOldBucketFiles(lock, false);
         Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[2])));
     }
 
@@ -405,7 +405,7 @@ public class UTestBucketManager {
         Files.createDirectories(nonTempFolder);
         TableLock lock = new NoTableLock(table, table.getName());
         lock.lock(false, Duration.ofMillis(1000));
-        buc.cleanTempFolders(lock);
+        buc.cleanTempBucketFolders(lock);
 
         Assert.assertTrue("Temp folder should be deleted", !Files.exists(tempFolder));
         Assert.assertTrue("Non temp folder should not be deleted", Files.exists(nonTempFolder));

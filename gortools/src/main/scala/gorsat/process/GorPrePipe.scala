@@ -131,7 +131,7 @@ object GorPrePipe {
       val pgor = p + g + o + r + " "
       if (mic.contains(pgor)) {
         mic = CommandParseUtilities.repeatedQuoteSafeReplace(mic, pgor, "gor  ", mic.length + 1)
-        val (splitOpt, splitSize, splitOverlap) = ScriptParsers.splitOptionParser(mic)
+        val (splitOpt, splitSize, splitOverlap, _) = ScriptParsers.splitOptionParser(mic)
         if (splitOpt != "") {
           val repstr = if (splitOverlap != "") "-" + splitOpt + splitSize + ":" + splitOverlap + " " else "-" + splitOpt + splitSize + " "
           mic = mic.replace(repstr, "").replace(SplitManager.WHERE_SPLIT_WINDOW, "2=2")

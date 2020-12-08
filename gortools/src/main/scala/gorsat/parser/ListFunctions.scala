@@ -55,6 +55,8 @@ object ListFunctions {
     functions.register("LISTNUMSORTDESC", getSignatureString2String(listNumSortDesc), listNumSortDesc _)
     functions.register("LISTINDEX", getSignatureStringString2Int(listIndex), listIndex _)
     functions.register("LISTINDEX", getSignatureStringStringString2Int(listIndexWithDelimiter), listIndexWithDelimiter _)
+    functions.register("LISTCOUNT", getSignatureString2String(listCount), listCount _)
+    functions.register("LISTCOUNT", getSignatureStringString2String(listCountWithDelimiter), listCountWithDelimiter _)
     functions.register("LISTLAST", getSignatureString2String(listLast), listLast _)
     functions.register("LISTLAST", getSignatureStringString2String(listLastWithDelimiter), listLastWithDelimiter _)
     functions.register("LISTTAIL", getSignatureString2String(listTail), listTail _)
@@ -653,6 +655,27 @@ object ListFunctions {
 
   def listIndexWithDelimiter(ex1: sFun, ex2: sFun, ex3: sFun): iFun = {
     cvp => listIndexInner(ex1(cvp), ex2(cvp), ex3(cvp))
+  }
+
+  def listCount(ex1: sFun): sFun = {
+     listCountWithDelimiter(ex1,cvp => { "," })
+  }
+
+  def listCountWithDelimiter(ex1: sFun, ex2: sFun): sFun = {
+    case class CountHolder(var count : Int)
+    var groupCount = scala.collection.mutable.HashMap.empty[String, CountHolder]
+    cvp => {
+      ex1(cvp).split(ex2(cvp),-1).foreach( x => {
+          groupCount.get(x) match {
+            case Some(x) => x.count += 1
+            case None =>
+              val c = CountHolder(1)
+              groupCount += (x -> c)
+          }
+        }
+      )
+      groupCount.toList.sortWith((x,y) => x._1 < y._1).map(x => (x._1+';'+x._2.count)).mkString(ex2(cvp))
+    }
   }
 
   private def listIndexInner(string: String, target: String, delimiter: String = ","): Int = {

@@ -429,6 +429,15 @@ public class UTestGroup {
         Assert.assertEquals(expected, result);
     }
 
+    @Test
+    public void orderedGroupWithNorReturnsProperChrom() {
+        final String query = "norrows 100 | calc x random() | sort -c rownum | group -gc rownum -count -ordered | group -count";
+        final String result = TestUtils.runGorPipe(query);
+        final String expected = "Chrom\tPosNOR\tallCount\n" +
+                "chrN\t0\t100\n";
+        Assert.assertEquals(expected, result);
+    }
+
     private void assertValueArray(String line, int offset, double[] expectedValues, String[] functions) {
         String[] values = line.split("\t", -1);
         int count = 0;

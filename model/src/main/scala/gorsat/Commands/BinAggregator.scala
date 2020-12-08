@@ -26,7 +26,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.Row
 
 
-case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int) {
+case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int, useKeyForChrom: Boolean = false) {
   if (numBins < window) {
     throw new GorParsingException(s"Error in BinAggregator setup - numBins ($numBins) must be larger than window ($window): ")
   }
@@ -56,7 +56,7 @@ case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int) {
     val currentBinInfo = binInfo(mID)
     val currentBin = bins(mID)
     if (!currentBinInfo.used) {
-      currentBinInfo.chr = r.chr
+      currentBinInfo.chr = if (useKeyForChrom) key else r.chr
       currentBinInfo.key = key
       currentBinInfo.sta = sta
       currentBinInfo.sto = sto

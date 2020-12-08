@@ -101,7 +101,7 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
           }
         }
 
-        val dynamicSource: DynamicRowSource = if (iteratorCommand.toUpperCase.startsWith("NOR "))
+        val dynamicSource: DynamicRowSource = if (iteratorCommand.toUpperCase.startsWith("NOR ") && !iteratorCommand.replaceAll(" ","").toUpperCase.contains("|TOGOR"))
           new gorsat.DynIterator.DynamicGorNorSource(iteratorCommand, context) else new DynamicRowSource(iteratorCommand, context)
         if (hasOption(args, "-b")) dynamicSource.setBufferSize(bufferSize)
         if (hasOption(args, "-seek")) {

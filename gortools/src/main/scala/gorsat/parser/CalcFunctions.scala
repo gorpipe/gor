@@ -159,19 +159,19 @@ object CalcFunctions {
   }
 
   def onceDouble(ex: dFun): dFun = {
-    var onceVal: Double = Double.NaN
+    var onceVal: Double = 0.0
+    var valNotSet = true
     cvp => {
-      if (onceVal == Double.NaN) onceVal = ex(cvp)
+      if (valNotSet) { onceVal = ex(cvp); valNotSet = false }
       onceVal
     }
   }
 
   def onceInt(ex: iFun): iFun = {
-    var onceVal: Int = Int.MinValue
-    // worst case if the values are Int.MinValue the function will always be evaluated, otherwise we could use java Integer null and would need to cast to scala Int
-
+    var onceVal: Int = 0
+    var valNotSet = true
     cvp => {
-      if (onceVal == Int.MinValue) onceVal = ex(cvp)
+      if (valNotSet) { onceVal = ex(cvp); valNotSet = false }
       onceVal
     }
   }
