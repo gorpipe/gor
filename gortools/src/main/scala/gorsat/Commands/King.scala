@@ -30,7 +30,7 @@ import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
-class King2 extends CommandInfo("KING",
+class King extends CommandInfo("KING",
   CommandArguments("-sym", "-gc -vs -s -pi0thr -phithr -thetathr -maxvars", 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {

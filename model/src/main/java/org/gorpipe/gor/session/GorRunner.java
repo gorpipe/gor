@@ -23,8 +23,8 @@
 package org.gorpipe.gor.session;
 
 import gorsat.Commands.Processor;
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 
 public abstract class GorRunner {
-    public abstract void run(RowSource iterator, Processor processor);
+    public abstract void run(GenomicIterator iterator, Processor processor);
 }

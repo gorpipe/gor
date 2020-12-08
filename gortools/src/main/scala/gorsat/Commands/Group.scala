@@ -31,7 +31,7 @@ import org.gorpipe.gor.session.GorContext
 import scala.collection.mutable.ListBuffer
 
 class Group extends CommandInfo("GROUP",
-  CommandArguments("-count -cdist -min -med -max -dis -set -lis -avg -std -sum -h -ordered -truncate", "-gc -sc -ac -ic -fc -len -steps " +
+  CommandArguments("-count -cdist -min -med -max -dis -set -lis -avg -std -sum -h -ordered -notruncate", "-gc -sc -ac -ic -fc -len -steps " +
     "-s", 0, 1),
   CommandOptions(gorCommand = true, norCommand = true, memoryMonitorCommand = true, verifyCommand = true,
     cancelCommand = true, ignoreSplitCommand = true)) {
@@ -63,7 +63,7 @@ class Group extends CommandInfo("GROUP",
     val useAvg = hasOption(args, "-avg")
     val useStd = hasOption(args, "-std")
     val useSum = hasOption(args, "-sum")
-    val truncate = hasOption(args, "-truncate")
+    val truncate = !hasOption(args, "-notruncate")
 
     val assumeOrdered = hasOption(args, "-ordered")
 

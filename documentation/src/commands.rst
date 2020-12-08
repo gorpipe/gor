@@ -200,6 +200,9 @@ Commands
    * - :ref:`SELECT`
      - Filters specified columns from the output stream.
      - GOR/NOR
+   * - :ref:`SELWHERE`
+     - Filters specified columns from the output stream using an expression on column names/indices.
+     - GOR/NOR
    * - :ref:`SEQ`
      - Returns the corresponding reference sequence read for each row of the output (based on the position).
      - GOR

@@ -28,7 +28,6 @@ import org.gorpipe.model.gor.Pipes
 
 abstract class RowSource extends GenomicIterator with AutoCloseable {
   var bufferSize: Int = Pipes.rowsToProcessBuffer
-  private var ex : Throwable = _
   var parent : RowSource = _
 
   def getParent : RowSource = parent
@@ -40,38 +39,14 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
   def getCurrentBatchSize = 0
   def getCurrentBatchLoc = 0
   def getCurrentBatchRow( i : Int ) : Row = null
-  def setPosition(seekChr: String, seekPos : Int) { seek(seekChr, seekPos) }
+  def setPosition(seekChr: String, seekPos : Int)
   def moveToPosition(seekChr: String, seekPos : Int, maxReads: Int = 10000): Unit = setPosition(seekChr, seekPos)
   def close()
   def terminateReading() { /* do nothing */ }
   def getBufferSize : Int = bufferSize
   def setBufferSize( bs : Int ) { bufferSize = bs }
-  def isBuffered = false
 
   def getGorHeader: GorHeader = null
-
-  def setEx(throwable: Throwable) : Unit = {
-    if (ex == null || throwable == null) {
-      ex = throwable
-    }
-  }
-
-  def getEx: Throwable = {
-    ex
-  }
-
-  override def clone(): RowSource = {
-    val rs = new RowSource {
-      /**
-       * Close the data source, releasing all resources (typically files).
-       */
-      override def close(): Unit = ???
-    }
-    rs.bufferSize = bufferSize
-    rs.ex = ex
-    rs.parent = parent
-    rs
-  }
 
   override def next(line: Line): Boolean = {
     if( hasNext ) {
@@ -82,5 +57,8 @@ abstract class RowSource extends GenomicIterator with AutoCloseable {
     false
   }
 
-  override def seek(seekChr: String, seekPos: Int) = false
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
+    setPosition(seekChr, seekPos)
+    true
+  }
 }

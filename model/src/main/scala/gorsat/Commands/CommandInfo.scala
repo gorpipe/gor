@@ -24,8 +24,8 @@ package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities.validateCommandArguments
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 
 case class CommandInfo(name: String,
@@ -82,6 +82,6 @@ case class CommandInfo(name: String,
   protected def processArguments(context: GorContext, argString: String, inputArguments: Array[String], options : Array[String], executeNor : Boolean, forcedInputHeader : String) : CommandParsingResult = { throw new NotImplementedError() }
 }
 
-case class CommandRuntime(activePipeStep:Analysis = null, cacheDir: String = null , inputSource:RowSource  = null) {
+case class CommandRuntime(activePipeStep:Analysis = null, cacheDir: String = null , inputSource: GenomicIterator  = null) {
 
 }

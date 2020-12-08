@@ -25,6 +25,7 @@ package gorsat;
 import gorsat.Commands.Analysis;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
@@ -151,16 +152,21 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
     }
 
     @Override
-    public BatchedPipeStepIteratorAdaptor clone() {
-        RowSource cl = ((RowSource) sourceIterator).clone();
-        return new BatchedPipeStepIteratorAdaptor(cl, pipeStep.clone(), getHeader(), brsConfig);
+    public BatchedPipeStepIteratorAdaptor clone() throws CloneNotSupportedException {
+        GenomicIterator cl = ((GenomicIterator) sourceIterator).clone();
+        return new BatchedPipeStepIteratorAdaptor(sourceIterator, pipeStep.clone(), getHeader(), brsConfig);
     }
 
     @Override
     public Spliterator<Row> trySplit() {
         if( !nosplit && sourceIterator != null && nextChromMap.containsKey(currentChrom) ) {
             String nextChrom = nextChromMap.get(currentChrom);
-            BatchedPipeStepIteratorAdaptor splitbpia = clone();
+            BatchedPipeStepIteratorAdaptor splitbpia;
+            try {
+                splitbpia = clone();
+            } catch (CloneNotSupportedException e) {
+                throw new GorSystemException("Trying to clone non clonable object", e);
+            }
             splitbpia.setPosition(currentChrom, 0);
             currentChrom = nextChrom;
             return splitbpia;
