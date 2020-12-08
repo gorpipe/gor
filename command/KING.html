@@ -172,9 +172,10 @@ variant format with a <strong>VARJOIN</strong>.</p>
 is also includes dummy columns for Chrom and Pos with the values “ChrA” and 0, respectively.  The important columns are
 however PN1, PN2, IBS0, XX, tpq, kpq, Nhet, Nhom, NAai, NAaj, count, pi0, phi, and theta.  See the code examples
 and the KING paper for further details related to the <strong>KING</strong> command.</p>
+<p>See also the KING2 and QUEEN commands.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING tagbucketrelation tagselection1 tagselection2  [-<span class="no">gc</span> cols] [(-s sep | -vs charsize)]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING tagbucketrelation tag-list1 tag-list2  [-<span class="no">gc</span> cols] [-sym] [(-s sep | -vs valuesize)]
 </pre></div>
 </div>
 </div>
@@ -189,19 +190,22 @@ and the KING paper for further details related to the <strong>KING</strong> comm
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
 <td><p>Grouping columns other than (chrom,pos).  NOTE, one of the must include AF</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">sep</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sym</span></code></p></td>
+<td><p>Assume tags1 and tags2 lists are the same and return only output for one of the pairs, e.g. pn1&lt;pn2</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">sep</span></code></p></td>
 <td><p>Specify separator for the elements in values.  Default to comma.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-vs</span> <span class="pre">size</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-vs</span> <span class="pre">size</span></code></p></td>
 <td><p>Use a fixed character size for values, e.g. rather than variable length separated with comma.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-pi0thr</span> <span class="pre">value</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-pi0thr</span> <span class="pre">value</span></code></p></td>
 <td><p>Threshold value to filter output on pi0, e.g. to pass we must have pi0 &lt; value</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-phithr</span> <span class="pre">value</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-phithr</span> <span class="pre">value</span></code></p></td>
 <td><p>Threshold value to filter output on phi, e.g. to pass we must have phi &gt; value</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-thetathr</span> <span class="pre">value</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-thetathr</span> <span class="pre">value</span></code></p></td>
 <td><p>Threshold value to filter output on theta, e.g. to pass we must have theta &gt; value</p></td>
 </tr>
 </tbody>
@@ -213,9 +217,9 @@ and the KING paper for further details related to the <strong>KING</strong> comm
 
 <span class="nd">gor</span> [#vars#] | king -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 #buckets#
                &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn)
-               &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn)
+               &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #rightpns# ) | select pn)
 
-is equivalent to this query written withouth the KING command:
+is equivalent to this query written without the KING command:
 
 <span class="nd">gor</span> #hvars# | csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,tpq,kpq -vs 1 -u 3 -tag <span class="na">PN</span> #buckets# &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn)
 | where value != &#39;3&#39;
@@ -267,7 +271,7 @@ The above query example shows how the parameters pi0 and phi (or theta) can be u
 </div>
 <div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
+<p><a class="reference internal" href="KING2.html#king2"><span class="std std-ref">KING2</span></a> <span class="xref std std-ref">QUEEN</span> <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
 </div>
 </div>
 </div>
