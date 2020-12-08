@@ -34,7 +34,7 @@ import org.gorpipe.model.gor.iterators.LineIterator
 
 object GorQueen {
 
-  case class binaryHolder(bui : BucketInfo, af : Float) extends BinaryHolder
+  case class binaryHolder(bui : BucketInfo, af : Float, IDX1 : Array[Int], IDX1size : Int, GTS1length : Int, GTS2 : Array[Char]) extends BinaryHolder
 
   case class SaHolder(var seps: scala.collection.mutable.ArrayBuffer[Int])
 
@@ -72,16 +72,6 @@ object GorQueen {
       o(oc) = str.charAt(i)
       i += 1
     }
-  }
-
-  def colIndexMove(n: Int, str: CharSequence, offset: Int, sah: SaHolder, bui : BucketInfo, oc : Int): Unit = {
-    val start = if (n == 0) offset else sah.seps(n - 1) + 1
-      if (str.charAt(start)=='1') { bui.IDX1(bui.IDX1size) = oc; bui.IDX1size += 1 }
-  }
-
-  def colIndexMoveFixed(n: Int, str: CharSequence, offset: Int, bui : BucketInfo, oc : Int, valSize: Int, sepSize: Int): Unit = {
-    val start = offset + n * (valSize + sepSize)
-    if (str.charAt(start)=='1') { bui.IDX1(bui.IDX1size) = oc; bui.IDX1size += 1 }
   }
 
   case class QueenState(session: GorSession,
@@ -175,7 +165,30 @@ object GorQueen {
     }
 
     def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+
       for (key <- groupMap.keys.toList.sorted) {
+/*
+        var IDX1 : Array[Int] = _
+        var IDX1size : Int = 0
+        var GTS1length : Int = 0
+        var GTS2 : Array[Char] = _
+*/
+        val GTS1length = bui.outputBucketID.length
+        val outputSize2 = bui.outputBucketID2.length
+        val IDX1 = new Array[Int](outputSize2)
+        val GTS2 = new Array[Char](outputSize2)
+        var IDX1size : Int = 0
+
+        def colIndexMove(n: Int, str: CharSequence, offset: Int, sah: SaHolder, oc : Int): Unit = {
+          val start = if (n == 0) offset else sah.seps(n - 1) + 1
+          if (str.charAt(start)=='1' || str.charAt(start)=='2') { IDX1(IDX1size) = oc; IDX1size += 1 }
+        }
+
+        def colIndexMoveFixed(n: Int, str: CharSequence, offset: Int, oc : Int, valSize: Int, sepSize: Int): Unit = {
+          val start = offset + n * (valSize + sepSize)
+          if (str.charAt(start)=='1' || str.charAt(start)=='2') { IDX1(IDX1size) = oc; IDX1size += 1 }
+        }
+
         val theBinaryHolderRow = RowObj("chrA", 0, "")
         var sh: ColHolder = null
         if (useGroup) sh = groupMap(key) else sh = groupMap("theOnlyGroup")
@@ -184,7 +197,7 @@ object GorQueen {
         var outCol = 0
         try {
           r = null
-          bui.IDX1size = 0
+          IDX1size = 0
           outCol = 0
           while (outCol < bui.outputBucketPos.length) {
             val buckNo = bui.outputBucketID(outCol)
@@ -193,9 +206,9 @@ object GorQueen {
             val offset = sh.offsetArray(buckNo)
             if (r != null) {
                 if (valSize == -1) {
-                colIndexMove(buckPos, r, offset, sh.splitArr(buckNo), bui, outCol)
+                colIndexMove(buckPos, r, offset, sh.splitArr(buckNo), outCol)
               } else {
-                  colIndexMoveFixed(buckPos, r, offset, bui, outCol, valSize, sepSize)
+                  colIndexMoveFixed(buckPos, r, offset, outCol, valSize, sepSize)
                 }
             }
             outCol += 1
@@ -207,19 +220,18 @@ object GorQueen {
             r = sh.buckRows(buckNo)
             val offset = sh.offsetArray(buckNo)
             if (r == null) {
-              bui.GTS2(outCol) = '3'
+              GTS2(outCol) = '3'
             } else {
               if (valSize == -1) {
-                colCharMove(buckPos, r, offset, sh.splitArr(buckNo), bui.GTS2, outCol)
+                colCharMove(buckPos, r, offset, sh.splitArr(buckNo), GTS2, outCol)
               } else {
-                colCharMoveFixed(buckPos, r, offset, bui.GTS2, outCol, valSize, sepSize)
+                colCharMoveFixed(buckPos, r, offset, GTS2, outCol, valSize, sepSize)
               }
             }
             outCol += 1
           }
 
-
-          theBinaryHolderRow.bH = binaryHolder(bui,af)
+          theBinaryHolderRow.bH = binaryHolder(bui,af,IDX1,IDX1size,GTS1length,GTS2)
 
           if (!nextProcessor.wantsNoMore) {
             nextProcessor.process(theBinaryHolderRow)
@@ -257,10 +269,6 @@ object GorQueen {
     var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
     var outputTags: Array[String] = _
     var outputTags2: Array[String] = _
-    var IDX1 : Array[Int] = _
-    var IDX1size : Int = 0
-    var GTS1length : Int = 0
-    var GTS2 : Array[Char] = _
   }
 
   case class QueenAggregate(minSharing: Float, gm : GorMonitor) extends Analysis {
@@ -286,21 +294,21 @@ object GorQueen {
       bh = r.bH.asInstanceOf[binaryHolder]
       if (needsInitialization) {
         needsInitialization = false
-        gtSize1 = bh.bui.GTS1length
-        gtSize2 = bh.bui.GTS2.length
+        gtSize1 = bh.GTS1length
+        gtSize2 = bh.GTS2.length
         gtPairSize = gtSize1 * gtSize2
         share = new Array[Int](gtPairSize)
         count = new Array[Int](gtPairSize)
       }
 
       var i: Int = 0
-      while (i < bh.bui.IDX1size) {
-        val pni = bh.bui.IDX1(i)
+      while (i < bh.IDX1size) {
+        val pni = bh.IDX1(i)
         var j: Int = 0
         var ai = pni*gtSize2
         while (j < gtSize2) {
-            val gt2 = bh.bui.GTS2(j)
-            if (gt2 == '1') share(ai) += 1
+            val gt2 = bh.GTS2(j)
+            if (gt2 == '1' || gt2 == '2') share(ai) += 1
             if (gt2 != '3') count(ai) += 1
             ai += 1
             j += 1
@@ -440,9 +448,6 @@ object GorQueen {
       bi.outputBucketPos = new Array[Int](outputSize)
       bi.outputBucketID2 = new Array[Int](outputSize2)
       bi.outputBucketPos2 = new Array[Int](outputSize2)
-      bi.GTS1length = outputSize
-      bi.IDX1 = new Array[Int](outputSize2)
-      bi.GTS2 = new Array[Char](outputSize2)
 
       val tagMap = outputOrderMap.clone()
       val tagMap2 = outputOrderMap2.clone()

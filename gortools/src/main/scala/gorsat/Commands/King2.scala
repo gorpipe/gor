@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GorKing2.{KingAggregate, KingAnalysis}
+import gorsat.Analysis.GorKing.{KingAggregate, KingAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities.validHeader
@@ -30,8 +30,8 @@ import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
-class King2 extends CommandInfo("KING2",
-  CommandArguments("", "-gc -vs -s -pi0thr -phithr -thetathr -maxvars", 2),
+class King extends CommandInfo("KING2",
+  CommandArguments("", "-gc -vs -s -pi0thr -phithr -thetathr", 2),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -50,13 +50,6 @@ class King2 extends CommandInfo("KING2",
       valSize = intValueOfOptionWithRangeCheck(args, "-vs", 1)
       sepVal = ""
     }
-
-    var max_variants = 1000
-    if (hasOption(args, "-maxvars")) {
-      max_variants = intValueOfOption(args, "-maxvars")
-      if (max_variants > 10000000) throw new GorParsingException("The maximum number of variants is 100millions or limited by memory, e.g. memory requirement is (#PNs x #variants / 4)bytes.")
-    }
-
 
     var pi0thr = 0.0f
     var t_pi0 = false
@@ -126,7 +119,7 @@ class King2 extends CommandInfo("KING2",
 
 
 
-      val pipeStep = KingAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, afCol, sepVal, valSize, uv, context.getSession) | KingAggregate(pi0thr,phithr,thetathr,t_pi0,t_phi,t_theta,max_variants,context.getSession.getSystemContext.getMonitor)
+      val pipeStep = KingAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, afCol, sepVal, valSize, uv, context.getSession) | KingAggregate(pi0thr,phithr,thetathr,t_pi0,t_phi,t_theta,context.getSession.getSystemContext.getMonitor)
 
       val combinedHeader = validHeader("Chrom\tPos\tPN1\tPN2\tIBS0\tXX\ttpq\tkpq\tNhet\tNhom\tNAai\tNAaj\tcount\tpi0\tphi\ttheta")
       CommandParsingResult(pipeStep, combinedHeader)
