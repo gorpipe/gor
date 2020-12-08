@@ -159,6 +159,11 @@ public abstract class GenomicIterator implements Iterator<Row>, AutoCloseable {
         }
     }
 
+    @Override
+    public GenomicIterator clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
+    }
+
     /**
      * @return Source name associated with this iterator
      */
