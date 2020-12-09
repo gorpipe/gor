@@ -2,12 +2,12 @@
 
    <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span>
 
-.. _KING:
+.. _KING2:
 
-====
-KING
-====
-The **KING** command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
+=====
+KING2
+=====
+The **KING2** command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
 Bioinformatics, Vol. 26 no. 22 2010, pages 2867–2873).
 
 The left-input stream is of the same type as for **CSVSEL**, i.e. it must contain the columns ``values`` and ``bucket``.
@@ -22,7 +22,11 @@ is also includes dummy columns for Chrom and Pos with the values "ChrA" and 0, r
 however PN1, PN2, IBS0, XX, tpq, kpq, Nhet, Nhom, NAai, NAaj, count, pi0, phi, and theta.  See the code examples
 and the KING paper for further details related to the **KING** command.
 
-See also the KING2 and QUEEN commands.
+The KING2 command can be used as a second step after generating first candidate relatives with the QUEEN command
+based on rare variants only.  The logic in QUEEN is significantly faster and with proper sharing filtering, the number
+of tag-pairs that must be analysed with KING2 does not have to bee large.  See also KING that uses different tag input
+and storage model for the genotypes, i.e. stores all genotypes and does not store all states for the tag combinations
+(e.g. pn1 x pn2).
 
 
 Usage
@@ -30,15 +34,13 @@ Usage
 
 .. code-block:: gor
 
-    gor ... | KING tagbucketrelation tag-list1 tag-list2  [-gc cols] [-sym] [(-s sep | -vs valuesize)]
+    gor ... | KING2 tagbucketrelation tag1xtag2-relation  [-gc cols] [(-s sep | -vs charsize)]
 
 Options
 =======
 
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-gc cols``        | Grouping columns other than (chrom,pos).  NOTE, one of the must include AF                         |
-+---------------------+----------------------------------------------------------------------------------------------------+
-| ``-sym``            | Assume tags1 and tags2 lists are the same and return only output for one of the pairs, e.g. pn1<pn2|
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-s sep``          | Specify separator for the elements in values.  Default to comma.                                   |
 +---------------------+----------------------------------------------------------------------------------------------------+
@@ -60,8 +62,8 @@ Examples
     The following query:
 
     gor [#vars#] | king -gc ref,alt,af -vs 1 #buckets#
-                   <(nor #buckets# | inset -c pn <(nor #leftpns# ) | select pn)
-                   <(nor #buckets# | inset -c pn <(nor #rightpns# ) | select pn)
+                   <(nor #buckets# | inset -c pn <(nor #leftpns# ) | select pn
+                   | multimap -cartesian <(nor #buckets# | inset -c pn <(nor #rightpns# ) | select pn))
 
     is equivalent to this query written without the KING command:
 
@@ -103,7 +105,7 @@ Examples
     create #vars# = gorrows -p chr1:1-100 | select 1-2 | calc ref 'C' | calc alt 'A' | calc af random() | map -c pos [#values#] | calc bucket 'b1'
     | csvsel -tag PN -gc ref,alt,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -gc ref,alt,af [#bucket#] <(gorrows -p chr1:1-2 | group chrom | calc pn '' | top 0);
 
-    create #king# = nor <(gor [#vars#] | king -gc af [#bucket#] [#pns1#] [#pns2#] -vs 1) | select pn1-;
+    create #king# = nor <(gor [#vars#] | king -gc af [#bucket#] <(nor [#pns1#] | multimap -cartesian [#pns2#]) -vs 1) | select pn1-;
 
     nor [#king#] | calc monozygotic if(phi > pow(2.0,-1.5) and phi < 0.1,1,0)
     | calc parent_offspring if(phi > pow(2.0,-2.5) and phi < pow(2.0,-1.5) and pi0 < 0.1,1,0)
@@ -116,6 +118,4 @@ Examples
 Related commands
 ----------------
 
-:ref:`KING2` :ref:`QUEEN` :ref:`CSVCC` :ref:`GTGEN` :ref:`GTLD`
-
-
+:ref:`KING` :ref:`QUEEN` :ref:`CSVCC` :ref:`GTGEN` :ref:`GTLD`

@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GorKing.{KingAggregate, KingAnalysis}
+import gorsat.Analysis.GorKing2.{KingAggregate, KingAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities.validHeader
@@ -31,7 +31,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 class King extends CommandInfo("KING",
-  CommandArguments("", "-gc -vs -s -pi0thr -phithr -thetathr", 2),
+  CommandArguments("-sym", "-gc -vs -s -pi0thr -phithr -thetathr -maxvars", 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -50,6 +50,16 @@ class King extends CommandInfo("KING",
       valSize = intValueOfOptionWithRangeCheck(args, "-vs", 1)
       sepVal = ""
     }
+
+    var max_variants = 1000
+    if (hasOption(args, "-maxvars")) {
+      max_variants = intValueOfOption(args, "-maxvars")
+      if (max_variants > 10000000) throw new GorParsingException("The maximum number of variants is 100millions or limited by memory, e.g. memory requirement is (#PNs x #variants / 4)bytes.")
+    }
+
+    var symmetric_PNlists = false
+    if (hasOption(args, "-sym")) symmetric_PNlists = true
+
 
     var pi0thr = 0.0f
     var t_pi0 = false
@@ -89,6 +99,9 @@ class King extends CommandInfo("KING",
     var iteratorCommand2 = ""
     var dsource2: DynamicNorSource = null
     var rightHeader2 = ""
+    var iteratorCommand3 = ""
+    var dsource3: DynamicNorSource = null
+    var rightHeader3 = ""
 
     try {
       var rightFile1 = iargs(0).trim
@@ -108,18 +121,28 @@ class King extends CommandInfo("KING",
       dsource2 = inputSource2.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader2 = inputSource2.header
 
+      var rightFile3 = iargs(1).trim
+      if ((rightFile3.toUpperCase.endsWith(".NORZ") || rightFile3.toUpperCase.endsWith(".TSV") || rightFile3.toUpperCase.endsWith(".NOR")) && !(rightFile3.slice(0, 2) == "<(")) rightFile3 = "<(nor " + rightFile3 + " )"
+
+      val inputSource3 = SourceProvider(rightFile3, context, executeNor = executeNor, isNor = true)
+      iteratorCommand3 = inputSource3.iteratorCommand
+      dsource3 = inputSource3.dynSource.asInstanceOf[DynamicNorSource]
+      rightHeader3 = inputSource3.header
 
       if (rightHeader1.split("\t").length != 2) {
         throw new GorParsingException(s"buckettagfile must have 2 tab-delimited columns: Tag/PN (distinct), bucketID.\nThe relative position of tag in bucket specifies the csv order.\nCurrent header is: $rightHeader1")
       }
 
-      if (rightHeader2.split("\t").length != 2) {
-        throw new GorParsingException(s"The tagfile must have two columns with all the PN/tag pairs to test, e.g. (PN1,PN2).\n\\nCurrent header is: $rightHeader2")
+      if (rightHeader2.split("\t").length != 1) {
+        throw new GorParsingException(s"The left-tagfile must have only one columns with all the PN/tags, e.g. PN.\n\\nCurrent header is: $rightHeader2")
+      }
+
+      if (rightHeader3.split("\t").length != 1) {
+        throw new GorParsingException(s"The right-tagfile must have only one columns with all the PN/tags, e.g. PN.\n\\nCurrent header is: $rightHeader3")
       }
 
 
-
-      val pipeStep = KingAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, afCol, sepVal, valSize, uv, context.getSession) | KingAggregate(pi0thr,phithr,thetathr,t_pi0,t_phi,t_theta,context.getSession.getSystemContext.getMonitor)
+      val pipeStep = KingAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, rightFile3, iteratorCommand3, dsource3, buckCol, valCol, gcCols, afCol, sepVal, valSize, uv, context.getSession) | KingAggregate(pi0thr,phithr,thetathr,t_pi0,t_phi,t_theta,max_variants,symmetric_PNlists,context.getSession.getSystemContext.getMonitor)
 
       val combinedHeader = validHeader("Chrom\tPos\tPN1\tPN2\tIBS0\tXX\ttpq\tkpq\tNhet\tNhom\tNAai\tNAaj\tcount\tpi0\tphi\ttheta")
       CommandParsingResult(pipeStep, combinedHeader)
