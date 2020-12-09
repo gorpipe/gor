@@ -282,6 +282,7 @@ public class GorZipLexOutputStream extends OutputStream {
         flush();
 
         if (this.idx != null) {
+            this.idx.writeLastEntry();
             this.idx.close();
         }
         this.target.close();

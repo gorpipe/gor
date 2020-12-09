@@ -38,7 +38,7 @@ import java.nio.file.Paths;
         aliases = {"i"},
         description="Index gor data files",
         header="Index gor data files")
-public class IndexCommand extends HelpOptions implements Runnable{
+public class IndexCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Option(names={"-f","--fullindex"},
             description = "Performs a full index of gor file.")
@@ -59,7 +59,7 @@ public class IndexCommand extends HelpOptions implements Runnable{
     private ByteArrayOutputStream lastbaos = null;
 
     private boolean byteArrayEquals(byte[] b1, byte[] b2, int len) {
-        for( int j = 0; i < len; j++ ) {
+        for( int j = 0; j < len; j++ ) {
             if( b1[j] != b2[j] ) return false;
         }
         return true;
@@ -131,6 +131,7 @@ public class IndexCommand extends HelpOptions implements Runnable{
                 InputStream is = ds.open();
                 OutputStream fos = Files.newOutputStream(gorindex)
         ) {
+            fos.write("## fileformat=GORIv1\n".getBytes());
             while (i == r) {
                 pos = pos + r;
                 r = is.read(buffer);
@@ -139,7 +140,6 @@ public class IndexCommand extends HelpOptions implements Runnable{
             }
             i += 1;
             lastOffset = i;
-            long lastPos = i;
 
             while (r > 0) {
                 writeBufferToFile(fos);
@@ -148,11 +148,11 @@ public class IndexCommand extends HelpOptions implements Runnable{
                 writeUntil(baos, is, '\t');
                 skipUntil(is, '\n');
                 lastOffset = i;
+                long totalOffset = pos + lastOffset;
 
                 if (r > 0) {
-                    byte[] bytes = (lastPos + "\n").getBytes();
+                    byte[] bytes = (totalOffset + "\n").getBytes();
                     baos.write(bytes);
-                    lastPos = pos + i;
                 }
             }
             if (!lastwritten && lastbaos != null) fos.write(lastbaos.toByteArray());
