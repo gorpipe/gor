@@ -24,6 +24,7 @@ package org.gorpipe.gor.binsearch;
 
 import com.github.luben.zstd.ZstdOutputStream;
 import htsjdk.samtools.util.Md5CalculatingOutputStream;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.Row;
@@ -74,6 +75,7 @@ public class GorZipLexOutputStream extends OutputStream {
 
     private final LexRow chrColRow;
     private String lastChr = null;
+    private int lastPos = 0;
 
     static class BufferInfo {
         byte[] keyInBytes; //the chr and pos fields of the last line in block as byte array.
@@ -236,11 +238,14 @@ public class GorZipLexOutputStream extends OutputStream {
      */
     public void write(Row line) throws IOException {
         if (this.lastChr != null && !this.lastChr.equals(line.chr)) {
+            if(lastChr.compareTo(line.chr) > 0) throw new GorDataException("Wrong chromosome order in gor stream " + line.chr + " " + lastChr);
             //Force flush
             writeBuffer();
             this.beginOfLastLine = 0;
             line.writeRowToStream(this.byteOutput);
             this.byteOutput.write('\n');
+        } else if(line.pos < lastPos) {
+            throw new GorDataException("Wrong order in gor stream " + line.pos + " " + lastPos);
         } else {
             final int oldPos = this.byteOutput.size();
             line.writeRowToStream(this.byteOutput);
@@ -258,6 +263,7 @@ public class GorZipLexOutputStream extends OutputStream {
             } else this.beginOfLastLine = oldPos;
         }
         this.lastChr = line.chr;
+        this.lastPos = line.pos;
     }
 
 
