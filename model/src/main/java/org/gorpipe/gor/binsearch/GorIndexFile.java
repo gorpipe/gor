@@ -49,6 +49,8 @@ public class GorIndexFile implements AutoCloseable{
     private String lastChromWritten = "";
     private int lastPosWritten = 0;
 
+    private boolean skippedLast = false;
+
     public GorIndexFile(File file, GorIndexType indexType) throws IOException {
         out = Files.newBufferedWriter(file.toPath());
         this.indexType = indexType;
@@ -80,11 +82,16 @@ public class GorIndexFile implements AutoCloseable{
         }
     }
 
+    public void writeLastEntry() throws IOException {
+        if(skippedLast) writeEntry(lastChrom, lastPosInChrom, lastFilePosInChrom);
+    }
+
     public void putFilePosition(String chr, int pos, long filePos) throws IOException {
         if (indexType == GorIndexType.CHROMINDEX) {
             if (chr.equals(lastChrom)) {
                 lastPosInChrom = pos;
                 lastFilePosInChrom = filePos;
+                skippedLast = true;
                 return;
             } else if(lastFilePosInChrom > 0) {
                 // We store the last position for each chromosome. This is to allow the quickest
@@ -108,6 +115,7 @@ public class GorIndexFile implements AutoCloseable{
             out.write(line);
             lastChromWritten = chr;
             lastPosWritten = pos;
+            skippedLast = false;
         }
     }
 
