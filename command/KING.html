@@ -175,9 +175,6 @@ and the KING paper for further details related to the <strong>KING</strong> comm
 <p>See also the KING2 and QUEEN commands.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING tagbucketrelation tag-list1 tag-list2  [-<span class="no">gc</span> cols] [-sym] [(-s sep | -vs valuesize)]
-</pre></div>
-</div>
 </div>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
@@ -199,13 +196,16 @@ and the KING paper for further details related to the <strong>KING</strong> comm
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-vs</span> <span class="pre">size</span></code></p></td>
 <td><p>Use a fixed character size for values, e.g. rather than variable length separated with comma.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-pi0thr</span> <span class="pre">value</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-maxvars</span> <span class="pre">value</span></code></p></td>
+<td><p>The maximum number of variants used in the calculation, e.g. 100k.  Memory 2bits per gt. Def. 1000</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-pi0thr</span> <span class="pre">value</span></code></p></td>
 <td><p>Threshold value to filter output on pi0, e.g. to pass we must have pi0 &lt; value</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-phithr</span> <span class="pre">value</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-phithr</span> <span class="pre">value</span></code></p></td>
 <td><p>Threshold value to filter output on phi, e.g. to pass we must have phi &gt; value</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-thetathr</span> <span class="pre">value</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-thetathr</span> <span class="pre">value</span></code></p></td>
 <td><p>Threshold value to filter output on theta, e.g. to pass we must have theta &gt; value</p></td>
 </tr>
 </tbody>

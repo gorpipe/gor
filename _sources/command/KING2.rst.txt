@@ -61,7 +61,7 @@ Examples
 
     The following query:
 
-    gor [#vars#] | king -gc ref,alt,af -vs 1 #buckets#
+    gor [#vars#] | king2 -gc ref,alt,af -vs 1 #buckets#
                    <(nor #buckets# | inset -c pn <(nor #leftpns# ) | select pn
                    | multimap -cartesian <(nor #buckets# | inset -c pn <(nor #rightpns# ) | select pn))
 
@@ -105,7 +105,7 @@ Examples
     create #vars# = gorrows -p chr1:1-100 | select 1-2 | calc ref 'C' | calc alt 'A' | calc af random() | map -c pos [#values#] | calc bucket 'b1'
     | csvsel -tag PN -gc ref,alt,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -gc ref,alt,af [#bucket#] <(gorrows -p chr1:1-2 | group chrom | calc pn '' | top 0);
 
-    create #king# = nor <(gor [#vars#] | king -gc af [#bucket#] <(nor [#pns1#] | multimap -cartesian [#pns2#]) -vs 1) | select pn1-;
+    create #king# = nor <(gor [#vars#] | king2 -gc af [#bucket#] <(nor [#pns1#] | multimap -cartesian [#pns2#]) -vs 1) | select pn1-;
 
     nor [#king#] | calc monozygotic if(phi > pow(2.0,-1.5) and phi < 0.1,1,0)
     | calc parent_offspring if(phi > pow(2.0,-2.5) and phi < pow(2.0,-1.5) and pi0 < 0.1,1,0)

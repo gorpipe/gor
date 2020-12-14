@@ -216,7 +216,7 @@ and storage model for the genotypes, i.e. stores all genotypes and does not stor
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>The following query:
 
-<span class="nd">gor</span> [#vars#] | king -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 #buckets#
+<span class="nd">gor</span> [#vars#] | king2 -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 #buckets#
                &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #leftpns# ) | select pn
                | multimap -cartesian &lt;(<span class="nd">nor</span> #buckets# | inset -c pn &lt;(<span class="nd">nor</span> #rightpns# ) | select pn))
 
@@ -259,7 +259,7 @@ The query that uses the KING command is MUCH faster when the <span class="na">PN
 <span class="nd">create</span> #vars# = gorrows -<span class="no">p</span> chr1:1-100 | select 1-2 | calc ref &#39;C&#39; | calc <span class="na">alt</span> &#39;A&#39; | calc af random() | map -c <span class="na">pos</span> [#values#] | calc bucket &#39;b1&#39;
 | csvsel -tag <span class="na">PN</span> -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -<span class="no">gc</span> ref,<span class="na">alt</span>,af [#bucket#] &lt;(gorrows -<span class="no">p</span> chr1:1-2 | group chrom | calc pn &#39;&#39; | top 0);
 
-<span class="nd">create</span> #king# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | king -<span class="no">gc</span> af [#bucket#] &lt;(<span class="nd">nor</span> [#pns1#] | multimap -cartesian [#pns2#]) -vs 1) | select pn1-;
+<span class="nd">create</span> #king# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | king2 -<span class="no">gc</span> af [#bucket#] &lt;(<span class="nd">nor</span> [#pns1#] | multimap -cartesian [#pns2#]) -vs 1) | select pn1-;
 
 <span class="nd">nor</span> [#king#] | calc monozygotic if(phi &gt; pow(2.0,-1.5) and phi &lt; 0.1,1,0)
 | calc parent_offspring if(phi &gt; pow(2.0,-2.5) and phi &lt; pow(2.0,-1.5) and pi0 &lt; 0.1,1,0)
