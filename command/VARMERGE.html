@@ -164,7 +164,8 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">-seg</span></code> option is used to indicate if the variants are denoted with zero-based segments (e.g. Chrom,bpStart,bpStop,Ref,Alt) as opposed to the default one-based position format (e.g. Chrom,Pos,Ref,Alt).</p>
 <p>By default the variants are represented in a right-normalized format such that SNPs have one letter notation and InDels have an identical base in the first letter of refcol and altcol.  The <code class="docutils literal notranslate"><span class="pre">-nonorm</span></code> option does skip the normalization step and represents the variants with the maximum span of the reference sequence (depends on the overlap between reference sequences in the input stream).</p>
 <p>Right-normalising has the benefit of presenting the variations in different rows into a coherent form. This is done because most aligners do not guarantee consistent representations of InDels for sequence reads in repeat regions.</p>
-<p>The merge span (as defined by the <code class="docutils literal notranslate"><span class="pre">-span</span></code> option) is capped at 1000 base-pairs.</p>
+<p>The merge span (as defined by the <code class="docutils literal notranslate"><span class="pre">-span</span></code> option) is capped at 1M base-pairs, however, such high normalization is not recommended.  Rather consider using VARNORM
+and the use of the -norm option in VARJOIN.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARMERGE</span> refcol altcol [ -seg | -nonorm| -span]
@@ -186,7 +187,7 @@
 <td><p>Do not minimize (normalize) the variant after merging the reference seqs.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-span</span></code></p></td>
-<td><p>Max merge span. The default is 100bp.</p></td>
+<td><p>Max merge span. The default is 100bp, max 1Mb (crazy high!)</p></td>
 </tr>
 </tbody>
 </table>
@@ -194,6 +195,10 @@
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>For examples of how to use the <a class="reference internal" href="#varmerge"><span class="std std-ref">VARMERGE</span></a> command, check the chapter on <a class="reference internal" href="../variantData.html#mergingvariants"><span class="std std-ref">Merging Variants</span></a>.</p>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a> <a class="reference internal" href="VARJOIN.html#varjoin"><span class="std std-ref">VARJOIN</span></a></p>
+</div>
 </div>
 </div>
 

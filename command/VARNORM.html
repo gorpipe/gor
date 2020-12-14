@@ -162,7 +162,9 @@
 <span id="id1"></span><h1>VARNORM<a class="headerlink" href="#varnorm" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#varnorm"><span class="std std-ref">VARNORM</span></a> command normalises the variation data in a gor stream to the left or right. The column containing the reference and alternate allele must be specified. If neither <code class="docutils literal notranslate"><span class="pre">-left</span></code> nor <code class="docutils literal notranslate"><span class="pre">-right</span></code> is specified, then left normalisation is default.</p>
 <p>If the <code class="docutils literal notranslate"><span class="pre">-trim</span></code> command is used, then any redundant bases in the representations of insertions or deletions will be deleted (i.e. deletions will be represented by empty cells in Call - or in Reference in the case of insertions).</p>
-<p>By default, normalisation is run automatically as part of a VARMERGE command.</p>
+<p>By default, normalisation is run automatically as part of a VARJOIN command, however, if variants need to be grouped (e.g. for counting or generating horizontal data)
+the InDels must be normalized.  For very large InDels a high span may be needed, however, we don’t recommend excessive span.  Consider then
+the use of pre-normalized data and the -norm option in VARJOIN.  The system can be configured to default on -norm behaviour for VARJOIN.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARNORM</span> refcol altcol [ -seg | -left | -right | -trim | -span ]
@@ -190,7 +192,7 @@
 <td><p>Trims the redundant bases away from the defined columns (ref + alt)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-span</span></code></p></td>
-<td><p>Max read span. The default is 1000bp.</p></td>
+<td><p>Max merge span. The default is 100bp, max 1Mb (crazy high!)</p></td>
 </tr>
 </tbody>
 </table>
@@ -202,6 +204,10 @@
 </div>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">VARNORM</span> -left #3 #4 | <span class="nb">GROUP</span> 1 -<span class="no">gc</span> #3,#4 -<span class="no">count</span> | <span class="nb">WHERE</span> allcount &gt; 1 | <span class="nb">TOP</span> 2
 </pre></div>
+</div>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> <a class="reference internal" href="VARJOIN.html#varjoin"><span class="std std-ref">VARJOIN</span></a></p>
 </div>
 </div>
 </div>

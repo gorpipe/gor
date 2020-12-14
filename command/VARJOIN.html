@@ -260,7 +260,7 @@ the join may have to be followed with SORT step to ensure GOR.</p></td>
 <td><p>Specifies the start and stop position</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-span</span></code></p></td>
-<td><p>Fuzz factor on the join position</p></td>
+<td><p>Fuzz factor on the position, e.g. InDel variant normalization.  Def. 1000bp, max 1Mb.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-norm</span></code></p></td>
 <td><p>Assume left or right normalised variants, i.e. -span is zero.
@@ -275,6 +275,10 @@ property ‘gor.varjointype’ or ‘varjointype’ in gor config file.</p></td>
 </table>
 <p>See also <a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> and the example for the <a class="reference internal" href="LEFTWHERE.html#leftwhere"><span class="std std-ref">LEFTWHERE</span></a> command in relation to this.</p>
 <p>The right-source can also be specified as a gor-stream, using the &lt;(…) notation as in the <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a> command.</p>
+<div class="section" id="related-commands">
+<h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a> <a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a></p>
+</div>
 </div>
 </div>
 
