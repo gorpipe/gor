@@ -47,7 +47,7 @@ class VarNorm extends CommandInfo("VARNORM",
     if (hasOption(args, "-left")) leftNormalize = true
     if (hasOption(args, "-right")) leftNormalize = false
     var mergeSpan = intValueOfOptionWithDefaultWithRangeCheck(args, "-span", 1000, 0)
-    if (mergeSpan > 1000) mergeSpan = 1000
+    if (mergeSpan > 1000000) { throw new GorParsingException("Span cannot exceed 1Mb!  This leads to slow execution and heave memory. Consider eliminating problematic variants.") }
     refCol = columnFromHeader(iargs(0), forcedInputHeader, executeNor)
     alleleCol = columnFromHeader(iargs(1), forcedInputHeader, executeNor)
     if (refCol < 0 || alleleCol < 0) {

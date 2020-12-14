@@ -87,7 +87,7 @@ Options
 +--------------------+---------------------------------------------------------------------------------------+
 | ``-p``             | Specifies the start and stop position                                                 |
 +--------------------+---------------------------------------------------------------------------------------+
-| ``-span``          | Fuzz factor on the join position                                                      |
+| ``-span``          | Fuzz factor on the position, e.g. InDel variant normalization.  Def. 1000bp, max 1Mb. |
 +--------------------+---------------------------------------------------------------------------------------+
 | ``-norm``          | Assume left or right normalised variants, i.e. -span is zero.                         |
 |                    | Skip dynamic normalization on indels. Equivalent to VARNORM, but faster.              |
@@ -102,3 +102,7 @@ See also :ref:`VARMERGE` and the example for the :ref:`LEFTWHERE` command in rel
 The right-source can also be specified as a gor-stream, using the <(...) notation as in the :ref:`JOIN` command.
 
 
+Related commands
+----------------
+
+:ref:`VARNORM` :ref:`VARMERGE` :ref:`JOIN`

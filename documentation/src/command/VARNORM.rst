@@ -11,7 +11,9 @@ The :ref:`VARNORM` command normalises the variation data in a gor stream to the 
 
 If the ``-trim`` command is used, then any redundant bases in the representations of insertions or deletions will be deleted (i.e. deletions will be represented by empty cells in Call - or in Reference in the case of insertions).
 
-By default, normalisation is run automatically as part of a VARMERGE command.
+By default, normalisation is run automatically as part of a VARJOIN command, however, if variants need to be grouped (e.g. for counting or generating horizontal data)
+the InDels must be normalized.  For very large InDels a high span may be needed, however, we don't recommend excessive span.  Consider then
+the use of pre-normalized data and the -norm option in VARJOIN.  The system can be configured to default on -norm behaviour for VARJOIN.
 
 Usage
 =====
@@ -32,7 +34,7 @@ Options
 +--------------+------------------------------------------------------------------------------------+
 | ``-trim``    | Trims the redundant bases away from the defined columns (ref + alt)                |
 +--------------+------------------------------------------------------------------------------------+
-| ``-span``    | Max read span. The default is 1000bp.                                              |
+| ``-span``    | Max merge span. The default is 100bp, max 1Mb (crazy high!)                        |
 +--------------+------------------------------------------------------------------------------------+
 
 Examples
@@ -44,3 +46,9 @@ Examples
 .. code-block:: gor
 
    gor #dbsnp# | VARNORM -left #3 #4 | GROUP 1 -gc #3,#4 -count | WHERE allcount > 1 | TOP 2
+
+
+Related commands
+----------------
+
+:ref:`VARMERGE` :ref:`VARJOIN`
