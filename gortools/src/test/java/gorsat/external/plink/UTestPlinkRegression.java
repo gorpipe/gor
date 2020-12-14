@@ -44,6 +44,17 @@ public class UTestPlinkRegression {
             "h\t2\n"+
             "i\t1\n"+
             "j\t2\n";
+    String qtpheno = "#IID\tpheno\n" +
+            "a\t0.0\n"+
+            "b\t1.0\n"+
+            "c\t0.5\n"+
+            "d\t0.0\n"+
+            "e\t1.0\n"+
+            "f\t0.5\n"+
+            "g\t0.0\n"+
+            "h\t1.0\n"+
+            "i\t0.5\n"+
+            "j\t0.0\n";
     String multipheno = "#IID\tpheno\tpheno2\n" +
             "a\t1\t1\n"+
             "b\t2\t1\n"+
@@ -55,6 +66,17 @@ public class UTestPlinkRegression {
             "h\t2\t2\n"+
             "i\t1\t2\n"+
             "j\t2\t2\n";
+    String mixedpheno = "#IID\tpheno\tpheno2\n" +
+            "a\t1\t0.0\n"+
+            "b\t2\t1.0\n"+
+            "c\t1\t0.5\n"+
+            "d\t2\t0.0\n"+
+            "e\t1\t1.0\n"+
+            "f\t2\t0.5\n"+
+            "g\t1\t0.0\n"+
+            "h\t2\t1.0\n"+
+            "i\t1\t0.5\n"+
+            "j\t2\t0.0\n";
     String adjust = "CHROM\tPOS\tID\tREF\tALT\tP\tTEST\tPHENO\n" +
             "chr1\t1\tid\tA\tC\t0.00001\tADD\tpheno\n" +
             "chr2\t2\tid\tG\tT\t0.000001\tADD\tpheno\n";
@@ -75,6 +97,7 @@ public class UTestPlinkRegression {
         if( oldPlinkExec != null ) System.setProperty("org.gorpipe.gor.driver.plink.executable",oldPlinkExec);
     }
 
+    @Ignore("Needs plink2 installed")
     @Test
     public void testPlink2CoreDumpCleanup() throws Exception {
         Path projectPath = Paths.get(".");
@@ -170,7 +193,6 @@ public class UTestPlinkRegression {
         }
     }
 
-
     @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegression() throws IOException {
@@ -184,6 +206,45 @@ public class UTestPlinkRegression {
             String results = TestUtils.runGorPipe(query);
             Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
                     "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n", results);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
+    public void testPlinkRegressionQt() throws IOException {
+        Path pg = Paths.get("reg.gor");
+        Path pp = Paths.get("qtpheno.txt");
+        String regor = regorheader + "chr1\t1\trs1\tA\tC\t0101010101\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, qtpheno.getBytes());
+            String query = "gor reg.gor | plinkregression qtpheno.txt";
+            String results = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tBETA\tSE\tT_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\t0.1\t0.291548\t0.342997\t0.740439\t.\tpheno\n", results);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
+    public void testPlinkRegressionMixed() throws IOException {
+        Path pg = Paths.get("reg.gor");
+        Path pp = Paths.get("mixedpheno.txt");
+        String regor = regorheader + "chr1\t1\trs1\tA\tC\t0101010101\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, mixedpheno.getBytes());
+            String query = "gor reg.gor | plinkregression mixedpheno.txt";
+            String results = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH?\tTEST\tOBS_CT\tOR\tLOG(OR)_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\t0.1\t0.291548\t0.342997\t0.740439\t.\tpheno2\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
@@ -283,8 +344,8 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Test
     @Ignore("Needs plink2 installed")
+    @Test
     public void testPlink() {
         //This script is from Hakon
         //Want to keep it here for debugging purposes.
