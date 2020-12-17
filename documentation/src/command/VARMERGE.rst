@@ -15,7 +15,8 @@ By default the variants are represented in a right-normalized format such that S
 
 Right-normalising has the benefit of presenting the variations in different rows into a coherent form. This is done because most aligners do not guarantee consistent representations of InDels for sequence reads in repeat regions.
 
-The merge span (as defined by the ``-span`` option) is capped at 1000 base-pairs.
+The merge span (as defined by the ``-span`` option) is capped at 1M base-pairs, however, such high normalization is not recommended.  Rather consider using VARNORM
+and the use of the -norm option in VARJOIN.
 
 Usage
 =====
@@ -31,10 +32,14 @@ Options
 +-------------+---------------------------------------------------------------------------+
 | ``-nonorm`` | Do not minimize (normalize) the variant after merging the reference seqs. |
 +-------------+---------------------------------------------------------------------------+
-| ``-span``   | Max merge span. The default is 100bp.                                     |
+| ``-span``   | Max merge span. The default is 100bp, max 1Mb (crazy high!)               |
 +-------------+---------------------------------------------------------------------------+
 
 Examples
 ========
 For examples of how to use the :ref:`VARMERGE` command, check the chapter on :ref:`Merging Variants<mergingVariants>`.
 
+Related commands
+----------------
+
+:ref:`VARNORM` :ref:`VARJOIN`

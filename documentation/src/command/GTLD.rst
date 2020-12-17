@@ -17,6 +17,20 @@ and separate the sum step and the calculation steps for Dprime and r.
 The input stream must have ``VALUES`` column storing the genotypes (as 0,1,2, or 3), with or without a ``BUCKET``
 column.
 
+To represent the variant pairs the output columns are chrom,pos,ref,alt,distance,posx,refx,altx,
+and the genotype pair counts LD_g00,LD_g10,LD_g20,LD_g01,LD_g11,LD_g21,LD_g02,LD_g12,LD_g22
+and from the genotype counts the -calc option uses the EM algorithm to phase the haplotypes and estimate
+LD_D,LD_Dp,LD_r,De, using the following standard formulas:
+
+      Nh = h00+h01+h10+h11
+      p1 = (h00+h01)/Nh
+      q1 = (h00+h10)/Nh
+      LD_D = h00*h11-h10*h01
+      d = if (LD_D<0.0) max((p1*q1),(1.0-p1)*(1.0-q1)) else min((p1*(1-q1)),(1.0-p1)*q1)
+      rd = sqrt(p1*(1.0-p1)*q1*(1.0-q1))
+      LD_Dp = LD_D/d
+      LD_r = LD_D/rd
+
 Usage
 =====
 
@@ -32,10 +46,10 @@ Options
 | ``-f distance``     | The maximum span for LD calculation in base pairs.                                                 |
 |                     | Note very large span can require time and memory                                                   |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-sum``            | Aggregate the correlation counts LD_x11,LD_x12,LD_x21, and LD_x22,                                 |
+| ``-sum``            | Aggregate the correlation counts LD_g00,LD_g10,LD_g20,LD_g01,LD_g11,LD_g21,LD_g02,LD_g12 and LD_g22|
 |                     | from single genotype character values column.                                                      |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-calc``           | Calculate Dprime and the correlation coefficient r from LD_x11,LD_x12,LD_x21, and LD_x22.          |
+| ``-calc``           | Calculate Dprime and the correlation coefficient, r, from LD_g00,..,LD_g22.                        |
 +---------------------+----------------------------------------------------------------------------------------------------+
 
 
@@ -47,7 +61,7 @@ Examples
     /* An example calculating LD from a stream of (chr,pos,ref,alt,bucket,values) */
 
     pgor -split 10000000:100000 [#buckethorvars#] | GTLD -sum -calc -f 100000
-    | where posx != pos and (LD_Dp > 0.2 or LD_r)
+    | where posx != pos and (abs(LD_Dp) > 0.2 or abs(LD_r)>0.2)
     | where ##WHERE_SPLIT_WINDOW##
 
 The above query example calculates LD using genomic range parallelism from all the variants in all the buckets.
@@ -56,7 +70,7 @@ The following query calculate LD in a single gene:
 .. code-block:: gor
 
     gor #genes# | where gene_symbol = 'BRCA2' | join -segsnp -f 1000000 -ir <(gor [#buckethorvars#])
-    | GTLD -sum -calc -f 100000 | where posx != pos and (LD_Dp > 0.2 or LD_r)
+    | GTLD -sum -calc -f 100000 | where posx != pos and (abs(LD_Dp) > 0.2 or abs(LD_r)>0.2)
 
 Finally, the following query uses sample parallelism to calculate the LD, allowing for bigger range with less memory usage:
 
@@ -67,7 +81,7 @@ Finally, the following query uses sample parallelism to calculate the LD, allowi
     | varjoin -r <(gor #VEP# | where max_impact in ('HIGH','MODERATE') | select 1-4,max_consequence,max_impact)
     | GTLD -sum -f 1000000 | where posx != pos;
 
-    pgor [xxx] | GTLD -calc | where LD_Dp > 0.2 or LD_r | hide LD_x11,LD_x12,LD_x21,LD_x22 | sort 1 -gc reference,call,LD_r:n
+    pgor [xxx] | GTLD -calc | where (abs(LD_Dp) > 0.2 or abs(LD_r)>0.2) | hide LD_g00-LD_g22 | sort 1 -gc reference,call,LD_r:n
 
 Note that it is possible to have asymmetry in the LD calculation pairs. I.e. you can specify which variants in the input stream are only used as the left-variant in the pair.
 

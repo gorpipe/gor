@@ -56,7 +56,7 @@ class VarJoin extends CommandInfo("VARJOIN",
 
     // Such that zero-length refseqs are compared.
     var fuzzFactor = intValueOfOptionWithDefaultWithRangeCheck(args,"-span", 100, 0)
-    if (fuzzFactor > 1000) fuzzFactor = 1000
+    if (fuzzFactor > 1000000) { throw new GorParsingException("Span cannot exceed 1Mb!  This leads to slow execution and heavy memory usage.") }
     if (exactJoin) fuzzFactor = 0
 
 

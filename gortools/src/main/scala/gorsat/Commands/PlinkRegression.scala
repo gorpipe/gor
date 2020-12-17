@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.external.plink.{PlinkArguments, PlinkProcessAdaptor, PlinkVcfProcessAdaptor}
+import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
-
 
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",
   CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf", "-covar -threshold -hwe -geno -maf", 1, 1),
@@ -78,6 +78,8 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
       throw new GorParsingException("There must be a reference allele column, alternative allele column and value column.")
     }
 
+    val phenotype = GorJavaUtilities.getPhenotype(pheno)
+
     val headerBuilder = new StringBuilder()
     headerBuilder.append(inHeaderCols(0))
     headerBuilder.append('\t')
@@ -89,8 +91,9 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     headerBuilder.append('\t')
     headerBuilder.append(inHeaderCols(colIndices(2)))
     headerBuilder.append('\t')
-    headerBuilder.append("A1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO")
-
+    if(phenotype.equals(GorJavaUtilities.Phenotypes.BINARY)) headerBuilder.append("A1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO")
+    else if(phenotype.equals(GorJavaUtilities.Phenotypes.MIXED)) headerBuilder.append("A1\tFIRTH?\tTEST\tOBS_CT\tOR\tLOG(OR)_SE\tZ_STAT\tP\tERRCODE\tPHENO")
+    else headerBuilder.append("A1\tTEST\tOBS_CT\tBETA\tSE\tT_STAT\tP\tERRCODE\tPHENO")
 
     val header = headerBuilder.toString()
     val pip = if( vcf ) new PlinkVcfProcessAdaptor(context.getSession, plinkArguments, colIndices(1), colIndices(2), colIndices(0), if( colIndices.length == 4 ) colIndices(3) else -1, !imputed, threshold, vcf, forcedInputHeader, header)
