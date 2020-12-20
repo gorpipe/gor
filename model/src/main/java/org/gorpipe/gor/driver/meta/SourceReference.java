@@ -48,8 +48,6 @@ public class SourceReference {
     @JsonIgnore
     GenomicIterator.ChromoLookup lookup;
     public final String chrSubset;
-    @JsonIgnore
-    public final int[] columns;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?
@@ -64,9 +62,8 @@ public class SourceReference {
      * @param commonRoot
      * @param lookup
      * @param chrSubset
-     * @param columns
      */
-    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, int[] columns) {
+    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -77,14 +74,13 @@ public class SourceReference {
         this.commonRoot = commonRoot;
         this.lookup = lookup != null ? lookup : new DefaultChromoLookup();
         this.chrSubset = chrSubset;
-        this.columns = columns;
     }
 
     /**
      * @param url url for the source.
      */
     public SourceReference(String url) {
-        this(url, null, null, null, null, null);
+        this(url, null, null, null, null);
     }
 
     /**
@@ -93,13 +89,13 @@ public class SourceReference {
      */
     public SourceReference(String url, SourceReference parentSourceReference) {
         this(url, parentSourceReference.getSecurityContext(), parentSourceReference.getCommonRoot(),
-                parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), parentSourceReference.getColumns());
+                parentSourceReference.getLookup(), parentSourceReference.getChrSubset());
     }
 
     @JsonCreator
     public SourceReference(@JsonProperty("url") String url, @JsonProperty("securityContext") String securityContext,
                            @JsonProperty("commonRoot") String commonRoot, @JsonProperty("chrSubset") String chrSubset) {
-        this(url, securityContext, commonRoot, null, chrSubset, null);
+        this(url, securityContext, commonRoot, null, chrSubset);
     }
 
     public String getUrl() {
@@ -127,7 +123,7 @@ public class SourceReference {
     }
 
     public int[] getColumns() {
-        return columns;
+        return null;
     }
 
     @Override
@@ -141,13 +137,12 @@ public class SourceReference {
                 && Objects.equals(securityContext, that.securityContext)
                 && Objects.equals(commonRoot, that.commonRoot)
                 && Objects.equals(lookup, that.lookup)
-                && Objects.equals(chrSubset, that.chrSubset)
-                && Arrays.equals(columns, that.columns);
+                && Objects.equals(chrSubset, that.chrSubset);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(url, securityContext, commonRoot, lookup, chrSubset, Arrays.hashCode(columns));
+        return Objects.hash(url, securityContext, commonRoot, lookup, chrSubset);
     }
 
     @Override
@@ -158,7 +153,6 @@ public class SourceReference {
                 ", commonRoot='" + commonRoot + '\'' +
                 ", lookup=" + lookup +
                 ", chrSubset='" + chrSubset + '\'' +
-                ", columns=" + Arrays.toString(columns) +
                 '}';
     }
 
@@ -202,11 +196,10 @@ public class SourceReference {
             this.commonRoot = parentSourceReference.commonRoot;
             this.lookup = parentSourceReference.lookup;
             this.chrSubset = parentSourceReference.chrSubset;
-            this.columns = parentSourceReference.columns;
         }
 
         public SourceReference build() {
-            return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, columns);
+            return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset);
         }
 
         public Builder securityContext(String securityContext) {
@@ -226,11 +219,6 @@ public class SourceReference {
 
         public Builder chrSubset(String chrSubset) {
             this.chrSubset = chrSubset;
-            return this;
-        }
-
-        public Builder columns(int[] columns) {
-            this.columns = columns;
             return this;
         }
     }

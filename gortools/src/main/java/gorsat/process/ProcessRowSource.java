@@ -254,7 +254,7 @@ public class ProcessRowSource extends ProcessSource {
         GenomicIterator.ChromoLookup lookup = createChromoLookup();
         GenomicIterator vcfit;
         try {
-            vcfit = new VcfGzGenomicIterator(lookup, "filename", null, br) {
+            vcfit = new VcfGzGenomicIterator(lookup, "filename", br) {
                 @Override
                 public boolean seek(String seekChr, int seekPos) {
                     return seek(seekChr, seekPos, lookup.chrToLen(seekChr));

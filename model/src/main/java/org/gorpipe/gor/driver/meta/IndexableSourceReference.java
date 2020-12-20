@@ -31,8 +31,8 @@ public class IndexableSourceReference extends SourceReference {
     private final String indexSource;
     private final String referenceSource;
 
-    public IndexableSourceReference(String url, String indexSource, String referenceSource, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, int[] columns) {
-        super(url, securityContext, commonRoot, lookup, chrSubset, columns);
+    public IndexableSourceReference(String url, String indexSource, String referenceSource, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) {
+        super(url, securityContext, commonRoot, lookup, chrSubset);
 
         this.indexSource = indexSource;
         this.referenceSource = referenceSource;

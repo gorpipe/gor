@@ -51,10 +51,10 @@ class SeqBasesGenomicIterator extends GenomicIterator {
     final short BUF_SIZE = 1024 * 16;
     final byte[] buf = new byte[BUF_SIZE];
 
-    SeqBasesGenomicIterator(String path, ChromoLookup lookup, int[] columns) {
+    SeqBasesGenomicIterator(String path, ChromoLookup lookup) {
         this.path = path + '/';
         this.lookup = lookup;
-        this.columns = columns != null ? columns : new int[]{0, 1, 2};
+        this.columns = new int[]{0, 1, 2};
         this.columnMap = new int[COLS.length];
         Arrays.fill(columnMap, -1);
         for (int i = 2; i < this.columns.length; i++) {

@@ -37,13 +37,13 @@ class StdInGenomicIterator extends GenomicIterator {
     private boolean hasMore = true;
     private final ChromoLookup lookup;
 
-    StdInGenomicIterator(ChromoLookup lookup, int[] columns) {
+    StdInGenomicIterator(ChromoLookup lookup) {
         buf = new byte[1024 * 1024];
         this.lookup = lookup;
         cache();
         setHeader(readHeader());
         int headerLength = getHeader().split("\t").length;
-        this.columns = columns != null ? columns : createDefaultColumns(headerLength);
+        this.columns = createDefaultColumns(headerLength);
         this.columnMap = new int[headerLength];
         Arrays.fill(columnMap, -1);
         for (int i = 2; i < this.columns.length; i++) {

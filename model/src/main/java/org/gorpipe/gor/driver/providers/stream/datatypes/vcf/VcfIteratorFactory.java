@@ -50,8 +50,7 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
         if (file.getIndexSource() == null || !file.getIndexSource().exists()) {
             // Use the same iterator for as the non-seekable .vcf.gz files as for .vcf files if ignore order is requested
             if (compressed) {
-                return new VcfFileIterator(file, file.getFileSource().getSourceReference().getLookup(),
-                        file.getFileSource().getSourceReference().getColumns(), compressed);
+                return new VcfFileIterator(file, file.getFileSource().getSourceReference().getLookup(), compressed);
             } else {
                 try (InputStream instream = file.getFileSource().open()) {
                     final Map<Integer, String> id2chr = new HashMap();

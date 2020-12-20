@@ -97,7 +97,7 @@ public class UTestSeqBasesGenomicIterator {
         try {
             final String path = workDir.getRoot().getCanonicalPath();
             final DefaultChromoLookup lookup = new DefaultChromoLookup();
-            final SeqBasesGenomicIterator iterator = new SeqBasesGenomicIterator(path, lookup, null);
+            final SeqBasesGenomicIterator iterator = new SeqBasesGenomicIterator(path, lookup);
             iterator.init(null);
             iterator.setColnum(1);
             return iterator;
