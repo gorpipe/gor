@@ -159,6 +159,14 @@ public class GorJavaUtilities {
         }
     }
 
+    public static String clearHints(String query) {
+        int i = query.indexOf("/*+");
+        if(i != -1) {
+            return query.substring(0,i) + query.substring(query.indexOf("*/",i+3)+2,query.length());
+        }
+        return query;
+    }
+
     public static String[] splitResourceHints(String query, String validStart) {
         int i = query.indexOf("/*+");
         String[] ret = new String[] {query,null};

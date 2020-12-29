@@ -67,7 +67,8 @@ object GorPrePipe {
     var usedFiles: List[String] = Nil
 
     for (i <- pipeSteps.indices) {
-      val fullcommand = if (i == 0 && !(pipeSteps(0).toUpperCase.trim.startsWith("GOR") || pipeSteps(0).toUpperCase.trim.startsWith("NOR") || pipeSteps(0).toUpperCase.trim.startsWith("SPARK") || pipeSteps(0).toUpperCase.trim.startsWith("SELECT"))) "GOR " + pipeSteps(i).trim else pipeSteps(i).trim
+      val fullcommandWithHints = if (i == 0 && !(pipeSteps(0).toUpperCase.trim.startsWith("GOR") || pipeSteps(0).toUpperCase.trim.startsWith("NOR") || pipeSteps(0).toUpperCase.trim.startsWith("SPARK") || pipeSteps(0).toUpperCase.trim.startsWith("SELECT"))) "GOR " + pipeSteps(i).trim else pipeSteps(i).trim
+      val fullcommand = GorJavaUtilities.clearHints(fullcommandWithHints)
       val command = fullcommand.split(' ')(0).toUpperCase
       var loopcommand = command
       val argString = CommandParseUtilities.quoteSafeSplitAndTrim(fullcommand, ' ').mkString(" ")
