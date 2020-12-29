@@ -147,7 +147,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     val lastCommand = igorCommands.last
     val lastCommandLower = lastCommand.toLowerCase
     var valid : Boolean = false
-    if(lastCommandLower.startsWith("select ") || lastCommandLower.startsWith("spark ") || lastCommand.contains("/*+")) {
+    if(context.getAllowMergeQuery && (lastCommandLower.startsWith("select ") || lastCommandLower.startsWith("spark ") || lastCommand.contains("/*+"))) {
       val gorfinal = if(lastCommandLower.startsWith("gor")) "gor [extrafinal]" else "nor [extrafinal]"
       val gorhead = "create extrafinal = "+igorCommands.mkString(";")
       val acmd = Array(gorhead,gorfinal)

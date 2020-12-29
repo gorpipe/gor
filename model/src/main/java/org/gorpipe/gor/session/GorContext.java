@@ -34,6 +34,7 @@ public class GorContext {
     private final String command;
     private final String signature;
 
+    private boolean allowMergeQuery;
     private Optional<String> sortCols = Optional.empty();
     private StatsCollector stats = null;
 
@@ -49,12 +50,25 @@ public class GorContext {
         this(session, null, "gorfinal", "", "[gorfinal]");
     }
 
-    public GorContext(GorSession session, GorContext outer, String signature, String cmd, String name) {
+    public GorContext(GorSession session, GorContext outer, String signature, String cmd, String name, boolean allowMergeQuery) {
         this.session = session;
         this.outerContext = outer;
         this.signature = signature;
         this.command = cmd;
         this.name = name;
+        this.allowMergeQuery = allowMergeQuery;
+    }
+
+    public GorContext(GorSession session, GorContext outer, String signature, String cmd, String name) {
+        this(session, outer, signature, cmd, name, true);
+    }
+
+    public boolean getAllowMergeQuery() {
+        return allowMergeQuery;
+    }
+
+    public void setAllowMergeQuery(boolean allowMergeQuery) {
+        this.allowMergeQuery= allowMergeQuery;
     }
 
     public Optional<String> getSortCols() {
