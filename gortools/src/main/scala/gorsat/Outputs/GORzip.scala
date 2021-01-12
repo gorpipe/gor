@@ -37,8 +37,10 @@ import org.gorpipe.gor.model.Row
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   * @param idx Whether and index file should be written.
   */
-class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED) extends Output {
-  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, idx, compressionLevel)
+class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, md5File: Boolean = true, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED) extends Output {
+  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, md5File, idx, compressionLevel)
+
+  def getName() = fileName
 
   def setup {
     if (header != null & !skipHeader) out.setHeader(header)
