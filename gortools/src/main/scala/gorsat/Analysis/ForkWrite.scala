@@ -28,7 +28,7 @@ import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.{GORzip, OutFile}
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GorOptions, Row}
 import org.gorpipe.model.gor.RowObj
 
 import java.util.UUID
@@ -195,7 +195,7 @@ case class ForkWrite(forkCol: Int,
     val d = parent.resolve(respath)
     if(!Files.exists(d)) {
       Files.move(p, d)
-      val dict = parent.resolve("thedict.gord")
+      val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
       Files.writeString(dict, respath + "\t1\t" + minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
     }
   }

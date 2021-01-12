@@ -72,7 +72,7 @@ public class GorOptions {
 
     private static final String ERROR_INITIALIZING_QUERY = "Error Initializing Query: ";
     private static final String IS_NOT_FOUND = " is not found!";
-    private static final String DEFAULT_FOLDER_DICTIONARY_NAME = "thedict.gord";
+    public static final String DEFAULT_FOLDER_DICTIONARY_NAME = "thedict.gord";
 
     private static final Logger log = LoggerFactory.getLogger(GorOptions.class);
 
