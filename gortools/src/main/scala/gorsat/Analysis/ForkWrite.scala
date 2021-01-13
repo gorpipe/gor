@@ -49,6 +49,26 @@ case class OutputOptions(remove: Boolean = false,
                             skipHeader: Boolean = false
                            )
 
+class RangeStat {
+  var minChr: String = null
+  var minPos: Int = -1
+  var maxChr: String = null
+  var maxPos: Int = -1
+
+  def updateRange(ir: Row): Unit = {
+    if(minChr==null) {
+      minChr = ir.chr
+      minPos = ir.pos
+    }
+    maxChr = ir.chr
+    maxPos = ir.pos
+  }
+
+  def generateDictEntry(respath: String): String = {
+    return respath + "\t1\t" + minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n"
+  }
+}
+
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,
                      inHeader: String,
@@ -74,11 +94,6 @@ case class ForkWrite(forkCol: Int,
     var out: Output = _
   }
 
-  var minChr: String = null
-  var minPos: Int = -1
-  var maxChr: String = null
-  var maxPos: Int = -1
-
   var useFork: Boolean = forkCol >= 0
   var forkMap = mutable.Map.empty[String, FileHolder]
   val tagSet: mutable.Set[String] = scala.collection.mutable.Set()++options.tags
@@ -90,6 +105,8 @@ case class ForkWrite(forkCol: Int,
   var counter = 0
   var somethingToWrite = false
   var header: String = inHeader
+  val rangeStat = new RangeStat
+
   if (options.remove) {
     val cols: Array[String] = inHeader.split("\t")
     val headerBuilder = new mutable.StringBuilder(inHeader.length + cols.length - 1)
@@ -108,7 +125,14 @@ case class ForkWrite(forkCol: Int,
     header = headerBuilder.toString
   }
 
-  def outFile(name: String, skipHeader: Boolean): Output = {
+  /**
+    * Creates OutFile with given name
+    * if the path is a directory save a file with generated md5 sum as name under diretory
+    * @param name
+    * @param skipHeader
+    * @return
+    */
+  def createOutFile(name: String, skipHeader: Boolean): Output = {
     if (options.useFolder) {
       val p = Paths.get(name)
       Files.createDirectories(p)
@@ -128,7 +152,7 @@ case class ForkWrite(forkCol: Int,
     } else {
       true
     })
-    sh.out = outFile(name, skipHeader)
+    sh.out = createOutFile(name, skipHeader)
     sh.out.setup()
     sh.fileOpen = true
     openFiles += 1
@@ -160,13 +184,7 @@ case class ForkWrite(forkCol: Int,
       }
     }
 
-    if(minChr==null) {
-      minChr = ir.chr
-      minPos = ir.pos
-    }
-
-    maxChr = ir.chr
-    maxPos = ir.pos
+    rangeStat.updateRange(ir)
 
     if (sh.fileOpen) {
       sh.out.process(r)
@@ -188,7 +206,7 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  def move(name: String, md5: String): Unit = {
+  def moveToMd5FileNameAndAppendToDictionary(name: String, md5: String): Unit = {
     val p = Paths.get(name)
     val parent = p.getParent
     val respath = md5 + ".gorz"
@@ -196,7 +214,7 @@ case class ForkWrite(forkCol: Int,
     if(!Files.exists(d)) {
       Files.move(p, d)
       val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-      Files.writeString(dict, respath + "\t1\t" + minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+      Files.writeString(dict, rangeStat.generateDictEntry(respath), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
     }
   }
 
@@ -205,10 +223,10 @@ case class ForkWrite(forkCol: Int,
     sh.out match {
       case of: OutFile =>
         val md5 = of.md5
-        if(md5!=null) move(of.getName, md5)
+        if(md5!=null) moveToMd5FileNameAndAppendToDictionary(of.getName, md5)
       case of: GORzip =>
         val md5 = of.out.getMd5
-        if(md5!=null) move(of.getName(), md5)
+        if(md5!=null) moveToMd5FileNameAndAppendToDictionary(of.getName(), md5)
       case _ =>
     }
   }
@@ -227,7 +245,7 @@ case class ForkWrite(forkCol: Int,
       }
     })
     if (!somethingToWrite && !useFork) {
-      val out = outFile(fullFileName, false)
+      val out = createOutFile(fullFileName, false)
       out.setup()
       out.finish()
     }
