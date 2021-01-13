@@ -7,52 +7,59 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 public class UTestGorDictionaryFolder {
+    public void deleteFolder(Path folderpath) {
+        try {
+            Files.walk(folderpath).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try {
+                    Files.delete(p);
+                } catch (IOException e) {
+                    // ignore
+                }
+            });
+        } catch (IOException e) {
+            // ignore
+        }
+    }
+
     @Test
     public void testWriteToFolder() {
-        Path heypath = Paths.get("folder.gord");
+        Path folderpath = Paths.get("folder1.gord");
         try {
-            TestUtils.runGorPipe("gor -p chr21 ../tests/data/gor/genes.gor | write -d "+heypath);
-            TestUtils.runGorPipe("gor -p chr22 ../tests/data/gor/genes.gor | write -d "+heypath);
-            String results = TestUtils.runGorPipe("gor "+heypath+" | group chrom -count");
+            TestUtils.runGorPipe("gor -p chr21 ../tests/data/gor/genes.gor | write -d "+folderpath);
+            TestUtils.runGorPipe("gor -p chr22 ../tests/data/gor/genes.gor | write -d "+folderpath);
+            String results = TestUtils.runGorPipe("gor "+folderpath+" | group chrom -count");
             Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\n" +
                     "chr21\t0\t100000000\t669\n" +
                     "chr22\t0\t100000000\t1127\n", results);
         } finally {
-            try {
-                Files.delete(heypath);
-            } catch (IOException e) {
-                // Ignore
-            }
+            deleteFolder(folderpath);
         }
     }
 
     @Test
     public void testCreateWriteFolder() {
-        Path heypath = Paths.get("folder.gord");
+        Path folderpath = Paths.get("folder2.gord");
         try {
-            String results = TestUtils.runGorPipe("create a = gor -p chr21 ../tests/data/gor/genes.gor | write -d " + heypath +
-                    "; create b = gor -p chr22 ../tests/data/gor/genes.gor | write -d " + heypath +
-                    "; gor " + heypath + " | group chrom -count");
+            String results = TestUtils.runGorPipe("create a = gor -p chr21 ../tests/data/gor/genes.gor | write -d " + folderpath +
+                    "; create b = gor -p chr22 ../tests/data/gor/genes.gor | write -d " + folderpath +
+                    "; gor " + folderpath + " | group chrom -count");
             Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\n" +
                     "chr21\t0\t100000000\t669\n" +
                     "chr22\t0\t100000000\t1127\n", results);
         } finally {
-            try {
-                Files.delete(heypath);
-            } catch (IOException e) {
-                // Ignore
-            }
+            deleteFolder(folderpath);
         }
     }
 
     @Test
     public void testPgorWriteFolder() {
-        Path heypath = Paths.get("folder.gord");
+        Path folderpath = Paths.get("folder3.gord");
         try {
-            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write -d " + heypath +
-                    "; gor " + heypath + " | group chrom -count");
+            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write -d " + folderpath +
+                    "; gor " + folderpath + " | group chrom -count");
             Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\n" +
                     "chr1\t0\t250000000\t4747\n" +
                     "chr10\t0\t150000000\t2011\n" +
@@ -80,11 +87,7 @@ public class UTestGorDictionaryFolder {
                     "chrX\t0\t200000000\t2138\n" +
                     "chrY\t0\t100000000\t480\n", results);
         } finally {
-            try {
-                Files.delete(heypath);
-            } catch (IOException e) {
-                // ignore
-            }
+            deleteFolder(folderpath);
         }
     }
 }
