@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.util.zip.Deflater
-import gorsat.Commands.{Analysis, Output}
+import gorsat.Commands.{Analysis, Output, RangeStat}
 import gorsat.Outputs.{GORzip, OutFile}
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
@@ -48,26 +48,6 @@ case class OutputOptions(remove: Boolean = false,
                             useFolder: Boolean = false,
                             skipHeader: Boolean = false
                            )
-
-class RangeStat {
-  var minChr: String = null
-  var minPos: Int = -1
-  var maxChr: String = null
-  var maxPos: Int = -1
-
-  def updateRange(ir: Row): Unit = {
-    if(minChr==null) {
-      minChr = ir.chr
-      minPos = ir.pos
-    }
-    maxChr = ir.chr
-    maxPos = ir.pos
-  }
-
-  def generateDictEntry(respath: String): String = {
-    return respath + "\t1\t" + minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n"
-  }
-}
 
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,
@@ -105,7 +85,6 @@ case class ForkWrite(forkCol: Int,
   var counter = 0
   var somethingToWrite = false
   var header: String = inHeader
-  val rangeStat = new RangeStat
 
   if (options.remove) {
     val cols: Array[String] = inHeader.split("\t")
@@ -184,8 +163,6 @@ case class ForkWrite(forkCol: Int,
       }
     }
 
-    rangeStat.updateRange(ir)
-
     if (sh.fileOpen) {
       sh.out.process(r)
     } else {
@@ -206,7 +183,7 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  def moveToMd5FileNameAndAppendToDictionary(name: String, md5: String): Unit = {
+  def moveToMd5FileNameAndAppendToDictionary(name: String, md5: String, rangeStat: RangeStat): Unit = {
     val p = Paths.get(name)
     val parent = p.getParent
     val respath = md5 + ".gorz"
@@ -214,21 +191,22 @@ case class ForkWrite(forkCol: Int,
     if(!Files.exists(d)) {
       Files.move(p, d)
       val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-      Files.writeString(dict, rangeStat.generateDictEntry(respath), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+      val range = rangeStat.generateDictEntry(respath)
+      if(range!=null) {
+        val metapath = respath + ".meta"
+        val m = parent.resolve(metapath)
+        Files.writeString(m, range)
+        Files.writeString(dict, range, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+      }
     }
   }
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
-    sh.out match {
-      case of: OutFile =>
-        val md5 = of.md5
-        if(md5!=null) moveToMd5FileNameAndAppendToDictionary(of.getName, md5)
-      case of: GORzip =>
-        val md5 = of.out.getMd5
-        if(md5!=null) moveToMd5FileNameAndAppendToDictionary(of.getName(), md5)
-      case _ =>
-    }
+    val md5 = sh.out.getMd5
+    val name = sh.out.getName
+    val range = sh.out.getRange
+    if(md5!=null&&name!=null) moveToMd5FileNameAndAppendToDictionary(name, md5, range)
   }
 
   override def finish() {

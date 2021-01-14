@@ -22,8 +22,38 @@
 
 package gorsat.Commands
 
+import org.gorpipe.gor.model.Row
+
+class RangeStat {
+  var minChr: String = null
+  var minPos: Int = -1
+  var maxChr: String = null
+  var maxPos: Int = -1
+
+  def updateRange(ir: Row): Unit = {
+    if(minChr==null) {
+      minChr = ir.chr
+      minPos = ir.pos
+    }
+    maxChr = ir.chr
+    maxPos = ir.pos
+  }
+
+  override def toString: String = {
+    minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n"
+  }
+
+  def generateDictEntry(respath: String): String = {
+    respath + "\t1\t" + toString
+  }
+}
+
 abstract class Output extends Processor {
   var pipeFrom : Processor = _
+  var name : String = _
+  def getName: String = null
+  def getMd5: String = null
+  def getRange: RangeStat = null
   def reportWantsNoMore() {
     if (pipeFrom!=null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true

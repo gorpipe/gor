@@ -758,9 +758,9 @@ public class GorOptions {
     private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
         Path gordPath = Paths.get(fileName);
         if(Files.isDirectory(gordPath)) {
-            Path gorDictPath = gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
+            Path gorDictPath = gordPath.resolve(gordPath.getFileName());
             if(!Files.exists(gorDictPath)) {
-                gordPath = gordPath.resolve(gordPath.getFileName());
+                gordPath = gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
             } else gordPath = gorDictPath;
             fileName = gordPath.toString();
         }
