@@ -366,7 +366,7 @@ public class ProcessRowSource extends ProcessSource {
                 if( it == null ) it = reader.iterator();
             }
         };
-        bamit.init(lookup, samreader, null, false);
+        bamit.init(lookup, samreader, false);
         bamit.chrnamesystem = 0;
         return bamit;
     }

@@ -97,9 +97,8 @@ public class CramIterator extends BamIterator {
      *
      * @param lookup  The lookup service for chromosome name to ids
      * @param file    The CRAM File to iterate through
-     * @param columns The columns to be included, or null to include all
      */
-    public CramIterator(ChromoLookup lookup, String file, String index, String reference, int[] columns, boolean generateMissingAttributes) {
+    public CramIterator(ChromoLookup lookup, String file, String index, String reference, boolean generateMissingAttributes) {
 
         fileName = file;
         generateMissingCramAttributes = generateMissingAttributes;
@@ -118,7 +117,7 @@ public class CramIterator extends BamIterator {
             throw new GorResourceException("Cram file not found.", file, e);
         }
         SamReader samreader = new SamReader.PrimitiveSamReaderToSamReaderAdapter(cramFileReader, null);
-        init(lookup, samreader, columns, true);
+        init(lookup, samreader, true);
     }
 
     @Override
@@ -196,7 +195,7 @@ public class CramIterator extends BamIterator {
             }
 
             SamReader samreader = new SamReader.PrimitiveSamReaderToSamReaderAdapter(cramFileReader, sir);
-            init(lookup, samreader, columns, true);
+            init(lookup, samreader, true);
         }
     }
 

@@ -35,6 +35,6 @@ public class BamFileIterator extends BamIterator {
      */
     public BamFileIterator(BamFile file) {
         super(file.getFileSource().getSourceReference().getLookup(), SamtoolsAdapter.createReader(file.getFileSource(),
-                file.getIndexSource()), file.getFileSource().getSourceReference().getColumns());
+                file.getIndexSource()));
     }
 }

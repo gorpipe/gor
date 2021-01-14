@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ class StdInGenomicIterator extends GenomicIterator {
     private final int[] columnMap; // map source columns into Line data columns
     private boolean hasMore = true;
     private final ChromoLookup lookup;
+    Row nextRow = null;
 
     StdInGenomicIterator(ChromoLookup lookup) {
         buf = new byte[1024 * 1024];
@@ -87,23 +89,38 @@ class StdInGenomicIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
+    public boolean hasNext() {
+        if (nextRow != null) {
+            return true;
+        }
+        nextRow = next();
+        return nextRow != null;
+    }
+
+    @Override
+    public Row next() {
+        if (nextRow != null) {
+            Row result = nextRow;
+            nextRow = null;
+            return result;
+        }
+
         if (begin < end || hasMore) {
             cacheIfNeeded(100);
             if (!hasMore) { // For empty files this is needed
-                return false;
+                return null;
             }
-            line.chrIdx = lookup.prefixedChrToId(buf, begin, end - begin);
-            line.chr = line.chrIdx >= 0 ? lookup.idToName(line.chrIdx) : null;
+            int chrIdx = lookup.prefixedChrToId(buf, begin, end - begin);
+            String chr = chrIdx >= 0 ? lookup.idToName(chrIdx) : null;
             while (begin < buf.length && buf[begin++] != '\t') {
                 // Find column end
             }
 
             int colend = findColumnEnd();
-            line.pos = ByteArray.toInt(buf, begin, colend);
+            int pos = ByteArray.toInt(buf, begin, colend);
             if (buf[colend] == '\n') {
                 if (columns.length > 2) {
-                    throw new GorSystemException("Line starting with " + line.chr + " " + line.pos + " is missing data columns", null);
+                    throw new GorSystemException("Line starting with " + chr + " " + pos + " is missing data columns", null);
                 }
             }
             if (colend > begin && buf[colend + 1] == '\r') {
@@ -111,14 +128,22 @@ class StdInGenomicIterator extends GenomicIterator {
             }
             begin = colend + 1;
 
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(chr);
+            stringBuilder.append("\t");
+            stringBuilder.append(pos);
+            stringBuilder.append("\t");
             for (int i = 2; i < columns.length; i++) {
                 if (columnMap[i] >= 0) {
                     colend = findColumnEnd();
                     int len = colend - begin;
-                    line.cols[columnMap[i]].set(buf, begin, len);
+
+                    for (int ix = 0; i < len; ix++) {
+                        stringBuilder.append((char)buf[begin + ix]);
+                    }
                     if (buf[colend] == '\n') {
                         if (i != columns.length - 1) {
-                            throw new GorSystemException("Line starting with " + line.chr + " " + line.pos + " is missing data columns", null);
+                            throw new GorSystemException("Line starting with " + chr + " " + pos + " is missing data columns", null);
                         }
                     }
                     if (colend > begin && buf[colend + 1] == '\r') {
@@ -127,9 +152,14 @@ class StdInGenomicIterator extends GenomicIterator {
                     begin += len + 1;
                 }
             }
-            return true;
+            return RowObj.apply(stringBuilder);
         }
-        return false;
+        return null;
+    }
+
+    @Override
+    public boolean next(Line line) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

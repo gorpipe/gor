@@ -72,10 +72,9 @@ public class BamIterator extends GenomicIterator {
      *
      * @param lookup  The lookup service for chromosome name to ids
      * @param file    The BAM File to iterate through
-     * @param columns The columns to be included, or null to include all
      */
-    public BamIterator(GenomicIterator.ChromoLookup lookup, String file, int[] columns) {
-        this(lookup, SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(file)), columns);
+    public BamIterator(GenomicIterator.ChromoLookup lookup, String file) {
+        this(lookup, SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(file)));
     }
 
     /**
@@ -83,13 +82,12 @@ public class BamIterator extends GenomicIterator {
      *
      * @param lookup  The lookup service for chromosome name to ids
      * @param reader  The BAM Reader to use for accessing the bam file
-     * @param columns The columns to be included, or null to include all
      */
-    public BamIterator(GenomicIterator.ChromoLookup lookup, SamReader reader, int[] columns) {
-        init(lookup, reader, columns, false);
+    public BamIterator(GenomicIterator.ChromoLookup lookup, SamReader reader) {
+        init(lookup, reader, false);
     }
 
-    public void init(GenomicIterator.ChromoLookup lookup, SamReader reader, int[] columns, boolean isCRAM) {
+    public void init(GenomicIterator.ChromoLookup lookup, SamReader reader, boolean isCRAM) {
         this.isCRAM = isCRAM;
         this.reader = reader;
         this.samFileHeader = reader.getFileHeader();
@@ -201,62 +199,6 @@ public class BamIterator extends GenomicIterator {
             reader = null;
         }
     }
-
-    void fillLine(Line line, SAMRecord record) {
-        line.chrIdx = lookup.chrToId(record.getReferenceName());
-        line.chr = line.chrIdx >= 0 ? lookup.idToName(line.chrIdx) : record.getReferenceName(); // Allways report chromosome name on choosen gor form, but fallback to reference name if id lookup failed
-        line.pos = record.getAlignmentStart();
-        if (columns == ALL_COLUMNS) { // Add all used columns
-            line.cols[0].set(record.getAlignmentEnd());
-            line.cols[1].set(record.getReadName());
-            line.cols[2].set(record.getFlags()); // shall we translate this
-
-            line.cols[3].set(record.getMappingQuality());
-            line.cols[4].set(record.getCigarString());
-
-            line.cols[5].set(record.getStringAttribute("MD"));
-            line.cols[6].set(record.getMateReferenceName());
-            line.cols[7].set(record.getMateAlignmentStart());
-            line.cols[8].set(record.getInferredInsertSize());
-            line.cols[9].set(record.getReadBases());
-            line.cols[10].clear();
-            prepareBaseQualities(record, line.cols[10]);
-            line.cols[11].clear();
-            prepareAttributes(record, line.cols[11]);
-        } else { // Pick out the columns used
-            for (int c = 0; c < columns.length - 2; c++) {
-                int v = columns[c + 2];
-                if (v == 2) {
-                    line.cols[c].set(record.getAlignmentEnd());
-                } else if (v == 3) {
-                    line.cols[c].set(record.getReadName());
-                } else if (v == 4) {
-                    line.cols[c].set(record.getFlags()); // shall we translate this
-                } else if (v == 5) {
-                    line.cols[c].set(record.getMappingQuality());
-                } else if (v == 6) {
-                    line.cols[c].set(record.getCigarString());
-                } else if (v == 7) {
-                    line.cols[c].set(record.getStringAttribute("MD"));
-                } else if (v == 8) {
-                    line.cols[c].set(record.getMateReferenceName());
-                } else if (v == 9) {
-                    line.cols[c].set(record.getMateAlignmentStart());
-                } else if (v == 10) {
-                    line.cols[c].set(record.getInferredInsertSize());
-                } else if (v == 11) {
-                    line.cols[c].set(record.getReadBases());
-                } else if (v == 12) {
-                    line.cols[c].clear();
-                    prepareBaseQualities(record, line.cols[c]);
-                } else if (v == 13) {
-                    line.cols[c].clear();
-                    prepareAttributes(record, line.cols[c]);
-                }
-            }
-        }
-    }
-
     private void resizeDefaultColumnMaps(int newsize) {
         Function<SAMRecord, String>[] revStringMap = new Function[newsize];
         ToIntFunction<SAMRecord>[] revIntMap = new ToIntFunction[newsize];
@@ -316,23 +258,7 @@ public class BamIterator extends GenomicIterator {
 
     @Override
     public boolean next(Line line) {
-        initIterator();
-        if (it != null) {
-            SAMRecord record = null;
-            while (it.hasNext() && (record = it.next()) != null && (record.getReadUnmappedFlag() || "*".equals(record.getCigarString()))) {
-                record = null; // Do not want to include unmapped or invalid reads
-            }
-            if (record != null) {
-                fillLine(line, record);
-                return true;
-            }
-
-            it.close();
-            it = null;
-
-            return seekToNextChrom(line);
-        }
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     private String assemblyBasedOnChrOneLength() {
