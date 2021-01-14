@@ -63,9 +63,9 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
   val out: Writer =
     new java.io.OutputStreamWriter(new BufferedOutputStream(gzippedOutputStream, 1024 * 128))
 
-  def getName = name
+  override def getName: String = name
 
-  def md5 = {
+  override def getMd5: String = {
     interceptingFileOutputStream match {
       case stream: Md5CalculatingOutputStream =>
         stream.md5()

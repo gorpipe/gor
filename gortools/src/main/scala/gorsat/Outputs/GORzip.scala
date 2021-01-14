@@ -23,10 +23,11 @@
 package gorsat.Outputs
 
 import java.util.zip.Deflater
-
-import gorsat.Commands.Output
+import gorsat.Commands.{Output, RangeStat}
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.gor.model.Row
+
+import java.nio.file.{Files, Paths}
 
 /**
   * @param fileName Name of the file to be written.
@@ -39,18 +40,25 @@ import org.gorpipe.gor.model.Row
   */
 class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, md5File: Boolean = true, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED) extends Output {
   val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, md5File, idx, compressionLevel)
+  val range = new RangeStat()
+  override def getName: String = fileName
 
-  def getName() = fileName
-
-  def setup {
+  def setup() {
     if (header != null & !skipHeader) out.setHeader(header)
   }
 
   def process(r: Row) {
+    range.updateRange(r)
     out.write(r)
   }
 
+  override def getRange: RangeStat = range
+  override def getMd5: String = out.getMd5
+
   def finish {
+    val metapath = fileName + ".meta"
+    val m = Paths.get(metapath)
+    Files.writeString(m, range.toString)
     out.close
   }
 }
