@@ -40,7 +40,6 @@ object DiagnosticsFunctions {
     functions.registerWithOwner("TIME", getSignatureEmpty2Int(removeOwner(time)), time _)
     functions.register("MINORVERSION", getSignatureEmpty2Int(minorVersion _), minorVersion _)
     functions.register("MAJORVERSION", getSignatureEmpty2Int(majorVersion _), majorVersion _)
-    functions.register("DATE", getSignatureEmpty2String(date _), date _)
     functions.register("HOSTNAME", getSignatureEmpty2String(hostname _), hostname _)
     functions.register("IP", getSignatureEmpty2String(ip _), ip _)
     functions.register("ARCH", getSignatureEmpty2String(arch _), arch _)
@@ -172,12 +171,6 @@ object DiagnosticsFunctions {
   def hostname(): sFun = {
     _ => {
       InetAddress.getLocalHost.getHostName
-    }
-  }
-
-  def date(): sFun = {
-    _ => {
-      new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
     }
   }
 
