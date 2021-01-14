@@ -192,7 +192,7 @@ case class ForkWrite(forkCol: Int,
       Files.move(p, d)
       val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
       val range = rangeStat.generateDictEntry(respath)
-      if(range!=null) {
+      if(range!=null&&range.nonEmpty) {
         val metapath = respath + ".meta"
         val m = parent.resolve(metapath)
         Files.writeString(m, range)
