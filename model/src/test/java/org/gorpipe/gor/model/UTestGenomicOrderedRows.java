@@ -424,18 +424,6 @@ public class UTestGenomicOrderedRows {
     }
 
     /**
-     * Tests position seek cache implementation
-     */
-    @Category(IntegrationTests.class)
-    @Test
-    public void testFilePositionCacheSeek() {
-        Assert.assertEquals(1, 1);
-        System.setProperty("gor.files.position.cache", "true");
-        String fileName = "../tests/data/gor/example.wgs.goodcov.gorz";
-        TestUtils.runGorPipe(fileName + " -p chr1:560000- | top 5");
-    }
-
-    /**
      * Test invoking gor with simple .gord dictionary file
      *
      * @throws Exception

@@ -42,5 +42,7 @@ class UTestGorIterator extends FunSuite {
     TestUtils.assertGorpipeResults(result6,query6)
     TestUtils.assertGorpipeResults(result7,query7)
     TestUtils.assertGorpipeResults(result8,query8)
+
+    System.setProperty("gor.iterators.useAdaptiveMTP", "true")
   }
 }
