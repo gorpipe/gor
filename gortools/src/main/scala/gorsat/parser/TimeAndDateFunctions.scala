@@ -39,10 +39,18 @@ object TimeAndDateFunctions {
     functions.register("DATE", getSignatureEmpty2String(currentdate), currentdate _)
     functions.register("DATE", getSignatureString2String(currentdateWithFormat), currentdateWithFormat _)
     functions.register("DAYDIFF", getSignatureStringStringString2Long(daydiff), daydiff _)
+    functions.register("MONTHDIFF", getSignatureStringStringString2Long(monthdiff), monthdiff _)
     functions.register("YEARDIFF", getSignatureStringStringString2Long(yeardiff), yeardiff _)
     functions.register("CURRENTDATE", getSignatureEmpty2String(currentdate), currentdate _)
     functions.register("CURRENTDATE", getSignatureString2String(currentdateWithFormat), currentdateWithFormat _)
+    functions.register("ADDYEARS", getSignatureStringStringInt2String(addyears), addyears _)
     functions.register("ADDMONTHS", getSignatureStringStringInt2String(addmonths), addmonths _)
+    functions.register("ADDDAYS", getSignatureStringStringInt2String(adddays), adddays _)
+    functions.register("YEAR", getSignatureStringString2Int(year), year _)
+    functions.register("MONTH", getSignatureStringString2Int(month), month _)
+    functions.register("DAYOFWEEK", getSignatureStringString2Int(dayofweek), dayofweek _)
+    functions.register("DAYOFMONTH", getSignatureStringString2Int(dayofmonth), dayofmonth _)
+    functions.register("DAYOFYEAR", getSignatureStringString2Int(dayofyear), dayofyear _)
   }
 
   def yeardiff(format: sFun, date1: sFun, date2: sFun): lFun = {
@@ -51,6 +59,15 @@ object TimeAndDateFunctions {
       val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
       val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
       Duration.between(parsedDate1, parsedDate2).toDays / 365
+    }
+  }
+
+  def monthdiff(format: sFun, date1: sFun, date2: sFun): lFun = {
+    cvp => {
+      val dateFormat = new SimpleDateFormat(format(cvp))
+      val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
+      val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
+      Duration.between(parsedDate1, parsedDate2).toDays / 30
     }
   }
 
@@ -85,11 +102,62 @@ object TimeAndDateFunctions {
     new SimpleDateFormat(format(cvp)).format(new Date())
   }
 
+  def addyears(format: sFun, date: sFun, years: iFun): sFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    val d2 = d.plusYears(years(cvp))
+    d2.format(formatter)
+  }
+
   def addmonths(format: sFun, date: sFun, months: iFun): sFun = cvp => {
     val formatString = format(cvp)
     val formatter = DateTimeFormatter.ofPattern(formatString)
     val d = LocalDate.parse(date(cvp), formatter)
     val d2 = d.plusMonths(months(cvp))
     d2.format(formatter)
+  }
+
+  def adddays(format: sFun, date: sFun, days: iFun): sFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    val d2 = d.plusDays(days(cvp))
+    d2.format(formatter)
+  }
+
+  def year(format: sFun, date: sFun): iFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    d.getYear
+  }
+
+  def month(format: sFun, date: sFun): iFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    d.getMonthValue
+  }
+
+  def dayofweek(format: sFun, date: sFun): iFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    d.getDayOfWeek.getValue
+  }
+
+  def dayofmonth(format: sFun, date: sFun): iFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    d.getDayOfMonth
+  }
+
+  def dayofyear(format: sFun, date: sFun): iFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    d.getDayOfYear
   }
 }
