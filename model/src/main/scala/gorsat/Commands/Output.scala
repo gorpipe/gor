@@ -40,7 +40,7 @@ class RangeStat {
   }
 
   override def toString: String = {
-    minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n"
+    if(minChr!=null) minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos + "\n" else ""
   }
 
   def generateDictEntry(respath: String): String = {

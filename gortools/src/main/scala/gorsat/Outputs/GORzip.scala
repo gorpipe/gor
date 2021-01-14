@@ -58,7 +58,8 @@ class GORzip(fileName: String, header: String = null, skipHeader: Boolean = fals
   def finish {
     val metapath = fileName + ".meta"
     val m = Paths.get(metapath)
-    Files.writeString(m, range.toString)
+    val rangeStr = range.toString
+    if(rangeStr.nonEmpty) Files.writeString(m, rangeStr)
     out.close
   }
 }

@@ -26,7 +26,7 @@ import gorsat.Analysis.CheckOrder
 
 import java.io.File
 import java.lang
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
@@ -153,24 +153,24 @@ object GeneralQueryHandler {
     val theHeader = theSource.getHeader
     val temp_cacheFile = AnalysisUtilities.getTempFileName(outfile)
 
+    val oldName = Paths.get(temp_cacheFile)
+    val oldMetaName = Paths.get(temp_cacheFile+".meta")
     try {
       val nor = theSource.isNor
-      var oldName: File = null
-      var newName: File = null
+      var newName: Path = null
       // TODO: Get a gor config instance somehow into gorpipeSession or gorContext?
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
         val ps: Processor = if(nor) out else CheckOrder() | out
         runner.run(theSource, ps)
-        oldName = new java.io.File(temp_cacheFile)
         val md5File = Paths.get(temp_cacheFile + ".md5")
         if (Files.exists(md5File)) {
           val md5SumLines = Files.readAllLines(md5File)
 
           if (md5SumLines.size() > 0 && md5SumLines.get(0).nonEmpty) {
             val extension = outfile.slice(outfile.lastIndexOfSlice("."), outfile.length)
-            newName = md5File.getParent.resolve(md5SumLines.get(0) + extension).toFile
+            newName = md5File.getParent.resolve(md5SumLines.get(0) + extension)
             try {
               //Files.delete(md5File)
             } catch {
@@ -183,24 +183,26 @@ object GeneralQueryHandler {
           logger.warn("MD5 files are enabled but no md5 files are found when storing files in filecahce.")
         }
 
-        if (newName == null){
-          newName = new java.io.File(outfile)
+        if (newName == null) {
+          newName = Paths.get(outfile)
         }
       } else {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, nor = nor)
         val ps: Processor = if(nor) out else CheckOrder() | out
         runner.run(theSource, ps)
-        newName = new java.io.File(outfile)
-        oldName = new java.io.File(temp_cacheFile)
+        newName = Paths.get(outfile)
       }
 
-      oldName.renameTo(newName)
+      Files.move(oldName,newName)
+      if(Files.exists(oldMetaName)) {
+        Files.move(oldMetaName,oldMetaName.getParent.resolve(newName.getFileName.toString+".meta"))
+      }
       newName.toString
     } catch {
       case e: Exception =>
         try {
-          new java.io.File(temp_cacheFile).delete
+          Files.delete(oldName)
         } catch {
           case _: Exception => /* do nothing */
         }
@@ -227,8 +229,14 @@ object GeneralQueryHandler {
       val stasto = cep(1).split('-')
       val (c, sp, ep) = (cep(0), stasto(0), stasto(1))
       chrI += 1
+      val metaPath = Paths.get(f+".meta")
+      val rest = if(Files.exists(metaPath)) {
+        Files.readString(metaPath).trim
+      } else {
+        c + "\t" + sp + "\t" + c + "\t" + ep
+      }
       // file, alias, chrom, startpos, chrom, endpos
-      f + "\t" + chrI + "\t" + c + "\t" + sp + "\t" + c + "\t" + ep
+      f + "\t" + chrI + "\t" + rest
     })
     writeList(outfile, dictList)
 
