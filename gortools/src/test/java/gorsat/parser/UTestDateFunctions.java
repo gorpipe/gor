@@ -117,4 +117,10 @@ public class UTestDateFunctions {
         String result = TestUtils.getCalculated("yeardiff('dd/MM/yyyy', '23/06/2022', '18/06/2017')");
         Assert.assertEquals("-5", result);
     }
+
+    @Test
+    public void testAddMonths() {
+        String result = TestUtils.getCalculated("addmonths('dd/MM/yyyy', '18/06/2017', 5)");
+        Assert.assertEquals("18/11/2017", result);
+    }
 }
