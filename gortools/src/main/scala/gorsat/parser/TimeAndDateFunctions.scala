@@ -23,11 +23,12 @@
 package gorsat.parser
 
 import java.text.SimpleDateFormat
-import java.time.Duration
+import java.time.{Duration, LocalDate, LocalDateTime}
 import java.util.Date
-
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{iFun, lFun, sFun}
+
+import java.time.format.DateTimeFormatter
 
 object TimeAndDateFunctions {
   def register(functions: FunctionRegistry): Unit = {
@@ -35,9 +36,13 @@ object TimeAndDateFunctions {
     functions.register("EPOCH", getSignatureStringString2Long(epochWithDateAndFormat), epochWithDateAndFormat _)
     functions.register("EDATE", getSignatureLong2String(edate), edate _)
     functions.register("EDATE", getSignatureLongString2String(edateWithFormat), edateWithFormat _)
-    functions.register("DATE", getSignatureString2String(date), date _)
+    functions.register("DATE", getSignatureEmpty2String(currentdate), currentdate _)
+    functions.register("DATE", getSignatureString2String(currentdateWithFormat), currentdateWithFormat _)
     functions.register("DAYDIFF", getSignatureStringStringString2Long(daydiff), daydiff _)
     functions.register("YEARDIFF", getSignatureStringStringString2Long(yeardiff), yeardiff _)
+    functions.register("CURRENTDATE", getSignatureEmpty2String(currentdate), currentdate _)
+    functions.register("CURRENTDATE", getSignatureString2String(currentdateWithFormat), currentdateWithFormat _)
+    functions.register("ADDMONTHS", getSignatureStringStringInt2String(addmonths), addmonths _)
   }
 
   def yeardiff(format: sFun, date1: sFun, date2: sFun): lFun = {
@@ -58,12 +63,6 @@ object TimeAndDateFunctions {
     }
   }
 
-  def date(ex: sFun): sFun = {
-    cvp => {
-      new SimpleDateFormat(ex(cvp)).format(new Date())
-    }
-  }
-
   def epoch(): lFun = _ => new Date().getTime
 
   def epochWithDateAndFormat(ex1: sFun, ex2: sFun): lFun = {
@@ -76,5 +75,21 @@ object TimeAndDateFunctions {
 
   def edateWithFormat(ex1: lFun, ex2: sFun): sFun = cvp => {
     new SimpleDateFormat(ex2(cvp)).format(new Date(ex1(cvp)))
+  }
+
+  def currentdate(): sFun = cvp => {
+    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
+  }
+
+  def currentdateWithFormat(format: sFun): sFun = cvp => {
+    new SimpleDateFormat(format(cvp)).format(new Date())
+  }
+
+  def addmonths(format: sFun, date: sFun, months: iFun): sFun = cvp => {
+    val formatString = format(cvp)
+    val formatter = DateTimeFormatter.ofPattern(formatString)
+    val d = LocalDate.parse(date(cvp), formatter)
+    val d2 = d.plusMonths(months(cvp))
+    d2.format(formatter)
   }
 }
