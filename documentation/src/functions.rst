@@ -570,16 +570,39 @@ Date Functions
    * - Function
      - Description
      - More info
+   * - ``ADDDAYS(string, string, int) : string``
+     - Add some days to the given date.
+     - :ref:`adddays`
+   * - ``ADDMONTHS(string, string, int) : string``
+     - Add some months to the given date.
+     - :ref:`addmonths`
+   * - ``ADDYEARS(string, string, int) : string``
+     - Add some years to the given date.
+     - :ref:`addyears`
+   * - ``CURRENTDATE() : string``
+     - The current date and time in the format 'yyyy-MM-dd HH:mm:ss' - same as :ref:`date`.
+     - :ref:`currentdate`
+   * - ``CURRENTDATE(string) : string``
+     - The current date and time in a specific format - same as :ref:`date`.
+     - :ref:`date`
    * - ``DATE() : string``
-     - The current time in the format 'yyyy-MM-dd HH:mm:ss'.
+     - The current date and time in the format 'yyyy-MM-dd HH:mm:ss'.
      - :ref:`date`
    * - ``DATE(string) : string``
-     - The current time in a specific format, defined by a string of characters that represent time units.
-       Example: 'dd/MM/yyyy'. Uses the Java SimpleDateFormat class for formatting.
+     - The current date and time in a specific format, defined by a string of characters that represent date/time units.
      - :ref:`date`
    * - ``DAYDIFF(string, string, string) : int``
      - The difference, in days, between two dates.
      - :ref:`daydiff`
+   * - ``DAYOFWEEK(string, string) : int``
+     - The day of week of the given date.
+     - :ref:`dayofweek`
+   * - ``DAYOFMONTH(string, string) : int``
+     - The day of month of the given date.
+     - :ref:`dayofmonth`
+   * - ``DAYOFYEAR(string, string) : int``
+     - The day of year of the given date.
+     - :ref:`dayofyear`
    * - ``EDATE(long) : string``
      - A specific time, indicated by a timestamp, in the format 'yyyy-MM-dd HH:mm:ss'.
      - :ref:`edate`
@@ -593,6 +616,15 @@ Date Functions
      - A timestamp of a specific time, indicated with a specified format.
        The format is defined in the same way as with date(string) and edate(long, string). Example: epoch('16/06/2017','dd/MM/yyyy').
      - :ref:`epoch`
+   * - ``MONTH(string, string) : int``
+     - The month of the given date.
+     - :ref:`month`
+   * - ``MONTHDIFF(string, string, string) : int``
+     - The difference, in months, between two dates.
+     - :ref:`monthdiff`
+   * - ``YEAR(string, string) : int``
+     - The year of the given date.
+     - :ref:`year`
    * - ``YEARDIFF(string, string, string) : int``
      - The difference, in years, between two dates.
      - :ref:`yeardiff`

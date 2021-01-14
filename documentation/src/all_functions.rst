@@ -2,6 +2,7 @@
    :maxdepth: 1
    :hidden:
 
+   functions/adddays
    functions/abs
    functions/arccosine
    functions/arcsine
