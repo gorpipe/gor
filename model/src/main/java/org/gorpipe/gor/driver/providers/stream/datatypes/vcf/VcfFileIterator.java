@@ -32,7 +32,7 @@ import java.io.IOException;
  * Created by sigmar on 27/10/15.
  */
 public class VcfFileIterator extends VcfGzGenomicIterator {
-    public VcfFileIterator(StreamSourceFile file, GenomicIterator.ChromoLookup lookup, int[] columns, boolean compressed) throws IOException {
-        super(lookup, file.getName(), columns, file.getFileSource(), compressed);
+    public VcfFileIterator(StreamSourceFile file, GenomicIterator.ChromoLookup lookup, boolean compressed) throws IOException {
+        super(lookup, file.getName(), file.getFileSource(), compressed);
     }
 }

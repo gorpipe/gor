@@ -42,12 +42,6 @@ import java.util.List;
  */
 public class UTestGorOptions {
 
-    static {
-        System.setProperty("filemod.cache.max.entry.cnt", "200");
-        System.setProperty("filemod.cache.sleep.time", "10 seconds");
-        System.setProperty("filemod.cache.refresh.threshold", "1 second");
-    }
-
     /**
      * Test that ../ paths do not reference above the assumed root
      */

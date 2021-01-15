@@ -24,6 +24,7 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,11 +51,12 @@ class SeqBasesGenomicIterator extends GenomicIterator {
     final ChromoLookup lookup;
     final short BUF_SIZE = 1024 * 16;
     final byte[] buf = new byte[BUF_SIZE];
+    Row nextRow = null;
 
-    SeqBasesGenomicIterator(String path, ChromoLookup lookup, int[] columns) {
+    SeqBasesGenomicIterator(String path, ChromoLookup lookup) {
         this.path = path + '/';
         this.lookup = lookup;
-        this.columns = columns != null ? columns : new int[]{0, 1, 2};
+        this.columns = new int[]{0, 1, 2};
         this.columnMap = new int[COLS.length];
         Arrays.fill(columnMap, -1);
         for (int i = 2; i < this.columns.length; i++) {
@@ -118,10 +120,26 @@ class SeqBasesGenomicIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
+    public boolean hasNext() {
+        if (nextRow != null) {
+            return true;
+        }
+        nextRow = next();
+        return nextRow != null;
+    }
+
+    @Override
+    public Row next() {
+        if (nextRow != null) {
+            Row result = nextRow;
+            nextRow = null;
+            return result;
+        }
+
         if (filePos < seqfileLength) {
-            line.chrIdx = chromo;
-            line.chr = chromoName;
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(chromoName);
+            stringBuilder.append("\t");
             if (filePos - bufFilePos >= BUF_SIZE) {
                 try {
                     int read = seqfile.read(buf);
@@ -132,18 +150,25 @@ class SeqBasesGenomicIterator extends GenomicIterator {
                 }
             }
 
-            line.cols[0].set(buf[filePos - bufFilePos]);
-            line.pos = ++filePos;
-            return true;
+            stringBuilder.append(filePos + 1);
+            stringBuilder.append("\t");
+            stringBuilder.append((char)buf[filePos - bufFilePos]);
+            filePos++;
+            return RowObj.apply(stringBuilder);
         }
         final int id = new ChromoCache().findNextInLexicoOrder(chromoName);
         if (id < 26) { // Only do this for standard human chromosome names
             String chr = lookup.idToName(id);
             if (chr != null) {
                 seek(chr, 1);
-                return next(line);
+                return next();
             }
         }
-        return false;
+        return null;
+    }
+
+    @Override
+    public boolean next(Line line) {
+        throw new UnsupportedOperationException();
     }
 }

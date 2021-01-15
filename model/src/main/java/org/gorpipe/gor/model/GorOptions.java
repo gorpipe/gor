@@ -437,7 +437,7 @@ public class GorOptions {
     private GenomicIterator createGenomicIteratorFromRef(SourceRef ref) {
         GenomicIterator i;
         try {
-            i = ref.iterate(new DefaultChromoLookup(), chrname, null);
+            i = ref.iterate(new DefaultChromoLookup(), chrname);
         } catch (IOException e) {
             throw new GorResourceException("Couldn't open file", ref.getName(), e);
         }

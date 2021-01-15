@@ -26,6 +26,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.util.IntHashMap;
+import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,17 +52,15 @@ public class DbGenomicIterator extends GenomicIterator {
     private boolean hasNext;
     private final String chrColName;
     private final String posColName;
-    private final int[] columns;
     private final List<DbScope> dbScopes;
     private List<DbScope> dbScopesUsed;
     private boolean seekInitialized;
 
-    public DbGenomicIterator(ChromoLookup lookup, String databaseSource, String tableName, String chrColName, String posColName, int[] columns, List<DbScope> dbScopes, String securityContext) {
+    public DbGenomicIterator(ChromoLookup lookup, String databaseSource, String tableName, String chrColName, String posColName, List<DbScope> dbScopes, String securityContext) {
         this.lookup = lookup;
         this.sqlbase = "select * from " + tableName;
         this.chrColName = chrColName;
         this.posColName = posColName;
-        this.columns = columns;
         this.dbScopes = dbScopes;
         this.seekInitialized = false;
         this.securityContext = securityContext;
@@ -124,16 +123,11 @@ public class DbGenomicIterator extends GenomicIterator {
 
     private String getHeaderFromResultSetMetaData(ResultSetMetaData md) throws SQLException {
         final IntHashMap map = new IntHashMap();
-        if (columns != null) { // Map source column to header array destination
-            for (int i = 0; i < columns.length; i++) {
-                map.put(columns[i], i);
-            }
-        } else { // Setup one to one mapping of source column to header array destination
-            for (int i = 0; i < md.getColumnCount(); i++) { // Assume scoping column is always first in query
-                final int headerPosition = (!dbScopesUsed.isEmpty()) ? (i == 0 ? -dbScopesUsed.size() : i - dbScopesUsed.size()) : i;
-                if (headerPosition >= 0) {
-                    map.put(i, headerPosition);
-                }
+        // Setup one to one mapping of source column to header array destination
+        for (int i = 0; i < md.getColumnCount(); i++) { // Assume scoping column is always first in query
+            final int headerPosition = (!dbScopesUsed.isEmpty()) ? (i == 0 ? -dbScopesUsed.size() : i - dbScopesUsed.size()) : i;
+            if (headerPosition >= 0) {
+                map.put(i, headerPosition);
             }
         }
         String[] header = new String[map.size()];
@@ -258,36 +252,40 @@ public class DbGenomicIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
+    public boolean hasNext() {
+        return hasNext;
+    }
+
+    @Override
+    public Row next() {
         if (!hasNext) {
-            return false;
+            return null;
         }
         try {
             assert rs != null;
-            if (columns == null) {
-                // We need to find where chrom and pos columns are.
-                int idx = dbScopesUsed.size() + 1;
-                // Get chrom and pos columns
-                line.chr = rs.getString(idx++);
-                line.chrIdx = lookup.chrToId(line.chr);
-                line.pos = rs.getInt(idx++);
-                // Loop through remainder of columns after chrom and pos
-                for (int i = 0; i <= line.cols.length - dbScopesUsed.size(); i++) {
-                    line.cols[i].setUTF8(removeInvalidCharacters(rs.getString(idx + i)));
-                }
-            } else {
-                line.chr = rs.getString(columns[0] + 1);
-                line.chrIdx = lookup.chrToId(line.chr);
-                line.pos = rs.getInt(columns[1] + 1);
-                for (int i = 2; i < columns.length; i++) {
-                    line.cols[i - 2].setUTF8(removeInvalidCharacters(rs.getString(columns[i] + 1)));
-                }
+            // We need to find where chrom and pos columns are.
+            int idx = dbScopesUsed.size() + 1;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            // Get chrom and pos columns
+            stringBuilder.append(rs.getString(idx++));
+            stringBuilder.append("\t");
+            stringBuilder.append(rs.getInt(idx++));
+            stringBuilder.append("\t");
+            // Loop through remainder of columns after chrom and pos
+            for (int i = 0; i <= rs.getMetaData().getColumnCount() - dbScopesUsed.size(); i++) {
+                stringBuilder.append(removeInvalidCharacters(rs.getString(idx + i)));
             }
             hasNext = rs.next();
-            return true;
+            return RowObj.apply(stringBuilder);
         } catch (SQLException ex) {
             throw new GorDataException("Error reading Db - " + DbScope.dbScopesToString(dbScopes) + " securityContext: " + securityContext + ex.getMessage(), ex);
         }
+    }
+
+    @Override
+    public boolean next(Line line) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

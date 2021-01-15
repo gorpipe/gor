@@ -89,7 +89,7 @@ public class Db {
             retryTimeout = Integer.parseInt(System.getProperty("gor.hikari.connectionretrytimeout", "30000"));
             ds.setMaximumPoolSize(parseInt(System.getProperty("gor.hikari.poolsize", "20")));
             ds.setIdleTimeout(parseInt(System.getProperty("gor.hikari.idletimeout", "10000")));
-            ds.setLeakDetectionThreshold(parseInt(System.getProperty("gor.hikari.leakdetectionthreashold", "0")));
+            ds.setLeakDetectionThreshold(parseInt(System.getProperty("gor.hikari.leakdetectionthreashold", "30000")));
             ds.setAutoCommit(false);
 
             // The rest of the Hikari config has sane defaults but here are the options that can be adjusted:

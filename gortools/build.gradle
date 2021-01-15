@@ -124,20 +124,14 @@ project(':gortools') {
     def scripts = [
             'gorpipe'   : ['className'     : 'gorsat.process.GorPipe',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dgor.querylimits.writequota.mb=0',
-                                              '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
 
             'gorshell'   : ['className'     : 'org.gorpipe.gorshell.GorShell',
                             'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                               '-Dgor.querylimits.writequota.mb=0',
-                                               '-Dgor.querylimits.timeout.seconds=0',
                                                '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
 
             'gor'       : ['className'     : 'org.gorpipe.gor.cli.GorCLI',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dgor.querylimits.writequota.mb=0',
-                                              '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
 
             'jessica'   : ['override'      : 'startScripts',
@@ -146,8 +140,6 @@ project(':gortools') {
 
             'gormanager': ['className'     : 'org.gorpipe.gor.manager.TableManagerCLI',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dgor.querylimits.writequota.mb=0',
-                                              '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
 
             'gortool'   : ['className'     : 'org.gorpipe.gor.tools.GorToolsCLI',
