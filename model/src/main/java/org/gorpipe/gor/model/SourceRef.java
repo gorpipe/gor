@@ -363,20 +363,20 @@ public class SourceRef {
      * @return The GenomicIterator from this source
      * @throws Exception
      */
-    public GenomicIterator iterate(GenomicIterator.ChromoLookup lookup, String chrSubset, int[] columns) throws IOException {
+    public GenomicIterator iterate(GenomicIterator.ChromoLookup lookup, String chrSubset) throws IOException {
         // All files, except specific endings are assumed to be tab delimited text files in genomic order
         // With first two fields as chromosome and position
         if (isStandardIn()) {
-            return new StdInGenomicIterator(lookup, columns);
+            return new StdInGenomicIterator(lookup);
         }
 
-        return iterateFile(file, indexFile, referenceFile, securityContext, commonRoot, lookup, chrSubset, columns);
+        return iterateFile(file, indexFile, referenceFile, securityContext, commonRoot, lookup, chrSubset);
     }
 
-    private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, int[] columns) throws IOException {
+    private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) throws IOException {
         try {
             if (GorDriverFactory.fromConfig().config().enabled()) {
-                SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext, commonRoot, lookup, chrSubset, columns);
+                SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext, commonRoot, lookup, chrSubset);
 
                 GenomicIterator newIt = GorDriverFactory.fromConfig().createIterator(sourceReference);
                 if (newIt != null) {
@@ -391,7 +391,7 @@ public class SourceRef {
                 String name = file.substring(4);
                 return NamedTableGorIterators.getIterator(name);
             } else if (fileObject.isDirectory()) { // Note this will need to talk to the filesystem so it is relatively costly
-                return new SeqBasesGenomicIterator(file, lookup, columns);
+                return new SeqBasesGenomicIterator(file, lookup);
             } else {
                 return new GorSeekableIterator(new RacSeekableFile(new RandomAccessFile(file, "r"), file));
             }

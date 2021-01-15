@@ -69,6 +69,6 @@ public class MemSourceProvider implements SourceProvider {
 
     @Override
     public GenomicIterator createIterator(DataSource source) {
-        return new MemGenomicIterator(source.getSourceReference().getLookup(), 4000, source.getSourceReference().getColumns());
+        return new MemGenomicIterator(source.getSourceReference().getLookup(), 4000);
     }
 }

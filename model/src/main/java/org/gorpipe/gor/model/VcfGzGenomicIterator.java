@@ -30,6 +30,7 @@ import org.gorpipe.gor.util.ByteTextBuilder;
 import org.gorpipe.gor.util.NCGZIPInputStream;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
+import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
 
 import java.io.BufferedReader;
@@ -41,16 +42,14 @@ import java.util.zip.GZIPInputStream;
  * Simple genomic iterator for zipped vcf files, can not be seeked into
  */
 public class VcfGzGenomicIterator extends GenomicIterator {
-    private int[] columns; // Source columns to include
-    private String[] header; // Header of file
-    public BufferedReader reader; // The reader to use
+    public BufferedReader reader;
     private StreamSource streamSource;
     final GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
-    private Line linebuf; // The linebuf to temporarily read the data into
     public String next;
     public ChrNameSystem chrNameSystem;
 
     int len = 0;
+    private String fileName;
 
     public enum ChrNameSystem {
         WITH_CHR_PREFIX,
@@ -61,27 +60,19 @@ public class VcfGzGenomicIterator extends GenomicIterator {
         this.lookup = lookup;
     }
 
-    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int[] cols, StreamSource streamsource, boolean compressed) throws IOException {
-        this(lookup, file, cols, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
+    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, StreamSource streamsource, boolean compressed) throws IOException {
+        this(lookup, file, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
         this.streamSource = streamsource;
     }
 
-    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, int[] cols, BufferedReader reader) throws IOException {
+    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, BufferedReader reader) throws IOException {
         this(lookup);
-        init(file, cols, reader);
+        init(file, reader);
     }
 
-    public void init(String file, int[] cols, BufferedReader reader) throws IOException {
+    public void init(String file, BufferedReader reader) throws IOException {
+        fileName = file;
         this.reader = reader;
-//
-//    		// File is either normal gzip file or pgzip file, must use distinct classes for reading thoose.
-//    		final InputStream stream = new BufferedInputStream(new FileInputStream(file));
-//    		boolean isBgZip = BlockCompressedInputStream.isValidFile(stream);
-//    		isBgZip = false;
-//    		stream.close();
-//
-//    		final InputStream in = isBgZip ? new BlockCompressedInputStream(new FileInputStream(file)) : new GZIPInputStream(new FileInputStream(file), 16*1024);
-//    		reader = new BufferedReader(new InputStreamReader(in), 16*1024);
 
         // Must iterate to the beginning of the file, ignoring commenting header lines
         String line;
@@ -116,25 +107,9 @@ public class VcfGzGenomicIterator extends GenomicIterator {
             throw new GorDataException("Error Initializing Query. Expected to find header line start with a single # in file " + file);
         }
         String[] headerAll = StringUtil.splitToArray(line, 1, '\t');
-        final int totalExtraCols = headerAll.length - 2;
 
-        // Set up the column maps
-        if (cols != null) {
-            this.columns = new int[cols.length - 2];
-            final String[] newheader = new String[cols.length];
-            newheader[0] = headerAll[0];
-            newheader[1] = headerAll[1];
-            for (int i = 2; i < cols.length; i++) {
-                this.columns[i - 2] = cols[i] - 2;
-                newheader[i] = headerAll[cols[i]];
-            }
-            setHeader(String.join("\t",newheader));
-            linebuf = new Line(totalExtraCols);
-        } else {
-            columns = null;
-            linebuf = null;
-            setHeader(String.join("\t",headerAll));
-        }
+        setHeader(String.join("\t",headerAll));
+
         next = reader.readLine();
     }
 
@@ -145,48 +120,49 @@ public class VcfGzGenomicIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
-        len++;
-        try {
-            if (reader != null) {
-                if (next != null) {
-                    final byte[] buf = next.getBytes(Util.utf8Charset);
-                    next = reader.readLine();
-                    // Read chromosome and position first
-                    line.chrIdx = lookup.prefixedChrToId(buf, 0, buf.length);
-                    if (line.chrIdx != -1) {
-                        line.chr = lookup.idToName(line.chrIdx);
-                        int offset = 0;
-                        while (offset < buf.length && buf[offset++] != '\t') {
-                            // Find end of column
-                        }
-
-                        line.pos = ByteArray.toInt(buf, offset);
-                        offset += ByteTextBuilder.cntDigits(line.pos) + 1;
-
-                        if (linebuf != null) {
-                            // Rearange according to column selection
-                            linebuf.setData(buf, offset);
-                            for (int i = 0; i < columns.length; i++) {
-                                line.cols[i].set(linebuf.cols[columns[i]].getBytes());
-                            }
-                        } else {
-                            // Read all of the rest of the columns
-                            line.setData(buf, offset);
-                        }
-                        return true;
-                    }
-                }
-                close();
-            }
-            return false;
-        } catch (IOException ex) {
-            if ("Stream closed".equals(ex.getMessage())) {
-                // Just return false if the stream was closed.
-                return false;
-            }
-            throw new RuntimeException(ex);
+    public boolean hasNext() {
+        if (next != null) {
+            return true;
         }
+        try {
+            next = reader.readLine();
+        } catch (IOException e) {
+            throw new GorResourceException("Error reading file", fileName, e);
+        }
+        return next != null;
+    }
+
+    private Row createRow(String s) {
+        Row row = RowObj.apply(s);
+        String chr = lookup.chrToName(row.chr);
+        if (!chr.equals(row.chr)) {
+            String s2 = String.format("%s\t%d\t%s", chr, row.pos, row.otherCols());
+            row = RowObj.apply(s2);
+        }
+        return row;
+    }
+
+    @Override
+    public Row next() {
+        if (next == null) {
+            try {
+                next = reader.readLine();
+            } catch (IOException e) {
+                throw new GorResourceException("Error reading file", fileName, e);
+            }
+        }
+        if (next == null) {
+            return null;
+        }
+
+        Row row = createRow(next);
+        next = null;
+        return row;
+    }
+
+    @Override
+    public boolean next(Line line) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

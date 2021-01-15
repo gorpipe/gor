@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.gor.binsearch.StringIntKey;
+import org.gorpipe.model.gor.RowObj;
 
 import javax.swing.table.TableModel;
 
@@ -31,6 +32,7 @@ import javax.swing.table.TableModel;
  */
 public class TableModelIterator extends GenomicIterator {
     private final TableModel tableModel;
+    Row nextRow = null;
 
     private int currentRowId;
     private final GenomicIterator.ChromoLookup lookup;
@@ -141,7 +143,22 @@ public class TableModelIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
+    public boolean hasNext() {
+        if (nextRow != null) {
+            return true;
+        }
+        nextRow = next();
+        return nextRow != null;
+    }
+
+    @Override
+    public Row next() {
+        if (nextRow != null) {
+            Row result = nextRow;
+            nextRow = null;
+            return result;
+        }
+
         boolean hasNext = true;
 
         if (currentRowId < 0 || currentRowId >= getModel().getRowCount()) {
@@ -152,27 +169,28 @@ public class TableModelIterator extends GenomicIterator {
             hasNext = false;
         }
         if (!hasNext) {
-            return false;
+            return null;
         }
         String chr = getModel().getValueAt(currentRowId, 0).toString();
-        line.chrIdx = lookup.chrToId(chr);
-        line.chr = chr;
-        line.pos = Integer.parseInt(getModel().getValueAt(currentRowId, 1).toString());
+        int pos = Integer.parseInt(getModel().getValueAt(currentRowId, 1).toString());
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(chr);
+        stringBuilder.append("\t");
+        stringBuilder.append(pos);
+        stringBuilder.append("\t");
 
         for (int c = 2; c < getModel().getColumnCount(); c++) {
-            Object o = getModel().getValueAt(currentRowId, c);
-            if (o instanceof Integer) {
-                line.cols[c - 2].set((Integer) o);
-            } else {
-                if (o == null) {
-                    line.cols[c - 2].setUTF8(null);
-                } else {
-                    line.cols[c - 2].setUTF8(o.toString());
-                }
-            }
+            String s = getModel().getValueAt(currentRowId, c).toString();
+            stringBuilder.append(s);
+            stringBuilder.append("\t");
         }
         currentRowId++;
-        return true;
+        return RowObj.apply(stringBuilder);
     }
 
+    @Override
+    public boolean next(Line line) {
+        throw new UnsupportedOperationException();
+    }
 }

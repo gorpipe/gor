@@ -102,7 +102,7 @@ public class DbSource implements GorSource {
         List<DbScope> dbScopes = DbScope.parse(this.sourceReference.getSecurityContext());
 
         return new DbGenomicIterator(this.sourceReference.getLookup(), databaseSource, tableName, chrColName, posColName,
-                this.sourceReference.getColumns(), dbScopes, sourceReference.securityContext);
+                dbScopes, sourceReference.securityContext);
     }
 
 

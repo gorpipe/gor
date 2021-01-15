@@ -55,7 +55,7 @@ public class MemSource implements GorSource {
 
     @Override
     public GenomicIterator open(String filter) {
-        return new MemGenomicIterator(sourceReference.getLookup(), 4000, sourceReference.getColumns());
+        return new MemGenomicIterator(sourceReference.getLookup(), 4000);
     }
 
     @Override

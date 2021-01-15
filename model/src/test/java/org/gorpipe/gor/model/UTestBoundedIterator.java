@@ -125,7 +125,7 @@ public class UTestBoundedIterator {
         GorOptions gorOptions = GorOptions.createGorOptions(query);
         GenomicIterator it = null;
         try {
-            it = gorOptions.files.get(0).iterate(null, gorOptions.chrname, null);
+            it = gorOptions.files.get(0).iterate(null, gorOptions.chrname);
         } catch (IOException e) {
             Assert.fail("Couldn't create iterator");
         }

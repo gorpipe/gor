@@ -69,11 +69,7 @@ public class MonitorIterator extends GenomicIterator {
 
     @Override
     public boolean next(Line line) {
-        boolean result = iterator.next(line);
-        if(result) {
-            handleNotify(line);
-        }
-        return result;
+        throw new UnsupportedOperationException();
     }
 
     @Override
