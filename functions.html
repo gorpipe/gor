@@ -948,18 +948,49 @@ Pr(gt=2) = pfalt * pmalt, where pfalt and pmalt are the chars probabilities valu
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATE()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
-<td><p>The current time in the format ‘yyyy-MM-dd HH:mm:ss’.</p></td>
-<td><p><span class="xref std std-ref">date</span></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ADDDAYS(string,</span> <span class="pre">string,</span> <span class="pre">int)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Add some days to the given date.</p></td>
+<td><p><a class="reference internal" href="functions/adddays.html#adddays"><span class="std std-ref">ADDDAYS</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
-<td><p>The current time in a specific format, defined by a string of characters that represent time units.
-Example: ‘dd/MM/yyyy’. Uses the Java SimpleDateFormat class for formatting.</p></td>
-<td><p><span class="xref std std-ref">date</span></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ADDMONTHS(string,</span> <span class="pre">string,</span> <span class="pre">int)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Add some months to the given date.</p></td>
+<td><p><a class="reference internal" href="functions/addmonths.html#addmonths"><span class="std std-ref">ADDMONTHS</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DAYDIFF(string,</span> <span class="pre">string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ADDYEARS(string,</span> <span class="pre">string,</span> <span class="pre">int)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>Add some years to the given date.</p></td>
+<td><p><a class="reference internal" href="functions/addyears.html#addyears"><span class="std std-ref">ADDYEARS</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CURRENTDATE()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>The current date and time in the format ‘yyyy-MM-dd HH:mm:ss’ - same as <a class="reference internal" href="functions/date.html#date"><span class="std std-ref">DATE</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/currentdate.html#currentdate"><span class="std std-ref">CURRENTDATE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CURRENTDATE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>The current date and time in a specific format - same as <a class="reference internal" href="functions/date.html#date"><span class="std std-ref">DATE</span></a>.</p></td>
+<td><p><a class="reference internal" href="functions/date.html#date"><span class="std std-ref">DATE</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATE()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>The current date and time in the format ‘yyyy-MM-dd HH:mm:ss’.</p></td>
+<td><p><a class="reference internal" href="functions/date.html#date"><span class="std std-ref">DATE</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DATE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
+<td><p>The current date and time in a specific format, defined by a string of characters that represent date/time units.</p></td>
+<td><p><a class="reference internal" href="functions/date.html#date"><span class="std std-ref">DATE</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DAYDIFF(string,</span> <span class="pre">string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>The difference, in days, between two dates.</p></td>
 <td><p><a class="reference internal" href="functions/daydiff.html#daydiff"><span class="std std-ref">DAYDIFF</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DAYOFWEEK(string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The day of week of the given date.</p></td>
+<td><p><a class="reference internal" href="functions/dayofweek.html#dayofweek"><span class="std std-ref">DAYOFWEEK</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DAYOFMONTH(string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The day of month of the given date.</p></td>
+<td><p><a class="reference internal" href="functions/dayofmonth.html#dayofmonth"><span class="std std-ref">DAYOFMONTH</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DAYOFYEAR(string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The day of year of the given date.</p></td>
+<td><p><a class="reference internal" href="functions/dayofyear.html#dayofyear"><span class="std std-ref">DAYOFYEAR</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EDATE(long)</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
 <td><p>A specific time, indicated by a timestamp, in the format ‘yyyy-MM-dd HH:mm:ss’.</p></td>
@@ -978,7 +1009,19 @@ Example: ‘dd/MM/yyyy’. Uses the Java SimpleDateFormat class for formatting.<
 The format is defined in the same way as with date(string) and edate(long, string). Example: epoch(‘16/06/2017’,’dd/MM/yyyy’).</p></td>
 <td><p><span class="xref std std-ref">epoch</span></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">YEARDIFF(string,</span> <span class="pre">string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MONTH(string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The month of the given date.</p></td>
+<td><p><a class="reference internal" href="functions/month.html#month"><span class="std std-ref">MONTH</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MONTHDIFF(string,</span> <span class="pre">string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The difference, in months, between two dates.</p></td>
+<td><p><a class="reference internal" href="functions/monthdiff.html#monthdiff"><span class="std std-ref">MONTHDIFF</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">YEAR(string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The year of the given date.</p></td>
+<td><p><a class="reference internal" href="functions/year.html#year"><span class="std std-ref">YEAR</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">YEARDIFF(string,</span> <span class="pre">string,</span> <span class="pre">string)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>The difference, in years, between two dates.</p></td>
 <td><p><a class="reference internal" href="functions/yeardiff.html#yeardiff"><span class="std std-ref">YEARDIFF</span></a></p></td>
 </tr>
