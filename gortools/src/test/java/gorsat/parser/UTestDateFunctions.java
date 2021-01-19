@@ -101,6 +101,24 @@ public class UTestDateFunctions {
     }
 
     @Test
+    public void testMonthdiffSameDate() {
+        String result = TestUtils.getCalculated("monthdiff('dd/MM/yyyy', '16/06/2017', '16/06/2017')");
+        Assert.assertEquals("0", result);
+    }
+
+    @Test
+    public void testMonthdiffFirstDateEarlier() {
+        String result = TestUtils.getCalculated("monthdiff('dd/MM/yyyy', '16/04/2017', '18/06/2017')");
+        Assert.assertEquals("2", result);
+    }
+
+    @Test
+    public void testMonthdiffFirstDateLater() {
+        String result = TestUtils.getCalculated("monthdiff('dd/MM/yyyy', '23/11/2017', '18/06/2017')");
+        Assert.assertEquals("-5", result);
+    }
+
+    @Test
     public void testYeardiffSameDate() {
         String result = TestUtils.getCalculated("yeardiff('dd/MM/yyyy', '16/06/2017', '16/06/2017')");
         Assert.assertEquals("0", result);
@@ -116,5 +134,53 @@ public class UTestDateFunctions {
     public void testYeardiffFirstDateLater() {
         String result = TestUtils.getCalculated("yeardiff('dd/MM/yyyy', '23/06/2022', '18/06/2017')");
         Assert.assertEquals("-5", result);
+    }
+
+    @Test
+    public void testAddYears() {
+        String result = TestUtils.getCalculated("addyears('dd/MM/yyyy', '18/06/2017', 5)");
+        Assert.assertEquals("18/06/2022", result);
+    }
+
+    @Test
+    public void testAddMonths() {
+        String result = TestUtils.getCalculated("addmonths('dd/MM/yyyy', '18/06/2017', 5)");
+        Assert.assertEquals("18/11/2017", result);
+    }
+
+    @Test
+    public void testAddDays() {
+        String result = TestUtils.getCalculated("adddays('dd/MM/yyyy', '18/06/2017', 5)");
+        Assert.assertEquals("23/06/2017", result);
+    }
+
+    @Test
+    public void testYear() {
+        String result = TestUtils.getCalculated("year('dd/MM/yyyy', '18/06/2017')");
+        Assert.assertEquals("2017", result);
+    }
+
+    @Test
+    public void testMonth() {
+        String result = TestUtils.getCalculated("month('dd/MM/yyyy', '18/06/2017')");
+        Assert.assertEquals("6", result);
+    }
+
+    @Test
+    public void testDayOfWeek() {
+        String result = TestUtils.getCalculated("dayofweek('dd/MM/yyyy', '14/01/2021')");
+        Assert.assertEquals("4", result);
+    }
+
+    @Test
+    public void testDayOfMonth() {
+        String result = TestUtils.getCalculated("dayofmonth('dd/MM/yyyy', '14/01/2021')");
+        Assert.assertEquals("14", result);
+    }
+
+    @Test
+    public void testDayOfYear() {
+        String result = TestUtils.getCalculated("dayofyear('dd/MM/yyyy', '14/01/2021')");
+        Assert.assertEquals("14", result);
     }
 }
