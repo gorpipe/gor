@@ -38,7 +38,6 @@ import java.util.List;
 /**
  * DbGenomicIterator allows iterating genomic data in the database. It allows subclassing to enable
  * static filtering on columns, for an example allowing project scoping in the RDA use case.
- *
  * @version $Id$
  */
 public class DbGenomicIterator extends GenomicIterator {
@@ -271,10 +270,10 @@ public class DbGenomicIterator extends GenomicIterator {
             stringBuilder.append(rs.getString(idx++));
             stringBuilder.append("\t");
             stringBuilder.append(rs.getInt(idx++));
-            stringBuilder.append("\t");
             // Loop through remainder of columns after chrom and pos
-            for (int i = 0; i <= rs.getMetaData().getColumnCount() - dbScopesUsed.size(); i++) {
-                stringBuilder.append(removeInvalidCharacters(rs.getString(idx + i)));
+            while (idx <= rs.getMetaData().getColumnCount()) {
+                stringBuilder.append("\t");
+                stringBuilder.append(removeInvalidCharacters(rs.getString(idx++)));
             }
             hasNext = rs.next();
             return RowObj.apply(stringBuilder);
