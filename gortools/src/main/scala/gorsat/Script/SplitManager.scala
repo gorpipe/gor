@@ -65,12 +65,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
           val repstr = if (splitOverlap != "") "-" + splitOpt + splits + ":" + splitOverlap + " " else "-" + splitOpt + splits + " "
           mc = mc.replace(repstr, "")
         }
-        expandedCommands ::= CommandEntry(n, mc, g)
+        expandedCommands ::= CommandEntry(n, mc, g, cacheFile)
       })
 
       removeFromCreates = true
     } else {
-      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName)
+      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName, cacheFile)
     }
 
     CommandGroup(expandedCommands, removeFromCreates)

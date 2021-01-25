@@ -29,4 +29,4 @@ package gorsat.Script
   * @param query          Query from the create statement
   * @param batchGroupName Name of the current batch group
   */
-case class CommandEntry(createName: String, query: String, batchGroupName: String)
+case class CommandEntry(createName: String, query: String, batchGroupName: String, cacheFile: String)

@@ -206,7 +206,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               // We need to create a new dictionary query to the batch to get the results from expanded queries
               val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
               val querySignature = StringUtilities.createMD5(cte.query + fileSignature)
-              executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName)
+              executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName, cte.cacheFile)
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })
@@ -408,6 +408,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       val cacheFiles = activeQueryHandler.executeBatch(executionCommands.map(x => x.signature),
         executionCommands.map(x => x.query),
         executionCommands.map(x => x.createName),
+        executionCommands.map(x => x.cacheFile),
         context.getSession.getSystemContext.getMonitor).toList
 
       executionCommands.map(x => x.createName).zip(cacheFiles).foreach(x => {

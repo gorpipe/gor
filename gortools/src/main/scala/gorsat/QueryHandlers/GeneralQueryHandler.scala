@@ -46,7 +46,7 @@ import java.util.Optional
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
 
-  def executeBatch(commandSignatures: Array[String], commandsToExecute: Array[String], batchGroupNames: Array[String], gorMonitor: GorMonitor): Array[String] = {
+  def executeBatch(commandSignatures: Array[String], commandsToExecute: Array[String], batchGroupNames: Array[String], cacheFiles: Array[String], gorMonitor: GorMonitor): Array[String] = {
     val fileNames = new Array[String](commandSignatures.length)
     val fileCache = context.getSession.getProjectContext.getFileCache
     var commandList: List[() => Unit] = Nil
@@ -143,7 +143,7 @@ object GeneralQueryHandler {
   }
 
   def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean): String = {
-    if(outfile!=null) context.start(outfile)
+    context.start(outfile)
     // We are using absolute paths here
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART)) {
       writeOutGorDictionaryPart(commandToExecute, outfile)
@@ -154,7 +154,7 @@ object GeneralQueryHandler {
     } else {
       runCommandInternal(context, commandToExecute, outfile, useMd5)
     }
-    if(outfile!=null) context.end()
+    context.end()
     result
   }
 
