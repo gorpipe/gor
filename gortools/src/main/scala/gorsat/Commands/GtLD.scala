@@ -46,10 +46,13 @@ class GtLD extends CommandInfo("GTLD",
     var combinedHeader = leftHeader
     val allCols = leftHeader.split("\t")
 
-    val bucketCol = leftHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "BUCKET" )
-    val valuesCol = leftHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "VALUES" )
-    val useOnlyAsLeftVar = leftHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "USEONLYASLEFTVAR" )
+    val bucketCol = allCols.indexWhere( x => x.toUpperCase == "BUCKET" )
+    val valuesCol = allCols.indexWhere( x => x.toUpperCase == "VALUES" )
+    val useOnlyAsLeftVar = allCols.indexWhere( x => x.toUpperCase == "USEONLYASLEFTVAR" )
     var otherCols: List[Int] = Range(0,allCols.length).toList
+
+    var headerLength = allCols.length
+    var numNewCols = 4
 
     val req = if (bucketCol >= 0) List(bucketCol) else Nil
 
@@ -61,11 +64,13 @@ class GtLD extends CommandInfo("GTLD",
 
       combinedHeader += "\tLD_g00\tLD_g10\tLD_g20\tLD_g01\tLD_g11\tLD_g21\tLD_g02\tLD_g12\tLD_g22"
       combinedHeader = IteratorUtilities.validHeader(combinedHeader)
-    }
 
-    val headerLength = combinedHeader.split("\t").length
-    val gcCols = Range(2,headerLength-4).toList
-    val icCols = Range(headerLength-4,headerLength).toList
+      headerLength = combinedHeader.split("\t").length
+      numNewCols = 9
+
+    }
+    val gcCols = Range(2,headerLength - numNewCols).toList
+    val icCols = Range(headerLength - numNewCols, headerLength).toList
 
     val missingSEG = "" // not used here
 

@@ -53,7 +53,7 @@ public class UTestGtGenAndLd {
                 " | csvsel -gc ref,alt -u 3 -vs 1 [#buckets#] <(nor [#buckets#] | select #1) " +
                 " | gtld -sum -f 100 -calc" +
                 " | merge <(" + basicGtGen + " | gtld -sum -f 100 -calc) " +
-                " | group 1 -gc 3- -count| throwif allcount != 1 | where 2=3";
+                " | group 1 -gc 3- -count| throwif allcount != 2 | where 2=3";
 
         TestUtils.runGorPipe(testSetupGORQL + query );
     }
@@ -64,17 +64,6 @@ public class UTestGtGenAndLd {
                 "gor [yyy] | gtld -calc" +
                 " | merge <(" + basicGtGen + basicGtLd + " -calc) " +
                 " | group 1 -gc 3- -count | throwif allcount != 2 | where 2=3";
-
-        TestUtils.runGorPipe(testSetupGORQL + query);
-    }
-
-    @Test
-    @Ignore("Incompatible with new gtld")
-    public void testGtGen3() {
-        String query = "create yyy = " + basicGtGen + basicGtLd + ";" +
-                "gor [yyy] | replace LD_x11 3 | replace LD_x12 1| replace LD_x21 1 | replace LD_x22 3" +
-                " | gtld -calc" +
-                " | throwif abs(ld_dp-0.5)>0.01 or abs(ld_r-0.5)>0.01 | where 2=3";
 
         TestUtils.runGorPipe(testSetupGORQL + query);
     }
@@ -100,5 +89,40 @@ public class UTestGtGenAndLd {
                 "chr1\t1\tBUCKET1\t2\n";
         Assert.assertEquals(wanted, results);
         FileUtils.deleteDirectory(tmpDir);
+    }
+
+    @Test
+    public void GTLDWithBuckets() {
+        String common = "def #pns# = 100000;\n" +
+                "def #p# = 0.3;\n" +
+                "def #q# = 0.02;\n" +
+                "def #D# = 0.1; /* Should ideally be smaller than all of: p*q, (1-p)*(1-q), (1-p)*q, p*(1-q) */\n" +
+                "create #gt# = gor <(norrows #pns#  | calc p #p# | calc q #q# | calc D #D#\n" +
+                "| calc h1 if(random()<p,if(random()<(p*q+D)/p,'0_0','0_1'),if(random()<((1-p)*q-D)/(1-p),'1_0','1_1'))\n" +
+                "| calc h2 if(random()<p,if(random()<(p*q+D)/p,'0_0','0_1'),if(random()<((1-p)*q-D)/(1-p),'1_0','1_1'))\n" +
+                "| colsplit h1 2 snp_f -s '_'\n" +
+                "| colsplit h2 2 snp_m -s '_'\n" +
+                "| calc gt1 decode(snp_f_1+'_'+snp_m_1,'0_0,0,0_1,1,1_0,1,1_1,2')\n" +
+                "| calc gt2 decode(snp_f_2+'_'+snp_m_2,'0_0,0,0_1,1,1_0,1,1_1,2')\n" +
+                "| group -lis -sc gt1,gt2 -s '' -len 1000000\n" +
+                "| calc values lis_gt1+','+lis_gt2\n" +
+                "| hide lis_*\n" +
+                "| split values\n" +
+                "| rownum\n" +
+                "| rename rownum pos\n" +
+                "| calc chrom 'chr1'\n" +
+                "| calc ref 'A'\n" +
+                "| calc alt 'T'\n" +
+                ")\n" +
+                "| select chrom,pos,ref,alt,values\n" +
+                ";\n";
+
+        String query1 = "nor <(gor [#gt#] | bucketsplit values 5000 -vs 1 | gtld -sum -f 100)\n";
+        String query2 = "nor <(gor [#gt#] | gtld -sum -f 100)\n";
+
+        String result1 = TestUtils.runGorPipe(common + query1);
+        String result2 = TestUtils.runGorPipe(common + query2);
+
+        Assert.assertEquals(result1, result2);
     }
 }
