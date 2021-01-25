@@ -24,8 +24,8 @@ package gorsat.Analysis
 
 import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.util.zip.Deflater
-import gorsat.Commands.{Analysis, Output, RangeStat}
-import gorsat.Outputs.{GORzip, OutFile}
+import gorsat.Commands.{Analysis, Output, OutputMeta}
+import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.model.{GorOptions, Row}
@@ -183,30 +183,31 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  def moveToMd5FileNameAndAppendToDictionary(name: String, md5: String, rangeStat: RangeStat): Unit = {
-    val p = Paths.get(name)
-    val parent = p.getParent
-    val respath = md5 + ".gorz"
-    val d = parent.resolve(respath)
-    if(!Files.exists(d)) {
-      Files.move(p, d)
-      val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-      val range = rangeStat.generateDictEntry(respath)
-      if(range!=null&&range.nonEmpty) {
+  def moveToMd5FileNameAndAppendToDictionary(name: String, outputMeta: OutputMeta): Unit = {
+    if(outputMeta.md5!=null) {
+      val p = Paths.get(name)
+      val parent = p.getParent
+      val md5 = outputMeta.md5
+      val respath = md5 + ".gorz"
+      val d = parent.resolve(respath)
+      if (!Files.exists(d)) {
+        Files.move(p, d)
+        val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
         val metapath = respath + ".meta"
         val m = parent.resolve(metapath)
-        Files.writeString(m, range)
-        Files.writeString(dict, range, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+        Files.writeString(m, outputMeta.toString)
+        Files.writeString(dict, outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+      } else {
+        System.err.println()
       }
     }
   }
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
-    val md5 = sh.out.getMd5
-    val name = sh.out.getName
-    val range = sh.out.getRange
-    if(md5!=null&&name!=null) moveToMd5FileNameAndAppendToDictionary(name, md5, range)
+    /*val name = sh.out.getName
+    val meta = sh.out.getMeta
+    if(name!=null) moveToMd5FileNameAndAppendToDictionary(name, meta)*/
   }
 
   override def finish() {

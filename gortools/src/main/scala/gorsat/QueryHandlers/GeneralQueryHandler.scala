@@ -24,9 +24,8 @@ package gorsat.QueryHandlers
 
 import gorsat.Analysis.CheckOrder
 
-import java.io.File
 import java.lang
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
@@ -42,6 +41,8 @@ import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.slf4j.LoggerFactory
 
+import scala.collection.JavaConverters._
+import java.util.Optional
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
 
@@ -58,22 +59,31 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
         val nested = context.createNestedContext(batchGroupName, commandSignature, commandToExecute)
 
         try {
-          var cacheFile: String = fileCache.lookupFile(commandSignature)
-
-          // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
-          if (cacheFile == null) {
-            val startTime = System.currentTimeMillis
-            cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
-            val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5)
-            if (fileCache != null) {
-              val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
-              val overheadTime = findOverheadTime(commandToExecute)
-              cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
+          val newCacheFile = cacheFiles(i)
+          fileNames(i) = if(newCacheFile!=null) {
+            val cachePath = Paths.get(newCacheFile)
+            val isGord = commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)
+            if(!Files.exists(cachePath) || Files.isDirectory(cachePath)) {
+              runCommand(nested, commandToExecute, if(isGord) newCacheFile else null, useMd5)
             }
+            newCacheFile
           } else {
-            nested.cached(cacheFile)
+            var cacheFile = fileCache.lookupFile(commandSignature)
+            // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
+            if (cacheFile == null) {
+              val startTime = System.currentTimeMillis
+              cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
+              val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5)
+              if (fileCache != null) {
+                val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
+                val overheadTime = findOverheadTime(commandToExecute)
+                cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
+              }
+            } else {
+              nested.cached(cacheFile)
+            }
+            cacheFile
           }
-          fileNames(i) = cacheFile
         } catch {
           case gue: GorUserException =>
             gue.setQuerySource(batchGroupName)
@@ -133,7 +143,7 @@ object GeneralQueryHandler {
   }
 
   def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean): String = {
-    context.start(outfile)
+    if(outfile!=null) context.start(outfile)
     // We are using absolute paths here
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART)) {
       writeOutGorDictionaryPart(commandToExecute, outfile)
@@ -144,7 +154,7 @@ object GeneralQueryHandler {
     } else {
       runCommandInternal(context, commandToExecute, outfile, useMd5)
     }
-    context.end()
+    if(outfile!=null) context.end()
     result
   }
 
@@ -212,34 +222,58 @@ object GeneralQueryHandler {
     }
   }
 
-  private def writeOutGorDictionary(commandToExecute: String, outfile: String): String = {
-    val w = commandToExecute.split(' ')
-    var dictFiles: List[String] = Nil
-    var chromsrange: List[String] = Nil
-    var i = 1
-    while (i < w.length - 1) {
-      dictFiles ::= getRelativeFileLocationForDictionaryFileReferences(w(i))
-      chromsrange ::= w(i + 1)
-      i += 2
-    }
-    var chrI = 0
-    val dictList = dictFiles.zip(chromsrange).map(x => {
-      val f = x._1
-      val cep = x._2.split(':')
-      val stasto = cep(1).split('-')
-      val (c, sp, ep) = (cep(0), stasto(0), stasto(1))
-      chrI += 1
-      val metaPath = Paths.get(f+".meta")
-      val rest = if(Files.exists(metaPath)) {
-        Files.readString(metaPath).trim
-      } else {
-        c + "\t" + sp + "\t" + c + "\t" + ep
-      }
-      // file, alias, chrom, startpos, chrom, endpos
-      f + "\t" + chrI + "\t" + rest
+  private def writeOutGorDictionaryFolder(outfolderpath: Path) {
+    val outpath = outfolderpath.resolve(outfolderpath.getFileName)
+    var i = 0
+    Files.walk(outfolderpath).filter(p => p.getFileName.toString.endsWith(".meta")).forEach(p => {
+      Files.lines(p).filter(s => s.startsWith("##RANGE:")).findFirst().ifPresent(s => {
+        var outfile = p.getFileName.toString
+        outfile = outfile.substring(0,outfile.length-5)
+        i+=1
+        Files.writeString(outpath, outfile+"\t"+i.toString+"\t"+s.substring(8).trim+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+      })
     })
-    writeList(outfile, dictList)
+  }
 
+  private def writeOutGorDictionary(commandToExecute: String, outfile: String): String = {
+    val outpath = Paths.get(outfile)
+    if(Files.isDirectory(outpath)) {
+      writeOutGorDictionaryFolder(outpath)
+    } else {
+      val w = commandToExecute.split(' ')
+      var dictFiles: List[String] = Nil
+      var chromsrange: List[String] = Nil
+      var i = 1
+      while (i < w.length - 1) {
+        dictFiles ::= w(i)
+        chromsrange ::= w(i + 1)
+        i += 2
+      }
+      var chrI = 0
+      val dictList = dictFiles.zip(chromsrange).map(x => {
+        val f = x._1
+        val cep = x._2.split(':')
+        val stasto = cep(1).split('-')
+        val (c, sp, ep) = (cep(0), stasto(0), stasto(1))
+        chrI += 1
+        val rf = getRelativeFileLocationForDictionaryFileReferences(f)
+        val prefix = rf + "\t" + chrI + "\t"
+        val metaPath = Paths.get(f + ".meta")
+        val opt: Optional[String] = if (Files.exists(metaPath)) {
+          Files.lines(metaPath)
+            .filter(l => l.startsWith("##RANGE:"))
+            .map(s => s.substring(8).trim)
+            .asInstanceOf[java.util.stream.Stream[String]]
+            .filter(f => f.nonEmpty).map(s => prefix + s)
+            .findFirst().asInstanceOf[Optional[String]]
+        } else {
+          Optional.of[String](prefix + c + "\t" + sp + "\t" + c + "\t" + ep)
+        }
+        opt
+        // file, alias, chrom, startpos, chrom, endpos
+      }).flatMap(o => o.stream().iterator().asScala)
+      writeList(outfile, dictList)
+    }
     outfile
   }
 

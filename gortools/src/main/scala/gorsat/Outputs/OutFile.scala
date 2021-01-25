@@ -45,11 +45,11 @@ import org.gorpipe.gor.model.Row
   * @param append Whether we should write the output to the beginning or end of the file.
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   */
-class OutFile(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean = true, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
+class OutFile(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
   val finalFileOutputStream = new java.io.FileOutputStream(name, append)
   val interceptingFileOutputStream: OutputStream =
     if (md5) {
-      new Md5CalculatingOutputStream(finalFileOutputStream, new File(name + ".md5"))
+      new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) new File(name + ".md5") else null)
     } else {
       finalFileOutputStream
     }
@@ -64,14 +64,6 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
     new java.io.OutputStreamWriter(new BufferedOutputStream(gzippedOutputStream, 1024 * 128))
 
   override def getName: String = name
-
-  override def getMd5: String = {
-    interceptingFileOutputStream match {
-      case stream: Md5CalculatingOutputStream =>
-        stream.md5()
-      case _ => null
-    }
-  }
 
   def setup {
     if (header != null & !skipHeader) {
@@ -90,6 +82,11 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
   def finish {
     out.flush()
     out.close()
+    meta.md5 = interceptingFileOutputStream match {
+      case stream: Md5CalculatingOutputStream =>
+        stream.md5()
+      case _ => null
+    }
 
     if(idx == GorIndexType.TABIX) {
       val gp = Paths.get(name)

@@ -27,6 +27,8 @@ import gorsat.Script
 import gorsat.Script._
 import org.gorpipe.gor.session.GorContext
 
+import java.nio.file.Paths
+
 /***
   * PGOR macro used to preprocess standalone pgor commands into create statement plus gor query. Also performs expansion
   * based on active build and splits. Also if a custom split options are used it performs a split based on input chromosome,
@@ -58,9 +60,15 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
 
       val gorReplacement = if( noWithin ) "gor -nowithin -p " else "gor -p "
       val partitionKey = "[" + theKey + "_" + replacePattern + "]"
-      val newQuery = gorReplacement + replacePattern + " <(" + create.query.trim.slice(5, create.query.length) + ")"
+      val innerQuery = create.query.trim.slice(5, create.query.length)
+      val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
+      val lastCmd = querySplit.last.trim.toLowerCase
+      val hasWrite = lastCmd.startsWith("write ")
+      val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
+      val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite) "|"+lastCmd else "")
+      var cachePath = if(hasWrite) lastCmd.split(" ").last else null
       partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery,
-        create.dependencies, create.batchGroupName))
+        create.dependencies, create.batchGroupName, cachePath))
 
       val splitManager = SplitManager.createFromCommand(create.groupName, newQuery, context)
 
@@ -71,8 +79,12 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
 
       val theCommand = splitManager.chromosomeSplits.keys.foldLeft("gordict") ((x, y) => x + " [" + theKey + "_" + y + "] " +
         splitManager.chromosomeSplits(y).range)
+      /*if(cachePath!=null) {
+        val gordCachePath = Paths.get(cachePath)
+        cachePath = gordCachePath.resolve(gordCachePath.getFileName).toString
+      }*/
       partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand,
-        theDependencies.toArray, create.batchGroupName, isDictionary = true))
+        theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
     } else {
       partitionedGorCommands += (createKey -> ExecutionBlock(create.groupName,
         "xxxxgor " + create.query.trim.slice(5, create.query.length),

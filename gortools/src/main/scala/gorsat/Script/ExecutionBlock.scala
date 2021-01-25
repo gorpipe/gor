@@ -30,4 +30,5 @@ case class ExecutionBlock(groupName: String,
                           var query: String = null,
                           dependencies: Array[String],
                           batchGroupName: String = null,
+                          cachePath: String = null,
                           isDictionary: Boolean = false)

@@ -180,6 +180,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         activeExecutionBlocks.foreach { newExecutionBlock =>
           // Get the command to finally execute
           val commandToExecute = newExecutionBlock._2.query
+          val cachePath = newExecutionBlock._2.cachePath
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
@@ -188,7 +189,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val splitManager = SplitManager.createFromCommand(newExecutionBlock._1, commandToExecute, context)
 
           // Expand execution blocks based on the active split
-          val commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock._1)
+          val commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock._1, cachePath)
 
           // Remove this command from the execution blocks if needed
           if (commandGroup.removeFromCreate) {
@@ -276,7 +277,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
   private def createBlockIfAvailable(executionBatch: ExecutionBatch, key: String, executionBlock: ExecutionBlock): Unit = {
     val dependencies = executionBlock.dependencies
     if (dependencies.isEmpty || virtualFileManager.areDependenciesReady(dependencies)) {
-      executionBatch.createNewBlock(key, executionBlock.query, dependencies, executionBlock.groupName)
+      executionBatch.createNewBlock(key, executionBlock.query, dependencies, executionBlock.groupName, executionBlock.cachePath)
     }
   }
 

@@ -92,6 +92,7 @@ class Write extends CommandInfo("WRITE",
       throw new GorParsingException("Option -noheader (skip header) is not valid with gor/gorz/nor/norz")
     }
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, md5, true, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader)), forcedInputHeader.split("\t").slice(0,2).mkString("\t"))
+    val fixedHeader = if(passthrough) forcedInputHeader else forcedInputHeader.split("\t").slice(0,2).mkString("\t")
+    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, passthrough)), fixedHeader)
   }
 }

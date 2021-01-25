@@ -55,12 +55,38 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
+    public void testWritePassThrough() {
+        Path path = Paths.get("gorfile.gorz");
+        String results = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write -p " + path);
+        Assert.assertEquals("Wrong results in write folder", "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
+                "chr1\t11868\t14412\tDDX11L1\n" , results);
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+    @Test
+    public void testCreateWrite() {
+        Path path = Paths.get("gorfile.gorz");
+        String results = TestUtils.runGorPipe("create a = gor -p chr21 ../tests/data/gor/genes.gor | write " + path + "; gor [a] | group chrom -count");
+        Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\n" +
+                "chr21\t0\t100000000\t669\n" , results);
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+    @Test
     public void testPgorWriteFolder() {
         Path folderpath = Paths.get("folder3.gord");
         try {
-            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor"+// | write -d " + folderpath +
-                    //"; gor " + folderpath + " | group chrom -count");
+            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write -d " + folderpath +
                     "; gor [a] | group chrom -count");
+                    //"; gor [a] | group chrom -count");
             Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\n" +
                     "chr1\t0\t250000000\t4747\n" +
                     "chr10\t0\t150000000\t2011\n" +
@@ -88,7 +114,7 @@ public class UTestGorDictionaryFolder {
                     "chrX\t0\t200000000\t2138\n" +
                     "chrY\t0\t100000000\t480\n", results);
         } finally {
-            //deleteFolder(folderpath);
+            deleteFolder(folderpath);
         }
     }
 }

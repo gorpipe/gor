@@ -23,7 +23,7 @@
 package gorsat.Outputs
 
 import java.util.zip.Deflater
-import gorsat.Commands.{Output, RangeStat}
+import gorsat.Commands.Output
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.gor.model.Row
 
@@ -40,7 +40,6 @@ import java.nio.file.{Files, Paths}
   */
 class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, md5File: Boolean = true, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED) extends Output {
   val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, md5File, idx, compressionLevel)
-  val range = new RangeStat()
   override def getName: String = fileName
 
   def setup() {
@@ -48,18 +47,15 @@ class GORzip(fileName: String, header: String = null, skipHeader: Boolean = fals
   }
 
   def process(r: Row) {
-    range.updateRange(r)
+    meta.updateRange(r)
     out.write(r)
   }
 
-  override def getRange: RangeStat = range
-  override def getMd5: String = out.getMd5
-
   def finish {
+    out.close
+    meta.md5 = out.getMd5
     val metapath = fileName + ".meta"
     val m = Paths.get(metapath)
-    val rangeStr = range.toString
-    if(rangeStr.nonEmpty) Files.writeString(m, rangeStr)
-    out.close
+    Files.writeString(m, meta.toString)
   }
 }
