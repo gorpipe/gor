@@ -194,6 +194,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.GtGen)
       addInfo(new gorsat.Commands.PrGtGen)
       addInfo(new gorsat.Commands.SelWhere)
+      addInfo(new gorsat.Commands.VerifyVariant)
     }
   }
 }
