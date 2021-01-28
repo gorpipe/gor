@@ -114,6 +114,9 @@ case class ForkWrite(forkCol: Int,
   def createOutFile(name: String, skipHeader: Boolean): Output = {
     if (options.useFolder) {
       val p = Paths.get(name)
+      if(Files.exists(p) && !Files.isDirectory(p) && Files.size(p) == 0) {
+        Files.delete(p);
+      }
       Files.createDirectories(p)
       val uuid = UUID.randomUUID().toString
       val noptions = OutputOptions(options.remove, options.columnCompress, true, false, options.nor, options.idx, options.tags, options.prefix, options.prefixFile, options.compressionLevel, options.useFolder, options.skipHeader)
@@ -192,22 +195,26 @@ case class ForkWrite(forkCol: Int,
       val d = parent.resolve(respath)
       if (!Files.exists(d)) {
         Files.move(p, d)
-        val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
         val metapath = respath + ".meta"
-        val m = parent.resolve(metapath)
-        Files.writeString(m, outputMeta.toString)
-        Files.writeString(dict, outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-      } else {
-        System.err.println()
+        val dm = parent.resolve(metapath)
+        val mp = Paths.get(name+".meta")
+        if(!Files.exists(dm)) Files.move(mp, dm)
+
+        val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
+        Files.writeString(dict, d.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
       }
+    } else {
+      System.err.println()
     }
   }
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
-    /*val name = sh.out.getName
-    val meta = sh.out.getMeta
-    if(name!=null) moveToMd5FileNameAndAppendToDictionary(name, meta)*/
+    if(options.useFolder) {
+      val name = sh.out.getName
+      val meta = sh.out.getMeta
+      moveToMd5FileNameAndAppendToDictionary(name, meta)
+    }
   }
 
   override def finish() {
@@ -223,7 +230,7 @@ case class ForkWrite(forkCol: Int,
         sh.fileOpen = false
       }
     })
-    if (!somethingToWrite && !useFork) {
+    if (!options.useFolder && !somethingToWrite && !useFork) {
       val out = createOutFile(fullFileName, false)
       out.setup()
       out.finish()

@@ -25,9 +25,11 @@ package gorsat.Macros
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
+import gorsat.Utilities.{AnalysisUtilities, StringUtilities}
+import gorsat.process.GorPrePipe
 import org.gorpipe.gor.session.GorContext
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 
 /***
   * PGOR macro used to preprocess standalone pgor commands into create statement plus gor query. Also performs expansion
@@ -62,32 +64,54 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       val partitionKey = "[" + theKey + "_" + replacePattern + "]"
       val innerQuery = create.query.trim.slice(5, create.query.length)
       val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
-      val lastCmd = querySplit.last.trim.toLowerCase
+      var lastCmd = querySplit.last.trim.toLowerCase
       val hasWrite = lastCmd.startsWith("write ")
       val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
-      val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite) "|"+lastCmd else "")
-      var cachePath = if(hasWrite) lastCmd.split(" ").last else null
-      partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery,
-        create.dependencies, create.batchGroupName, cachePath))
+      var cacheFileExists = false
+      val cachePath = if(hasWrite) {
+        val cacheRes = lastCmd.split(" ").last
+        cacheFileExists = Files.exists(Paths.get(cacheRes))
+        cacheRes
+      } else {
+        val fileCache = context.getSession.getProjectContext.getFileCache
+        val fingerprint = create.signature
+        var cachefile = fileCache.lookupFile(fingerprint)
+        if(cachefile==null) {
+          cachefile = fileCache.tempLocation(fingerprint, ".gord")
+          val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
+          val cacheFilePath = Paths.get(cachefile)
+          cachefile = rootPath.relativize(cacheFilePath).normalize().toString
+          lastCmd = "write -d " + cachefile
+        } else cacheFileExists = true
+        cachefile
+      }
 
-      val splitManager = SplitManager.createFromCommand(create.groupName, newQuery, context)
+      val theCommand = if(!cacheFileExists) {
+        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + "|" + lastCmd
+        partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery, create.signature,
+          create.dependencies, create.batchGroupName, cachePath))
 
-      splitManager.chromosomeSplits.keys.foreach(chrKey => {
-        val parKey = "[" + theKey + "_" + chrKey + "]"
-        theDependencies ::= parKey
-      })
+        val splitManager = SplitManager.createFromCommand(create.groupName, newQuery, context)
 
-      val theCommand = splitManager.chromosomeSplits.keys.foldLeft("gordict") ((x, y) => x + " [" + theKey + "_" + y + "] " +
-        splitManager.chromosomeSplits(y).range)
+        splitManager.chromosomeSplits.keys.foreach(chrKey => {
+          val parKey = "[" + theKey + "_" + chrKey + "]"
+          theDependencies ::= parKey
+        })
+
+        splitManager.chromosomeSplits.keys.foldLeft("gordict")((x, y) => x + " [" + theKey + "_" + y + "] " +
+          splitManager.chromosomeSplits(y).range)
+      } else {
+        "gor "+cachePath
+      }
       /*if(cachePath!=null) {
         val gordCachePath = Paths.get(cachePath)
         cachePath = gordCachePath.resolve(gordCachePath.getFileName).toString
       }*/
-      partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand,
+      partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand, create.signature,
         theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
     } else {
       partitionedGorCommands += (createKey -> ExecutionBlock(create.groupName,
-        "xxxxgor " + create.query.trim.slice(5, create.query.length),
+        "xxxxgor " + create.query.trim.slice(5, create.query.length), create.signature,
         create.dependencies, create.batchGroupName)) // this should nolonger happen
     }
 

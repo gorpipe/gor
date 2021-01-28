@@ -40,7 +40,7 @@ class TableFunction extends MacroInfo("TABLEFUNCTION", CommandArguments("", "", 
 
     var creates = Map.empty[String, ExecutionBlock]
     val newQuery = "gor " + create.query.substring(this.name.length+1)
-    creates += (createKey -> ExecutionBlock(create.groupName, newQuery, create.dependencies, create.batchGroupName))
+    creates += (createKey -> ExecutionBlock(create.groupName, newQuery, create.signature, create.dependencies, create.batchGroupName))
 
     MacroParsingResult(creates, null)
   }

@@ -53,14 +53,14 @@ object ScriptExecutionEngine {
       if (a != "") {
         val vf = virtualFiles(b)
         val batchGroupName: String = validateCreateName(a)
-        creates += ("[" + batchGroupName + "]" -> ExecutionBlock(batchGroupName, b, vf.toArray))
+        creates += ("[" + batchGroupName + "]" -> ExecutionBlock(batchGroupName, b, null, vf.toArray))
       } else {
         if (creates.contains("[]")) {
           throw new GorParsingException("Only one final command is allowed")
         }
         val batchGroupName = GOR_FINAL
         val vf = virtualFiles(command)
-        creates += ("[]" -> ExecutionBlock(batchGroupName, command, vf.toArray))
+        creates += ("[]" -> ExecutionBlock(batchGroupName, command, null, vf.toArray))
       }
     })
 
@@ -168,6 +168,13 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         // Replace any virtual file in the current query
         firstLevelBlock.query = virtualFileManager.replaceVirtualFiles(firstLevelBlock.query)
 
+        if(firstLevelBlock.signature==null) {
+          val usedFiles = getUsedFiles(firstLevelBlock.query)
+          val fileSignature = if (valid) getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles) else ""
+          val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
+          firstLevelBlock.signature = querySignature
+        }
+
         // Expand the executionBlock with macros
         val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock))
 
@@ -204,8 +211,10 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               executionBlocks -= firstLevelBlock.groupName
             } else {
               // We need to create a new dictionary query to the batch to get the results from expanded queries
-              val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
-              val querySignature = StringUtilities.createMD5(cte.query + fileSignature)
+              val querySignature = if(firstLevelBlock.signature==null) {
+                val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
+                StringUtilities.createMD5(cte.query + fileSignature)
+              } else firstLevelBlock.signature
               executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName, cte.cacheFile)
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
@@ -277,7 +286,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
   private def createBlockIfAvailable(executionBatch: ExecutionBatch, key: String, executionBlock: ExecutionBlock): Unit = {
     val dependencies = executionBlock.dependencies
     if (dependencies.isEmpty || virtualFileManager.areDependenciesReady(dependencies)) {
-      executionBatch.createNewBlock(key, executionBlock.query, dependencies, executionBlock.groupName, executionBlock.cachePath)
+      executionBatch.createNewBlock(key, executionBlock.query, executionBlock.signature, dependencies, executionBlock.groupName, executionBlock.cachePath)
     }
   }
 
@@ -328,7 +337,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
   def getFileSignatureAndUpdateSignatureMap(commandToExecute: String, usedFiles: List[String]): String = {
     var fileSignature = ""
     if (CommandParseUtilities.isDictionaryQuery(commandToExecute)) {
-      fileSignature = StringUtilities.createMD5(usedFiles.mkString(" "))
+      val usedFilesConcatStr = usedFiles.mkString(" ")
+      fileSignature = StringUtilities.createMD5(usedFilesConcatStr)
     } else {
       val signatureKey = getSignature(commandToExecute)
       val fileListKey = usedFiles.mkString(" ") + signatureKey

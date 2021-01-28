@@ -77,12 +77,12 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
 
       if (!extraCommands.isEmpty) newCmd += extraCommands
 
-      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.dependencies, create.batchGroupName))
+      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.signature, create.dependencies, create.batchGroupName))
       theDependencies ::= parKey
     })
 
     val theCommand = partitions.keys.foldLeft("gordictpart") ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, theDependencies.toArray, create.batchGroupName, isDictionary = true))
+    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
   }

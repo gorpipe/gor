@@ -47,7 +47,7 @@ import java.util.stream.Stream;
 public class GorServerFileReader extends FileReader {
     private static final Logger log = LoggerFactory.getLogger(GorServerFileReader.class);
 
-    private static final String RESULT_CACHE_DIR = "cache/result_cache";
+    public static final String RESULT_CACHE_DIR = "cache/result_cache";
     private final String resolvedSessionRoot;
     private final boolean allowAbsolutePath;
     private final Object[] constants;

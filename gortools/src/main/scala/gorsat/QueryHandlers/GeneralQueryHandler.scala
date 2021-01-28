@@ -36,7 +36,7 @@ import gorsat.process.ParallelExecutor
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.GorParallelQueryHandler
+import org.gorpipe.gor.model.{GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.slf4j.LoggerFactory
@@ -63,17 +63,24 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
           fileNames(i) = if(newCacheFile!=null) {
             val cachePath = Paths.get(newCacheFile)
             val isGord = commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)
+            var cacheRes = newCacheFile
             if(!Files.exists(cachePath) || Files.isDirectory(cachePath)) {
-              runCommand(nested, commandToExecute, if(isGord) newCacheFile else null, useMd5)
+              val startTime = System.currentTimeMillis
+              val resultFileName = runCommand(nested, commandToExecute, if(isGord) newCacheFile else null, useMd5, true)
+              if (fileCache != null && resultFileName.contains(GorServerFileReader.RESULT_CACHE_DIR)) {
+                val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
+                val overheadTime = findOverheadTime(commandToExecute)
+                cacheRes = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
+              }
             }
-            newCacheFile
+            cacheRes
           } else {
             var cacheFile = fileCache.lookupFile(commandSignature)
             // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
             if (cacheFile == null) {
               val startTime = System.currentTimeMillis
               cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
-              val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5)
+              val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, false)
               if (fileCache != null) {
                 val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
                 val overheadTime = findOverheadTime(commandToExecute)
@@ -142,13 +149,13 @@ object GeneralQueryHandler {
       CommandParseUtilities.getExtensionForQuery(commandToExecute, header))
   }
 
-  def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean): String = {
+  def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean, theTheDict: Boolean): String = {
     context.start(outfile)
     // We are using absolute paths here
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART)) {
       writeOutGorDictionaryPart(commandToExecute, outfile)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)) {
-      writeOutGorDictionary(commandToExecute, outfile)
+      writeOutGorDictionary(commandToExecute, outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.NOR_DICTIONARY)) {
       writeOutNorDictionaryPart(commandToExecute, outfile)
     } else {
@@ -222,8 +229,14 @@ object GeneralQueryHandler {
     }
   }
 
-  private def writeOutGorDictionaryFolder(outfolderpath: Path) {
-    val outpath = outfolderpath.resolve(outfolderpath.getFileName)
+  private def writeOutGorDictionaryFolder(outfolderpath: Path, useTheDict: Boolean) {
+    val outpath = if(useTheDict) {
+      val dict = outfolderpath.resolve("thedict.gord")
+      Files.writeString(dict,"")
+      dict
+    } else {
+      outfolderpath.resolve(outfolderpath.getFileName)
+    }
     var i = 0
     Files.walk(outfolderpath).filter(p => p.getFileName.toString.endsWith(".meta")).forEach(p => {
       Files.lines(p).filter(s => s.startsWith("##RANGE:")).findFirst().ifPresent(s => {
@@ -235,10 +248,10 @@ object GeneralQueryHandler {
     })
   }
 
-  private def writeOutGorDictionary(commandToExecute: String, outfile: String): String = {
+  private def writeOutGorDictionary(commandToExecute: String, outfile: String, useTheDict: Boolean): String = {
     val outpath = Paths.get(outfile)
     if(Files.isDirectory(outpath)) {
-      writeOutGorDictionaryFolder(outpath)
+      writeOutGorDictionaryFolder(outpath, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil

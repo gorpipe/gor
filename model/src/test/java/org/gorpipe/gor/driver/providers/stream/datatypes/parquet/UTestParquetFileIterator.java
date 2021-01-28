@@ -178,7 +178,7 @@ public class UTestParquetFileIterator {
         iterator.getHeader();
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-            GorZipLexOutputStream gorzip = new GorZipLexOutputStream(byteStream, false, null);
+            GorZipLexOutputStream gorzip = new GorZipLexOutputStream(byteStream, false, false, null);
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
