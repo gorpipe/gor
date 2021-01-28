@@ -135,7 +135,12 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
                 String s = iterator.next();
                 if (s == null) {
                     iterator = null;
-                    return ++hgSeekIndex < chrs.size() && hasNext();
+                    hgSeekIndex++;
+                    if(hgSeekIndex < chrs.size()) {
+                        return hasNext();
+                    } else {
+                        return false;
+                    }
                 } else {
                     nextRow = createRow(s);
                     return true;
