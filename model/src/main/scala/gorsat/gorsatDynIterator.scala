@@ -331,5 +331,4 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       val h = super.getHeader
       h.substring(h.indexOf('\t',h.indexOf('\t')+1)+1) }
   }
-
 }
