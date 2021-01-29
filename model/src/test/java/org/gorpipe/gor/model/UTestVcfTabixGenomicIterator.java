@@ -83,6 +83,16 @@ public class UTestVcfTabixGenomicIterator {
     }
 
     @Test
+    public void testVcfTabixAll() throws IOException {
+        try (VcfGzTabixGenomicIterator vcfit = new VcfGzTabixGenomicIterator(cl, fs, fi)) {
+            StringBuilder sb = new StringBuilder();
+            vcfit.forEachRemaining(sb::append);
+            String results = sb.substring(sb.lastIndexOf("chr"));
+            Assert.assertEquals("Wrong line from tabix indexed vcf file", "chrY\t327\t.\tT\tC\t666.18\tGATK_STANDARD;HARD_TO_VALIDATE\tAB=0.74;AC=3;AF=0.50;AN=6;DB=0;DP=936;Dels=0.00;HRun=3;MQ=34.66;MQ0=728;QD=0.71;SB=-268.74;set=filteredInBoth\tGT:DP:GQ\t1/0:10:62.65\t1/0:37:99.00\t1/0:53:99.00", results);
+        }
+    }
+
+    @Test
     public void testVcfTabixGetHeader() throws IOException {
         try (VcfGzTabixGenomicIterator vcfit = new VcfGzTabixGenomicIterator(cl, fs, fi)) {
             Assert.assertEquals("Wrong header from tabix indexed vcf file", "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNA19238\tNA19239\tNA19240", String.join("\t", vcfit.getHeader()));
