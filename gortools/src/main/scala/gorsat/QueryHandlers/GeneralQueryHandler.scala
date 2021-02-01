@@ -205,8 +205,10 @@ object GeneralQueryHandler {
         }
       } else {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
-        val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, nor = nor)
-        val ps: Processor = if(nor) out else CheckOrder() | out
+        val ps: Processor = if(outfile!=null) {
+          val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, nor = nor, md5 = true)
+          if (nor) out else CheckOrder() | out
+        } else null
         runner.run(theSource, ps)
         newName = Paths.get(outfile)
       }

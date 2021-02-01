@@ -80,7 +80,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
           cachefile = fileCache.tempLocation(fingerprint, ".gord")
           val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
           val cacheFilePath = Paths.get(cachefile)
-          cachefile = rootPath.relativize(cacheFilePath).normalize().toString
+          cachefile = if(cacheFilePath.isAbsolute) rootPath.relativize(cacheFilePath).normalize().toString else cacheFilePath.toString
           lastCmd = "write -d " + cachefile
         } else cacheFileExists = true
         cachefile

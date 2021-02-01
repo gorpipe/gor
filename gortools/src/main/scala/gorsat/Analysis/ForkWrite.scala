@@ -38,7 +38,7 @@ import scala.collection.mutable.ArrayBuffer
 case class OutputOptions(remove: Boolean = false,
                             columnCompress: Boolean = false,
                             md5: Boolean = false,
-                            md5File: Boolean = true,
+                            md5File: Boolean = false,
                             nor: Boolean = false,
                             idx: GorIndexType = GorIndexType.NONE,
                             tags: Array[String] = null,
