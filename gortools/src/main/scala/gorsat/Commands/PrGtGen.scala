@@ -32,7 +32,7 @@ import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PrGtGen extends CommandInfo("PRGTGEN",
-  CommandArguments("", "-pn -pl -gl -gp -gc -prgc -maxseg -e -afc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
+  CommandArguments("", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -110,9 +110,16 @@ class PrGtGen extends CommandInfo("PRGTGEN",
           throw ex
       }
     }
-
+/*
     val afc = if (iargs.length == 3) {
       if (hasOption(args, "-afc")) intValueOfOption(args, "-afc") else columnFromHeader("AF", priorHeader, false)
+    } else -1
+ */
+    val pabc = if (iargs.length == 3) {
+      if (hasOption(args, "-pabc")) intValueOfOption(args, "-pabc") else columnFromHeader("pAB", priorHeader, false)
+    } else -1
+    val pbbc = if (iargs.length == 3) {
+      if (hasOption(args, "-pbbc")) intValueOfOption(args, "-pbbc") else columnFromHeader("pBB", priorHeader, false)
     } else -1
     val anc = if (iargs.length == 3) {
       if (hasOption(args, "-anc")) intValueOfOption(args, "-anc") else columnFromHeader("AN", priorHeader, false)
@@ -139,7 +146,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     }
 
     val hcol = leftHeader.split("\t")
-    val outputHeader = hcol.slice(0, 2).mkString("\t") + (if (gcCols.nonEmpty) "\t" + gcCols.map(hcol(_)).mkString("\t") else "") + "\tAF\tAN\tBucket\tValues"
+    val outputHeader = hcol.slice(0, 2).mkString("\t") + (if (gcCols.nonEmpty) "\t" + gcCols.map(hcol(_)).mkString("\t") else "") + "\tAF\tAN\tpAB\tpBB\tBucket\tValues"
 
     var maxSegSize = 10000
     if (hasOption(args, "-maxseg")) maxSegSize = intValueOfOption(args, "-maxseg")
@@ -149,7 +156,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val pipeStep: Analysis =
       if (iargs.length == 3) {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
-          AFANSourceAnalysis(priorSource, context, lookupSignature, prgcCols, afc, anc) |
+          AFANSourceAnalysis(priorSource, context, lookupSignature, prgcCols, pabc, pbbc, anc) |
           RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
       } else {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |

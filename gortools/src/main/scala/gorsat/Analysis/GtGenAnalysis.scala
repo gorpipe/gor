@@ -296,6 +296,7 @@ object GtGenAnalysis {
       if ((lr.chr == lastLeftChr && maxLeftStop < leftStop) || lr.chr != lastLeftChr) maxLeftStop = leftStop
       lastLeftChr = lr.chr
 
+ /* this should not be needed because the -xl -xr (PN-list) is constant
       groupClean += 1
       if (groupClean == 100000 && useGroup && groupMap.size > 1) {
         groupMap.keys.foreach(k => {
@@ -322,6 +323,7 @@ object GtGenAnalysis {
         })
         groupClean = 0
       }
+      */
     }
 
     var prev_row: Row = _
