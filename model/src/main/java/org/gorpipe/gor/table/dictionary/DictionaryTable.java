@@ -40,62 +40,6 @@ import java.util.*;
  * Created by gisli on 23/08/16.
  * <p>
  * Format of the gord dictionary file
- * <p>
- * [<meta-information lines>]
- * [<header line>]
- * <data lines>
- * <p>
- * The format of the meta-information lines is:
- * <p>
- * [## <key>=<value>]
- * ...
- * <p>
- * <p>
- * <key>       Attribute name.  Not case sensitive.
- * <value>     Attribute value.
- * <p>
- * Reserved key values are:
- * <p>
- * fileformat      - Version of the file format.
- * created         - Creation date of the file
- * build           - Reference data build version.
- * columns         - Column definition for the gor files in the dictionary.
- * sourceColumn    - Name of the source column.
- * <p>
- * Format of the header line is:
- * <p>
- * [# <column name 1>\t<column name 2>\t<column name 3> ...]
- * <p>
- * <p>
- * Each data line is a tab separated list of columns, described as:
- * <p>
- * <file>[[|<flags>]|<bucket>][\t<alias>[\t<startchrom>\t<startpos>\t<endchrom>\t<endpos>\t[tags]]]
- * <p>
- * where:
- * <p>
- * <file>              Abosolute path or relative (to the location of the dictionary) path to the main data file.
- * <flags>             Comma seprated list of flags applicable to the data file.  Available flags:
- * D - The file is marked as deleted.  This means the file has been deleted and should be
- * ignored when reading from the bucket.
- * <bucket>            Relative path ot the bucket file <file> belongs to.
- * <alias>             Alias for <file>.  The alias specifies "source" value of <file>.  If no tags are specified, <alias> is used
- * as tag for <file>.  Can be empty.
- * <startchrom>        Filter start chromosome, e.g. chr1.  Can be empty, if all range elements are empty.
- * <startpos>          Filter start pos. Can be empty, if all range elements are empty.
- * <endchrom>          Filter stop chromosome, e.g. chr3. Can be empty, if all range elements are empty.
- * <endpos>            Filter stop pos.  Can be empty, if all range elements are empty.
- * <tags>              Comma separated list of tags:  <tagval1>[,<tagval2>...]
- * <p>
- * <p>
- * Notes:
- * 1. The <file> + <filter> is a unique key into the file.  Note, this always exact match, i.e. filter that is a subset of another filter
- * will be treated as different.  This could be improved by banning overlapping filters.
- * 2. If <tags> are specified then they are used for filtering (but the <alias> is not).  If no <tags> are specified <alias> is used as
- * tags for filtering.
- * 3. <file> could be bucket file.
- * 4. Seems in general alias is used for normal files but tags for the bucket files.
- * <p>
- * <p>
  * NOTE:
  * - HG says, either all the files have alias or none of them.
  */

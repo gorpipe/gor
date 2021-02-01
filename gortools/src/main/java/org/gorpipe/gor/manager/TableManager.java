@@ -116,7 +116,7 @@ public class TableManager {
     }
 
     /**
-     * Set the bucket size.  Also updates the minBucketSize if it is larger than <bucketSize>.
+     * Set the bucket size.  Also updates the minBucketSize if it is larger than {@code bucketSize}.
      *
      * @param bucketSize the requested bucket size.
      */
@@ -141,10 +141,10 @@ public class TableManager {
     }
 
     /**
-     * Initialize the table given by <path>.
+     * Initialize the table given by {@code path}.
      *
      * @param path path to the table.
-     * @return the table given by <path>.
+     * @return the table given by {@code path}.
      */
     public BaseTable initTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {

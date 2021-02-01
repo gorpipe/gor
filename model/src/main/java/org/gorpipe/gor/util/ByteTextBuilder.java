@@ -619,7 +619,7 @@ public class ByteTextBuilder implements CharSequence, Serializable, Comparable<B
      * Compare the text in the two buffers
      *
      * @param b
-     * @return 0 if they are equals, <0 if this is lexicographically less than b and >0 if this is lexicographically greater than b
+     * @return 0 if they are equals, &lt;0 if this is lexicographically less than b and &gt;0 if this is lexicographically greater than b
      */
     public int compareTo(ByteTextBuilder b) {
         final int l = pos - b.pos;
@@ -721,7 +721,7 @@ public class ByteTextBuilder implements CharSequence, Serializable, Comparable<B
      * Compare the text in the two buffers
      *
      * @param b
-     * @return 0 if they are equals, <0 if this is lexicographically less than b and >0 if this is lexicographically greater than b
+     * @return 0 if they are equals, &lt;0 if this is lexicographically less than b and &gt;0 if this is lexicographically greater than b
      */
     public int compareToIgnoreCase(ByteTextBuilder b) {
         final int l = pos - b.pos;

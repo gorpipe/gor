@@ -41,8 +41,6 @@ import java.util.stream.Stream;
 
 /**
  * Gor server file reader
- *
- * @TODO: Remove once use of DriverBackedGorServerFileReader is proven.
  */
 public class GorServerFileReader extends FileReader {
     private static final Logger log = LoggerFactory.getLogger(GorServerFileReader.class);

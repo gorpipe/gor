@@ -37,7 +37,7 @@ public class GorDriverFactory {
     private static GorDriver standardDriver;
 
     /**
-     * Constructs a GorDriver using the {@link GorModulesConfig} config interface, loaded from the 'gor.modules' prefix.
+     * Constructs a GorDriver using the GorModulesConfig config interface, loaded from the 'gor.modules' prefix.
      * That is, the config directory will be checked for a file named 'gor.modules.props' which will be used to populate
      * the configuration interface.
      *

@@ -64,7 +64,7 @@ import java.util.stream.Stream;
  * <p>./nor/file1.tsv\tPatient_1\n
  * <p>./nor/file2.tsv\tPatient_2\n
  * <p>./nor/file3.tsv\tPatient_3\n
- * <p>#./nor/file4.tsv\tPatient_4\n   -> Ignored
+ * <p>#./nor/file4.tsv\tPatient_4\n   -&gt; Ignored
  *
  * <p><p>Nor dictionaries do not support bucketization as there only one file open at a time.
  *

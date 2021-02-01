@@ -160,7 +160,11 @@ project(':gortools') {
     publishing {
         publications {
             mavenJavaLibModule(MavenPublication) {
-                artifact distZip
+                if (project.hasProperty('publishToMavenCentral')) {
+                    artifact javadocJar
+                } else {
+                    artifact distZip
+                }
                 artifact sourcesJar
             }
         }

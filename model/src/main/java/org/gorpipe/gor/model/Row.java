@@ -282,7 +282,6 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
     public abstract void resize(int newsize);
 
     /**
-     * @// TODO: 2019-02-27 The indexing here is inconsistent - 0 means first column after pos
      * Set the value of the given column to the given value.
      * @param i The column index to set
      * @param val The value to set the column to

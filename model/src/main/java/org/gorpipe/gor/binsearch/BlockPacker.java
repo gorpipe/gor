@@ -43,9 +43,6 @@ import java.util.zip.DeflaterOutputStream;
  * block: rowcnt | { type } | { column }
  * rowcnt: unsigned 16 bits
  * type: zero terminated sequence of typeid
- * typeid: byte := 3->intoffset, 4-> shortoffset, 5->byteoffset, 6->longseq, 7->incr, 8->constant, 9->unsigned byte diff, 10->unsigned short diff, 11->unsigned int diff
- * 12->signed byte diff, 13->signed short diff, 19->empty, 20->charseq, 21->varcharseq, 22->textlookup, 23->sametext, 24->externalTextLookup, 25->externalTextLookupWithDiff
- * 26->externalTextLookupWithCycle, 28->textlookupWithDiff, 29->externalTextLookupWith16bitDiff
  * column: sequence of coldata
  * coldata: { longseq | byteoffset | shortoffset | intoffset | incr | constant | usbytediff | sbytediff | ushortdiff | sshortdiff | uintdiff | charseq | varcharseq | textlookup | textlookupdiff | sametest }
  * longseq: sequence of 64 bits

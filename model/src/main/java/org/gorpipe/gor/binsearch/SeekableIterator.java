@@ -160,7 +160,7 @@ public class SeekableIterator implements AutoCloseable {
     }
 
     /**
-     * Seeks to the position of the first line whose key is >= to key.
+     * Seeks to the position of the first line whose key is &ge; to key.
      *
      * @throws IOException If we encounter a problem seeking to the file and reading its content.
      */
