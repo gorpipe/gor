@@ -170,7 +170,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
         if(firstLevelBlock.signature==null) {
           val usedFiles = getUsedFiles(firstLevelBlock.query)
-          val fileSignature = if (valid) getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles) else ""
+          val fileSignature = getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles)
           val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
           firstLevelBlock.signature = querySignature
         }
