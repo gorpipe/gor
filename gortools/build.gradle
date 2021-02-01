@@ -85,6 +85,7 @@ project(':gortools') {
         testImplementation "com.github.samtools:htsjdk:2.23.0"
 
         testRuntime "org.apache.derby:derby:10.15.2.0"
+        testRuntime "org.apache.derby:derbytools:10.15.2.0"
 
         antlr("org.antlr:antlr4:4.7")
     }
