@@ -168,18 +168,19 @@ object GeneralQueryHandler {
   private def runCommandInternal(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean): String = {
     val theSource = new DynamicRowSource(commandToExecute, context)
     val theHeader = theSource.getHeader
-    val temp_cacheFile = AnalysisUtilities.getTempFileName(outfile)
 
-    val oldName = Paths.get(temp_cacheFile)
-    val oldMetaName = Paths.get(temp_cacheFile+".meta")
+    val temp_cacheFile = if(outfile!=null) AnalysisUtilities.getTempFileName(outfile) else null
+    val oldName = if(temp_cacheFile!=null) Paths.get(temp_cacheFile) else null
     try {
       val nor = theSource.isNor
       var newName: Path = null
       // TODO: Get a gor config instance somehow into gorpipeSession or gorContext?
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
-        val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
-        val ps: Processor = if(nor) out else CheckOrder() | out
+        val ps: Processor = if(outfile!=null) {
+          val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
+          if(nor) out else CheckOrder() | out
+        } else null
         runner.run(theSource, ps)
         val md5File = Paths.get(temp_cacheFile + ".md5")
         if (Files.exists(md5File)) {
@@ -210,14 +211,17 @@ object GeneralQueryHandler {
           if (nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
-        newName = Paths.get(outfile)
+        if(outfile!=null) newName = Paths.get(outfile)
       }
 
-      Files.move(oldName,newName)
-      if(Files.exists(oldMetaName)) {
-        Files.move(oldMetaName,oldMetaName.getParent.resolve(newName.getFileName.toString+".meta"))
-      }
-      newName.toString
+      if(oldName!=null) {
+        Files.move(oldName, newName)
+        val oldMetaName = Paths.get(temp_cacheFile + ".meta")
+        if (Files.exists(oldMetaName)) {
+          Files.move(oldMetaName, oldMetaName.getParent.resolve(newName.getFileName.toString + ".meta"))
+        }
+        newName.toString
+      } else ""
     } catch {
       case e: Exception =>
         try {
