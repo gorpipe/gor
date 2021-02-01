@@ -17,9 +17,9 @@ public class GTGen {
     private boolean hasPrior;
     private final double[] qs;
     private final boolean[] hasData;
-    private double pAA;
-    private double pAB;
-    private double pBB;
+    private double pAA = 0.25;
+    private double pAB = 0.5;
+    private double pBB = 0.25;
     private int covCount;
     private final PowerLookupTable ePlt;
     private final PowerLookupTable oneMinusEPlt;
@@ -72,6 +72,13 @@ public class GTGen {
         return 0.5 * this.pAB + this.pBB;
     }
 
+    public double get_pAB()  {
+        return this.pAB;
+    }
+
+    public double get_pBB()  {
+        return this.pBB;
+    }
     /**
      * Returns whether there is some data for sample with index {@code idx}.
      */
@@ -91,10 +98,22 @@ public class GTGen {
      * {@code m} ones, excluding ours, the estimated allele frequency is {@code af}. The resulting allele frequency
      * will be the same as if we had called them all together at first.
      */
-    public void setPrior(double af, int m) {
-        this.priorAF = af;
+    public void setPrior(double pab, double pbb, int m) {
+        this.pAB = pab;
+        this.pBB = pbb;
+        this.pAA = 1.0-pab-pbb;
         this.m = m;
         this.hasPrior = true;
+        this.priorAF = this.getAF();
+    }
+
+    public void setPrior(double af, int m) {
+        this.pBB = af*af;
+        this.pAA = (1-af)*(1-af);
+        this.pAB = 1-this.pAA-this.pBB;
+        this.m = m;
+        this.hasPrior = true;
+        this.priorAF = this.getAF();
     }
 
     public void addData(int sampleIdx, double pAA, double pAB, double pBB) {
@@ -167,13 +186,14 @@ public class GTGen {
     }
 
     private boolean computeAfWithPrior(double tol, int maxIt) {
-        this.setAF(this.priorAF);
+        // this.setAF(this.priorAF);
         final double p0AA = this.pAA;
         final double p0AB = this.pAB;
         final double p0BB = this.pBB;
         double error = Double.POSITIVE_INFINITY;
+        double corr_factor = 0.01/(1+this.m + this.covCount);  /* we cannot estimate a smaller prob with full power */
         int it = 0;
-        while (error > tol && it++ < maxIt) {
+        while (error > tol && error > corr_factor && it++ < maxIt) {
             double sum_pAA = this.m * p0AA;
             double sum_pAB = this.m * p0AB;
             double sum_pBB = this.m * p0BB;
@@ -188,21 +208,29 @@ public class GTGen {
                     sum_pBB += x2 * sum_rec;
                 }
             }
-            final double new_pAA = sum_pAA / (this.m + this.covCount);
-            final double new_pAB = sum_pAB / (this.m + this.covCount);
-            final double new_pBB = sum_pBB / (this.m + this.covCount);
+
+            final double new_pAA_temp = corr_factor + sum_pAA / (this.m + this.covCount);
+            final double new_pAB_temp = corr_factor + sum_pAB / (this.m + this.covCount);
+            final double new_pBB_temp = corr_factor + sum_pBB / (this.m + this.covCount);
+
+            final double tot_prob = new_pAA_temp+new_pAB_temp+new_pBB_temp;
+            final double new_pAA = new_pAA_temp/tot_prob;
+            final double new_pAB = new_pAB_temp/tot_prob;
+            final double new_pBB = new_pBB_temp/tot_prob;
+
             error = max(abs(new_pAA - this.pAA), max(abs(new_pAB - this.pAB), abs(new_pBB - this.pBB)));
             this.pAA = new_pAA;
             this.pAB = new_pAB;
             this.pBB = new_pBB;
         }
-        return error <= tol;
+        return error <= tol || error < corr_factor;
     }
 
     private boolean computeAfWithoutPrior(double tol, int maxIt) {
         double error = Double.POSITIVE_INFINITY;
+        double corr_factor = 0.01/(1+this.covCount); /* we cannot estimate a smaller prob with full power */
         int it = 0;
-        while (error > tol && it++ < maxIt) {
+        while (error > tol && error > corr_factor && it++ < maxIt) {
             double sum_pAA = 0;
             double sum_pAB = 0;
             double sum_pBB = 0;
@@ -217,14 +245,20 @@ public class GTGen {
                     sum_pBB += x2 * sum_rec;
                 }
             }
-            final double new_pAA = sum_pAA / this.covCount;
-            final double new_pAB = sum_pAB / this.covCount;
-            final double new_pBB = sum_pBB / this.covCount;
+            final double new_pAA_temp = corr_factor + sum_pAA / this.covCount;
+            final double new_pAB_temp = corr_factor + sum_pAB / this.covCount;
+            final double new_pBB_temp = corr_factor + sum_pBB / this.covCount;
+
+            final double tot_prob = new_pAA_temp+new_pAB_temp+new_pBB_temp;
+            final double new_pAA = new_pAA_temp/tot_prob;
+            final double new_pAB = new_pAB_temp/tot_prob;
+            final double new_pBB = new_pBB_temp/tot_prob;
+
             error = max(abs(new_pAA - this.pAA), max(abs(new_pAB - this.pAB), abs(new_pBB - this.pBB)));
             this.pAA = new_pAA;
             this.pAB = new_pAB;
             this.pBB = new_pBB;
         }
-        return error <= tol;
+        return error <= tol || error < corr_factor;
     }
 }

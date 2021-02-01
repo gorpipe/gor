@@ -130,7 +130,7 @@ object PrGtGenAnalysis {
     def unregisterUser(user: AnyRef): Unit = users -= user
   }
 
-  case class AFANSourceAnalysis(afSource: RowSource, context: GorContext, lookupSignature: String, grCols: List[Int], afCol: Int, anCol: Int) extends Analysis {
+  case class AFANSourceAnalysis(afSource: RowSource, context: GorContext, lookupSignature: String, grCols: List[Int], pabCol: Int, pbbCol: Int, anCol: Int) extends Analysis {
     val ti = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
     ti.registerUser(this)
 
@@ -140,7 +140,7 @@ object PrGtGenAnalysis {
 
     val grColsArray = grCols.toArray
 
-    case class AFANRow(chr: String, pos: Int, af: Double, an: Int)
+    case class AFANRow(chr: String, pos: Int, pAB: Double, pBB: Double, an: Int)
 
     var rightBatch: Map[String, AFANRow] = Map.empty
     var offsetRow: (String, AFANRow) = _
@@ -167,7 +167,7 @@ object PrGtGenAnalysis {
     }
 
     def getAFANRow(r: Row): AFANRow = {
-      AFANRow(r.chr, r.pos, r.colAsDouble(afCol), r.colAsInt(anCol))
+      AFANRow(r.chr, r.pos, r.colAsDouble(pabCol), r.colAsDouble(pbbCol), r.colAsInt(anCol))
     }
 
     def getGroupId(r: Row): String = {
@@ -184,7 +184,7 @@ object PrGtGenAnalysis {
       rightBatch.get(groupId) match {
         case Some(afanRow) => {
           val gh = r.bH.asInstanceOf[GroupHolder]
-          gh.gtGen.setPrior(afanRow.af, afanRow.an)
+          gh.gtGen.setPrior(afanRow.pAB, afanRow.pBB, afanRow.an)
         }
         case None => //Do nothing
       }
@@ -228,7 +228,7 @@ object PrGtGenAnalysis {
 
     private def writeOutRows(r: Row, r_gh: GroupHolder, gtGen: GTGen, converged: Boolean): Unit = {
       if (converged) {
-        val rowPrefix = r.toString + '\t' + "%5.5g\t%d".format(gtGen.getAF, gtGen.getAn) + '\t'
+        val rowPrefix = r.toString + '\t' + "%5.5g\t%d".format(gtGen.getAF, gtGen.getAn) + '\t' + "%5.5g\t%5.5g".format(gtGen.get_pAB, gtGen.get_pBB) + '\t'
         var bucketIdx = 0
         val len = ti.numberOfBuckets
         var sampleIdx: Int = 0

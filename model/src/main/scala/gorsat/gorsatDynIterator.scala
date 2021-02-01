@@ -234,8 +234,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   def getContextHeader(norContext : Boolean) : String = {
     var header = super.getHeader
     if (header != "") return header
-    val i = iteratorCommand.indexOf("<(")
-    val itCmd = (if( i > -1 ) iteratorCommand.substring(i) else iteratorCommand).replace("| top 0 ", "")
+    val itCmd = iteratorCommand.replace("| top 0 ", "")
 
     drsGorPipeSession.getCache.getHeaderFileMap.putIfAbsent(itCmd, new Pair[String, Array[String]]())
 
@@ -332,5 +331,4 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       val h = super.getHeader
       h.substring(h.indexOf('\t',h.indexOf('\t')+1)+1) }
   }
-
 }

@@ -32,7 +32,7 @@ Usage
 
 .. code-block:: gor
 
-    gor ... | PRGTGEN tagbucketrelation [optional: priorfile] coveragefile [ attributes ]
+    gor ... | PRGTGEN tagbucketrelation [optional: prior_gor_source] coverage_gor_source [ attributes ]
 
 Options
 =======
@@ -59,7 +59,9 @@ Options
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-gl col``         | The GL col (from i)). Is looked up by name if not given.                                           |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-afc col``        | The allele frequency column in the prior source. Is looked up by name if not given.                |
+| ``-pabc col``       | The probability for heterozygot genotype pAB=2pq                                                   |
++---------------------+----------------------------------------------------------------------------------------------------+
+| ``-pbbc col``       | The probability for homozygot alt, pBB = pAltAlt, equal to Af*Af if variant in HWE                 |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-anc col``        | The allele number column in the prior source. Is looked up by name if not given.                   |
 +---------------------+----------------------------------------------------------------------------------------------------+
@@ -83,8 +85,74 @@ Examples
 
 .. code-block:: gor
 
-    /* An example of creating horizontal variations stored in buckets */
+    /* An example simulating genotypes and comparing incremental joint-calling with single step join-calling */
 
+    def #r# = rename #1 PN | replace #1 #1+1;
+    def #n# = 999;
+    def #bucksize# = 500;
+
+    create #bucket# = norrows #n# | #r# | rownum | calc bucket 'b'+str(1+div(rownum, #bucksize# )) | hide rownum;
+    create #pns# = nor [#bucket#] | select pn;
+
+    create #cov# = gor <(nor [#pns#] | calc chrom 'chr1' | calc bpstart 0 | calc bpstop 10 | calc depth 10
+    | select chrom-depth,pn);
+
+    create #vars# = gor <(nor [#pns#] | calc chrom 'chr1' | calc pos 10 | calc ref 'A' | calc alt 'C'
+    | calc CallCopies if(random()<0.01 or pn > '950' and random()<0.55 or pn = '999' /* or pn = '1' */,1,0)
+    | calc Depth 10
+    | calc CallRatio form(if(pn='999' /* or pn='1' */,1.0,if(callcopies=1, round(Depth/2.0)+round(Depth*0.9*(-0.5+random())), round(-1+random()+random()+random()) )/Depth),4,4)
+    | select chrom-callratio,pn)
+    | where callratio>0;
+
+    create #pns1# = nor [#pns#] | top 950;
+    create #bucket1# = nor [#bucket#] | inset -c pn [#pns1#];
+
+    create #pns2# = nor [#pns#] | skip 950;
+    create #bucket2# = nor [#bucket#] | inset -c pn [#pns2#];
+
+    def #prthr# = 0.9;
+    def #e# = 0.001;
+    def #skip# = skip -5;
+
+    create #gt# = gor [#vars#] | #skip#
+    | inset -c pn [#pns#]
+    | prgtgen -gc ref,alt [#bucket#] [#cov#] -e #e#
+    | csvsel -gc 3,4,af,an,pab,pbb -vs 2 [#bucket#] [#pns#]  -tag pn
+    | calc pr chars2prprpr(value)
+    | calc value2 chars2gt(value,#prthr#);
+
+    create #gt1# = gor [#vars#] | #skip#
+    | inset -c pn [#pns1#]
+    | prgtgen -gc ref,alt [#bucket1#] <(gor [#cov#] | inset -c PN [#pns1#]) -e  #e#
+    | csvsel -gc 3,4,af,an,pab,pbb -vs 2 [#bucket1#] [#pns1#]  -tag pn
+    | calc pr chars2prprpr(value)
+    | calc value2 chars2gt(value,#prthr#);
+
+    create #gt2# = gor [#vars#] | #skip#
+    | inset -c pn [#pns2#]
+    | prgtgen -gc ref,alt [#bucket2#] <(gor [#cov#] | inset -c PN [#pns2#]) -e  #e#
+    | csvsel -gc 3,4,af,an,pab,pbb -vs 2 [#bucket2#] [#pns2#]  -tag pn
+    | calc pr chars2prprpr(value)
+    | calc value2 chars2gt(value,#prthr#);
+
+    create #af1# = gor [#gt1#] | select 1-pbb | top 1 /* | replace pbb pbb+(1/AN)*(1/AN) */;
+
+    create #gt2af# = gor [#vars#] | #skip#
+    | inset -c pn [#pns2#]
+    | prgtgen -gc ref,alt [#bucket2#] [#af1#] <(gor [#cov#] | inset -c PN [#pns2#]) -e #e#
+    | where len(values)>1
+    | csvsel -gc 3,4,af,an,pab,pbb -vs 2 [#bucket2#] [#pns2#]  -tag pn
+    | calc pr chars2prprpr(value)
+    | calc value2 chars2gt(value,#prthr#);
+
+    /*
+    gor [#gt2af#] | varjoin -r -xl pn -xr pn [#gt2#] | varjoin -r -xl pn -xr pn [#gt#] | varjoin -r [ #vars#] -xl pn -xr pn
+    | where callcopies = -1 or value2xx = 2 | hide pn,pnx,pnxx,ref,alt| colnum
+    */
+
+    gor [#gt2af#] | varjoin -r -xl pn -xr pn [#gt2#] | varjoin -r -xl pn -xr pn [#gt#]
+    | calc err_gt2af if(value2!=value2xx,1,0) | calc err_gt2 if(value2x!=value2xx,1,0)
+    | group 1 -gc an,af,anx,afx,anxx,afxx,value2xx,value2,value2x -sum -ic err* -count
 
 
 Related commands

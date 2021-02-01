@@ -411,6 +411,7 @@ object GorKing2 {
             pns2 = temp
             swapped = true
           }
+
           val grsize = (pns1.length / 100).max(1) // split for max 100 threads
           val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._2))
 
