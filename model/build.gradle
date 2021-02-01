@@ -34,23 +34,23 @@ project(':model') {
         implementation project(':util')
 
         // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
-        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
+        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.1.2"
 
         annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
         implementation 'com.google.auto.service:auto-service:1.0-rc6'
-        implementation "org.aeonbits.owner:owner:1.0.+"
+        implementation "org.aeonbits.owner:owner:1.0.12"
         implementation "commons-configuration:commons-configuration:1.10"
-        implementation "com.github.samtools:htsjdk:2.22.+"
+        implementation "com.github.samtools:htsjdk:2.23.0"
         implementation "com.github.luben:zstd-jni:1.4.4-3"  // TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
-        implementation "com.zaxxer:HikariCP:3.4.+"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.11.+"
-        implementation 'org.apache.parquet:parquet-common:1.11.0'
-        implementation 'org.apache.parquet:parquet-column:1.11.0'
-        implementation 'org.apache.parquet:parquet-hadoop:1.11.0'
+        implementation "com.zaxxer:HikariCP:4.0.1"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
+        implementation 'org.apache.parquet:parquet-common:1.11.1'
+        implementation 'org.apache.parquet:parquet-column:1.11.1'
+        implementation 'org.apache.parquet:parquet-hadoop:1.11.1'
         implementation 'org.apache.hadoop:hadoop-common:3.3.0'
         implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
 
-        runtime "org.xerial:sqlite-jdbc:3.28.+"
+        runtime "org.xerial:sqlite-jdbc:3.34.0"
         // Exclude slf4j bindings we dont want.
         runtime("org.postgresql:postgresql:42.2.7")
 
@@ -61,13 +61,13 @@ project(':model') {
 
         testImplementation "commons-codec:commons-codec:1.13"
         testImplementation "commons-io:commons-io:2.6"
-        testImplementation "ch.qos.logback:logback-core:1.2.+"
-        testImplementation 'ch.qos.logback:logback-classic:1.2.+'
-        testImplementation "org.mockito:mockito-core:3.0.+"
+        testImplementation "ch.qos.logback:logback-core:1.2.3"
+        testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+        testImplementation "org.mockito:mockito-core:3.7.7"
         testImplementation "org.scalatest:scalatest_2.12:3.0.8"
-        testImplementation "org.scalacheck:scalacheck_2.12:1.13.+"
+        testImplementation "org.scalacheck:scalacheck_2.12:1.15.2"
         testImplementation("org.postgresql:postgresql:42.2.7")
 
-        testRuntime "org.apache.derby:derby:10.14.+"
+        testRuntime "org.apache.derby:derby:10.15.2.0"
     }
 }

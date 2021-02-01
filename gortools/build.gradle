@@ -40,51 +40,51 @@ project(':gortools') {
         implementation project(':util')
 
         // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
-        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
+        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.1.2"
 
         implementation "org.freemarker:freemarker:2.3.19"
         implementation "org.yaml:snakeyaml:1.25"
-        implementation "org.scala-lang:scala-compiler:2.12.+"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.11.+"
-        implementation "org.scalanlp:breeze_2.12:0.13.+"
-        implementation "info.picocli:picocli:4.1.+"
-        implementation "de.tototec:de.tototec.cmdoption:0.6.+"
-        implementation "colt:colt:1.2.+"
-        implementation 'info.picocli:picocli-shell-jline3:4.1.4'
+        implementation "org.scala-lang:scala-compiler:2.12.13"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
+        implementation "org.scalanlp:breeze_2.12:1.1"
+        implementation "info.picocli:picocli:4.6.1"
+        implementation "de.tototec:de.tototec.cmdoption:0.7.0"
+        implementation "colt:colt:1.2.0"
+        implementation 'info.picocli:picocli-shell-jline3:4.6.1'
         implementation "commons-io:commons-io:2.6"
         implementation "commons-lang:commons-lang:2.6"
-        implementation "com.github.samtools:htsjdk:2.22.+"
-        implementation "org.aeonbits.owner:owner:1.0.+"
-        implementation 'org.apache.parquet:parquet-common:1.11.0'
-        implementation 'org.apache.parquet:parquet-column:1.11.0'
-        implementation 'org.apache.parquet:parquet-hadoop:1.11.0'
+        implementation "com.github.samtools:htsjdk:2.23.0"
+        implementation "org.aeonbits.owner:owner:1.0.12"
+        implementation 'org.apache.parquet:parquet-common:1.11.1'
+        implementation 'org.apache.parquet:parquet-column:1.11.1'
+        implementation 'org.apache.parquet:parquet-hadoop:1.11.1'
         implementation 'org.apache.hadoop:hadoop-common:3.3.0'
         implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
         implementation "org.reflections:reflections:0.9.12"
-        implementation 'ch.qos.logback:logback-classic:1.2.+'
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
         implementation('net.logstash.logback:logstash-logback-encoder:6.2')
-        implementation "io.prometheus:simpleclient:0.6.+"
+        implementation "io.prometheus:simpleclient:0.10.0"
 
         runtime project(':documentation')
         runtime project(":drivers")
 
-        runtime "org.scala-lang:scala-reflect:2.12.+"
+        runtime "org.scala-lang:scala-reflect:2.12.13"
 
         testImplementation project(':test')
         testImplementation project(':util')
 
-        testImplementation "org.mockito:mockito-core:3.0.+"
+        testImplementation "org.mockito:mockito-core:3.7.7"
         testImplementation "org.scalatest:scalatest_2.12:3.0.8"
-        testImplementation "org.scalacheck:scalacheck_2.12:1.13.+"
+        testImplementation "org.scalacheck:scalacheck_2.12:1.15.2"
         testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
         testImplementation "commons-io:commons-io:2.6"
         testImplementation "commons-lang:commons-lang:2.6"
         testImplementation "com.google.guava:guava:27.0-jre"
-        testImplementation 'org.slf4j:slf4j-api:1.7.+'
-        testImplementation 'ch.qos.logback:logback-classic:1.2.+'
-        testImplementation "com.github.samtools:htsjdk:2.22.+"
+        testImplementation 'org.slf4j:slf4j-api:1.7.30'
+        testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+        testImplementation "com.github.samtools:htsjdk:2.23.0"
 
-        testRuntime "org.apache.derby:derby:10.14.+"
+        testRuntime "org.apache.derby:derby:10.15.2.0"
 
         antlr("org.antlr:antlr4:4.7")
     }
