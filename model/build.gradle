@@ -69,5 +69,6 @@ project(':model') {
         testImplementation("org.postgresql:postgresql:42.2.7")
 
         testRuntime "org.apache.derby:derby:10.15.2.0"
+        testRuntime "org.apache.derby:derbytools:10.15.2.0"
     }
 }
