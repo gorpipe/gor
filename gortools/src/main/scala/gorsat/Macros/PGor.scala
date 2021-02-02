@@ -75,19 +75,21 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       } else {
         val fileCache = context.getSession.getProjectContext.getFileCache
         val fingerprint = create.signature
-        var cachefile = fileCache.lookupFile(fingerprint)
-        if(cachefile==null) {
-          cachefile = fileCache.tempLocation(fingerprint, ".gord")
-          val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
-          val cacheFilePath = Paths.get(cachefile)
-          cachefile = if(cacheFilePath.isAbsolute) rootPath.relativize(cacheFilePath).normalize().toString else cacheFilePath.toString
-          lastCmd = "write -d " + cachefile
-        } else cacheFileExists = true
-        cachefile
+        if(fingerprint!=null) {
+          var cachefile = fileCache.lookupFile(fingerprint)
+          if (cachefile == null) {
+            cachefile = fileCache.tempLocation(fingerprint, ".gord")
+            val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
+            val cacheFilePath = Paths.get(cachefile)
+            cachefile = if (cacheFilePath.isAbsolute) rootPath.relativize(cacheFilePath).normalize().toString else cacheFilePath.toString
+            lastCmd = "write -d " + cachefile
+          } else cacheFileExists = true
+          cachefile
+        } else null
       }
 
       val theCommand = if(!cacheFileExists) {
-        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + "|" + lastCmd
+        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite) "|" + lastCmd else "")
         partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery, create.signature,
           create.dependencies, create.batchGroupName, cachePath))
 
