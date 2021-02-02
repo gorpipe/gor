@@ -40,6 +40,62 @@ import java.util.*;
  * Created by gisli on 23/08/16.
  * <p>
  * Format of the gord dictionary file
+ * <p>
+ * {@literal [<meta-information lines>]}
+ * {@literal [<header line>]}
+ * {@literal <data lines>}
+ * <p>
+ * The format of the meta-information lines is:
+ * <p>
+ * {@literal [## <key>=<value>]}
+ * ...
+ * <p>
+ * <p>
+ * {@literal <key>       Attribute name.  Not case sensitive.}
+ * {@literal <value>     Attribute value.}
+ * <p>
+ * Reserved key values are:
+ * <p>
+ * fileformat      - Version of the file format.
+ * created         - Creation date of the file
+ * build           - Reference data build version.
+ * columns         - Column definition for the gor files in the dictionary.
+ * sourceColumn    - Name of the source column.
+ * <p>
+ * Format of the header line is:
+ * <p>
+ * {@literal [# <column name 1>\t<column name 2>\t<column name 3> ...]}
+ * <p>
+ * <p>
+ * Each data line is a tab separated list of columns, described as:
+ * <p>
+ * {@literal <file>[[|<flags>]|<bucket>][\t<alias>[\t<startchrom>\t<startpos>\t<endchrom>\t<endpos>\t[tags]]]}
+ * <p>
+ * where:
+ * <p>
+ * {@literal <file>              Abosolute path or relative (to the location of the dictionary) path to the main data file.}
+ * {@literal <flags>             Comma seprated list of flags applicable to the data file.  Available flags:}
+ * D - The file is marked as deleted.  This means the file has been deleted and should be
+ * ignored when reading from the bucket.
+ * {@literal <bucket>            Relative path ot the bucket file <file> belongs to.}
+ * {@literal <alias>             Alias for <file>.  The alias specifies "source" value of <file>.  If no tags are specified, <alias> is used}
+ * {@literal as tag for <file>.  Can be empty.}
+ * {@literal <startchrom>        Filter start chromosome, e.g. chr1.  Can be empty, if all range elements are empty.}
+ * {@literal <startpos>          Filter start pos. Can be empty, if all range elements are empty.}
+ * {@literal <endchrom>          Filter stop chromosome, e.g. chr3. Can be empty, if all range elements are empty.}
+ * {@literal <endpos>            Filter stop pos.  Can be empty, if all range elements are empty.}
+ * {@literal <tags>              Comma separated list of tags:  <tagval1>[,<tagval2>...]}
+ * <p>
+ * <p>
+ * Notes:
+ * {@literal 1. The <file> + <filter> is a unique key into the file.  Note, this always exact match, i.e. filter that is a subset of another filter}
+ * will be treated as different.  This could be improved by banning overlapping filters.
+ * {@literal 2. If <tags> are specified then they are used for filtering (but the <alias> is not).  If no <tags> are specified <alias> is used as}
+ * tags for filtering.
+ * {@literal 3. <file> could be bucket file.}
+ * 4. Seems in general alias is used for normal files but tags for the bucket files.
+ * <p>
+ * <p>
  * NOTE:
  * - HG says, either all the files have alias or none of them.
  */
