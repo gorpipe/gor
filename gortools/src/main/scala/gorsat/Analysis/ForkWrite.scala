@@ -112,7 +112,7 @@ case class ForkWrite(forkCol: Int,
     * @return
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
-    if (options.useFolder) {
+    if (options.useFolder && !name.toLowerCase.endsWith(".parquet")) {
       val p = Paths.get(name)
       if(Files.exists(p) && !Files.isDirectory(p) && Files.size(p) == 0) {
         Files.delete(p);
@@ -240,7 +240,7 @@ case class ForkWrite(forkCol: Int,
     if (!isInErrorState) {
       // Create all missing tag files
       tagSet.foreach(x => {
-        if (!x.isEmpty) {
+        if (x.nonEmpty) {
           try {
             val fileHolder = FileHolder(x)
             openFile(fileHolder)
