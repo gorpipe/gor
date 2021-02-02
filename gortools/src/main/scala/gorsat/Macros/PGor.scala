@@ -25,8 +25,6 @@ package gorsat.Macros
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
-import gorsat.Utilities.{AnalysisUtilities, StringUtilities}
-import gorsat.process.GorPrePipe
 import org.gorpipe.gor.session.GorContext
 
 import java.nio.file.{Files, Paths}
@@ -93,7 +91,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       }
 
       val theCommand = if(!cacheFileExists) {
-        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite || lastCmd.startsWith("write ")) "|" + lastCmd else "")
+        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite || lastCmd.startsWith("write ")) " | " + lastCmd else "")
         partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery, create.signature,
           create.dependencies, create.batchGroupName, cachePath))
 

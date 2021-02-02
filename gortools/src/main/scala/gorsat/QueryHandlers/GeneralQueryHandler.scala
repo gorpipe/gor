@@ -214,7 +214,7 @@ object GeneralQueryHandler {
         if(outfile!=null) newName = Paths.get(outfile)
       }
 
-      if(oldName!=null) {
+      if(oldName!=null && Files.exists(oldName)) {
         Files.move(oldName, newName)
         val oldMetaName = Paths.get(temp_cacheFile + ".meta")
         if (Files.exists(oldMetaName)) {

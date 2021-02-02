@@ -1,6 +1,7 @@
 package gorsat;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -55,6 +56,7 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
+    @Ignore("Passthrough not supported yet")
     public void testWritePassThrough() {
         Path path = Paths.get("gorfile.gorz");
         String results = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write -p " + path);

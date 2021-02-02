@@ -166,7 +166,7 @@ object OutFile {
   def apply(name: String, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
     driver(name, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, None, prefixFile, compressionLevel))
 
-  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor, md5 = md5))
+  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
 
   def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor))
 
