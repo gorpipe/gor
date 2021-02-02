@@ -81,7 +81,11 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
             cachefile = fileCache.tempLocation(fingerprint, ".gord")
             val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
             val cacheFilePath = Paths.get(cachefile)
-            cachefile = if (cacheFilePath.isAbsolute) rootPath.relativize(cacheFilePath).normalize().toString else cacheFilePath.toString
+            cachefile = if (cacheFilePath.isAbsolute) {
+              val norm = rootPath.relativize(cacheFilePath).normalize().toString
+              if(norm.startsWith("..")) cacheFilePath.toString
+              else norm
+            } else cacheFilePath.toString
             lastCmd = "write -d " + cachefile
           } else cacheFileExists = true
           cachefile
@@ -89,7 +93,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       }
 
       val theCommand = if(!cacheFileExists) {
-        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite) "|" + lastCmd else "")
+        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite || lastCmd.startsWith("write ")) "|" + lastCmd else "")
         partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery, create.signature,
           create.dependencies, create.batchGroupName, cachePath))
 
