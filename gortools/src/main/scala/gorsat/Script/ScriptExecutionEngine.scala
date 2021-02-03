@@ -168,7 +168,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         // Replace any virtual file in the current query
         firstLevelBlock.query = virtualFileManager.replaceVirtualFiles(firstLevelBlock.query)
 
-        if(firstLevelBlock.signature==null) {
+        if(firstLevelBlock.signature==null&&firstLevelBlock.query!=null&&firstLevelBlock.query.toLowerCase.startsWith("pgor ")) {
           val usedFiles = getUsedFiles(firstLevelBlock.query)
           val fileSignature = getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles)
           val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
