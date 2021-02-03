@@ -24,12 +24,23 @@ package gorsat.Commands
 
 import org.gorpipe.gor.model.Row
 
+import java.util
+
 class OutputMeta {
   var minChr: String = null
   var minPos: Int = -1
   var maxChr: String = null
   var maxPos: Int = -1
   var md5: String = null
+  var cardColName: String = null
+  var cardColIndex = -1
+  val cardSet = new util.TreeSet[String]()
+
+  def initCardCol(cardCol: String, header: String): Unit = {
+    val hsplit = header.toLowerCase.split("\t")
+    cardColName = cardCol
+    cardColIndex = hsplit.indexOf(cardCol.toLowerCase)
+  }
 
   def updateRange(ir: Row): Unit = {
     if(minChr==null) {
@@ -38,6 +49,8 @@ class OutputMeta {
     }
     maxChr = ir.chr
     maxPos = ir.pos
+
+    if(cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString)
   }
 
   def getRange: String = {
@@ -48,6 +61,10 @@ class OutputMeta {
     var ret = ""
     if(minChr!=null) ret += "##RANGE: " + getRange + "\n"
     if(md5!=null) ret += "##MD5: " + md5 + "\n"
+    if(cardColIndex != -1) {
+      val cardStr = cardSet.toString
+      ret += "##CARDCOL["+cardColName+"]: " + cardStr.substring(1,cardStr.length-1).replace(" ","")
+    }
     ret
   }
 

@@ -148,7 +148,7 @@ object OutFile {
 
     try {
       if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
-        new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel)
+        new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
         new NorFileOut(name, header, skipHeader, append, options.md5)
       } else if (nameUpper.endsWith(".PARQUET")) {

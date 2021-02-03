@@ -64,9 +64,10 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
       var lastCmd = querySplit.last.trim.toLowerCase
       val hasWrite = lastCmd.startsWith("write ")
+      val hasWriteFile = hasWrite & lastCmd.endsWith(".gord")
       val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
       var cacheFileExists = false
-      val cachePath = if(hasWrite) {
+      val cachePath = if(hasWriteFile) {
         val cacheRes = lastCmd.split(" ").last
         cacheFileExists = Files.exists(Paths.get(cacheRes))
         cacheRes
@@ -84,7 +85,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
               if(norm.startsWith("..")) cacheFilePath.toString
               else norm
             } else cacheFilePath.toString
-            lastCmd = "write -d " + cachefile
+            lastCmd = if(hasWrite) lastCmd + " " + cachefile else "write -d " + cachefile
           } else cacheFileExists = true
           cachefile
         } else null

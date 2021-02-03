@@ -46,7 +46,8 @@ case class OutputOptions(remove: Boolean = false,
                             prefixFile: Option[String] = None,
                             compressionLevel: Int = Deflater.BEST_SPEED,
                             useFolder: Boolean = false,
-                            skipHeader: Boolean = false
+                            skipHeader: Boolean = false,
+                            cardCol: String = null
                            )
 
 case class ForkWrite(forkCol: Int,
@@ -119,7 +120,7 @@ case class ForkWrite(forkCol: Int,
       }
       Files.createDirectories(p)
       val uuid = UUID.randomUUID().toString
-      val noptions = OutputOptions(options.remove, options.columnCompress, true, false, options.nor, options.idx, options.tags, options.prefix, options.prefixFile, options.compressionLevel, options.useFolder, options.skipHeader)
+      val noptions = OutputOptions(options.remove, options.columnCompress, true, false, options.nor, options.idx, options.tags, options.prefix, options.prefixFile, options.compressionLevel, options.useFolder, options.skipHeader, cardCol = options.cardCol)
       OutFile.driver(p.resolve(uuid+".gorz").toString, header, skipHeader, noptions)
     } else {
       OutFile.driver(name, header, skipHeader, options)

@@ -238,7 +238,7 @@ object GeneralQueryHandler {
   private def writeOutGorDictionaryFolder(outfolderpath: Path, useTheDict: Boolean) {
     val outpath = if(useTheDict) {
       val dict = outfolderpath.resolve("thedict.gord")
-      Files.writeString(dict,"")
+      Files.writeString(dict,"#filepath\tbucket\tstartchrom\tstartpos\tendchrom\tendpos\tsource\n")
       dict
     } else {
       outfolderpath.resolve(outfolderpath.getFileName)
@@ -246,10 +246,17 @@ object GeneralQueryHandler {
     var i = 0
     Files.walk(outfolderpath).filter(p => p.getFileName.toString.endsWith(".meta")).forEach(p => {
       Files.lines(p).filter(s => s.startsWith("##RANGE:")).findFirst().ifPresent(s => {
-        var outfile = p.getFileName.toString
+        var outfile = outfolderpath.relativize(p).toString
         outfile = outfile.substring(0,outfile.length-5)
         i+=1
-        Files.writeString(outpath, outfile+"\t"+i.toString+"\t"+s.substring(8).trim+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+        val cc = Files.lines(p).filter(s => s.startsWith("##CARDCOL")).findFirst()
+        val gordline = if(cc.isPresent) {
+          val ccstr = cc.get()
+          outfile+"\t"+i.toString+"\t"+s.substring(8).trim+"\t"+ccstr.substring(ccstr.indexOf(':')+1).trim
+        } else {
+          outfile+"\t"+i.toString+"\t"+s.substring(8).trim
+        }
+        Files.writeString(outpath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
       })
     })
   }

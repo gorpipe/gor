@@ -83,8 +83,25 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
+    public void testGorCardinalityColumn() throws IOException {
+        Path path = Paths.get("gorfile.gorz");
+        TestUtils.runGorPipe("gor -p chr21 ../tests/data/gor/genes.gor | calc c substr(gene_symbol,0,1) | write -card c " + path);
+        Path metapath = Paths.get("gorfile.gorz.meta");
+        String metainfo = Files.readString(metapath);
+        Assert.assertEquals("Wrong results in meta file", "##RANGE: chr21\t9683190\tchr21\t48110675\n" +
+                "##MD5: 162498408aa03202fa1d2327b2cf9c4f\n" +
+                "##CARDCOL[c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z",
+                metainfo);
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            // Ignore
+        }
+    }
+
+    @Test
     public void testPgorWriteFolder() {
-        Path folderpath = Paths.get("folder3.gord");
+        Path folderpath = Paths.get("folder.gord");
         try {
             String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write -d " + folderpath +
                     "; gor [a] | group chrom -count");
@@ -115,6 +132,22 @@ public class UTestGorDictionaryFolder {
                     "chrM\t0\t20000\t37\n" +
                     "chrX\t0\t200000000\t2138\n" +
                     "chrY\t0\t100000000\t480\n", results);
+        } finally {
+            deleteFolder(folderpath);
+        }
+    }
+
+    @Test
+    public void testPgorWriteFolderWithCardinality() throws IOException {
+        Path folderpath = Paths.get("folder.gord");
+        try {
+            TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c -d " + folderpath +
+                    "; gor [a] | group chrom -count");
+            String thedict = Files.readString(folderpath.resolve("thedict.gord"));
+            Assert.assertEquals("Wrong results in dictionary",
+                    "#filepath\tbucket\tstartchrom\tstartpos\tendchrom\tendpos\tsource\n" +
+                            "dd02aed74a26d4989a91f3619ac8dc20.gorz\t1\tchrM\t576\tchrM\t15955\tJ,M\n",
+                    thedict);
         } finally {
             deleteFolder(folderpath);
         }
