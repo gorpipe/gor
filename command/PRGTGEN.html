@@ -177,7 +177,7 @@ given in the source should be thought of as having been estimated for some numbe
 the ones we are calling now.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | PRGTGEN tagbucketrelation [optional: priorfile] coveragefile [ attributes ]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | PRGTGEN tagbucketrelation [optional: prior_gor_source] coverage_gor_source [ attributes ]
 </pre></div>
 </div>
 </div>
@@ -186,7 +186,74 @@ the ones we are calling now.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example of creating horizontal variations stored in buckets */
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example simulating genotypes and comparing incremental joint-calling with single step join-calling */
+
+<span class="nd">def</span> #r# = rename #1 <span class="na">PN</span> | replace #1 #1+1;
+<span class="nd">def</span> #n# = 999;
+<span class="nd">def</span> #bucksize# = 500;
+
+<span class="nd">create</span> #bucket# = norrows #n# | #r# | rownum | calc bucket &#39;b&#39;+<span class="k">str</span>(1+div(rownum, #bucksize# )) | hide rownum;
+<span class="nd">create</span> #pns# = <span class="nd">nor</span> [#bucket#] | select pn;
+
+<span class="nd">create</span> #cov# = <span class="nd">gor</span> &lt;(<span class="nd">nor</span> [#pns#] | calc chrom &#39;chr1&#39; | calc bpstart 0 | calc bpstop 10 | calc depth 10
+| select chrom-depth,pn);
+
+<span class="nd">create</span> #vars# = <span class="nd">gor</span> &lt;(<span class="nd">nor</span> [#pns#] | calc chrom &#39;chr1&#39; | calc <span class="na">pos</span> 10 | calc ref &#39;A&#39; | calc <span class="na">alt</span> &#39;C&#39;
+| calc CallCopies if(random()&lt;0.01 or pn &gt; &#39;950&#39; and random()&lt;0.55 or pn = &#39;999&#39; /* or pn = &#39;1&#39; */,1,0)
+| calc Depth 10
+| calc CallRatio form(if(pn=&#39;999&#39; /* or pn=&#39;1&#39; */,1.0,if(callcopies=1, round(Depth/2.0)+round(Depth*0.9*(-0.5+random())), round(-1+random()+random()+random()) )/Depth),4,4)
+| select chrom-callratio,pn)
+| where callratio&gt;0;
+
+<span class="nd">create</span> #pns1# = <span class="nd">nor</span> [#pns#] | top 950;
+<span class="nd">create</span> #bucket1# = <span class="nd">nor</span> [#bucket#] | inset -c pn [#pns1#];
+
+<span class="nd">create</span> #pns2# = <span class="nd">nor</span> [#pns#] | skip 950;
+<span class="nd">create</span> #bucket2# = <span class="nd">nor</span> [#bucket#] | inset -c pn [#pns2#];
+
+<span class="nd">def</span> #prthr# = 0.9;
+<span class="nd">def</span> #e# = 0.001;
+<span class="nd">def</span> #skip# = skip -5;
+
+<span class="nd">create</span> #gt# = <span class="nd">gor</span> [#vars#] | #skip#
+| inset -c pn [#pns#]
+| prgtgen -<span class="no">gc</span> ref,<span class="na">alt</span> [#bucket#] [#cov#] -e #e#
+| csvsel -<span class="no">gc</span> 3,4,af,an,pab,pbb -vs 2 [#bucket#] [#pns#]  -tag pn
+| calc pr chars2prprpr(value)
+| calc value2 chars2gt(value,#prthr#);
+
+<span class="nd">create</span> #gt1# = <span class="nd">gor</span> [#vars#] | #skip#
+| inset -c pn [#pns1#]
+| prgtgen -<span class="no">gc</span> ref,<span class="na">alt</span> [#bucket1#] &lt;(<span class="nd">gor</span> [#cov#] | inset -c <span class="na">PN</span> [#pns1#]) -e  #e#
+| csvsel -<span class="no">gc</span> 3,4,af,an,pab,pbb -vs 2 [#bucket1#] [#pns1#]  -tag pn
+| calc pr chars2prprpr(value)
+| calc value2 chars2gt(value,#prthr#);
+
+<span class="nd">create</span> #gt2# = <span class="nd">gor</span> [#vars#] | #skip#
+| inset -c pn [#pns2#]
+| prgtgen -<span class="no">gc</span> ref,<span class="na">alt</span> [#bucket2#] &lt;(<span class="nd">gor</span> [#cov#] | inset -c <span class="na">PN</span> [#pns2#]) -e  #e#
+| csvsel -<span class="no">gc</span> 3,4,af,an,pab,pbb -vs 2 [#bucket2#] [#pns2#]  -tag pn
+| calc pr chars2prprpr(value)
+| calc value2 chars2gt(value,#prthr#);
+
+<span class="nd">create</span> #af1# = <span class="nd">gor</span> [#gt1#] | select 1-pbb | top 1 /* | replace pbb pbb+(1/AN)*(1/AN) */;
+
+<span class="nd">create</span> #gt2af# = <span class="nd">gor</span> [#vars#] | #skip#
+| inset -c pn [#pns2#]
+| prgtgen -<span class="no">gc</span> ref,<span class="na">alt</span> [#bucket2#] [#af1#] &lt;(<span class="nd">gor</span> [#cov#] | inset -c <span class="na">PN</span> [#pns2#]) -e #e#
+| where len(values)&gt;1
+| csvsel -<span class="no">gc</span> 3,4,af,an,pab,pbb -vs 2 [#bucket2#] [#pns2#]  -tag pn
+| calc pr chars2prprpr(value)
+| calc value2 chars2gt(value,#prthr#);
+
+/*
+<span class="nd">gor</span> [#gt2af#] | varjoin -r -xl pn -xr pn [#gt2#] | varjoin -r -xl pn -xr pn [#gt#] | varjoin -r [ #vars#] -xl pn -xr pn
+| where callcopies = -1 or value2xx = 2 | hide pn,pnx,pnxx,ref,<span class="na">alt</span>| colnum
+*/
+
+<span class="nd">gor</span> [#gt2af#] | varjoin -r -xl pn -xr pn [#gt2#] | varjoin -r -xl pn -xr pn [#gt#]
+| calc err_gt2af if(value2!=value2xx,1,0) | calc err_gt2 if(value2x!=value2xx,1,0)
+| group 1 -<span class="no">gc</span> an,af,anx,afx,anxx,afxx,value2xx,value2,value2x -sum -<span class="no">ic</span> err* -<span class="no">count</span>
 </pre></div>
 </div>
 <div class="section" id="related-commands">
