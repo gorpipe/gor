@@ -41,9 +41,6 @@ public class VariantCounts {
     double altScore;
 
     /**
-     * @param callCounts
-     * @param nullScore
-     * @param altScore
      */
     public VariantCounts(int[] callCounts, double nullScore, double altScore) {
         this.callCounts = callCounts;

@@ -30,7 +30,6 @@ import java.util.Set;
 
 /**
  * Template model that enables template writer to skip first occurence of a given argument.
- * <p>
  * <p>Example:
  * <pre>
  * {@literal &lt;#if condition>}
@@ -38,11 +37,9 @@ import java.util.Set;
  * {@literal &lt;/#if>}
  * {@literal $skip('AND') something more}
  * </pre>
- * <p>
  * <p>The first time the method is called, nothing is output, the next call will output 'AND' (without quotes).
  * In this case that means that 'AND' will only be output if the condition is true, resulting in either:
  * "something AND something more" or just "something more".
- * <p>
  * <p>Calls to skip can optionally be scoped to provide more control.
  * Example:
  * <pre>
@@ -56,7 +53,6 @@ import java.util.Set;
  * {@literal </#if>}
  * {@literal $skip('AND', 'scope2') more something else}
  * </pre>
- * <p>
  * <p>This effectively separates concerns for the first two calls and the last two calls, resulting in the possible outcomes:
  * <ul>
  * <li>something AND something more OR something else AND more something else

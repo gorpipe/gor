@@ -59,14 +59,14 @@ import java.util.stream.Stream;
  * <p>Example of a nor dictionary:
  *
  *
- * <p><p>##Source=phenotype
+ * <p>##Source=phenotype
  * <p>#Source\tTag\n
  * <p>./nor/file1.tsv\tPatient_1\n
  * <p>./nor/file2.tsv\tPatient_2\n
  * <p>./nor/file3.tsv\tPatient_3\n
  * <p>#./nor/file4.tsv\tPatient_4\n   -&gt; Ignored
  *
- * <p><p>Nor dictionaries do not support bucketization as there only one file open at a time.
+ * <p>Nor dictionaries do not support bucketization as there only one file open at a time.
  *
  */
 public class NordIterator extends RowSource {

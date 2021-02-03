@@ -52,7 +52,6 @@ import java.util.regex.Pattern;
 
 /**
  * A basic dialog implementation
- * <p>
  * <p>Uses the freemarker library to interpolate the dialog's query with
  * supplied arguments.<br>
  * The provided query is processed such that all whitespace is
@@ -65,11 +64,9 @@ import java.util.regex.Pattern;
  * <dt>br</dt>
  * <dd>inserts an explicit newline</dd>
  * </dl>
- * <p>
  * <p>All arguments are wrapped in a freemarker object wrapper such that when
  * referencing the argument's value the query writer uses {@code argname.val}
  * and when referencing the argument's operator the query writer uses {@code argname.op}.</p>
- * <p>
  * <p>Aside from being a bean model for a dialog this class provides a ListModel
  * interface on the dialog's arguments.</p>
  * <p>The interpolated query is defined as executable if all non-optional
@@ -361,7 +358,7 @@ public class Dialog extends AbstractListBean {
     }
 
     /**
-     * @return <code>true</code> if advanced arguments are visible, otherwise <code>false</code>
+     * @return {@code true} if advanced arguments are visible, otherwise {@code false}
      */
     public boolean advancedArgumentsVisible() {
         return advancedArgumentsVisible;

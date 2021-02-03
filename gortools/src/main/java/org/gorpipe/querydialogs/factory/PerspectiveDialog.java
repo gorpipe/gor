@@ -144,11 +144,11 @@ public class PerspectiveDialog extends Dialog {
 
     /**
      * Verify dialog by getting the error message. If the error message
-     * is empty the dialog is valid and the method returns <code>true</code>.
+     * is empty the dialog is valid and the method returns {@code true}.
      * If the error message is not empty the dialog is invalid, and the error message
-     * is displayed in an error dialog and the method returns <code>false</code>.
+     * is displayed in an error dialog and the method returns {@code false}.
      *
-     * @return <code>true</code> if dialog is valid, otherwise <code>false</code>
+     * @return {@code true} if dialog is valid, otherwise {@code false}
      */
     public boolean verify() {
         final String errorMsg = getErrorMessage();
@@ -163,7 +163,7 @@ public class PerspectiveDialog extends Dialog {
      * query will not be streamed to the SM user but instead the results are saved to a directory of
      * the user´s choice.
      *
-     * @return <code>true</code> if the query is a long running query, otherwise <code>false</code>
+     * @return {@code true} if the query is a long running query, otherwise {@code false}
      */
     public boolean checkIfLongRunningQuery() {
         final String longRunningMsg = determineLongRunningQuery();

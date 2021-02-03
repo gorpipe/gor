@@ -32,7 +32,6 @@ import java.util.function.Function;
 
 /**
  * A base class for all arguments.
- * <p>
  * <p>Aside from being a bean this class also provides a ListModel interface
  * on the allowed values for this argument</p>
  *
@@ -70,7 +69,6 @@ public abstract class Argument extends AbstractListBean {
 
     /**
      * Base constructor for all arguments.
-     * <p>
      * <p>All extensions of this abstract type are recommended to build via this constructor</p>
      *
      * @param type          - the type of argument
@@ -79,7 +77,7 @@ public abstract class Argument extends AbstractListBean {
      * @param defaultValue  - the initial value for this argument
      * @param allowedValues - a list of allowed values for this argument
      * @param operators     - a list of operators supported by this argument
-     * @param advanced      - <code>true</code> if argument is advanced, otherwise false. Can be used to determine visibility mode of argument.
+     * @param advanced      - {@code true} if argument is advanced, otherwise false. Can be used to determine visibility mode of argument.
      */
     public Argument(ArgumentType type, ArgumentDescription argDescr, Boolean optional, Object defaultValue,
                     List<? extends Object> allowedValues, URI valuesPath, List<String> operators, Boolean advanced, Integer displayWidth) {
@@ -151,7 +149,7 @@ public abstract class Argument extends AbstractListBean {
     /**
      * Get if argument is optional.
      *
-     * @return <code>true</code> if argument is optional, otherwise <code>false</code>
+     * @return {@code true} if argument is optional, otherwise {@code false}
      */
     public boolean isOptional() {
         return optional;
@@ -160,7 +158,7 @@ public abstract class Argument extends AbstractListBean {
     /**
      * Get if argument is empty.
      *
-     * @return <code>true</code> if argument is empty, otherwise <code>false</code>
+     * @return {@code true} if argument is empty, otherwise {@code false}
      */
     public boolean isEmpty() {
         return value == null;
@@ -169,7 +167,7 @@ public abstract class Argument extends AbstractListBean {
     /**
      * Get if argument is advanced.
      *
-     * @return <code>true</code> if argument is advanced, otherwise <code>false</code>
+     * @return {@code true} if argument is advanced, otherwise {@code false}
      */
     public boolean isAdvanced() {
         return advanced;
