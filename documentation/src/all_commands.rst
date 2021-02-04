@@ -87,6 +87,7 @@
    command/VARNORM
    command/VERIFYCOLTYPE
    command/VERIFYORDER
+   command/VERIFYVARIANT
    command/WAIT
    command/WHERE
    command/GORROW
