@@ -45,11 +45,11 @@ import org.gorpipe.gor.model.Row
   * @param append Whether we should write the output to the beginning or end of the file.
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   */
-class OutFile(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
+class OutFile(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
   val finalFileOutputStream = new java.io.FileOutputStream(name, append)
   val interceptingFileOutputStream: OutputStream =
     if (md5) {
-      new Md5CalculatingOutputStream(finalFileOutputStream, new File(name + ".md5"))
+      new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) new File(name + ".md5") else null)
     } else {
       finalFileOutputStream
     }
@@ -62,6 +62,8 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
     }
   val out: Writer =
     new java.io.OutputStreamWriter(new BufferedOutputStream(gzippedOutputStream, 1024 * 128))
+
+  override def getName: String = name
 
   def setup {
     if (header != null & !skipHeader) {
@@ -80,6 +82,11 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
   def finish {
     out.flush()
     out.close()
+    meta.setMd5(interceptingFileOutputStream match {
+      case stream: Md5CalculatingOutputStream =>
+        stream.md5()
+      case _ => null
+    })
 
     if(idx == GorIndexType.TABIX) {
       val gp = Paths.get(name)
@@ -141,7 +148,7 @@ object OutFile {
 
     try {
       if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
-        new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.idx, options.compressionLevel)
+        new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
         new NorFileOut(name, header, skipHeader, append, options.md5)
       } else if (nameUpper.endsWith(".PARQUET")) {
@@ -149,17 +156,17 @@ object OutFile {
       } else if (options.nor) {
         new CmdFileOut(name, header, skipHeader, append)
       } else {
-        new OutFile(name, header, skipHeader, append, options.md5, options.idx, options.compressionLevel)
+        new OutFile(name, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
       }
     } catch {
       case e: FileNotFoundException => throw new GorResourceException(s"Can't write to file", name, e)
     }
   }
 
-  def apply(name: String, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
-    driver(name, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, nor = nor, idx, null, None, prefixFile, compressionLevel))
+  def apply(name: String, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
+    driver(name, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, None, prefixFile, compressionLevel))
 
-  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor, md5 = md5))
+  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
 
   def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor))
 
