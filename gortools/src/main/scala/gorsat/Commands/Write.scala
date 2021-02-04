@@ -64,7 +64,7 @@ class Write extends CommandInfo("WRITE",
       indexing = stringValueOfOptionWithErrorCheck(args, "-i", Array("NONE", "CHROM", "FULL", "TABIX"))
     }
 
-    val card = stringValueOfOption(args, "-card")
+    val card = stringValueOfOptionWithDefault(args, "-card", null)
 
     var prefixFile : Option[String] = None
     var prefix : Option[String] = None
