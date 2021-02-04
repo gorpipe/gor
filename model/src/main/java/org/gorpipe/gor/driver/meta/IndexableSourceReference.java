@@ -39,7 +39,11 @@ public class IndexableSourceReference extends SourceReference {
     }
 
     public IndexableSourceReference(String url, IndexableSourceReference parentSourceReference) {
-        super(url, parentSourceReference);
+        this(url, parentSourceReference, null);
+    }
+
+    public IndexableSourceReference(String url, IndexableSourceReference parentSourceReference, String linkSubPath) {
+        super(url, parentSourceReference, linkSubPath);
 
         this.indexSource = parentSourceReference.getIndexSource();
         this.referenceSource = parentSourceReference.getReferenceSource();

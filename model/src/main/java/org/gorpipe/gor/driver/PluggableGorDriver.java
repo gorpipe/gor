@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -207,32 +209,58 @@ public class PluggableGorDriver implements GorDriver {
     private DataSource handleLinks(DataSource source) throws IOException {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
-                if (source.getSourceReference() instanceof IndexableSourceReference) {
-                    return getDataSource(new IndexableSourceReference(readLink(source), (IndexableSourceReference)source.getSourceReference()));
-                } else {
-                    return getDataSource(new SourceReference(readLink(source), source.getSourceReference()));
-                }
+                return getDataSource(getSourceRef(source, readLink(source), null));
             }
         } else {
             if (!source.exists() && source.supportsLinks()) {
                 String url = source.getSourceReference().getUrl();
                 // prevent stackoverflow, some datasources don't support links (dbsource), need to check file ending
                 if (!url.endsWith(".link")) {
-                    SourceReference sourceRef;
-
-                    if (source.getSourceReference() instanceof IndexableSourceReference) {
-                        sourceRef = new IndexableSourceReference(url + ".link", (IndexableSourceReference)source.getSourceReference());
-                    } else {
-                        sourceRef = new SourceReference(url + ".link", source.getSourceReference());
-                    }
-
-                    DataSource fallbackLinkSource = getDataSource(sourceRef);
-                    if (fallbackLinkSource.getDataType() != LINK) {
-                        // The link file existed, was resolved.
-                        // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
-                        return fallbackLinkSource;
-                    }
+                    return resolveLink(source, url);
                 }
+            }
+        }
+        return source;
+    }
+
+    private SourceReference getSourceRef(DataSource source, String url, String linkSubPath) {
+        if (source.getSourceReference() instanceof IndexableSourceReference) {
+            return new IndexableSourceReference(url, (IndexableSourceReference)source.getSourceReference(), linkSubPath);
+        } else {
+            return new SourceReference(url, source.getSourceReference(), linkSubPath);
+        }
+    }
+
+    private DataSource resolveLink(DataSource source, String url) throws IOException {
+        SourceReference sourceRef = getSourceRef(source, url+".link", null);
+
+        DataSource fallbackLinkSource = getDataSource(sourceRef);
+        if (fallbackLinkSource.getDataType() != LINK) {
+            // The link file existed, was resolved.
+            // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
+            return fallbackLinkSource;
+        } else {
+            Path p = Paths.get(url);
+            Path newLinkSubPath = p.getFileName();
+            Path parent = p.getParent();
+            if(parent!=null) return recursiveLinkFallBack(source, parent, newLinkSubPath);
+        }
+        return source;
+    }
+
+    private DataSource recursiveLinkFallBack(DataSource source, Path parent, Path linkSubPath) throws IOException {
+        Path pparent = parent.getParent();
+        if(pparent != null && !pparent.toString().endsWith(":")) {
+            Path parentFileName = parent.getFileName();
+            Path lparent = pparent.resolve(parentFileName+".link");
+            SourceReference sourceRef = getSourceRef(source, lparent.toString(), linkSubPath.toString());
+
+            DataSource fallbackLinkSource = getDataSource(sourceRef);
+            if (fallbackLinkSource.getDataType() != LINK) {
+                return fallbackLinkSource;
+            } else {
+                Path newLinkSubPath = parentFileName.resolve(linkSubPath);
+                return recursiveLinkFallBack(source, pparent, newLinkSubPath);
             }
         }
         return source;
@@ -240,6 +268,8 @@ public class PluggableGorDriver implements GorDriver {
 
     @Override
     public String readLink(DataSource source) throws IOException {
+        SourceReference sourceReference = source.getSourceReference();
+        String linkSubPath = sourceReference.getLinkSubPath();
         String linkText = sourceTypeToSourceProvider.get(source.getSourceType()).readLink(source);
         if (GorStandalone.isStandalone() && !linkText.startsWith("//db:")) {
             String prefix = "";
@@ -249,7 +279,7 @@ public class PluggableGorDriver implements GorDriver {
             }
             linkText = prefix + GorStandalone.getRootPrefixed(linkText);
         }
-        return linkText;
+        return linkSubPath != null ? linkText + linkSubPath : linkText;
     }
 
     @Override
