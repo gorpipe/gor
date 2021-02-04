@@ -23,11 +23,10 @@
 package gorsat.Outputs
 
 import java.util.zip.Deflater
+
 import gorsat.Commands.Output
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.gor.model.Row
-
-import java.nio.file.{Files, Paths}
 
 /**
   * @param fileName Name of the file to be written.
@@ -38,25 +37,18 @@ import java.nio.file.{Files, Paths}
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   * @param idx Whether and index file should be written.
   */
-class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, md5File: Boolean = true, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED, cardCol: String) extends Output {
-  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, md5File, idx, compressionLevel)
-  override def getName: String = fileName
+class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED) extends Output {
+  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, idx, compressionLevel)
 
-  def setup() {
-    if (cardCol != null) meta.initCardCol(cardCol, header)
+  def setup {
     if (header != null & !skipHeader) out.setHeader(header)
   }
 
   def process(r: Row) {
-    meta.updateRange(r)
     out.write(r)
   }
 
   def finish {
     out.close
-    meta.setMd5(out.getMd5)
-    val metapath = fileName + ".meta"
-    val m = Paths.get(metapath)
-    Files.writeString(m, meta.toString)
   }
 }

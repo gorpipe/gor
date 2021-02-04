@@ -160,7 +160,7 @@ object GeneralQueryHandler {
       // TODO: Get a gor config instance somehow into gorpipeSession or gorContext?
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
-        val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, columnCompress = false, nor = nor, true, useMd5, GorIndexType.NONE)
+        val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, GorIndexType.NONE)
         val ps: Processor = if(nor) out else CheckOrder() | out
         runner.run(theSource, ps)
         oldName = new java.io.File(temp_cacheFile)

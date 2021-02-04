@@ -24,6 +24,7 @@ package gorsat.Analysis
 
 import java.nio.file.{Files, Paths}
 import java.util.zip.Deflater
+
 import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
@@ -37,7 +38,6 @@ import scala.collection.mutable.ArrayBuffer
 case class OutputOptions(remove: Boolean = false,
                             columnCompress: Boolean = false,
                             md5: Boolean = false,
-                            md5File: Boolean = false,
                             nor: Boolean = false,
                             idx: GorIndexType = GorIndexType.NONE,
                             tags: Array[String] = null,
@@ -45,8 +45,7 @@ case class OutputOptions(remove: Boolean = false,
                             prefixFile: Option[String] = None,
                             compressionLevel: Int = Deflater.BEST_SPEED,
                             useFolder: Boolean = false,
-                            skipHeader: Boolean = false,
-                            cardCol: String = null
+                            skipHeader: Boolean = false
                            )
 
 case class ForkWrite(forkCol: Int,
@@ -85,7 +84,6 @@ case class ForkWrite(forkCol: Int,
   var counter = 0
   var somethingToWrite = false
   var header: String = inHeader
-
   if (options.remove) {
     val cols: Array[String] = inHeader.split("\t")
     val headerBuilder = new mutable.StringBuilder(inHeader.length + cols.length - 1)
@@ -178,7 +176,7 @@ case class ForkWrite(forkCol: Int,
       }
     })
     if (!somethingToWrite && !useFork) {
-      val out = OutFile.driver(fullFileName, header, false, options)
+      val out = OutFile(fullFileName, header, skipHeader = false, columnCompress = options.columnCompress, nor = options.nor, md5 = options.md5, options.idx, options.prefixFile)
       out.setup()
       out.finish()
     }
@@ -187,7 +185,7 @@ case class ForkWrite(forkCol: Int,
     if (!isInErrorState) {
       // Create all missing tag files
       tagSet.foreach(x => {
-        if (x.nonEmpty) {
+        if (!x.isEmpty) {
           try {
             val fileHolder = FileHolder(x)
             openFile(fileHolder)

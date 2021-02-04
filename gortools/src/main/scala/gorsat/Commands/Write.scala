@@ -22,17 +22,18 @@
 
 package gorsat.Commands
 
+import java.nio.file.Paths
 import java.util.zip.Deflater
 
 import gorsat.Analysis.{ForkWrite, OutputOptions}
 import gorsat.Commands.CommandParseUtilities._
-import org.apache.commons.io.FilenameUtils
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.session.GorContext
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -d -noheader", "-f -i -t -l -card -prefix", 1),
+  CommandArguments("-r -c -m -d -noheader", "-f -i -t -l -prefix", 1),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -64,8 +65,6 @@ class Write extends CommandInfo("WRITE",
       indexing = stringValueOfOptionWithErrorCheck(args, "-i", Array("NONE", "CHROM", "FULL", "TABIX"))
     }
 
-    val card = stringValueOfOptionWithDefault(args, "-card", null)
-
     var prefixFile : Option[String] = None
     var prefix : Option[String] = None
     if (hasOption(args, "-prefix")) {
@@ -93,7 +92,6 @@ class Write extends CommandInfo("WRITE",
       throw new GorParsingException("Option -noheader (skip header) is not valid with gor/gorz/nor/norz")
     }
 
-    val fixedHeader = forcedInputHeader.split("\t").slice(0,2).mkString("\t")
-    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card)), fixedHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader)), forcedInputHeader.split("\t").slice(0,2).mkString("\t"))
   }
 }

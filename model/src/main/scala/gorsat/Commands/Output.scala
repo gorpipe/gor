@@ -22,14 +22,8 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.model.GorMeta
-
 abstract class Output extends Processor {
   var pipeFrom : Processor = _
-  var name : String = _
-  val meta : GorMeta = new GorMeta()
-  def getName: String = name
-  def getMeta: GorMeta = meta
   def reportWantsNoMore() {
     if (pipeFrom!=null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true
