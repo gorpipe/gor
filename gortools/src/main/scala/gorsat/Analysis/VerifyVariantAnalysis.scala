@@ -27,17 +27,21 @@ import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorSession
 
-case class VerifyVariantAnalysis(session: GorSession, refColumn: Int) extends Analysis {
+case class VerifyVariantAnalysis(session: GorSession, refColumn: Int, altColumn: Int, maxLen: Int) extends Analysis {
   override def isTypeInformationNeeded: Boolean = false
   override def isTypeInformationMaintained: Boolean = true
 
-  val refSeqProvider = session.getProjectContext.createRefSeq()
+  private val refSeqProvider = session.getProjectContext.createRefSeq()
 
   override def process(r: Row): Unit = {
     val refFromRow = r.colAsString(refColumn).toString
     val bases = refSeqProvider.getBases(r.chr, r.pos, r.pos + refFromRow.length() - 1)
     if (!refFromRow.equalsIgnoreCase(bases)) {
       throw new GorDataException("Ref does not match the build", refColumn, getHeader(), r.toString)
+    }
+    val altFromRow = r.colAsString(altColumn)
+    if (altFromRow.length() > maxLen) {
+      throw new GorDataException("Variant exceeds maximum length", altColumn, getHeader(), r.toString)
     }
     super.process(r)
   }

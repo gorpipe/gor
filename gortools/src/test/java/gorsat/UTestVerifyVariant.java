@@ -23,6 +23,7 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -70,6 +71,84 @@ public class UTestVerifyVariant {
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
         final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
 
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(contents, result);
+    }
+
+    @Test
+    public void goodRefAltExceedsLength() throws IOException {
+        String contents = "Chrom\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call Filter\tPN\n" +
+                "chr9\t136754857\tN\tT\t2\t0.8999999761581421\t30\t54\tPASS\tGSC_FN00110_SAMPLE\n" +
+                "chr9\t136754883\tN\tA\t1\t0.5\t30\t52\tPASS\tGSC_FN00110_SAMPLE\n" +
+                "chr9\t136754884\tN\tAC\t2\t0.9\t30\t47\tPASS\tGSC_FN00110_SAMPLE\n" +
+                "chr9\t136754884\tN\tACAAAACCCAACCCAAACCCCCAAAAACCCACCCA\t2\t0.9\t30\t57\tPASS\tGSC_FN00110_SAMPLE\n" +
+                "chr9\t136754885\tN\tAC\t1\t0.5\t30\t52\tPASS\tGSC_FN00110_SAMPLE\n" +
+                "chr9\t136754885\tN\tAC\t1\t0.5\t30\t52\tPASS\tGSC_FN00110_SAMPLE\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
+
+        thrown.expect(GorDataException.class);
         TestUtils.runGorPipe(query);
+    }
+
+    @Test
+    public void noRefColumn() throws IOException {
+        String contents = "Chrom\tPOS\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call Filter\tPN\n" +
+                "chr9\t136754857\tT\t2\t0.8999999761581421\t30\t54\tPASS\tGSC_FN00110_SAMPLE\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
+
+        thrown.expect(GorParsingException.class);
+        TestUtils.runGorPipe(query);
+    }
+
+    @Test
+    public void refColumnNotInDefaultLocation() throws IOException {
+        String contents = "Chrom\tPOS\tCall\tCallCopies\tCallRatio\tReference\tDepth\tGL_Call Filter\tPN\n" +
+                "chr9\t136754857\tT\t2\t0.8999999761581421\tN\t30\t54\tPASS\tGSC_FN00110_SAMPLE\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
+
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(contents, result);
+    }
+
+    @Test
+    public void refColumnNotInDefaultLocationWithDifferentName() throws IOException {
+        String contents = "Chrom\tPOS\tCall\tCallCopies\tCallRatio\tBingoReference\tDepth\tGL_Call Filter\tPN\n" +
+                "chr9\t136754857\tT\t2\t0.8999999761581421\tN\t30\t54\tPASS\tGSC_FN00110_SAMPLE\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | verifyvariant -ref BingoReference", file.getAbsolutePath());
+
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(contents, result);
+    }
+
+    @Test
+    public void altColumnNotInDefaultLocation() throws IOException {
+        String contents = "Chrom\tPOS\tCallCopies\tCallRatio\tReference\tAlt\tDepth\tGL_Call Filter\tPN\n" +
+                "chr9\t136754857\t2\t0.8999999761581421\tN\tT\t30\t54\tPASS\tGSC_FN00110_SAMPLE\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
+
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(contents, result);
+    }
+
+    @Test
+    public void altColumnNotInDefaultLocationWithDifferentName() throws IOException {
+        String contents = "Chrom\tPOS\tCallCopies\tCallRatio\tReference\tBingoAlt\tDepth\tGL_Call Filter\tPN\n" +
+                "chr9\t136754857\t2\t0.8999999761581421\tN\tT\t30\t54\tPASS\tGSC_FN00110_SAMPLE\n";
+
+        final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
+        final String query = String.format("gor %s | verifyvariant -alt BingoAlt", file.getAbsolutePath());
+
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals(contents, result);
     }
 }
