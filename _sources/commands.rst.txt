@@ -263,6 +263,9 @@ Commands
    * - :ref:`VERIFYORDER`
      - Ensures that the genomic order of a GOR stream is correct, raising an exception if not.
      - GOR
+   * - :ref:`VERIFYVARIANT`
+     - Ensures that the reference column corresponds to the configured build, raising an exception if not.
+     - GOR
    * - :ref:`WAIT`
      - Wait the specified number of milliseconds.
      - GOR/NOR
