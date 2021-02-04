@@ -25,56 +25,54 @@ import com.nextcode.gradle.*
 plugins {
     id "gor.java-internal-library"
     id 'maven-publish'
+    id 'signing'
 }
 
 publishing {
     publications {
-        if(project.hasProperty('publishToMavenCentral')) {
-            mavenJava(MavenPublication) {
-                from components.java
+        mavenJavaLibModule(MavenPublication) {
+            from components.java
 
-                artifactId = getCustomProjectId()
-                groupId = 'org.gorpipe'
+            artifactId = getCustomProjectId()
+            groupId = getCustomGroupId()
 
-                pom {
-                    name = 'Gorpipe'
-                    description = 'GORpipe allows analysis of large sets of genomic and phenotypic tabular data using a declarative query language in a parallel execution engine'
-                    url = 'http://gorpipe.org'
-                    licenses {
-                        license {
-                            name = 'GNU Affero General Public License'
-                            url = 'https://www.gnu.org/licenses/agpl-3.0.en.html'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = 'gisli'
-                            name = 'Gisli Magnusson'
-                            email = 'gisli@genuitysci.com'
-                        }
-                        developer {
-                            id = 'sigmar'
-                            name = 'Sigmar Stefansson'
-                            email = 'sigmar@genuitysci.com'
-                        }
-                        developer {
-                            id = 'vidar'
-                            name = 'Vidar Hrafnkelsson'
-                            email = 'vidar@genuitysci.com'
-                        }
-                    }
-                    scm {
-                        connection = 'scm:git:git://github.com/gorpipe/gor.git'
-                        developerConnection = 'scm:git:ssh://github.com/gorpipe/gor.git'
-                        url = 'http://docs.gorpipe.org/'
+            pom {
+                name = 'Gorpipe'
+                description = 'GORpipe allows analysis of large sets of genomic and phenotypic tabular data using a declarative query language in a parallel execution engine'
+                url = 'http://gorpipe.org'
+                licenses {
+                    license {
+                        name = 'GNU Affero General Public License'
+                        url = 'https://www.gnu.org/licenses/agpl-3.0.en.html'
                     }
                 }
-            }
-        } else {
-            mavenJavaLibModule(MavenPublication) {
-                from components.java
-                artifactId = getCustomProjectId()
-                groupId = getCustomGroupId()
+                developers {
+                    developer {
+                        id = 'gisli'
+                        name = 'Gisli Magnusson'
+                        email = 'gisli@genuitysci.com'
+                    }
+                    developer {
+                        id = 'hakon'
+                        name = 'Hakon Gudbjartsson'
+                        email = 'hakon@genuitysci.com'
+                    }
+                    developer {
+                        id = 'sigmar'
+                        name = 'Sigmar Stefansson'
+                        email = 'sigmar@genuitysci.com'
+                    }
+                    developer {
+                        id = 'vidar'
+                        name = 'Vidar Hrafnkelsson'
+                        email = 'vidar@genuitysci.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/gorpipe/gor.git'
+                    developerConnection = 'scm:git:ssh://github.com/gorpipe/gor.git'
+                    url = 'http://docs.gorpipe.org/'
+                }
             }
         }
     }
@@ -111,5 +109,9 @@ publishing {
             }
         }
     }
+}
+
+signing {
+    sign publishing.publications.mavenJavaLibModule
 }
 
