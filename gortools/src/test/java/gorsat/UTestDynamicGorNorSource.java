@@ -22,7 +22,9 @@
 
 package gorsat;
 
+import gorsat.process.GorJavaUtilities;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.util.Util;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -79,5 +81,16 @@ public class UTestDynamicGorNorSource {
         String query = "gor <(nor " + tempFile.getAbsolutePath() + ")";
         thrown.expect(GorDataException.class);
         TestUtils.runGorPipe(query);
+    }
+
+    @Test
+    public void testQueryOptionRemove() {
+        String query = "gor -p chr1:1-2 -f 'PO' genes.gor";
+        String simpleQuery = Util.removeSeekFilterOptionsFromQuery(query);
+        Assert.assertEquals("Remove options failed", "gor genes.gor", simpleQuery);
+
+        query = "gor -p chr1:1-2 -ff <(nor stuff.tsv) genes.gor";
+        simpleQuery = Util.removeSeekFilterOptionsFromQuery(query);
+        Assert.assertEquals("Remove options failed", "gor genes.gor", simpleQuery);
     }
 }
