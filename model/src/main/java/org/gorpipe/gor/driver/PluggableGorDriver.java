@@ -248,12 +248,16 @@ public class PluggableGorDriver implements GorDriver {
         return source;
     }
 
+    private String fixHttpUrl(String url) {
+        return url.startsWith("http") && url.contains(":/") && !url.contains("://") ? url.replace(":/","://") : url;
+    }
+
     private DataSource recursiveLinkFallBack(DataSource source, Path parent, Path linkSubPath) throws IOException {
         Path pparent = parent.getParent();
         if(pparent != null && !pparent.toString().endsWith(":")) {
             Path parentFileName = parent.getFileName();
             Path lparent = pparent.resolve(parentFileName+".link");
-            SourceReference sourceRef = getSourceRef(source, lparent.toString(), linkSubPath.toString());
+            SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), linkSubPath.toString());
 
             DataSource fallbackLinkSource = getDataSource(sourceRef);
             if (fallbackLinkSource.getDataType() != LINK) {
