@@ -178,7 +178,7 @@ public class UTestParquetFileIterator {
         iterator.getHeader();
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-            GorZipLexOutputStream gorzip = new GorZipLexOutputStream(byteStream, false, null);
+            GorZipLexOutputStream gorzip = new GorZipLexOutputStream(byteStream, false, false, null);
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -321,10 +321,10 @@ public class UTestParquetFileIterator {
             tmpdir = Files.createTempDirectory("mu");
             Path tmprparquet = tmpdir.resolve("forkr.parquet");
             Path tmpparquet = tmpdir.resolve("fork.parquet");
-            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet.toString());
-            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet.toString());
-            String resultr = TestUtils.runGorPipe("gor "+tmprparquet.toString());
-            String result = TestUtils.runGorPipe("gor "+tmpparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet);
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet);
+            String resultr = TestUtils.runGorPipe("gor "+ tmprparquet);
+            String result = TestUtils.runGorPipe("gor "+ tmpparquet);
             Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
         } finally {
             if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
@@ -344,17 +344,17 @@ public class UTestParquetFileIterator {
             tmpdir = Files.createTempDirectory("mu");
             Path tmprparquet = tmpdir.resolve("forkr.parquet");
             Path tmpparquet = tmpdir.resolve("fork.parquet");
-            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet.toString());
-            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet.toString());
-            String resultr = TestUtils.runGorPipe("nor "+tmprparquet.toString());
-            String result = TestUtils.runGorPipe("nor "+tmpparquet.toString());
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -r -f differentrsIDs " + tmprparquet);
+            TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write -d -f differentrsIDs " + tmpparquet);
+            String resultr = TestUtils.runGorPipe("nor "+ tmprparquet);
+            String result = TestUtils.runGorPipe("nor "+ tmpparquet);
             Assert.assertEquals("wrong result from partitioned parquet folder",resultr,result);
         } finally {
             if(tmpdir!=null) Files.walk(tmpdir).sorted(Comparator.reverseOrder()).forEach(p -> {
                 try {
                     Files.delete(p);
                 } catch(Exception e) {
-
+                    // Ignore
                 }
             });
         }
