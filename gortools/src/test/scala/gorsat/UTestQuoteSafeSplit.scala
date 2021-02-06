@@ -37,7 +37,7 @@ class UTestQuoteSafeSplit extends FunSuite{
 
   test("Basic split with no nestation") {
     val data = "gor foo bar -h -a"
-    val result =  quoteSafeSplit(data, ' ')
+    val result = quoteSafeSplit(data, ' ')
 
     assert(result.length == 5)
     assert("gor" == result(0))
@@ -84,6 +84,49 @@ class UTestQuoteSafeSplit extends FunSuite{
     assert("gor" == result(0))
     assert("foo" == result(1))
     assert("\"bar -h -a\"" == result(2))
+    assert("<(nor foo1 bar1)" == result(3))
+    assert("gar" == result(4))
+    assert("far" == result(5))
+  }
+
+  test("Basic split with quote at end") {
+    val data = "gor foo \""
+    val result =  quoteSafeSplit(data, ' ')
+
+    assert(result.length == 3)
+    assert("gor" == result(0))
+    assert("foo" == result(1))
+    assert("\"" == result(2))
+  }
+
+  test("Basic split with escaped quote at end") {
+    val data = "gor foo \"\\\""
+    val result =  quoteSafeSplit(data, ' ')
+
+    assert(result.length == 3)
+    assert("gor" == result(0))
+    assert("foo" == result(1))
+    assert("\"\\\"" == result(2))
+  }
+
+  test("Basic split with missing end quote") {
+    val data = "gor foo \"bar -h -a <(nor foo1 bar1) gar far"
+    val result =  quoteSafeSplit(data, ' ')
+
+    assert(result.length == 3)
+    assert("gor" == result(0))
+    assert("foo" == result(1))
+    assert("\"bar -h -a <(nor foo1 bar1) gar far" == result(2))
+  }
+
+  test("Basic split with nested query with escaped quotes inside quotes") {
+    val data = "gor foo \"bar -h \\\"-a\" <(nor foo1 bar1) gar far"
+    val result =  quoteSafeSplit(data, ' ')
+
+    assert(result.length == 6)
+    assert("gor" == result(0))
+    assert("foo" == result(1))
+    assert("\"bar -h \\\"-a\"" == result(2))
     assert("<(nor foo1 bar1)" == result(3))
     assert("gar" == result(4))
     assert("far" == result(5))
@@ -251,13 +294,6 @@ class UTestQuoteSafeSplit extends FunSuite{
     val data = "gor '<(gor bla)'"
     val result =  quoteSafeIndexOf(data, "<(")
     assert(result == -1)
-  }
-
-  test("Testing aligned split and quotes") {
-    val data = "gor (if(if(foo)) )"
-    val result =  quoteSafeSplit(data, ')')
-    assert(result.length == 1)
-    assert(result(0) == "gor (if(if(foo)) )")
   }
 
   test("Testing aligned split and quotes on large query") {
