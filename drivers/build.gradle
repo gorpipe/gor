@@ -31,11 +31,11 @@ project(':drivers') {
 
         annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
         implementation 'com.google.auto.service:auto-service:1.0-rc6'
-        implementation "org.aeonbits.owner:owner:1.0.+"
-        implementation "com.github.samtools:htsjdk:2.22.+"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.11.+"
+        implementation "org.aeonbits.owner:owner:1.0.12"
+        implementation "com.github.samtools:htsjdk:2.23.0"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
         implementation "com.google.cloud:google-cloud-storage:1.112.0"
-        implementation "com.amazonaws:aws-java-sdk-s3:1.11.+"
-        implementation "com.microsoft.azure:azure-storage:8.3.+"
+        implementation "com.amazonaws:aws-java-sdk-s3:1.11.946"
+        implementation "com.microsoft.azure:azure-storage:8.6.6"
     }
 }

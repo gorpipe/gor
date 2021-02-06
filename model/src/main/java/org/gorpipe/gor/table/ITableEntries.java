@@ -73,7 +73,7 @@ public interface ITableEntries<T extends BucketableTableEntry> {
 
     /**
      * Check if the data has been loaded.
-     * @return <True> if the data has been loaded, <False> otherwise.
+     * @return {@code True} if the data has been loaded, {@code False} otherwise.
      */
     boolean isLoaded();
 
@@ -91,7 +91,7 @@ public interface ITableEntries<T extends BucketableTableEntry> {
     long size();
 
     /**
-     * Find the entry matching the <entry>.
+     * Find the entry matching the {@code entry}.
      * @param entry     the template to search by.
      * @return  the entry matching the template, or null if the entry is not found.
      */

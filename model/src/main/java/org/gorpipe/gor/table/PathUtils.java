@@ -42,7 +42,7 @@ public class PathUtils {
      * Get normalized absolute path
      *
      * @param path input path.  Relative paths are considered relative to the dicionary root.
-     * @return normalized absolute path of <path>.
+     * @return normalized absolute path of {@code path}.
      */
 
     public static URI resolve(URI root, URI path) {
@@ -87,7 +87,7 @@ public class PathUtils {
      * Get relativize to table or absolute path.
      *
      * @param path the path to relativize.
-     * @return relative to the root path if <path> is relative or starts with the table root path, otherwise absolute path is returned.
+     * @return relative to the root path if {@code path} is relative or starts with the table root path, otherwise absolute path is returned.
      * The path is also normalized.
      */
     public static Path relativize(Path root, Path path) {

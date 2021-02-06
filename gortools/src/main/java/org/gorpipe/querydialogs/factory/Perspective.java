@@ -96,14 +96,6 @@ public class Perspective {
     private Map<String, ? extends Object> argumentMap;
 
     /**
-     * @param namePrefix
-     * @param name
-     * @param groupName
-     * @param isDefault
-     * @param filterTemplate
-     * @param viewTemplate
-     * @param viewTemplateColumns
-     * @param initialColumns
      */
     public Perspective(String namePrefix, String name, String groupName, Boolean isDefault, String filterTemplate, String viewTemplate,
                        List<Object> viewTemplateColumns, List<Object> initialColumns) {

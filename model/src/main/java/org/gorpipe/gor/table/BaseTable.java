@@ -204,17 +204,17 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     }
 
     /**
-     * Get table property <key>
+     * Get table property {@code key}
      *
      * @param key property to get.
-     * @return table properyt <key>
+     * @return table properyt {@code key}
      */
     public String getProperty(String key) {
         return this.header.getProperty(key);
     }
 
     /**
-     * Set table property <key>
+     * Set table property {@code key}
      *
      * @param key   property name.
      * @param value property value
@@ -904,7 +904,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
          * 2. If the filter contains buckets we also include deleted lines.
          *
          * @param l    line to match
-         * @return <true> if the line matches the filter otherwise <false>.
+         * @return {@code true} if the line matches the filter otherwise {@code false}.
          */
         protected boolean match(T l) {
            return matchIncludeLine(l)

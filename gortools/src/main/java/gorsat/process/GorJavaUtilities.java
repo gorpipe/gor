@@ -298,7 +298,7 @@ public class GorJavaUtilities {
      * Helper method for wrapping Object[] iterator to Stream.
      *
      * @param iterator
-     * @return Stream<String> where iterator elements are represented as string joined with tab delimiter
+     * @return Stream where iterator elements are represented as string joined with tab delimiter
      */
     public static Stream<String> wrapObjectArrayIterator(Iterator<Object[]> iterator) {
         Iterator<String> theIterator = new Iterator<String>() {

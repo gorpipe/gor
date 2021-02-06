@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * This class encapsulates a general execution in parallel of the pgor command when a
  * standard parallel query handler is not used.
- * Written cooperatively by Joi & Gummi
  */
 public class ParallelExecutor {
 

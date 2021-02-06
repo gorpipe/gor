@@ -39,6 +39,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -109,7 +111,7 @@ public class GorZipLexOutputStream extends OutputStream {
      * @throws IOException
      */
     public GorZipLexOutputStream(String fileName, boolean useColumnEncodingZip) throws IOException {
-        this(fileName, false, useColumnEncodingZip, false, GorIndexType.NONE);
+        this(fileName, false, useColumnEncodingZip, false, true, GorIndexType.NONE);
     }
 
     /**
@@ -118,8 +120,8 @@ public class GorZipLexOutputStream extends OutputStream {
      * @param useColumnEncodingZip
      * @throws IOException
      */
-    public GorZipLexOutputStream(String fileName, boolean append, boolean useColumnEncodingZip, boolean md5, GorIndexType idx) throws IOException {
-        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5 ? new File(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx, Deflater.BEST_SPEED);
+    public GorZipLexOutputStream(String fileName, boolean append, boolean useColumnEncodingZip, boolean md5, boolean md5File, GorIndexType idx) throws IOException {
+        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5, md5File ? Paths.get(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx, Deflater.BEST_SPEED);
     }
 
     /**
@@ -128,32 +130,32 @@ public class GorZipLexOutputStream extends OutputStream {
      * @param useColumnEncodingZip
      * @throws IOException
      */
-    public GorZipLexOutputStream(String fileName, boolean append, boolean useColumnEncodingZip, boolean md5, GorIndexType idx, int compressionLevel) throws IOException {
-        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5 ? new File(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx, compressionLevel);
+    public GorZipLexOutputStream(String fileName, boolean append, boolean useColumnEncodingZip, boolean md5, boolean md5File, GorIndexType idx, int compressionLevel) throws IOException {
+        this(new FileOutputStream(fileName, append), useColumnEncodingZip, md5, md5File ? Paths.get(fileName + ".md5") : null, idx != GorIndexType.NONE ? new File(fileName + DataType.GORI.suffix) : null, idx, compressionLevel);
     }
 
     /**
      * @param output
      * @param useColumnEncodingZip
      */
-    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File, boolean base64) throws IOException {
-        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, null, GorIndexType.NONE, Deflater.BEST_SPEED, base64);
+    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, boolean md5, Path md5File, boolean base64) throws IOException {
+        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5, md5File, null, GorIndexType.NONE, Deflater.BEST_SPEED, base64);
     }
 
     /**
      * @param output
      * @param useColumnEncodingZip
      */
-    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File) throws IOException {
-        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, null, GorIndexType.NONE, Deflater.BEST_SPEED, false);
+    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, boolean md5, Path md5File) throws IOException {
+        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5, md5File, null, GorIndexType.NONE, Deflater.BEST_SPEED, false);
     }
 
     /**
      * @param output
      * @param useColumnEncodingZip
      */
-    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, File md5File, File idxFile, GorIndexType idxType, int compressionLevel) throws IOException {
-        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5File, idxFile, idxType, compressionLevel, false);
+    public GorZipLexOutputStream(OutputStream output, boolean useColumnEncodingZip, boolean md5, Path md5File, File idxFile, GorIndexType idxType, int compressionLevel) throws IOException {
+        this(output, DEF_CHR_COL, DEF_POS_COL, useColumnEncodingZip, md5, md5File, idxFile, idxType, compressionLevel, false);
     }
 
     /**
@@ -164,15 +166,20 @@ public class GorZipLexOutputStream extends OutputStream {
      * @param posCol
      * @param useColumnEncodingZip
      */
-    private GorZipLexOutputStream(OutputStream output, int chrCol, int posCol, boolean useColumnEncodingZip, File md5File, File idxFile, GorIndexType idxType, int compressionLevel, boolean base64) throws IOException {
+    private GorZipLexOutputStream(OutputStream output, int chrCol, int posCol, boolean useColumnEncodingZip, boolean md5, Path md5File, File idxFile, GorIndexType idxType, int compressionLevel, boolean base64) throws IOException {
         this.chrColRow = new LexRow(chrCol, posCol);
         this.idx = idxFile != null ? new GorIndexFile(idxFile, idxType) : null;
-        this.target = md5File != null ? new Md5CalculatingOutputStream(output, md5File) : output;
+        this.target = md5 ? new Md5CalculatingOutputStream(output, md5File) : output;
         this.byteOutput = new ByteArrayWrapper(DEFAULT_CHUNK);
         this.useColumnEncodingZip = useColumnEncodingZip;
         this.byteToWrite = (byte) ((useColumnEncodingZip ? 1 : 0) + ((useZStd ? 1 : 0) << 1));
         this.compressionLevel = compressionLevel;
         this.base64 = base64;
+    }
+
+    public String getMd5() {
+        if(target instanceof  Md5CalculatingOutputStream) return ((Md5CalculatingOutputStream)target).md5();
+        return null;
     }
 
     /**

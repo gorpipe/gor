@@ -36,7 +36,6 @@ import java.util.List;
  * @author arnie
  * @version $Id$
  */
-@SuppressWarnings({"javadoc", "serial"})
 public class DateArgument extends Argument {
     /**
      * The property name for the argument's date value.

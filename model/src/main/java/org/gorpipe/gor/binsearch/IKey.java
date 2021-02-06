@@ -31,7 +31,7 @@ public interface IKey extends Comparable<IKey> {
      * creates a comparable key from a buffer
      *
      * @param buffer      Input buffer
-     * @param bufLength   The number of valid bytes in the buffer, i.e. the buffer length must be <= buffer.length
+     * @param bufLength   The number of valid bytes in the buffer, i.e. the buffer length must be &le; buffer.length
      * @param beginOfLine start of line in buffer
      * @return a new key parsed from the buffer
      */

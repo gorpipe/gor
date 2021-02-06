@@ -79,10 +79,10 @@ public class SourceType {
     }
 
     /**
-     * Check if <file> matches the source type.
+     * Check if {@code file} matches the source type.
      *
      * @param file file to check.
-     * @return true if <file> matches the source type, otherwise false.
+     * @return true if {@code file} matches the source type, otherwise false.
      */
     public boolean match(String file) {
         // Should match our cases, which are normal protocols and //db:.

@@ -318,10 +318,9 @@ public class GorShell {
     }
 
     private Completer getCompleter(CommandLine commandLine) {
-        Path workDir = Paths.get("");
-        PicocliCommands picocliCommands = new PicocliCommands(workDir, commandLine);
+        PicocliCommands picocliCommands = new PicocliCommands(commandLine);
 
-        Completers.SystemCompleter commandsCompleter = picocliCommands.compileCompleters();
+        var commandsCompleter = picocliCommands.compileCompleters();
         commandsCompleter.compile();
 
         StringsCompleter inputSourcesCompleter = new StringsCompleter(GorInputSources.getInputSources());
