@@ -28,7 +28,7 @@ import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{GorOptions, Row}
+import org.gorpipe.gor.model.{GorMeta, GorOptions, Row}
 import org.gorpipe.model.gor.RowObj
 
 import java.util.UUID
@@ -187,11 +187,11 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  def moveToMd5FileNameAndAppendToDictionary(name: String, outputMeta: OutputMeta): Unit = {
-    if(outputMeta.md5!=null) {
+  def moveToMd5FileNameAndAppendToDictionary(name: String, outputMeta: GorMeta): Unit = {
+    val md5 = outputMeta.getMd5
+    if(md5!=null) {
       val p = Paths.get(name)
       val parent = p.getParent
-      val md5 = outputMeta.md5
       val respath = md5 + ".gorz"
       val d = parent.resolve(respath)
       if (!Files.exists(d)) {
