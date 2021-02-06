@@ -161,7 +161,7 @@ public class StringIntKey implements IKey {
      * @param chrCol
      * @param bpCol
      * @param buffer      data buffer containing the key
-     * @param bufLength   The number of valid bytes in the buffer, i.e. the buffer length must be <= buffer.length
+     * @param bufLength   The number of valid bytes in the buffer, i.e. the buffer length must be &le; buffer.length
      * @param beginOfLine start of the row in the buffer
      * @param comparator  The comparator to use when ordering
      */

@@ -362,8 +362,7 @@ public class DbSource {
      *
      * @param content
      * @param constants
-     * @return Stream<String> tsv formatted lines with header first and data lines following.
-     * @throws IOException
+     * @return Stream tsv formatted lines with header first and data lines following.
      */
     public static Stream<String> getDBLinkStream(String content, Object[] constants) {
         return getDBLinkStream(content, constants, DEFAULT_DBSOURCE);
@@ -375,7 +374,7 @@ public class DbSource {
      * @param content
      * @param constants
      * @param source
-     * @return Stream<String> tsv formatted lines with header first and data lines following.
+     * @return Stream tsv formatted lines with header first and data lines following.
      */
     @SuppressWarnings("squid:S2095") //resource should not be closed since it being closed by the return object
     public static Stream<String> getDBLinkStream(String content, Object[] constants, String source) {

@@ -359,9 +359,8 @@ public class SourceRef {
      *
      * @param lookup    ChromosomeLookup map
      * @param chrSubset Name of chromosome, used if local caching can choose to cache only a subset of file
-     * @param columns   The columns to get from the source
      * @return The GenomicIterator from this source
-     * @throws Exception
+     * @throws IOException
      */
     public GenomicIterator iterate(GenomicIterator.ChromoLookup lookup, String chrSubset) throws IOException {
         // All files, except specific endings are assumed to be tab delimited text files in genomic order

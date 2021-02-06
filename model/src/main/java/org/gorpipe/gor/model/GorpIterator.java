@@ -60,7 +60,7 @@ import java.util.stream.Stream;
  * 3) So that the progress rows do not pass into the analysis steps, this iterator should used from a MergeIterator
  * (which will filter the progress rows) or one can write
  *
- * final GenomicIterator git = new GorpIterator(ss).filter(r -> !r.isProgress);
+ * {@code final GenomicIterator git = new GorpIterator(ss).filter(r -> !r.isProgress);}
  *
  * @author Hjalti Thor Isleifsson
  */

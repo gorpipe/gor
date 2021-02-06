@@ -54,7 +54,7 @@ class GORzip(fileName: String, header: String = null, skipHeader: Boolean = fals
 
   def finish {
     out.close
-    meta.md5 = out.getMd5
+    meta.setMd5(out.getMd5)
     val metapath = fileName + ".meta"
     val m = Paths.get(metapath)
     Files.writeString(m, meta.toString)

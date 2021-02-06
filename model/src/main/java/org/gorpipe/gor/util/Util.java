@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.util;
 
+import gorsat.Commands.CommandParseUtilities;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.util.collection.extract.Extract;
 
@@ -31,6 +32,9 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utility methods to use in gor
@@ -211,5 +215,27 @@ public class Util {
             return se;
         }
         return th;
+    }
+
+    public static String removeSeekFilterOptionsFromQuery(String query) {
+        String[] querySplit = CommandParseUtilities.quoteSafeSplit(query,'|');
+        String querySource = querySplit[0];
+        String rest = String.join("|", Arrays.copyOfRange(querySplit,1,querySplit.length));
+
+        List<String> argList = new ArrayList<>();
+        String[] querySourceSplit = CommandParseUtilities.quoteSafeSplit(querySource, ' ');
+        int i = 0;
+        while(i < querySourceSplit.length) {
+            String arg = querySourceSplit[i];
+            if(arg.equals("-p") || arg.equals("-f") || arg.equals("-ff")) {
+                i++;
+            } else {
+                argList.add(arg);
+            }
+            i++;
+        }
+
+        String simpleQuery = String.join(" ", argList);
+        return querySplit.length > 1 ? simpleQuery + "|" + rest : simpleQuery;
     }
 }

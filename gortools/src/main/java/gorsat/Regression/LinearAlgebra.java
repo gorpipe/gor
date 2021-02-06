@@ -166,15 +166,15 @@ public class LinearAlgebra {
      */
 
     /**
-     * Computes the dot product of the sub-vectors of x and y consisting of the elements whose index is < len.
+     * Computes the dot product of the sub-vectors of x and y consisting of the elements whose index is &lt; len.
      */
     public static double dotProd(double[] x, double[] y, int len) {
         return dotProd(x, y, 0, len);
     }
 
     /**
-     * Computes the dot product of the sub-vectors of x and y consisting of the elements whose index is < upTo and
-     * >= offset.
+     * Computes the dot product of the sub-vectors of x and y consisting of the elements whose index is &lt; upTo and
+     * &ge; offset.
      */
     public static double dotProd(double[] x, double[] y, int offset, int upTo) {
         double s0 = 0, s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0, s6 = 0, s7 = 0;
@@ -200,15 +200,15 @@ public class LinearAlgebra {
     }
 
     /**
-     * Computes the triple dot product of the sub-vectors of x, y, z consisting of the elements whose index is < len.
+     * Computes the triple dot product of the sub-vectors of x, y, z consisting of the elements whose index is &lt; len.
      */
     public static double tripleDotProd(double[] x, double[] y, double[] z, int len) {
         return tripleDotProd(x, y, z, 0, len);
     }
 
     /**
-     * Computes the tripte dot product of the sub-vectors of x, y, z consisting of the elements whose index is < upTo
-     * and >= offset.
+     * Computes the tripte dot product of the sub-vectors of x, y, z consisting of the elements whose index is &lt; upTo
+     * and &ge; offset.
      */
     public static double tripleDotProd(double[] x, double[] y, double[] z, int offset, int upTo) {
         double s0 = 0, s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0, s6 = 0, s7 = 0;
@@ -234,14 +234,14 @@ public class LinearAlgebra {
     }
 
     /**
-     * Computes the sum of the elements of {@code x} with index < {@code len}.
+     * Computes the sum of the elements of {@code x} with index &lt; {@code len}.
      */
     public static double sum(double[] x, int len) {
         return sum(x, 0, len);
     }
 
     /**
-     * Computes the sum the elements of x whose index is < upTo and >= offset.
+     * Computes the sum the elements of x whose index is &lt; upTo and &ge; offset.
      */
     public static double sum(double[] x, int offset, int upTo) {
         double s0 = 0, s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0, s6 = 0, s7 = 0;

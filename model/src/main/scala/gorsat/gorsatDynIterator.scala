@@ -30,6 +30,7 @@ import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.util.Util
 import org.gorpipe.model.gor.iterators.{LineIterator, RowSource, TimedRowSource}
 import org.gorpipe.model.gor.{Pipes, RowObj}
 import org.gorpipe.util.Pair
@@ -234,7 +235,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   def getContextHeader(norContext : Boolean) : String = {
     var header = super.getHeader
     if (header != "") return header
-    val itCmd = iteratorCommand.replace("| top 0 ", "")
+    val itCmd = Util.removeSeekFilterOptionsFromQuery(iteratorCommand.replace("| top 0 ", ""))
 
     drsGorPipeSession.getCache.getHeaderFileMap.putIfAbsent(itCmd, new Pair[String, Array[String]]())
 

@@ -41,7 +41,6 @@ import java.util.*;
  * <p>
  * Sample usage:
  * </p>
- * <p>
  * <pre>
  * AbstractDialogFactory&lt;Dialog&gt; f = new SomeDialogFactoryImplementation();
  * f.registerArgumentBuilder(ArgumentType.STRING, new StringArgumentBuilder());
@@ -94,8 +93,6 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     /**
      * @param resource - the Yaml to read
      * @return a {@link List} of {@link Dialog}s
-     * @throws IOException
-     * @throws TemplateException
      */
     public List<T> buildDialogs(String resource, String cacheDir) throws IOException, TemplateException {
         try (Reader br = fileResolver.getReader(resource)) {
@@ -106,8 +103,6 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     /**
      * @param resource - the Yaml to read
      * @return a {@link List} of {@link Dialog}s
-     * @throws IOException
-     * @throws TemplateException
      */
     public List<T> buildDialogs(String resource) throws IOException, TemplateException {
         try (Reader br = fileResolver.getReader(resource)) {
@@ -118,8 +113,6 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     /**
      * @param resource - the Yaml to read
      * @return a {@link List} of {@link Dialog}s
-     * @throws IOException
-     * @throws TemplateException
      */
     public List<T> buildDialogs(Path resource) throws IOException, TemplateException {
         try (Reader br = fileResolver.getReader(resource)) {
@@ -132,7 +125,6 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
      *
      * @param reader - reader of the yaml content
      * @return a {@link List} of {@link Dialog}s
-     * @throws TemplateException
      **/
     @SuppressWarnings("unchecked")
     public List<T> buildDialogs(Reader reader, String cacheDir) throws TemplateException, IOException {

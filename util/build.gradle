@@ -32,6 +32,6 @@ project(':util') {
 
         testRuntimeOnly project(':test')
 
-        testImplementation 'org.slf4j:slf4j-api:1.7.+'
+        testImplementation 'org.slf4j:slf4j-api:1.7.30'
     }
 }

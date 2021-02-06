@@ -82,11 +82,11 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
   def finish {
     out.flush()
     out.close()
-    meta.md5 = interceptingFileOutputStream match {
+    meta.setMd5(interceptingFileOutputStream match {
       case stream: Md5CalculatingOutputStream =>
         stream.md5()
       case _ => null
-    }
+    })
 
     if(idx == GorIndexType.TABIX) {
       val gp = Paths.get(name)

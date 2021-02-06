@@ -29,14 +29,66 @@ plugins {
 
 publishing {
     publications {
-        mavenJavaLibModule(MavenPublication) {
-            from components.java
-            artifactId = getCustomProjectId()
-            groupId = getCustomGroupId()
+        if(project.hasProperty('publishToMavenCentral')) {
+            mavenJava(MavenPublication) {
+                from components.java
+
+                artifactId = getCustomProjectId()
+                groupId = 'org.gorpipe'
+
+                pom {
+                    name = 'Gorpipe'
+                    description = 'GORpipe allows analysis of large sets of genomic and phenotypic tabular data using a declarative query language in a parallel execution engine'
+                    url = 'http://gorpipe.org'
+                    licenses {
+                        license {
+                            name = 'GNU Affero General Public License'
+                            url = 'https://www.gnu.org/licenses/agpl-3.0.en.html'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'gisli'
+                            name = 'Gisli Magnusson'
+                            email = 'gisli@genuitysci.com'
+                        }
+                        developer {
+                            id = 'sigmar'
+                            name = 'Sigmar Stefansson'
+                            email = 'sigmar@genuitysci.com'
+                        }
+                        developer {
+                            id = 'vidar'
+                            name = 'Vidar Hrafnkelsson'
+                            email = 'vidar@genuitysci.com'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/gorpipe/gor.git'
+                        developerConnection = 'scm:git:ssh://github.com/gorpipe/gor.git'
+                        url = 'http://docs.gorpipe.org/'
+                    }
+                }
+            }
+        } else {
+            mavenJavaLibModule(MavenPublication) {
+                from components.java
+                artifactId = getCustomProjectId()
+                groupId = getCustomGroupId()
+            }
         }
     }
     repositories {
-        if (project.hasProperty('publishToGithub')) {
+        if (project.hasProperty('publishToMavenCentral')) {
+            maven {
+                name = "MavenCentral"
+                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                credentials {
+                    username = project.findProperty("nexus_user")
+                    password = project.findProperty("nexus_password")
+                }
+            }
+        } else if (project.hasProperty('publishToGithub')) {
             maven {
                 name = "GitHubPackages"
                 url = "https://maven.pkg.github.com/gorpipe/gor"

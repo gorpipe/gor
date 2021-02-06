@@ -32,13 +32,11 @@ import java.util.List;
 
 /**
  * Represents an argument that expects a numeric value.
- * <p>
  * <p>Provides support for specifying a minimum and/or a maximum allowed value</p>
  *
  * @author arnie
  * @version $Id$
  */
-@SuppressWarnings({"javadoc", "serial"})
 public class NumberArgument extends Argument {
     /**
      * The property name for the argument's numeric value.

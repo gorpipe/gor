@@ -60,7 +60,7 @@ import java.util.stream.IntStream;
  * 6) In order to make sure that the progress rows do not enter the analysis steps in GORpipe, one should either use
  *    this class from MergeIterator or apply a filter to it in the following way:
  *    
- *    final GenomicIterator git = new RangeMergeIterator(sources).filter(r -> !r.isProgress);
+ *    {@code final GenomicIterator git = new RangeMergeIterator(sources).filter(r -> !r.isProgress);}
  *
  * @author Hjalti Thor Isleifsson
  */

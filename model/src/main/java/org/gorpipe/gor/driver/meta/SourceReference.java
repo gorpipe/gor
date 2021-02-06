@@ -48,6 +48,7 @@ public class SourceReference {
     @JsonIgnore
     GenomicIterator.ChromoLookup lookup;
     public final String chrSubset;
+    private final String linkSubPath;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?
@@ -64,6 +65,19 @@ public class SourceReference {
      * @param chrSubset
      */
     public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) {
+        this(url, securityContext, commonRoot, lookup, chrSubset, null);
+    }
+
+    /**
+     *
+     * @param url                       url for the source.
+     * @param securityContext
+     * @param commonRoot
+     * @param lookup
+     * @param chrSubset
+     * @param linkSubPath
+     */
+    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, String linkSubPath) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -74,13 +88,14 @@ public class SourceReference {
         this.commonRoot = commonRoot;
         this.lookup = lookup != null ? lookup : new DefaultChromoLookup();
         this.chrSubset = chrSubset;
+        this.linkSubPath = linkSubPath;
     }
 
     /**
      * @param url url for the source.
      */
     public SourceReference(String url) {
-        this(url, null, null, null, null);
+        this(url, null, null, null, null, null);
     }
 
     /**
@@ -88,18 +103,30 @@ public class SourceReference {
      * @param parentSourceReference parent source reference to copy unupplied context from.
      */
     public SourceReference(String url, SourceReference parentSourceReference) {
+        this(url, parentSourceReference, null);
+    }
+
+    /**
+     * @param url                   url for the source.
+     * @param parentSourceReference parent source reference to copy unupplied context from.
+     */
+    public SourceReference(String url, SourceReference parentSourceReference, String linkSubPath) {
         this(url, parentSourceReference.getSecurityContext(), parentSourceReference.getCommonRoot(),
-                parentSourceReference.getLookup(), parentSourceReference.getChrSubset());
+                parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), linkSubPath);
     }
 
     @JsonCreator
     public SourceReference(@JsonProperty("url") String url, @JsonProperty("securityContext") String securityContext,
                            @JsonProperty("commonRoot") String commonRoot, @JsonProperty("chrSubset") String chrSubset) {
-        this(url, securityContext, commonRoot, null, chrSubset);
+        this(url, securityContext, commonRoot, null, chrSubset, null);
     }
 
     public String getUrl() {
         return url;
+    }
+
+    public String getLinkSubPath() {
+        return linkSubPath;
     }
 
     public String getSecurityContext() {
@@ -184,6 +211,7 @@ public class SourceReference {
         private GenomicIterator.ChromoLookup lookup;
         private String chrSubset;
         private int[] columns;
+        private String linkSubPath;
 
         public Builder(String url) {
             this.url = url;
@@ -196,10 +224,11 @@ public class SourceReference {
             this.commonRoot = parentSourceReference.commonRoot;
             this.lookup = parentSourceReference.lookup;
             this.chrSubset = parentSourceReference.chrSubset;
+            this.linkSubPath = parentSourceReference.linkSubPath;
         }
 
         public SourceReference build() {
-            return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset);
+            return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, linkSubPath);
         }
 
         public Builder securityContext(String securityContext) {

@@ -35,10 +35,10 @@ public class StatisticalAdjustment {
      * The genomic control corrected chi-2 statistic is computed by dividing the initial chi-2 statistic by lambda
      * (the genomic inflation estimate).
      *
-     * If we have a z statistic > 0, then the corresponding the chi statistic is z^2. The correctied chi-statistic is
+     * If we have a z statistic &gt; 0, then the corresponding the chi statistic is z^2. The correctied chi-statistic is
      * z^2 / lambda so the corrected p-value is
      *
-     *  P(CHI_2(1) > z^2/lambda) = P(N(0,1) > z / sqrt(lambda) or N(0,1) < -z / sqrt(lambda)) = 2 * P(N(0,1) < -z / sqrt(lambda))
+     *  {@literal P(CHI_2(1) > z^2/lambda) = P(N(0,1) > z / sqrt(lambda) or N(0,1) < -z / sqrt(lambda)) = 2 * P(N(0,1) < -z / sqrt(lambda))}
      *
      * Which explains the formulas in the next two methods.
      */
@@ -57,7 +57,7 @@ public class StatisticalAdjustment {
      *
      * Let C be a CHI_2(1) random variable and N a N(0,1) random variable. Then C ~ N^2 so
      *
-     *    P(C > x^2) = P(N > |x| or N < -|x|) = 2 * P(N < -|x|).
+     *    {@literal P(C > x^2) = P(N > |x| or N < -|x|) = 2 * P(N < -|x|).}
      *
      * Thus, we can compute the chi-stats from the p values by normalInverse(p / 2)^2.
      */

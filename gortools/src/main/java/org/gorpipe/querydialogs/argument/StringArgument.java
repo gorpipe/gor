@@ -37,7 +37,7 @@ import java.util.List;
  * @author arnie
  * @version $Id$
  */
-@SuppressWarnings({"javadoc", "serial"})
+@SuppressWarnings({"javadoc"})
 public class StringArgument extends Argument {
     private final boolean singleSelection;
     private ValueFormatter formatter;
@@ -48,19 +48,6 @@ public class StringArgument extends Argument {
 
     /**
      * Constructor.
-     *
-     * @param argDescr
-     * @param quoted
-     * @param optional
-     * @param defaultValue
-     * @param allowedValues
-     * @param valuesPath
-     * @param formatter
-     * @param operators
-     * @param advanced
-     * @param displayWidth
-     * @param argType
-     * @param singleSelection
      */
     public StringArgument(ArgumentDescription argDescr, boolean quoted, Boolean optional, Object defaultValue,
                           List<? extends Object> allowedValues, URI valuesPath, ValueFormatter formatter, List<String> operators, Boolean advanced,
@@ -213,7 +200,7 @@ public class StringArgument extends Argument {
     /**
      * Check if only single selection is allowed for argument.
      *
-     * @return <code>true</code> if only single selection is allowed for argument, otherwise <code>false</code>
+     * @return {@code true} if only single selection is allowed for argument, otherwise {@code false}
      */
     public boolean isSingleSelection() {
         return singleSelection;

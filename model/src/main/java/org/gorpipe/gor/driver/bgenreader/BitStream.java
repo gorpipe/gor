@@ -29,7 +29,7 @@ package org.gorpipe.gor.driver.bgenreader;
  * with 2^0,..., and {@code bits} with 2^{{@code bits} - 1} and finally summing up the result. Then we take the next {@code bits} bits and so
  * on. In this way we obtain a stream of integers and BitStream is an interface for accessing those integers.
  *
- * Note: {@code bits} must be < 64.
+ * Note: {@code bits} must be &lt; 64.
  *
  * @author Hjalti Thor Isleifsson
  */

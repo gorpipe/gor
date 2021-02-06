@@ -27,7 +27,7 @@ public class PowerLookupTable {
     }
 
     /**
-     * Computes x^n, n >= 0.
+     * Computes x^n, n &ge; 0.
      */
     public static double pow(double x, int e) {
         if (e == 0) return 1D;

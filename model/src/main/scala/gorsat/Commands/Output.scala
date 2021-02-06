@@ -22,63 +22,14 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.model.Row
-
-import java.util
-
-class OutputMeta {
-  var minChr: String = null
-  var minPos: Int = -1
-  var maxChr: String = null
-  var maxPos: Int = -1
-  var md5: String = null
-  var cardColName: String = null
-  var cardColIndex = -1
-  val cardSet = new util.TreeSet[String]()
-
-  def initCardCol(cardCol: String, header: String): Unit = {
-    val hsplit = header.toLowerCase.split("\t")
-    cardColName = cardCol
-    cardColIndex = hsplit.indexOf(cardCol.toLowerCase)
-  }
-
-  def updateRange(ir: Row): Unit = {
-    if(minChr==null) {
-      minChr = ir.chr
-      minPos = ir.pos
-    }
-    maxChr = ir.chr
-    maxPos = ir.pos
-
-    if(cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString)
-  }
-
-  def getRange: String = {
-    if(minChr!=null) minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos else ""
-  }
-
-  override def toString: String = {
-    var ret = ""
-    if(minChr!=null) ret += "##RANGE: " + getRange + "\n"
-    if(md5!=null) ret += "##MD5: " + md5 + "\n"
-    if(cardColIndex != -1) {
-      val cardStr = cardSet.toString
-      ret += "##CARDCOL["+cardColName+"]: " + cardStr.substring(1,cardStr.length-1).replace(" ","")
-    }
-    ret
-  }
-
-  def generateDictEntry(respath: String): String = {
-    respath + "\t1\t" + toString
-  }
-}
+import org.gorpipe.gor.model.GorMeta
 
 abstract class Output extends Processor {
   var pipeFrom : Processor = _
   var name : String = _
-  val meta : OutputMeta = new OutputMeta()
+  val meta : GorMeta = new GorMeta()
   def getName: String = name
-  def getMeta: OutputMeta = meta
+  def getMeta: GorMeta = meta
   def reportWantsNoMore() {
     if (pipeFrom!=null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true

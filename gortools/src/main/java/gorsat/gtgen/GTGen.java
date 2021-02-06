@@ -80,14 +80,14 @@ public class GTGen {
         return this.pBB;
     }
     /**
-     * Returns whether there is some data for sample with index {@code idx}.
+     * @return Returns whether there is some data for sample with index {@code idx}.
      */
     public boolean hasCoverage(int idx) {
         return this.hasData[idx];
     }
 
     /**
-     * Returns the number of samples which have coverage.
+     * @return Returns the number of samples which have coverage.
      */
     public int getAn() {
         return this.hasPrior ? this.m + this.covCount : this.covCount;

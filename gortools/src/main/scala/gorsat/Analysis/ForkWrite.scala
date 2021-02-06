@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.util.zip.Deflater
-import gorsat.Commands.{Analysis, Output, OutputMeta}
+import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType

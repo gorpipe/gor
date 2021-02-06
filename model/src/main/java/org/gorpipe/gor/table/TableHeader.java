@@ -99,7 +99,7 @@ public class TableHeader {
      * Get header property.
      *
      * @param key name of the property.
-     * @return the header property identifed with <key>
+     * @return the header property identifed with [key]
      */
     public String getProperty(String key) {
         if (HEADER_SOURCE_COLUMN_KEY.equals(key) && !headerProps.containsKey(HEADER_SOURCE_COLUMN_KEY) && isProperTableHeader()) {
@@ -124,10 +124,10 @@ public class TableHeader {
     }
 
     /**
-     * Returns <tt>true</tt> if this header contains the property.
+     * Returns <code>true</code> if this header contains the property.
      *
      * @param key The property key.
-     * @return <tt>true</tt> if this header contains the property.
+     * @return <code>true</code> if this header contains the property.
      */
     public boolean containsProperty(String key) {
         return headerProps.containsKey(key);
