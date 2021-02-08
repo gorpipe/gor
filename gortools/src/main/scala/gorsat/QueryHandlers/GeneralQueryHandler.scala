@@ -246,8 +246,11 @@ object GeneralQueryHandler {
     var i = 0
     Files.walk(outfolderpath).filter(p => p.getFileName.toString.endsWith(".meta")).forEach(p => {
       Files.lines(p).filter(s => s.startsWith("##RANGE:")).findFirst().ifPresent(s => {
-        var outfile = outfolderpath.relativize(p).toString
-        outfile = outfile.substring(0,outfile.length-5)
+        var outfile = Files.lines(p).filter(s => s.startsWith("##MD5")).map(s => s.substring(6).trim).findFirst().asInstanceOf[Optional[String]].orElseGet(() => {
+          val o = outfolderpath.relativize(p).toString
+          o.substring(0,o.length-10)
+        })
+        outfile = outfile+".gorz"
         i+=1
         val cc = Files.lines(p).filter(s => s.startsWith("##CARDCOL")).findFirst()
         val gordline = if(cc.isPresent) {

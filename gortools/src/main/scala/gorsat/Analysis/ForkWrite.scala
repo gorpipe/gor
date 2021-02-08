@@ -196,23 +196,25 @@ case class ForkWrite(forkCol: Int,
       val d = parent.resolve(respath)
       if (!Files.exists(d)) {
         Files.move(p, d)
-        val metapath = respath + ".meta"
-        val dm = parent.resolve(metapath)
-        val mp = Paths.get(name+".meta")
-        if(!Files.exists(dm)) Files.move(mp, dm)
-        else if(Files.exists(mp)) {
-          Files.delete(mp);
-        }
-
-        val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-        Files.writeString(dict, d.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
       } else {
         Files.delete(p)
-        val mp = Paths.get(name+".meta")
-        Files.delete(mp)
       }
-    } else {
-      System.err.println()
+
+      val mp = Paths.get(name+".meta")
+      if(Files.exists(mp)) {
+        var metapath = respath + ".meta"
+        var dm = parent.resolve(metapath)
+        var c = 1
+        while (Files.exists(dm)) {
+          metapath = md5 + "_" + c + ".gorz.meta"
+          dm = parent.resolve(metapath)
+          c += 1
+        }
+        Files.move(mp, dm)
+      }
+
+      val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
+      Files.writeString(dict, d.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
     }
   }
 
