@@ -15,6 +15,10 @@ public class GorMeta {
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
 
+    public boolean linesWritten() {
+        return minChr != null;
+    }
+
     public void setMd5(String md5) {
         this.md5 = md5;
     }
