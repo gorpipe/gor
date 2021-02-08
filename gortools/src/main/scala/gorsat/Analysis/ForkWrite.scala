@@ -220,11 +220,6 @@ case class ForkWrite(forkCol: Int,
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
-    if(options.useFolder) {
-      val name = sh.out.getName
-      val meta = sh.out.getMeta
-      moveToMd5FileNameAndAppendToDictionary(name, meta)
-    }
   }
 
   override def finish() {

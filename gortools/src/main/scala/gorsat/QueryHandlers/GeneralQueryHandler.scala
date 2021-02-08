@@ -32,7 +32,7 @@ import gorsat.DynIterator.DynamicRowSource
 import gorsat.Outputs.OutFile
 import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, runCommand}
 import gorsat.Utilities.AnalysisUtilities
-import gorsat.process.ParallelExecutor
+import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
@@ -243,25 +243,7 @@ object GeneralQueryHandler {
     } else {
       outfolderpath.resolve(outfolderpath.getFileName)
     }
-    var i = 0
-    Files.walk(outfolderpath).filter(p => p.getFileName.toString.endsWith(".meta")).forEach(p => {
-      Files.lines(p).filter(s => s.startsWith("##RANGE:")).findFirst().ifPresent(s => {
-        var outfile = Files.lines(p).filter(s => s.startsWith("##MD5")).map(s => s.substring(6).trim).findFirst().asInstanceOf[Optional[String]].orElseGet(() => {
-          val o = outfolderpath.relativize(p).toString
-          o.substring(0,o.length-10)
-        })
-        outfile = outfile+".gorz"
-        i+=1
-        val cc = Files.lines(p).filter(s => s.startsWith("##CARDCOL")).findFirst()
-        val gordline = if(cc.isPresent) {
-          val ccstr = cc.get()
-          outfile+"\t"+i.toString+"\t"+s.substring(8).trim+"\t"+ccstr.substring(ccstr.indexOf(':')+1).trim
-        } else {
-          outfile+"\t"+i.toString+"\t"+s.substring(8).trim
-        }
-        Files.writeString(outpath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-      })
-    })
+    GorJavaUtilities.getMetapaths(outfolderpath, outpath)
   }
 
   private def writeOutGorDictionary(commandToExecute: String, outfile: String, useTheDict: Boolean): String = {
