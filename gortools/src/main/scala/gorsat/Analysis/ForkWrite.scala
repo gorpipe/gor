@@ -197,8 +197,8 @@ case class ForkWrite(forkCol: Int,
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
-    if(options.useFolder) {
-      val name = sh.out.getName
+    val name = sh.out.getName
+    if(options.useFolder && name != null && !name.toLowerCase.endsWith(".parquet")) {
       val meta = sh.out.getMeta
       appendToDictionary(name, meta)
     }
