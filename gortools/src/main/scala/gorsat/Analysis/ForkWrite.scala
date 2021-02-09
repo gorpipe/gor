@@ -187,39 +187,21 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  def moveToMd5FileNameAndAppendToDictionary(name: String, outputMeta: GorMeta): Unit = {
-    val md5 = outputMeta.getMd5
-    if(md5!=null) {
-      val p = Paths.get(name)
-      val parent = p.getParent
-      val respath = md5 + ".gorz"
-      val d = parent.resolve(respath)
-      if (!Files.exists(d)) {
-        Files.move(p, d)
-      } else {
-        Files.delete(p)
-      }
+  def appendToDictionary(name: String, outputMeta: GorMeta): Unit = {
+    val p = Paths.get(name)
+    val parent = p.getParent
 
-      val mp = Paths.get(name+".meta")
-      if(Files.exists(mp)) {
-        var metapath = respath + ".meta"
-        var dm = parent.resolve(metapath)
-        var c = 1
-        while (Files.exists(dm)) {
-          metapath = md5 + "_" + c + ".gorz.meta"
-          dm = parent.resolve(metapath)
-          c += 1
-        }
-        Files.move(mp, dm)
-      }
-
-      val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-      Files.writeString(dict, d.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-    }
+    val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
+    Files.writeString(dict, p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
   }
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
+    if(options.useFolder) {
+      val name = sh.out.getName
+      val meta = sh.out.getMeta
+      appendToDictionary(name, meta)
+    }
   }
 
   override def finish() {
