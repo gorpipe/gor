@@ -38,6 +38,58 @@ import java.nio.file.{Files, Paths}
 
 class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ignoreIllegalArguments = true)) {
 
+  def generateCachepath(context: GorContext, fingerprint: String): String = {
+    val fileCache = context.getSession.getProjectContext.getFileCache
+    val cachefile = fileCache.tempLocation(fingerprint, ".gord")
+    val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
+    val cacheFilePath = Paths.get(cachefile)
+    if (cacheFilePath.isAbsolute) {
+      val norm = rootPath.relativize(cacheFilePath).normalize().toString
+      if(norm.startsWith("..")) cacheFilePath.toString
+      else norm
+    } else cacheFilePath.toString
+  }
+
+  def fileCacheLookup(context: GorContext, fingerprint: String): (String, Boolean) = {
+    if(fingerprint!=null) {
+      val fileCache = context.getSession.getProjectContext.getFileCache
+      val cachefile = fileCache.lookupFile(fingerprint)
+      if (cachefile == null) (generateCachepath(context, fingerprint), false)
+      else (cachefile, true)
+    } else (null, false)
+  }
+
+  def appendQuery(finalQuery: String, cachefile: String, cacheFileExists: Boolean, lastCmd: String, hasWrite: Boolean): String = {
+    " <(" + finalQuery + ")" + (if(cachefile!=null && !cacheFileExists) {
+      " | " + (if(hasWrite) lastCmd + " " + cachefile else "write -d " + cachefile)
+    } else if(hasWrite) {
+      " | " + lastCmd
+    } else {
+      ""
+    })
+  }
+
+  def getCachePath(create: ExecutionBlock, context: GorContext): (Boolean, String, String) = {
+    val innerQuery = create.query.trim.slice(5, create.query.length)
+    val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
+    val lastCmd = querySplit.last.trim
+    val lastCmdLower = lastCmd.toLowerCase
+    val hasWrite = lastCmdLower.startsWith("write ")
+    val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
+    val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
+    if(hasWriteFile) {
+      val cacheRes = lastCmd.split(" ").last
+      val cacheFileExists = Files.exists(Paths.get(cacheRes))
+      val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
+      (cacheFileExists, cacheRes, queryAppend)
+    } else {
+      val fingerprint = create.signature
+      val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
+      val queryAppend = appendQuery(finalQuery, cachefile, cacheFileExists, lastCmd, hasWrite)
+      (cacheFileExists, cachefile, queryAppend)
+    }
+  }
+
   override protected def processArguments(createKey: String,
                                           create: ExecutionBlock,
                                           context: GorContext,
@@ -60,39 +112,11 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
 
       val gorReplacement = if( noWithin ) "gor -nowithin -p " else "gor -p "
       val partitionKey = "[" + theKey + "_" + replacePattern + "]"
-      val innerQuery = create.query.trim.slice(5, create.query.length)
-      val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
-      var lastCmd = querySplit.last.trim.toLowerCase
-      val hasWrite = lastCmd.startsWith("write ")
-      val hasWriteFile = hasWrite & lastCmd.endsWith(".gord")
-      val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
-      var cacheFileExists = false
-      val cachePath = if(hasWriteFile) {
-        val cacheRes = lastCmd.split(" ").last
-        cacheFileExists = Files.exists(Paths.get(cacheRes))
-        cacheRes
-      } else {
-        val fileCache = context.getSession.getProjectContext.getFileCache
-        val fingerprint = create.signature
-        if(fingerprint!=null) {
-          var cachefile = fileCache.lookupFile(fingerprint)
-          if (cachefile == null) {
-            cachefile = fileCache.tempLocation(fingerprint, ".gord")
-            val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
-            val cacheFilePath = Paths.get(cachefile)
-            cachefile = if (cacheFilePath.isAbsolute) {
-              val norm = rootPath.relativize(cacheFilePath).normalize().toString
-              if(norm.startsWith("..")) cacheFilePath.toString
-              else norm
-            } else cacheFilePath.toString
-            lastCmd = if(hasWrite) lastCmd + " " + cachefile else "write -d " + cachefile
-          } else cacheFileExists = true
-          cachefile
-        } else null
-      }
+
+      val (cacheFileExists, cachePath, queryAppend) = getCachePath(create, context)
 
       val theCommand = if(!cacheFileExists) {
-        val newQuery = gorReplacement + replacePattern + " <(" + finalQuery + ")" + (if(hasWrite || lastCmd.startsWith("write ")) " | " + lastCmd else "")
+        val newQuery = gorReplacement + replacePattern + queryAppend
         partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery, create.signature,
           create.dependencies, create.batchGroupName, cachePath))
 
@@ -108,10 +132,6 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       } else {
         "gor "+cachePath
       }
-      /*if(cachePath!=null) {
-        val gordCachePath = Paths.get(cachePath)
-        cachePath = gordCachePath.resolve(gordCachePath.getFileName).toString
-      }*/
       partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand, create.signature,
         theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
     } else {
