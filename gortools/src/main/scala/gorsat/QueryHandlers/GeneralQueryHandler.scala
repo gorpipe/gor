@@ -36,7 +36,7 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{GorMeta, GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.slf4j.LoggerFactory
@@ -243,7 +243,7 @@ object GeneralQueryHandler {
     } else {
       outfolderpath.resolve(outfolderpath.getFileName)
     }
-    GorJavaUtilities.getMetapaths(outfolderpath, outpath)
+    GorMeta.writeDictionaryFromMeta(outfolderpath, outpath)
   }
 
   private def writeOutGorDictionary(commandToExecute: String, outfile: String, useTheDict: Boolean): String = {

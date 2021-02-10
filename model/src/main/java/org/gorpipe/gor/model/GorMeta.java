@@ -1,9 +1,11 @@
 package org.gorpipe.gor.model;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GorMeta {
     String minChr = null;
@@ -14,6 +16,45 @@ public class GorMeta {
     String cardColName = null;
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
+
+    public static void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
+        List<Path> metapaths = Files.walk(outfolderpath).filter(p -> p.getFileName().toString().endsWith(".meta")).collect(Collectors.toList());
+        int i = 0;
+        for(Path p : metapaths) {
+            Optional<String> omd5 = Files.lines(p).filter(s -> s.startsWith("##MD5")).map(s -> s.substring(6).trim()).findFirst();
+            Optional<String> cc = Files.lines(p).filter(s -> s.startsWith("##CARDCOL")).findFirst();
+            Optional<String> range = Files.lines(p).filter(s -> s.startsWith("##RANGE:")).findFirst();
+            if(range.isPresent()) {
+                String s = range.get();
+                var outfile = omd5.orElseGet(() -> {
+                    String o = outfolderpath.relativize(p).toString();
+                    return o.substring(0,o.length()-10);
+                });
+                outfile = outfile+".gorz";
+                i+=1;
+                String gordline;
+                if(cc.isPresent()) {
+                    String ccstr = cc.get();
+                    gordline = outfile+"\t"+i+"\t"+s.substring(8).trim()+"\t"+ccstr.substring(ccstr.indexOf(':')+1).trim();
+                } else {
+                    gordline = outfile+"\t"+i+"\t"+s.substring(8).trim();
+                }
+                Files.writeString(dictionarypath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
+            if(omd5.isPresent()) {
+                String md5 = omd5.get();
+                Path dm = p.getParent().resolve(md5+".gorz.meta");
+                if(!Files.exists(dm)) Files.move(p, dm);
+                else Files.delete(p);
+
+                String fn = p.getFileName().toString();
+                Path g = p.getParent().resolve(fn.substring(0,fn.length()-5));
+                Path d = p.getParent().resolve(md5+".gorz");
+                if(!Files.exists(d)) Files.move(g, d);
+                else Files.delete(g);
+            }
+        }
+    }
 
     public boolean linesWritten() {
         return minChr != null;
