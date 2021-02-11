@@ -111,7 +111,9 @@ publishing {
     }
 }
 
-signing {
-    sign publishing.publications.mavenJavaLibModule
+if (project.hasProperty('publishToMavenCentral')) {
+    signing {
+        sign publishing.publications.mavenJavaLibModule
+    }
 }
 
