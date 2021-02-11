@@ -47,7 +47,7 @@ ext {
         // 2017-10-20
         // making deployments behave the same as before combining the repositories
         // revisit this when we start splitting the code into more logical modules
-        return "org.gorpipe." + getProjectRootName()
+        return "org.gorpipe"
     }
 
     getProjectRootName = {
