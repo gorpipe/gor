@@ -222,31 +222,26 @@ object PrGtGenAnalysis {
       val gtGen = r_gh.gtGen
       join(r, gtGen)
 
-      val converged = gtGen.impute(gts, tol, maxIt)
-      writeOutRows(r, r_gh, gtGen, converged)
+      gtGen.impute(gts, tol, maxIt)
+      writeOutRows(r, r_gh, gtGen)
     }
 
-    private def writeOutRows(r: Row, r_gh: GroupHolder, gtGen: GTGen, converged: Boolean): Unit = {
-      if (converged) {
-        val rowPrefix = r.toString + '\t' + "%5.5g\t%d".format(gtGen.getAF, gtGen.getAn) + '\t' + "%5.5g\t%5.5g".format(gtGen.get_pAB, gtGen.get_pBB) + '\t'
-        var bucketIdx = 0
-        val len = ti.numberOfBuckets
-        var sampleIdx: Int = 0
-        while (bucketIdx < len) {
-          val bucketSize = ti.getBucketSize(bucketIdx)
-          val bucketName = ti.getBucketNameFromIdx(bucketIdx)
-          val sb = new mutable.StringBuilder(getStringBuilderSizeHint(rowPrefix, bucketName, bucketSize))
-          sb ++= rowPrefix
-          sb ++= ti.getBucketNameFromIdx(bucketIdx)
-          sb += '\t'
-          writeGenotypes(sb, sampleIdx, sampleIdx + bucketSize, r_gh.gtGen)
-          sampleIdx += bucketSize
-          super.process(RowObj(sb.toString))
-          bucketIdx += 1
-        }
-      } else {
-        val rowPrefix = r.toString + "\t.\t.\t"
-        ti.buckIdxToName.foreach(bucket => super.process(RowObj(rowPrefix + bucket + "\t")))
+    private def writeOutRows(r: Row, r_gh: GroupHolder, gtGen: GTGen): Unit = {
+      val rowPrefix = r.toString + '\t' + "%5.5g\t%d".format(gtGen.getAF, gtGen.getAn) + '\t' + "%5.5g\t%5.5g".format(gtGen.get_pAB, gtGen.get_pBB) + '\t'
+      var bucketIdx = 0
+      val len = ti.numberOfBuckets
+      var sampleIdx: Int = 0
+      while (bucketIdx < len) {
+        val bucketSize = ti.getBucketSize(bucketIdx)
+        val bucketName = ti.getBucketNameFromIdx(bucketIdx)
+        val sb = new mutable.StringBuilder(getStringBuilderSizeHint(rowPrefix, bucketName, bucketSize))
+        sb ++= rowPrefix
+        sb ++= ti.getBucketNameFromIdx(bucketIdx)
+        sb += '\t'
+        writeGenotypes(sb, sampleIdx, sampleIdx + bucketSize, r_gh.gtGen)
+        sampleIdx += bucketSize
+        super.process(RowObj(sb.toString))
+        bucketIdx += 1
       }
     }
 
