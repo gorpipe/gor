@@ -711,7 +711,7 @@ public class Dictionary {
                 if (!PathUtils.isLocal(commonRoot)) {
                     return null; // Do no support relative references of local dictionary files with remote reference in common root
                 } else {
-                    Path commonRootPath = Paths.get(commonRoot).toAbsolutePath();
+                    Path commonRootPath = Paths.get(commonRoot).toAbsolutePath().normalize();
                     dictFileParent = PathUtils.relativize(commonRootPath, dictFileParent);
                 }
             }
