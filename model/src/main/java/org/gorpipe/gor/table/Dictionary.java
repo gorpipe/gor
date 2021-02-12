@@ -716,23 +716,18 @@ public class Dictionary {
     private static String findDictPathParent(final Path parentpath, String commonRoot) {
         if (parentpath != null) { // 25.01.2012 gfg+hakon, treat relative files in dictionary files always as relative to said dictionary
             // TODO:  Check this, if parentpaht is relative it is resolved from the current dir, but not the relative to the dictionary.gh
-            String dictFileParent = parentpath.toAbsolutePath().toString();
+            Path dictFileParent = parentpath.toAbsolutePath();
             if (commonRoot != null) {
                 if (isHttpRef(commonRoot) || isTcpRef(commonRoot)) {
                     return null; // Do no support relative references of local dictionary files with remote reference in common root
                 } else {
-                    if (dictFileParent.startsWith(commonRoot)) {
-                        dictFileParent = dictFileParent.substring(commonRoot.length());
-                        if (dictFileParent.length() > 0 && (dictFileParent.charAt(0) == '/' || dictFileParent.charAt(0) == '\\')) { // ensure there is no starting nor trailing slash
-                            dictFileParent = dictFileParent.substring(1);
-                        }
-                        if (dictFileParent.length() > 0 && (dictFileParent.charAt(dictFileParent.length() - 1) == '/' || dictFileParent.charAt(dictFileParent.length() - 1) == '\\')) {
-                            dictFileParent = dictFileParent.substring(0, dictFileParent.length() - 1);
-                        }
+                    Path commonRootPath = Paths.get(commonRoot).toAbsolutePath();
+                    if (dictFileParent.toString().startsWith(commonRootPath.toString())) {
+                        dictFileParent = commonRootPath.relativize(dictFileParent);
                     }
                 }
             }
-            return dictFileParent;
+            return dictFileParent.toString();
         }
         return null;
     }
