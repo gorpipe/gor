@@ -519,16 +519,6 @@ public class Dictionary {
         return null;
     }
 
-    private static boolean isHttpRef(String path) {
-        final String p = path.toLowerCase();
-        return p.startsWith("http://") || p.startsWith("https://");
-    }
-
-    private static boolean isTcpRef(String path) {
-        final String p = path.toLowerCase();
-        return p.startsWith("tcp://");
-    }
-
     public static class FileReference {
         public final String logical;
         public final String physical;
@@ -718,13 +708,11 @@ public class Dictionary {
             // TODO:  Check this, if parentpaht is relative it is resolved from the current dir, but not the relative to the dictionary.gh
             Path dictFileParent = parentpath.toAbsolutePath();
             if (commonRoot != null) {
-                if (isHttpRef(commonRoot) || isTcpRef(commonRoot)) {
+                if (!PathUtils.isLocal(commonRoot)) {
                     return null; // Do no support relative references of local dictionary files with remote reference in common root
                 } else {
                     Path commonRootPath = Paths.get(commonRoot).toAbsolutePath();
-                    if (dictFileParent.toString().startsWith(commonRootPath.toString())) {
-                        dictFileParent = commonRootPath.relativize(dictFileParent);
-                    }
+                    dictFileParent = PathUtils.relativize(commonRootPath, dictFileParent);
                 }
             }
             return dictFileParent.toString();
