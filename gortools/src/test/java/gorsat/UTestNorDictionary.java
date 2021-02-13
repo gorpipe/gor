@@ -22,6 +22,8 @@
 
 package gorsat;
 
+import gorsat.process.GenericSessionFactory;
+import gorsat.process.NordIterator;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
@@ -545,5 +547,86 @@ public class UTestNorDictionary {
 
         expected.expect(GorDataException.class);
         TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+    }
+
+    @Test
+    public void getHeader() throws IOException {
+        File fileA = FileTestUtils.createTempFile(workDir.getRoot(), "a.tsv",
+                "#pheno\tn_cases\nCAT\t500");
+        File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
+                "#pheno\tn_cases\nCAT\t300");
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+                "a.tsv\tAA\nb.tsv\tBB");
+
+        NordIterator iterator = new NordIterator(fileX.getAbsolutePath(), false, new String[0], "Source", false, false);
+        GenericSessionFactory sessionFactory = new GenericSessionFactory();
+        iterator.init(sessionFactory.create());
+        String header = iterator.getHeader();
+        Assert.assertEquals("ChromNOR\tPosNOR\tpheno\tn_cases\tSource", header);
+    }
+
+    @Test
+    public void getHeaderNestedNord() throws IOException {
+        File fileA = FileTestUtils.createTempFile(workDir.getRoot(), "a.tsv",
+                "#pheno\tn_cases\nCAT\t500");
+        File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
+                "#pheno\tn_cases\nCAT\t300");
+        File fileC = FileTestUtils.createTempFile(workDir.getRoot(), "c.tsv",
+                "#pheno\tn_cases\nCAT\t200");
+        File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
+                "#pheno\tn_cases\nCAT\t400");
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+                "a.tsv\tAA\nb.tsv\tBB\ny.nord\tCC");
+        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord", "" +
+                "c.tsv\tCC\nd.tsv\tCC");
+
+        NordIterator iterator = new NordIterator(fileX.getAbsolutePath(), false, new String[0], "Source", false, false);
+        GenericSessionFactory sessionFactory = new GenericSessionFactory();
+        iterator.init(sessionFactory.create());
+        String header = iterator.getHeader();
+        Assert.assertEquals("ChromNOR\tPosNOR\tpheno\tn_cases\tSource", header);
+    }
+
+    @Test
+    public void nestedNordFiles() throws IOException {
+        File fileA = FileTestUtils.createTempFile(workDir.getRoot(), "a.tsv",
+                "#pheno\tn_cases\nCAT\t500");
+        File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
+                "#pheno\tn_cases\nCAT\t300");
+        File fileC = FileTestUtils.createTempFile(workDir.getRoot(), "c.tsv",
+                "#pheno\tn_cases\nCAT\t200");
+        File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
+                "#pheno\tn_cases\nCAT\t400");
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+                "a.tsv\tAA\nb.tsv\tBB\ny.nord\tCC");
+        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord", "" +
+                "c.tsv\tCC\nd.tsv\tCC");
+
+        String result = TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+        String expected = "ChromNOR\tPosNOR\tpheno\tn_cases\n" +
+                "chrN\t0\tCAT\t500\n" +
+                "chrN\t0\tCAT\t300\n" +
+                "chrN\t0\tCAT\t200\n" +
+                "chrN\t0\tCAT\t400\n";
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void recursiveNestedNordFiles() throws IOException {
+        File fileA = FileTestUtils.createTempFile(workDir.getRoot(), "a.tsv",
+                "#pheno\tn_cases\nCAT\t500");
+        File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
+                "#pheno\tn_cases\nCAT\t300");
+        File fileC = FileTestUtils.createTempFile(workDir.getRoot(), "c.tsv",
+                "#pheno\tn_cases\nCAT\t200");
+        File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
+                "#pheno\tn_cases\nCAT\t400");
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+                "a.tsv\tAA\nb.tsv\tBB\ny.nord\tCC");
+        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord", "" +
+                "c.tsv\tCC\nd.tsv\tCC\nx.nord\tCC");
+
+        expected.expect(GorDataException.class);
+        String result = TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
     }
 }
