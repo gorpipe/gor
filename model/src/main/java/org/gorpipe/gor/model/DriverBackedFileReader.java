@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -183,7 +184,9 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public String getDictionarySignature(String dictionary, String[] tags) throws IOException {
         final DataSource file = resolveUrl(dictionary);
-        return new DictionaryTable.Builder<>(Paths.get(getResolvedUrl(file))).securityContext(securityContext).build().getSignature(true, file.getSourceReference().commonRoot, tags);
+        Path dictpath = Paths.get(getResolvedUrl(file));
+        if(Files.isDirectory(dictpath)) dictpath = dictpath.resolve(dictpath.getFileName());
+        return new DictionaryTable.Builder<>(dictpath).securityContext(securityContext).build().getSignature(true, file.getSourceReference().commonRoot, tags);
     }
 
     @Override

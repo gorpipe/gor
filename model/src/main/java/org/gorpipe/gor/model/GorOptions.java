@@ -53,6 +53,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -71,6 +72,7 @@ public class GorOptions {
 
     private static final String ERROR_INITIALIZING_QUERY = "Error Initializing Query: ";
     private static final String IS_NOT_FOUND = " is not found!";
+    public static final String DEFAULT_FOLDER_DICTIONARY_NAME = "thedict.gord";
 
     private static final Logger log = LoggerFactory.getLogger(GorOptions.class);
 
@@ -754,6 +756,15 @@ public class GorOptions {
     }
 
     private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
+        Path gordPath = Paths.get(fileName);
+        if(Files.isDirectory(gordPath)) {
+            Path gorDictPath = gordPath.resolve(gordPath.getFileName());
+            if(!Files.exists(gorDictPath)) {
+                gordPath = gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
+            } else gordPath = gorDictPath;
+            fileName = gordPath.toString();
+        }
+
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
         final Dictionary gord = Dictionary.getDictionary(fileName, getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);
         this.hasLocalDictonaryFile = true;

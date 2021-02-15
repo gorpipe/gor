@@ -45,10 +45,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
     throw new GorParsingException(s"Too many splits for query. The maximum allowed number of splits is $MAXIMUM_NUMBER_OF_SPLITS but the current query splits into ${chromosomeSplits.size} jobs")
   }
 
-  def expandCommand(commandToExecute: String, batchGroupName: String): CommandGroup = {
+  def expandCommand(commandToExecute: String, batchGroupName: String, cachePath: String = null): CommandGroup = {
     var expandedCommands: List[CommandEntry] = List.empty[CommandEntry]
     var removeFromCreates = false
 
+    val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute,'|').last.trim
+    val cacheFile = if(lastCommand.toLowerCase.startsWith("write ")) lastCommand.split(" ").last.trim else cachePath
     if (commandToExecute.contains(replacementPattern)) {
       val (splitOpt, splits, splitOverlap, _) = ScriptParsers.splitOptionParser(commandToExecute)
 
@@ -63,12 +65,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
           val repstr = if (splitOverlap != "") "-" + splitOpt + splits + ":" + splitOverlap + " " else "-" + splitOpt + splits + " "
           mc = mc.replace(repstr, "")
         }
-        expandedCommands ::= CommandEntry(n, mc, g)
+        expandedCommands ::= CommandEntry(n, mc, g, cacheFile)
       })
 
       removeFromCreates = true
     } else {
-      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName)
+      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName, cacheFile)
     }
 
     CommandGroup(expandedCommands, removeFromCreates)

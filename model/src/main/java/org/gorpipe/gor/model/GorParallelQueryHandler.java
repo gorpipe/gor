@@ -40,7 +40,7 @@ public interface GorParallelQueryHandler {
      * @param cancelMonitor     Cancel Monitor
      * @return File paths
      */
-    String[] executeBatch(String[] fingerprints, String[] commandsToExecute, String[] batchGroupNames, GorMonitor cancelMonitor);
+    String[] executeBatch(String[] fingerprints, String[] commandsToExecute, String[] batchGroupNames, String[] cacheFiles, GorMonitor cancelMonitor);
 
     /**
      * Force overwrite on all subqueries.

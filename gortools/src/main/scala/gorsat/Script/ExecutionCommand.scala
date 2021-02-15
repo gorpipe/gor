@@ -30,5 +30,6 @@ package gorsat.Script
   * @param query            Query to be executed in the query handler
   * @param batchGroupName   Name of the current batch group
   * @param createName       Name of the create statement, mainly used for logging.
+  * @param cacheFile        Optional cacheFile name
   */
-case class ExecutionCommand(signature: String, query: String, batchGroupName: String, createName: String)
+case class ExecutionCommand(signature: String, query: String, batchGroupName: String, createName: String, cacheFile: String)

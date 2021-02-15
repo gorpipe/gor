@@ -85,7 +85,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit
 
         if (!extraCommands.isEmpty) newCommand += " " + extraCommands
 
-        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.dependencies, create.batchGroupName))
+        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName))
         theDependencies ::= parKey
 
         partitionIndex += 1
@@ -99,7 +99,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit
     }
 
     val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, theDependencies.toArray, create.batchGroupName, isDictionary = true))
+    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
   }

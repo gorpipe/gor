@@ -27,6 +27,8 @@ import gorsat.Script
 import gorsat.Script._
 import org.gorpipe.gor.session.GorContext
 
+import java.nio.file.{Files, Paths}
+
 /***
   * PGOR macro used to preprocess standalone pgor commands into create statement plus gor query. Also performs expansion
   * based on active build and splits. Also if a custom split options are used it performs a split based on input chromosome,
@@ -35,6 +37,58 @@ import org.gorpipe.gor.session.GorContext
   */
 
 class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ignoreIllegalArguments = true)) {
+
+  def generateCachepath(context: GorContext, fingerprint: String): String = {
+    val fileCache = context.getSession.getProjectContext.getFileCache
+    val cachefile = fileCache.tempLocation(fingerprint, ".gord")
+    val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
+    val cacheFilePath = Paths.get(cachefile)
+    if (cacheFilePath.isAbsolute) {
+      val norm = rootPath.relativize(cacheFilePath).normalize().toString
+      if(norm.startsWith("..")) cacheFilePath.toString
+      else norm
+    } else cacheFilePath.toString
+  }
+
+  def fileCacheLookup(context: GorContext, fingerprint: String): (String, Boolean) = {
+    if(fingerprint!=null) {
+      val fileCache = context.getSession.getProjectContext.getFileCache
+      val cachefile = fileCache.lookupFile(fingerprint)
+      if (cachefile == null) (generateCachepath(context, fingerprint), false)
+      else (cachefile, true)
+    } else (null, false)
+  }
+
+  def appendQuery(finalQuery: String, cachefile: String, cacheFileExists: Boolean, lastCmd: String, hasWrite: Boolean): String = {
+    " <(" + finalQuery + ")" + (if(cachefile!=null && !cacheFileExists) {
+      " | " + (if(hasWrite) lastCmd + " " + cachefile else "write -d " + cachefile)
+    } else if(hasWrite) {
+      " | " + lastCmd
+    } else {
+      ""
+    })
+  }
+
+  def getCachePath(create: ExecutionBlock, context: GorContext): (Boolean, String, String) = {
+    val innerQuery = create.query.trim.slice(5, create.query.length)
+    val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
+    val lastCmd = querySplit.last.trim
+    val lastCmdLower = lastCmd.toLowerCase
+    val hasWrite = lastCmdLower.startsWith("write ")
+    val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
+    val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
+    if(hasWriteFile) {
+      val cacheRes = lastCmd.split(" ").last
+      val cacheFileExists = Files.exists(Paths.get(cacheRes))
+      val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
+      (cacheFileExists, cacheRes, queryAppend)
+    } else {
+      val fingerprint = create.signature
+      val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
+      val queryAppend = appendQuery(finalQuery, cachefile, cacheFileExists, lastCmd, hasWrite)
+      (cacheFileExists, cachefile, queryAppend)
+    }
+  }
 
   override protected def processArguments(createKey: String,
                                           create: ExecutionBlock,
@@ -58,24 +112,31 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
 
       val gorReplacement = if( noWithin ) "gor -nowithin -p " else "gor -p "
       val partitionKey = "[" + theKey + "_" + replacePattern + "]"
-      val newQuery = gorReplacement + replacePattern + " <(" + create.query.trim.slice(5, create.query.length) + ")"
-      partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery,
-        create.dependencies, create.batchGroupName))
 
-      val splitManager = SplitManager.createFromCommand(create.groupName, newQuery, context)
+      val (cacheFileExists, cachePath, queryAppend) = getCachePath(create, context)
 
-      splitManager.chromosomeSplits.keys.foreach(chrKey => {
-        val parKey = "[" + theKey + "_" + chrKey + "]"
-        theDependencies ::= parKey
-      })
+      val theCommand = if(!cacheFileExists) {
+        val newQuery = gorReplacement + replacePattern + queryAppend
+        partitionedGorCommands += (partitionKey -> Script.ExecutionBlock(partitionKey, newQuery, create.signature,
+          create.dependencies, create.batchGroupName, cachePath))
 
-      val theCommand = splitManager.chromosomeSplits.keys.foldLeft("gordict") ((x, y) => x + " [" + theKey + "_" + y + "] " +
-        splitManager.chromosomeSplits(y).range)
-      partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand,
-        theDependencies.toArray, create.batchGroupName, isDictionary = true))
+        val splitManager = SplitManager.createFromCommand(create.groupName, newQuery, context)
+
+        splitManager.chromosomeSplits.keys.foreach(chrKey => {
+          val parKey = "[" + theKey + "_" + chrKey + "]"
+          theDependencies ::= parKey
+        })
+
+        splitManager.chromosomeSplits.keys.foldLeft("gordict")((x, y) => x + " [" + theKey + "_" + y + "] " +
+          splitManager.chromosomeSplits(y).range)
+      } else {
+        "gor "+cachePath
+      }
+      partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand, create.signature,
+        theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
     } else {
       partitionedGorCommands += (createKey -> ExecutionBlock(create.groupName,
-        "xxxxgor " + create.query.trim.slice(5, create.query.length),
+        "xxxxgor " + create.query.trim.slice(5, create.query.length), create.signature,
         create.dependencies, create.batchGroupName)) // this should nolonger happen
     }
 

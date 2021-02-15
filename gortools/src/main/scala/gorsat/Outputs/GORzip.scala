@@ -52,11 +52,13 @@ class GORzip(fileName: String, header: String = null, skipHeader: Boolean = fals
     out.write(r)
   }
 
-  def finish {
+  def finish() {
     out.close
     meta.setMd5(out.getMd5)
-    val metapath = fileName + ".meta"
-    val m = Paths.get(metapath)
-    Files.writeString(m, meta.toString)
+    if(meta.linesWritten()) {
+      val metapath = fileName + ".meta"
+      val m = Paths.get(metapath)
+      Files.writeString(m, meta.toString)
+    }
   }
 }
