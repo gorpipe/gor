@@ -45,13 +45,13 @@ object ScriptExecutionEngine {
 
   val GOR_FINAL = "gorfinal"
 
-  def parseScript(commands: Array[String], ignoreDeps: Boolean = false): Map[String, ExecutionBlock] = {
+  def parseScript(commands: Array[String]): Map[String, ExecutionBlock] = {
     var creates = Map.empty[String, ExecutionBlock]
 
     commands.foreach(command => {
       val (a, b) = ScriptParsers.createParser(command)
       if (a != "") {
-        val vf = if(ignoreDeps) Array[String]() else virtualFiles(b).toArray
+        val vf = virtualFiles(b)
         val batchGroupName: String = validateCreateName(a)
         creates += ("[" + batchGroupName + "]" -> ExecutionBlock(batchGroupName, b, null, vf.toArray))
       } else {
@@ -143,19 +143,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
     // any left there is an error, something was not executed
-
-    val lastCommand = igorCommands.last
-    val lastCommandLower = lastCommand.toLowerCase
-    var valid : Boolean = false
-    if(context.getAllowMergeQuery && (lastCommandLower.startsWith("select ") || lastCommandLower.startsWith("spark ") || lastCommand.contains("/*+"))) {
-      val gorfinal = if(lastCommandLower.startsWith("gor")) "gor [extrafinal]" else "nor [extrafinal]"
-      val gorhead = "create extrafinal = "+igorCommands.mkString(";")
-      val acmd = Array(gorhead,gorfinal)
-      executionBlocks = ScriptExecutionEngine.parseScript(acmd, true)
-    } else {
-      executionBlocks = ScriptExecutionEngine.parseScript(igorCommands)
-      valid = validate
-    }
+    executionBlocks = ScriptExecutionEngine.parseScript(igorCommands)
 
     // Validate executionblocks for external references
     preValidateExecution()
@@ -243,7 +231,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
     // We'll need to validate the current execution and throw exception if there are still execution blocks available
     // IN the final execution list
-    if (valid) postValidateExecution()
+    if (validate) postValidateExecution()
 
     gorCommand
   }
