@@ -39,6 +39,7 @@ import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.model.{GorMeta, GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.PathUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -155,7 +156,7 @@ object GeneralQueryHandler {
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART)) {
       writeOutGorDictionaryPart(commandToExecute, outfile)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)) {
-      writeOutGorDictionary(commandToExecute, outfile, theTheDict)
+      writeOutGorDictionary(commandToExecute, context.getSession.getProjectContext.getRoot, outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.NOR_DICTIONARY)) {
       writeOutNorDictionaryPart(commandToExecute, outfile)
     } else {
@@ -246,8 +247,12 @@ object GeneralQueryHandler {
     GorMeta.writeDictionaryFromMeta(outfolderpath, outpath)
   }
 
-  private def writeOutGorDictionary(commandToExecute: String, outfile: String, useTheDict: Boolean): String = {
-    val outpath = Paths.get(outfile)
+  private def writeOutGorDictionary(commandToExecute: String, root: String, outfile: String, useTheDict: Boolean): String = {
+    var outpath = Paths.get(outfile)
+    if(!outpath.isAbsolute && root != null) {
+      val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
+      outpath = rootPath.resolve(outpath)
+    }
     if(Files.isDirectory(outpath)) {
       writeOutGorDictionaryFolder(outpath, useTheDict)
     } else {
