@@ -42,7 +42,8 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
   def generateCachepath(context: GorContext, fingerprint: String): String = {
     val fileCache = context.getSession.getProjectContext.getFileCache
     val cachefile = fileCache.tempLocation(fingerprint, ".gord")
-    val rootPath = Paths.get(context.getSession.getProjectContext.getRoot).normalize()
+    val rootPathStr = context.getSession.getProjectContext.getRoot.split("[ \t]+")(0)
+    val rootPath = Paths.get(rootPathStr).normalize()
     val cacheFilePath = Paths.get(cachefile)
     if (cacheFilePath.isAbsolute) {
       PathUtils.relativize(rootPath,cacheFilePath).toString
