@@ -44,7 +44,8 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit
                                           context: GorContext,
                                           doHeader: Boolean,
                                           inputArguments: Array[String],
-                                          options: Array[String]): MacroParsingResult = {
+                                          options: Array[String],
+                                          skipCache: Boolean): MacroParsingResult = {
 
     val cmdToModify = if (CommandParseUtilities.isNestedCommand(inputArguments(0))) {
       CommandParseUtilities.parseNestedCommand(inputArguments(0))

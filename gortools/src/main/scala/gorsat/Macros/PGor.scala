@@ -69,7 +69,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     })
   }
 
-  def getCachePath(create: ExecutionBlock, context: GorContext): (Boolean, String, String) = {
+  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, String, String) = {
     val innerQuery = create.query.trim.slice(5, create.query.length)
     val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
     val lastCmd = querySplit.last.trim
@@ -77,7 +77,10 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     val hasWrite = lastCmdLower.startsWith("write ")
     val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
     val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
-    if(hasWriteFile) {
+    if(skipcache) {
+      val queryAppend = appendQuery(finalQuery, null, false, lastCmd, false)
+      (false, null, queryAppend)
+    } else if(hasWriteFile) {
       val cacheRes = lastCmd.split(" ").last
       val cacheFileExists = Files.exists(Paths.get(cacheRes))
       val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
@@ -95,7 +98,8 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
                                           context: GorContext,
                                           doHeader: Boolean,
                                           inputArguments: Array[String],
-                                          options: Array[String]): MacroParsingResult = {
+                                          options: Array[String],
+                                          skipCache: Boolean): MacroParsingResult = {
 
 
     var partitionedGorCommands = Map.empty[String, ExecutionBlock]
@@ -113,7 +117,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       val gorReplacement = if( noWithin ) "gor -nowithin -p " else "gor -p "
       val partitionKey = "[" + theKey + "_" + replacePattern + "]"
 
-      val (cacheFileExists, cachePath, queryAppend) = getCachePath(create, context)
+      val (cacheFileExists, cachePath, queryAppend) = getCachePath(create, context, skipCache)
 
       val theCommand = if(!cacheFileExists) {
         val newQuery = gorReplacement + replacePattern + queryAppend
