@@ -26,6 +26,7 @@ import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.PathUtils
 
 import java.nio.file.{Files, Paths}
 
@@ -41,12 +42,10 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
   def generateCachepath(context: GorContext, fingerprint: String): String = {
     val fileCache = context.getSession.getProjectContext.getFileCache
     val cachefile = fileCache.tempLocation(fingerprint, ".gord")
-    val rootPath = context.getSession.getProjectContext.getRealProjectRootPath
+    val rootPath = Paths.get(context.getSession.getProjectContext.getRoot).normalize()
     val cacheFilePath = Paths.get(cachefile)
     if (cacheFilePath.isAbsolute) {
-      val norm = rootPath.relativize(cacheFilePath).normalize().toString
-      if(norm.startsWith("..")) cacheFilePath.toString
-      else norm
+      PathUtils.relativize(rootPath,cacheFilePath).toString
     } else cacheFilePath.toString
   }
 
