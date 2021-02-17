@@ -47,7 +47,8 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
                                           context: GorContext,
                                           doHeader: Boolean,
                                           inputArguments: Array[String],
-                                          options: Array[String]): MacroParsingResult = {
+                                          options: Array[String],
+                                          skipCache: Boolean): MacroParsingResult = {
 
     val tags = AnalysisUtilities.getFilterTags(options, context, doHeader)
     val dictionary = getDictionary(options, context.getSession)

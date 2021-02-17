@@ -35,6 +35,7 @@ import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.gor.util.StringUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,6 +75,7 @@ public class NordIterator extends RowSource {
     private final Map<String,String> properties = new HashMap<>();
     private final boolean useFilter;
     private final Set<String> filterEntries;
+    private final String[] filterEntriesAsArray;
     private final String nordFile;
     private String sourceColumnName;
     private String projectRoot = "";
@@ -82,7 +84,7 @@ public class NordIterator extends RowSource {
     private final boolean forceReadOfHeader;
     private boolean addSourceColumn;
     private boolean showSourceColumn = true;
-    private NorInputSource activeIterator;
+    private RowSource activeIterator;
     private Iterator<NordIteratorEntry> nordEntriesIterator;
     private NordIteratorEntry activeEntry = null;
     private int headerSize = 0;
@@ -90,6 +92,8 @@ public class NordIterator extends RowSource {
 
     private static final String DEFAULT_SOURCE_COLUMN_NAME = "Source";
     private static final String SOURCE_PROPERTY_NAME = "Source";
+    private GorSession gorSession;
+    private final Set<String> nestedIterators;
 
     /**
      * Nor dictionary constructor. Creates an instance of nor dictionary iterator, see class description.
@@ -107,12 +111,24 @@ public class NordIterator extends RowSource {
                         String sourceColumnName,
                         boolean ignoreMissingEntries,
                         boolean forceReadOfHeader) {
+        this(nordFile, useFilter, filterEntries, sourceColumnName, ignoreMissingEntries, forceReadOfHeader, new HashSet<>());
+    }
+
+    private NordIterator(String nordFile,
+                        boolean useFilter,
+                        String[] filterEntries,
+                        String sourceColumnName,
+                        boolean ignoreMissingEntries,
+                        boolean forceReadOfHeader,
+                        Set<String> nestedIterators) {
         this.nordFile = nordFile;
         this.useFilter = useFilter;
+        this.filterEntriesAsArray = filterEntries;
         this.filterEntries = new HashSet<>(Arrays.asList(filterEntries));
         this.ignoreMissingEntries = ignoreMissingEntries;
         this.forceReadOfHeader = forceReadOfHeader;
         this.sourceColumnName = sourceColumnName;
+        this.nestedIterators = nestedIterators;
     }
 
     @Override
@@ -154,8 +170,11 @@ public class NordIterator extends RowSource {
 
     public void init(GorSession session) {
 
-        this.fileReader = session.getProjectContext().getFileReader();
-        this.projectRoot = session.getProjectContext().getRealProjectRoot();
+        gorSession = session;
+        this.fileReader = gorSession.getProjectContext().getFileReader();
+        this.projectRoot = gorSession.getProjectContext().getRealProjectRoot();
+
+        addToNested(nordFile);
 
         Path nordPath = Paths.get(this.nordFile);
 
@@ -195,6 +214,21 @@ public class NordIterator extends RowSource {
             getHeaderFromFirstFile();
         }
         prepareNextIterator();
+    }
+
+    private void addToNested(String filename) {
+        try {
+            File file = new File(filename);
+            String canonicalPath = file.getCanonicalPath();
+            if (!nestedIterators.contains(canonicalPath)) {
+                nestedIterators.add(canonicalPath);
+            } else {
+                String message = String.format("Recursion detected in nested nor dictionary: %s", filename);
+                throw new GorDataException(message);
+            }
+        } catch (IOException e) {
+            // Don't care
+        }
     }
 
     private void getHeaderFromFirstFile() {
@@ -237,20 +271,25 @@ public class NordIterator extends RowSource {
 
             // Get the file path from entry
             String fileName = activeEntry.getFilePath();
-            Path entryPath = Paths.get(fileName);
+            if (fileName.toUpperCase().endsWith(".NORD")) {
+                fileName = Paths.get(this.nordRoot, fileName).toString();
+                activeIterator = new NordIterator(fileName, useFilter, filterEntriesAsArray, "", ignoreMissingEntries, forceReadOfHeader, nestedIterators);
+            } else {
+                Path entryPath = Paths.get(fileName);
 
-            if (!entryPath.isAbsolute()) {
-                Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(Paths.get(this.projectRoot, this.nordFile), this.projectRoot);
-                Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile);
+                if (!entryPath.isAbsolute()) {
+                    Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(Paths.get(this.projectRoot, this.nordFile), this.projectRoot);
+                    Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile);
 
-                if (reference.logical != null)
-                    fileName = line.fileRef.logical;
-                else
-                    fileName = Paths.get(this.nordRoot, fileName).toString();
+                    if (reference.logical != null)
+                        fileName = line.fileRef.logical;
+                    else
+                        fileName = Paths.get(this.nordRoot, fileName).toString();
+                }
+
+                activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false);
             }
-
-            // Create the nor iterator
-            this.activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false);
+            activeIterator.init(gorSession);
 
             // Test header
             try {
@@ -265,19 +304,22 @@ public class NordIterator extends RowSource {
         }
     }
 
-    private void getHeaderFromIterator(NorInputSource inputSource) {
+    private void getHeaderFromIterator(RowSource inputSource) {
         String iteratorHeader = inputSource.getHeader();
         if(iteratorHeader.isEmpty()) {
             throw new GorDataException("Missing header for: " + activeEntry.getTag());
         }
-
         iteratorHeader = addOptionalSourceColumn(iteratorHeader);
+        String expectedHeader = getHeader();
 
         if (getHeader().isEmpty()) {
             setHeader(iteratorHeader);
             headerSize = iteratorHeader.split("\t").length;
-        } else if (!iteratorHeader.equalsIgnoreCase(getHeader())) {
-            throw new GorDataException("Headers do not match between dictionary files for: " + activeEntry.getTag());
+        } else if (!iteratorHeader.equalsIgnoreCase(expectedHeader)) {
+            String message = String.format("Headers do not match between dictionary files for: %s\n" +
+                    "Expected header: %s\n" +
+                    "     Got header: %s", activeEntry.getTag(), expectedHeader, iteratorHeader);
+            throw new GorDataException(message);
         }
     }
 

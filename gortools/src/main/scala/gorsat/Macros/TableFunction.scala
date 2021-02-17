@@ -36,7 +36,8 @@ class TableFunction extends MacroInfo("TABLEFUNCTION", CommandArguments("", "", 
                                           context: GorContext,
                                           doHeader: Boolean,
                                           inputArguments: Array[String],
-                                          options: Array[String]): MacroParsingResult = {
+                                          options: Array[String],
+                                          skipCache: Boolean): MacroParsingResult = {
 
     var creates = Map.empty[String, ExecutionBlock]
     val newQuery = "gor " + create.query.substring(this.name.length+1)

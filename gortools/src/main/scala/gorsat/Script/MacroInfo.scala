@@ -41,7 +41,8 @@ abstract case class MacroInfo(name: String,
            create: ExecutionBlock,
            context: GorContext,
            doHeader: Boolean,
-           args: Array[String]): MacroParsingResult = {
+           args: Array[String],
+           skipCache: Boolean): MacroParsingResult = {
     // Test if gor pipe session is valid, if not throw exception
     if (context == null) {
       throw new GorSystemException("Gor context cannot be null", null)
@@ -65,7 +66,7 @@ abstract case class MacroInfo(name: String,
       throw new GorParsingException(s"$name: Maximum number of arguments reached. No more than ${commandArguments.maximumNumberOfArguments} argument(s) allowed.")
     }
 
-    processArguments(createKey, create, context, doHeader, arguments, args)
+    processArguments(createKey, create, context, doHeader, arguments, args, skipCache)
   }
 
   protected def processArguments(createKey: String,
@@ -73,7 +74,8 @@ abstract case class MacroInfo(name: String,
                                  context: GorContext,
                                  doHeader: Boolean,
                                  inputArguments: Array[String],
-                                 options: Array[String]): MacroParsingResult = {
+                                 options: Array[String],
+                                 skipCache: Boolean): MacroParsingResult = {
     throw new NotImplementedError()
   }
 

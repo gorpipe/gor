@@ -168,7 +168,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         // Replace any virtual file in the current query
         firstLevelBlock.query = virtualFileManager.replaceVirtualFiles(firstLevelBlock.query)
 
-        if(firstLevelBlock.signature==null&&firstLevelBlock.query!=null&&firstLevelBlock.query.toLowerCase.startsWith("pgor ")) {
+        if(validate&&firstLevelBlock.signature==null&&firstLevelBlock.query!=null&&firstLevelBlock.query.toLowerCase.startsWith("pgor ")) {
           val usedFiles = getUsedFiles(firstLevelBlock.query)
           val fileSignature = getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles)
           val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
@@ -176,7 +176,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         }
 
         // Expand the executionBlock with macros
-        val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock))
+        val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock), validate)
 
         // We need to determine if there is any dependency in the new executions, remove dependent blocks and
         // add them to the executionBlocks map
@@ -440,7 +440,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def expandMacros(creates: ExecutionBlocks): ExecutionBlocks = {
+  private def expandMacros(creates: ExecutionBlocks, valid: Boolean): ExecutionBlocks = {
 
     var activeCreates = creates
     var macroCreated = false
@@ -466,7 +466,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               create._2,
               context,
               false,
-              commandOptions.slice(1, commandOptions.length))
+              commandOptions.slice(1, commandOptions.length),
+              !valid)
 
             newCreates ++= macroResult.createCommands
             if (macroResult.aliases != null) {
