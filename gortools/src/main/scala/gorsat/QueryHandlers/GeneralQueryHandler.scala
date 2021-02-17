@@ -290,7 +290,7 @@ object GeneralQueryHandler {
       }).flatMap(o => o.stream().iterator().asScala)
       writeList(outfile, dictList)
     }
-    outfile
+    outpath.toString
   }
 
   def writeOutNorDictionaryPart(commandToExecute: String, outfile: String): String = {
