@@ -78,7 +78,7 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
     val context = new GenericSessionFactory().create().getGorContext
 
     if (macroInfo.nonEmpty) {
-      Option(macroInfo.get.init(block.groupName, block, context, doHeader = false, options))
+      Option(macroInfo.get.init(block.groupName, block, context, doHeader = false, options, false))
     } else {
       Option(null)
     }
