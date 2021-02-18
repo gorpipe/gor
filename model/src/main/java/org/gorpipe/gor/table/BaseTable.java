@@ -64,7 +64,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
     public static final boolean DEFAULT_USE_HISTORY = true;
-    private static final boolean DEFAULT_BUCKETIZE = true;
+    private static final boolean DEFAULT_BUCKETIZE = false;  // Value used if bucketized is not set.
 
     private final Path path;            // Path to the table (currently absolute instead of real for compatibility with older code).
     private final Path folderPath;      // Path to the table folder.  The table folder is hidden folder that sits next to the
@@ -82,7 +82,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private boolean useHistory = DEFAULT_USE_HISTORY;
     private boolean hasUniqueTags = false;    //True if we don't want to allow double entries of the same tag
     private boolean validateFiles = DEFAULT_VALIDATE_FILES;
-    private Boolean bucketize = true;
+    private Boolean bucketize = null;
 
     protected ITableEntries<T> tableEntries;
 
@@ -241,8 +241,12 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.validateFiles = validateFiles;
     }
 
+    public boolean isBucketizeSet() {
+        return bucketize != null;
+    }
+
     public boolean isBucketize() {
-        return bucketize != null ? bucketize : DEFAULT_BUCKETIZE;
+        return isBucketizeSet() ? bucketize : DEFAULT_BUCKETIZE;
     }
 
     public void setBucketize(boolean bucketize) {
@@ -367,8 +371,8 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         // Validate file columns.
         updateValidateHeader(line);
 
-        // Update bucketize
-        if (bucketize == null) {
+        // Update bucketize - Do that from the content so do it here.
+        if (!isBucketizeSet()) {
             bucketize = inferShouldBucketizeFromFile(line.getContentReal());
         }
 
@@ -559,7 +563,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
         hasUniqueTags = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY,  Boolean.toString(hasUniqueTags)));
 
-        bucketize = getBooleanConfigTableProperty(TableHeader.HEADER_BUCKETIZE_KEY, null);
+        bucketize = getBooleanConfigTableProperty(TableHeader.HEADER_BUCKETIZE_KEY, bucketize);
     }
 
     /**
@@ -762,18 +766,18 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         return configValue != null ? Boolean.valueOf(configValue) : def;
     }
 
-    public static boolean inferShouldBucketizeFromFile(String fileName) {
+    public static Boolean inferShouldBucketizeFromFile(String fileName) {
         String type = FilenameUtils.getExtension(fileName);
 
         if ("gor".equalsIgnoreCase(type) || "gorz".equalsIgnoreCase(type)) {
             return true;
         }
         
-        if ("bam".equalsIgnoreCase(type) || "cram".equalsIgnoreCase(type)) {
+        if ("bam".equalsIgnoreCase(type) || "cram".equalsIgnoreCase(type) || "vcf".equalsIgnoreCase(type)) {
             return false;
         }
 
-        return false;
+        return null;
     }
 
     // Util method.
