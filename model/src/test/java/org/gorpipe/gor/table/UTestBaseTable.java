@@ -697,10 +697,10 @@ public class UTestBaseTable {
         Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.bam"));
         Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.cram"));
         Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("/a/b/c.bam"));
-
-        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y"));
-        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile(""));
         Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.vcf"));
+
+        Assert.assertNull(BaseTable.inferShouldBucketizeFromFile("y"));
+        Assert.assertNull(BaseTable.inferShouldBucketizeFromFile(""));
     }
 
     @Test
