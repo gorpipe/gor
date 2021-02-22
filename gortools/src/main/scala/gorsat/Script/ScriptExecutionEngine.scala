@@ -211,10 +211,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               executionBlocks -= firstLevelBlock.groupName
             } else {
               // We need to create a new dictionary query to the batch to get the results from expanded queries
-              val querySignature = if(firstLevelBlock.signature==null) {
-                val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
-                StringUtilities.createMD5(cte.query + fileSignature)
-              } else firstLevelBlock.signature
+              val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
+              val querySignature = StringUtilities.createMD5(cte.query + fileSignature)
               executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName, cte.cacheFile)
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
