@@ -59,10 +59,8 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     } else (null, false)
   }
 
-  def appendQuery(finalQuery: String, cachefile: String, cacheFileExists: Boolean, lastCmd: String, hasWrite: Boolean): String = {
-    " <(" + finalQuery + ")" + (if(cachefile!=null && !cacheFileExists) {
-      " | " + (if(hasWrite) lastCmd + " " + cachefile else "write -d " + cachefile)
-    } else if(hasWrite) {
+  def appendQuery(finalQuery: String, lastCmd: String, hasWrite: Boolean): String = {
+    " <(" + finalQuery + ")" + (if(hasWrite) {
       " | " + lastCmd
     } else {
       ""
@@ -78,7 +76,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
     val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
     if(skipcache) {
-      val queryAppend = appendQuery(finalQuery, null, false, lastCmd, false)
+      val queryAppend = appendQuery(finalQuery, lastCmd, false)
       (false, null, queryAppend)
     } else if(hasWriteFile) {
       val cacheRes = lastCmd.split(" ").last
@@ -88,7 +86,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     } else {
       val fingerprint = create.signature
       val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
-      val queryAppend = appendQuery(finalQuery, cachefile, cacheFileExists, lastCmd, hasWrite)
+      val queryAppend = appendQuery(finalQuery, lastCmd, hasWrite)
       (cacheFileExists, cachefile, queryAppend)
     }
   }

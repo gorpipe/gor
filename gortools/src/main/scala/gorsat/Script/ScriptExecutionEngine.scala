@@ -139,6 +139,15 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     processedGorCommands
   }
 
+  private def resolveCache(lastCommand: String, hasWrite: Boolean): String = {
+    var res: String = null
+    if (hasWrite) {
+      val lastField = lastCommand.split(" ").last.trim
+      if(!lastField.startsWith("-")) res = lastField
+    }
+    res
+  }
+
   private def processScript(igorCommands: Array[String], validate: Boolean): String = {
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
@@ -187,7 +196,12 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         activeExecutionBlocks.foreach { newExecutionBlock =>
           // Get the command to finally execute
           val commandToExecute = newExecutionBlock._2.query
-          val cachePath = newExecutionBlock._2.cachePath
+          val cacheFile = newExecutionBlock._2.cachePath
+
+          val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|').last.trim
+          val hasWrite = lastCommand.toLowerCase.startsWith("write ")
+
+          val cachePath = if(cacheFile!=null) resolveCache(lastCommand, hasWrite) else cacheFile
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
@@ -211,9 +225,13 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               executionBlocks -= firstLevelBlock.groupName
             } else {
               // We need to create a new dictionary query to the batch to get the results from expanded queries
-              val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
-              val querySignature = StringUtilities.createMD5(cte.query + fileSignature)
-              executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName, cte.cacheFile)
+              val querySignature = if(firstLevelBlock.signature!=null&&commandToExecute.startsWith("gordict")) firstLevelBlock.signature
+              else {
+                val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
+                StringUtilities.createMD5(cte.query + fileSignature)
+              }
+              val query = if(cacheFile!=null && !hasWrite) cte.query + "| write -d " + cacheFile else cte.query
+              executionBatch.createNewCommand(querySignature, query, cte.batchGroupName, cte.createName, cte.cacheFile)
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })
