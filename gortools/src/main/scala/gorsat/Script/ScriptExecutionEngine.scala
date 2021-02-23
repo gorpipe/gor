@@ -201,7 +201,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|').last.trim
           val hasWrite = lastCommand.toLowerCase.startsWith("write ")
 
-          val cachePath = if(cacheFile!=null) resolveCache(lastCommand, hasWrite) else cacheFile
+          val cachePath = if(cacheFile==null) resolveCache(lastCommand, hasWrite) else cacheFile
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
