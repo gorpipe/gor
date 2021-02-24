@@ -1,8 +1,6 @@
 package gorsat;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +21,16 @@ public class UTestGorDictionaryFolder {
         } catch (IOException e) {
             // ignore
         }
+    }
+
+    @Before
+    public void init() {
+        System.setProperty("org.gorpipe.gor.driver.gord.folders","true");
+    }
+
+    @After
+    public void close() {
+        System.setProperty("org.gorpipe.gor.driver.gord.folders","false");
     }
 
     @Test

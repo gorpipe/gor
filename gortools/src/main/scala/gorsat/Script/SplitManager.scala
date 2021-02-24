@@ -49,8 +49,6 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
     var expandedCommands: List[CommandEntry] = List.empty[CommandEntry]
     var removeFromCreates = false
 
-    val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute,'|').last.trim
-    val cacheFile = if(lastCommand.toLowerCase.startsWith("write ")) lastCommand.split(" ").last.trim else cachePath
     if (commandToExecute.contains(replacementPattern)) {
       val (splitOpt, splits, splitOverlap, _) = ScriptParsers.splitOptionParser(commandToExecute)
 
@@ -65,12 +63,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
           val repstr = if (splitOverlap != "") "-" + splitOpt + splits + ":" + splitOverlap + " " else "-" + splitOpt + splits + " "
           mc = mc.replace(repstr, "")
         }
-        expandedCommands ::= CommandEntry(n, mc, g, cacheFile)
+        expandedCommands ::= CommandEntry(n, mc, g, cachePath)
       })
 
       removeFromCreates = true
     } else {
-      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName, cacheFile)
+      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName, cachePath)
     }
 
     CommandGroup(expandedCommands, removeFromCreates)
