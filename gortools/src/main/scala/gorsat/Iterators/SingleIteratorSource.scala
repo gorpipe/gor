@@ -23,7 +23,7 @@
 package gorsat.Iterators
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.RowSource
 
@@ -33,7 +33,7 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
   protected var posSet: Boolean = false
   protected var mustReCheck: Boolean = true
 
-  def hasNext: Boolean = {
+  override def hasNext: Boolean = {
     if (!mustReCheck) return myHasNext
     mustReCheck = false
     if (theIterator.hasNext) {
@@ -55,7 +55,7 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
     }
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {
+  override def setPosition(seekChr: String, seekPos: Int) {
     //	val e = new Exception; e.printStackTrace
     posSet = true
     mustReCheck = true

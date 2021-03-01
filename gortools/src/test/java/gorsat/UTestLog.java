@@ -22,8 +22,8 @@
 
 package gorsat;
 
-import org.gorpipe.test.SlowTests;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.test.SlowTests;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;

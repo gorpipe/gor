@@ -23,11 +23,10 @@
 package gorsat.gorsatGorIterator
 
 import java.nio.file.Files
+import java.util.stream.Collectors
 
-import org.gorpipe.model.genome.files.gor.FileReader
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader}
-import org.gorpipe.model.gor.MemoryMonitorUtil
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.iterators.LineIterator
 
 import scala.collection.JavaConverters._
@@ -41,7 +40,7 @@ object MapAndListUtilities {
 
   def exists(filename: String, reader: FileReader): Boolean = {
 
-    if (filename == null) return false;
+    if (filename == null) return false
 
     reader match {
       case dbfr: DriverBackedFileReader => dbfr.resolveUrl(filename).exists()
@@ -81,7 +80,14 @@ object MapAndListUtilities {
   }
 
   def getStringTraversable(filename: String, session: GorSession): Traversable[String] = {
-    session.getProjectContext.getFileReader.getReader(filename).lines().iterator().asScala.toTraversable
+    val reader = session.getProjectContext.getFileReader.getReader(filename)
+    try {
+      val lines = reader.lines()
+      val list = lines.collect(Collectors.toList[String])
+      list.asScala
+    } finally {
+      reader.close()
+    }
   }
 
   def getStringArray(filename: String, iterator: LineIterator, session: GorSession) : Array[String] = {
@@ -109,7 +115,7 @@ object MapAndListUtilities {
 
   def getSingleHashMap(filename: String, iterator: LineIterator, caseInsensitive: Boolean, ic: Int,
                        oc: Array[Int], asSet: Boolean, skipEmpty: Boolean, session: GorSession): singleHashMap =  {
-    val extFilename = "map" + filename + ic + oc.mkString(",")
+    val extFilename = "map" + filename + ic + oc.mkString(",") + asSet
     val ocl = oc.length
     syncGetSingleHashMap(extFilename, session) match {
       case Some(theMap) =>
@@ -117,7 +123,7 @@ object MapAndListUtilities {
         theMap
       case None =>
         try {
-          var colMap = new java.util.HashMap[String, String]()
+          val colMap = new java.util.HashMap[String, String]()
 
           val mmu: MemoryMonitorUtil =  new MemoryMonitorUtil(MemoryMonitorUtil.basicOutOfMemoryHandler)
 

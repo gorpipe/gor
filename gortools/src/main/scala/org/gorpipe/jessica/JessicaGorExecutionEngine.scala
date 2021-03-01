@@ -22,13 +22,13 @@
 
 package org.gorpipe.jessica
 
-import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities
-import gorsat.MacroUtilities.replaceAllAliases
 import gorsat.Outputs.ToList
+import gorsat.Utilities.AnalysisUtilities
+import gorsat.Utilities.MacroUtilities.replaceAllAliases
 import gorsat.process.{CLISessionFactory, GenericGorRunner, PipeInstance, PipeOptions}
-import org.gorpipe.gor.{GorRunner, GorSession}
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.{GorRunner, GorSession}
 
 import scala.collection.mutable.ListBuffer
 
@@ -64,9 +64,9 @@ class JessicaGorExecutionEngine(
     queryToExecute = replaceAllAliases(queryToExecute, fileAliasMap)
 
     val iterator = new PipeInstance(session.getGorContext)
-    iterator.subProcessArguments(queryToExecute, pipeOptions.fileSignature, pipeOptions.virtualFile, pipeOptions.scriptAnalyzer, pipeOptions.stdIn, "")
+    iterator.init(queryToExecute, pipeOptions.stdIn, "")
 
-    var header = iterator.combinedHeader
+    var header = iterator.getHeader
     if (containsWriteCommand(pipeOptions.query)) header = null
 
     // Add steps that return the output of the pipe

@@ -24,12 +24,12 @@ package gorsat.Commands
 
 import gorsat.Analysis.MergeSources
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Merge extends CommandInfo("MERGE",
-  CommandArguments("-u -s -i", "-e", 1, 1),
+  CommandArguments("-u -s -i", "-e -c", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -58,7 +58,8 @@ class Merge extends CommandInfo("MERGE",
 
       if (addRightLeft) combinedHeader = validHeader(combinedHeader + "\tSource")
 
-      val pipeStep: Analysis = MergeSources(segSource, emptyString, addRightLeft, lPickCols.toArray, rPickCols.toArray, same)
+      val sortInfo = Sort.parseSortColumns(args, executeNor, forcedInputHeader)
+      val pipeStep: Analysis = MergeSources(segSource, emptyString, addRightLeft, lPickCols.toArray, rPickCols.toArray, same, sortInfo)
 
       CommandParsingResult(pipeStep, combinedHeader, inputSource.usedFiles)
     } catch {

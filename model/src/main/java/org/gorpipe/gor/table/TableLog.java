@@ -52,9 +52,9 @@ public class TableLog {
         REMOVEFROMBUCKET
     }
 
-    private Path logDir;  // Location of log files.
-    private Path logFilePath;
-    private DateTimeFormatter formatter;
+    private final Path logDir;  // Location of log files.
+    private final Path logFilePath;
+    private final DateTimeFormatter formatter;
     protected List<String> unCommittedActions = Collections.synchronizedList(new ArrayList<>());
 
     /**

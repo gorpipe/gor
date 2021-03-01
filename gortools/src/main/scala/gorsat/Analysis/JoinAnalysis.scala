@@ -22,18 +22,20 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.Analysis
-import gorsat.AnalysisUtilities._
+import gorsat.Utilities.AnalysisUtilities._
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Commands.CommandParsingResult
-import gorsat.Iterators.ChromBoundedIteratorSource
+import gorsat.Commands.{Analysis, CommandParsingResult}
+import gorsat.Iterators.{ChromBoundedIteratorSource, SingleFileSource}
+import gorsat.Utilities.IteratorUtilities
+import gorsat.gorsatGorIterator.MemoryMonitorUtil
 import gorsat.process.SourceProvider
-import gorsat.{Analysis, IteratorUtilities}
+import gorsat.Analysis
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
-import org.gorpipe.gor.{GorConstants, GorContext}
-import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.gor.iterators.{RowSource, SingleFileSource}
-import org.gorpipe.model.gor.{MemoryMonitorUtil, RowObj}
+import org.gorpipe.gor.GorConstants
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
+import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.model.gor.RowObj
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer

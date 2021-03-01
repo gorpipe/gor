@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.function;
 
-import org.gorpipe.gor.ColumnValueProvider;
-import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.parser.ParseArith;
+import org.gorpipe.gor.model.ColumnValueProvider;
+import org.gorpipe.gor.model.Row;
 import scala.Boolean;
 import scala.Function1;
 
@@ -38,7 +38,7 @@ public class GorRowFilterFunction<T extends Row> implements Predicate<T>, Functi
         ParseArith filter = new ParseArith(null);
         filter.setColumnNamesAndTypes(header, gortypes);
         filter.compileFilter(gorwhere);
-        booleanFunction = filter.booleanFunction();
+        booleanFunction = filter.getBooleanFunction();
     }
 
     @Override

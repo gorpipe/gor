@@ -23,13 +23,13 @@
 package gorsat.Outputs
 
 import gorsat.Commands.Output
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class NorStdOut(header: String = null) extends Output {
   val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(System.out), 1024 * 100)
 
   def setup {
-    if (header != null) out.write("#" + header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
+    if (header != null) out.write( header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
   }
 
   def process(r: Row) {

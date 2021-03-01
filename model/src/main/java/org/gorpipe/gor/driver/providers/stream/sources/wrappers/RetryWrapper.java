@@ -88,7 +88,7 @@ public class RetryWrapper extends WrappedStreamSource {
     /**
      * A default retry operator. If there is a FileNotFoundException then do not retry.
      */
-    public class DefaultOnRetryOp implements OnRetryOp {
+    public static class DefaultOnRetryOp implements OnRetryOp {
 
         protected DefaultOnRetryOp() {
         }

@@ -22,10 +22,13 @@
 
 package gorsat.process;
 
-import org.gorpipe.gor.*;
-import org.gorpipe.gor.clients.LocalFileCacheClient;
-import org.gorpipe.model.genome.files.gor.DriverBackedFileReader;
 import gorsat.QueryHandlers.GeneralQueryHandler;
+import org.gorpipe.gor.clients.LocalFileCacheClient;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.session.GorSessionCache;
+import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.session.SystemContext;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -36,7 +39,7 @@ import java.util.UUID;
 public class GenericSessionFactory extends GorSessionFactory {
 
     private String root = "";
-    private String cacheDir;
+    private final String cacheDir;
     private String configFile = "";
 
     public GenericSessionFactory() {

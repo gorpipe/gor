@@ -23,14 +23,16 @@
 package org.gorpipe.gor.table;
 
 import com.google.common.collect.ArrayListMultimap;
+import org.apache.commons.io.FilenameUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -55,9 +57,9 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
     private ArrayListMultimap<Integer, T> tagHashToLines;
     private ArrayListMultimap<Integer, T> contentHashToLines;
     private int nextIndexOrderKey = 0;
-    private Path path;
-    private URI rootUri;
-    private String tableName;
+    private final Path path;
+    private final URI rootUri;
+    private final String tableName;
 
     /**
      * Construct new dict file from the given path and chromosome cache.

@@ -22,37 +22,40 @@
 
 package org.gorpipe.gor.driver;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import com.google.inject.Inject;
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
-import org.gorpipe.util.gorutil.standalone.GorStandalone;
+import org.gorpipe.gor.driver.providers.stream.FileCache;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 import static org.gorpipe.gor.driver.meta.DataType.LINK;
 
 public class PluggableGorDriver implements GorDriver {
     private final static Logger log = LoggerFactory.getLogger(PluggableGorDriver.class);
 
-    private TreeMap<String, SourceType> protocolToSourceType = new TreeMap<>();
-    private Map<SourceType, SourceProvider> sourceTypeToSourceProvider = new HashMap<>();
+    private final TreeMap<String, SourceType> protocolToSourceType = new TreeMap<>();
+    private final Map<SourceType, SourceProvider> sourceTypeToSourceProvider = new HashMap<>();
 
-    private GorDriverConfig config;
+    private final GorDriverConfig config;
 
-    @Inject
+    private static PluggableGorDriver instance;
+
     PluggableGorDriver(Set<SourceProvider> initialSourceProviders, GorDriverConfig config) {
         if (initialSourceProviders != null) {
             for (SourceProvider provider : initialSourceProviders) {
@@ -60,6 +63,33 @@ public class PluggableGorDriver implements GorDriver {
             }
         }
         this.config = config;
+    }
+
+    public static PluggableGorDriver instance() {
+        if (instance == null) {
+            GorDriverConfig gorDriverConfig = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
+            FileCache cache = new FileCache(gorDriverConfig);
+
+            ServiceLoader<StreamSourceIteratorFactory> factoryServiceLoader = ServiceLoader.load(StreamSourceIteratorFactory.class);
+            Set<StreamSourceIteratorFactory> factories = new HashSet<>();
+            for(StreamSourceIteratorFactory sp: factoryServiceLoader) {
+                factories.add(sp);
+            }
+
+            ServiceLoader<SourceProvider> sourceProviders = ServiceLoader.load(SourceProvider.class);
+            Set<SourceProvider> set = new HashSet<>();
+            for(SourceProvider sp: sourceProviders) {
+                sp.setConfig(gorDriverConfig);
+                sp.setCache(cache);
+                if (sp instanceof StreamSourceProvider) {
+                    ((StreamSourceProvider) sp).setIteratorFactories(factories);
+                }
+                set.add(sp);
+            }
+
+            instance = new PluggableGorDriver(set, gorDriverConfig);
+        }
+        return instance;
     }
 
     private void register(SourceProvider provider) {
@@ -179,32 +209,62 @@ public class PluggableGorDriver implements GorDriver {
     private DataSource handleLinks(DataSource source) throws IOException {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
-                if (source.getSourceReference() instanceof IndexableSourceReference) {
-                    return getDataSource(new IndexableSourceReference(readLink(source), (IndexableSourceReference)source.getSourceReference()));
-                } else {
-                    return getDataSource(new SourceReference(readLink(source), source.getSourceReference()));
-                }
+                return getDataSource(getSourceRef(source, readLink(source), null));
             }
         } else {
             if (!source.exists() && source.supportsLinks()) {
                 String url = source.getSourceReference().getUrl();
                 // prevent stackoverflow, some datasources don't support links (dbsource), need to check file ending
                 if (!url.endsWith(".link")) {
-                    SourceReference sourceRef = null;
-
-                    if (source.getSourceReference() instanceof IndexableSourceReference) {
-                        sourceRef = new IndexableSourceReference(url + ".link", (IndexableSourceReference)source.getSourceReference());
-                    } else {
-                        sourceRef = new SourceReference(url + ".link", source.getSourceReference());
-                    }
-
-                    DataSource fallbackLinkSource = getDataSource(sourceRef);
-                    if (fallbackLinkSource.getDataType() != LINK) {
-                        // The link file existed, was resolved.
-                        // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
-                        return fallbackLinkSource;
-                    }
+                    return resolveLink(source, url);
                 }
+            }
+        }
+        return source;
+    }
+
+    private SourceReference getSourceRef(DataSource source, String url, String linkSubPath) {
+        if (source.getSourceReference() instanceof IndexableSourceReference) {
+            return new IndexableSourceReference(url, (IndexableSourceReference)source.getSourceReference(), linkSubPath);
+        } else {
+            return new SourceReference(url, source.getSourceReference(), linkSubPath);
+        }
+    }
+
+    private DataSource resolveLink(DataSource source, String url) throws IOException {
+        SourceReference sourceRef = getSourceRef(source, url+".link", null);
+
+        DataSource fallbackLinkSource = getDataSource(sourceRef);
+        if (fallbackLinkSource.getDataType() != LINK) {
+            // The link file existed, was resolved.
+            // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
+            return fallbackLinkSource;
+        } else {
+            Path p = Paths.get(url);
+            Path newLinkSubPath = p.getFileName();
+            Path parent = p.getParent();
+            if(parent!=null) return recursiveLinkFallBack(source, parent, newLinkSubPath);
+        }
+        return source;
+    }
+
+    private String fixHttpUrl(String url) {
+        return url.startsWith("http") && url.contains(":/") && !url.contains("://") ? url.replace(":/","://") : url;
+    }
+
+    private DataSource recursiveLinkFallBack(DataSource source, Path parent, Path linkSubPath) throws IOException {
+        Path pparent = parent.getParent();
+        if(pparent != null && !pparent.toString().endsWith(":")) {
+            Path parentFileName = parent.getFileName();
+            Path lparent = pparent.resolve(parentFileName+".link");
+            SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), linkSubPath.toString());
+
+            DataSource fallbackLinkSource = getDataSource(sourceRef);
+            if (fallbackLinkSource.getDataType() != LINK) {
+                return fallbackLinkSource;
+            } else {
+                Path newLinkSubPath = parentFileName.resolve(linkSubPath);
+                return recursiveLinkFallBack(source, pparent, newLinkSubPath);
             }
         }
         return source;
@@ -212,6 +272,8 @@ public class PluggableGorDriver implements GorDriver {
 
     @Override
     public String readLink(DataSource source) throws IOException {
+        SourceReference sourceReference = source.getSourceReference();
+        String linkSubPath = sourceReference.getLinkSubPath();
         String linkText = sourceTypeToSourceProvider.get(source.getSourceType()).readLink(source);
         if (GorStandalone.isStandalone() && !linkText.startsWith("//db:")) {
             String prefix = "";
@@ -221,7 +283,7 @@ public class PluggableGorDriver implements GorDriver {
             }
             linkText = prefix + GorStandalone.getRootPrefixed(linkText);
         }
-        return linkText;
+        return linkSubPath != null ? linkText + linkSubPath : linkText;
     }
 
     @Override

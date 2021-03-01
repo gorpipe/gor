@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import gorsat.Utilities.AnalysisUtilities;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.SlowTests;
 import org.junit.Assert;

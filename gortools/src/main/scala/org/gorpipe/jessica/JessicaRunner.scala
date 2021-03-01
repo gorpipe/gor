@@ -24,8 +24,8 @@ package org.gorpipe.jessica
 
 import gorsat.Commands.{CommandParseUtilities, RowHeader}
 import gorsat.process.{PipeInstance, PipeOptions}
+import org.gorpipe.gor.model.Row
 import org.gorpipe.jessica
-import org.gorpipe.model.genome.files.gor.Row
 
 class JessicaRunner extends GorQueryHandler {
   var exception: Throwable = _
@@ -56,7 +56,7 @@ class JessicaRunner extends GorQueryHandler {
     pipeInfo = List.empty[PipeStepInfo]
     var currentInput = query
     try {
-      var pipeSteps = CommandParseUtilities.quoteSafeSplitAndTrim(query, '|')
+      val pipeSteps = CommandParseUtilities.quoteSafeSplitAndTrim(query, '|')
 
       for(i <- pipeSteps.indices) {
         val steps = pipeSteps.slice(0, i + 1)

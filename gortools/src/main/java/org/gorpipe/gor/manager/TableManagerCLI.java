@@ -22,18 +22,19 @@
 
 package org.gorpipe.gor.manager;
 
-import org.gorpipe.model.util.ConfigUtil;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GenomicRange;
-import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.lock.TableLock;
 import de.tototec.cmdoption.CmdCommand;
 import de.tototec.cmdoption.CmdOption;
 import de.tototec.cmdoption.CmdlineParser;
 import de.tototec.cmdoption.handler.AddToCollectionHandler;
 import de.tototec.cmdoption.handler.CmdOptionHandler;
 import org.apache.commons.lang.ArrayUtils;
+import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.GenomicRange;
+import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.lock.TableLock;
+import org.gorpipe.logging.GorLogbackUtil;
+import org.gorpipe.gor.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +70,8 @@ public class TableManagerCLI {
      * @param args commandline arguments.
      */
     static public void main(String[] args) {
+        GorLogbackUtil.initLog("gormanager");
+
         log.trace("TableManager starting");
         ConfigUtil.loadConfig("gor");
         log.trace("config loaded");
@@ -257,8 +260,8 @@ public class TableManagerCLI {
     @CmdCommand(names = {"bucketize"}, description = "Bucketize the table")
     private static class CommandBucketize implements CommandRun {
 
-        @CmdOption(names = {"-w", "--workers"}, args = {"<value>"}, description = "Number of workers/threads to use.  Default: " + BucketManager.DEFAULT_NUMBER_WORKERS)
-        protected int workers = BucketManager.DEFAULT_NUMBER_WORKERS;
+        @CmdOption(names = {"-w", "--workers"}, args = {"<value>"}, description = "Number of workers/threads to use.  Default: " + BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS)
+        protected int workers = BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS;
         @CmdOption(names = {"--min_bucket_size"}, args = {"<value>"}, description = "Minimum number of files in a bucket.  Can never be larger than the bucket size.  Default: " + BucketManager.DEFAULT_MIN_BUCKET_SIZE)
         protected int minBucketSize = BucketManager.DEFAULT_MIN_BUCKET_SIZE;
         @CmdOption(names = {"--bucket_size"}, args = {"<value>"}, description = "Preferred number of files in a bucket (effective maximum).  Default: " + BucketManager.DEFAULT_BUCKET_SIZE)

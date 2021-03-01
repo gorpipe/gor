@@ -22,7 +22,9 @@
 
 package gorsat.Regression;
 
-import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.junit.Assert;
 import org.junit.Test;
 

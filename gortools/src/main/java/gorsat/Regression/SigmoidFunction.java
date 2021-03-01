@@ -27,7 +27,7 @@ import org.apache.commons.math3.util.FastMath;
 import java.lang.ref.WeakReference;
 
 /**
- * A class which uses a lookup table to compute the sigmoid function x -> 1/(1 + e^(-x)) up to a precision of 10^(-10).
+ * A class which uses a lookup table to compute the sigmoid function {@literal x -> 1/(1 + e^(-x))} up to a precision of 10^(-10).
  */
 
 public class SigmoidFunction {

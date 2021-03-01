@@ -27,11 +27,11 @@
 package gorsat.process
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
-import gorsat.MacroUtilities._
 import gorsat.Script.{ScriptEngineFactory, ScriptParsers, SplitManager}
+import gorsat.Utilities.MacroUtilities._
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
-import org.gorpipe.gor.GorSession
+import org.gorpipe.gor.session.GorSession
 
 import scala.collection.JavaConverters._
 
@@ -67,7 +67,8 @@ object GorPrePipe {
     var usedFiles: List[String] = Nil
 
     for (i <- pipeSteps.indices) {
-      val fullcommand = if (i == 0 && !(pipeSteps(0).toUpperCase.trim.startsWith("GOR") || pipeSteps(0).toUpperCase.trim.startsWith("NOR"))) "GOR " + pipeSteps(i).trim else pipeSteps(i).trim
+      val fullcommandWithHints = if (i == 0 && !(pipeSteps(0).toUpperCase.trim.startsWith("GOR") || pipeSteps(0).toUpperCase.trim.startsWith("NOR") || pipeSteps(0).toUpperCase.trim.startsWith("SPARK") || pipeSteps(0).toUpperCase.trim.startsWith("SELECT"))) "GOR " + pipeSteps(i).trim else pipeSteps(i).trim
+      val fullcommand = GorJavaUtilities.clearHints(fullcommandWithHints)
       val command = fullcommand.split(' ')(0).toUpperCase
       var loopcommand = command
       val argString = CommandParseUtilities.quoteSafeSplitAndTrim(fullcommand, ' ').mkString(" ")
@@ -131,7 +132,7 @@ object GorPrePipe {
       val pgor = p + g + o + r + " "
       if (mic.contains(pgor)) {
         mic = CommandParseUtilities.repeatedQuoteSafeReplace(mic, pgor, "gor  ", mic.length + 1)
-        val (splitOpt, splitSize, splitOverlap) = ScriptParsers.splitOptionParser(mic)
+        val (splitOpt, splitSize, splitOverlap, _) = ScriptParsers.splitOptionParser(mic)
         if (splitOpt != "") {
           val repstr = if (splitOverlap != "") "-" + splitOpt + splitSize + ":" + splitOverlap + " " else "-" + splitOpt + splitSize + " "
           mic = mic.replace(repstr, "").replace(SplitManager.WHERE_SPLIT_WINDOW, "2=2")
@@ -153,10 +154,9 @@ object GorPrePipe {
 
     val inputCommands = CommandParseUtilities.quoteSafeSplit(inputCommand, ';')
 
-    val sessionFactory = new GenericSessionFactory()
     val mainAliasMap:singleHashMap = new java.util.HashMap[String, String]()
 
-    val engine = ScriptEngineFactory.create(session.getGorContext, scriptAnalyser = false)
+    val engine = ScriptEngineFactory.create(session.getGorContext)
 
     try {
       val modifiedInputCommands = inputCommands.map(x => pgorReplacer(replaceAllAliases(x, mainAliasMap)))
@@ -170,7 +170,7 @@ object GorPrePipe {
       outArray ++= aliases.asScala.map(x => "aliases\t" + x._1 + "\t" + x._2)
 
     } catch {
-      case e: Exception => /* nothing */
+      case _: Exception => /* nothing */
     }
 
     outArray

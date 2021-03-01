@@ -22,10 +22,10 @@
 
 package gorsat;
 
-import org.gorpipe.model.genome.files.gor.FileReader;
-import org.gorpipe.model.genome.files.gor.Row;
-import org.gorpipe.gor.GorSession;
 import gorsat.Commands.Analysis;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.model.Row;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,13 +37,13 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class IOTestAnalyser extends Analysis {
-    private Map<String, Integer> headerIndexMap = new HashMap<>();
-    private Random rnd = new Random();
+    private final Map<String, Integer> headerIndexMap = new HashMap<>();
+    private final Random rnd = new Random();
     String header;
-    private boolean parallel;
-    private List<Row> rows;
-    private FileReader fileReader;
-    private String cacheDir;
+    private final boolean parallel;
+    private final List<Row> rows;
+    private final FileReader fileReader;
+    private final String cacheDir;
 
     public IOTestAnalyser(String header, boolean parallel, GorSession session) {
         this.header = header;

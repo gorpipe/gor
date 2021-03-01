@@ -29,19 +29,16 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import org.gorpipe.model.genome.files.gor.URIUtils;
-import org.gorpipe.model.util.Util;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -213,9 +210,8 @@ public class S3GenomicIteratorFactory {
         final Stream<String> stream;
         final int idx = file.indexOf('/');
         if (idx < 0) {
-            String bucketName = file;
 
-            ObjectListing listing = s3.listObjects(bucketName, "");
+            ObjectListing listing = s3.listObjects(file, "");
             List<S3ObjectSummary> summaries = listing.getObjectSummaries();
 
             while (listing.isTruncated()) {
@@ -227,20 +223,6 @@ public class S3GenomicIteratorFactory {
             //throw new GorException("Error: Invalid S3 path", "The path " + file + " is not a valid S3 reference.");
         } else stream = null;
         return stream;
-    }
-
-    public String getContentMd5(String uristr) {
-        URI uri = URI.create(uristr);
-        Map<String, String> params = URIUtils.getParams(uri);
-        String file = uri.getPath();
-
-        AmazonS3 s3 = getS3(params);
-        int li = file.lastIndexOf('/');
-        String bucket = file.substring(file.indexOf("://") + 3, li);
-        String key = file.substring(li + 1);
-        ObjectMetadata om = s3.getObjectMetadata(bucket, key);
-        String md5 = om.getETag();
-        return md5;
     }
 
     RdaAWSCredentialsProvider rdaCredProvider;
@@ -375,7 +357,7 @@ class RdaAWSCredentialsProvider implements AWSCredentialsProvider {
         if (keystore != null) {
             log.debug("Loading AWS credentials from RDA keystore %s", keystore);
             Properties p = new Properties();
-            try (InputStream in = new FileInputStream(keystore);) {
+            try (InputStream in = new FileInputStream(keystore)) {
                 p.load(in);
                 accessKey = p.getProperty("access.key");
                 secretKey = p.getProperty("secret.key");

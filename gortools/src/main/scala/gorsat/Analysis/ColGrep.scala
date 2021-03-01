@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class ColGrep(pattern : String, useAllCols : Boolean, mCols : Array[Int], caseInsensitive : Boolean, inverted: Boolean) extends Analysis {
 

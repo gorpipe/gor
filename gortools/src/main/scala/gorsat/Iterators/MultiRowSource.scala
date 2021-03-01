@@ -22,7 +22,7 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.iterators.RowSource
 
 class MultiRowSource(sourceList: List[RowSource]) extends RowSource {
@@ -34,11 +34,11 @@ class MultiRowSource(sourceList: List[RowSource]) extends RowSource {
     rowsource = new DuoSourceGen(null, null, lf, rf, "NOT Files", null, "dummy gorRoot", null, null)
   }
 
-  def hasNext: Boolean = rowsource.hasNext
+  override def hasNext: Boolean = rowsource.hasNext
 
-  def next(): Row = rowsource.next()
+  override def next(): Row = rowsource.next()
 
-  def setPosition(seekChr: String, seekPos: Int): Unit = rowsource.setPosition(seekChr, seekPos)
+  override def setPosition(seekChr: String, seekPos: Int): Unit = rowsource.setPosition(seekChr, seekPos)
 
   def close: Unit = rowsource.close
 

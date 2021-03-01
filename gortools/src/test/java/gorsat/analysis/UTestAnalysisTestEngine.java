@@ -24,9 +24,7 @@ package gorsat.analysis;
 
 import gorsat.Analysis.WithIn;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.math3.genetics.Chromosome;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

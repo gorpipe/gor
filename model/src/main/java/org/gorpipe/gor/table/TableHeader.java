@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.table;
 
-import org.gorpipe.exceptions.GorResourceException;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +59,10 @@ public class TableHeader {
     public static final String HEADER_COLUMNS_KEY = "COLUMNS";
     public static final String HEADER_SERIAL_KEY = "SERIAL";
     public static final String HEADER_LINE_COUNT_KEY = "LINE_COUNT";
+    public static final String HEADER_USE_HISTORY_KEY = "USE_HISTORY";
+    public static final String HEADER_UNIQUE_TAGS_KEY = "UNIQUE_TAGS";
+    public static final String HEADER_VALIDATE_FILES_KEY = "VALIDATE_FILES";
+    public static final String HEADER_BUCKETIZE_KEY = "BUCKETIZE";
 
     HashMap<String, String> headerProps;
     private String[] contentColumns;                   // Columns of the content (output).
@@ -82,13 +86,29 @@ public class TableHeader {
     }
 
     /**
+     * Check if proper table header.
+     *
+     * @return true if the table header (heador for the dict filee) is a proper header otherwise false.
+     * Header is proper if it has defined at least 2 columns and they are not dummy.
+     */
+    public boolean isProperTableHeader() {
+        return this.tableColumns != null && this.tableColumns.length > 1 && !this.tableColumns[1].equalsIgnoreCase("col2");
+    }
+
+    /**
      * Get header property.
      *
      * @param key name of the property.
-     * @return the header property identifed with <key>
+     * @return the header property identifed with [key]
      */
     public String getProperty(String key) {
-        return this.headerProps.get(key);
+        if (HEADER_SOURCE_COLUMN_KEY.equals(key) && !headerProps.containsKey(HEADER_SOURCE_COLUMN_KEY) && isProperTableHeader()) {
+            // Special treatment for source column.  It it si missing from standard probs and the header is good
+            // we retreive it from the standard column heading.
+            return tableColumns[1];
+        } else {
+            return headerProps.get(key);
+        }
     }
 
     /**
@@ -104,10 +124,10 @@ public class TableHeader {
     }
 
     /**
-     * Returns <tt>true</tt> if this header contains the property.
+     * Returns <code>true</code> if this header contains the property.
      *
      * @param key The property key.
-     * @return <tt>true</tt> if this header contains the property.
+     * @return <code>true</code> if this header contains the property.
      */
     public boolean containsProperty(String key) {
         return headerProps.containsKey(key);
@@ -162,15 +182,15 @@ public class TableHeader {
             String[] lineSplit = line.split("=", 2);
             String propName = StringUtils.strip(lineSplit[0], "\t\n #");
             if (propName.equals(HEADER_COLUMNS_KEY)) {
-                setColumns(lineSplit[1].trim().split(",", -1));
+                setColumns(lineSplit[1].trim().split("[\t,]", -1));
             } else {
                 setProperty(propName, lineSplit[1].trim());
             }
             return true;
         } else if (line.startsWith("#")) {
-            String columnsString = StringUtils.strip(line, "\t\n #");
+            String columnsString = StringUtils.strip(line, "\n #");
             if (columnsString.length() > 0) {
-                this.tableColumns = columnsString.split(",", -1);
+                this.tableColumns = columnsString.split("[\t,]", -1);
             }
             return true;
         } else {
@@ -208,7 +228,7 @@ public class TableHeader {
         for (Map.Entry<String, String> entry : this.headerProps.entrySet()) {
             sb.append(String.format("## %s = %s%n", entry.getKey(), entry.getValue()));
         }
-        sb.append(String.format("# %s%n", String.join(",", this.tableColumns)));
+        sb.append(String.format("# %s%n", String.join("\t", this.tableColumns)));
 
         return sb.toString();
     }

@@ -33,6 +33,10 @@ public class BGenFile extends StreamSourceFile {
         super(fileSource);
     }
 
+    public BGenFile(StreamSource fileSource, StreamSource indexSource) {
+        super(fileSource, indexSource);
+    }
+
     @Override
     public boolean supportsIndex() {
         return true;

@@ -26,7 +26,7 @@ import gorsat.Analysis.TeeAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Outputs.StdOut2
 import gorsat.process.PipeInstance
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Tee extends CommandInfo("TEE",
   CommandArguments("-h", " ", 1, 1),
@@ -40,9 +40,8 @@ class Tee extends CommandInfo("TEE",
 
     context.getSession.setNorContext(executeNor)
     val teeIt = PipeInstance.createGorIterator(context)
-    teeIt.scalaPipeStepInit(outputPipeCmd,combinedHeader)
+    val teeStep = teeIt.createPipestep(outputPipeCmd,combinedHeader)
 
-    val teeStep = teeIt.getPipeStep
     val teeHeader = if (hasOption(args,"-h")) teeIt.getHeader else ""
 
     val pipeStep: Analysis = TeeAnalysis(teeStep | StdOut2(teeHeader))

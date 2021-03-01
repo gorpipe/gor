@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.adapters;
 
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import htsjdk.samtools.seekablestream.SeekableStream;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
 import java.io.IOException;
 

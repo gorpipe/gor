@@ -22,11 +22,10 @@
 
 package gorsat.parser
 
-import org.scalatest._
 import gorsat.process.GenericSessionFactory
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
+import org.scalatest._
 
 abstract class UnitSpec extends FlatSpec with Matchers with
   OptionValues with Inside with Inspectors

@@ -25,6 +25,10 @@ package org.gorpipe.gor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.session.EventLogger;
+import org.gorpipe.gor.session.GorContext;
+import org.gorpipe.gor.session.GorScriptTask;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.stats.StatsCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,6 +138,8 @@ public class RequestStats implements EventLogger {
         task.cacheFile = cacheFile;
         task.commandExecuted = commandToExecute;
 
+        createdFiles.put(cacheFile, name);
+
         nodeAddedOrUpdated(task);
     }
 
@@ -176,10 +182,16 @@ public class RequestStats implements EventLogger {
         addContextStats(session.getGorContext());
     }
 
+    @Override
+    public StatsCollector getStatsCollector() {
+        return new StatsCollector();
+    }
+
     static class QueryInfo {
         public String requestId;
         public Map<String, GorScriptTask> tasks = new HashMap<>();
         public Map<String, StatsCollector> stats = new HashMap<>();
+        public Map<String, String> createdFiles = new HashMap<>();
     }
 
     public void saveToJson() throws IOException {
@@ -187,6 +199,7 @@ public class RequestStats implements EventLogger {
         queryInfo.requestId = session.getRequestId();
         queryInfo.tasks = nodes;
         queryInfo.stats = stats;
+        queryInfo.createdFiles = createdFiles;
 
         String json = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(queryInfo);
         String fileName = "gor-stats-" + session.getRequestId() + ".json";

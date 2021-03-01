@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.VcfGzGenomicIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.VcfGzGenomicIterator;
 
 import java.io.IOException;
 
@@ -32,7 +32,7 @@ import java.io.IOException;
  * Created by sigmar on 27/10/15.
  */
 public class VcfFileIterator extends VcfGzGenomicIterator {
-    public VcfFileIterator(StreamSourceFile file, GenomicIterator.ChromoLookup lookup, int[] columns, boolean compressed) throws IOException {
-        super(lookup, file.getName(), columns, file.getFileSource(), compressed);
+    public VcfFileIterator(StreamSourceFile file, GenomicIterator.ChromoLookup lookup, boolean compressed) throws IOException {
+        super(lookup, file.getName(), file.getFileSource(), compressed);
     }
 }

@@ -24,7 +24,7 @@ package gorsat.InputSources
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
 import gorsat.Iterators.CountingNorRowIterator
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Norrows() extends InputSourceInfo("NORROWS", CommandArguments("","-step -offset", 1, 1), isNorCommand = true) {
 

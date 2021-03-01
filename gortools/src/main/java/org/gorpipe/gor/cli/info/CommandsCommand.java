@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.cli.info;
 
-import org.gorpipe.gor.cli.HelpOptions;
 import gorsat.process.GorPipeCommands;
+import org.gorpipe.gor.cli.HelpOptions;
 import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")

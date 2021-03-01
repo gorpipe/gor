@@ -28,6 +28,8 @@ package gorsat.Script
   */
 case class ExecutionBlock(groupName: String,
                           var query: String = null,
+                          var signature: String = null,
                           dependencies: Array[String],
                           batchGroupName: String = null,
+                          cachePath: String = null,
                           isDictionary: Boolean = false)

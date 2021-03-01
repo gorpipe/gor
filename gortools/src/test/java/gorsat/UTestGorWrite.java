@@ -23,6 +23,7 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -31,10 +32,8 @@ import org.junit.Test;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 /**
  * Created by hjalti on 13/06/17.
@@ -61,6 +60,27 @@ public class UTestGorWrite {
         path.toFile().deleteOnExit();
         String md5str = new String(Files.readAllBytes(path));
         Assert.assertEquals("Not a valid md5 string", 32, md5str.length());
+    }
+
+    @Test
+    public void testGorWriteColumnNumber() {
+        Path tmpfile = tmpdir.resolve("genes_md5.gorz");
+        tmpfile.toFile().deleteOnExit();
+        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize().toString();
+        String headerRes = TestUtils.runGorPipe(query);
+        Assert.assertEquals("", "Chrom\tgene_start\n", headerRes);
+    }
+
+    @Test
+    public void testGorzWriteCompressionLevel() throws IOException {
+        Path tmpfile = tmpdir.resolve("genes.gorz");
+        tmpfile.toFile().deleteOnExit();
+        String query = "gor ../tests/data/gor/genes.gor | write -l 9 " + tmpfile.toAbsolutePath().normalize().toString();
+
+        TestUtils.runGorPipeCount(query);
+
+        Path originalGenesGorz = Paths.get("../tests/data/gor/genes.gorz");
+        Assert.assertNotEquals("Files with different compression level are of same size", Files.size(tmpfile), Files.size(originalGenesGorz));
     }
 
     @Test
@@ -118,45 +138,121 @@ public class UTestGorWrite {
     }
 
     @Test
-    public void testGorWrite() {
-        Path tmpfile = tmpdir.resolve("genes_copy.gor");
-        tmpfile.toFile().deleteOnExit();
-        String fullpath = tmpfile.toAbsolutePath().normalize().toString();
-        TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write " + fullpath);
-        TestUtils.assertTwoGorpipeResults("gor ../tests/data/gor/genes.gorz", "gor " + fullpath);
+    public void testWriteGor() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".gor").toAbsolutePath();
+        TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write " + tmpfile);
+        TestUtils.assertTwoGorpipeResults("gor " + tmpfile, "gor ../tests/data/gor/genes.gorz");
+        Assert.assertEquals("#Chrom	gene_start	gene_end	Gene_Symbol", Files.readAllLines(tmpfile).get(0));
     }
 
     @Test
-    public void testGorWriteWithNonGorEnding() throws FileNotFoundException {
-        Path tmpfile = tmpdir.resolve("genes_copy.non");
-        tmpfile.toFile().deleteOnExit();
-        String fullpath = tmpfile.toAbsolutePath().normalize().toString();
-        TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write " + fullpath);
-        final String res = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gorz");
-        final BufferedReader br = new BufferedReader(new FileReader(tmpfile.toFile()));
-        final StringBuilder sb = new StringBuilder();
-        br.lines().forEach(line -> sb.append(line + "\n"));
-        Assert.assertEquals(res, sb.toString());
+    public void testWriteNor() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".nor").toAbsolutePath();
+        TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
+        TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
+        Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+    }
+
+    @Test
+    @Ignore("Write uses chr")
+    public void testWriteVcf() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".vcf").toAbsolutePath();
+        TestUtils.runGorPipeCount("gor ../tests/data/external/samtools/test.vcf | write " + tmpfile);
+        TestUtils.assertTwoGorpipeResults("gor " + tmpfile, "gor ../tests/data/external/samtools/test.vcf ");
+        Assert.assertEquals("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA00001	NA00002	NA00003", Files.readAllLines(tmpfile).get(1));
+    }
+
+    @Test
+    public void testWriteTsv() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".tsv").toAbsolutePath();
+        TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
+        TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
+        Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+    }
+
+    @Test
+    public void testWriteUnknownExt() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".non").toAbsolutePath();
+        TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
+        TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
+        Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+    }
+
+    @Test
+    public void testWriteNoHeaderUnknownExt() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".non").toAbsolutePath();
+        TestUtils.runGorPipeCount("nor ../tests/data/gor/genes.gorz | top 1 | write -noheader " + tmpfile);
+        Assert.assertEquals("chr1\t11868\t14412\tDDX11L1\n", FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
+    }
+
+    @Test
+    public void testWriteNoHeaderVcf() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".vcf").toAbsolutePath();
+        TestUtils.runGorPipeCount("gor ../tests/data/external/samtools/test.vcf  | top 1 | write -noheader " + tmpfile);
+        Assert.assertEquals("chr20\t14370\trs6054257\tG\tA\t29\tPASS\tNS=3;DP=14;AF=0.5;DB;H2\tGT:GQ:DP:HQ\t0|0:48:1:51,51\t1|0:48:8:51,51\t1/1:43:5:.,.\n",
+                FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
+    }
+
+    @Test
+    public void testWriteNoHeaderTsv() throws IOException {
+        Path tmpfile = Files.createTempFile(tmpdir, "data", ".tsv").toAbsolutePath();
+        TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | top 1 | write -noheader " + tmpfile);
+        Assert.assertEquals("C\tCC\trs367896724\n", FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
+    }
+
+    @Test
+    public void testWriteNoHeaderInternalExt() throws IOException {
+        try {
+            Path tmpfile = Files.createTempFile(tmpdir, "data", ".gor");
+            TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write -noheader "
+                    + tmpfile.toAbsolutePath().normalize().toString());
+            Assert.fail("Can not skip header for gor");
+        } catch (GorParsingException pe) {
+        }
+
+        try {
+            Path tmpfile = Files.createTempFile(tmpdir, "data", ".gorz");
+            TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write -noheader "
+                    + tmpfile.toAbsolutePath().normalize().toString());
+            Assert.fail("Can not skip header for gorz");
+        } catch (GorParsingException pe) {
+        }
+
+        try {
+            Path tmpfile = Files.createTempFile(tmpdir, "data", ".nor");
+            TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write -noheader "
+                    + tmpfile.toAbsolutePath().normalize().toString());
+            Assert.fail("Can not skip header for nor");
+        } catch (GorParsingException pe) {
+        }
+
+        try {
+            Path tmpfile = Files.createTempFile(tmpdir, "data", ".norz");
+            TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write -noheader "
+                    + tmpfile.toAbsolutePath().normalize().toString());
+            Assert.fail("Can not skip header for norz");
+        } catch (GorParsingException pe) {
+        }
     }
 
     @Test
     public void testGorWriteStandardOut() throws IOException {
+        // Not sure what this test is doing with stdout!
         final PrintStream stdout = System.out;
         final ByteArrayOutputStream bout = new ByteArrayOutputStream(1024 * 1024);
-        System.setOut(new PrintStream(bout));
+        try {
+            System.setOut(new PrintStream(bout));
 
-        Path tmpfile = tmpdir.resolve("genes_top3.gor");
-        tmpfile.toFile().deleteOnExit();
-        String fullpath = tmpfile.toAbsolutePath().normalize().toString();
+            Path tmpfile = Files.createTempFile(tmpdir, "data", ".gor").toAbsolutePath();;
+            String query = "gor ../tests/data/gor/genes.gorz | top 3 | write " + tmpfile;
+            String queryResult = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gorz | top 3");
 
-        String query = "gor ../tests/data/gor/genes.gorz |top 3|write " + fullpath;
-        String queryResult = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gorz |top 3");
-
-        TestUtils.runGorPipeIteratorOnMain(query);
-
-        System.setOut(stdout); // Replace with actual system out
-
-        Assert.assertEquals("Unexpected results written to file!", FileUtils.readFileToString(new File(fullpath), "utf-8"), queryResult);
+            TestUtils.runGorPipeIteratorOnMain(query);
+            Assert.assertEquals("Unexpected results written to file!",
+                    "#" + queryResult, FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
+        } finally {
+            System.setOut(stdout); // Replace with actual system out
+        }
     }
 
     @Test

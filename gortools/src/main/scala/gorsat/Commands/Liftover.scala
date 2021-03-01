@@ -23,10 +23,10 @@
 package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.PipeInstance
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 
 class Liftover extends CommandInfo("LIFTOVER",
@@ -185,8 +185,7 @@ class Liftover extends CommandInfo("LIFTOVER",
             | replace CIGAR if(liftover_qstrand='-',revcigar(CIGAR),CIGAR)
             | replace MPOS if(isint(MPOS),MPOS-#2+liftover_nStart,MPOS)
             | select liftover_nChrom,liftover_nStart,liftover_nEnd,""" + (if (lhColnum > 3) "4-distance[-1]," else "") +
-          """
-1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
+          """1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
             | rename #1 """ + lhChrom +
           """ | rename #2 """ + lhStart +
@@ -223,8 +222,7 @@ class Liftover extends CommandInfo("LIFTOVER",
             | calc liftover_nStart IF(fulloverlap = 'mapped',int(liftover_nnStart),int(0))
             | calc liftover_nEnd IF(fulloverlap = 'mapped',int(liftover_nnEnd),int(1))
             | select liftover_nChrom,liftover_nStart,liftover_nEnd,""" + (if (lhColnum > 3) "4-distance[-1]," else "") +
-          """
-1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
+          """1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
             | rename #1 """ + lhChrom +
           """ | rename #2 """ + lhStart +
@@ -242,11 +240,11 @@ class Liftover extends CommandInfo("LIFTOVER",
     }
 
 
-    val itDyn = PipeInstance.createGorIterator(context)
-    itDyn.scalaPipeStepInit(command, combinedHeader)
+    val itDyn = new PipeInstance(context)
+    val pipestep = itDyn.createPipestep(command, combinedHeader)
     combinedHeader = itDyn.getHeader
 
-    CommandParsingResult(itDyn.thePipeStep, combinedHeader)
+    CommandParsingResult(pipestep, combinedHeader)
   }
 }
 

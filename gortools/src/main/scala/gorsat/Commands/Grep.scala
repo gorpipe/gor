@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.ColGrep
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Grep extends CommandInfo("GREP",
   CommandArguments("-s -i -v", "-c", 1, 1),

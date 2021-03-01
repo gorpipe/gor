@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 case class RegularRowHandler(binsize: Int) extends RowHandler {
   val binIDgen = RegularBinIDgen(binsize)

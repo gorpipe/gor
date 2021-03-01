@@ -1,0 +1,119 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+
+import com.nextcode.gradle.*
+
+plugins {
+    id "gor.java-internal-library"
+    id 'maven-publish'
+    id 'signing'
+}
+
+publishing {
+    publications {
+        mavenJavaLibModule(MavenPublication) {
+            from components.java
+
+            artifactId = getCustomProjectId()
+            groupId = getCustomGroupId()
+
+            pom {
+                name = 'Gorpipe'
+                description = 'GORpipe allows analysis of large sets of genomic and phenotypic tabular data using a declarative query language in a parallel execution engine'
+                url = 'http://gorpipe.org'
+                licenses {
+                    license {
+                        name = 'GNU Affero General Public License'
+                        url = 'https://www.gnu.org/licenses/agpl-3.0.en.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'gisli'
+                        name = 'Gisli Magnusson'
+                        email = 'gisli@genuitysci.com'
+                    }
+                    developer {
+                        id = 'hakon'
+                        name = 'Hakon Gudbjartsson'
+                        email = 'hakon@genuitysci.com'
+                    }
+                    developer {
+                        id = 'sigmar'
+                        name = 'Sigmar Stefansson'
+                        email = 'sigmar@genuitysci.com'
+                    }
+                    developer {
+                        id = 'vidar'
+                        name = 'Vidar Hrafnkelsson'
+                        email = 'vidar@genuitysci.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/gorpipe/gor.git'
+                    developerConnection = 'scm:git:ssh://github.com/gorpipe/gor.git'
+                    url = 'http://docs.gorpipe.org/'
+                }
+            }
+        }
+    }
+    repositories {
+        if (project.hasProperty('publishToMavenCentral')) {
+            maven {
+                name = "MavenCentral"
+                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                credentials {
+                    username = project.findProperty("nexus_user")
+                    password = project.findProperty("nexus_password")
+                }
+            }
+        } else if (project.hasProperty('publishToGithub')) {
+            maven {
+                name = "GitHubPackages"
+                url = "https://maven.pkg.github.com/gorpipe/gor"
+                credentials {
+                    username = project.findProperty('github_user') ?: System.getenv("GITHUB_ACTOR")
+                    password = project.findProperty('github_token') ?: System.getenv("GITHUB_TOKEN")
+                }
+            }
+        } else {
+            maven {
+                name "gitlab-gor-maven"
+                url uri("https://gitlab.com/api/v4/projects/17033400/packages/maven")
+                credentials(HttpHeaderCredentials) {
+                    name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
+                    value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
+                }
+                authentication {
+                    header(HttpHeaderAuthentication)
+                }
+            }
+        }
+    }
+}
+
+if (project.hasProperty('publishToMavenCentral')) {
+    signing {
+        sign publishing.publications.mavenJavaLibModule
+    }
+}
+

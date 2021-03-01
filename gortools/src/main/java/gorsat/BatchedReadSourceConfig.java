@@ -22,9 +22,9 @@
 
 package gorsat;
 
+import org.aeonbits.owner.Config;
 import org.gorpipe.base.config.annotations.Documentation;
 import org.gorpipe.base.config.converters.DurationConverter;
-import org.aeonbits.owner.Config;
 
 import java.time.Duration;
 

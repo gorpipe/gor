@@ -22,7 +22,7 @@
 
 package gorsat.parser;
 
-import org.gorpipe.gor.ColumnValueProvider;
+import org.gorpipe.gor.model.ColumnValueProvider;
 
 public interface CvpIntegerLambda {
     int evaluate(ColumnValueProvider cvp);

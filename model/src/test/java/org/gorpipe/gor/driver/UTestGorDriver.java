@@ -22,14 +22,12 @@
 
 package org.gorpipe.gor.driver;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.GorDriver;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import org.nanohttpd.protocols.http.TestFileHttpServer;
 
@@ -72,6 +70,83 @@ public class UTestGorDriver {
         FileTestUtils.createLinesFile(workDir, 2000);
     }
 
+
+    @Test
+    public void gorDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gor");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void gorzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gorz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void gorgzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gor.gz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void norDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/nor/simple.nor");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void norzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/nor/simple.norz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void vcfDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/test.vcf");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void vcfgzDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/test.vcf.gz");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void bamDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/noindex.bam");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void cramDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/cram_query_sorted.cram");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void bgenDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/external/bgen/testfile1_chr1.bgen");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void parquetDataSource() throws IOException {
+        SourceReference sourceReference = new SourceReference("../tests/data/parquet/dbsnp_test.parquet");
+        GenomicIterator iterator = gorDriver.createIterator(sourceReference);
+        Assert.assertNotNull(iterator);
+    }
 
     @Test
     public void testRelativeLinkFiles() {
@@ -136,7 +211,7 @@ public class UTestGorDriver {
 
     @Test
     public void testIndexedSourceReference() throws IOException {
-        DataSource source = gorDriver.getDataSource(new IndexableSourceReference("../tests/data/gor/genes.gor", "foo", "bar", null, null, null, null, null));
+        DataSource source = gorDriver.getDataSource(new IndexableSourceReference("../tests/data/gor/genes.gor", "foo", "bar", null, null, null, null));
 
         Assert.assertTrue("source should exists", source.exists());
         Assert.assertTrue(source.getSourceReference() instanceof IndexableSourceReference);
@@ -159,7 +234,7 @@ public class UTestGorDriver {
         FileUtils.writeStringToFile(linkFile, dataFile.getAbsolutePath(), Charset.defaultCharset());
 
         // Create indexable source references
-        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(linkFile.getAbsolutePath(), "foo", "bar", null, null, null, null, null));
+        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(linkFile.getAbsolutePath(), "foo", "bar", null, null, null, null));
         Assert.assertTrue("source should exists", source.exists());
 
         // test that the data source source reference is of the correct type and includes the index and reference file
@@ -175,7 +250,7 @@ public class UTestGorDriver {
         FileUtils.writeStringToFile(linkFile, dataFile.getAbsolutePath(), Charset.defaultCharset());
 
         // Create indexable source references
-        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(linkFile.getAbsolutePath().replace(".link", ""), "foo", "bar", null, null, null, null, null));
+        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(linkFile.getAbsolutePath().replace(".link", ""), "foo", "bar", null, null, null, null));
         Assert.assertTrue("source should exists", source.exists());
 
         // test that the data source source reference is of the correct type and includes the index and reference file

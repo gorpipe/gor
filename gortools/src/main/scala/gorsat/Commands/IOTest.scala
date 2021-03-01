@@ -23,8 +23,8 @@
 package gorsat.Commands
 
 import gorsat.IOTestAnalyser
-import gorsat.IteratorUtilities.validHeader
-import org.gorpipe.gor.GorContext
+import gorsat.Utilities.IteratorUtilities.validHeader
+import org.gorpipe.gor.session.GorContext
 
 class IOTest extends CommandInfo("IOTEST",
   CommandArguments("-p", "", 0, 0),

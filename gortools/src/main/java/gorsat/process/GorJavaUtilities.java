@@ -23,11 +23,11 @@
 package gorsat.process;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.GorSession;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
+import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.iterators.RowSource;
-import org.gorpipe.model.genome.files.gor.DbSource;
-import org.gorpipe.model.genome.files.gor.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
@@ -78,7 +79,46 @@ public class GorJavaUtilities {
         }
     }
 
-    public static class PRPRPRValue extends PRPRValue {
+    public enum Phenotypes {
+        BINARY,
+        QUANTITATIVE,
+        MIXED
+    }
+
+    public static Phenotypes getPhenotype(String pheno) throws IOException {
+        Phenotypes pt = Phenotypes.BINARY;
+        if (pheno!=null&&pheno.length()>0) {
+            var p = Paths.get(pheno);
+            if(Files.exists(p)) {
+                String[] common = Files.lines(p).skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
+                    for (int i = 0; i < r1.length; i++) {
+                        try {
+                            Integer.parseInt(r1[i]);
+                            r1[i] = r2[i];
+                        } catch (NumberFormatException e) {
+                            // Keep non integers fore reduction
+                        }
+                    }
+                    return r1;
+                }).get();
+
+                pt = null;
+                for (int i = 0; i < common.length; i++) {
+                    try {
+                        Integer.parseInt(common[i]);
+                        if (pt == null) pt = Phenotypes.BINARY;
+                        else if (pt.equals(Phenotypes.QUANTITATIVE)) pt = Phenotypes.MIXED;
+                    } catch (NumberFormatException e) {
+                        if (pt == null) pt = Phenotypes.QUANTITATIVE;
+                        else if (pt.equals(Phenotypes.BINARY)) pt = Phenotypes.MIXED;
+                    }
+                }
+            }
+        }
+        return pt;
+    }
+
+    public static class PRPRPRValue extends GorJavaUtilities.PRPRValue {
         PRPRPRValue() {
             super();
         }
@@ -120,6 +160,41 @@ public class GorJavaUtilities {
         }
     }
 
+    public static String clearHints(String query) {
+        int i = query.indexOf("/*+");
+        if(i != -1) {
+            return query.substring(0,i) + query.substring(query.indexOf("*/",i+3)+2,query.length());
+        }
+        return query;
+    }
+
+    public static String[] splitResourceHints(String query, String validStart) {
+        int i = query.indexOf("/*+");
+        String[] ret = new String[] {query,null};
+        if (i!=-1) {
+            int e = query.indexOf("*/",i+3);
+            String hints = query.substring(i+3,e).trim();
+            List<String> resourceHints = new ArrayList<>();
+            List<String> sqlHints = new ArrayList<>();
+            String[] hintSplit = hints.split("[ ]+");
+            Arrays.asList(hintSplit).forEach(hint -> {
+                if (hint.startsWith(validStart)) {
+                    resourceHints.add(hint);
+                } else {
+                    sqlHints.add(hint);
+                }
+            });
+            if (resourceHints.size()>0) ret[1] = String.join(" ", resourceHints);
+            if (sqlHints.size()==0) {
+                query = query.substring(0,i) + query.substring(e+2);
+            } else {
+                query = query.substring(0,i+3) + String.join(" ", sqlHints) + query.substring(e);
+            }
+            ret[0] = query;
+        }
+        return ret;
+    }
+
     public static String createMapString(Map<String,String> createMap) {
         return createMap.entrySet().stream().map(e -> "create "+e.getKey()+" = "+e.getValue()).collect(Collectors.joining("; ","",""));
     }
@@ -150,7 +225,7 @@ public class GorJavaUtilities {
                     }
                 }
             }
-            myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1, myCommand.length());
+            myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1);
         }
         return myCommand;
     }
@@ -224,7 +299,7 @@ public class GorJavaUtilities {
      * Helper method for wrapping Object[] iterator to Stream.
      *
      * @param iterator
-     * @return Stream<String> where iterator elements are represented as string joined with tab delimiter
+     * @return Stream where iterator elements are represented as string joined with tab delimiter
      */
     public static Stream<String> wrapObjectArrayIterator(Iterator<Object[]> iterator) {
         Iterator<String> theIterator = new Iterator<String>() {
@@ -358,8 +433,7 @@ public class GorJavaUtilities {
         }
 
         if (projectRoot != null) {
-            Path projectWhiteListPath = projectRoot.resolve(whiteListFile);
-            return projectWhiteListPath;
+            return projectRoot.resolve(whiteListFile);
         }
 
         log.warn("Whitelist file {} is relative but no project root is defined!", whiteListFile);

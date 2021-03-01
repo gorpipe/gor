@@ -22,25 +22,68 @@
 
 package gorsat;
 
-import org.gorpipe.model.genome.files.gor.Row;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 
 /**
  * Created by sigmar on 25/06/15.
  */
 public class UTestNor {
+
+    @Rule
+    public TemporaryFolder projectDir = new TemporaryFolder();
+
+    @Rule
+    public TemporaryFolder symbolicTarget = new TemporaryFolder();
+
+    private ProjectContext projectContext;
+
+    @Before
+    public void setUp() throws IOException {
+        ArrayList<String> locations = new ArrayList<>();
+        locations.add("user_data");
+
+        projectContext = new ProjectContext.Builder()
+                .setRoot(projectDir.getRoot().getCanonicalPath())
+                .setWriteLocations(locations)
+                .build();
+        createSymbolicLink();
+    }
+
+    private void createSymbolicLink() throws IOException {
+        String userDataFolder = projectContext.getRealProjectRoot() + "/user_data";
+        File dir = new File(userDataFolder);
+        dir.mkdir();
+        FileTestUtils.createTempFile(dir, "test.gor",
+                "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                        "chr1\t10179\tC\tCC\trs367896724\n" +
+                        "chr1\t10250\tA\tC\trs199706086");
+        Path link = Paths.get(projectContext.getRealProjectRoot() + "/shared");
+        Path target = Paths.get(userDataFolder);
+        Files.createSymbolicLink(link, target);
+    }
+
+
     /**
      * Test noring a filesystem
-     *
      */
     @Test
     public void testNorFileSystem() {
@@ -61,28 +104,28 @@ public class UTestNor {
     public void testNorWithEmptyLines() throws IOException {
         File tempFile = File.createTempFile("norrows", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset)null);
+        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset) null);
 
         int count1 = TestUtils.runGorPipeCount(String.format("nor %s", tempFile));
         int count2 = TestUtils.runGorPipeCount(String.format("nor %s -i", tempFile));
 
         Assert.assertTrue(count1 != count2);
         Assert.assertEquals("We should receive all 6 lines", 6, count1);
-        Assert.assertEquals( "We should not get the empty line here, only 2 lines", 2, count2);
+        Assert.assertEquals("We should not get the empty line here, only 2 lines", 2, count2);
     }
 
     @Test
     public void testNorWithEmptyLinesInNestedQuery() throws IOException {
         File tempFile = File.createTempFile("norrows_nested", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset)null);
+        FileUtils.writeStringToFile(tempFile, "#foo\tbar\n\nfoo1\tbar1\n\n\n\nfoo3\tbar3", (Charset) null);
 
         int count1 = TestUtils.runGorPipeCount(String.format("nor <(nor %s)", tempFile));
         int count2 = TestUtils.runGorPipeCount(String.format("nor <(nor %s -i)", tempFile));
 
         Assert.assertTrue(count1 != count2);
         Assert.assertEquals("We should receive all 6 lines", 6, count1);
-        Assert.assertEquals( "We should not get the empty line here, only 2 lines", 2, count2);
+        Assert.assertEquals("We should not get the empty line here, only 2 lines", 2, count2);
     }
 
     @Test
@@ -138,13 +181,31 @@ public class UTestNor {
         }
     }
 
+    @Test
+    public void testNorWithGorRoot() throws IOException {
+        String gorRoot = Paths.get("../").toFile().getCanonicalPath();
+        String[] args = new String[]{"nor -r tests | top 10", "-gorroot", gorRoot};
+        String results = TestUtils.runGorPipe(args);
+        Assert.assertFalse(results.contains(gorRoot));
+    }
+
+    @Test
+    public void testNorWithGorRootSymbolic() {
+        String gorRoot = projectContext.getRealProjectRoot();
+        String[] args1 = new String[]{"nor -r shared | top 10", "-gorroot", gorRoot};
+        String[] args2 = new String[]{"nor -r user_data | top 10", "-gorroot", gorRoot};
+        String results1 = TestUtils.runGorPipe(args1);
+        String results2 = TestUtils.runGorPipe(args2);
+        Assert.assertFalse(results1.contains(gorRoot));
+        Assert.assertFalse(results2.contains(gorRoot));
+    }
 
     private int getDepthRangeFromIterator(RowSource iterator) {
         int minDepth = Integer.MAX_VALUE;
         int maxDepth = Integer.MIN_VALUE;
         while (iterator.hasNext()) {
             Row row = iterator.next();
-            int depth = row.colAsInt(7);
+            int depth = row.colAsInt(8);
 
             if (depth < minDepth)
                 minDepth = depth;
@@ -161,7 +222,7 @@ public class UTestNor {
     @Test
     public void testNorLongRowsFewColumns() throws IOException {
         int[] lineSizes = {1, 16, 64, 128};
-        for (int sz: lineSizes) {
+        for (int sz : lineSizes) {
             int length = sz * 1000;
             String filePath = createTestFileLongLinesFewColumns(length);
 
@@ -176,7 +237,7 @@ public class UTestNor {
     @Test
     public void testNorLongRowsManyColumns() throws IOException {
         int[] lineSizes = {1, 16, 64, 128};
-        for (int sz: lineSizes) {
+        for (int sz : lineSizes) {
             int length = sz * 1000;
             String filePath = createTestFileLongLinesManyColumns(length);
 
@@ -195,7 +256,7 @@ public class UTestNor {
         PrintWriter outputWriter = new PrintWriter(tempFile);
         outputWriter.println("#Col1\tCol2\tCol3");
 
-        int columnLength = (length-3) / 3;
+        int columnLength = (length - 3) / 3;
         String col1 = StringUtils.repeat("a", columnLength);
         String col2 = StringUtils.repeat("b", columnLength);
         String col3 = StringUtils.repeat("c", columnLength);

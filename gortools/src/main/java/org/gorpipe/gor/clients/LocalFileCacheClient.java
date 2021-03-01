@@ -25,12 +25,12 @@ package org.gorpipe.gor.clients;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
-import org.gorpipe.client.FileCache;
-import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.driver.meta.FileNature;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.client.FileCache;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.meta.FileNature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +48,10 @@ public class LocalFileCacheClient implements FileCache {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFileCacheClient.class);
 
-    private Path rootPath;
-    private boolean useSubFolders;
-    private int subFolderSize;
-    private Cache<String, String> cache;
+    private final Path rootPath;
+    private final boolean useSubFolders;
+    private final int subFolderSize;
+    private final Cache<String, String> cache;
 
     /**
      * Constructs an instance of local file cache. If sub folders are used the first subFolderSize letters of the
@@ -206,8 +206,7 @@ public class LocalFileCacheClient implements FileCache {
 
                 if (dataType != null) {
                     if (dataType.nature == FileNature.MD5_LINK) {
-                        String md5File = FileUtils.readFileToString(file, Charset.defaultCharset()).trim();
-                        foundFile = md5File;
+                        foundFile = FileUtils.readFileToString(file, Charset.defaultCharset()).trim();
                     } else if (dataType.nature == FileNature.VARIANTS || dataType.nature == FileNature.TABLE) {
                         foundFile = file.toString();
                     }
@@ -231,5 +230,10 @@ public class LocalFileCacheClient implements FileCache {
         }
 
         return to.toString();
+    }
+
+    @Override
+    public void close() throws Exception {
+        cache.cleanUp();
     }
 }

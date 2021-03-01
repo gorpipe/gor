@@ -22,14 +22,19 @@
 
 package org.gorpipe.gor.driver.providers.db;
 
-import java.io.IOException;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.model.GenomicIterator;
 
+import java.io.IOException;
+
+@AutoService(SourceProvider.class)
 public class DbSourceProvider implements SourceProvider {
+
+    public DbSourceProvider() {}
 
     @Override
     public DataSource resolveDataSource(SourceReference sourceReference) {

@@ -8,7 +8,12 @@
 NOR
 ===
 
-The :ref:`NOR` command reads non-ordered relations from a single file or a nested source. File sources are assumed to be tab-separated (.tsv, .rep, or .map) and with # as the first symbol in the first line to indicate that it is a header. Comma-separated files can also be used if they are named .csv. Likewise, .gor and .gorz files can be read, but are treated as unordered relations.
+The :ref:`NOR` command reads non-ordered relations from a single file or a nested source. File sources are assumed to be
+tab-separated (.tsv, .rep, or .map) and with ``#`` as the first symbol in the first line to indicate that it is a header.
+Comma-separated files can also be used if they are named .csv. Likewise, .gor and .gorz files can be read, but are treated as unordered relations.
+
+The ``-h`` option can be used to instruct the query to read the first line as a header, but this option is not necessary
+if the first line starts with a ``#`` symbol.
 
 It is important to note that NOR queries on very large files can be memory intensive.
 

@@ -25,7 +25,7 @@ package gorsat.Commands
 import gorsat.Analysis.{MergeGenotypes, SortAnalysis}
 import gorsat.Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class VarMerge extends CommandInfo("VARMERGE",
   CommandArguments("-seg -nonorm", "-span", 2, 2),
@@ -36,7 +36,8 @@ class VarMerge extends CommandInfo("VARMERGE",
     var alleleCol = -1
     val seg = hasOption(args, "-seg")
     val normalize = !hasOption(args, "-nonorm")
-    val mergeSpan = intValueOfOptionWithDefaultWithRangeCheck(args, "-span",100, 0, 1000)
+    val mergeSpan = intValueOfOptionWithDefaultWithRangeCheck(args, "-span",100, 0)
+    if (mergeSpan > 1000000) { throw new GorParsingException("Span cannot exceed 1Mb!  This leads to slow execution and heavy memory. Consider eliminating problematic variants.") }
 
     refCol = columnFromHeader(iargs(0), forcedInputHeader, executeNor)
     alleleCol = columnFromHeader(iargs(1), forcedInputHeader, executeNor)

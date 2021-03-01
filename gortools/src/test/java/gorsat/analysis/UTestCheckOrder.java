@@ -22,8 +22,9 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.exceptions.GorDataException;
 import gorsat.Analysis.CheckOrder;
+import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -92,5 +93,13 @@ public class UTestCheckOrder {
         }
 
         Assert.fail("This should never fail");
+    }
+
+    @Test
+    public void testCheckOrderWithCreate() {
+        try {
+            TestUtils.runGorPipe("create xxx = gorrow chr1,2 | calc npos '2,1' | split npos | select chrom,npos; gor [xxx]");
+            Assert.fail("Query should failed on gor order");
+        } catch(Exception ignored) {}
     }
 }

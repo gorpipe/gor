@@ -22,10 +22,10 @@
 
 package gorsat.external.plink;
 
-import org.gorpipe.model.genome.files.gor.Row;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.model.Row;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -48,18 +48,18 @@ public class PlinkAdjustAdaptor extends gorsat.Commands.Analysis {
     private static final String DEFAULT_TEST_ENTRY = "ADD";
     private static final String DEFAULT_PHENO_ENTRY = "pheno";
 
-    private ExecutorService es = Executors.newSingleThreadExecutor();//.newFixedThreadPool(4);
-    private Map<String, FilenameAndWriter> splitFileMap = new HashMap<>();
-    private List<Future<Stream<Row>>> futList = new ArrayList<>();
-    private int testIndex;
-    private int phenoIndex;
-    private String header;
-    private String resultHeader;
-    private String adjustColumns;
-    private boolean sort;
-    private String[] plinkExecutable;
+    private final ExecutorService es = Executors.newSingleThreadExecutor();//.newFixedThreadPool(4);
+    private final Map<String, FilenameAndWriter> splitFileMap = new HashMap<>();
+    private final List<Future<Stream<Row>>> futList = new ArrayList<>();
+    private final int testIndex;
+    private final int phenoIndex;
+    private final String header;
+    private final String resultHeader;
+    private final String adjustColumns;
+    private final boolean sort;
+    private final String[] plinkExecutable;
 
-    class FilenameAndWriter {
+    static class FilenameAndWriter {
         Path filepath;
         String pheno;
         String test;
@@ -116,7 +116,7 @@ public class PlinkAdjustAdaptor extends gorsat.Commands.Analysis {
                 writer = Files.newBufferedWriter(newSplitFile);
                 writer.write(header);
                 writer.write('\n');
-                splitFileMap.put(filename,new FilenameAndWriter(newSplitFile,pheno,test,writer));
+                splitFileMap.put(filename, new FilenameAndWriter(newSplitFile, pheno, test, writer));
             } else writer = splitFileMap.get(filename).writer;
             row.writeRow(writer);
             writer.write('\n');
@@ -141,7 +141,7 @@ public class PlinkAdjustAdaptor extends gorsat.Commands.Analysis {
                     String pheno = fw.pheno;
                     String test = fw.test;
                     PlinkAdjustment plinkAdjustmentCall = new PlinkAdjustment(plinkExecutable, filepath, pheno, test, adjustColumns, sort);
-                    futList.add(es.<Stream<Row>>submit(plinkAdjustmentCall));
+                    futList.add(es.submit(plinkAdjustmentCall));
                 } catch (IOException e) {
                     throw new GorSystemException("Error closing plink adjust temp file", e);
                 }

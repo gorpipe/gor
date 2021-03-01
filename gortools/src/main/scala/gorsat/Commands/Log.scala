@@ -27,8 +27,8 @@ import java.nio.file.Paths
 import gorsat.Analysis.LoggingAnalysis.LogAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Monitors.MonitorLog
-import gorsat.StringUtilities
-import org.gorpipe.gor.GorContext
+import gorsat.Utilities.StringUtilities
+import org.gorpipe.gor.session.GorContext
 
 
 class Log extends CommandInfo("LOG",

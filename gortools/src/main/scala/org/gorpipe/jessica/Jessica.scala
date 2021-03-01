@@ -27,15 +27,18 @@ import gorsat.process.PipeOptions
 import javax.swing.SwingUtilities
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.ExceptionUtilities
+import org.gorpipe.gor.model.DbSource
 import org.gorpipe.gor.servers.GorConfig
-import org.gorpipe.model.genome.files.gor.DbSource
-import org.gorpipe.model.util.ConfigUtil
+import org.gorpipe.gor.util.ConfigUtil
+import org.gorpipe.logging.GorLogbackUtil
 import org.slf4j.LoggerFactory
 
 object Jessica extends App {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val consoleLogger = LoggerFactory.getLogger("console." + this.getClass)
+
+  GorLogbackUtil.initLog("gor")
 
   var version: String = getClass.getPackage.getImplementationVersion
   if (version eq null) {

@@ -48,6 +48,7 @@ public enum DataType {
     CSI(INDEX, ".csi"),
     GORD(TABLE, ".gord"),
     GORT(TABLE, ".gort"),
+    GORP(TABLE, ".gorp"),
     LINK(REFERENCE, ".link"),
     LOCAL_LINK(REFERENCE, ".link.local"),
     CRAM(VARIANTS, ".cram"),

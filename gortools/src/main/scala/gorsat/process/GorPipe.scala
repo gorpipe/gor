@@ -26,21 +26,19 @@
 
 package gorsat.process
 
-import org.gorpipe.exceptions.ExceptionUtilities
-import org.gorpipe.model.genome.files.gor.DefaultFileReader
 import gorsat._
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
+import org.gorpipe.gor.model.{DbSource, DefaultFileReader}
 import org.gorpipe.gor.servers.GorConfig
-import org.gorpipe.model.genome.files.gor.{DbSource, DefaultFileReader}
-import org.gorpipe.model.util.ConfigUtil
+import org.gorpipe.gor.util.ConfigUtil
+import org.gorpipe.logging.GorLogbackUtil
 import org.slf4j.LoggerFactory
 
 import scala.language.postfixOps
 
 object GorPipe extends GorPipeFirstOrderCommands {
 
-  private val logger = LoggerFactory.getLogger(this.getClass)
   private val consoleLogger = LoggerFactory.getLogger("console." + this.getClass)
 
   var version: String = getClass.getPackage.getImplementationVersion
@@ -72,6 +70,8 @@ object GorPipe extends GorPipeFirstOrderCommands {
       printOutGORPipeVersion()
       System.exit(0)
     }
+
+    GorLogbackUtil.initLog("gorpipe")
 
     // Initialize config
     ConfigUtil.loadConfig("gor")

@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.cli.manager;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.BaseTable;
-import org.apache.commons.lang.ArrayUtils;
 import picocli.CommandLine;
 
 import java.time.Duration;

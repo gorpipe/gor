@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import gorsat.Analysis.BucketSplitAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities
+import gorsat.Utilities.IteratorUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class BucketSplit extends CommandInfo("BUCKETSPLIT",
   CommandArguments("-cs", "-vs -s -b", 2, 2),

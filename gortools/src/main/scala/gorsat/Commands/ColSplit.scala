@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.ColSplitAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class ColSplit extends CommandInfo("COLSPLIT",
   CommandArguments("-o", "-s -m", 3, 3),

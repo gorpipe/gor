@@ -22,42 +22,46 @@
 
 package org.gorpipe.gor.table.lock;
 
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.BaseTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import org.gorpipe.gor.table.BaseTable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Class do acquire named locks.  The locks are reentrant can be used for both inter process and inter thread locking.
- * Within process they are read write locks, but between processes they are limited to single lock object (same for read and write).
+ * Class do acquire named locks.  The locks can be used for both inter process and inter thread locking.
+ * The lock is not reentrent.
  * <p>
- * For inter process locking we use exclusive lock file.    The file is opened with CREATE_NEW which throws error if the while exists.
+ * We use exclusive lock file for locking.    The file is opened with CREATE_NEW which throws error if the while exists.
  * <p>
  * Processes must have access to the same file system.
  * <p>
  * Created by gisli on 08/08/16.
  */
-public class ExclusiveFileTableLock extends ProcessThreadTableLock {
+public class ExclusiveFileTableLock extends TableLock {
 
     private static final Logger log = LoggerFactory.getLogger(ExclusiveFileTableLock.class);
 
     private static final long OLDEST_LOCK_DATE_POSSIBLE = 1388534400;  // Start of year 2014.
     private static final Duration EXCL_DEFAULT_RESERVE_LOCK_PERIOD = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.lock_period", "43200000"))); // 12 hours.
 
-    private Duration checkForLockPeriod = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.check_period", "100")));  // Time between check for lock (if waiting.)
+    private final Duration checkForLockPeriod = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.check_period", "100")));  // Time between check for lock (if waiting.)
+
+    private Path lockPath;
+    private FileChannel fc;
+    private RenewableLockHelper lockHelper;
+    protected int thisLockCount;
 
     /**
      * Create lock
@@ -70,9 +74,86 @@ public class ExclusiveFileTableLock extends ProcessThreadTableLock {
         this.lockPath = table.getFolderPath().resolve(String.format("%s.%s.excl.lock", table.getName(), name));
     }
 
-    @SuppressWarnings("squid:S2095") //file lock not acquired when using try-with-resources
     @Override
-    protected ProcessLock acquireProcessLock(Duration timeout) throws IOException {
+    protected boolean doLock(Duration timeout) {
+        if (!isShared() && getReadHoldCount() > 0) {
+            TableLockLogMessage  msg = new TableLockLogMessage("ExclusiveFileTableLock in invalid state - Must release all read locks hold by thread before acquiring write lock.");
+            throw new GorSystemException(msg.toString(), null);
+        }
+
+        if (!isValid())  {
+            try {
+                 createLock(timeout);
+            } catch (Exception e) {
+                throw new GorSystemException(new TableLockLogMessage("Error while getting lock").toString(), e);
+            }
+            log.debug("{}", new TableLockLogMessage("Got process lock"));
+        } else {
+            log.trace("{}", new TableLockLogMessage("Process lock already created"));
+        }
+
+        // Validate and update status
+
+        if (isValid()) {
+            log.trace("{}", new TableLockLogMessage("Incrementing counter"));
+            thisLockCount++;
+            return true;
+        } else {
+            // Did not get the lock.  If got the thread lock we must clean up.
+            TableLockLogMessage  msg = new TableLockLogMessage("Did not acquire lock, timed out or interrupted on thread lock.");
+
+            // If with timeout we warn, else we assume it is normal not to get the lock.
+            if (timeout.toMillis() != 0) {
+                log.warn("{}", msg);
+            } else {
+                log.debug("{}", msg);
+            }
+            return false;
+        }
+    }
+
+    @Override
+    protected void doRelease() {
+        if (this.thisLockCount == 0) {
+            // We don't have any lock.
+            log.debug("{}", new TableLockLogMessage("Trying to release when we dont have the lock"));
+            return;
+        }
+
+        thisLockCount--;
+        log.debug("Lockcount on releasee: " + thisLockCount);
+        if (thisLockCount == 0) {
+            deleteLock();
+        }
+    }
+
+    @Override
+    public boolean isValid() {
+        return lockHelper != null && lockHelper.reservedTo() >= System.currentTimeMillis()
+                && fc != null && fc.isOpen();
+    }
+
+    @Override
+    public int getReadHoldCount() {
+        return isShared() ? thisLockCount : 0;
+    }
+
+    @Override
+    public int getWriteHoldCount() {
+        return isShared() ? 0 : thisLockCount;
+    }
+
+    @Override
+    public long reservedTo() {
+        return lockHelper != null ? lockHelper.reservedTo() : -1;
+    }
+
+    public Path getLockPath() {
+        return this.lockPath;
+    }
+
+    @SuppressWarnings("squid:S2095") //file lock not acquired when using try-with-resources
+    protected void createLock(Duration timeout) throws IOException {
         long requestTime = System.currentTimeMillis();
         // Check for expiration either once, half through the wait or every 1 minutes.
         long checkForExpirationInterval = Math.min(Duration.ofMillis(timeout.toMillis() / 2).toMillis(), Duration.ofMinutes(1).toMillis());
@@ -80,19 +161,12 @@ public class ExclusiveFileTableLock extends ProcessThreadTableLock {
         log.debug("{}", new TableLockLogMessage("About to create/access process lock file"));
         do {
             try {
-                FileChannel fc = FileChannel.open(getLockPath(),
+                fc = FileChannel.open(getLockPath(),
                         StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.SYNC);
 
                 // If here we got the lock.
 
-                ProcessLock processLock = new ProcessLock(EXCL_DEFAULT_RESERVE_LOCK_PERIOD) {
-                    long reservedTo = calcExpirationTime();
-
-                    @Override
-                    public synchronized boolean isValid() {
-                        return super.isValid() && fc.isOpen();
-                    }
-
+                lockHelper = new RenewableLockHelper(EXCL_DEFAULT_RESERVE_LOCK_PERIOD) {
                     @Override
                     public synchronized void renew() {
                         if (!Files.exists(getLockPath())) {
@@ -103,40 +177,18 @@ public class ExclusiveFileTableLock extends ProcessThreadTableLock {
                             throw new AcquireLockException("Could not renew lock as it is not valid!");
                         }
 
-                        reservedTo = calcExpirationTime();
                         try {
                             writeToLockFile(fc, "acquired", reservedTo(), false);
                         } catch (Exception e) {
                             throw new AcquireLockException("Could not renew lock because of an exception!", e);
                         }
-                        log.trace("Renewing process lock to {}.", reservedTo);
-                    }
-
-                    @Override
-                    public synchronized long reservedTo() {
-                        return reservedTo;
-                    }
-
-                    @Override
-                    public synchronized void release() {
-                        super.release();
-                        try {
-                            if (Files.exists(getLockPath()) && isValid()) {
-                                writeToLockFile(fc, "Releasing", 0, true);
-                                fc.close();
-                                log.trace("Deleting process lock file");
-                                // We got exclusive lock, and can hence delete the file.
-                                Files.delete(getLockPath());
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException("Could not release lock because of an exception!", e);
-                        }
+                        log.trace("Renewing process lock to {}.", reservedTo());
                     }
                 };
 
-                writeToLockFile(fc, "acquired", processLock.reservedTo(), false);
+                writeToLockFile(fc, "acquired", reservedTo(), false);
 
-                return processLock;
+                return;
             } catch (FileAlreadyExistsException e) {
                 // If here we did not get the lock.
                 long currentTime = System.currentTimeMillis();
@@ -151,35 +203,29 @@ public class ExclusiveFileTableLock extends ProcessThreadTableLock {
                     Thread.sleep(this.checkForLockPeriod.toMillis());
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
-                    return null;
+                    return;
                 }
             }
         } while (System.currentTimeMillis() < requestTime + Math.max(timeout.toMillis(), 0));
-
-        return null;
     }
 
-    @Override
-    public long reservedTo() {
-        if (this.lockData.processLock != null) {
-            return this.lockData.processLock.reservedTo();
-        }
-
-        return checkReservedTo();
-    }
-
-    @Override
-    protected long checkReservedTo() {
+    private void deleteLock() {
         try {
-            List<String> lines = Files.readAllLines(getLockPath());
-            if (!lines.isEmpty() && lines.get(0) != null && lines.get(0).contains("\t")) {
-                return Long.parseLong(lines.get(0).split("\t")[1]);
+            if (Files.exists(getLockPath()) && isValid()) {
+                writeToLockFile(fc, "Releasing", 0, true);
+                fc.close();
+                log.trace("Deleting process lock file");
+                // We got exclusive lock, and can hence delete the file.
+                Files.delete(getLockPath());
             }
-        } catch (IOException ioe) {
-            log.warn("Exception when checking/deleting lockfile.", ioe);
-        }
 
-        return -1;
+            if (lockHelper != null){
+                lockHelper.release();
+                lockHelper = null;
+            }
+        } catch (IOException e) {
+            throw new GorSystemException("Could not release lock because of an exception!", e);
+        }
     }
 
     /**

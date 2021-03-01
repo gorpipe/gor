@@ -41,10 +41,10 @@ import java.net.MalformedURLException;
  * Created by villi on 22/08/15.
  */
 public class S3Source implements StreamSource {
-    private SourceReference sourceReference;
-    private String bucket;
-    private String key;
-    private S3Client client;
+    private final SourceReference sourceReference;
+    private final String bucket;
+    private final String key;
+    private final S3Client client;
     private S3SourceMetadata meta;
 
     /**

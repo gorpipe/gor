@@ -24,7 +24,7 @@ package org.gorpipe.gor.driver.providers.db;
 
 import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.gor.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +104,7 @@ public class DbScope {
     @Override
     public boolean equals(Object object) {
         boolean same = false;
-        if (object != null && object instanceof DbScope) {
+        if (object instanceof DbScope) {
             DbScope dbscope = (DbScope) object;
             same = (this.column.equals(dbscope.column)) && (this.value.equals(dbscope.value));
         }
@@ -113,18 +113,18 @@ public class DbScope {
     }
 
     public static String dbScopesToString(List<DbScope> dbScopes) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (DbScope dbScope : dbScopes) {
-            result = result + " " + dbScope.toString() + ";";
+            result.append(" ").append(dbScope.toString()).append(";");
         }
-        return result;
+        return result.toString();
     }
 
     public static String dbScopesColumnsToString(List<DbScope> dbScopes) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (DbScope dbScope : dbScopes) {
-            result = result + " " + dbScope.getColumn() + ";";
+            result.append(" ").append(dbScope.getColumn()).append(";");
         }
-        return result;
+        return result.toString();
     }
 }

@@ -33,7 +33,7 @@ import java.util.List;
 
 public class StreamSourceFile implements SourceFile {
 
-    private StreamSource fileSource;
+    private final StreamSource fileSource;
     private StreamSource indexSource;
     private StreamSource referenceSource;
 

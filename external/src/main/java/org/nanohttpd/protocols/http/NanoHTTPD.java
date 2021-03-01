@@ -129,7 +129,7 @@ public class NanoHTTPD {
     /**
      * HTTP response. Return one of these from serve().
      */
-    public class Response {
+    public static class Response {
         /**
          * Default constructor: response = HTTP_OK, data = mime = 'null'
          */
@@ -331,17 +331,17 @@ public class NanoHTTPD {
                         } catch (NumberFormatException ex) {
                         }
                     }
-                    String postLine = "";
-                    char buf[] = new char[512];
+                    StringBuilder postLine = new StringBuilder();
+                    char[] buf = new char[512];
                     int read = in.read(buf);
-                    while (read >= 0 && size > 0 && !postLine.endsWith("\r\n")) {
+                    while (read >= 0 && size > 0 && !postLine.toString().endsWith("\r\n")) {
                         size -= read;
-                        postLine += String.valueOf(buf, 0, read);
+                        postLine.append(String.valueOf(buf, 0, read));
                         if (size > 0)
                             read = in.read(buf);
                     }
-                    postLine = postLine.trim();
-                    decodeParms(postLine, parms);
+                    postLine = new StringBuilder(postLine.toString().trim());
+                    decodeParms(postLine.toString(), parms);
                 }
 
                 // Ok, now do the serve()
@@ -470,7 +470,7 @@ public class NanoHTTPD {
             }
         }
 
-        private Socket mySocket;
+        private final Socket mySocket;
     }
 
     /**
@@ -478,17 +478,17 @@ public class NanoHTTPD {
      * instead of '+'.
      */
     private String encodeUri(String uri) {
-        String newUri = "";
+        StringBuilder newUri = new StringBuilder();
         StringTokenizer st = new StringTokenizer(uri, "/ ", true);
         while (st.hasMoreTokens()) {
             String tok = st.nextToken();
             if (tok.equals("/"))
-                newUri += "/";
+                newUri.append("/");
             else if (tok.equals(" "))
-                newUri += "%20";
+                newUri.append("%20");
             else {
                 try {
-                    newUri += URLEncoder.encode(tok, Charset.defaultCharset().name());
+                    newUri.append(URLEncoder.encode(tok, Charset.defaultCharset().name()));
                 } catch (UnsupportedEncodingException e) {
                     throw new GorSystemException("Unsupported coding found when coding: " + uri, e);
                 }
@@ -497,10 +497,10 @@ public class NanoHTTPD {
                 // UnsupportedEncodingException uee )
             }
         }
-        return newUri;
+        return newUri.toString();
     }
 
-    private int myTcpPort;
+    private final int myTcpPort;
 
     File myFileDir;
 
@@ -554,44 +554,44 @@ public class NanoHTTPD {
                 // No index file, list the directory
             else if (allowDirectoryListing) {
                 String[] files = f.list();
-                String msg = "<html><body><h1>Directory " + uri + "</h1><br/>";
+                StringBuilder msg = new StringBuilder("<html><body><h1>Directory " + uri + "</h1><br/>");
 
                 if (uri.length() > 1) {
                     String u = uri.substring(0, uri.length() - 1);
                     int slash = u.lastIndexOf('/');
                     if (slash >= 0 && slash < u.length())
-                        msg += "<b><a href=\"" + uri.substring(0, slash + 1) + "\">..</a></b><br/>";
+                        msg.append("<b><a href=\"").append(uri.substring(0, slash + 1)).append("\">..</a></b><br/>");
                 }
 
                 for (int i = 0; i < files.length; ++i) {
                     File curFile = new File(f, files[i]);
                     boolean dir = curFile.isDirectory();
                     if (dir) {
-                        msg += "<b>";
+                        msg.append("<b>");
                         files[i] += "/";
                     }
 
-                    msg += "<a href=\"" + encodeUri(uri + files[i]) + "\">" + files[i] + "</a>";
+                    msg.append("<a href=\"").append(encodeUri(uri + files[i])).append("\">").append(files[i]).append("</a>");
 
                     // Show file size
                     if (curFile.isFile()) {
                         long len = curFile.length();
-                        msg += " &nbsp;<font size=2>(";
+                        msg.append(" &nbsp;<font size=2>(");
                         if (len < 1024)
-                            msg += curFile.length() + " bytes";
+                            msg.append(curFile.length()).append(" bytes");
                         else if (len < 1024 * 1024)
-                            msg += curFile.length() / 1024 + "." + (curFile.length() % 1024 / 10 % 100) + " KB";
+                            msg.append(curFile.length() / 1024).append(".").append(curFile.length() % 1024 / 10 % 100).append(" KB");
                         else
-                            msg += curFile.length() / (1024 * 1024) + "." + curFile.length() % (1024 * 1024) / 10
-                                    % 100 + " MB";
+                            msg.append(curFile.length() / (1024 * 1024)).append(".").append(curFile.length() % (1024 * 1024) / 10
+                                    % 100).append(" MB");
 
-                        msg += ")</font>";
+                        msg.append(")</font>");
                     }
-                    msg += "<br/>";
+                    msg.append("<br/>");
                     if (dir)
-                        msg += "</b>";
+                        msg.append("</b>");
                 }
-                return new Response(HTTP_OK, MIME_HTML, msg);
+                return new Response(HTTP_OK, MIME_HTML, msg.toString());
             } else {
                 return new Response(HTTP_FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: No directory listing.");
             }
@@ -648,7 +648,7 @@ public class NanoHTTPD {
     /**
      * Hashtable mapping (String)FILENAME_EXTENSION -> (String)MIME_TYPE
      */
-    private static Hashtable theMimeTypes = new Hashtable();
+    private static final Hashtable theMimeTypes = new Hashtable();
 
     static {
         StringTokenizer st = new StringTokenizer("htm    text/html " + "html   text/html "
@@ -664,7 +664,7 @@ public class NanoHTTPD {
     /**
      * GMT date formatter
      */
-    private static java.text.SimpleDateFormat gmtFrmt;
+    private static final java.text.SimpleDateFormat gmtFrmt;
 
     static {
         gmtFrmt = new java.text.SimpleDateFormat("E, d MMM yyyy HH:mm:ss 'GMT'", Locale.US);

@@ -48,9 +48,9 @@ import java.security.InvalidKeyException;
  * Created by simmi on 10/09/15.
  */
 public class AzureBlobSource implements StreamSource {
-    private SourceReference sourceReference;
-    private String bucket;
-    private String key;
+    private final SourceReference sourceReference;
+    private final String bucket;
+    private final String key;
     CloudBlockBlob cb;
     OperationContext opContext;
     BlobRequestOptions options;
@@ -178,8 +178,7 @@ public class AzureBlobSource implements StreamSource {
         try {
             HttpURLConnection urlc = getBlob(cb.getUri(), options, opContext, null, null, range == null ? null : range.getFirst(), range == null ? null : range.getLast() - range.getFirst() + 1, false);
             StorageRequest.signBlobQueueAndFileRequest(urlc, cb.getServiceClient(), -1L, null);
-            InputStream is = urlc.getInputStream();
-            return is;
+            return urlc.getInputStream();
         } catch (StorageException e) {
             throw new IOException("Unable to open inputstream on Azure url " + sourceReference.getUrl(), e);
         } catch (URISyntaxException | InvalidKeyException e) {

@@ -36,7 +36,7 @@ Glossary
       3. The GOR architecture as a whole.
       4. The act of merging two streams together, e.g. to "gor" together two files.
 
-   GorPipe
+   GORpipe
       A command line interface for the GOR language.
 
    GOR stream
@@ -67,7 +67,7 @@ Glossary
       definition
 
    Sequence Miner
-      The GUI tool used by advanced users of WuXi NextCODE's tools, which enables deep data mining and custom queries on top of raw genetic data as well as derived data.
+      A GUI tool that enables deep data mining and custom queries on top of raw genetic data as well as derived data.
 
    source commands
       Commands in the GOR query language that start GOR queries and generate some data to work with.

@@ -22,13 +22,13 @@
 
 package gorsat.InputSources
 
-import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NorInputSource, ServerGorSource, ServerNorGorSource}
+import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.NordIterator
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 object Nor
@@ -78,9 +78,24 @@ object Nor
       } else if (inputParams.toUpperCase.contains(".YML")) {
         var nInputParams = context.getSession.getSystemContext.getReportBuilder.parse(inputParams)
         inputSource = new ServerNorGorSource(nInputParams,  context, true)
+      } else if (inputParams.toUpperCase.endsWith("PARQUET")) {
+        var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
+        extraFilterArgs += (if(hasOption(args, "-s")) " " + stringValueOfOption(args, "-s") else "")
+
+        if (CommandParseUtilities.hasOption(args, "-c")) {
+          val cols = CommandParseUtilities.stringValueOfOption(args, "-c")
+          context.setSortCols(cols)
+        }
+
+        if (hasOption(args, "-f")) {
+          val tags = stringValueOfOption(args, "-f")
+          inputSource = new ServerGorSource(inputParams + " -f " + tags + extraFilterArgs,  context, true)
+        } else if (hasOption(args, "-ff")) {
+          val tags = stringValueOfOption(args, "-ff")
+          inputSource = new ServerGorSource(inputParams + " -ff " + tags + extraFilterArgs,  context, true)
+        } else inputSource = new ServerGorSource(inputParams, context, true)
       } else if (inputParams.toUpperCase.endsWith("GOR") ||
         inputParams.toUpperCase.endsWith("GORZ") ||
-        inputParams.toUpperCase.endsWith("PARQUET")  ||
         (inputParams.toUpperCase.endsWith("GORD") &&
           !hasOption(args, "-asdict"))) {
 
@@ -102,8 +117,11 @@ object Nor
       } else if (inputParams.toUpperCase.endsWith("NORD") && !hasOption(args, "-asdict")) {
         inputSource = createNordIterator(inputParams, args, context)
       } else {
-        if (inputParams.toUpperCase.endsWith("NORZ")) inputSource = new ServerGorSource(inputParams, context, true)
-        else inputSource = new NorInputSource(inputParams, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
+        if (inputParams.toUpperCase.endsWith("NORZ")) {
+          inputSource = new ServerGorSource(inputParams, context, true)
+        } else {
+          inputSource = new NorInputSource(inputParams, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
+        }
       }
 
       InputSourceParsingResult(inputSource, null, isNorContext = true)

@@ -48,9 +48,8 @@ public class AzureBlobHelper {
 
             String storageConnectionString = "DefaultEndpointsProtocol=http;" + "AccountName=" + name + ";AccountKey=" + key;
             CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString);
-            CloudBlobClient serviceClient = account.createCloudBlobClient();
 
-            azure = serviceClient;
+            azure = account.createCloudBlobClient();
         }
 
         return azure;

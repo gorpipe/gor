@@ -25,12 +25,13 @@ package gorsat.process
 import java.nio.file.Paths
 import java.util.UUID
 
-import gorsat.AnalysisUtilities
 import gorsat.QueryHandlers.GeneralQueryHandler
-import org.gorpipe.gor.clients.LocalFileCacheClient
+import gorsat.Utilities.AnalysisUtilities
 import org.gorpipe.gor._
-import org.gorpipe.model.genome.files.gor.DriverBackedFileReader
-import org.gorpipe.util.gorutil.standalone.GorStandalone
+import org.gorpipe.gor.clients.LocalFileCacheClient
+import org.gorpipe.gor.model.DriverBackedFileReader
+import org.gorpipe.gor.session.{GorSession, ProjectContext, SystemContext}
+import org.gorpipe.util.standalone.GorStandalone
 
 /**
   * Factory class to create a session for standalone Sequence Miner.

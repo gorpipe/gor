@@ -26,8 +26,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-
 public class UTestJoin {
     private static final Logger log = LoggerFactory.getLogger(UTestJoin.class);
 

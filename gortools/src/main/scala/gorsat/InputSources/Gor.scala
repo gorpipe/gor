@@ -30,7 +30,7 @@ import gorsat.DynIterator._
 import gorsat.Iterators.ServerGorSource
 import gorsat.process.PipeOptions
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.Pipes
 import org.gorpipe.model.gor.iterators.RowSource
 
@@ -101,7 +101,7 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
           }
         }
 
-        val dynamicSource: DynamicRowSource = if (iteratorCommand.toUpperCase.startsWith("NOR "))
+        val dynamicSource: DynamicRowSource = if (iteratorCommand.toUpperCase.startsWith("NOR ") && !iteratorCommand.replaceAll(" ","").toUpperCase.contains("|TOGOR"))
           new gorsat.DynIterator.DynamicGorNorSource(iteratorCommand, context) else new DynamicRowSource(iteratorCommand, context)
         if (hasOption(args, "-b")) dynamicSource.setBufferSize(bufferSize)
         if (hasOption(args, "-seek")) {
@@ -130,8 +130,8 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
         options.parseOptions(qra)
         gorpipe.processArguments(qra, executeNor = false)
 
-        if (gorpipe.theIterator != null) {
-          inputSource = gorpipe.theIterator
+        if (gorpipe.getRowSource != null) {
+          inputSource = gorpipe.getRowSource
         }
       } else {
         usedFiles ++= iargs.toList.filter(x => !x.startsWith("-"))

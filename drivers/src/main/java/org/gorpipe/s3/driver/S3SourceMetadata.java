@@ -33,7 +33,7 @@ import java.util.TimeZone;
 
 public class S3SourceMetadata extends StreamSourceMetadata {
 
-    private ObjectMetadata omd;
+    private final ObjectMetadata omd;
 
     public S3SourceMetadata(S3Source source, ObjectMetadata md, String subset) {
         super(source, source.getName(), md.getLastModified().getTime(), md.getInstanceLength(), null, false);

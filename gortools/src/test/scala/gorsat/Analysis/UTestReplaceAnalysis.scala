@@ -25,7 +25,6 @@ package gorsat.Analysis
 import gorsat.Commands.RowHeader
 import gorsat.Script.ScriptExecutionEngine
 import gorsat.process.GenericSessionFactory
-import org.gorpipe.gor.GorContext
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec

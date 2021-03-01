@@ -30,8 +30,14 @@ Options
 +-------------------+----------------------------------------------------------------------+
 | ``-gc cols``      | Grouping columns (other than bin).                                   |
 +-------------------+----------------------------------------------------------------------+
+| ``-ordered``      | Assume the grouping columns are ordered.                             |
++-------------------+----------------------------------------------------------------------+
 
 Use ``binsize = chrom`` to aggregate for a whole chromosome and ``binsize = genome`` to aggregate for the entire genome. Note, that the column must be a numeric column.
+
+When using ATMIN in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
+significantly. Note that there are no checks to see if the order is correct - only use this option if the input
+stream is correctly ordered.
 
 Examples
 ========

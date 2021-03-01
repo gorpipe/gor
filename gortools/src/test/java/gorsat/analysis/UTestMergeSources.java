@@ -140,7 +140,7 @@ public class UTestMergeSources {
     }
 
     private void performTest(String[] sourceInput, String[] mergeInput, String[] result, boolean addSourceColumn, int[] leftColumns, int[] rightColumns, boolean columnsAreSame) {
-        MergeSources analysis = new MergeSources(RowArrayIterator.apply(mergeInput), "missing", addSourceColumn, leftColumns, rightColumns, columnsAreSame);
+        MergeSources analysis = new MergeSources(RowArrayIterator.apply(mergeInput), "missing", addSourceColumn, leftColumns, rightColumns, columnsAreSame, null);
         AnalysisTestEngine engine = new AnalysisTestEngine();
         engine.run(analysis, sourceInput, result);
     }

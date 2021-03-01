@@ -24,14 +24,14 @@ package gorsat.Commands
 
 import gorsat.Analysis.GroupAnalysis
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.mutable.ListBuffer
 
 class Group extends CommandInfo("GROUP",
-  CommandArguments("-count -cdist -min -med -max -dis -set -lis -avg -std -sum -h", "-gc -sc -ac -ic -fc -len -steps " +
+  CommandArguments("-count -cdist -min -med -max -dis -set -lis -avg -std -sum -h -ordered -notruncate", "-gc -sc -ac -ic -fc -len -steps " +
     "-s", 0, 1),
   CommandOptions(gorCommand = true, norCommand = true, memoryMonitorCommand = true, verifyCommand = true,
     cancelCommand = true, ignoreSplitCommand = true)) {
@@ -48,32 +48,24 @@ class Group extends CommandInfo("GROUP",
       throw new GorParsingException("Too few input arguments supplied for group.")
     }
 
-    var useCount = false
-    var useCdist = false
-    var useMax = false
-    var useMin = false
-    var useMed = false
-    var useDis = false
-    var useSet = false
-    var useLis = false
-    var useAvg = false
-    var useStd = false
-    var useSum = false
     var setLen = 10000
     val sepVal = replaceSingleQuotes(stringValueOfOptionWithDefault(args, "-s", ","))
 
 
-    if (hasOption(args, "-count")) useCount = true
-    if (hasOption(args, "-cdist")) useCdist = true
-    if (hasOption(args, "-max")) useMax = true
-    if (hasOption(args, "-min")) useMin = true
-    if (hasOption(args, "-med")) useMed = true
-    if (hasOption(args, "-dis")) useDis = true
-    if (hasOption(args, "-set")) useSet = true
-    if (hasOption(args, "-lis")) useLis = true
-    if (hasOption(args, "-avg")) useAvg = true
-    if (hasOption(args, "-std")) useStd = true
-    if (hasOption(args, "-sum")) useSum = true
+    val useCount = hasOption(args, "-count")
+    val useCdist = hasOption(args, "-cdist")
+    val useMax = hasOption(args, "-max")
+    val useMin = hasOption(args, "-min")
+    val useMed = hasOption(args, "-med")
+    val useDis = hasOption(args, "-dis")
+    val useSet = hasOption(args, "-set")
+    val useLis = hasOption(args, "-lis")
+    val useAvg = hasOption(args, "-avg")
+    val useStd = hasOption(args, "-std")
+    val useSum = hasOption(args, "-sum")
+    val truncate = !hasOption(args, "-notruncate")
+
+    val assumeOrdered = hasOption(args, "-ordered")
 
     if (hasOption(args, "-len")) setLen = intValueOfOptionWithRangeCheck(args, "-len", 10, 1000000)
 
@@ -186,18 +178,22 @@ class Group extends CommandInfo("GROUP",
 
     if (chrGen.startsWith("CHR")) {
       pipeStep = GroupAnalysis.ChromAggregate(context.getSession, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
-        useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+        useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, truncate, sepVal, header)
     } else if (chrGen.startsWith("GEN")) {
       overwriteValidtion = true
       pipeStep = GroupAnalysis.GenomeAggregate(useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis,
-        useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+        useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, truncate, sepVal, header)
     } else {
       if (slideSteps > 1) {
         pipeStep = GroupAnalysis.SlideAggregate(slideSteps, binSize, useCount, useCdist, useMax, useMin, useMed,
-          useDis, useSet, useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+          useDis, useSet, useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, truncate, sepVal, header)
       } else {
-        pipeStep = GroupAnalysis.Aggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
-          useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, sepVal, header)
+        pipeStep = if (assumeOrdered)
+          GroupAnalysis.OrderedAggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
+            useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, truncate, sepVal, header)
+          else
+          GroupAnalysis.Aggregate(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet,
+            useLis, useAvg, useStd, useSum, acCols, icCols, fcCols, gcCols, setLen, truncate, sepVal, header)
       }
     }
 

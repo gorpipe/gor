@@ -23,7 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.WhereAnalysis
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class TryWhere extends CommandInfo("TRYWHERE",
   CommandArguments("", "", 1, -1, ignoreIllegalArguments = true),

@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Commands.GenomicRange.Range
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.model.genome.files.gor.GorCommand
+import org.gorpipe.gor.model.GorCommand
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -141,6 +141,26 @@ object CommandParseUtilities {
       throw new GorParsingException(s"Value missing for option $name", name, args(index + 1))
     }
     args(index + 1)
+  }
+
+  def charValueOfOption(args: Array[String], name: String): Char = {
+    val idx = indexOfOption(args, name) + 1
+    if (idx == 0) {
+      throw new GorParsingException(s"Value option $name is not found", name, "")
+    } else if (idx >= args.length) {
+      throw new GorParsingException(s"Value not found for option $name", name, "")
+    } else {
+      val s = args(idx)
+      val len = args(idx).length
+      if (len == 1) {
+        s.head
+      } else if (len == 3 && ((s(0) == '\'' && s(len - 1) == '\'') || (s(0) == '\"' || s(len - 1) == '\"'))) {
+        s(1)
+      } else {
+        throw new GorParsingException(s"Character option $name only takes one character as argument.\n" +
+          s"Current argument ${args(idx)} is invalid.", name, "")
+      }
+    }
   }
 
   def stringArrayOfOption(args: Array[String], name: String): Array[String] = {
@@ -350,7 +370,7 @@ object CommandParseUtilities {
 
       if (forNor) col += 2
     } catch {
-      case e: Exception =>
+      case _: Exception =>
 
         if (columnNumberOrName.indexOf("[") > 0 && columnNumberOrName.indexOf("]") > columnNumberOrName.indexOf("[")) {
           try {
@@ -358,7 +378,7 @@ object CommandParseUtilities {
             name = columnNumberOrName.substring(0, b).toUpperCase
             offset = columnNumberOrName.substring(b + 1, e).toInt
           } catch {
-            case e: Exception => throw new GorParsingException(s"Column $columnNumberOrName has illegal offset.")
+            case _: Exception => throw new GorParsingException(s"Column $columnNumberOrName has illegal offset.")
           }
         } else {
           name = columnNumberOrName.toUpperCase
@@ -451,7 +471,7 @@ object CommandParseUtilities {
     try {
       columnIndices = columnsFromHeader(columns, header, forNor, ignoreNonExisting)
     } catch {
-      case gpe: GorParsingException =>
+      case _: GorParsingException =>
 
     }
 
@@ -542,9 +562,10 @@ object CommandParseUtilities {
   def parseRange(range: String): Range = {
     val rcol = range.split("[:|-]")
 
-    if (rcol.length > 3)
-      throw new GorParsingException(s"Invalid range value '$range'. One of the following is supported: 'chrom', 'chrom:start-' or 'chrom:start-stop'")
-
+    if (rcol.length > 3) {
+      throw new GorParsingException(s"Invalid range value '$range'. One of the following is supported: 'chrom', " +
+        s"'chrom:start-' or 'chrom:start-stop'")
+    }
     var startChr = ""
     var startPos = 0
     var stopPos = Integer.MAX_VALUE
@@ -605,7 +626,9 @@ object CommandParseUtilities {
           withinQuotes = true
           quoteType = s(i)
           t += 1
-        } else t += 1
+        } else {
+          t += 1
+        }
       } else if ((s(i) == brop || s(i) == brcl) && !withinQuotes) {
         if (s(i) == brop) withinBrackets += 1
         if (s(i) == brcl) withinBrackets -= 1
@@ -623,11 +646,11 @@ object CommandParseUtilities {
     val trimmedCommand = command.trim()
     val ip = quoteSafeIndexOf(trimmedCommand, ">(")
     if (ip < 0) {
-      throw new GorParsingException("Bad nested process gorpipe command: " + trimmedCommand);
+      throw new GorParsingException("Bad nested process gorpipe command: " + trimmedCommand)
     }
     val ep = findEndBracketPos(ip + 2, trimmedCommand)
     if (ep < ip + 2 || ep < trimmedCommand.length - 1) {
-      throw new GorParsingException("Nested process gorpipe command not closed with a bracket: " + trimmedCommand);
+      throw new GorParsingException("Nested process gorpipe command not closed with a bracket: " + trimmedCommand)
     }
     trimmedCommand.slice(ip + 2, ep).trim
   }
@@ -640,11 +663,11 @@ object CommandParseUtilities {
     val trimmedCommand = command.trim()
     val ip = quoteSafeIndexOf(trimmedCommand, "<(")
     if (ip < 0) {
-      throw new GorParsingException("Bad nested gorpipe command: " + trimmedCommand);
+      throw new GorParsingException("Bad nested gorpipe command: " + trimmedCommand)
     }
     val ep = findEndBracketPos(ip + 2, trimmedCommand)
     if (ep < ip + 2 || ep < trimmedCommand.length - 1) {
-      throw new GorParsingException("Nested gorpipe command not closed with a bracket: " + trimmedCommand);
+      throw new GorParsingException("Nested gorpipe command not closed with a bracket: " + trimmedCommand)
     }
     trimmedCommand.slice(ip + 2, ep)
   }
@@ -678,7 +701,9 @@ object CommandParseUtilities {
         right = right.slice(sta + a.length, right.length)
         outStr.append(left + b)
         keepOn = true
-      } else keepOn = false
+      } else {
+        keepOn = false
+      }
     }
     outStr.append(right)
     outStr.toString
@@ -727,6 +752,7 @@ object CommandParseUtilities {
     ("NORSTDIN", TSV_EXTENSION),
     ("NORROWS", TSV_EXTENSION),
     ("SPARK", PARQUET_EXTENSION),
+    ("SELECT", PARQUET_EXTENSION),
     (GOR_DICTIONARY, GOR_DICTIONARY_EXTENSION),
     (GOR_DICTIONARY_PART, GOR_DICTIONARY_EXTENSION),
     (NOR_DICTIONARY, NOR_DICTIONARY_EXTENSION),
@@ -779,6 +805,8 @@ object CommandParseUtilities {
 
   private def getDefaultBlocks: Array[SplitBlock] = Array[SplitBlock](SplitBlock('(', ')'), SplitBlock('{', '}'))
 
+  private val getDefaultSpecialChars : Set[Char] = Set('\\', '\'', '"', '(', ')', '{', '}')
+
   case class SplitQuote(quote: Char) {
     var withinQuotes = false
   }
@@ -797,11 +825,11 @@ object CommandParseUtilities {
     * @return Split array
     */
   def quoteSafeSplit(inputString: String, splitCharacter: Char): Array[String] = {
-    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, getDefaultBlocks, true)
+    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, getDefaultBlocks, getDefaultSpecialChars, true)
   }
 
   def quoteSafeSplitNoValidation(inputString: String, splitCharacter: Char): Array[String] = {
-    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, getDefaultBlocks, false)
+    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, getDefaultBlocks, getDefaultSpecialChars, false)
   }
 
   /**
@@ -828,7 +856,8 @@ object CommandParseUtilities {
     */
   def quoteSquareBracketsSafeSplit(inputString: String, splitCharacter: Char): Array[String] = {
     val blocks = getDefaultBlocks :+ SplitBlock('[', ']')
-    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, blocks, true)
+    val specialChars = getDefaultSpecialChars ++ Set('[', ']')
+    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, blocks, specialChars, true)
   }
 
   /**
@@ -841,57 +870,61 @@ object CommandParseUtilities {
    */
   def quoteCurlyBracketsSafeSplit(inputString: String, splitCharacter: Char): Array[String] = {
     val blocks = getDefaultBlocks :+ SplitBlock('{', '}')
-    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, blocks, false)
+    val specialChars = getDefaultSpecialChars ++ Set('{', '}')
+    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, blocks, specialChars, false)
   }
 
-  private def quoteCustomSafeSplit(inputString: String, splitCharacter: Char, quotes: Array[SplitQuote], blocks: Array[SplitBlock], validateBlocks: Boolean): Array[String] = {
+  private def consumeQuoted(inputString: String, start: Int, end: Int): Int = {
+    var currentChar = inputString(start)
     var backSlashCount = 0
-    val words = new scala.collection.mutable.ArrayBuffer[String]
-    val t = new StringBuilder(300)
-    var i = 0
+    val quoteChar = currentChar
+    var i = start + 1
+    while (i < end && ((inputString(i) != quoteChar) || (backSlashCount % 2 != 0))) {
+      currentChar = inputString.charAt(i)
+      if (currentChar == '\\') backSlashCount += 1 else backSlashCount = 0
+      i += 1
+    }
+    i
+  }
 
-    while (i < inputString.length) {
-      val currentChar = inputString(i)
-      val withinQuotes = quotes.exists(x => x.withinQuotes)
-      val currentCharIsQuote = quotes.exists(x => x.quote == currentChar)
-      val withinQuotesDifferentFromCurrent = currentCharIsQuote && quotes.exists(x => x.withinQuotes && x.quote != currentChar)
-      val withinBlock = blocks.exists(x => x.withinBlock > 0)
-      var append = true
+  private def quoteCustomSafeSplit(inputString: String, splitCharacter: Char, quotes: Array[SplitQuote], blocks: Array[SplitBlock], specialChars: Set[Char], validateBlocks: Boolean): Array[String] = {
+    var backSlashCount = 0
+    var words = List[String]()
+    var i = 0
+    var start = i
+
+    var withinBlock = false
+    val inputLength = inputString.length
+    while (i < inputLength) {
+      val currentChar = inputString.charAt(i)
 
       if (currentChar == splitCharacter) {
-        if (!(withinQuotes || withinBlock)) {
-          words += t.toString
-          t.length = 0
-          append = false
+        if (!withinBlock) {
+          words = inputString.substring(start, i) :: words
+          start = i + 1
         }
-
-        blocks.foreach { x =>
-          if (splitCharacter == x.startBlock) x.withinBlock += 1
-          if (splitCharacter == x.endBlock) x.withinBlock -= 1
-        }
-      } else {
-        if (currentCharIsQuote && !withinQuotesDifferentFromCurrent) {
-          if ((backSlashCount % 2) == 0) {
-            quotes.foreach { x =>
-              if (currentChar == x.quote) {
-                x.withinQuotes = !x.withinQuotes
-              }
+        backSlashCount = 0
+      } else if (specialChars.contains(currentChar)) {
+        if (currentChar == '\\') {
+          backSlashCount += 1
+        } else {
+          backSlashCount = 0
+          if (quotes.exists(x => x.quote == currentChar) && (backSlashCount % 2) == 0) {
+            i = consumeQuoted(inputString, i, inputLength)
+          } else {
+            withinBlock = false
+            blocks.foreach { x =>
+              if (x.startBlock == currentChar) x.withinBlock += 1
+              if (x.endBlock == currentChar) x.withinBlock -= 1
+              if (x.withinBlock > 0) withinBlock = true
             }
-          }
-        } else if (blocks.exists(x => x.startBlock == currentChar || x.endBlock == currentChar) && !withinQuotes) {
-          blocks.foreach { x =>
-            if (x.startBlock == currentChar) x.withinBlock += 1
-            if (x.endBlock == currentChar) x.withinBlock -= 1
           }
         }
       }
 
-      if (append) t.append(currentChar)
-
-      if (currentChar == '\\') backSlashCount += 1 else backSlashCount = 0
       i += 1
     }
-    if (t.nonEmpty) words += t.toString
+    if (start < inputLength) words = inputString.substring(start) :: words
 
     // Validate the final state
     if (validateBlocks) {
@@ -902,7 +935,7 @@ object CommandParseUtilities {
       }
     }
 
-    words.toArray
+    words.reverse.toArray
   }
 
   /**
@@ -944,7 +977,7 @@ object CommandParseUtilities {
         if (quotes.exists(x => x.quote == c)) {
           if (withinQuotes && (backSlashCount % 2) == 0) {
             if (c == quoteType) {
-              withinQuotes = false;
+              withinQuotes = false
               patternQuote = false
             }
           } else if (backSlashCount % 2 == 0) {
@@ -957,9 +990,9 @@ object CommandParseUtilities {
         if (withinQuotes && c == '\\') backSlashCount += 1 else backSlashCount = 0
 
         if (j == 0) {
-          wq = withinQuotes;
-          pq = patternQuote;
-          qt = quoteType;
+          wq = withinQuotes
+          pq = patternQuote
+          qt = quoteType
           bc = backSlashCount
         }
         if (c == searchString(j)) {
@@ -990,8 +1023,9 @@ object CommandParseUtilities {
 
         if (!withinQuotes) {
           blocks.foreach { x =>
-            if (x.startBlock == c) x.withinBlock += 1
-            else if (x.endBlock == c) x.withinBlock -= 1
+            if (x.startBlock == c) {
+              x.withinBlock += 1
+            } else if (x.endBlock == c) x.withinBlock -= 1
           }
         }
 

@@ -23,6 +23,7 @@
 package gorsat;
 
 import gorsat.Script.VirtualFileManager;
+import gorsat.Utilities.MacroUtilities;
 import org.junit.Assert;
 import org.junit.Test;
 

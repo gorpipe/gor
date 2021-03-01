@@ -33,6 +33,7 @@
    command/GROUP
    command/GTGEN
    command/GTLD
+   command/GTTRANSPOSE
    command/HIDE
    command/INSET
    command/JOIN
@@ -66,6 +67,7 @@
    command/SEGPROJ
    command/SEGSPAN
    command/SELECT
+   command/SELWHERE
    command/SEQ
    command/SETCOLTYPE
    command/SIGNATURE
@@ -78,12 +80,14 @@
    command/TOP
    command/UNPIVOT
    command/UNTIL
+   command/VARGROUP
    command/VARIANTS
    command/VARJOIN
    command/VARMERGE
    command/VARNORM
    command/VERIFYCOLTYPE
    command/VERIFYORDER
+   command/VERIFYVARIANT
    command/WAIT
    command/WHERE
    command/GORROW

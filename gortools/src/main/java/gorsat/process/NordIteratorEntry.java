@@ -26,8 +26,8 @@ import org.gorpipe.exceptions.GorDataException;
 
 public class NordIteratorEntry {
 
-    private String tag;
-    private String filePath;
+    private final String tag;
+    private final String filePath;
 
     public NordIteratorEntry(String filePath, String tag) {
         this.tag = tag;

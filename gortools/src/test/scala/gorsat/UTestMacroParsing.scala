@@ -23,7 +23,6 @@
 package gorsat
 
 import Script.{ExecutionBlock, MacroParsingResult}
-import org.gorpipe.gor.GorContext
 import process.{GenericSessionFactory, _}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -79,7 +78,7 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
     val context = new GenericSessionFactory().create().getGorContext
 
     if (macroInfo.nonEmpty) {
-      Option(macroInfo.get.init(block.groupName, block, context, doHeader = false, options))
+      Option(macroInfo.get.init(block.groupName, block, context, doHeader = false, options, false))
     } else {
       Option(null)
     }
@@ -87,7 +86,7 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
   test("Macro: PGOR - block expansion") {
     val resultBlocks = performBlockExpansionTest("pgor",
-      ExecutionBlock("[xxx]", "pgor ../tests/data/gor/genes.gor | top 10", null, "xxx"),
+      ExecutionBlock("[xxx]", "pgor ../tests/data/gor/genes.gor | top 10", null, null, "xxx"),
       Array("../tests/data/gor/genes.gor"))
 
     if (resultBlocks.nonEmpty) {
@@ -108,7 +107,7 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
   test("Macro: PGOR - block expansion, build hg38") {
     val resultBlocks = performBlockExpansionTest("pgor",
-      ExecutionBlock("[xxx]", "pgor ../tests/data/gor/genes.gor | top 10", null, "xxx"),
+      ExecutionBlock("[xxx]", "pgor ../tests/data/gor/genes.gor | top 10", null, null, "xxx"),
       Array("../tests/data/gor/genes.gor"))
 
     if (resultBlocks.nonEmpty) {
@@ -129,7 +128,7 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
   test("Macro: PGOR - block expansion, build hg38 with full chromosome split") {
     val resultBlocks = performBlockExpansionTest("pgor",
-      ExecutionBlock("[xxx]", "pgor ../tests/data/gor/genes.gor | group chromo -gc 1-4 -count | top 10", null, "xxx"),
+      ExecutionBlock("[xxx]", "pgor ../tests/data/gor/genes.gor | group chromo -gc 1-4 -count | top 10", null, null, "xxx"),
       Array("../tests/data/gor/genes.gor"))
 
     if (resultBlocks.nonEmpty) {
@@ -150,7 +149,7 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
   test("Macro: PARALLEL - block expansion") {
     val resultBlocks = performBlockExpansionTest("parallel",
-      ExecutionBlock("[xxx]", "parallel -parts <(norrows 10 -offset 10) <(norrows 10 -offset 10 | calc dd rownum*#{col:rownum}) | top 10", null, "xxx"),
+      ExecutionBlock("[xxx]", "parallel -parts <(norrows 10 -offset 10) <(norrows 10 -offset 10 | calc dd rownum*#{col:rownum}) | top 10", null, null, "xxx"),
       Array("-parts", "<(norrows 10 -offset 10)","<(norrows 10 -offset 10 | calc dd rownum*#{col:rownum})"))
 
     if (resultBlocks.nonEmpty) {

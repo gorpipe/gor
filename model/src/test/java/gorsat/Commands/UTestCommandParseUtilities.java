@@ -1,7 +1,7 @@
 package gorsat.Commands;
 
-import org.gorpipe.exceptions.GorParsingException;
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Test;
 

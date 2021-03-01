@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.utils;
 
-import com.google.inject.Inject;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +37,9 @@ import java.io.IOException;
  */
 public class RetryHandler {
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private long retryInitialSleepMs;
-    private long retryMaxSleepMs;
+    private final long retryInitialSleepMs;
+    private final long retryMaxSleepMs;
 
-    @Inject
     public RetryHandler(GorDriverConfig config) {
         this(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
     }
@@ -71,6 +69,11 @@ public class RetryHandler {
             try {
                 return op.perform();
             } catch (IOException e) {
+                if (e.getMessage().equals("Stale file handle")) {
+                    // Stale file handle errors generally require retries on a higher level as the
+                    // file needs to be reopened.
+                    throw e;
+                }
                 lastException = e;
                 log.debug("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
                 try {

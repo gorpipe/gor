@@ -22,7 +22,7 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 abstract class TimedRowSource extends RowSource {
   var myHasNext: Boolean = false
@@ -35,7 +35,7 @@ abstract class TimedRowSource extends RowSource {
     var theNext : Row = null
     if (myNext != null && myNext.pos == seekPos && myNext.chr == seekChr) return
 
-    if( seekChr == myNext.chr ) {
+    if (myNext != null && seekChr == myNext.chr) {
       val avgSeekTimeMillis = getAvgSeekTimeMilliSecond
       var etaMillis = if( getAvgBasesPerMilliSecond > 0 ) (seekPos - myNext.pos) / getAvgBasesPerMilliSecond else 0.0
       var estRowNum = etaMillis * getAvgRowsPerMilliSecond

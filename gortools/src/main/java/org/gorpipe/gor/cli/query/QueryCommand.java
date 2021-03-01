@@ -23,14 +23,14 @@
 package org.gorpipe.gor.cli.query;
 
 import ch.qos.logback.classic.Level;
-import org.gorpipe.gor.cli.HelpOptions;
-import org.gorpipe.model.genome.files.gor.DbSource;
-import org.gorpipe.model.util.ConfigUtil;
-import org.gorpipe.exceptions.ExceptionUtilities;
-import org.gorpipe.exceptions.GorException;
 import gorsat.process.CLIGorExecutionEngine;
 import gorsat.process.GorExecutionEngine;
 import gorsat.process.PipeOptions;
+import org.gorpipe.exceptions.ExceptionUtilities;
+import org.gorpipe.exceptions.GorException;
+import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.gor.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -45,7 +45,7 @@ import java.util.UUID;
         header = "Execute a gor query, script or template")
 public class QueryCommand extends HelpOptions implements Runnable{
 
-    private static Logger consoleLogger = LoggerFactory.getLogger("console." + QueryCommand.class);
+    private static final Logger consoleLogger = LoggerFactory.getLogger("console." + QueryCommand.class);
 
     @CommandLine.Option(defaultValue = "false", names={"-t","--stacktrace"}, description = "Displays stack trace for errors.")
     private boolean showStackTrace;
@@ -139,12 +139,12 @@ public class QueryCommand extends HelpOptions implements Runnable{
 
     private String loadQuery(String query, boolean inputIsScript) {
 
+        String[] args;
         if (inputIsScript) {
-            String[] args = {"-script " + query};
-            return PipeOptions.getQueryFromArgs(args);
+            args = new String[]{"-script " + query};
         } else {
-            String[] args = {query};
-            return PipeOptions.getQueryFromArgs(args);
+            args = new String[]{query};
         }
+        return PipeOptions.getQueryFromArgs(args);
     }
 }

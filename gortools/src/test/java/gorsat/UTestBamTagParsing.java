@@ -22,10 +22,11 @@
 
 package gorsat;
 
-import org.gorpipe.model.genome.files.gor.BamIterator;
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Line;
+import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
+import org.gorpipe.gor.model.DefaultChromoLookup;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.Row;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,11 +39,11 @@ public class UTestBamTagParsing {
     @Test
     public void testBamTagParse() {
         GenomicIterator.ChromoLookup lookup = new DefaultChromoLookup();
-        BamIterator bamit = new BamIterator(lookup, "../tests/data/external/samtools/serialization_test.bam", null);
+        BamIterator bamit = new BamIterator(lookup, "../tests/data/external/samtools/serialization_test.bam");
 
-        Line line = new Line(BamIterator.HEADER.length);
-        while (bamit.next(line)) {
-            String tag = line.cols[11].toString();
+        while (bamit.hasNext()) {
+            Row row = bamit.next();
+            String tag = row.colAsString(13).toString();
             Assert.assertFalse(tag.startsWith(" "));
         }
     }

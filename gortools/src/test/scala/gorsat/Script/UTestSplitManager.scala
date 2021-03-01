@@ -22,11 +22,11 @@
 
 package gorsat.Script
 
-import org.gorpipe.gor.ReferenceBuildDefaults
 import gorsat.DynIterator
 import gorsat.process.{GenericSessionFactory, PipeInstance, PipeOptions, TestSessionFactory}
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.{GorContext, ReferenceBuildDefaults}
+import org.gorpipe.gor.reference.ReferenceBuildDefaults
+import org.gorpipe.gor.session.GorContext
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -146,31 +146,31 @@ class UTestSplitManager extends FunSuite {
       + " [xxx] -split <(pgor ../tests/data/gor/genes.gor | top 1 | select 1-3) | top 10", "xxx")
 
     assert(commandGroup.commandEntries.length == 25)
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:11868-14412 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr10:60000-60544 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr11:75779-76143 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr12:67606-69138 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr13:19041311-19059588 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr14:19109938-19118336 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr15:20083768-20093074 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr16:61552-64093 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr17:4960-5048 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr18:11102-15928 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr19:60104-70966 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr2:38813-46870 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr20:68350-77174 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr21:9683190-9683272 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr22:16062156-16063236 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr3:65430-66175 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr4:48990-50018 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr5:58312-59030 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr6:105918-106856 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr7:19756-35479 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr8:14090-14320 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr9:11055-11620 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chrM:576-647 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chrX:170409-172712 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chrY:2654895-2655740 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:11869-14412 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr10:60001-60544 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr11:75780-76143 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr12:67607-69138 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr13:19041312-19059588 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr14:19109939-19118336 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr15:20083769-20093074 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr16:61553-64093 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr17:4961-5048 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr18:11103-15928 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr19:60105-70966 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr2:38814-46870 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr20:68351-77174 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr21:9683191-9683272 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr22:16062157-16063236 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr3:65431-66175 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr4:48991-50018 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr5:58313-59030 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr6:105919-106856 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr7:19757-35479 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr8:14091-14320 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr9:11056-11620 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chrM:577-647 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chrX:170410-172712 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chrY:2654896-2655740 [xxx] | top 10"))
   }
 
   test("Too many splits") {

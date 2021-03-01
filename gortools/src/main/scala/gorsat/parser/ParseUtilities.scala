@@ -28,13 +28,10 @@ package gorsat.parser
 
 import java.util.Locale
 
-import org.gorpipe.exceptions._
-import org.gorpipe.model.util.GChiSquared2by2
-import gorsat.process.PipeOptions
 import org.gorpipe.exceptions.{GorDataException, GorParsingException, GorSystemException}
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.{GChiSquared2by2, GFisherExact2by2}
 import org.gorpipe.model.gor.iterators.RefSeq
-import org.gorpipe.model.util.GFisherExact2by2
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -246,14 +243,9 @@ object ParseUtilities {
     */
   def eval(s: String, context: GorContext): String = {
     val pipeInstance = gorsat.process.PipeInstance.createGorIterator(context)
-    val args = Array(s)
+    pipeInstance.init(s)
 
-    val options = new PipeOptions
-    options.parseOptions(args)
-    options.norContext = false
-    pipeInstance.subProcessArguments(options)
-
-    val rs = pipeInstance.theIterator
+    val rs = pipeInstance.getRowSource
     var systemMessage = ""
     try {
       if (rs.hasNext) {
@@ -411,7 +403,7 @@ object ParseUtilities {
       val mGT0 = mGT.indexOf(cGT(0))
       val mGT1 = mGT.indexOf(cGT(1))
       if (mGT0 >= 0 && !(mGT1 >= 0)) return cGT(1).toString
-      return cGT(fORm).toString
+      cGT(fORm).toString
     } catch {
       case e: GorSystemException => logger.error(child + father + mother, e); ""
     }
@@ -451,7 +443,7 @@ object ParseUtilities {
     if (father == "A" || father == "C" || father == "G" || father == "T") fHet = false
     var mHet = true
     if (mother == "A" || mother == "C" || mother == "G" || mother == "T") mHet = false
-    if (fHet && mHet && (father == mother || mother == "U" || father == "U")) return "0" else return "1"
+    if (fHet && mHet && (father == mother || mother == "U" || father == "U")) "0" else "1"
   }
 
   /**
@@ -469,7 +461,7 @@ object ParseUtilities {
 
     if (fGT.indexOf(cGT(0)) >= 0 && mGT.indexOf(cGT(1)) >= 0) return "0"
     if (fGT.indexOf(cGT(1)) >= 0 && mGT.indexOf(cGT(0)) >= 0) return "0"
-    return "1"
+    "1"
   }
 
   /**
@@ -484,9 +476,9 @@ object ParseUtilities {
     val c = if (iChild == "") "U" else iChild
     val f = if (iFactor == "") "U" else iFactor
     val m = if (iMother == "") "U" else iMother
-    if (ihe(c, f, m) == "1") return "0"
-    else if (phaseKnown(c, f, m) == "1") return "2"
-    else return "1"
+    if (ihe(c, f, m) == "1") "0"
+    else if (phaseKnown(c, f, m) == "1") "2"
+    else "1"
   }
 
   def varSignature(ref: String, alt: String): String = {
@@ -504,7 +496,7 @@ object ParseUtilities {
       if (ref(i) == 'A') a -= 1 else if (ref(i) == 'G') g -= 1 else if (ref(i) == 'C') c -= 1 else if (ref(i) == 'T') t -= 1
       i += 1
     }
-    return "A" + a + "C" + c + "G" + g + "T" + t
+    "A" + a + "C" + c + "G" + g + "T" + t
   }
 
   def generateVarSeq(refSeq: String, refPos: Int, allRefSize: Int, alleles: String, allelePos: Int, alleleStart: Int, alleleStop: Int): String = {
@@ -523,7 +515,7 @@ object ParseUtilities {
     while (p < seqLength) {
       bases.append(refSeq(p - insSize)); p += 1
     }
-    return bases.toString
+    bases.toString
   }
 
   def sameVarSeqs(varSeq1: String, refSeq: String, refPos: Int, allRefSize: Int, alleles: String, allelePos: Int, alleleStart: Int, allleleStop: Int): Boolean = {
@@ -543,8 +535,8 @@ object ParseUtilities {
     while (p < seqLength) {
       if (p1 > vl || varSeq1(p1) != refSeq(p - insSize)) return false; p += 1; p1 += 1
     }
-    if (p1 != varSeq1.length) return false
-    else return true
+    if (p1 != varSeq1.length) false
+    else true
   }
 
   def mergedReference(pos1: Int, ref1: String, pos2: Int, ref2: String, refSeq: RefSeq, theChrom: String): String = {
@@ -566,7 +558,7 @@ object ParseUtilities {
       else seq.setCharAt(p - start, refSeq.getBase(theChrom, p).toUpper)
       p += 1
     }
-    return seq.toString
+    seq.toString
   }
 
   def cvsSplitArray(s: String): Array[Int] = {
@@ -623,13 +615,13 @@ object ParseUtilities {
     if (tests > 2 && ssame > 1) return 2
     if (tests == 2 && ssame > 1) return 1
     if (ssame > 0) return 1
-    return 0
+    0
   }
 
   def allelesFoundVCF(pos1: Int, ref1: String, alleles1: String, pos2: Int, ref2: String, alleles2: String, refSeq: RefSeq, theChrom: String): Int = {
     if (pos2 > pos1 + 10000 || pos1 > pos2 + 10000) return 0
     if (((pos2 > pos1 && pos1 + ref1.length < pos2) || (pos1 > pos2 && pos2 + ref2.length < pos1)) && ref1 == alleles1 && ref2 == alleles2) return 0
-    return compareVCFgt(pos1, ref1, alleles1, pos2, ref2, alleles2, refSeq, theChrom)
+    compareVCFgt(pos1, ref1, alleles1, pos2, ref2, alleles2, refSeq, theChrom)
   }
 
   def gtStatVCF(posC: Int, refC: String, allelesC: String, posF: Int, refF: String, allelesF: String, posM: Int, refM: String, allelesM: String, refSeq: RefSeq, theChrom: String): String = {
@@ -637,7 +629,7 @@ object ParseUtilities {
     if (childAlleles.length == 1) {
       val foundInFather = allelesFoundVCF(posC, refC, allelesC, posF, refF, allelesF, refSeq, theChrom)
       val foundInMother = allelesFoundVCF(posC, refC, allelesC, posM, refM, allelesM, refSeq, theChrom)
-      if (foundInFather + foundInMother >= 2) return "2" else return "0"
+      if (foundInFather + foundInMother >= 2) "2" else "0"
     } else {
       val foundInFather1 = allelesFoundVCF(posC, refC, childAlleles(0), posF, refF, allelesF, refSeq, theChrom)
       val foundInMother1 = allelesFoundVCF(posC, refC, childAlleles(0), posM, refM, allelesM, refSeq, theChrom)
@@ -650,14 +642,14 @@ object ParseUtilities {
       if (foundInMother1 > 0 && foundInFather1 == 0 && foundInFather2 > 0) return "2"
       if (foundInMother2 > 0 && foundInFather2 == 0 && foundInFather1 > 0) return "2"
       if (foundInFather1 + foundInMother1 >= 2 && foundInFather2 + foundInMother2 >= 2) return "1"
-      return "0"
+      "0"
     }
   }
 
   def fatherGTVCF(posC: Int, refC: String, allelesC: String, posF: Int, refF: String, allelesF: String, posM: Int, refM: String, allelesM: String, refSeq: RefSeq, theChrom: String): String = {
     val childAlleles = allelesC.split("[,|/]")
     if (childAlleles.length == 1) {
-      return childAlleles(0)
+      childAlleles(0)
     } else {
       if (allelesC.indexOf('|') > -1) return childAlleles(0)
       val foundInFather1 = allelesFoundVCF(posC, refC, childAlleles(0), posF, refF, allelesF, refSeq, theChrom)
@@ -670,14 +662,14 @@ object ParseUtilities {
       if (foundInMother1 > 0 && !(foundInFather1 > 0)) motherAllele = 0
       if (foundInMother2 > 0 && !(foundInFather2 > 0)) motherAllele = 1
       if (motherAllele != 0) return childAlleles(0) else if (motherAllele != 1) return childAlleles(1)
-      return childAlleles(0)
+      childAlleles(0)
     }
   }
 
   def motherGTVCF(posC: Int, refC: String, allelesC: String, posF: Int, refF: String, allelesF: String, posM: Int, refM: String, allelesM: String, refSeq: RefSeq, theChrom: String): String = {
     val childAlleles = allelesC.split("[,|/]")
     if (childAlleles.length == 1) {
-      return childAlleles(0)
+      childAlleles(0)
     } else {
       if (allelesC.indexOf('|') > -1) return childAlleles(1)
       val foundInFather1 = allelesFoundVCF(posC, refC, childAlleles(0), posF, refF, allelesF, refSeq, theChrom)
@@ -691,7 +683,7 @@ object ParseUtilities {
       if (foundInFather1 > 0 && !(foundInMother1 > 0)) fatherAllele = 0
       if (foundInFather2 > 0 && !(foundInMother2 > 0)) fatherAllele = 1
       if (fatherAllele != 1) return childAlleles(1) else if (fatherAllele != 0) return childAlleles(0)
-      return childAlleles(1)
+      childAlleles(1)
     }
   }
 }

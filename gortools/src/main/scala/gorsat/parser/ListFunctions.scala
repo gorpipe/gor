@@ -24,11 +24,14 @@ package gorsat.parser
 
 import java.util.regex.Pattern
 
-import org.gorpipe.gor.ColumnValueProvider
+import gorsat.Analysis.Cols2ListAnalysis
+import gorsat.Commands.ColumnSelection
+import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{bFun, dFun, iFun, sFun}
+import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.ColumnValueProvider
 
 import scala.collection.mutable
-import gorsat.parser.FunctionSignature._
 
 object ListFunctions {
   //noinspection VarCouldBeVal
@@ -52,6 +55,8 @@ object ListFunctions {
     functions.register("LISTNUMSORTDESC", getSignatureString2String(listNumSortDesc), listNumSortDesc _)
     functions.register("LISTINDEX", getSignatureStringString2Int(listIndex), listIndex _)
     functions.register("LISTINDEX", getSignatureStringStringString2Int(listIndexWithDelimiter), listIndexWithDelimiter _)
+    functions.register("LISTCOUNT", getSignatureString2String(listCount), listCount _)
+    functions.register("LISTCOUNT", getSignatureStringString2String(listCountWithDelimiter), listCountWithDelimiter _)
     functions.register("LISTLAST", getSignatureString2String(listLast), listLast _)
     functions.register("LISTLAST", getSignatureStringString2String(listLastWithDelimiter), listLastWithDelimiter _)
     functions.register("LISTTAIL", getSignatureString2String(listTail), listTail _)
@@ -92,6 +97,69 @@ object ListFunctions {
     functions.register("CSCONTAINSANY", getSignatureStringStringList2Boolean(csContainsAny), csContainsAny _)
     functions.register("LISTHASCOUNT", getSignatureStringStringList2Int(listHasCount), listHasCount _)
     functions.register("CSLISTHASCOUNT", getSignatureStringStringList2Int(csListHasCount), csListHasCount _)
+    functions.registerWithOwner("COLS2LIST", getSignatureString2String(removeOwner(cols2List)), cols2List _)
+    functions.registerWithOwner("COLS2LIST", getSignatureStringString2String(removeOwner(cols2ListCustomSep)), cols2ListCustomSep _)
+    functions.registerWithOwner("COLS2LISTMAP", getSignatureStringString2String(removeOwner(cols2Listmap)), cols2Listmap _)
+    functions.registerWithOwner("COLS2LISTMAP", getSignatureStringStringString2String(removeOwner(cols2ListmapCustomSep)), cols2ListmapCustomSep _)
+  }
+
+  def cols2Listmap(owner: ParseArith, columnSelection: sFun, expression: sFun): sFun = {
+    cols2ListmapCustomSep(owner, columnSelection, expression, _ => ",")
+  }
+
+
+  def cols2ListmapCustomSep(owner: ParseArith, columnSelection: sFun, expression: sFun, sep: sFun): sFun = {
+    def getColumnSelection = {
+      try {
+        ColumnSelection(owner.getHeader.toString, columnSelection(dummyCvp), owner.context, owner.executeNor)
+      } catch {
+        case _: NullPointerException => throw new GorParsingException("COLS2LISTMAP expects a quoted column selection " +
+          "expression")
+      }
+    }
+    def getExpression = {
+      try {
+        val exprSrc = expression(dummyCvp)
+        Cols2ListAnalysis.compileExpression(exprSrc, owner.getHeader)
+      } catch {
+        case _: NullPointerException => throw new GorParsingException("COLS2LISTMAP expects a quoted expression")
+      }
+    }
+
+    val columns: ColumnSelection = getColumnSelection
+    val ex = getExpression
+    val separator = sep(dummyCvp)
+    val offset = if (owner.executeNor) 2 else 0
+    cvp => {
+      val buffer = new java.lang.StringBuilder()
+      Cols2ListAnalysis.addColumnValuesAsList(columns, offset, separator, cvp, ex, buffer)
+      buffer.toString
+    }
+  }
+
+  def cols2List(owner: ParseArith, columnSelection: sFun): sFun = {
+    cols2ListCustomSep(owner, columnSelection, _ => ",")
+  }
+
+  def cols2ListCustomSep(owner: ParseArith, columnSelection: sFun, sep: sFun): sFun = {
+    def getColumnSelection = {
+      try {
+        ColumnSelection(owner.getHeader.toString, columnSelection(dummyCvp), owner.context, owner.executeNor)
+      } catch {
+        case _: NullPointerException => throw new GorParsingException("COLS2LIST expects a qouted column selection " +
+          "expression")
+      }
+    }
+
+    val columns: ColumnSelection = getColumnSelection
+    val separator = sep(dummyCvp)
+    val offset = if (owner.executeNor) 2 else 0
+    val ex = (_: ColumnValueProvider, x: CharSequence) => x
+    cvp => {
+      val buffer = new java.lang.StringBuilder()
+      Cols2ListAnalysis.addColumnValuesAsList(columns, offset, separator, cvp, ex, buffer)
+      buffer.toString
+    }
   }
 
   def listHasCount(ex1: sFun, ex2: List[String]): iFun = {
@@ -188,13 +256,14 @@ object ListFunctions {
     cvp => fsvMapInner(func, cvp, ex1(cvp), ex2(cvp), ex4(cvp))
   }
 
-  private def fsvMapInner(f: ColumnValueProvider => String, cvp: ColumnValueProvider, sourceList: String, itemSize: Int, delimiter: String = ","): String = {
+  private def fsvMapInner(f: ColumnValueProvider => String, cvp: ColumnValueProvider, sourceList: String,
+                          itemSize: Int, delimiter: String = ","): String = {
     val builder = new java.lang.StringBuilder()
     val listCvp = FixedSizeIteratorCvp(cvp, sourceList, itemSize)
     while (listCvp.hasNext) {
       listCvp.next()
       builder.append(f(listCvp))
-      if(listCvp.hasNext) builder.append(delimiter)
+      if (listCvp.hasNext) builder.append(delimiter)
     }
     builder.toString
   }
@@ -262,12 +331,12 @@ object ListFunctions {
     // General case
     val listCvp = IteratorCvp(cvp, sourceList, delimiter)
     var i = 1
-    while(listCvp.hasNext && i < N) {
+    while (listCvp.hasNext && i < N) {
       listCvp.next()
       i += 1
     }
 
-    if(i == N) {
+    if (i == N) {
       listCvp.next()
       listCvp.stringValue(SpecialColumns.ListItem)
     } else {
@@ -332,7 +401,7 @@ object ListFunctions {
     val filter = owner.createSubFilter()
     filter.compileFilter(ex3(dummyCvp))
     cvp =>
-      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex3(cvp))
+      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp))
 
   }
 
@@ -340,22 +409,23 @@ object ListFunctions {
     val filter = owner.createSubFilter()
     filter.compileFilter(ex3(dummyCvp))
     cvp =>
-      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex3(cvp), ex4(cvp))
+      listZipFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex4(cvp))
 
   }
 
-  def listZipFilterInner(cvp: ColumnValueProvider, filter: ParseArith, arg1: String, arg2: String, arg3: String, delimiter: String = ","): String = {
+  def listZipFilterInner(cvp: ColumnValueProvider, filter: ParseArith, arg1: String, arg2: String,
+                         delimiter: String = ","): String = {
     val buffer = new java.lang.StringBuilder()
 
     val sourceList = IteratorCvp(cvp, arg1, delimiter)
     val conditionList = IteratorCvp(cvp, arg2, delimiter)
 
     var needDelimiter = false
-    while(sourceList.hasNext && conditionList.hasNext) {
+    while (sourceList.hasNext && conditionList.hasNext) {
       conditionList.next()
       sourceList.next()
-      if(filter.evalBooleanFunction(conditionList)) {
-        if(needDelimiter) {
+      if (filter.evalBooleanFunction(conditionList)) {
+        if (needDelimiter) {
           buffer.append(delimiter)
         }
         needDelimiter = true
@@ -375,7 +445,7 @@ object ListFunctions {
       listZipInner(ex1(cvp), ex2(cvp), ex3(cvp), ex4(cvp))
   }
 
-  private def listZipInner (arg1: String, arg2: String, delimiter: String = ",", separator: String = ";"): String = {
+  private def listZipInner(arg1: String, arg2: String, delimiter: String = ",", separator: String = ";"): String = {
     if (arg1 == "" || arg2 == "") return ""
 
     delimiter.length match {
@@ -385,7 +455,7 @@ object ListFunctions {
     }
   }
 
-  private def listZipNoDelimiter(arg1: String, arg2: String, separator: String):String = {
+  private def listZipNoDelimiter(arg1: String, arg2: String, separator: String): String = {
     val minLength = if (arg1.length < arg2.length) arg1.length else arg2.length
     val bufferLength = (2 + separator.length) * minLength - 1
     val buffer = new java.lang.StringBuilder(bufferLength)
@@ -406,7 +476,7 @@ object ListFunctions {
     buffer.toString
   }
 
-  private def listZipSingleCharDelimiter(arg1: String, arg2: String, delimiter: String, separator: String):String = {
+  private def listZipSingleCharDelimiter(arg1: String, arg2: String, delimiter: String, separator: String): String = {
     val buffer = new java.lang.StringBuilder()
     val del = delimiter.charAt(0)
     var i = 0
@@ -429,19 +499,19 @@ object ListFunctions {
     buffer.toString
   }
 
-  private def listZipGeneralDelimiter(arg1: String, arg2: String, delimiter: String, separator: String):String = {
+  private def listZipGeneralDelimiter(arg1: String, arg2: String, delimiter: String, separator: String): String = {
     val buffer = new java.lang.StringBuilder()
 
     val firstList = IteratorCvp(dummyCvp, arg1, delimiter)
     val secondList = IteratorCvp(dummyCvp, arg2, delimiter)
 
     var needDelimiter = false
-    while(firstList.hasNext && secondList.hasNext) {
+    while (firstList.hasNext && secondList.hasNext) {
       firstList.next()
       secondList.next()
       val firstValue = firstList.stringValue()
       val secondValue = secondList.stringValue()
-      if(needDelimiter) {
+      if (needDelimiter) {
         buffer.append(delimiter)
       } else {
         needDelimiter = true
@@ -465,16 +535,17 @@ object ListFunctions {
     cvp => listFilterInner(cvp, filter, ex1(cvp), ex2(cvp), ex3(cvp))
   }
 
-  private def listFilterInner(cvp: ColumnValueProvider, filter: ParseArith, arg1: String, arg2: String, delimiter: String = ","): String = {
+  private def listFilterInner(cvp: ColumnValueProvider, filter: ParseArith, arg1: String, arg2: String,
+                              delimiter: String = ","): String = {
     val buffer = new java.lang.StringBuilder()
 
     val sourceList = IteratorCvp(cvp, arg1, delimiter)
 
     var needDelimiter = false
-    while(sourceList.hasNext) {
+    while (sourceList.hasNext) {
       sourceList.next()
-      if(filter.evalBooleanFunction(sourceList)) {
-        if(needDelimiter) {
+      if (filter.evalBooleanFunction(sourceList)) {
+        if (needDelimiter) {
           buffer.append(delimiter)
         }
         needDelimiter = true
@@ -510,14 +581,15 @@ object ListFunctions {
     cvp => listMapInner(func, cvp, ex1(cvp), ex2(cvp), ex3(cvp))
   }
 
-  private def listMapInner(f: ColumnValueProvider => String, cvp: ColumnValueProvider, arg1: String, arg2: String, delimiter: String = ","): String = {
+  private def listMapInner(f: ColumnValueProvider => String, cvp: ColumnValueProvider, arg1: String, arg2: String,
+                           delimiter: String = ","): String = {
     val listCvp = IteratorCvp(cvp, arg1, delimiter)
     val builder = new java.lang.StringBuilder()
 
-    while(listCvp.hasNext) {
+    while (listCvp.hasNext) {
       listCvp.next()
       builder.append(f(listCvp))
-      if(listCvp.hasNext) builder.append(delimiter)
+      if (listCvp.hasNext) builder.append(delimiter)
     }
     builder.toString
   }
@@ -557,10 +629,13 @@ object ListFunctions {
   }
 
   private def listLastInner(string: String, del: String = ","): String = {
-    if (string.length == 0) string
-    else if (del.length == 0) string.substring(string.length - 1)
-    else if (del.length == 1) string.substring(string.lastIndexOf(del.charAt(0)) + 1)
-    else if (dontTreatAsRegex(del)) {
+    if (string.length == 0) {
+      string
+    } else if (del.length == 0) {
+      string.substring(string.length - 1)
+    } else if (del.length == 1) {
+      string.substring(string.lastIndexOf(del.charAt(0)) + 1)
+    } else if (dontTreatAsRegex(del)) {
       val tmp = string.lastIndexOf(del)
       if (tmp == -1) return string
       string.substring(tmp + 2)
@@ -580,6 +655,27 @@ object ListFunctions {
 
   def listIndexWithDelimiter(ex1: sFun, ex2: sFun, ex3: sFun): iFun = {
     cvp => listIndexInner(ex1(cvp), ex2(cvp), ex3(cvp))
+  }
+
+  def listCount(ex1: sFun): sFun = {
+     listCountWithDelimiter(ex1,cvp => { "," })
+  }
+
+  def listCountWithDelimiter(ex1: sFun, ex2: sFun): sFun = {
+    case class CountHolder(var count : Int)
+    var groupCount = scala.collection.mutable.HashMap.empty[String, CountHolder]
+    cvp => {
+      ex1(cvp).split(ex2(cvp),-1).foreach( x => {
+          groupCount.get(x) match {
+            case Some(x) => x.count += 1
+            case None =>
+              val c = CountHolder(1)
+              groupCount += (x -> c)
+          }
+        }
+      )
+      groupCount.toList.sortWith((x,y) => x._1 < y._1).map(x => (x._1+';'+x._2.count)).mkString(ex2(cvp))
+    }
   }
 
   private def listIndexInner(string: String, target: String, delimiter: String = ","): Int = {
@@ -802,9 +898,9 @@ object ListFunctions {
 
   private def listSecondInner(cvp: ColumnValueProvider, sourceList: String, delimiter: String = ","): String = {
     val listCvp = IteratorCvp(cvp, sourceList, delimiter)
-    if(listCvp.hasNext) {
+    if (listCvp.hasNext) {
       listCvp.next()
-      if(listCvp.hasNext) {
+      if (listCvp.hasNext) {
         listCvp.next()
         return listCvp.stringValue(SpecialColumns.ListItem)
       }
@@ -814,7 +910,8 @@ object ListFunctions {
 
   private val dontTreatAsRegex = (regex: String) => {
     (regex.length() == 2 && regex.charAt(0) == '\\' && ((regex.charAt(1) - '0') | ('9' - regex.charAt(1))) < 0 &&
-      ((regex.charAt(1) - 'a') | ('z' - regex.charAt(1))) < 0 && ((regex.charAt(1) - 'A') | ('Z' - regex.charAt(1))) < 0) &&
+      ((regex.charAt(1) - 'a') | ('z' - regex.charAt(1))) < 0 && ((regex.charAt(1) - 'A') | ('Z' - regex.charAt(1)))
+      < 0) &&
       (regex.charAt(1) < Character.MIN_HIGH_SURROGATE || regex.charAt(1) > Character.MAX_LOW_SURROGATE)
   }
 

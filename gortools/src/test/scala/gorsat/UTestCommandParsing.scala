@@ -25,12 +25,11 @@ package gorsat
 import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Path}
 
-import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import Commands.CommandParseUtilities
 import process._
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}
@@ -179,7 +178,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
           val result = command.init(context, x.norContext, x.header, x.command + " " + x.arguments, arguments)
           if (result.step != null) {
             try {
-              result.step.finish()
+              result.step.securedFinish(null)
             } catch {
               case _:Throwable => // Do nothing
             }
@@ -546,7 +545,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, twoColumnsPath.toString, header, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, twoColumnsPath.toString + " " + twoColumnsPath.toString, defaultHeaderSNP, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, twoColumnsPath.toString + " " + twoColumnsPath.toString, header, testShouldSucceed = true)
-    testsToPerform += TestEntry(commandName, "<(gor " + twoColumnsPath.toString + ") <(gor " + twoColumnsPath.toString + ")", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "<(gor " + twoColumnsPath.toString + ") <(gor " + twoColumnsPath.toString + ")", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<(nor " + twoColumnsPath.toString + ") <(nor " + twoColumnsPath.toString + ")", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<(nor " + twoColumnsPath.toString + ") <(nor " + twoColumnsPath.toString + ") -gc 1,2", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<(nor " + twoColumnsPath.toString + ") <(nor " + twoColumnsPath.toString + ") -gc foo,7", header, testShouldSucceed = false)
@@ -862,7 +861,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n", header, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n value,date", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n value date", header, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<( nor " +  norColumnsPath.toString + ") -c joincol ", header, testShouldSucceed = true)
 
     performTests(testsToPerform)
@@ -887,7 +886,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n", header, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n value,date", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n value date", header, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<(nor " +  norColumnsPath.toString + ") -c joincol ", header, testShouldSucceed = true)
 
     performTests(testsToPerform)
@@ -912,7 +911,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n", header, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n value,date", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n value date", header, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<(nor " +  norColumnsPath.toString + ") -c joincol ", header, testShouldSucceed = true)
 
     performTests(testsToPerform)
@@ -933,7 +932,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -cis", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -n", header, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "<(gor " +  patientsPathSEG.toString + ") -c joincol", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "<(nor " +  norColumnsPath.toString + ") -c joincol ", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -dp", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -c joincol -dl", header, testShouldSucceed = false)

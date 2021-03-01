@@ -23,14 +23,15 @@
 package gorsat;
 
 import com.google.common.io.Files;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.gor.GorSessionFactory;
-import org.gorpipe.test.utils.FileTestUtils;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateModelException;
+import gorsat.Utilities.ReportUtilities;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.session.GorSession;
+import gorsat.process.GorSessionFactory;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -63,6 +64,11 @@ public class UTestTableFunction {
         Path currentPath = Paths.get("../tests/data/reports");
         String macroPath = currentPath.toAbsolutePath().normalize().toString();
         System.setProperty("dialog.macrodir", macroPath);
+    }
+
+    @AfterClass
+    public static void cleanup() {
+        System.gc();
     }
 
     @Test
@@ -100,7 +106,7 @@ public class UTestTableFunction {
         GorSessionFactory factory = new GenericSessionFactory();
 
         PipeInstance pi = PipeInstance.createGorIterator(factory.create().getGorContext());
-        pi.subProcessArguments(query, false, null, false, false, "");
+        pi.init(query, false, "");
         int count = 0;
         while (pi.hasNext()) {
             pi.next();
@@ -428,7 +434,7 @@ public class UTestTableFunction {
         factory.setConfigFile(configFile.getAbsolutePath());
 
         PipeInstance pi = PipeInstance.createGorIterator(factory.create().getGorContext());
-        pi.subProcessArguments(query, false, null, false, false, "");
+        pi.init(query, false, "");
         int count = 0;
         while (pi.hasNext()) {
             pi.next();

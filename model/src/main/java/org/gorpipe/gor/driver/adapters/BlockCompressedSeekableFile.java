@@ -22,9 +22,10 @@
 
 package org.gorpipe.gor.driver.adapters;
 
-import java.io.IOException;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import htsjdk.samtools.util.BlockCompressedInputStream;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+
+import java.io.IOException;
 
 /**
  * Created by sigmar on 14/03/16.

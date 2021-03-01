@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.adapters;
 
-import org.gorpipe.model.genome.files.gor.RacFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.RacFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +44,11 @@ public class StreamSourceRacFile extends RacFile {
     @Override
     public long length() throws IOException {
         return delegate.length();
+    }
+
+    @Override
+    public int read() throws IOException {
+        return this.delegate.read();
     }
 
     @Override

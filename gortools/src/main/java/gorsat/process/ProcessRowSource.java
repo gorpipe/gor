@@ -22,7 +22,6 @@
 
 package gorsat.process;
 
-import org.gorpipe.model.gor.Pipes;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
@@ -32,8 +31,10 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.*;
+import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
+import org.gorpipe.gor.model.*;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.model.gor.Pipes;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.*;
@@ -50,14 +51,14 @@ import java.util.stream.Collectors;
  * Created by sigmar on 12/02/16.
  */
 public class ProcessRowSource extends ProcessSource {
-    private StringBuilder errorStr = new StringBuilder();
+    private final StringBuilder errorStr = new StringBuilder();
     List<String> commands;
     private GenomicIterator it;
     boolean nor;
     private ProcessBuilder pb;
     private Process p;
     private Path fileroot = null;
-    private String filter;
+    private final String filter;
 
     public ProcessRowSource(String cmd, String type, boolean nor, GorSession session, GenomicRange.Range range, String filter) {
         this(CommandParseUtilities.quoteSafeSplit(cmd, ' '), type, nor, session, range, filter, Pipes.rowsToProcessBuffer());
@@ -169,9 +170,10 @@ public class ProcessRowSource extends ProcessSource {
                 it = bamIterator( is );
             }
             if( range.chromosome() != null ) it.seek(range.chromosome(), range.start(), range.stop());
-            String[] headerArray = it.getHeader();
+            String header = it.getHeader();
+            String[] headerArray = header.split("\t");
             it.setColnum(headerArray.length-2);
-            header_$eq(String.join("\t", headerArray));
+            setHeader(String.join("\t", header));
         } catch (IOException e) {
             throw new GorResourceException("unable to get header from process " + commands.get(0), "", e);
         }
@@ -179,11 +181,12 @@ public class ProcessRowSource extends ProcessSource {
 
     private GenomicIterator gorIterator( InputStream is, List<String> headercommands, String type ) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        header_$eq( br.readLine() );
-        if (header() == null) {
+        final String header = br.readLine();
+        setHeader(header);
+        if (getHeader() == null) {
             throw new GorSystemException("Running external process: " + String.join(" ", headercommands) + " with error: " + errorStr, null);
         }
-        if (nor) header_$eq("ChromNOR\tPosNOR\t" + header().replace(" ", "_").replace(":", "") );
+        if (nor) setHeader("ChromNOR\tPosNOR\t" + getHeader().replace(" ", "_").replace(":", "") );
         return new GenomicIterator() {
             BufferedReader reader = br;
             String next = readLine();
@@ -205,15 +208,15 @@ public class ProcessRowSource extends ProcessSource {
                 try {
                     next = readLine();
                 } catch (IOException e) {
-                            throw new GorSystemException("Error reading next line from external process", e);
+                    throw new GorSystemException("Error reading next line from external process", e);
                 }
 
                 return row;
             }
 
             @Override
-            public String[] getHeader() {
-                return header().split("\t");
+            public String getHeader() {
+                return header;
             }
 
             @Override
@@ -251,7 +254,7 @@ public class ProcessRowSource extends ProcessSource {
         GenomicIterator.ChromoLookup lookup = createChromoLookup();
         GenomicIterator vcfit;
         try {
-            vcfit = new VcfGzGenomicIterator(lookup, "filename", null, br) {
+            vcfit = new VcfGzGenomicIterator(lookup, "filename", br) {
                 @Override
                 public boolean seek(String seekChr, int seekPos) {
                     return seek(seekChr, seekPos, lookup.chrToLen(seekChr));
@@ -261,7 +264,7 @@ public class ProcessRowSource extends ProcessSource {
                 public boolean seek(String seekChr, int seekPos, int endPos) {
                     try {
                         reader.close();
-                        if (seekChr != null && this.chrNameSystem != VcfGzTabixGenomicIterator.ChrNameSystem.WITH_CHR_PREFIX)
+                        if (seekChr != null && this.chrNameSystem != VcfGzGenomicIterator.ChrNameSystem.WITH_CHR_PREFIX)
                             seekChr = seekChr.substring(3);
                         InputStream is1 = setRange(seekChr, seekPos, endPos == 0 ? 1 : endPos);
                         reader = new BufferedReader(new InputStreamReader(is1));
@@ -363,7 +366,7 @@ public class ProcessRowSource extends ProcessSource {
                 if( it == null ) it = reader.iterator();
             }
         };
-        bamit.init(lookup, samreader, null, false);
+        bamit.init(lookup, samreader, false);
         bamit.chrnamesystem = 0;
         return bamit;
     }
@@ -544,7 +547,7 @@ public class ProcessRowSource extends ProcessSource {
         final ChromoCache lookupCache = new ChromoCache();
         final boolean addAnyChrToCache = true;
         final ChrDataScheme dataOutputScheme = ChrDataScheme.ChrLexico;
-        GenomicIterator.ChromoLookup lookup = new GenomicIterator.ChromoLookup() {
+        return new ChromoLookup() {
             @Override
             public final String idToName(int id) {
                 return lookupCache.toName(dataOutputScheme, id);
@@ -580,6 +583,5 @@ public class ProcessRowSource extends ProcessSource {
                 return lookupCache;
             }
         };
-        return lookup;
     }
 }

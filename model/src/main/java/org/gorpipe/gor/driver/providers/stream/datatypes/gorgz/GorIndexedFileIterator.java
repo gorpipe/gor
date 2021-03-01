@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.gorgz;
 
-import org.gorpipe.model.genome.files.gor.GorGzGenomicIterator;
 import org.gorpipe.gor.driver.providers.stream.datatypes.tabix.TabixIndexedFile;
+import org.gorpipe.gor.model.GorGzGenomicIterator;
 
 import java.io.IOException;
 

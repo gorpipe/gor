@@ -24,8 +24,8 @@ package org.gorpipe.gor.driver.utils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.gorpipe.security.cred.Credentials;
-import org.gorpipe.security.cred.CredentialsProvider;
+import org.gorpipe.gor.security.Credentials;
+import org.gorpipe.gor.security.CredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +45,10 @@ public class CredentialClientCache<ClientClass> {
     private final static Logger log = LoggerFactory.getLogger(CredentialClientCache.class);
 
     // Cache credential to client mapping
-    private Cache<Credentials, ClientClass> credToClient = createCache();
+    private final Cache<Credentials, ClientClass> credToClient = createCache();
 
     // Cache bundled credentials to lookup cache.  The lookup cache caches lookup_key (e.g. project/bucker) to credentials for that bundle.
-    private Cache<CredentialsProvider, Cache<Optional<String>, Optional<Credentials>>> bundleToLookupCache = createCache();
+    private final Cache<CredentialsProvider, Cache<Optional<String>, Optional<Credentials>>> bundleToLookupCache = createCache();
 
     private final String service;
     private final Function<Credentials, ClientClass> createClient;

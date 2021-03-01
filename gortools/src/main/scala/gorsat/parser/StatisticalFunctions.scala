@@ -23,10 +23,10 @@
 package gorsat.parser
 
 import cern.jet.stat.Probability
-import org.gorpipe.model.util.GChiSquared2by2
-import org.apache.commons.math3.distribution.ChiSquaredDistribution
-import gorsat.parser.FunctionTypes.{dFun, iFun}
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes.{dFun, iFun}
+import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import org.gorpipe.gor.util.GChiSquared2by2
 
 object StatisticalFunctions {
   def register(functions: FunctionRegistry): Unit = {

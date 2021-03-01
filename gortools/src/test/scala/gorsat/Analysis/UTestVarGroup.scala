@@ -57,6 +57,16 @@ class UTestVarGroup extends FunSuite with BeforeAndAfter {
     testAgainstExpectedResults(cont, wanted)
   }
 
+  test("no multiallelic variants nested") {
+    val cont = "CHROM\tPOS\tREF\tALT\tVALUES\n" +
+      "chr1\t1\tA\tC\t01230123\n" +
+      "chr1\t2\tA\tC\t01230123\n"
+    val wanted = "CHROM\tPOS\tREF\tALT\tVALUES\n" +
+      "chr1\t1\tA\tC\t0/0,0/1,1/1,./.,0/0,0/1,1/1,./.\n" +
+      "chr1\t2\tA\tC\t0/0,0/1,1/1,./.,0/0,0/1,1/1,./.\n"
+    testNestedAgainstExpectedResults(cont, wanted)
+  }
+
   test("multiallelic variant - two alternatives") {
     val cont = "CHROM\tPOS\tREF\tALT\tVALUES\n" +
       "chr1\t1\tA\tC\t011020\n" +
@@ -206,6 +216,13 @@ class UTestVarGroup extends FunSuite with BeforeAndAfter {
   def testAgainstExpectedResults(cont: String, wanted: String, varGroupOptions: String = ""): Unit = {
     val fileName = FileTestUtils.createTempFile(wd, "test.gor", cont).getAbsolutePath
     val query = "gor " + fileName + " | vargroup " + varGroupOptions
+    val results = TestUtils.runGorPipe(query)
+    Assert.assertEquals(wanted, results)
+  }
+
+  def testNestedAgainstExpectedResults(cont: String, wanted: String, varGroupOptions: String = ""): Unit = {
+    val fileName = FileTestUtils.createTempFile(wd, "test.gor", cont).getAbsolutePath
+    val query = "gor <(gor " + fileName + " | vargroup " + varGroupOptions + ")"
     val results = TestUtils.runGorPipe(query)
     Assert.assertEquals(wanted, results)
   }

@@ -22,11 +22,11 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.ParquetLine;
-import org.gorpipe.model.genome.files.gor.Row;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.hadoop.ParquetReader;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.ParquetLine;
+import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,21 +34,27 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Function;
 
-public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<Row> {
+public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<Row>, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ParquetRowReader.class);
     ParquetReader<Group> reader;
     Row row;
+    String part;
 
     Function<Group, ParquetLine> lineProvider;
 
-    public ParquetRowReader(ParquetReader<Group> reader, GenomicIterator.ChromoLookup lookup) {
-        this(reader, (Group group) -> new ParquetLine(group, lookup));
+    public ParquetRowReader(ParquetReader<Group> reader, GenomicIterator.ChromoLookup lookup, String part) {
+        this(reader, (Group group) -> new ParquetLine(group, lookup), part);
     }
 
-    public ParquetRowReader(ParquetReader<Group> reader, Function<Group, ParquetLine> lineProvider) {
+    public ParquetRowReader(ParquetReader<Group> reader, Function<Group, ParquetLine> lineProvider, String part) {
         this.reader = reader;
         this.lineProvider = lineProvider;
+        this.part = part;
         hasNext();
+    }
+    
+    public String getPart() {
+        return part;
     }
 
     @Override
@@ -73,5 +79,14 @@ public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<
     @Override
     public int compareTo(ParquetRowReader o) {
         return row.compareTo(o.row);
+    }
+
+    @Override
+    public void close() {
+        try {
+            reader.close();
+        } catch (IOException e) {
+            // Dont care
+        }
     }
 }

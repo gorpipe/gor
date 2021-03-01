@@ -59,7 +59,7 @@ public class UTestGorTee {
 
         List<String> lines = Files.readAllLines(p);
         Assert.assertEquals("Incorrect group size", 2, lines.size());
-        Assert.assertEquals("Chrom\tbpStart\tbpStop\tallCount", lines.get(0));
+        Assert.assertEquals("#Chrom\tbpStart\tbpStop\tallCount", lines.get(0));
         Assert.assertEquals("chrA\t0\t1000000000\t5", lines.get(1));
     }
 
@@ -71,7 +71,7 @@ public class UTestGorTee {
 
         List<String> lines = Files.readAllLines(p);
         Assert.assertEquals("Incorrect group size", 2, lines.size());
-        Assert.assertEquals("allCount", lines.get(0));
+        Assert.assertEquals("#allCount", lines.get(0));
         Assert.assertEquals("9", lines.get(1));
     }
 

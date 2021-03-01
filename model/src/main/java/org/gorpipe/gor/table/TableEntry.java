@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -230,9 +231,8 @@ public abstract class TableEntry {
             constructor.setAccessible(true);
             return constructor.newInstance(template);
         } catch (Exception e) {
-            log.warn("Could not copy table entry", e);
+            throw new GorSystemException("Could not copy table entry", e);
         }
-        return null;
     }
 
     @Override

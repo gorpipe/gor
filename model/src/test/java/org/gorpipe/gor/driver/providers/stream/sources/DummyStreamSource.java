@@ -1,10 +1,11 @@
 package org.gorpipe.gor.driver.providers.stream.sources;
 
-import java.io.IOException;
-import java.io.InputStream;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Dummy boilerplate stream source for testing.

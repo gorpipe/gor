@@ -23,7 +23,7 @@
 package org.gorpipe.model.gor
 
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.model.genome.files.gor.{Row, RowBase}
+import org.gorpipe.gor.model.{Row, RowBase}
 
 object RowObj {
 
@@ -68,7 +68,11 @@ object RowObj {
         throw new java.lang.NumberFormatException("Error in "+str.subSequence(start,stop)+". "+"Row: "+str+" column: "+n)
       }
       else {
-        num = num * 10 + (si - '0'); i += 1
+        val next = num * 10 + (si - '0')
+        if (next < num) {
+          throw new java.lang.NumberFormatException("Number is too large for Int")
+        }
+        num = next; i += 1
       }
     }
     if (isNegative) -num else num
@@ -82,7 +86,7 @@ object RowObj {
 
   def peekAtColumn(n: Int, str: CharSequence, sa: Array[Int]): Char = {
     val start = if (n == 0) 0 else sa(n - 1) + 1
-    return str.charAt(start);
+    str.charAt(start)
   }
 
   def colDouble(n: Int, str: CharSequence, sa: Array[Int]): Double = {
@@ -184,6 +188,12 @@ object RowObj {
 
   def apply(x: CharSequence, numCols: Int): Row = {
     new RowBase(x, numCols)
+  }
+
+  def apply(x: CharSequence, bh: BinaryHolder): Row = {
+    val toReturn = StoR(x)
+    toReturn.bH = bh
+    toReturn
   }
 
   def binary(chr: String, pos: Int, bH: BinaryHolder) = new RowBase(chr, pos, null, null, bH)

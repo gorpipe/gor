@@ -22,14 +22,11 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
 
 /**
  * Utilities for streams
@@ -60,7 +57,7 @@ public class StreamUtils {
      */
     public static int readToBuffer(InputStream stream, byte[] buf, int offset, int length) throws IOException {
         int totalread = 0;
-        int read = 0;
+        int read;
         do {
             read = stream.read(buf, offset + totalread, length - totalread);
             if (read > 0) {
@@ -85,7 +82,7 @@ public class StreamUtils {
     public static long readFullyToStream(InputStream input, OutputStream output, int bufSize) throws IOException {
         byte[] buf = new byte[bufSize];
         long totalread = 0;
-        int read = 0;
+        int read;
         do {
             read = input.read(buf, 0, bufSize);
             if (read > 0) {
@@ -102,7 +99,7 @@ public class StreamUtils {
     public static long readRangeToStream(InputStream input, RequestRange range, OutputStream output, int bufSize) throws IOException {
         byte[] buf = new byte[bufSize];
         long totalwritten = 0;
-        int read = 0;
+        int read;
         input.skip(range.getFirst());
         do {
             int len = totalwritten + bufSize > range.getLength() ? (int) (range.getLength() - totalwritten) : bufSize;

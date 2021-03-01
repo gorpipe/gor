@@ -35,8 +35,8 @@ case class ExecutionBatch(level: Int) {
   private val executionBlocks = new  ListBuffer[ExecutionBlock]
   private val executionCommands = new ListBuffer[ExecutionCommand]
 
-  def createNewBlock(dataSource: String, query: String, dependencies: Array[String], sourceName: String): ExecutionBlock = {
-    var block = ExecutionBlock(dataSource, query, dependencies, sourceName)
+  def createNewBlock(dataSource: String, query: String, signature: String, dependencies: Array[String], sourceName: String, cachePath: String): ExecutionBlock = {
+    var block = ExecutionBlock(dataSource, query, signature, dependencies, sourceName, cachePath)
     executionBlocks += block
     block
   }
@@ -44,8 +44,8 @@ case class ExecutionBatch(level: Int) {
   def getBlocks: Array[ExecutionBlock] = executionBlocks.toArray
   def hasBlocks: Boolean = executionBlocks.nonEmpty
 
-  def createNewCommand(signature: String, query: String, batchGroupName: String, createName: String) : ExecutionCommand = {
-    var command = ExecutionCommand(signature, query, batchGroupName, createName)
+  def createNewCommand(signature: String, query: String, batchGroupName: String, createName: String, cacheFile: String) : ExecutionCommand = {
+    var command = ExecutionCommand(signature, query, batchGroupName, createName, cacheFile)
     executionCommands += command
     command
   }

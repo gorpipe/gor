@@ -22,23 +22,32 @@
 
 package gorsat.external.plink;
 
-import org.gorpipe.model.genome.files.gor.pgen.PGenWriter;
-import org.gorpipe.model.genome.files.gor.pgen.PGenWriterFactory;
-import org.gorpipe.model.genome.files.gor.Row;
-import org.gorpipe.base.config.ConfigManager;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.gor.RowObj;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.driver.pgen.PGenWriter;
+import org.gorpipe.gor.driver.pgen.PGenWriterFactory;
+import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.*;
+import java.nio.file.Paths;
+import java.util.PriorityQueue;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This analysis class collects gor or vcf lines and writes them in batches to a temporary vcf files read by plink2 process
@@ -65,18 +74,22 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
     final Path writeDir;
     final PlinkArguments args;
 
-    private float threshold;
+    private final float threshold;
     private final String phenoFile;
     private final int refIdx, altIdx, rsIdIdx, valueIdx;
     private final boolean hardCalls;
     private String lastChr = "";
     private int lastPos = -1;
 
+    private final String expectedHeader;
+    private boolean checkedHeaderFromPlink = false;
+
     public PlinkProcessAdaptor(GorSession session, PlinkArguments plinkArguments,
                                int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header) throws IOException {
         GorDriverConfig cfg = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
         plinkExecutable = cfg.plinkExecutable().split(" ");
         this.session = session;
+        this.expectedHeader = header;
         this.es = Executors.newSingleThreadExecutor();
         try {
             this.writeDir = Files.createTempDirectory("plinkregression");
@@ -113,26 +126,43 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
     void sendLine(PriorityQueue<GORLine> pq) {
         while (pq.size() > 0) {
             GORLine gorline = pq.poll();
+            if(!checkedHeaderFromPlink) {
+                String header = gorline.getHeader();
+                if(header!=null&&header.length()>0) {
+                    if(expectedHeader.split("\t").length-1!=header.split("\t").length) {
+                        throw new GorDataException("Unexpected number of columns in plink2 result, expected "+expectedHeader+" got "+header);
+                    }
+                    checkedHeaderFromPlink = true;
+                }
+            }
             super.process(RowObj.apply(gorline.toString()));
             nextGorLine(pq, gorline);
         }
     }
 
+    boolean isWriterInitialized() {
+        return writer!=null;
+    }
+
     void prepareAndRunPlink(String pgenFilePath) throws ExecutionException, InterruptedException {
         try {
-            writer.close();
+            if(isWriterInitialized()) writer.close();
         } catch (Exception e) {
             throw new GorSystemException(e);
         }
         if (plinkFuture != null) first = plinkFuture.get();
-        PlinkThread plinkThread = new PlinkThread(session.getProjectContext().getRealProjectRootPath().toFile(), this.writeDir,
-                this.plinkExecutable, pgenFilePath, this.psamFile, this.first,this, this.args, false);
-        plinkFuture = es.submit(plinkThread);
+        Path pgenPath = Paths.get(pgenFilePath+PGEN_ENDING);
+        Path rootPath = session.getProjectContext().getRealProjectRootPath();
+        if((pgenPath.isAbsolute() && Files.exists(pgenPath)) || Files.exists(rootPath.resolve(pgenPath))) {
+            PlinkThread plinkThread = new PlinkThread(rootPath.toFile(), this.writeDir,
+                    this.plinkExecutable, pgenFilePath, this.psamFile, this.first, this, this.args, false);
+            plinkFuture = es.submit(plinkThread);
+        } else plinkFuture = null;
     }
 
     void processRow(Row row) throws IOException, ExecutionException, InterruptedException {
         if (linesWrittenToCurrentFile > MAXIMUM_NUMBER_OF_LINES && (!lastChr.equals(row.chr) || lastPos != row.pos)) {
-            prepareAndRunPlink(getCurrentPGenFile());
+            prepareAndRunPlink(getCurrentInputFile());
             setNewPGenStream();
             linesWrittenToCurrentFile = 0;
         }
@@ -156,7 +186,7 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
                 final String phenos = currLine.substring(tabIdx + 1);
                 bw.write(pn + "\t" + pn + "\t0\t0\tNA\t" + phenos + "\n");
             }
-            setNewTmpFileStream();
+            setNewPGenStream();
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
@@ -176,23 +206,19 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
         }
     }
 
-    void setNewTmpFileStream() throws IOException {
-        setNewPGenStream();
-    }
-
     private void setNewPGenStream() throws IOException {
         this.pfnIdx = (this.pfnIdx + 1) & 1;
-        this.writer = PGenWriterFactory.getPGenWriter(getCurrentPGenFile() + PGEN_ENDING, this.refIdx, this.altIdx, this.rsIdIdx, this.valueIdx, this.hardCalls, !this.hardCalls, this.threshold);
+        this.writer = PGenWriterFactory.getPGenWriter(getCurrentInputFile() + PGEN_ENDING, this.refIdx, this.altIdx, this.rsIdIdx, this.valueIdx, this.hardCalls, !this.hardCalls, this.threshold);
     }
 
-    String getCurrentPGenFile() {
+    String getCurrentInputFile() {
         return this.pgenFiles[this.pfnIdx];
     }
 
     @Override
     public void finish() {
         try {
-            prepareAndRunPlink(this.getCurrentPGenFile());
+            if (isWriterInitialized()) prepareAndRunPlink(this.getCurrentInputFile());
             if (plinkFuture != null) plinkFuture.get();
         } catch (ExecutionException e) {
             isInErrorState_$eq(true);

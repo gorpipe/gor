@@ -29,7 +29,7 @@ import java.util.Optional
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
-import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, RacFile}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, RacFile}
 import org.slf4j.{Logger, LoggerFactory}
 
 class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
@@ -42,7 +42,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
   var lastKey: String = ""
   var lastBuff: Array[Byte] = _
   var noReferenceBuildFound = false
-  var filemap = new util.HashMap[String,Optional[RacFile]]
+  val filemap = new util.HashMap[String, Optional[RacFile]]
 
   override def close(): Unit = {
     filemap.entrySet().stream().forEach( f => f.getValue.ifPresent(f => f.close()) )

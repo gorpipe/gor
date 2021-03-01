@@ -25,10 +25,13 @@ package gorsat.parser
 import java.util
 
 import gorsat.Analysis.DagMapAnalysis
+import gorsat.Commands.RowHeader
 import gorsat.parser.FunctionTypes._
 import gorsat.parser.ParseUtilities._
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.{ColumnValueProvider, GorContext, SyntaxChecker}
+import org.gorpipe.gor.SyntaxChecker
+import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.{RefSeq, RowSource}
 
 import scala.collection.mutable
@@ -48,7 +51,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
 
   var refSeq: RefSeq = _
   var context: GorContext = _
-  private var executeNor = false
+  var executeNor = false
   private var outputType: String = "Boolean, String, Int, Double, Long"
   var stringFunction: sFun = _
   var intFunction: iFun = _
@@ -79,7 +82,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
   setMode()
 
   private def setMode(): Unit = {
-    var mode = System.getenv("GOR_CALCMODE")
+    val mode = System.getenv("GOR_CALCMODE")
 
     mode match {
       case "classic" | null =>
@@ -133,7 +136,8 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     calcCompiler.setColumnNamesAndTypes(colNames, colTypes)
 
     if (colNames.length != colTypes.length) {
-      throw new GorParsingException("Error in column names - column names and type arrays differ in size: ")
+      val msg = "Error in column names - column names and type arrays differ in size"
+      throw new GorSystemException(msg, null)
     }
     val colSymbol = "#"
 
@@ -231,6 +235,10 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     if(rs != null) rs.getAvgSeekTimeMilliSecond else -1.0
   }
 
+  def getHeader: RowHeader = {
+    RowHeader(orgColNames, orgColTypes)
+  }
+
   def StringVariableHandler(colName: String): sFun = {
     val column = stringVariableMap(colName.toUpperCase)
     cvp => {
@@ -308,7 +316,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     def apply(in: Input): ParseResult[String]
   } = new Parser[String] {
     def apply(in: Input): ParseResult[String] = name(in) match {
-      case Success(x, in1) => {
+      case Success(x, in1) =>
         val variableName = x.toUpperCase
         longVariableMap.get(variableName) match {
           case Some(_) =>
@@ -325,7 +333,6 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
             }
             Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
         }
-      }
       case Failure(msg, next) =>
         Failure(msg, next)
     }
@@ -342,7 +349,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     def apply(in: Input): ParseResult[String]
   } = new Parser[String] {
     def apply(in: Input): ParseResult[String] = name(in) match {
-      case Success(x, in1) => {
+      case Success(x, in1) =>
         val variableName = x.toUpperCase
         intVariableMap.get(variableName) match {
           case Some(_) =>
@@ -359,7 +366,6 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
             }
             Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
         }
-      }
       case Failure(msg, next) =>
         Failure(msg, next)
     }
@@ -1011,7 +1017,7 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     def apply(in: Input): ParseResult[String]
   } = new Parser[String] {
     def apply(in: Input): ParseResult[String] = {
-      val p = colRef | "#rc" | "#RC" | """$rc""" | """$RC""" | """[[1-9]*a-zA-Z_]\w*""".r
+      val p = colRef | "#rc" | "#RC" | """$rc""" | """$RC""" | """[[1-9]*a-zA-Z_][\w.]*""".r
       val result = p(in)
       result match {
         case Failure(msg, next) =>
@@ -1074,6 +1080,63 @@ class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
     }
 
     outputType
+  }
+
+  def getBooleanFunction(): ColumnValueProvider => Boolean = {
+    if (runClassic) {
+      booleanFunction
+    } else {
+      calcLambda.evaluateBoolean
+    }
+  }
+
+  def getStringFunction(): ColumnValueProvider => String = {
+    if (runClassic) {
+      stringFunction
+    } else {
+      calcLambda.evaluateString
+    }
+  }
+
+  def getDoubleFunction(): ColumnValueProvider => Double = {
+    if (runClassic) {
+      doubleFunction
+    } else {
+      calcLambda.evaluateDouble
+    }
+  }
+
+  def getLongFunction(): ColumnValueProvider => Long = {
+    if (runClassic) {
+      longFunction
+    } else {
+      calcLambda.evaluateLong
+    }
+  }
+
+  def getIntFunction(): ColumnValueProvider => Int = {
+    if (runClassic) {
+      intFunction
+    } else {
+      calcLambda.evaluateInt
+    }
+  }
+
+  def getCompiledBooleanFunction(): ColumnValueProvider => Boolean = {
+    outputType.charAt(0) match {
+      case 'B' => getBooleanFunction()
+    }
+  }
+
+  def getCompiledStringFunction(): ColumnValueProvider => String = {
+    outputType.charAt(0) match {
+      case 'S' => getStringFunction()
+      case 'D' => cvp: ColumnValueProvider => getDoubleFunction().apply(cvp).toString
+      case 'L' => cvp: ColumnValueProvider => getLongFunction().apply(cvp).toString
+      case 'I' => cvp: ColumnValueProvider => getIntFunction().apply(cvp).toString
+      case 'B' => cvp: ColumnValueProvider => getBooleanFunction().apply(cvp).toString
+      case _ => _: ColumnValueProvider => ""
+    }
   }
 
   /**

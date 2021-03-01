@@ -22,8 +22,8 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.gor.GorSessionFactory;
 import gorsat.Analysis.AddFlankingSeqs;
+import gorsat.process.GorSessionFactory;
 import org.junit.Test;
 
 public class UTestAddFlankingSeqs {

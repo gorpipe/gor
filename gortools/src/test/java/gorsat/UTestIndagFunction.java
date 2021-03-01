@@ -22,9 +22,9 @@
 
 package gorsat;
 
+import gorsat.parser.ParseArith;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.test.utils.FileTestUtils;
-import gorsat.parser.ParseArith;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

@@ -22,10 +22,10 @@
 
 package gorsat.parser;
 
+import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
-import gorsat.TestUtils;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;

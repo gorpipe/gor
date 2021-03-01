@@ -27,11 +27,14 @@ import java.util.Locale
 
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler}
 import gorsat.gorsatGorIterator.MapAndListUtilities
+import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
+
+import scala.collection.mutable.ArrayBuffer
 
 object GorCsvCC {
 
@@ -82,7 +85,7 @@ object GorCsvCC {
     val unknown: Boolean = if (uv != "") true else false
     val uc: Int = if (unknown) uv.toInt else -1
 
-    var bui: BucketInfo = _
+    var tbpi: TagBucketPhenoInfo = _
     var groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
     var singleColHolder = ColHolder()
     if (!useGroup) groupMap += ("theOnlyGroup" -> singleColHolder)
@@ -127,18 +130,18 @@ object GorCsvCC {
     }
 
     def initialize(binInfo: BinInfo): Unit = {
-      bui = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[BucketInfo]
-      if( bui == null ) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      tbpi = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagBucketPhenoInfo]
+      if( tbpi == null ) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
 
-      maxUsedBuckets = bui.bucketIDMap.size
-      maxPhenoStats = bui.phenoMap.size
+      maxUsedBuckets = tbpi.numberOfBuckets
+      maxPhenoStats = tbpi.phenoMap.size
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
     }
 
     def process(r: Row) {
       line = r.colAsString(valCol)
-      bui.bucketIDMap.get(r.colAsString(buckCol).toString) match {
+      tbpi.buckNameToIdx.get(r.colAsString(buckCol).toString) match {
         case Some(buckNo) =>
           var sh: ColHolder = null
           if (useGroup) {
@@ -172,12 +175,12 @@ object GorCsvCC {
         var rstr: CharSequence = null
         var theTag = 0
         try {
-          while (phenorow < bui.phenorowsLeft.length && !nextProcessor.wantsNoMore) {
-            val tag = bui.phenorowsLeft(phenorow)
-            val phenostatus = bui.phenorowsRight(phenorow)
+          while (phenorow < tbpi.phenorowsLeft.length && !nextProcessor.wantsNoMore) {
+            val tag = tbpi.phenorowsLeft(phenorow)
+            val phenostatus = tbpi.phenorowsRight(phenorow)
             theTag = tag
-            val buckNo = bui.outputBucketID(tag)
-            val buckPos = bui.outputBucketPos(tag)
+            val buckNo = tbpi.getBucketIdxFromPn(tag)
+            val buckPos = tbpi.getBucketPos(tag)
             rstr = sh.buckRows(buckNo)
             if (rstr == null) {
               if (unknown) {
@@ -239,28 +242,27 @@ object GorCsvCC {
             }
             phenorow += 1
           }
-          if (!nextProcessor.wantsNoMore) {
-            var i = 0
-            while (i < maxPhenoStats) {
-              val pheno = bui.phenoMap(i)
-              var j = 0
-              while (j < 4.max(uc + 1)) {
-                if (!use_prob || use_threshold) {
-                  val counts = sh.phenoStatusCounter(i)(j)
-                  nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + counts))
-                } else {
-                  val counts = sh.phenoStatusFloatCounter(i)(j)
-                  nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + fd3.format(counts)))
-                }
-                j += 1
+          var i = 0
+          while (i < maxPhenoStats) {
+            val pheno = tbpi.phenoMap(i)
+            var j = 0
+            while (j < 4.max(uc + 1)) {
+              if (nextProcessor.wantsNoMore) return
+              if (!use_prob || use_threshold) {
+                val counts = sh.phenoStatusCounter(i)(j)
+                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + counts))
+              } else {
+                val counts = sh.phenoStatusFloatCounter(i)(j)
+                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + fd3.format(counts)))
               }
-              i += 1
+              j += 1
             }
+            i += 1
           }
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>
-            val bucket = bui.bucketIDMap.filter(b => b._2 == theTag).keys.mkString(",")
-            throw new GorDataException("Missing values in bucket " + bucket + " in searching for tag " + bui.outputTags(theTag) + "\nin row with\n" + rstr + "\n\n", e)
+            val bucket = tbpi.buckNameToIdx.filter(b => b._2 == theTag).keys.mkString(",")
+            throw new GorDataException("Missing values in bucket " + bucket + " in searching for tag " + tbpi.getPnNameFromIdx(theTag) + "\nin row with\n" + rstr + "\n\n", e)
         }
       }
       // cleanup
@@ -289,15 +291,8 @@ object GorCsvCC {
   }
 
 
-  case class BucketInfo() {
-    var outputBucketID: Array[Int] = _
-    var outputBucketPos: Array[Int] = _
-    var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var outputTags: Array[String] = _
-    var phenoMap = scala.collection.immutable.Map.empty[Int, String]
-    var phenorowsLeft: Array[Int] = _
-    var phenorowsRight: Array[Int] = _
-  }
+  case class TagBucketPhenoInfo(pbt: PnBucketTable, phenoMap: Map[Int, String], phenorowsLeft: Array[Int], phenorowsRight: Array[Int])
+    extends PnBucketTable(pbt.buckNameToIdx, pbt.buckIdxToName, pbt.buckIdxToBuckSize, pbt.pnToIdx, pbt.pnIdxToName, pbt.pnIdxToBuckIdx, pbt.pnIdxToBuckPos)
 
   def lookup(fileName1: String, iteratorCommand1: String, fileName2: String, iteratorCommand2: String): String = {
     (fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2).replace("| top 0 ","")
@@ -306,39 +301,6 @@ object GorCsvCC {
   case class CsvCCAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, buckCol: Int, valCol: Int,
                            grCols: List[Int], sepVal: String, valSize: Int, uv: String, use_phase: Boolean, use_prob: Boolean, use_threshold: Boolean, p_threshold: Double, session: GorSession) extends
     BinAnalysis(RegularRowHandler(1), BinAggregator(CsvCCFactory(session, lookup(fileName1, iteratorCommand1, fileName2, iteratorCommand2), buckCol, valCol, grCols, sepVal, valSize, uv, use_phase, use_prob, use_threshold, p_threshold), 2, 1)) {
-    var bucketIDMap = scala.collection.mutable.Map.empty[String, Int]
-    var bucketID: Int = -1
-
-    def bucketID(b: String): Int = bucketIDMap.get(b) match {
-      case Some(x) => x;
-      case None =>
-        bucketID += 1
-        bucketIDMap += (b -> bucketID)
-        bucketID
-    }
-
-    case class BucketCounter() {
-      var c: Integer = -1
-    }
-
-    var bucketOrderMap = scala.collection.mutable.Map.empty[String, Int]
-    var bucketCounterMap = scala.collection.mutable.Map.empty[String, BucketCounter]
-
-    def bucketOrder(b: String, t: String): Int = {
-      val bc = bucketCounterMap.get(b) match {
-        case Some(x) => x;
-        case None =>
-          bucketCounterMap += (b -> BucketCounter())
-          bucketCounterMap(b)
-      }
-      bucketOrderMap.get("#bu:" + b + "#ta:" + t) match {
-        case Some(x) => x;
-        case None =>
-          bc.c += 1
-          bucketOrderMap += (("#bu:" + b + "#ta:" + t) -> bc.c)
-          bc.c
-      }
-    }
 
     val outputOrderMap = scala.collection.mutable.Map.empty[String, Int]
     var outputCounter: Int = -1
@@ -385,8 +347,8 @@ object GorCsvCC {
             throw e
         }
 
-        var phenorows: List[(Int, Int)] = Nil
-        var tags: List[String] = Nil
+        val phenoRows = ArrayBuffer.empty[(Int,Int)]
+        val tags = ArrayBuffer.empty[String]
         l2.foreach(x => {
           val r = x.split("\t")
           var phenotype = "pheno"
@@ -403,45 +365,16 @@ object GorCsvCC {
             throw new RuntimeException("Incorrect number of columns in the phenostatus file.  Use either (tag,pheno,status) or (tag,status): " + r.mkString(",") + "\n\n")
           }
           val tagID = outputOrder(tag) // The equivalence of PN/tag order
-          tags ::= tag
+          tags += tag
           val phenostatusID = if (r.length == 3) phenotOrder(phenotype + '\t' + ccstatus) else phenotOrder(ccstatus)
-          phenorows ::= (tagID, phenostatusID)
+          phenoRows += ((tagID, phenostatusID))
         })
-        val bi = BucketInfo()
-        val outputSize = outputOrderMap.size
-        bi.outputBucketID = new Array[Int](outputSize)
-        bi.outputBucketPos = new Array[Int](outputSize)
-        bi.phenorowsLeft = phenorows.reverse.map(_._1).toArray
-        bi.phenorowsRight = phenorows.reverse.map(_._2).toArray
-        bi.phenoMap = phenoOrderMap.toList.map(x => {
-          (x._2, x._1)
-        }).toMap[Int, String]
-
-        val tagMap = outputOrderMap.clone()
-
-        l1.foreach(x => {
-          val r = x.split("\t")
-          val (tag, bid) = (r(0), r(1))
-          tagMap.remove(tag)
-          val bucketid = bucketID(bid)
-          val bucketpos = bucketOrder(bid, tag)
-          if (outputOrder(tag) < outputSize) {
-            bi.outputBucketID(outputOrder(tag)) = bucketid
-            bi.outputBucketPos(outputOrder(tag)) = bucketpos
-          }
-        })
-
-        if (tagMap.nonEmpty) throw new RuntimeException("There are tags in the second input file which are not defined in the first tag/bucket input, including: " + tagMap.keys.toList.slice(0, 10).mkString(","))
-
-        bi.bucketIDMap = bucketIDMap
-        bi.outputTags = tags.reverse.toArray
-        bi
+        val phenoRowsLeft = phenoRows.toIterator.map(_._1).toArray
+        val phenoRowsRight = phenoRows.toIterator.map(_._2).toArray
+        val phenoMap = phenoOrderMap.toIterator.map(x => (x._2, x._1)).toMap[Int, String]
+        val pnBucketTable = PnBucketParsing.parse(l1).filter(tags.distinct)
+        TagBucketPhenoInfo(pnBucketTable, phenoMap, phenoRowsLeft, phenoRowsRight)
       })
-
-      // cleanup
-      bucketIDMap = null
-      bucketOrderMap = null
-      bucketCounterMap = null
     }
   }
 }

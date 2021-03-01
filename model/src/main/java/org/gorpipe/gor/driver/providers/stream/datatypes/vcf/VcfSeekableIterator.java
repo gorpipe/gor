@@ -25,12 +25,12 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
-import org.gorpipe.model.genome.files.binsearch.SeekableIterator;
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
-import org.gorpipe.model.genome.files.gor.ContigDataScheme;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Line;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.binsearch.SeekableIterator;
+import org.gorpipe.gor.binsearch.StringIntKey;
+import org.gorpipe.gor.model.ContigDataScheme;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class VcfSeekableIterator extends GenomicIterator {
     private static final Logger log = LoggerFactory.getLogger(VcfSeekableIterator.class);
 
     private final SeekableIterator seekableIterator;
-    private final GorHeader gh;
+    private GorHeader gh;
     private final Comparator<StringIntKey> comparator;
     private final ChrBoundedIterator chrIterator;
     private final ContigDataScheme dataScheme;
@@ -68,8 +68,8 @@ public class VcfSeekableIterator extends GenomicIterator {
     }
 
     @Override
-    public String[] getHeader() {
-        return this.gh.getColumns();
+    public String getHeader() {
+        return String.join("\t",this.gh.getColumns());
     }
 
     @Override
@@ -177,12 +177,17 @@ public class VcfSeekableIterator extends GenomicIterator {
                     this.current = null;
                     this.reachedEnd = true;
                 } else {
-                    this.current = RowObj.apply(this.chr + next.substring(chrEnd, next.length()));
+                    this.current = RowObj.apply(this.chr + next.substring(chrEnd));
                 }
             } else {
                 this.current = null;
                 this.reachedEnd = true;
             }
         }
+    }
+
+    @Override
+    protected void selectHeader(int[] cols) {
+        this.gh = this.gh.select(cols);
     }
 }

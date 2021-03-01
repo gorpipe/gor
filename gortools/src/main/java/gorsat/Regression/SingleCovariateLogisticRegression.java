@@ -22,9 +22,7 @@
 
 package gorsat.Regression;
 
-import static gorsat.Regression.LinearAlgebra.dotProd;
-import static gorsat.Regression.LinearAlgebra.sum;
-import static gorsat.Regression.LinearAlgebra.tripleDotProd;
+import static gorsat.Regression.LinearAlgebra.*;
 
 class SingleCovariateLogisticRegression extends LogisticRegression {
 

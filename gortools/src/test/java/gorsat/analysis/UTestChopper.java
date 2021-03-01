@@ -22,8 +22,8 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.gor.GorSession;
 import gorsat.Analysis.Chopper;
+import org.gorpipe.gor.session.GorSession;
 import org.junit.Test;
 
 public class UTestChopper {

@@ -23,7 +23,7 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
@@ -219,6 +219,18 @@ public class UTestGorMapMultimap {
             }
             Assert.assertEquals("Gor map cartesian join failed", 2, count);
         }
+    }
+
+    @Test
+    public void testMapLookupCacheWithSameSignature() {
+        String query = "create xxx = gor ../tests/data/gor/genes.gor | top 1" +
+                "| inset -c gene_symbol <(nor -h ../tests/data/gor/genes.gor | top 1 | select gene_symbol,1-) -b -cis " +
+                "| map -c gene_symbol <(nor -h ../tests/data/gor/genes.gor | top 1 |select gene_symbol,1-) -m 0; gor [xxx] | select 1,2,Gene_Symbolx";
+
+        String res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Wrong result from inset/map query", res,
+                "Chrom\tgene_start\tGene_Symbolx\n" +
+                "chr1\t11868\tDDX11L1\n");
     }
 
     @Test

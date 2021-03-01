@@ -2,6 +2,7 @@
 # Gradle
 
 .gradle/
+.github/
 **/build/
 **/_build/**
 **/out/
@@ -20,6 +21,7 @@ gor.iws
 **/.classpath
 **/.settings/
 **/.externalToolBuilders
+**/bin/
 .metadata
 
 projectFilesBackup/

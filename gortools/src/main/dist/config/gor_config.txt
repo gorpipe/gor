@@ -1,1 +1,3 @@
-# Default gor_config
+buildPath	ref/chromSeq
+buildSizeFile	ref/buildsize.gor
+buildSplitFile	ref/build37split.txt

@@ -22,8 +22,8 @@
 
 package gorsat.parser;
 
-import org.gorpipe.exceptions.GorDataException;
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -134,13 +134,13 @@ public class UTestGenomicFunctions {
 
     @Test
     public void testIUPACFA() {
-        TestUtils.assertCalculated("iupacfa('','','','')", "A");
+        TestUtils.assertCalculated("iupacfa('','','')", "A");
         // todo test with meaningful input
     }
 
     @Test
     public void testIUPACMA() {
-        TestUtils.assertCalculated("iupacma('','','','')", "C");
+        TestUtils.assertCalculated("iupacma('','','')", "C");
         // todo test with meaningful input
     }
 

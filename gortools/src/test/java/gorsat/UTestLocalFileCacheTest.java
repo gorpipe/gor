@@ -22,8 +22,8 @@
 
 package gorsat;
 
-import org.gorpipe.gor.clients.LocalFileCacheClient;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.clients.LocalFileCacheClient;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

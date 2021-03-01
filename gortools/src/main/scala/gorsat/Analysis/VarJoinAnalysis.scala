@@ -24,11 +24,12 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import gorsat.Iterators.ChromBoundedIteratorSource
+import gorsat.gorsatGorIterator.MemoryMonitorUtil
 import gorsat.parser.ParseUtilities.{allelesFoundVCF, varSignature}
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.iterators.RowSource
-import org.gorpipe.model.gor.{MemoryMonitorUtil, RowObj}
+import org.gorpipe.model.gor.RowObj
 
 object VarJoinAnalysis {
   case class ParameterHolder(ic : Boolean, ir : Boolean)
@@ -123,8 +124,8 @@ object VarJoinAnalysis {
 
           var rightStart = 0
           var rightStop = 0
-          val rRef = rr.colAsString(rRefCol).toString
-          val rAlt = rr.colAsString(rAltCol).toString
+          val rRef = rr.colAsString(rRefCol).toString.toUpperCase()
+          val rAlt = rr.colAsString(rAltCol).toString.toUpperCase()
           rightStart = rr.pos
           rightStop = rightStart + rRef.length
           val rSeg = varSEGinfo(rightStart,rightStop,rr,rRef,rAlt)

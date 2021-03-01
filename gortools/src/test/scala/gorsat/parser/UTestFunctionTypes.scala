@@ -22,8 +22,6 @@
 
 package gorsat.parser
 
-import org.gorpipe.gor.ColumnValueProvider
-import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner

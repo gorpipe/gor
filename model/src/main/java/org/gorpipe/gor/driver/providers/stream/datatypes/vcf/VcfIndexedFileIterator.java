@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
-import org.gorpipe.model.genome.files.gor.VcfGzTabixGenomicIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
+import org.gorpipe.gor.model.VcfGzTabixGenomicIterator;
 
 import java.io.IOException;
 
@@ -35,7 +35,6 @@ public class VcfIndexedFileIterator extends VcfGzTabixGenomicIterator {
      * Implements the legacy interface required by SoruceReference
      */
     public VcfIndexedFileIterator(StreamSourceFile source) throws IOException {
-        super(source.getFileSource().getSourceReference().getLookup(), source.getFileSource(), source.getIndexSource(),
-                source.getFileSource().getSourceReference().getColumns());
+        super(source.getFileSource().getSourceReference().getLookup(), source.getFileSource(), source.getIndexSource());
     }
 }

@@ -22,11 +22,11 @@
 
 package gorsat.parser
 
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
+import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
 class UTestIteratorCvp extends FlatSpec {

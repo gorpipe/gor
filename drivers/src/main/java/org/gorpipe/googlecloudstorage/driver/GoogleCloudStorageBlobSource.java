@@ -28,6 +28,7 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.Lists;
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -36,7 +37,6 @@ import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.gorpipe.gor.servers.GorConfig;
-import org.gorpipe.base.config.ConfigManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -48,9 +48,9 @@ import java.nio.channels.Channels;
  * Created by simmi on 20/02/18.
  */
 public class GoogleCloudStorageBlobSource implements StreamSource {
-    private SourceReference sourceReference;
-    private String bucket;
-    private String key;
+    private final SourceReference sourceReference;
+    private final String bucket;
+    private final String key;
     private String json;
     Blob cb;
     private InputStream is;

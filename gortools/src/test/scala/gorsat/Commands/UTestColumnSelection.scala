@@ -24,7 +24,6 @@ package gorsat.Commands
 
 import gorsat.Script.ScriptExecutionEngine
 import gorsat.process.{GenericSessionFactory, GorInputSources, GorPipeCommands}
-import org.gorpipe.gor.GorContext
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -234,5 +233,29 @@ class UTestColumnSelection extends FlatSpec with BeforeAndAfterAll {
   "header" should "return valid header" in {
     val cs = ColumnSelection("a\tb\tC\td\te\tf\tg\th", "b-d", context)
     assert(cs.header == "b\tC\td")
+  }
+
+  "addPosColumns" should "add first two columns when selection is empty" in {
+    val cs = ColumnSelection("a\tb\tC\td\te\tf\tg\th", "", context)
+    cs.addPosColumns()
+    assert(cs.header == "a\tb")
+  }
+
+  it should "add first two columns when selection is a single column" in {
+    val cs = ColumnSelection("a\tb\tC\td\te\tf\tg\th", "c", context)
+    cs.addPosColumns()
+    assert(cs.header == "a\tb\tC")
+  }
+
+  it should "add first two columns when selection is a list of columns" in {
+    val cs = ColumnSelection("a\tb\tC\td\te\tf\tg\th", "c,d,f", context)
+    cs.addPosColumns()
+    assert(cs.header == "a\tb\tC\td\tf")
+  }
+
+  it should "add first two columns when selection is a range of columns" in {
+    val cs = ColumnSelection("a\tb\tC\td\te\tf\tg\th", "c-f", context)
+    cs.addPosColumns()
+    assert(cs.header == "a\tb\tC\td\te\tf")
   }
 }

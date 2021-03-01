@@ -26,6 +26,7 @@ import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.lock.TableLock;
 import picocli.CommandLine;
+
 import java.time.Duration;
 
 @SuppressWarnings("squid:S106")

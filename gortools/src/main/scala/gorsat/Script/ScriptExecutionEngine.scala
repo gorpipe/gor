@@ -22,16 +22,18 @@
 
 package gorsat.Script
 
-import gorsat.AnalysisUtilities.getSignature
+import gorsat.Utilities.AnalysisUtilities.getSignature
 import gorsat.Commands.CommandParseUtilities
-import gorsat.MacroUtilities._
+import gorsat.Utilities.MacroUtilities._
 import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
+import gorsat.Utilities.{AnalysisUtilities, MacroUtilities, StringUtilities}
 import gorsat.process.{GorPipeMacros, GorPrePipe, PipeInstance}
-import gorsat.{AnalysisUtilities, DynIterator, MacroUtilities, StringUtilities}
+import gorsat.DynIterator
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
-import org.gorpipe.gor.{GorContext, GorScriptAnalyzer, GorSession}
-import org.gorpipe.model.genome.files.gor.GorParallelQueryHandler
+import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.GorScriptAnalyzer
+import org.gorpipe.gor.model.GorParallelQueryHandler
 import org.slf4j.{Logger, LoggerFactory}
 
 object ScriptExecutionEngine {
@@ -51,14 +53,14 @@ object ScriptExecutionEngine {
       if (a != "") {
         val vf = virtualFiles(b)
         val batchGroupName: String = validateCreateName(a)
-        creates += ("[" + batchGroupName + "]" -> ExecutionBlock(batchGroupName, b, vf.toArray))
+        creates += ("[" + batchGroupName + "]" -> ExecutionBlock(batchGroupName, b, null, vf.toArray))
       } else {
         if (creates.contains("[]")) {
           throw new GorParsingException("Only one final command is allowed")
         }
         val batchGroupName = GOR_FINAL
         val vf = virtualFiles(command)
-        creates += ("[]" -> ExecutionBlock(batchGroupName, command, vf.toArray))
+        creates += ("[]" -> ExecutionBlock(batchGroupName, command, null, vf.toArray))
       }
     })
 
@@ -75,84 +77,51 @@ object ScriptExecutionEngine {
 }
 
 /**
-  * Class to execute gor scripts. Scripts are executed with the supplied query handlers, one for the main execution
-  * and another for fetching headers. Users can supply a listener to monitor the internals of the script engine for
-  * logging and testing purposes.
+  * Class to execute gor scripts. Scripts are executed with the supplied query handler.
   *
-  * @param queryHandler         Remote query handler
-  * @param headerQueryHandler   Local query handler for executing local queries such as dictionary and header queries
-  * @param context              Current gor pipe session
-  * @param listener             Interface for monitoring internal state of the execution engine
+  * @param queryHandler Remote query handler
+  * @param context      Current gor pipe session
   */
 class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
-                            headerQueryHandler: GorParallelQueryHandler,
-                            context: GorContext,
-                            listener: ScriptExecutionListener = new DefaultListener()
-                           ) {
+                            localQueryHandler: GorParallelQueryHandler,
+                            context: GorContext) {
 
   private var executionBlocks: ExecutionBlocks = Map.empty[String, ExecutionBlock]
   private var aliases: singleHashMap = new java.util.HashMap[String, String]()
-  private var allUsedFiles: List[String] = Nil
   private var fileSignatureMap = Map.empty[String, String]
   private var singleFileSignatureMap = Map.empty[String, String]
   private val virtualFileManager = new VirtualFileManager
 
   private val eventLogger = context.getSession.getEventLogger
 
-  def getCreatedFiles : Map[String, String] = {
+  def getCreatedFiles: Map[String, String] = {
     virtualFileManager.getCreatedFiles
   }
 
-  def getVirtualFiles : List[(String,String)] = {
+  def getVirtualFiles: List[(String, String)] = {
     Nil
   }
 
-  def getAliases : singleHashMap = {
+  def getAliases: singleHashMap = {
     aliases
   }
 
-  def execute(gorCommands: Array[String]): String = {
-    internalExecute(gorCommands, suggestName = false, "")
-  }
-
-  def executeSuggestName(gorCommands: Array[String]): String = {
-    internalExecute(gorCommands, suggestName = true, "")
-  }
-
-  def executeVirtualFile(virtualFile: String, gorCommands: Array[String]): String = {
-    internalExecute(gorCommands, suggestName = false, virtualFile)
-  }
-
-  private def internalExecute(igorCommands: Array[String], suggestName: Boolean, virtualFile: String): String = {
-
-    listener.beforeExecution(igorCommands)
-
+  def execute(commands: Array[String], validate: Boolean = true): String = {
     // Apply aliases to query, this replaces the def entries
-    aliases = extractAliases(igorCommands)
-    listener.beforeAlias(igorCommands)
-    var gorCommands = applyAliases(igorCommands, aliases)
-    listener.afterAlias(gorCommands)
+    aliases = extractAliases(commands)
+    var gorCommands = applyAliases(commands, aliases)
 
     // Preprocess the script, change macros to create + gor statements
-    listener.beforePreProcessing(gorCommands)
     gorCommands = performScriptPreProcessing(gorCommands)
-    listener.afterPreProcessing(gorCommands)
 
     // This is some cleanup, is it needed?
     gorCommands = CommandParseUtilities.cleanCommandStrings(gorCommands)
 
-    val analyzer = new GorScriptAnalyzer()
-    analyzer.parse(gorCommands.mkString(";"))
+    val analyzer = new GorScriptAnalyzer(gorCommands.mkString(";"))
     eventLogger.tasks(analyzer.getTasks)
 
-    val (gorCommand, createdFiles) = processScript(gorCommands, doHeader = false, suggestName = suggestName)
+    val gorCommand = processScript(gorCommands, validate)
 
-    listener.afterExecution(gorCommand, createdFiles)
-
-    if (virtualFile != "") {
-      val temp = createdFiles.filter(x => x._1 == ("[" + virtualFile + "]")).toList
-      if (temp.isEmpty) return "" else return temp.head._2
-    }
     gorCommand
   }
 
@@ -170,7 +139,16 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     processedGorCommands
   }
 
-  private def processScript(igorCommands: Array[String], doHeader: Boolean, suggestName: Boolean): (String, Map[String, String]) = {
+  private def resolveCache(lastCommand: String, hasWrite: Boolean): String = {
+    var res: String = null
+    if (hasWrite) {
+      val lastField = lastCommand.split(" ").last.trim
+      if(!lastField.startsWith("-")) res = lastField
+    }
+    res
+  }
+
+  private def processScript(igorCommands: Array[String], validate: Boolean): String = {
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
     // any left there is an error, something was not executed
@@ -195,14 +173,19 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
       // Create a new batch of execution blocks which are independent from each other
       executionBatch = getNextBatch(level)
-      listener.beforeExecuteBatch(executionBatch)
-
       executionBatch.getBlocks.foreach(firstLevelBlock => {
         // Replace any virtual file in the current query
         firstLevelBlock.query = virtualFileManager.replaceVirtualFiles(firstLevelBlock.query)
 
+        if(validate&&firstLevelBlock.signature==null&&firstLevelBlock.query!=null&&firstLevelBlock.query.toLowerCase.startsWith("pgor ")) {
+          val usedFiles = getUsedFiles(firstLevelBlock.query)
+          val fileSignature = getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles)
+          val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
+          firstLevelBlock.signature = querySignature
+        }
+
         // Expand the executionBlock with macros
-        val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock), doHeader)
+        val newExecutionBlocks = expandMacros(Map(firstLevelBlock.groupName -> firstLevelBlock), validate)
 
         // We need to determine if there is any dependency in the new executions, remove dependent blocks and
         // add them to the executionBlocks map
@@ -210,11 +193,15 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
         virtualFileManager.addRange(activeExecutionBlocks)
 
-        activeExecutionBlocks.foreach {newExecutionBlock =>
-          listener.beforeVirtualFileReplacement(firstLevelBlock.query, virtualFileManager)
+        activeExecutionBlocks.foreach { newExecutionBlock =>
           // Get the command to finally execute
-          val commandToExecute = getCommandToExecute(suggestName, doHeader, newExecutionBlock._2.query)
-          listener.afterVirtualFileReplacement(commandToExecute)
+          val commandToExecute = newExecutionBlock._2.query
+          val cacheFile = newExecutionBlock._2.cachePath
+
+          val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|').last.trim
+          val hasWrite = lastCommand.toLowerCase.startsWith("write ")
+
+          val cachePath = if(cacheFile==null) resolveCache(lastCommand, hasWrite) else cacheFile
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
@@ -223,9 +210,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val splitManager = SplitManager.createFromCommand(newExecutionBlock._1, commandToExecute, context)
 
           // Expand execution blocks based on the active split
-          listener.beforeSplitExpand(commandToExecute, splitManager)
-          val commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock._1)
-          listener.afterSplitExpand(commandToExecute, commandGroup, splitManager)
+          val commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock._1, cachePath)
 
           // Remove this command from the execution blocks if needed
           if (commandGroup.removeFromCreate) {
@@ -240,15 +225,16 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               executionBlocks -= firstLevelBlock.groupName
             } else {
               // We need to create a new dictionary query to the batch to get the results from expanded queries
-              val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
-              val querySignature = StringUtilities.createMD5(cte.query + fileSignature)
-              executionBatch.createNewCommand(querySignature, cte.query, cte.batchGroupName, cte.createName)
-              eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query);
+              val querySignature = if(firstLevelBlock.signature!=null&&commandToExecute.startsWith("gordict")) firstLevelBlock.signature
+              else {
+                val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
+                StringUtilities.createMD5(cte.query + fileSignature)
+              }
+              val query = if(cacheFile!=null && !hasWrite) cte.query + "| write -d " + cacheFile else cte.query
+              executionBatch.createNewCommand(querySignature, query, cte.batchGroupName, cte.createName, cte.cacheFile)
+              eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })
-
-          // Collect files if we are suggesting virtual file name
-          if (suggestName) allUsedFiles :::= usedFiles.filter(x => !x.startsWith("["))
         }
 
         // Add dictionary entries back to the execution blocks lists but process other entries
@@ -256,27 +242,23 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       })
 
       // Execute the current batch
-      executeBatch(executionBatch, suggestName, doHeader)
-
-      listener.afterExecuteBatch(executionBatch)
-
+      executeBatch(executionBatch)
     } while (executionBatch.hasBlocks)
 
     // We'll need to validate the current execution and throw exception if there are still execution blocks available
     // IN the final execution list
-    postValidateExecution(suggestName, doHeader)
+    if (validate) postValidateExecution()
 
-    if (suggestName) gorCommand = StringUtilities.createMD5(igorCommands.mkString(" ") + allUsedFiles.distinct.sorted.map(x => fileFingerPrint(x, context.getSession)).mkString(" "))
-
-    (gorCommand, virtualFileManager.getCreatedFiles)
+    gorCommand
   }
 
   private def preValidateExecution(): Unit = {
     var externalVirtualRelation: List[String] = Nil
-    executionBlocks.values.foreach{block =>
-      MacroUtilities.virtualFiles(block.query).foreach{relation =>
-        if(MacroUtilities.isExternalVirtFile(relation))
+    executionBlocks.values.foreach { block =>
+      MacroUtilities.virtualFiles(block.query).foreach { relation =>
+        if (MacroUtilities.isExternalVirtFile(relation)) {
           externalVirtualRelation ::= relation
+        }
       }
     }
 
@@ -285,7 +267,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def postValidateExecution(suggestName: Boolean, doHeader: Boolean): Unit = {
+  private def postValidateExecution(): Unit = {
     val unusedEntries = virtualFileManager.getUnusedVirtualFileEntries
 
     if (unusedEntries.length > 0) {
@@ -294,12 +276,10 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         .foreach(entry => ScriptExecutionEngine.log.warn(s"No reference to virtual file: ${entry.name}"))
     }
 
-    if (executionBlocks.keys.nonEmpty && !suggestName) {
+    if (executionBlocks.keys.nonEmpty) {
       var message = "Could not create the following queries due to virtual dependencies:\n"
       executionBlocks.keys.foreach(x => message += "\t" + (x + " = ").replace("[] = ", " ") + executionBlocks(x).query.substring(0, Math.min(executionBlocks(x).query.length, 50)) + "\n")
-      if (!doHeader) {
-        throw new GorParsingException(message)
-      }
+      throw new GorParsingException(message)
     }
   }
 
@@ -309,20 +289,20 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       virtualFileManager.get(e._1) match {
         case Some(x) =>
           if (x.fileName == null) {
-            createBlockIAvailable(executionBatch, e._1, e._2)
+            createBlockIfAvailable(executionBatch, e._1, e._2)
           }
         case None =>
-          createBlockIAvailable(executionBatch, e._1, e._2)
+          createBlockIfAvailable(executionBatch, e._1, e._2)
       }
     })
 
     executionBatch
   }
 
-  private def createBlockIAvailable(executionBatch: ExecutionBatch, key: String, executionBlock: ExecutionBlock): Unit = {
+  private def createBlockIfAvailable(executionBatch: ExecutionBatch, key: String, executionBlock: ExecutionBlock): Unit = {
     val dependencies = executionBlock.dependencies
     if (dependencies.isEmpty || virtualFileManager.areDependenciesReady(dependencies)) {
-      executionBatch.createNewBlock(key, executionBlock.query, dependencies, executionBlock.groupName)
+      executionBatch.createNewBlock(key, executionBlock.query, executionBlock.signature, dependencies, executionBlock.groupName, executionBlock.cachePath)
     }
   }
 
@@ -354,14 +334,6 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     (activeExecutionBlocks, dependantExecutionBlocks)
   }
 
-  private def getCommandToExecute(suggestName: Boolean, doHeader: Boolean, query: String): String = {
-    if (!suggestName && doHeader) {
-      query.replace("|", "| top 0 |") + "| top 0"
-    } else {
-      query
-    }
-  }
-
   def getUsedFiles(commandToExecute: String): List[String] = {
     if (CommandParseUtilities.isDictionaryQuery(commandToExecute)) {
       // The header does not matter here
@@ -381,7 +353,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
   def getFileSignatureAndUpdateSignatureMap(commandToExecute: String, usedFiles: List[String]): String = {
     var fileSignature = ""
     if (CommandParseUtilities.isDictionaryQuery(commandToExecute)) {
-      fileSignature = StringUtilities.createMD5(usedFiles.mkString(" "))
+      val usedFilesConcatStr = usedFiles.mkString(" ")
+      fileSignature = StringUtilities.createMD5(usedFilesConcatStr)
     } else {
       val signatureKey = getSignature(commandToExecute)
       val fileListKey = usedFiles.mkString(" ") + signatureKey
@@ -397,19 +370,12 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     fileSignature
   }
 
-  private def executeBatch(executionBatch: ExecutionBatch, suggestName: Boolean, doHeader: Boolean): Unit = {
+  private def executeBatch(executionBatch: ExecutionBatch): Unit = {
     val dictionaryExecutions = executionBatch.getCommands.filter(x => CommandParseUtilities.isDictionaryQuery(x.query))
     val regularExecutions = executionBatch.getCommands.filter(x => !CommandParseUtilities.isDictionaryQuery(x.query))
 
-    listener.beforeExecuteQueryHandler(executionBatch, dictionaryExecutions, regularExecutions)
-    if (!suggestName) {
-      if (!dictionaryExecutions.isEmpty) runQueryHandler(dictionaryExecutions, doHeader)
-      if (!regularExecutions.isEmpty) runQueryHandler(regularExecutions, doHeader)
-    } else {
-      dictionaryExecutions.foreach(x => executionBlocks -= x.createName)
-      regularExecutions.foreach(x => executionBlocks -= x.createName)
-    }
-    listener.afterExecuteQueryHandler(executionBatch, dictionaryExecutions, regularExecutions)
+    if (!dictionaryExecutions.isEmpty) runQueryHandler(dictionaryExecutions)
+    if (!regularExecutions.isEmpty) runQueryHandler(regularExecutions)
   }
 
   private def fileFingerPrint(fileName: String, gorPipeSession: GorSession): String = {
@@ -417,47 +383,58 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       case Some(signature) =>
         signature
       case None =>
-        val fileReader = gorPipeSession.getProjectContext.getFileReader
-        val cacheDirectory = AnalysisUtilities.theCacheDirectory(gorPipeSession)
-
-        try {
-          if (fileName.startsWith("#gordict#")) {
-            val hasTags = fileName.contains("#gortags#")
-            val dictFile = fileName.substring("#gordict#".length, if (hasTags) fileName.indexOf("#gortags#") else fileName.length())
-            val dictTags = if (hasTags) fileName.substring(fileName.indexOf("#gortags#") + "#gortags#".length, fileName.length).split(',') else null
-            val tmp = if (dictTags != null && dictTags.length > 9) fileReader.getFileSignature(dictFile) else fileReader.getDictionarySignature(dictFile, dictTags)
-
-            singleFileSignatureMap += (fileName -> tmp)
-            tmp
+        val signature = if (fileName.startsWith("#gordict#")) {
+          getGorDictSignature(gorPipeSession, fileName)
+        } else {
+          val fileReader = gorPipeSession.getProjectContext.getFileReader
+          val cacheDirectory = AnalysisUtilities.theCacheDirectory(gorPipeSession)
+          // TODO: Get a gor config instance somehow into gorpipeSession or gorContext to skip using system.getProperty here
+          val x_f_name = fileName.split('/').last.split('.').head
+          val tmp: String = if (System.getProperty("gor.caching.md5.enabled", "false").toBoolean
+            && x_f_name.split('.').head.endsWith("_md5")) {
+            // cache files with md5 have the md5 sum encoded in the filename
+            return x_f_name.split('.').head
+          } else if (fileName.startsWith(cacheDirectory)) {
+            return "0"
           } else {
-            // TODO: Get a gor config instance somehow into gorpipeSession or gorContext to skip using system.getProperty here
-            val x_f_name = fileName.split('/').last.split('.').head
-            val tmp: String = if (System.getProperty("gor.caching.md5.enabled", "false").toBoolean
-              && x_f_name.split('.').head.endsWith("_md5")) {
-              // cache files with md5 have the md5 sum encoded in the filename
-              return x_f_name.split('.').head
-            } else if (fileName.startsWith(cacheDirectory)) {
-              return "0"
-            } else {
+            try {
               fileReader.getFileSignature(fileName)
+            } catch {
+              case e: Exception => throw new GorResourceException("In fileFingerPrint: file " + fileName + " does not exist!", fileName, e)
             }
-
-            singleFileSignatureMap += (fileName -> tmp)
-            tmp
           }
-        } catch {
-          case e: Exception => throw new GorResourceException("In fileFingerPrint: file " + fileName + " does not exist!", fileName, e)
+          tmp
         }
+        singleFileSignatureMap += (fileName -> signature)
+        signature
     }
   }
 
-  private def runQueryHandler(executionCommands: Array[ExecutionCommand], doHeader: Boolean) {
+  private def getGorDictSignature(gorPipeSession: GorSession, fileName: String) = {
+    val fileReader = gorPipeSession.getProjectContext.getFileReader
+    val hasTags = fileName.contains("#gortags#")
+    val dictFile = fileName.substring("#gordict#".length, if (hasTags) fileName.indexOf("#gortags#") else fileName.length())
+    val dictTags = if (hasTags) fileName.substring(fileName.indexOf("#gortags#") + "#gortags#".length, fileName.length).split(',') else null
+    try {
+      if (dictTags != null && dictTags.length > 9) {
+        fileReader.getFileSignature(dictFile)
+      } else {
+        fileReader.getDictionarySignature(dictFile, dictTags)
+      }
+    } catch {
+      case e: GorResourceException =>
+        throw new GorResourceException(s"Could not get signature for file", dictFile, e)
+    }
+  }
+
+  private def runQueryHandler(executionCommands: Array[ExecutionCommand]) {
     if (executionCommands != null && !executionCommands.isEmpty) {
-      val activeQueryHandler = if (doHeader || CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) headerQueryHandler else queryHandler
+      val activeQueryHandler = if (CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) localQueryHandler else queryHandler
 
       val cacheFiles = activeQueryHandler.executeBatch(executionCommands.map(x => x.signature),
         executionCommands.map(x => x.query),
         executionCommands.map(x => x.createName),
+        executionCommands.map(x => x.cacheFile),
         context.getSession.getSystemContext.getMonitor).toList
 
       executionCommands.map(x => x.createName).zip(cacheFiles).foreach(x => {
@@ -472,14 +449,14 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         }
         getCreatedFiles.foreach(x => {
           if (x._2 != null) {
-            ScriptExecutionEngine.log.debug("runQueryHandler createdFiles: {} - {} - {}", x._1.toString, x._2.toString, "")
+            ScriptExecutionEngine.log.debug("runQueryHandler createdFiles: {} - {} - {}", x._1, x._2, "")
           }
         })
       }
     }
   }
 
-  private def expandMacros(creates: ExecutionBlocks, doHeader: Boolean): ExecutionBlocks = {
+  private def expandMacros(creates: ExecutionBlocks, valid: Boolean): ExecutionBlocks = {
 
     var activeCreates = creates
     var macroCreated = false
@@ -504,8 +481,9 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
             val macroResult = macroEntry.get.init(create._1,
               create._2,
               context,
-              doHeader,
-              commandOptions.slice(1, commandOptions.length))
+              false,
+              commandOptions.slice(1, commandOptions.length),
+              !valid)
 
             newCreates ++= macroResult.createCommands
             if (macroResult.aliases != null) {

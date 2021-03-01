@@ -22,17 +22,18 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
+import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.UUID;
-import org.gorpipe.model.util.Util;
-import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Very simple LRU file cache.  Files are stored by unique id (should include timestamp information if important).

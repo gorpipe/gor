@@ -22,8 +22,8 @@
 
 package gorsat.analysis;
 
-import org.gorpipe.exceptions.GorDataException;
 import gorsat.Analysis.CigarVarSegs;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Test;
 
 public class UTestCigarVarSegs {

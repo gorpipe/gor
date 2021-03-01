@@ -22,12 +22,12 @@
 
 package gorsat.Analysis
 
-import gorsat.AnalysisUtilities.{ParameterHolder, SEGinfo}
+import gorsat.Utilities.AnalysisUtilities.{ParameterHolder, SEGinfo}
 import gorsat.Commands._
 import gorsat.Iterators.{ChromBoundedIteratorSource, RowListIterator}
 import gorsat.process.GenericGorRunner
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
 import org.gorpipe.model.gor.iterators.RowSource
@@ -125,8 +125,7 @@ object GtLDAnalysis {
         (lastRightChr < lr.chr || (lastRightChr == lr.chr && lastRightPos <= leftStop + fuzzFactor))) {
         if (lr.chr == lastSeekChr && !rightSource.hasNext) {
           /* do nothing */
-        }
-        else if (lr.chr > lastRightChr) {
+        } else if (lr.chr > lastRightChr) {
           if (snpsnp || segsnp) rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor).max(0))
           else rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
           lastSeekChr = lr.chr
@@ -186,9 +185,7 @@ object GtLDAnalysis {
 
       }
       val lSeg = SEGinfo(leftStart, leftStop, lr)
-      var ovlaps = 0
 
-      var groupKeyLeft = null
       if (useGroup) {
         val groupKeyLeft = lr.selectedColumns(leq)
         groupMap.get(groupKeyLeft) match {
@@ -207,10 +204,10 @@ object GtLDAnalysis {
         val rSeg = gr.rowBuffer(gr.buffer)(i)
         val rr = rSeg.r
         if (lr.chr == rr.chr && lSeg.start - fuzzFactor < rSeg.stop && lSeg.stop + fuzzFactor > rSeg.start) {
-          val LDs = LDstatCalc(lr.colAsString(valuesCol).toString,rr.colAsString(valuesCol).toString)
-          nextProcessor.process(RowObj(lr.chr+"\t"+lr.pos+"\t"+lr.selectedColumns(otherCols)+"\t"+((rr.pos - lr.pos) - (if (rr.pos - lr.pos > 0) 1 else 0) + "\t"
-            + rr.pos+"\t"+rr.selectedColumns(otherCols))+"\t"
-            + LDs.x11 + "\t" + LDs.x12 + "\t" + LDs.x21 + "\t" + LDs.x22 ))
+            val LDs = LDstatCalc(lr.colAsString(valuesCol).toString, rr.colAsString(valuesCol).toString)
+            nextProcessor.process(RowObj(lr.chr + "\t" + lr.pos + "\t" + lr.selectedColumns(otherCols) + "\t" + ((rr.pos - lr.pos) /* - (if (rr.pos - lr.pos > 0) 1 else 0) */ + "\t"
+              + rr.pos + "\t" + rr.selectedColumns(otherCols)) + "\t"
+              + LDs.g00+"\t"+LDs.g10+"\t"+LDs.g20+"\t"+LDs.g01+"\t"+LDs.g11+"\t"+LDs.g21+"\t"+LDs.g02+"\t"+LDs.g12+"\t"+LDs.g22))
 
         }
         if (!((rr.chr == lr.chr && rSeg.stop + fuzzFactor < lSeg.start) || rr.chr < lr.chr)) {
@@ -257,8 +254,6 @@ object GtLDAnalysis {
     override def finish {
       rightSource.close
     }
-
-
   }
 
   case class LDSnpJoinSnpOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
@@ -266,47 +261,43 @@ object GtLDAnalysis {
     this | LDSegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpsnp", 2, 2, leq, req, otherCols, valuesCol, 1, plain)
   }
 
-  case class LDstats(x11 : Int, x12 : Int, x21 : Int, x22 : Int)
+  case class LDstats(g00 : Int, g10 : Int, g20 : Int, g01 : Int, g11 :Int, g21 : Int, g02 : Int, g12 : Int, g22 : Int)
 
   def LDstatCalc(a : String, b : String) : LDstats = {
     var i = 0
-    var x11 = 0; var x12 = 0; var x21 = 0; var x22 = 0
+    var g00 = 0; var g10 = 0; var g20 = 0;
+    var g01 = 0; var g11 = 0; var g21 = 0;
+    var g02 = 0; var g12 = 0; var g22 = 0;
+
     while (i < a.length) {
       if (a(i) == '0') {
         if (b(i) == '0') {
-          x11 += 4
+          g00 += 1
         } else if (b(i)=='1') {
-          x11 += 2
-          x12 += 2
+          g01 += 1
         } else if (b(i)=='2') {
-          x12 += 4
+          g02 += 1
         }
       } else if (a(i)=='1') {
         if (b(i) == '0') {
-          x11 += 2
-          x21 += 2
+          g10 += 1
         } else if (b(i)=='1') {
-          x11 += 1
-          x12 += 1
-          x21 += 1
-          x22 += 1
+          g11 += 1
         } else if (b(i)=='2') {
-          x12 += 2
-          x22 += 2
+          g12 += 1
         }
       } else if (a(i)=='2') {
         if (b(i) == '0') {
-          x21 += 4
+          g20 += 1
         } else if (b(i)=='1') {
-          x21 += 2
-          x22 += 2
+          g21 += 1
         } else if (b(i)=='2') {
-          x22 += 4
+          g22 += 1
         }
       }
       i += 1
     }
-    return LDstats(x11,x12,x21,x22)
+    LDstats(g00,g10,g20,g01,g11,g21,g02,g12,g22)
   }
 
 
@@ -356,7 +347,7 @@ object GtLDAnalysis {
     val otherCols = iotherCols.toArray
     val noEquijoin = if (lreq == Nil) true else false
 
-    def initialize(bi: BinInfo) = {
+    def initialize(bi: BinInfo): Unit = {
       lRows = Nil
       rRows = Nil
     }
@@ -368,14 +359,17 @@ object GtLDAnalysis {
     }
 
     def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+      if (nextProcessor.wantsNoMore) return
       if (rRows.nonEmpty && lRows.length * rRows.length < 400) {
-        for (lr <- lRows.reverse) {
-          for (rr <- rRows.reverse) if (!nextProcessor.wantsNoMore && rr.pos - fuzz - 1 < lr.pos && lr.pos <= rr.pos + fuzz && (noEquijoin || rr.selectedColumns(req) == lr.selectedColumns(req))) {
-            val LDs = LDstatCalc(lr.colAsString(valuesCol).toString,rr.colAsString(valuesCol).toString)
-            val r = RowObj(lr.chr+"\t"+lr.pos+"\t"+lr.selectedColumns(otherCols)+"\t"+((rr.pos - lr.pos) - (if (rr.pos - lr.pos > 0) 1 else 0) + "\t"
-              + rr.pos+"\t"+rr.selectedColumns(otherCols))+"\t"
-              + LDs.x11 + "\t" + LDs.x12 + "\t" + LDs.x21 + "\t" + LDs.x22 )
-            nextProcessor.process(r)
+        for (lr <- lRows.reverse;
+             rr <- rRows.reverse) {
+          if (nextProcessor.wantsNoMore) return
+          if (rr.pos - fuzz - 1 < lr.pos && lr.pos <= rr.pos + fuzz && (noEquijoin || rr.selectedColumns(req) == lr.selectedColumns(req))) {
+              val LDs = LDstatCalc(lr.colAsString(valuesCol).toString, rr.colAsString(valuesCol).toString)
+              val r = RowObj(lr.chr + "\t" + lr.pos + "\t" + lr.selectedColumns(otherCols) + "\t" + ((rr.pos - lr.pos) /* - (if (rr.pos - lr.pos > 0) 1 else 0) */ + "\t"
+                + rr.pos + "\t" + rr.selectedColumns(otherCols)) + "\t"
+                + LDs.g00+"\t"+LDs.g10+"\t"+LDs.g20+"\t"+LDs.g01+"\t"+LDs.g11+"\t"+LDs.g21+"\t"+LDs.g02+"\t"+LDs.g12+"\t"+LDs.g22)
+              nextProcessor.process(r)
           }
         }
       } else if (lRows.nonEmpty && rRows.nonEmpty) {
@@ -396,29 +390,89 @@ object GtLDAnalysis {
     BinAnalysis(LDSelfJoinRowHandler(binSize, fuzz, binN), BinAggregator(LDSelfJoinFactory(missingSEG, fuzz, req, otherCols, valuesCol, useOnlyAsLeftVar), binN + 10, binN)) {
   }
 
-  def fd(d: Double) = (d formatted "%6.4f").replace(',', '.')
+  def fd(d: Double): String = (d formatted "%6.4f").replace(',', '.')
 
-  case class LDcalculation(x11Col : Int) extends Analysis {
-    val x12Col = x11Col+1
-    val x21Col = x11Col+2
-    val x22Col = x11Col+3
+  case class LDcalculation(g00Col : Int) extends Analysis {
+    val g10Col = g00Col+1
+    val g20Col = g00Col+2
+    val g01Col = g00Col+3
+    val g11Col = g00Col+4
+    val g21Col = g00Col+5
+    val g02Col = g00Col+6
+    val g12Col = g00Col+7
+    val g22Col = g00Col+8
 
     override def process(r: Row): Unit = {
-      val x11 = r.colAsInt(x11Col)
-      val x12 = r.colAsInt(x12Col)
-      val x21 = r.colAsInt(x21Col)
-      val x22 = r.colAsInt(x22Col)
-      val N = (x11+x12+x21+x22).toDouble
-      val p1=(x11+x12)/N
-      val q1=(x11+x21)/N
-      val D = x11/N-p1*q1
-      val d = if (D<0) (p1*q1).max((1.0-p1)*(1.0-q1)) else (p1*(1-q1)).min((1.0-p1)*q1)
+      val g00 = r.colAsDouble(g00Col)
+      val g10 = r.colAsDouble(g10Col)
+      val g20 = r.colAsDouble(g20Col)
+      val g01 = r.colAsDouble(g01Col)
+      val g11 = r.colAsDouble(g11Col)
+      val g21 = r.colAsDouble(g21Col)
+      val g02 = r.colAsDouble(g02Col)
+      val g12 = r.colAsDouble(g12Col)
+      val g22 = r.colAsDouble(g22Col)
+
+      val N : Double = g00+g10+g20+g01+g11+g21+g02+g12+g22;
+      var G00 = g00/N; var G10 = g10/N; var G20 = g20/N;
+      var G01 = g01/N; var G11 = g11/N; var G21 = g21/N;
+      var G02 = g02/N; var G12 = g12/N; var G22 = g22/N;
+      var h00 = G00+(G01+G10)*0.5
+      var h10 = (G10+G11+G21)*0.5+G20
+      var h01 = (G01+G11+G12)*0.5+G02
+      var h11 = G22+(G21+G12)*0.5
+      // println("start h00 "+h00+" h01 "+h01+" h10 "+h10+" h11 "+h11+" sum "+(h00+h01+h10+h11))
+      val h0000 = G00
+      val h1000 = G10
+      val h1010 = G20
+      val h0001 = G01
+      val h1110 = G21
+      val h0101 = G02
+      val h1101 = G12
+      val h1111 = G22
+      var it = 0
+      var h1001_last = G11+1.0e-5
+      var h0011_last = G11+1.0e-5
+      var keep_on = true
+      while (it <= 20 && keep_on) {
+        it += 1
+        // E-step
+        val t1 = h10*h01
+        val t2 = h00*h11
+        val h1001 = G11*t1/(t1+t2)
+        val h0011 = G11*t2/(t1+t2)
+        // println("G11 "+G11+" h1001 "+h1001+" h0011 "+h0011)
+        // M-step
+        h00 = h0000*2+h1000+h0001+h0011
+        h10 = h1000+h1010*2+h1001+h1110
+        h01 = h0001+h1001+h0101*2+h1101
+        h11 = h1110+h0011+h1101+h1111*2
+        val s = 1.0/(h00+h10+h01+h11)
+        h00 = h00*s
+        h01 = h01*s
+        h10 = h10*s
+        h11 = h11*s
+        // println("it "+it+" h00 "+h00+" h01 "+h01+" h10 "+h10+" h11 "+h11+" sum "+(h00+h01+h10+h11))
+        val d1 = h1001_last-h1001
+        val d2 = h0011_last-h0011
+        // println("error "+(math.sqrt(d1*d1+d2*d2)/(h1001+h1001_last+h0011_last+h0011)))
+        if(math.sqrt(d1*d1+d2*d2)/(h1001+h1001_last+h0011_last+h0011) < 0.0001) keep_on = false else keep_on = true
+        h1001_last = h1001
+        h0011_last = h0011
+      }
+
+      val Nh = h00+h01+h10+h11
+      val p1 = (h00+h01)/Nh
+      val q1 = (h00+h10)/Nh
+      val D = h00*h11-h10*h01
+      val d = if (D<0.0) (p1*q1).max((1.0-p1)*(1.0-q1)) else (p1*(1-q1)).min((1.0-p1)*q1)
       val rd = Math.sqrt(p1*(1.0-p1)*q1*(1.0-q1))
       val Dm = D/d
       val rcoeff = D/rd
-      super.process(r.rowWithAddedColumns(""+fd(Dm)+"\t"+fd(rcoeff)))
+
+      // println("D "+D+" rd "+rd+" Dm "+Dm+" rcoeff "+rcoeff)
+
+      super.process(r.rowWithAddedColumns(""+fd(D)+"\t"+fd(Dm)+"\t"+fd(rcoeff)))
     }
   }
-
-
-  }
+}

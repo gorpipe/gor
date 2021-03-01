@@ -23,13 +23,11 @@
 package gorsat.process
 
 import gorsat.Commands.CommandParseUtilities
+import gorsat.gorsatGorIterator.MapAndListUtilities
+import org.gorpipe.gor.model.FileReader
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.language.postfixOps
-import gorsat.gorsatGorIterator.MapAndListUtilities
-import org.gorpipe.model.genome.files.gor.FileReader
-
-import scala.collection.mutable.ArrayBuffer
 
 trait GorPipeFirstOrderCommands {
 
@@ -59,7 +57,7 @@ trait GorPipeFirstOrderCommands {
         "Example: \n" +
         "  gorpipe \"gor genes.gor | group 1000 -count\"\n\n" +
         "For further information see the GOR User Manual: http://cdn.nextcode.com/gor\n" +
-        "For command help type gorpipe help <command>, e.g. gorpipe help join, gorpipe help formulas, or gorpipe help all."
+        "For command help type gorpipe help <command>, e.g. gorpipe help join, gorpipe help formulas, or gorpipe help all.\n"
     }
 
     if (args.length > 1) {

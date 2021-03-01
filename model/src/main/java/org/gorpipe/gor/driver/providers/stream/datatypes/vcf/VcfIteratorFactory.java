@@ -22,17 +22,18 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
-import org.gorpipe.model.genome.files.binsearch.StringIntKey;
+import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.adapters.OffsetStreamSourceSeekableFile;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.model.genome.files.gor.ChrDataScheme;
-import org.gorpipe.model.genome.files.gor.ChromoCache;
-import org.gorpipe.model.genome.files.gor.ContigDataScheme;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.binsearch.StringIntKey;
+import org.gorpipe.gor.model.ChrDataScheme;
+import org.gorpipe.gor.model.ChromoCache;
+import org.gorpipe.gor.model.ContigDataScheme;
+import org.gorpipe.gor.model.GenomicIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +41,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+@AutoService(StreamSourceIteratorFactory.class)
 public class VcfIteratorFactory implements StreamSourceIteratorFactory {
 
     @Override
@@ -48,8 +50,7 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
         if (file.getIndexSource() == null || !file.getIndexSource().exists()) {
             // Use the same iterator for as the non-seekable .vcf.gz files as for .vcf files if ignore order is requested
             if (compressed) {
-                return new VcfFileIterator(file, file.getFileSource().getSourceReference().getLookup(),
-                        file.getFileSource().getSourceReference().getColumns(), compressed);
+                return new VcfFileIterator(file, file.getFileSource().getSourceReference().getLookup(), compressed);
             } else {
                 try (InputStream instream = file.getFileSource().open()) {
                     final Map<Integer, String> id2chr = new HashMap();

@@ -22,11 +22,11 @@
 
 package org.gorpipe.gor.function;
 
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import gorsat.process.PipeOptions;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.model.Row;
 
 import java.io.Serializable;
 import java.util.function.Function;
@@ -49,7 +49,7 @@ public class GorRowQueryFunction implements Function<Row, Stream<Row>>, AutoClos
 
     public String getHeader(String inputHeader) {
         PipeInstance pi = init(inputHeader);
-        return pi.combinedHeader();
+        return pi.getHeader();
     }
 
     public String getHeader() {
@@ -64,7 +64,7 @@ public class GorRowQueryFunction implements Function<Row, Stream<Row>>, AutoClos
         GenericSessionFactory gsf = new GenericSessionFactory();
         GorSession gps = gsf.create();
         PipeInstance pi = new PipeInstance(gps.getGorContext());
-        pi.subProcessArguments(pipeOptions.query(), pipeOptions.fileSignature(), pipeOptions.virtualFile(), pipeOptions.scriptAnalyzer(), pipeOptions.stdIn(), header);
+        pi.init(pipeOptions.query(), pipeOptions.stdIn(), header);
         return pi;
     }
 

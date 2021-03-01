@@ -22,9 +22,10 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.GorContext
+import org.gorpipe.exceptions.GorSystemException
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.stats.StatsCollector
-import org.gorpipe.model.genome.files.gor.Row
 
 abstract class Analysis() extends Processor with Cloneable {
   var pipeTo: Analysis = _
@@ -33,7 +34,7 @@ abstract class Analysis() extends Processor with Cloneable {
   var alreadyFinished = false
   var isInErrorState = false
   var rowHeader: RowHeader = _
-  var cloned : Analysis = null
+  var cloned : Analysis = _
   var isCloned = false
 
   private[this] var _statsCollector: StatsCollector = _
@@ -110,8 +111,8 @@ abstract class Analysis() extends Processor with Cloneable {
       pipeTo | to
     }
     else {
-      pipeTo = to;
-      nextProcessor = to;
+      pipeTo = to
+      nextProcessor = to
       to.from(this)
     }
     this
@@ -150,7 +151,10 @@ abstract class Analysis() extends Processor with Cloneable {
   }
 
   def process(r: Row) {
-    if (!wantsNoMore) nextProcessor.process(r)
+    if (alreadyFinished)
+      throw new GorSystemException("Analysis step already finished", null)
+    if (!wantsNoMore && nextProcessor != null)
+      nextProcessor.process(r)
   }
 
   def finish() {}

@@ -22,11 +22,13 @@
 
 package gorsat;
 
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.gor.iterators.RowSource;
 import com.sun.management.UnixOperatingSystemMXBean;
 import gorsat.Commands.CommandParseUtilities;
+import gorsat.Utilities.AnalysisUtilities;
+import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +114,7 @@ public class TestUtils {
 
         try (PipeInstance pipe = new PipeInstance(factory.create().getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.subProcessArguments(queryToExecute,false, null, false, false, "");
+            pipe.init(queryToExecute, false, "");
             StringBuilder result = new StringBuilder();
             result.append(pipe.getHeader());
             result.append("\n");
@@ -127,7 +129,7 @@ public class TestUtils {
     public static RowSource runGorPipeIterator(String query) {
         PipeInstance pipe = createPipeInstance(false);
         pipe.init(query, null);
-        return pipe.theIterator();
+        return pipe.getRowSource();
     }
 
 
@@ -176,7 +178,7 @@ public class TestUtils {
 
         try (PipeInstance pipe = new PipeInstance(sessionSupplier.get().getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
+            pipe.init(queryToExecute, false, "");
             int count = 0;
             while (pipe.hasNext()) {
                 pipe.next();
@@ -193,7 +195,7 @@ public class TestUtils {
 
         try (PipeInstance pipe = new PipeInstance(createSession(args, whitelistFile.toAbsolutePath().toString(), false).getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
+            pipe.init(queryToExecute, false, "");
             int count = 0;
             while (pipe.hasNext()) {
                 pipe.next();
@@ -339,7 +341,7 @@ public class TestUtils {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server);
+        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, null);
         return factory.create();
     }
 

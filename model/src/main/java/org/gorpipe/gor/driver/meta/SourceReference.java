@@ -22,14 +22,14 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.model.genome.files.gor.DefaultChromoLookup;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.DefaultChromoLookup;
+import org.gorpipe.gor.model.GenomicIterator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -48,8 +48,7 @@ public class SourceReference {
     @JsonIgnore
     GenomicIterator.ChromoLookup lookup;
     public final String chrSubset;
-    @JsonIgnore
-    public final int[] columns;
+    private final String linkSubPath;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?
@@ -64,9 +63,21 @@ public class SourceReference {
      * @param commonRoot
      * @param lookup
      * @param chrSubset
-     * @param columns
      */
-    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, int[] columns) {
+    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) {
+        this(url, securityContext, commonRoot, lookup, chrSubset, null);
+    }
+
+    /**
+     *
+     * @param url                       url for the source.
+     * @param securityContext
+     * @param commonRoot
+     * @param lookup
+     * @param chrSubset
+     * @param linkSubPath
+     */
+    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, String linkSubPath) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -77,7 +88,7 @@ public class SourceReference {
         this.commonRoot = commonRoot;
         this.lookup = lookup != null ? lookup : new DefaultChromoLookup();
         this.chrSubset = chrSubset;
-        this.columns = columns;
+        this.linkSubPath = linkSubPath;
     }
 
     /**
@@ -92,8 +103,16 @@ public class SourceReference {
      * @param parentSourceReference parent source reference to copy unupplied context from.
      */
     public SourceReference(String url, SourceReference parentSourceReference) {
+        this(url, parentSourceReference, null);
+    }
+
+    /**
+     * @param url                   url for the source.
+     * @param parentSourceReference parent source reference to copy unupplied context from.
+     */
+    public SourceReference(String url, SourceReference parentSourceReference, String linkSubPath) {
         this(url, parentSourceReference.getSecurityContext(), parentSourceReference.getCommonRoot(),
-                parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), parentSourceReference.getColumns());
+                parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), linkSubPath);
     }
 
     @JsonCreator
@@ -104,6 +123,10 @@ public class SourceReference {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getLinkSubPath() {
+        return linkSubPath;
     }
 
     public String getSecurityContext() {
@@ -127,7 +150,7 @@ public class SourceReference {
     }
 
     public int[] getColumns() {
-        return columns;
+        return null;
     }
 
     @Override
@@ -141,13 +164,12 @@ public class SourceReference {
                 && Objects.equals(securityContext, that.securityContext)
                 && Objects.equals(commonRoot, that.commonRoot)
                 && Objects.equals(lookup, that.lookup)
-                && Objects.equals(chrSubset, that.chrSubset)
-                && Arrays.equals(columns, that.columns);
+                && Objects.equals(chrSubset, that.chrSubset);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(url, securityContext, commonRoot, lookup, chrSubset, Arrays.hashCode(columns));
+        return Objects.hash(url, securityContext, commonRoot, lookup, chrSubset);
     }
 
     @Override
@@ -158,7 +180,6 @@ public class SourceReference {
                 ", commonRoot='" + commonRoot + '\'' +
                 ", lookup=" + lookup +
                 ", chrSubset='" + chrSubset + '\'' +
-                ", columns=" + Arrays.toString(columns) +
                 '}';
     }
 
@@ -184,12 +205,13 @@ public class SourceReference {
      * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.
      */
     public static class Builder {
-        private String url;
+        private final String url;
         private String securityContext;
         private String commonRoot;
         private GenomicIterator.ChromoLookup lookup;
         private String chrSubset;
         private int[] columns;
+        private String linkSubPath;
 
         public Builder(String url) {
             this.url = url;
@@ -202,11 +224,11 @@ public class SourceReference {
             this.commonRoot = parentSourceReference.commonRoot;
             this.lookup = parentSourceReference.lookup;
             this.chrSubset = parentSourceReference.chrSubset;
-            this.columns = parentSourceReference.columns;
+            this.linkSubPath = parentSourceReference.linkSubPath;
         }
 
         public SourceReference build() {
-            return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, columns);
+            return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, linkSubPath);
         }
 
         public Builder securityContext(String securityContext) {
@@ -226,11 +248,6 @@ public class SourceReference {
 
         public Builder chrSubset(String chrSubset) {
             this.chrSubset = chrSubset;
-            return this;
-        }
-
-        public Builder columns(int[] columns) {
-            this.columns = columns;
             return this;
         }
     }

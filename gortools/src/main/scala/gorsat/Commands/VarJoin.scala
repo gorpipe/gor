@@ -25,11 +25,12 @@ package gorsat.Commands
 import gorsat.Analysis.SortAnalysis
 import gorsat.Analysis.VarJoinAnalysis.{ParameterHolder, SegVarJoinSegOverlap, SegVarJoinSegOverlapInclusOnly}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities
 import gorsat.Iterators.{EatStdInputSource, StdInputSourceIterator}
+import gorsat.Utilities.IteratorUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.{GorConstants, GorContext}
+import org.gorpipe.gor.GorConstants
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable.ListBuffer
@@ -55,7 +56,7 @@ class VarJoin extends CommandInfo("VARJOIN",
 
     // Such that zero-length refseqs are compared.
     var fuzzFactor = intValueOfOptionWithDefaultWithRangeCheck(args,"-span", 100, 0)
-    if (fuzzFactor > 1000) fuzzFactor = 1000
+    if (fuzzFactor > 1000000) { throw new GorParsingException("Span cannot exceed 1Mb!  This leads to slow execution and heavy memory usage.") }
     if (exactJoin) fuzzFactor = 0
 
 

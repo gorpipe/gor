@@ -19,71 +19,76 @@
  *
  *  END_COPYRIGHT
  */
-
 plugins {
+    id 'gor.java-library'
+    id 'gor.java-application'
     id 'antlr'
+    id 'gor.scala-common'
 }
 
 project(':gortools') {
-    apply plugin: 'antlr'
-    apply plugin: 'scala'
-    // See: https://github.com/gradle/gradle/issues/6854
-    configurations.all {
-        if (name.startsWith("incrementalScalaAnalysis")) {
-            extendsFrom = []
-        }
-    }
-
-    idea {
-        module {
-            // Not using generatedSourceDirs because of
-            // https://discuss.gradle.org/t/support-for-intellij-2016/15294/8
-            sourceDirs += file("${projectDir}/build/generated/source/proto/main/java")
-            sourceDirs += file("${projectDir}/build/generated/source/proto/main/grpc")
-        }
-    }
 
     generateGrammarSource {
         arguments += ["-visitor"]
     }
 
-    // To build mixed java scala projects, the scala plugin can handle both java and scala code so
-    // we add the java source dir to scala plugin and remove all src dirs from the java plugin.
-    sourceSets.main.scala.srcDirs "src/main/java"
     sourceSets.main.scala.srcDirs file("${projectDir}/build/generated-src/antlr/main")
-    sourceSets.main.java.srcDirs = []
 
     dependencies {
-        compile project(':base:exception')
-        compile project(':model')
-        compile project(':querydialogs')
-        compile project(':base:config')
+        implementation project(':model')
+        implementation project(':base')
+        implementation project(':util')
 
-        compile "io.prometheus:simpleclient:0.6.+"
-        compile "org.scala-lang:scala-compiler:2.12.+"
-        compile "org.scala-lang.modules:scala-xml_2.12:1.0.+"
+        // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
+        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.1.2"
 
-        compile "org.scala-lang.modules:scala-parser-combinators_2.12:1.0.+"
-        compile "org.scalanlp:breeze_2.12:0.13.+"
-        compile "info.picocli:picocli:4.0.+"
-        compile "de.tototec:de.tototec.cmdoption:0.6.+"
-        compile "colt:colt:1.2.+"
+        implementation "org.freemarker:freemarker:2.3.19"
+        implementation "org.yaml:snakeyaml:1.25"
+        implementation "org.scala-lang:scala-compiler:2.12.13"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
+        implementation "org.scalanlp:breeze_2.12:1.1"
+        implementation "info.picocli:picocli:4.6.1"
+        implementation "de.tototec:de.tototec.cmdoption:0.7.0"
+        implementation "colt:colt:1.2.0"
+        implementation 'info.picocli:picocli-shell-jline3:4.6.1'
+        implementation "commons-io:commons-io:2.6"
+        implementation "commons-lang:commons-lang:2.6"
+        implementation "com.github.samtools:htsjdk:2.23.0"
+        implementation "org.aeonbits.owner:owner:1.0.12"
+        implementation 'org.apache.parquet:parquet-common:1.11.1'
+        implementation 'org.apache.parquet:parquet-column:1.11.1'
+        implementation 'org.apache.parquet:parquet-hadoop:1.11.1'
+        implementation 'org.apache.hadoop:hadoop-common:3.3.0'
+        implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
+        implementation "org.reflections:reflections:0.9.12"
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
+        implementation('net.logstash.logback:logstash-logback-encoder:6.2')
+        implementation "io.prometheus:simpleclient:0.10.0"
 
         runtime project(':documentation')
-        runtime "org.scala-lang:scala-reflect:2.12.+"
         runtime project(":drivers")
 
-        testCompile project(':base:test')
-        testCompile "org.mockito:mockito-core:3.0.+"
-        testCompile "org.scalatest:scalatest_2.12:3.+"
-        testCompile "org.scalacheck:scalacheck_2.12:1.13.+"
-        testCompile 'com.github.stefanbirkner:system-rules:1.19.0'
+        runtime "org.scala-lang:scala-reflect:2.12.13"
 
-        testRuntime "org.apache.derby:derby:10.14.+"
+        testImplementation project(':test')
+        testImplementation project(':util')
+
+        testImplementation "org.mockito:mockito-core:3.7.7"
+        testImplementation "org.scalatest:scalatest_2.12:3.0.8"
+        testImplementation "org.scalacheck:scalacheck_2.12:1.15.2"
+        testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
+        testImplementation "commons-io:commons-io:2.6"
+        testImplementation "commons-lang:commons-lang:2.6"
+        testImplementation "com.google.guava:guava:27.0-jre"
+        testImplementation 'org.slf4j:slf4j-api:1.7.30'
+        testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+        testImplementation "com.github.samtools:htsjdk:2.23.0"
+
+        testRuntime "org.apache.derby:derby:10.15.2.0"
+        testRuntime "org.apache.derby:derbytools:10.15.2.0"
 
         antlr("org.antlr:antlr4:4.7")
     }
-
 
     // Tests
 
@@ -106,7 +111,6 @@ project(':gortools') {
     }
 
     // Distribution
-    apply plugin: 'application'
 
     distributions {
         main {
@@ -121,14 +125,14 @@ project(':gortools') {
     def scripts = [
             'gorpipe'   : ['className'     : 'gorsat.process.GorPipe',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dgor.querylimits.writequota.mb=0',
-                                              '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
+
+            'gorshell'   : ['className'     : 'org.gorpipe.gorshell.GorShell',
+                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
+                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
 
             'gor'       : ['className'     : 'org.gorpipe.gor.cli.GorCLI',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dgor.querylimits.writequota.mb=0',
-                                              '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
 
             'jessica'   : ['override'      : 'startScripts',
@@ -137,8 +141,6 @@ project(':gortools') {
 
             'gormanager': ['className'     : 'org.gorpipe.gor.manager.TableManagerCLI',
                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dgor.querylimits.writequota.mb=0',
-                                              '-Dgor.querylimits.timeout.seconds=0',
                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
 
             'gortool'   : ['className'     : 'org.gorpipe.gor.tools.GorToolsCLI',
@@ -152,8 +154,21 @@ project(':gortools') {
 
 
     mainClassName = "dummy-not-used"
+
+    tasks.distZip.enabled = true
+    tasks.distZip.archiveClassifier = "dist"
+
+    publishing {
+        publications {
+            mavenJavaLibModule(MavenPublication) {
+                if (project.hasProperty('publishToMavenCentral')) {
+                    artifact javadocJar
+                } else {
+                    artifact distZip
+                }
+                artifact sourcesJar
+            }
+        }
+    }
 }
 
-if (file("build.deploy.gradle").exists()) {
-    apply from: "build.deploy.gradle"
-}

@@ -19,9 +19,14 @@
  *
  *  END_COPYRIGHT
  */
+plugins {
+    id 'gor.java-library'
+}
 
 project(':external') {
     dependencies {
-        compile project(':base:exception')
+        implementation project(':base')
+
+        implementation 'org.slf4j:slf4j-api:1.7.30'
     }
 }

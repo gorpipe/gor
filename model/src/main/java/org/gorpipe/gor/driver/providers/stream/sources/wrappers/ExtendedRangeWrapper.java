@@ -22,14 +22,15 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
-import java.io.IOException;
-import java.io.InputStream;
 import org.gorpipe.gor.driver.adapters.PersistentInputStream;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by villi on 24/08/15.
@@ -64,7 +65,6 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     public static final int DEFAULT_MAX_RANGE = 10 * 1024 * 1024;  // 10MB
 
     private final int seekThreshold;
-    private final int maxRange;
 
     ExtendedRangeStream extendedRangeStream;
 
@@ -77,7 +77,6 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     public ExtendedRangeWrapper(StreamSource source, int seekThreshold, int maxRange) {
         super(source);
         this.seekThreshold = seekThreshold;
-        this.maxRange = maxRange;
     }
 
     @Override

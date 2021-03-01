@@ -22,19 +22,20 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.GorCsvSel.{BucketInfo, CsvSelAnalysis}
+import gorsat.Analysis.GorCsvSel.CsvSelAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
+import gorsat.PnBucketTable
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.mutable
 
 class CsvSel extends CommandInfo("CSVSEL",
   CommandArguments("-dose -vcf", "-gc -vs -s -tag -u -hide -threshold", 2),
-  CommandOptions(gorCommand = true, cancelCommand = true))
+  CommandOptions(gorCommand = true, norCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
     if(!(hasOption(args, "-s") || hasOption(args, "-vs"))) {
@@ -53,7 +54,7 @@ class CsvSel extends CommandInfo("CSVSEL",
       sepVal = ""
     }
 
-    val uv = stringValueOfOptionWithDefault(args, "-u","")
+    val uv = stringValueOfOptionWithDefault(args, "-u","3")
 
     val outputRows = hasOption(args, "-tag")
 
@@ -132,7 +133,7 @@ class CsvSel extends CommandInfo("CSVSEL",
         outputHeaderBuilder.append(stringValueOfOption(args, "-tag"))
         outputHeaderBuilder.append("\tvalue")
       } else if (toVCF) {
-        val tags = pipeStep.session.getCache.getObjectHashMap.get(pipeStep.lookupSignature).asInstanceOf[BucketInfo].outputTags
+        val tags = pipeStep.session.getCache.getObjectHashMap.get(pipeStep.lookupSignature).asInstanceOf[PnBucketTable].pnIdxToName
         outputHeaderBuilder.append("\tQUAL")
         outputHeaderBuilder.append("\tFILTER")
         outputHeaderBuilder.append("\tINFO")

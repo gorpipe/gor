@@ -23,8 +23,9 @@
 package gorsat.Analysis
 
 import gorsat.Commands._
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.exceptions.GorDataException
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable
@@ -36,7 +37,7 @@ object GroupAnalysis {
                             useMin: Boolean, useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean,
                             useAvg: Boolean, useStd: Boolean, useSum: Boolean,
                             acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
-                            sepVal: String) extends BinState {
+                            truncate: Boolean, sepVal: String) extends BinState {
 
     case class StatHolder(numCols: Int) {
       val sums = new Array[Double](numCols)
@@ -58,7 +59,11 @@ object GroupAnalysis {
 
     def maxLen(s: String, maxLen: Int = 200): String = {
       if (s.length > maxLen) {
-        s.substring(0, maxLen.min(s.length)) + "..."
+        if (truncate) {
+          s.substring(0, maxLen.min(s.length)) + "..."
+        } else {
+          throw new GorDataException("String is too long")
+        }
       } else {
         s
       }
@@ -165,7 +170,7 @@ object GroupAnalysis {
       for (key <- groupMap.keys.toList.sorted) {
         val sh = groupMap(key)
         val lineBuilder = new mutable.StringBuilder
-        lineBuilder.append(bi.key)
+        lineBuilder.append(bi.chr)
         lineBuilder.append('\t')
         if (useSegment) {
           lineBuilder.append(bi.sta)
@@ -351,20 +356,40 @@ object GroupAnalysis {
                               useMin: Boolean, useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean,
                               useAvg: Boolean, useStd: Boolean, useSum: Boolean,
                               acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int],
-                              setLen: Int, sepVal: String) extends BinFactory {
+                              setLen: Int, truncate: Boolean, sepVal: String) extends BinFactory {
     def create: BinState =
       AggregateState(binSize, useSegment, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
-        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, sepVal)
+        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal)
   }
 
   case class Aggregate(binSize: Int, useCount: Boolean, useCdist: Boolean, useMax: Boolean, useMin: Boolean,
                        useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean, useAvg: Boolean,
                        useStd: Boolean, useSum: Boolean,
                        acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
-                       sepVal: String, outgoingHeader: RowHeader) extends
+                       truncate: Boolean, sepVal: String, outgoingHeader: RowHeader) extends
     BinAnalysis(RegularRowHandler(binSize), BinAggregator(
       AggregateFactory(binSize, binSize > 1, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
-        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2, 1)) {
+        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2, 1)) {
+
+
+    override def isTypeInformationMaintained: Boolean = outgoingHeader != null
+
+    override def setRowHeader(header: RowHeader): Unit = {
+      rowHeader = header
+      if(pipeTo != null && outgoingHeader != null) {
+        pipeTo.setRowHeader(outgoingHeader.propagateTypes(rowHeader))
+      }
+    }
+  }
+
+  case class OrderedAggregate(binSize: Int, useCount: Boolean, useCdist: Boolean, useMax: Boolean, useMin: Boolean,
+                       useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean, useAvg: Boolean,
+                       useStd: Boolean, useSum: Boolean,
+                       acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
+                       truncate: Boolean, sepVal: String, outgoingHeader: RowHeader) extends
+    BinAnalysis(GroupingColumnRowHandler(binSize, grCols.toArray), BinAggregator(
+      AggregateFactory(binSize, binSize > 1, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
+        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2, 1)) {
 
 
     override def isTypeInformationMaintained: Boolean = outgoingHeader != null
@@ -381,10 +406,10 @@ object GroupAnalysis {
                             useMin: Boolean, useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean,
                             useAvg: Boolean, useStd: Boolean, useSum: Boolean,
                             acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
-                            sepVal: String, outgoingHeader: RowHeader) extends
+                            truncate: Boolean, sepVal: String, outgoingHeader: RowHeader) extends
     BinAnalysis(SlidingRowHandler(binSize, slideSteps), BinAggregator(
       AggregateFactory(binSize, binSize > 1, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg,
-        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2 * 2 * slideSteps, 2 * 1 * slideSteps)) {
+        useStd, useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2 * 2 * slideSteps, 2 * 1 * slideSteps)) {
 
     override def isTypeInformationMaintained: Boolean = outgoingHeader != null
 
@@ -400,10 +425,10 @@ object GroupAnalysis {
                             useMin: Boolean, useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean,
                             useAvg: Boolean, useStd: Boolean, useSum: Boolean,
                             acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
-                            sepVal: String, outgoingHeader: RowHeader) extends
+                            truncate: Boolean, sepVal: String, outgoingHeader: RowHeader) extends
     BinAnalysis(ChromRowHandler(session), BinAggregator(
       AggregateFactory(1, true, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg, useStd,
-        useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2, 1)) {
+        useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2, 1)) {
 
     override def isTypeInformationMaintained: Boolean = outgoingHeader != null
 
@@ -419,10 +444,10 @@ object GroupAnalysis {
                              useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean, useAvg: Boolean,
                              useStd: Boolean, useSum: Boolean,
                              acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
-                             sepVal: String, outgoingHeader: RowHeader) extends
+                             truncate: Boolean, sepVal: String, outgoingHeader: RowHeader) extends
     BinAnalysis(GenomeRowHandler(), BinAggregator(
       AggregateFactory(1, true, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg, useStd,
-        useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2, 1)) {
+        useSum, acCols, icCols, fcCols, grCols, setLen, truncate, sepVal), 2, 1, useKeyForChrom = true)) {
 
     override def isTypeInformationMaintained: Boolean = outgoingHeader != null
 

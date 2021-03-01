@@ -70,6 +70,12 @@ Options
 |                   |  properly aggregated and annotations of row belonging to those group may be incorrect.              |
 |                   |  A special binsize value, "gene", can be used to denote 3Mbp in conjunction with the range option.  |
 +-------------------+-----------------------------------------------------------------------------------------------------+
+| ``-ordered``      |  Assume the grouping columns are ordered.                                                           |
++-------------------+-----------------------------------------------------------------------------------------------------+
+
+When using GRANNO in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
+significantly. Note that there are no checks to see if the order is correct - only use this option if the input
+stream is correctly ordered.
 
 
 Examples

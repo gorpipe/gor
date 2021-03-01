@@ -22,13 +22,13 @@
 
 package gorsat.parser
 
-import gorsat.StringUtilities
+import gorsat.Utilities.StringUtilities
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes._
 import gorsat.parser.ParseUtilities.{eval, system}
 import gorsat.process.GorJavaUtilities.CmdParams
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 
 object CalcFunctions {
   /**
@@ -126,7 +126,8 @@ object CalcFunctions {
     cvp => {
       if (!mapDefined) {
         mapDefined = true
-        val slist = ex2(cvp).split(",",-1).map(_.trim)
+        val s2 = ex2(cvp)
+        val slist = s2.split(",",-1).map(_.trim)
         if (slist.length < 2) throw new GorParsingException("The map parameter needs at least two values. Example: ...|calc x DECODE(col,'a,1')")
         val n = slist.length/2
         var i = 0
@@ -136,9 +137,10 @@ object CalcFunctions {
         }
         if (slist.length > 2*n) elseValue = slist.last
       }
-      myMap.get(ex1(cvp)) match {
+      val s1 = ex1(cvp)
+      myMap.get(s1) match {
         case Some(x) => x
-        case None => if (elseValue != null) elseValue else ex1(cvp)
+        case None => if (elseValue != null) elseValue else s1
       }
     }
   }
@@ -157,19 +159,19 @@ object CalcFunctions {
   }
 
   def onceDouble(ex: dFun): dFun = {
-    var onceVal: Double = Double.NaN
+    var onceVal: Double = 0.0
+    var valNotSet = true
     cvp => {
-      if (onceVal == Double.NaN) onceVal = ex(cvp)
+      if (valNotSet) { onceVal = ex(cvp); valNotSet = false }
       onceVal
     }
   }
 
   def onceInt(ex: iFun): iFun = {
-    var onceVal: Int = Int.MinValue
-    // worst case if the values are Int.MinValue the function will always be evaluated, otherwise we could use java Integer null and would need to cast to scala Int
-
+    var onceVal: Int = 0
+    var valNotSet = true
     cvp => {
-      if (onceVal == Int.MinValue) onceVal = ex(cvp)
+      if (valNotSet) { onceVal = ex(cvp); valNotSet = false }
       onceVal
     }
   }

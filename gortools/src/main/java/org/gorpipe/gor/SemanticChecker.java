@@ -22,15 +22,13 @@
 
 package org.gorpipe.gor;
 
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.GorScriptBaseVisitor;
-import org.gorpipe.gor.GorScriptParser;
 import gorsat.Commands.CommandInfo;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.process.GorPipeCommands;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.gorpipe.exceptions.GorParsingException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -40,8 +38,8 @@ public class SemanticChecker extends GorScriptBaseVisitor<Boolean> {
         GorPipeCommands.register();
     }
 
-    private Set<String> virtualRelationsCreated = new HashSet<>();
-    private Set<String> virtualRelationsReferenced = new HashSet<>();
+    private final Set<String> virtualRelationsCreated = new HashSet<>();
+    private final Set<String> virtualRelationsReferenced = new HashSet<>();
 
     public void validate(String input) {
         SyntaxChecker syntaxChecker = new SyntaxChecker();

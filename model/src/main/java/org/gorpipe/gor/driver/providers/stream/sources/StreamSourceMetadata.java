@@ -22,9 +22,10 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources;
 
+import org.gorpipe.gor.driver.meta.SourceMetadata;
+
 import java.io.IOException;
 import java.util.Map;
-import org.gorpipe.gor.driver.meta.SourceMetadata;
 
 /**
  * Metadata for stream sources.

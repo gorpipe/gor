@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.manager;
 
+import org.apache.commons.io.IOUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.TableLock;
-import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +40,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
-import static org.gorpipe.gor.table.PathUtils.resolve;
 
 public class TestTableManagerUtil {
     private static final Logger log = LoggerFactory.getLogger(TestTableManagerUtil.class);

@@ -24,7 +24,7 @@ package gorsat.Macros
 
 import gorsat.Commands.CommandArguments
 import gorsat.Script._
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 /**
   * Macro which expands report builder (*.yml) files into gor script.
@@ -36,11 +36,12 @@ class TableFunction extends MacroInfo("TABLEFUNCTION", CommandArguments("", "", 
                                           context: GorContext,
                                           doHeader: Boolean,
                                           inputArguments: Array[String],
-                                          options: Array[String]): MacroParsingResult = {
+                                          options: Array[String],
+                                          skipCache: Boolean): MacroParsingResult = {
 
     var creates = Map.empty[String, ExecutionBlock]
     val newQuery = "gor " + create.query.substring(this.name.length+1)
-    creates += (createKey -> ExecutionBlock(create.groupName, newQuery, create.dependencies, create.batchGroupName))
+    creates += (createKey -> ExecutionBlock(create.groupName, newQuery, create.signature, create.dependencies, create.batchGroupName))
 
     MacroParsingResult(creates, null)
   }

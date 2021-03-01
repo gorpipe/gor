@@ -22,10 +22,10 @@
 
 package gorsat.parser
 
-import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
-import gorsat.parser.ParseUtilities.{allelesFoundVCF, fatherGT, genTag, gtStat, motherGT}
-import gorsat.process.GorJavaUtilities
 import gorsat.parser.FunctionSignature._
+import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
+import gorsat.parser.ParseUtilities._
+import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.GorParsingException
 
 object GenomeFunctions {
@@ -56,8 +56,8 @@ object GenomeFunctions {
     functions.register("VCFFORMATTAG", getSignatureStringStringString2String(vcfFormatTag), vcfFormatTag _)
     functions.register("IUPACGTSTAT", getSignatureStringStringString2String(iupacGtStat), iupacGtStat _)
     functions.register("TAG", getSignatureStringStringString2String(tag), tag _)
-    functions.register("IUPACMA", getSignatureStringStringStringString2String(iupacma), iupacma _)
-    functions.register("IUPACFA", getSignatureStringStringStringString2String(iupacfa), iupacfa _)
+    functions.register("IUPACMA", getSignatureStringStringString2String(iupacma), iupacma _)
+    functions.register("IUPACFA", getSignatureStringStringString2String(iupacfa), iupacfa _)
     functions.register("IOOA", getSignatureString2Int(iooa), iooa _)
     functions.register("CHARS2GT", getSignatureStringDouble2String(chars2Gt), chars2Gt _)
     functions.register("CHARSPHASED2GT", getSignatureStringDouble2String(charsPhased2Gt), charsPhased2Gt _)
@@ -148,13 +148,13 @@ object GenomeFunctions {
     }
   }
 
-  def iupacma(ex1: sFun, ex2: sFun, ex3: sFun, ex4: sFun): sFun = {
+  def iupacma(ex1: sFun, ex2: sFun, ex3: sFun): sFun = {
     cvp => {
       motherGT(ex1(cvp), ex2(cvp), ex3(cvp))
     }
   }
 
-  def iupacfa(ex1: sFun, ex2: sFun, ex3: sFun, ex4: sFun): sFun = {
+  def iupacfa(ex1: sFun, ex2: sFun, ex3: sFun): sFun = {
     cvp => {
       fatherGT(ex1(cvp), ex2(cvp), ex3(cvp))
     }
@@ -190,7 +190,7 @@ object GenomeFunctions {
 
   private def getEndOfField(formatValue: String, start: Int) = {
     val ix = formatValue.indexOf(':', start)
-    var nextColonPos = if (ix > -1) ix else formatValue.length
+    val nextColonPos = if (ix > -1) ix else formatValue.length
     nextColonPos
   }
 

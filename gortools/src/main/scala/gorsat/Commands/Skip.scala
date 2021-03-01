@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.SkipAnalysis
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Skip extends CommandInfo("SKIP",
   CommandArguments("", "", 0, 1),

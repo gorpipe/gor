@@ -22,8 +22,7 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.Analysis
-import gorsat.Commands.RowHeader
+import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.exceptions.GorParsingException
 
 case class SetColTypeAnalysis(outgoingHeader: RowHeader) extends Analysis {

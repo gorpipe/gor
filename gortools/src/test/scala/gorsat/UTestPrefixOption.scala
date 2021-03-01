@@ -25,13 +25,14 @@ package gorsat
 import java.io._
 import java.nio.file.Files
 
-import scala.io.Source
-import org.gorpipe.model.genome.files.binsearch.GorIndexType
+import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.model.gor.RowObj
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfter, FunSuite}
+
+import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class UTestPrefixOption extends FunSuite with BeforeAndAfter {
@@ -50,11 +51,11 @@ class UTestPrefixOption extends FunSuite with BeforeAndAfter {
     val headerFileCont = List("##This is header line", "##This is another header line")
     val headerFilePath = writeContentToFile("header.tsv", headerFileCont)
 
-    val inputFileCont = Array("CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
+    val inputFileCont = Array("#CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
 
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
-    val outFile = Outputs.OutFile(outPutFileName, inputFileCont.head, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
+    val outFile = Outputs.OutFile(outPutFileName, inputFileCont.head, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
     outFile.setup
     outFile.process(RowObj(inputFileCont(1)))
     outFile.finish
@@ -81,7 +82,7 @@ class UTestPrefixOption extends FunSuite with BeforeAndAfter {
 
     val outPutFileName = new File(tmpFolder, "output.gorz").getAbsolutePath
 
-    val outFile = Outputs.OutFile(outPutFileName, inputFileCont.head, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
+    val outFile = Outputs.OutFile(outPutFileName, inputFileCont.head, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
     outFile.setup
     outFile.process(RowObj(inputFileCont(1)))
     outFile.finish
@@ -104,7 +105,7 @@ class UTestPrefixOption extends FunSuite with BeforeAndAfter {
 
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
-    val outFile = Outputs.OutFile(outPutFileName, "", true, false, false, false, GorIndexType.NONE, Option(""))
+    val outFile = Outputs.OutFile(outPutFileName, "", true, false, false, false, false, GorIndexType.NONE, Option(""))
     outFile.setup
     outFile.process(RowObj(inputFileCont(0)))
     outFile.finish
@@ -121,7 +122,7 @@ class UTestPrefixOption extends FunSuite with BeforeAndAfter {
     val headerFileCont = List("##Headerline1", "##Headerline2")
     val headerFilePath = writeContentToFile("header.tsv", headerFileCont)
 
-    val inputFileCont = List("CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
+    val inputFileCont = List("#CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
     val inputFilePath = writeContentToFile("input.gor", inputFileCont)
 
     val outputFilePath = tmpFolder.getAbsoluteFile + "/output.vcf"

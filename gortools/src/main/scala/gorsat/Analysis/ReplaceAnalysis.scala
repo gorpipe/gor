@@ -22,14 +22,11 @@
 
 package gorsat.Analysis
 
-import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorSession
-import gorsat.Commands.Analysis
-import gorsat.Commands.{CommandParseUtilities, RowHeader}
+import gorsat.Commands.{Analysis, CommandParseUtilities, RowHeader}
 import gorsat.parser.ReplaceCvp
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
 
 case class ReplaceAnalysis(context: GorContext, executeNor: Boolean, paramString: String, header: String,
                            columns: Array[Int]) extends Analysis with Expressions

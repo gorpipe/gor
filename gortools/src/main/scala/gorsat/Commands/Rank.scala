@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import gorsat.Analysis.RankAnalysis._
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.mutable.ListBuffer
 

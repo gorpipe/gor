@@ -27,13 +27,12 @@ import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.sql.DriverManager
 
-import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import Commands.CommandParseUtilities
 import process.{GenericSessionFactory, GorInputSources, GorPipeCommands, PipeInstance}
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.DbSource
+import org.gorpipe.gor.model.DbSource
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.iterators.RowSource
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith

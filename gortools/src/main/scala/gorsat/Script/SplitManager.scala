@@ -27,7 +27,7 @@ import gorsat.DynIterator.DynamicRowSource
 import gorsat.Script.SplitManager.{MAXIMUM_NUMBER_OF_SPLITS, WHERE_SPLIT_WINDOW}
 import gorsat.process.GorPipeCommands
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.JavaConverters._
 
@@ -45,12 +45,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
     throw new GorParsingException(s"Too many splits for query. The maximum allowed number of splits is $MAXIMUM_NUMBER_OF_SPLITS but the current query splits into ${chromosomeSplits.size} jobs")
   }
 
-  def expandCommand(commandToExecute: String, batchGroupName: String): CommandGroup = {
+  def expandCommand(commandToExecute: String, batchGroupName: String, cachePath: String = null): CommandGroup = {
     var expandedCommands: List[CommandEntry] = List.empty[CommandEntry]
     var removeFromCreates = false
 
     if (commandToExecute.contains(replacementPattern)) {
-      val (splitOpt, splits, splitOverlap) = ScriptParsers.splitOptionParser(commandToExecute)
+      val (splitOpt, splits, splitOverlap, _) = ScriptParsers.splitOptionParser(commandToExecute)
 
       chromosomeSplits.foreach(k => {
         val (n, c, g) = (groupName.replace(replacementPattern, k._1),
@@ -63,12 +63,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
           val repstr = if (splitOverlap != "") "-" + splitOpt + splits + ":" + splitOverlap + " " else "-" + splitOpt + splits + " "
           mc = mc.replace(repstr, "")
         }
-        expandedCommands ::= CommandEntry(n, mc, g)
+        expandedCommands ::= CommandEntry(n, mc, g, cachePath)
       })
 
       removeFromCreates = true
     } else {
-      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName)
+      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName, cachePath)
     }
 
     CommandGroup(expandedCommands, removeFromCreates)
@@ -97,10 +97,10 @@ object SplitManager {
     }
 
     if (commandToExecute.contains(REGULAR_REPLACEMENT_PATTERN) || commandToExecute.contains(SPLIT_REPLACEMENT_PATTERN)) {
-      val (splitOpt, splits, splitOverlap) = ScriptParsers.splitOptionParser(commandToExecute)
+      val (splitOpt, splits, splitOverlap, splitZero) = ScriptParsers.splitOptionParser(commandToExecute)
 
       if (CommandParseUtilities.isNestedCommand(splits)) {
-        splitManager = SplitManager(groupName, parseNestedSplit(context, splits), splitManager.replacementPattern)
+        splitManager = SplitManager(groupName, parseNestedSplit(context, splits, if(splitZero) 0 else 1), splitManager.replacementPattern)
       } else if (splitOpt != "") {
         splitManager = SplitManager(groupName, parseArbitrarySplit(context.getSession.getProjectContext.getReferenceBuild.getBuildSize, splits.toInt,
           if (splitOverlap == "") 0 else splitOverlap.toInt), splitManager.replacementPattern)
@@ -167,7 +167,7 @@ object SplitManager {
     chromosomeSplits
   }
 
-  def parseNestedSplit(context: GorContext, query: String): Map[String, SplitEntry] = {
+  def parseNestedSplit(context: GorContext, query: String, base: Int = 1): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
     val iteratorCommand = CommandParseUtilities.parseNestedCommand(query).trim
@@ -183,8 +183,9 @@ object SplitManager {
           i = 1
           lastChr = row.chr
         }
+        val pos = row.pos + base
         val end = row.colAsInt(2)
-        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr + ":" + row.pos + "-" + end, 0.max(row.pos) + "<= #2i and #2i < " + end))
+        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr + ":" + pos + "-" + end, 0.max(pos) + "<= #2i and #2i < " + end))
         i += 1
       }
     } finally {

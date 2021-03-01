@@ -22,19 +22,19 @@
 
 package org.gorpipe.gor.table;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.model.util.Util;
-import org.gorpipe.util.Pair;
+import org.gorpipe.gor.util.StringUtil;
+import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.collection.IntArray;
-import org.gorpipe.util.string.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,200 +50,252 @@ import java.util.stream.Stream;
  * <p>
  * Format of the gord dictionary file
  * <p>
- * [<meta-information lines>]
- * [<header line>]
- * <data lines>
+ * {@literal [<meta-information lines>]}
+ * {@literal [<header line>]}
+ * {@literal <data lines>}
  * <p>
  * The format of the meta-information lines is:
  * <p>
- * [## <key>=<value>]
+ * {@literal [## <key>=<value>]}
  * ...
  * <p>
- * <p>
- * <key>       Attribute name.  Not case sensitive.
- * <value>     Attribute value.
+ * {@literal <key>       Attribute name.  Not case sensitive.}
+ * {@literal <value>     Attribute value.}
  * <p>
  * Reserved key values are:
  * <p>
- * fileformat      - Version of the file format.
- * created         - Creation date of the file
- * build           - Reference data build version.
- * columns         - Column definition for the gor files in the dictionary.
- * sourceColumn    - Name of the source column.
+ * FILE_FORMAT      - Version of the file format.
+ * CREATED         - Creation date of the file
+ * BUILD           - Reference data build version.
+ * COLUMNS         - Column definition for the gor files in the dictionary.
+ * SOURCE_COLUMNS    - Name of the source column.
  * <p>
  * Format of the header line is:
  * <p>
- * [# <column name 1>\t<column name 2>\t<column name 3> ...]
+ * {@literal [# <column name 1>\t<column name 2>\t<column name 3> ...]}
  * <p>
  * <p>
  * Each data line is a tab separated list of columns, described as:
  * <p>
- * <file>[[|<flags>]|<bucket>][\t<alias>[\t<startchrom>\t<startpos>\t<endchrom>\t<endpos>\t[tags]]]
+ * {@literal <file>[[|<flags>]|<bucket>][\t<alias>[\t<startchrom>\t<startpos>\t<endchrom>\t<endpos>\t[tags]]]}
  * <p>
  * where:
  * <p>
- * <file>              Abosolute path or relative (to the location of the dictionary) path to the main data file.
- * <flags>             Comma seprated list of flags applicable to the data file.  Available flags:
+ * {@literal <file>              Abosolute path or relative (to the location of the dictionary) path to the main data file.}
+ * {@literal <flags>             Comma seprated list of flags applicable to the data file.  Available flags:}
  * D - The file is marked as deleted.  This means the file has been deleted and should be
  * ignored when reading from the bucket.
- * <bucket>            Relative path ot the bucket file <file> belongs to.
- * <alias>             Alias for <file>.  The alias specifies "source" value of <file>.  If no tags are specified, <alias> is used
- * as tag for <file>.  Can be empty.
- * <startchrom>        Filter start chromosome, e.g. chr1.  Can be empty, if all range elements are empty.
- * <startpos>          Filter start pos. Can be empty, if all range elements are empty.
- * <endchrom>          Filter stop chromosome, e.g. chr3. Can be empty, if all range elements are empty.
- * <endpos>            Filter stop pos.  Can be empty, if all range elements are empty.
- * <tags>              Comma separated list of tags:  <tagval1>[,<tagval2>...]
+ * {@literal <bucket>            Relative path ot the bucket file <file> belongs to.}
+ * {@literal <alias>             Alias for <file>.  The alias specifies "source" value of <file>.  If no tags are specified, <alias> is used}
+ * {@literal as tag for <file>.  Can be empty.}
+ * {@literal <startchrom>        Filter start chromosome, e.g. chr1.  Can be empty, if all range elements are empty.}
+ * {@literal <startpos>          Filter start pos. Can be empty, if all range elements are empty.}
+ * {@literal <endchrom>          Filter stop chromosome, e.g. chr3. Can be empty, if all range elements are empty.}
+ * {@literal <endpos>            Filter stop pos.  Can be empty, if all range elements are empty.}
+ * {@literal <tags>              Comma separated list of tags:  <tagval1>[,<tagval2>...]}
  * <p>
  * <p>
  * Notes:
- * 1. The <file> + <filter> is a unique key into the file.  Note, this always exact match, i.e. filter that is a subset of another filter
+ * 1. The {@literal <file> + <filter>} is a unique key into the file.  Note, this always exact match, i.e. filter that is a subset of another filter
  * will be treated as different.  This could be improved by banning overlapping filters.
- * 2. If <tags> are specified then they are used for filtering (but the <alias> is not).  If no <tags> are specified <alias> is used as
+ * {@literal 2. If <tags> are specified then they are used for filtering (but the <alias> is not).  If no {@literal <tags>} are specified {@literal <alias>} is used as}
  * tags for filtering.
- * 3. <file> could be bucket file.
+ * 3. {@literal <file>} could be bucket file.
  * 4. Seems in general alias is used for normal files but tags for the bucket files.
  * 5. We assume that either all files have alias or none of them.
  */
 public class Dictionary {
-
     private static final Logger log = LoggerFactory.getLogger(Dictionary.class);
-    private boolean isDictionaryWithBuckets = false; // source col from dictionary files can be hiden if no buckets and no -f filters
-    private final String commonRoot;
-    protected DictionaryLine[] files;
-    private DictionaryLine fallbackLineForHeader = null;
-    private FileReference dictFileParent = null;
-    private Set<String> validTags;    //Set containing all not deleted tags in the dictionary.
-    private final boolean hasTags;  //Whether the user has specified any tags to filter the dictionary with.
-    private boolean bucketHasDeletedFile;
-    final static ConcurrentHashMap<String, DictionaryCacheObject> dictCache = new ConcurrentHashMap<>();   //A map from dictionaries to the cache objects.
+    final private static Map<String, Dictionary> dictCache = new ConcurrentHashMap<>();   //A map from dictionaries to the cache objects.
 
-    /**
-     * When a dictionary is read for the first time we make a hash map mapping tags to its corresponding lines.
-     * We also store an array of the bucketEntry objects for the dictionary and an hashmap from the buckets names to their
-     * corresponding indices.
-     */
-    private static class DictionaryCacheObject {
-        final LinkedHashMap<String, IntArray> tagsToActiveLines;    //A map from tags to its corresponding lines.
-        final String fileSignature;  //The file signature of the dictionary. Usually an md5 sum.
-        final FileReference fileReference;  //The dictFileParent
-        final DictionaryLine[] activeDictionaryLines;  //All dictionaryLines which are not deleted
-        final HashMap<String, Integer> mapBucketIndex; //Map from bucketNames to corresponding indices.
-        final int[] bucketTotalCount; //bucketCount[i] = number of files in bucket i.
-        final int[] bucketActiveCount;
-        final String[] bucketResetNames; //bucketResetNames[i] = resetFilePath(...).physical of bucket i.
-        final Set<String>[] bucketTags; //bucketTags[i] = set of tags in bucket i.
-        final boolean bucketHasDeletedFile;   //Is there any deleted file in a bucket in the dictionary?
-        final Set<String> validTags;  //Set of all tags which are not deleted.
-        final ConcurrentHashMap<String, Pair<DictionaryLine[], Boolean>> tagsToListCache = new ConcurrentHashMap<>();
 
-        DictionaryCacheObject(String fileSignature, LinkedHashMap<String, IntArray> tagsToActiveLines, FileReference fileReference, DictionaryLine[] activeDictionaryLines,
-                              HashMap<String, Integer> mapBucketIndex, int[] bucketTotalCount, int[] bucketActiveCount, String[] bucketResetNames, Set<String>[] bucketTags,
-                              boolean bucketHasDeletedFile, Set<String> validTags) {
-            this.fileSignature = fileSignature;
-            this.tagsToActiveLines = tagsToActiveLines;
-            this.fileReference = fileReference;
-            this.activeDictionaryLines = activeDictionaryLines;
-            this.mapBucketIndex = mapBucketIndex;
-            this.bucketTotalCount = bucketTotalCount;
-            this.bucketResetNames = bucketResetNames;
-            this.bucketTags = bucketTags;
-            this.bucketHasDeletedFile = bucketHasDeletedFile;
-            this.validTags = validTags;
-            this.bucketActiveCount = bucketActiveCount;
-        }
+    public final boolean isDictionaryWithBuckets; // source col from dictionary files can be hiden if no buckets and no -f filters
+    final private Map<String, int[]> tagsToActiveLines;    //A map from tags to its corresponding lines.
+    final private String fileSignature;  //The file signature of the dictionary. Usually an md5 sum.
+    final private DictionaryLine[] activeDictionaryLines;  //All dictionaryLines which are not deleted
+    final private Map<String, Integer> mapBucketIndex; //Map from bucketNames to corresponding indices.
+    final private int[] bucketTotalCount; //bucketCount[i] = number of files in bucket i.
+    final private int[] bucketActiveCount;
+    final private String[] bucketResetNames; //bucketResetNames[i] = resetFilePath(...).physical of bucket i.
+    final private Set<String>[] bucketTags; //bucketTags[i] = set of tags in bucket i.
+    final private Multimap<String, String> bucketHasDeletedFile;   //Is there any deleted file in a bucket in the dictionary?
+    final private Set<String> validTags;    //Set containing all not deleted tags in the dictionary.
+    final private String path;
+    private final boolean useCache;
+
+    private final Map<String, DictionaryLine[]> tagsToListCache;
+
+    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
+        return getDictionary(path, uniqueID, commonRoot, true);
     }
 
-    public Dictionary(String path, boolean allowBucketAccess, Set<String> queryTags,
-                      String commonRoot, String uniqueID) {
-        this(path, allowBucketAccess, queryTags, commonRoot, uniqueID, false);
-    }
-
-    public Dictionary(String path, boolean allowBucketAccess, Set<String> queryTags,
-                      String commonRoot, String uniqueID, boolean isSilentTagFilter) {
-        this(path, allowBucketAccess, queryTags, commonRoot, uniqueID, queryTags != null && !queryTags.isEmpty(), isSilentTagFilter, true);
-    }
-
-    public Dictionary(String path, boolean allowBucketAccess, Set<String> queryTags, String commonRoot,
-                      String uniqueID, boolean hasTags, boolean isSilentTagFilter, boolean useDictionaryCache) throws GorDataException {
-        this.hasTags = hasTags;
-        this.commonRoot = commonRoot;
-        if (useDictionaryCache) {
+    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot, boolean useCache) {
+        if (useCache) {
             if (uniqueID == null || uniqueID.equals("")) {
                 dictCache.remove(path);
-                parseDictionary(path, allowBucketAccess, queryTags, isSilentTagFilter);
+                return processDictionary(path, uniqueID, commonRoot, true);
             } else {
-                final DictionaryCacheObject cache;
-                try {
-                    cache = dictCache.compute(path, (ppath, cacheObject) -> {
-                        if (cacheObject == null || !cacheObject.fileSignature.equals(uniqueID)) {
-                            return generateCache(ppath, uniqueID);
-                        } else {
-                            return cacheObject;
-                        }
-                    });
-                } catch (Exception e) {
-                    dictCache.remove(path);
-                    throw e;
-                }
-                this.validTags = cache.validTags;
-                final String orderedTags = orderTags(queryTags);
-                final Set<String> badTags = new HashSet<>();
-                final Pair<DictionaryLine[], Boolean> fileListAndMore =
-                        cache.tagsToListCache.computeIfAbsent(orderedTags,
-                                s -> parseFileListFromCache(cache, allowBucketAccess, queryTags, badTags));
-
-                // See if we should throw an error and if we should remove the key from the cache
-                boolean hasInvalidTags = false;
-
-                // Removing the entry from cache due to invalid tags should be separate from throwing the data exception
-                if (hasInvalidTags(badTags)) {
-                    cache.tagsToListCache.remove(orderedTags);
-                    hasInvalidTags = true;
-                }
-
-                // Here we throw the data exception if the call is not silent
-                if (hasInvalidTags && !isSilentTagFilter) {
-                    throw new GorDataException("Invalid Source Filter for dictionary file: " + path + ". Following are not in dictionary " + String.join(",", badTags));
-                }
-                this.files = fileListAndMore.getFormer();
-                if (this.files.length == 0 && cache.activeDictionaryLines.length > 0) this.fallbackLineForHeader = cache.activeDictionaryLines[0];
-                this.isDictionaryWithBuckets = fileListAndMore.getLatter();
+                return dictCache.compute(path, (p, d) -> {
+                    if (d == null || !d.fileSignature.equals(uniqueID)) {
+                        return processDictionary(p, uniqueID, commonRoot, true);
+                    } else {
+                        return d;
+                    }
+                });
             }
         } else {
-            parseDictionary(path, allowBucketAccess, queryTags, isSilentTagFilter);
+            return processDictionary(path, uniqueID, commonRoot, false);
         }
+    }
+
+    private Dictionary(String path, String uniqueId, Map<String, int[]> tagsToActiveLines,
+                       DictionaryLine[] activeDictionaryLines, Map<String, Integer> mapBucketIndex,
+                       int[] bucketTotalCount, int[] bucketActiveCount, String[] bucketResetNames,
+                       Set<String>[] bucketTags, Multimap<String, String> bucketHasDeletedFile, Set<String> validTags,
+                       boolean useCache) {
+        this.path = path;
+        this.fileSignature = uniqueId;
+        this.tagsToActiveLines = tagsToActiveLines;
+        this.activeDictionaryLines = activeDictionaryLines;
+        this.mapBucketIndex = mapBucketIndex;
+        this.bucketTotalCount = bucketTotalCount;
+        this.bucketActiveCount = bucketActiveCount;
+        this.bucketResetNames = bucketResetNames;
+        this.bucketTags = bucketTags;
+        this.bucketHasDeletedFile = bucketHasDeletedFile;
+        this.validTags = validTags;
+        this.isDictionaryWithBuckets = this.bucketTotalCount.length > 0;
+        this.useCache = useCache;
+        this.tagsToListCache = this.useCache ? new ConcurrentHashMap<>() : null;
+    }
+
+    public DictionaryLine[] getSources(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
+        final DictionaryLine[] toReturn;
+        final Set<String> badTags = new HashSet<>();
+        if (this.useCache) {
+            final String orderedTags = orderTags(tags);
+            toReturn = tagsToListCache.compute(orderedTags, (key, list) -> list == null ? generateList(tags, allowBucketAccess, badTags) : list);
+            // Removing the entry from cache due to invalid tags should be separate from throwing the data exception
+            if (badTags.size() > 0) {
+                tagsToListCache.remove(orderedTags);
+            }
+        } else {
+            toReturn = generateList(tags, allowBucketAccess, badTags);
+        }
+        final boolean hasInvalidTags = badTags.size() > 0;
+
+        // Here we throw the data exception if the call is not silent
+        if (hasInvalidTags && !isSilentTagFilter) {
+            throwBadTagException(badTags);
+        }
+        if (toReturn.length == 0) {
+            //Must return a dummy line.
+            if (this.activeDictionaryLines.length > 0) {
+                return new DictionaryLine[] {this.activeDictionaryLines[0]};
+            } else {
+                throw new GorDataException("Dictionary " + this.path + " has no active lines.");
+            }
+        } else {
+            return toReturn;
+        }
+    }
+
+    private DictionaryLine[] generateList(Set<String> tags, boolean allowBucketAccess, Set<String> badTags) {
+        final int[] filesToOptimize;
+        final IntArray bucketUsedCounts = new IntArray();
+        final IntArray bucketTotalCount = new IntArray();
+        final List<String> resetBucketNames = new ArrayList<>();
+        final Map<String, Integer> newBucketToIdx;
+        final int[] bucketUsedCountsArray;
+        final int[] bucketTotalCountArray;
+        final String[] resetBucketNamesArray;
+        final Set<String>[] bucketTagsArray;
+        int numberOfFilesWithoutBucket = 0;
+        final List<Set<String>> bucketTagsList = new ArrayList<>();
+
+        if (tags != null && tags.size() > 0) {
+            Set<Integer> filesToOptimizeTmp = new LinkedHashSet<>();
+            newBucketToIdx = new HashMap<>();
+            for (String tag : tags) {
+                if (this.validTags.contains(tag)) {
+                    for (int i : this.tagsToActiveLines.get(tag)) {
+                        filesToOptimizeTmp.add(i);
+                        final String bucket = this.activeDictionaryLines[i].bucket;
+                        if (bucket == null) numberOfFilesWithoutBucket++;
+                        else {
+                            final int bucketIdx = newBucketToIdx.computeIfAbsent(bucket, bucketbucket -> {
+                                bucketUsedCounts.add(0);
+                                final int idx = this.mapBucketIndex.get(bucketbucket);
+                                bucketTotalCount.add(this.bucketTotalCount[idx]);
+                                resetBucketNames.add(this.bucketResetNames[idx]);
+                                bucketTagsList.add(this.bucketTags[idx]);
+                                return newBucketToIdx.size();
+                            });
+                            bucketUsedCounts.increment(bucketIdx);
+                        }
+                    }
+                } else badTags.add(tag);
+            }
+            filesToOptimize = new int[filesToOptimizeTmp.size()];
+            int idx = 0;
+            for (int i : filesToOptimizeTmp) filesToOptimize[idx++] = i;
+            bucketUsedCountsArray = bucketUsedCounts.toArray();
+            bucketTotalCountArray = bucketTotalCount.toArray();
+            resetBucketNamesArray = resetBucketNames.toArray(new String[0]);
+            bucketTagsArray = bucketTagsList.toArray(new Set[0]);
+        } else {
+            filesToOptimize = new int[this.activeDictionaryLines.length];
+            for (int i = 0; i < filesToOptimize.length; i++) {
+                if (this.activeDictionaryLines[i].bucket == null) numberOfFilesWithoutBucket++;
+                filesToOptimize[i] = i;
+            }
+            bucketUsedCountsArray = this.bucketActiveCount;
+            bucketTotalCountArray = this.bucketTotalCount;
+            resetBucketNamesArray = this.bucketResetNames;
+            newBucketToIdx = this.mapBucketIndex;
+            bucketTagsArray = this.bucketTags;
+        }
+
+        final DictionaryLine[] fileList;
+        if (allowBucketAccess && this.bucketTotalCount.length != 0) {
+            fileList = getOptimizedFileList(bucketTotalCountArray, bucketUsedCountsArray, bucketTagsArray, filesToOptimize, numberOfFilesWithoutBucket,
+                    this.activeDictionaryLines, newBucketToIdx, resetBucketNamesArray);
+        } else {
+            fileList = new DictionaryLine[filesToOptimize.length];
+            for (int i = 0; i < filesToOptimize.length; ++i) {
+                fileList[i] = this.activeDictionaryLines[filesToOptimize[i]];
+            }
+        }
+        return fileList;
+    }
+
+    private void throwBadTagException(Set<String> badTags) {
+        String message = "Invalid Source Filter for dictionary file: " + this.path + ". ";
+        if (badTags.contains("")) {
+            message += "Empty tag is not allowed";
+        } else {
+            message += "Following are not in dictionary " + String.join(",", badTags);
+        }
+        throw new GorDataException(message);
     }
 
     public Set<String> getValidTags() {
         return this.validTags;
     }
 
-    public boolean getBucketHasDeletedFile() {
-        return this.bucketHasDeletedFile;
+    public boolean getAnyBucketHasDeletedFile() {
+        return !this.bucketHasDeletedFile.isEmpty();
     }
 
-    public DictionaryLine[] getFiles() {
-        return files;
+    public Collection<String> getBucketDeletedFiles(String bucket) {
+        return this.bucketHasDeletedFile.get(bucket);
     }
 
-    public DictionaryLine[] getFallbackLinesForHeader() {
-        return new DictionaryLine[]{this.fallbackLineForHeader};
-    }
-
-    public boolean isDictionaryWithBuckets() {
-        return isDictionaryWithBuckets;
-    }
-
-    private FileReference getBucketsPath(final FileReference dictFileParent) {
+    private static FileReference getBucketsPath(final FileReference dictFileParent, String commonRoot) {
         final boolean isAbsolute = Util.isAbsoluteFilePath(dictFileParent.physical);
         return commonRoot == null || isAbsolute || (dictFileParent.physical + '/').startsWith(commonRoot)
                 ? dictFileParent
                 : new FileReference(dictFileParent.logical, commonRoot + dictFileParent.physical);
-    }
-
-    private boolean hasInvalidTags(Set<String> badTags) {
-        return this.hasTags && !badTags.isEmpty();
     }
 
     /**
@@ -251,39 +303,41 @@ public class Dictionary {
      *
      * @return Cache object with all important info about the dictionary.
      */
-    private DictionaryCacheObject generateCache(String path, String uniqueId) {
-        final ArrayList<Set<String>> bucketTagsList = new ArrayList<>();
-        final ArrayList<String> resetBucketNames = new ArrayList<>();
+    private static Dictionary processDictionary(String path, String uniqueId, String commonRoot, boolean useCache) {
+        final List<Set<String>> bucketTagsList = new ArrayList<>();
+        final List<String> resetBucketNames = new ArrayList<>();
         final IntArray bucketTotalCounts = new IntArray();
         final IntArray bucketActiveCount = new IntArray();
-        final HashMap<String, Integer> bucketToIdx = new HashMap<>();
+        final Map<String, Integer> bucketToIdx = new HashMap<>();
         final Path gordPath = Paths.get(path);
         final FileReference dictFileParent = getDictionaryFileParent(gordPath, commonRoot);
-        this.dictFileParent = dictFileParent;
-        final FileReference bucketsParent = getBucketsPath(dictFileParent);
-        final ArrayList<DictionaryLine> activeDictionaryLines = new ArrayList<>();
-        final LinkedHashMap<String, IntArray> tagsToLines = new LinkedHashMap<>();
+        final FileReference bucketsParent = getBucketsPath(dictFileParent, commonRoot);
+        final List<DictionaryLine> activeDictionaryLines = new ArrayList<>();
+        final Map<String, IntArray> tagsToLines = new LinkedHashMap<>();
         final Set<String> validTags = new HashSet<>();
-        this.bucketHasDeletedFile = false; //This is changed if we find a deleted line with bucket.
-        if(Files.exists(gordPath)) {
+        final Multimap<String, String> bucketHasDeletedFile = ArrayListMultimap.create(); //This is changed if we find a deleted line with bucket.
+        if (Files.exists(gordPath)) {
             try (final Stream<String> stream = Files.newBufferedReader(gordPath).lines()) {
                 stream.map(String::trim)
                         .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
-                        .map(line -> parseDictionaryLine(line, this.dictFileParent))
+                        .map(line -> parseDictionaryLine(line, dictFileParent, path))
                         .filter(Objects::nonNull)
-                        .forEach(dictLine ->
-                                processLineForCache(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, dictLine)
+                        .forEach(dictLine -> processLine(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
                         );
             } catch (IOException ex) {
                 throw new GorResourceException("Error Initializing Query. Can not open file " + path, path, ex);
             }
         }
-        return new DictionaryCacheObject(uniqueId, tagsToLines, this.dictFileParent, activeDictionaryLines.toArray(new DictionaryLine[0]),
-                bucketToIdx, bucketTotalCounts.toArray(), bucketActiveCount.toArray(), resetBucketNames.toArray(new String[0]),
-                bucketTagsList.toArray(new Set[0]), this.bucketHasDeletedFile, validTags);
+        final Map<String, int[]> newTagsToLines = new HashMap<>();
+        tagsToLines.forEach((tag, arr) -> newTagsToLines.put(tag, arr.toArray()));
+        return new Dictionary(path, uniqueId, newTagsToLines, activeDictionaryLines.toArray(new DictionaryLine[0]), bucketToIdx,
+                bucketTotalCounts.toArray(), bucketActiveCount.toArray(), resetBucketNames.toArray(new String[0]),
+                bucketTagsList.toArray(new Set[0]), bucketHasDeletedFile, validTags, useCache);
     }
 
-    private void processLineForCache(ArrayList<Set<String>> bucketTagsList, ArrayList<String> resetBucketNames, IntArray bucketTotalCounts, IntArray bucketActiveCount, HashMap<String, Integer> bucketToIdx, FileReference bucketsParent, ArrayList<DictionaryLine> activeDictionaryLines, LinkedHashMap<String, IntArray> tagsToLines, Set<String> validTags, DictionaryLine dictLine) {
+    private static void processLine(List<Set<String>> bucketTagsList, List<String> resetBucketNames, IntArray bucketTotalCounts, IntArray bucketActiveCount,
+                                    Map<String, Integer> bucketToIdx, FileReference bucketsParent, List<DictionaryLine> activeDictionaryLines, Map<String, IntArray> tagsToLines,
+                                    Set<String> validTags, Multimap<String, String> bucketHasDeletedFile, DictionaryLine dictLine) {
         if (dictLine.bucket != null) {
             final int bucketIdx = bucketToIdx.computeIfAbsent(dictLine.bucket, bucket -> {
                 resetBucketNames.add(resetFilePath(bucket, bucket.contains("://") ? new FileReference("") : bucketsParent).physical);
@@ -294,7 +348,7 @@ public class Dictionary {
             });
             bucketTotalCounts.increment(bucketIdx);
             if (dictLine.isDeleted) {
-                this.bucketHasDeletedFile = true;
+                bucketHasDeletedFile.put(Paths.get(dictLine.bucket).getFileName().toString(), dictLine.alias);
                 bucketTagsList.get(bucketIdx).add(dictLine.alias);
             } else {
                 bucketActiveCount.increment(bucketIdx);
@@ -312,158 +366,8 @@ public class Dictionary {
         }
     }
 
-    private void parseDictionary(String path, boolean allowBucketAccess, Set<String> queryTags, boolean isSilentTagFilter) {
-        this.validTags = new HashSet<>();
-        final IntArray fileListToBeOptimized = new IntArray();
-        int numberOfLinesWithoutBuckets = 0;
-        final ArrayList<String> resetBucketNames = new ArrayList<>();
-        final IntArray bucketTotalCounts = new IntArray();
-        final IntArray bucketUsedCounts = new IntArray();
-        final HashMap<String, Integer> bucketToIdx = new HashMap<>();
-        final HashSet<String> badTags = this.hasTags && !isSilentTagFilter ? new HashSet<>(queryTags) : null;
-        final Path gordPath = Paths.get(path);
-        final FileReference dictFileParent = getDictionaryFileParent(gordPath, commonRoot);
-        this.dictFileParent = dictFileParent;
-        final FileReference bucketsParent = getBucketsPath(dictFileParent);
-        final ArrayList<DictionaryLine> activeDictionaryLines = new ArrayList<>();
-        this.bucketHasDeletedFile = false; //This is changed in subProcess if we find a deleted line with bucket.
-        final ArrayList<Set<String>> bucketTagsList = new ArrayList<>();
-        try (final Stream<String> lines = new BufferedReader(new FileReader(gordPath.toFile())).lines()) {
-            numberOfLinesWithoutBuckets = (int) lines.map(String::trim)
-                    .filter(line -> !(line.isEmpty() || line.charAt(0) == '#')).map(line -> parseDictionaryLine(line, dictFileParent))
-                    .peek(dictLine -> {
-                        if (dictLine != null) {
-                            int bucketIdx = -1;
-                            if (dictLine.bucket != null) {
-                                bucketIdx = bucketToIdx.computeIfAbsent(dictLine.bucket, bucket -> {
-                                    resetBucketNames.add(resetFilePath(bucket, bucket.contains("://") ? new FileReference("") : bucketsParent).physical);
-                                    bucketTagsList.add(new HashSet<>());
-                                    bucketTotalCounts.add(0);
-                                    bucketUsedCounts.add(0);
-                                    return bucketToIdx.size();
-                                });
-                                bucketTotalCounts.increment(bucketIdx);
-                                if (dictLine.isDeleted) {
-                                    this.bucketHasDeletedFile = true;
-                                    bucketTagsList.get(bucketIdx).add(dictLine.alias);
-                                } else {
-                                    bucketTagsList.get(bucketIdx).addAll(dictLine.tags);
-                                }
-                            }
-                            if (!dictLine.isDeleted) {
-                                // Optimization, reduce the maximum number of files needed to be opened by applying tag filter ASAP, if tag filter is used.
-                                // For Gor Server this allows more accurate number of files to be opened by a query
-                                if (dictLine.alias == null || !this.hasTags || TableAccessOptimizer.match(dictLine.tags, queryTags, dictLine.alias)) { // Do not include files that will not be used
-                                    if (dictLine.bucket != null) bucketUsedCounts.increment(bucketIdx);
-                                    fileListToBeOptimized.add(activeDictionaryLines.size());
-                                    activeDictionaryLines.add(dictLine);
-                                } else if (this.fallbackLineForHeader == null) {
-                                    this.fallbackLineForHeader = dictLine;
-                                }
-                                if (this.hasTags && !badTags.isEmpty() && !dictLine.tags.isEmpty()) {
-                                    badTags.removeAll(dictLine.tags);
-                                }
-                                this.validTags.addAll(dictLine.tags);
-                            }
-                        }
-                    }).filter(dictLine -> !dictLine.isDeleted && dictLine.bucket == null).count();
-        } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query. Can not open file " + path, path, ex);
-        }
-
-        if (hasInvalidTags(badTags) && !isSilentTagFilter) {
-            throw new GorDataException("Invalid Source Filter for dictionary file: " + path + ". Following are not in dictionary " + String.join(",", badTags));
-        }
-
-        final int[] bucketTotalCountArray = bucketTotalCounts.toArray();
-        final String[] resetBucketNamesArray = resetBucketNames.toArray(new String[0]);
-        final DictionaryLine[] activeDictionaryLinesArray = activeDictionaryLines.toArray(new DictionaryLine[0]);
-        if (allowBucketAccess && bucketTotalCounts.size() != 0) {
-            this.files = getOptimizedFileList(bucketTotalCountArray, bucketUsedCounts.toArray(), bucketTagsList.toArray(new Set[0]), fileListToBeOptimized.toArray(), numberOfLinesWithoutBuckets,
-                    activeDictionaryLinesArray, bucketToIdx, resetBucketNamesArray);
-        } else {
-            this.files = new DictionaryLine[fileListToBeOptimized.size()];
-            for (int i = 0; i < this.files.length; ++i) {
-                this.files[i] = activeDictionaryLinesArray[fileListToBeOptimized.get(i)];
-            }
-        }
-        if (bucketTotalCounts.size() > 0) {
-            this.isDictionaryWithBuckets = true;
-        }
-    }
-
-    private Pair<DictionaryLine[], Boolean> parseFileListFromCache(DictionaryCacheObject cache, boolean allowBucketAccess, Set<String> queryTags, Set<String> badTags) {
-        final int[] filesToOptimize;
-        this.bucketHasDeletedFile = cache.bucketHasDeletedFile;
-        final IntArray bucketUsedCounts = new IntArray();
-        final IntArray bucketTotalCount = new IntArray();
-        final ArrayList<String> resetBucketNames = new ArrayList<>();
-        final HashMap<String, Integer> newBucketToIdx;
-        final int[] bucketUsedCountsArray;
-        final int[] bucketTotalCountArray;
-        final String[] resetBucketNamesArray;
-        final Set<String>[] bucketTagsArray;
-        int numberOfFilesWithoutBucket = 0;
-        final ArrayList<Set<String>> bucketTagsList = new ArrayList<>();
-
-        if (this.hasTags) {
-            Set<Integer> filesToOptimizeTmp = new LinkedHashSet<>();
-            newBucketToIdx = new HashMap<>();
-            for (String tag : queryTags) {
-                if (cache.validTags.contains(tag)) {
-                    for (int i : cache.tagsToActiveLines.get(tag)) {
-                        filesToOptimizeTmp.add(i);
-                        final String bucket = cache.activeDictionaryLines[i].bucket;
-                        if (bucket == null) numberOfFilesWithoutBucket++;
-                        else {
-                            final int bucketIdx = newBucketToIdx.computeIfAbsent(bucket, bucketbucket -> {
-                                bucketUsedCounts.add(0);
-                                final int idx = cache.mapBucketIndex.get(bucketbucket);
-                                bucketTotalCount.add(cache.bucketTotalCount[idx]);
-                                resetBucketNames.add(cache.bucketResetNames[idx]);
-                                bucketTagsList.add(cache.bucketTags[idx]);
-                                return newBucketToIdx.size();
-                            });
-                            bucketUsedCounts.increment(bucketIdx);
-                        }
-                    }
-                } else badTags.add(tag);
-            }
-            filesToOptimize = new int[filesToOptimizeTmp.size()];
-            int idx = 0;
-            for (int i : filesToOptimizeTmp) filesToOptimize[idx++] = i;
-            bucketUsedCountsArray = bucketUsedCounts.toArray();
-            bucketTotalCountArray = bucketTotalCount.toArray();
-            resetBucketNamesArray = resetBucketNames.toArray(new String[0]);
-            bucketTagsArray = bucketTagsList.toArray(new Set[0]);
-        } else {
-            filesToOptimize = new int[cache.activeDictionaryLines.length];
-            for (int i = 0; i < filesToOptimize.length; i++) {
-                if (cache.activeDictionaryLines[i].bucket == null) numberOfFilesWithoutBucket++;
-                filesToOptimize[i] = i;
-            }
-            bucketUsedCountsArray = cache.bucketActiveCount;
-            bucketTotalCountArray = cache.bucketTotalCount;
-            resetBucketNamesArray = cache.bucketResetNames;
-            newBucketToIdx = cache.mapBucketIndex;
-            bucketTagsArray = cache.bucketTags;
-        }
-        this.isDictionaryWithBuckets = bucketUsedCountsArray.length != 0;
-        final DictionaryLine[] fileList;
-        if (allowBucketAccess && cache.bucketTotalCount.length != 0) {
-            fileList = getOptimizedFileList(bucketTotalCountArray, bucketUsedCountsArray, bucketTagsArray, filesToOptimize, numberOfFilesWithoutBucket,
-                    cache.activeDictionaryLines, newBucketToIdx, resetBucketNamesArray);
-        } else {
-            fileList = new DictionaryLine[filesToOptimize.length];
-            for (int i = 0; i < filesToOptimize.length; ++i) {
-                fileList[i] = cache.activeDictionaryLines[filesToOptimize[i]];
-            }
-        }
-        return new Pair<>(fileList, this.isDictionaryWithBuckets);
-    }
-
     private DictionaryLine[] getOptimizedFileList(int[] bucketTotalFileCounts, int[] bucketUsedCounts, Set<String>[] bucketTagsArray, int[] fileListToOptimize, int numberOfFilesWithoutBucket,
-                                                  DictionaryLine[] activeDictionaryLines, HashMap<String, Integer> bucketsToIdx, String[] resetBucketNames) {
+                                                  DictionaryLine[] activeDictionaryLines, Map<String, Integer> bucketsToIdx, String[] resetBucketNames) {
         final int numberOfBuckets = bucketUsedCounts.length;
         final boolean[] replace = new boolean[numberOfBuckets]; //replace[i] = bucket i will be used
         final boolean[] include = new boolean[numberOfBuckets]; //include[i] = files of bucket i will be accessed directly.
@@ -476,7 +380,7 @@ public class Dictionary {
         final int singleFilesBucketCountThresholdRatio = 10;
         final int minNumberOfFilesToAccess = numberOfFilesWithoutBucket + numberOfBuckets; //No matter what, we have to open this many files.
 
-        /**
+        /*
          * We optimize the file list by replacing each file from a bucket with more than @threshold usage ratio (number of files we are going to use / total number of files in the bucket)
          * If we are still accessing more than @FILE_COUNT_THRESHOLD or @minNumberOfFilesToAccess many files or if the number of single files is more than @singleFilesBucketCountThresholdRatio times
          * the number of buckets we keep on with @threshold = half of what it was.
@@ -503,8 +407,8 @@ public class Dictionary {
         int cntIndividualFiles = 0;
         String bucket;
         int bucketIdx = -1;
-        for (int i = 0; i < fileListToOptimize.length; ++i) {
-            bucket = activeDictionaryLines[fileListToOptimize[i]].bucket;
+        for (int file_idx : fileListToOptimize) {
+            bucket = activeDictionaryLines[file_idx].bucket;
             if (bucket != null && replace[bucketIdx = bucketsToIdx.get(bucket)]) { // All files from this bucket will be replaced with the bucket
                 replace[bucketIdx] = false;
                 if (log.isTraceEnabled()) {
@@ -513,13 +417,13 @@ public class Dictionary {
                 filesToUse[filesToUseIdx++] = new DictionaryLine(new FileReference(resetBucketNames[bucketIdx]), null, null, null, -1, null, -1, bucketTagsArray[bucketIdx], true, false);
             } else if (bucket == null || include[bucketIdx]) { // all files from this bucket are to be included as they were
                 if (log.isTraceEnabled()) {
-                    log.trace("Include {}", activeDictionaryLines[fileListToOptimize[i]]);
+                    log.trace("Include {}", activeDictionaryLines[file_idx]);
                 }
-                filesToUse[filesToUseIdx++] = activeDictionaryLines[fileListToOptimize[i]];
+                filesToUse[filesToUseIdx++] = activeDictionaryLines[file_idx];
                 cntIndividualFiles++;
             } else { // else we skip the file since it is from a bucket that is going to be included
                 if (log.isTraceEnabled()) {
-                    log.trace("Skipping {} with idx {} from bucket {}", activeDictionaryLines[fileListToOptimize[i]], fileListToOptimize[i], bucket);
+                    log.trace("Skipping {} with idx {} from bucket {}", activeDictionaryLines[file_idx], file_idx, bucket);
                 }
             }
         }
@@ -528,10 +432,10 @@ public class Dictionary {
             for (int i = 0; i < numberOfBuckets; ++i) {
                 if (replace[i]) {
                     if (i > 0) sb.append(',');
-                    sb.append(resetBucketNames[i] + " (" + bucketUsedCounts[i] + ")");
+                    sb.append(resetBucketNames[i]).append(" (").append(bucketUsedCounts[i]).append(")");
                 }
             }
-            log.debug("Individual Files={}, Buckets={} for %d tags { {} }", cntIndividualFiles, numberOfBucketsToBeAccessed, numberOfFilesTakenFromBuckets, sb);
+            log.debug("Individual Files={}, Buckets={} for {} tags { {} }", cntIndividualFiles, numberOfBucketsToBeAccessed, numberOfFilesTakenFromBuckets, sb);
 
             if (log.isTraceEnabled()) {
                 log.trace("Files={} -> {}", filesToUse.length, Arrays.toString(filesToUse));
@@ -540,58 +444,64 @@ public class Dictionary {
         return filesToUse;
     }
 
-    static public DictionaryLine parseDictionaryLine(String line, FileReference dictFileParent) {
-        final ArrayList<String> parts = StringUtil.split(line);
-        final int length = parts.size();
-        if (length > 0) {
-            String file = parts.get(0).replace('\\', '/');
-            String bucketFileName = null;
-            final int pipeIdx = file.indexOf('|');
-            final String alias = length > 1 ? parts.get(1) : null;
-            boolean lineDeleted = false;
-            if (pipeIdx >= 0) { // If file bucket is encoded in the file name
-                if (pipeIdx == 0) {
-                    throw new GorDataException("Error Intializing Query. File " + file + " starts with pipe character");
-                }
-                final String bucket = file.substring(pipeIdx + 1);
-                if (bucket.toLowerCase().startsWith("d|")) {
-                    bucketFileName = bucket.substring(2);
-                    log.debug("Ignoring deleted file: {}", bucketFileName);
-                    lineDeleted = true;
-                } else {
-                    file = file.substring(0, pipeIdx);
-                    bucketFileName = bucket;
-                }
-            }
-
-            if (!lineDeleted) {
-                FileReference fileref = file.contains("://") ? resetFilePath(file, null) : resetFilePath(file, dictFileParent);
-                final Set<String> tags;
-                if (length > 2) {
-                    if (length >= 6) {
-                        // Support specification of the genomic range of each file
-                        final String startChr = parts.get(2);
-                        final int startPos = Integer.parseInt(parts.get(3));
-                        final String stopChr = parts.get(4);
-                        final int stopPos = Integer.parseInt(parts.get(5));
-                        // support both comma separated and tab separated tags
-                        tags = length < 7 ? tagset(alias)
-                                : tagset(parts.get(6).indexOf(',') >= 0 ? StringUtil.split(parts.get(6), ',') : parts.subList(6, parts.size()));
-
-                        return new DictionaryLine(fileref, bucketFileName, alias, startChr, startPos, stopChr, stopPos, tags, false, false);
+    static public DictionaryLine parseDictionaryLine(String line, FileReference dictFileParent, String dictPath) {
+        try {
+            final ArrayList<String> parts = StringUtil.split(line);
+            final int length = parts.size();
+            if (length > 0) {
+                String file = parts.get(0).replace('\\', '/');
+                String bucketFileName = null;
+                final int pipeIdx = file.indexOf('|');
+                final String alias = length > 1 ? parts.get(1) : null;
+                boolean lineDeleted = false;
+                if (pipeIdx >= 0) { // If file bucket is encoded in the file name
+                    if (pipeIdx == 0) {
+                        throw new GorDataException("Error Intializing Query. File " + file + " starts with pipe character");
+                    }
+                    final String bucket = file.substring(pipeIdx + 1);
+                    if (bucket.toLowerCase().startsWith("d|")) {
+                        bucketFileName = bucket.substring(2);
+                        log.debug("Ignoring deleted file: {}", bucketFileName);
+                        lineDeleted = true;
                     } else {
-                        throw new GorDataException("Error Initializing Query. Expected 4 columns for genomic range specification!");
+                        file = file.substring(0, pipeIdx);
+                        bucketFileName = bucket;
+                    }
+                }
+
+                if (!lineDeleted) {
+                    FileReference fileref = file.contains("://") ? resetFilePath(file, null) : resetFilePath(file, dictFileParent);
+                    final Set<String> tags;
+                    if (length > 2) {
+                        if (length >= 6) {
+                            // Support specification of the genomic range of each file
+                            final String startChr = parts.get(2);
+                            final int startPos = Integer.parseInt(parts.get(3));
+                            final String stopChr = parts.get(4);
+                            final int stopPos = Integer.parseInt(parts.get(5));
+                            // support both comma separated and tab separated tags
+                            tags = length < 7 ? tagset(alias)
+                                    : tagset(parts.get(6).indexOf(',') >= 0 ? StringUtil.split(parts.get(6), ',') : parts.subList(6, parts.size()));
+
+                            return new DictionaryLine(fileref, bucketFileName, alias, startChr, startPos, stopChr, stopPos, tags, false, false);
+                        } else {
+                            throw new GorDataException("Error Initializing Query. Expected 4 columns for genomic range specification!");
+                        }
+                    } else {
+                        // Add alias as tag on the file, if alias is specified
+                        tags = tagset(alias);
+                        return new DictionaryLine(fileref, bucketFileName, alias, null, -1, null, -1, tags, false, false);
                     }
                 } else {
-                    // Add alias as tag on the file, if alias is specified
-                    tags = tagset(alias);
-                    return new DictionaryLine(fileref, bucketFileName, alias, null, -1, null, -1, tags, false, false);
+                    return new DictionaryLine(null, bucketFileName, alias, null, -1, null, -1, null, false, true);
                 }
-            } else {
-                return new DictionaryLine(null, bucketFileName, alias, null, -1, null, -1, null, false, true);
             }
+            return null;
+        } catch (GorException ge) {
+            throw ge;
+        } catch (Exception e) {
+            throw new GorDataException(String.format("Error parsing dictionary %s, line: %s", dictPath, line), e);
         }
-        return null;
     }
 
     private static Set<String> tagset(String alias) {
@@ -607,16 +517,6 @@ public class Dictionary {
             return new HashSet<>(t);
         }
         return null;
-    }
-
-    private static boolean isHttpRef(String path) {
-        final String p = path.toLowerCase();
-        return p.startsWith("http://") || p.startsWith("https://");
-    }
-
-    private static boolean isTcpRef(String path) {
-        final String p = path.toLowerCase();
-        return p.startsWith("tcp://");
     }
 
     public static class FileReference {
@@ -697,7 +597,7 @@ public class Dictionary {
         }
 
         public String toPreciseString() {
-            final String[] tagsArray = tags.toArray(new String[tags.size()]);
+            final String[] tagsArray = tags.toArray(new String[0]);
             Arrays.sort(tagsArray);
             return fileRef.physical + " " + bucket + " " + alias + " " + startChr + " " + startPos + " " + Arrays.toString(tagsArray);
         }
@@ -806,23 +706,16 @@ public class Dictionary {
     private static String findDictPathParent(final Path parentpath, String commonRoot) {
         if (parentpath != null) { // 25.01.2012 gfg+hakon, treat relative files in dictionary files always as relative to said dictionary
             // TODO:  Check this, if parentpaht is relative it is resolved from the current dir, but not the relative to the dictionary.gh
-            String dictFileParent = parentpath.toAbsolutePath().toString();
+            Path dictFileParent = parentpath.toAbsolutePath();
             if (commonRoot != null) {
-                if (isHttpRef(commonRoot) || isTcpRef(commonRoot)) {
+                if (!PathUtils.isLocal(commonRoot)) {
                     return null; // Do no support relative references of local dictionary files with remote reference in common root
                 } else {
-                    if (dictFileParent.startsWith(commonRoot)) {
-                        dictFileParent = dictFileParent.substring(commonRoot.length());
-                        if (dictFileParent.length() > 0 && (dictFileParent.charAt(0) == '/' || dictFileParent.charAt(0) == '\\')) { // ensure there is no starting nor trailing slash
-                            dictFileParent = dictFileParent.substring(1);
-                        }
-                        if (dictFileParent.length() > 0 && (dictFileParent.charAt(dictFileParent.length() - 1) == '/' || dictFileParent.charAt(dictFileParent.length() - 1) == '\\')) {
-                            dictFileParent = dictFileParent.substring(0, dictFileParent.length() - 1);
-                        }
-                    }
+                    Path commonRootPath = Paths.get(commonRoot).toAbsolutePath().normalize();
+                    dictFileParent = PathUtils.relativize(commonRootPath, dictFileParent);
                 }
             }
-            return dictFileParent;
+            return dictFileParent.toString();
         }
         return null;
     }

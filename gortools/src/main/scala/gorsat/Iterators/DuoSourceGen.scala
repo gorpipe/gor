@@ -23,10 +23,10 @@
 package gorsat.Iterators
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.GorContext
-import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.genome.files.gor.Row.SortInfo
-import org.gorpipe.model.gor.iterators.{RowSource, SingleFileSource}
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.Row.SortInfo
+import org.gorpipe.gor.session.GorContext
+import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable
 
@@ -83,7 +83,7 @@ class DuoSourceGen(leftList: List[String], rightList: List[String],
     rightMyNext = if (rightHasNext) rightsource.next() else null
   }
 
-  def next(): Row = {
+  override def next(): Row = {
     if (notCalledHasNext) if (!hasNext) {
       throw new GorSystemException("hasNext in duoSourceGen: getRow call on false hasNext!", null)
     }
@@ -96,7 +96,7 @@ class DuoSourceGen(leftList: List[String], rightList: List[String],
     myNext
   }
 
-  def hasNext: Boolean = {
+  override def hasNext: Boolean = {
     if (!posSet) {
       throw new GorSystemException("Row position has not bee set", null)
     }
@@ -108,7 +108,7 @@ class DuoSourceGen(leftList: List[String], rightList: List[String],
     leftHasNext || rightHasNext
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {
+  override def setPosition(seekChr: String, seekPos: Int) {
     leftsource.setPosition(seekChr, seekPos)
     rightsource.setPosition(seekChr, seekPos)
     posSet = true

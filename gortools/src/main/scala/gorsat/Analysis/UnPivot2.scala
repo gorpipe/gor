@@ -22,16 +22,18 @@
 
 package gorsat.Analysis
 
-import gorsat.Commands.Analysis
-import gorsat.Commands.RowHeader
-import org.gorpipe.model.genome.files.gor.Row
-import org.gorpipe.model.gor.RowObj
+import gorsat.Commands.{Analysis, RowHeader}
+import org.gorpipe.gor.model.Row
+
+case class NamedColumn(index: Int, name: String)
 
 case class UnPivot2(header: String, unpivCols: List[Int], oCols: List[Int], outgoingHeader: RowHeader) extends Analysis {
   /**
     * Column names from the original row, used to fill in the Col_Name column
     */
   val columnNames: Array[String] = header.split("\t")
+
+  val namedColumns: List[NamedColumn] = unpivCols.map(x => NamedColumn(x, columnNames(x)))
 
   /**
     * Columns that remain unchanged from the original row
@@ -70,10 +72,10 @@ case class UnPivot2(header: String, unpivCols: List[Int], oCols: List[Int], outg
 
   override def process(r: Row) {
     val baseRow = r.rowWithSelectedColumns(remainingColumns)
-    unpivCols.foreach(x => {
-      val addedColumns = Array(columnNames(x), r.colAsString(x))
+    for (col <- namedColumns) {
+      val addedColumns = Array(col.name, r.colAsString(col.index))
       val row = baseRow.rowWithAddedColumns(addedColumns)
       super.process(row)
-    })
+    }
   }
 }

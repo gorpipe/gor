@@ -22,11 +22,10 @@
 
 package gorsat.Analysis
 
-import org.gorpipe.model.genome.files.gor.Row.SortInfo
-import gorsat.Commands.Processor
-import gorsat.Commands._
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import gorsat.Commands.{Processor, _}
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.Row.SortInfo
+import org.gorpipe.gor.session.GorSession
 
 case class SortAnalysis(header: String,
                         session: GorSession,

@@ -34,8 +34,8 @@ import java.util.UUID;
 
 public class RequestLoggingWrapper extends WrappedStreamSource {
 
-    private StreamSourceMetadata sourceMeta;
-    private File logFile;
+    private final StreamSourceMetadata sourceMeta;
+    private final File logFile;
 
     public RequestLoggingWrapper(StreamSource wrapped) throws IOException {
         super(wrapped);
@@ -70,7 +70,7 @@ public class RequestLoggingWrapper extends WrappedStreamSource {
         return new LoggingStream(open, start, minLength);
     }
 
-    public class LoggingStream extends PositionAwareInputStream {
+    public static class LoggingStream extends PositionAwareInputStream {
 
         public LoggingStream(InputStream in, Long start, Long minLength) {
             super(in);

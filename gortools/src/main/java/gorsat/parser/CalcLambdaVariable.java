@@ -23,7 +23,7 @@
 package gorsat.parser;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.ColumnValueProvider;
+import org.gorpipe.gor.model.ColumnValueProvider;
 
 public class CalcLambdaVariable implements TypedCalcLambda {
     private final int columnIndex;

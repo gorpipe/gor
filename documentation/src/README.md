@@ -7,4 +7,4 @@ There is one .rst file for each GOR command. Documentation on the reStructured T
 
 [Sphinx](http://www.sphinx-doc.org/en/stable/) is then used to render html pages. Sphinx can be installed with `pip install Sphinx` and an introduction to Sphinx can be found [here](http://www.sphinx-doc.org/en/stable/tutorial.html).
 
-Please contact Alison for further explanations, alisonm@wuxinextcode.com.
+Please contact Alison for further explanations, alisonm@genuitysci.com.

@@ -25,10 +25,10 @@ package gorsat.Commands
 import gorsat.Analysis.DagMapAnalysis.DAGMultiMapLookup
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 import scala.collection.mutable.ListBuffer
 

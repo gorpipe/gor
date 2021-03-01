@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bam;
 
-import org.gorpipe.model.genome.files.gor.BamIterator;
 import org.gorpipe.gor.driver.adapters.SamtoolsAdapter;
 
 /**
@@ -36,6 +35,6 @@ public class BamFileIterator extends BamIterator {
      */
     public BamFileIterator(BamFile file) {
         super(file.getFileSource().getSourceReference().getLookup(), SamtoolsAdapter.createReader(file.getFileSource(),
-                file.getIndexSource()), file.getFileSource().getSourceReference().getColumns());
+                file.getIndexSource()));
     }
 }

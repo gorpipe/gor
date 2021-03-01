@@ -27,8 +27,8 @@ import java.nio.file.Files
 
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfter, FunSuite}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
 @RunWith(classOf[JUnitRunner])
 class UTestCsvsel2 extends FunSuite with BeforeAndAfter {

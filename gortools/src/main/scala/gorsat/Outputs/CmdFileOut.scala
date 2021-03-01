@@ -23,7 +23,7 @@
 package gorsat.Outputs
 
 import gorsat.Commands.Output
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 
 /**
   * @param name Name of the file to be written.
@@ -35,7 +35,13 @@ class CmdFileOut(name: String, header: String, skipHeader: Boolean = false, appe
   val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(name, append)), 1024 * 100)
 
   def setup {
-    if (header != null & !skipHeader) out.write(header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
+    if (header != null & !skipHeader) {
+      val outHeader = header.split("\t", -1).slice(2, 1000000).mkString("\t")
+      if (!outHeader.startsWith("#")) {
+        out.write("#")
+      }
+      out.write(outHeader  + "\n")
+    }
   }
 
   def process(r: Row) {

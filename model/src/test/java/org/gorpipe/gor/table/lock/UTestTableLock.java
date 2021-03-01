@@ -12,6 +12,9 @@
 
 package org.gorpipe.gor.table.lock;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.BaseTable;
@@ -19,9 +22,6 @@ import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.TableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.test.IntegrationTests;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.NullOutputStream;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.slf4j.LoggerFactory;
@@ -90,17 +90,19 @@ public class UTestTableLock {
         FileUtils.deleteDirectory(tableWorkDir.toFile());
     }
 
+    @Ignore // Need to create different test for nolock
     @Test
     public void testThreadNoTableLock() throws Exception {
         // Should fail as we have are not doing any locking.
         try {
-            testThreadTableFileLock(NoTableLock.class);
+            testReentrantThreadTableFileLock(NoTableLock.class);
             Assert.fail("No lock should fail");
         } catch (ComparisonFailure cf) {
             // Expected result.
         }
     }
 
+    @Ignore // Need to create different test for nolock
     @Test
     public void testProcessNoTableLock() throws Exception {
         // Should fail as we have are not doing any locking.
@@ -113,29 +115,13 @@ public class UTestTableLock {
     }
 
     @Test
-    public void testThreadFileTableLock() throws Exception {
-        testThreadTableFileLock(FileTableLock.class);
-    }
-
-    @Test
     public void testThreadExclusiveFileTableLock() throws Exception {
-        testThreadTableFileLock(ExclusiveFileTableLock.class);
-    }
-
-    @Ignore // There are problems with FileLock as does not seem to get exclusive locks.
-    @Test
-    public void testProcessFileTableLock() throws Exception {
-        testProcessTableFileLock(FileTableLock.class);
+        testNonReentrantThreadTableFileLock(ExclusiveFileTableLock.class);
     }
 
     @Test
     public void testProcessExclusiveFileTableLock() throws Exception {
         testProcessTableFileLock(ExclusiveFileTableLock.class);
-    }
-
-    @Test
-    public void testRenewFileTableLock() throws Exception {
-        testTableLockRenew(FileTableLock.class, null);
     }
 
     @Test
@@ -148,20 +134,9 @@ public class UTestTableLock {
         testTableLockRenew(ExclusiveFileTableLock.class, drlp);
     }
 
-    @Ignore // There are problems with FileLock as does not seem to get exclusive locks.
-    @Test
-    public void testCleanUpFileTableLock() throws Exception {
-        testTableLockCrashCleanUp(FileTableLock.class);
-    }
-
     @Test
     public void testCleanUpExclusiveFileTableLock() throws Exception {
         testTableLockCrashCleanUp(ExclusiveFileTableLock.class);
-    }
-
-    @Test
-    public void testMultiProcessUpdateFileTableLock() throws Exception {
-        testMultiProcessUpdateTableFileLock(FileTableLock.class);
     }
 
     @Test
@@ -169,14 +144,17 @@ public class UTestTableLock {
         testMultiProcessUpdateTableFileLock(ExclusiveFileTableLock.class);
     }
 
-    public static void testThreadTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
+    public static void testReentrantThreadTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
 
-        File gordFile = new File(tableWorkDir.toFile(), "gortable_filelock.gord");
+        String baseName = String.format("gortable_filelock_%s", tableLockClass.getName());
+        File gordFile = new File(tableWorkDir.toFile(), baseName + ".gord");
 
         TableManager tm = TableManager.newBuilder().build();
 
+        String lockPath = String.format(".%s/%s.%s.lock", baseName, baseName, baseName);
+
         Files.deleteIfExists(gordFile.toPath());
-        Files.deleteIfExists(Paths.get(tableWorkDir.toString(), ".gortable_filelock/gortable_filelock.gortable_filelock.lock"));
+        Files.deleteIfExists(Paths.get(tableWorkDir.toString(), lockPath));
 
         FileUtils.write(gordFile, gort1, (Charset)null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
@@ -233,6 +211,7 @@ public class UTestTableLock {
                 DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
                 String selectRes;
                 try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict1, dict1.getName(), tm.getLockTimeout())) {
+                    log.debug("Thread1 - Got lock");
                     actionList.add("2");
                     selectRes = selectStringFilter(dict1.filter().buckets("bucket2"));
                     try {
@@ -261,7 +240,7 @@ public class UTestTableLock {
                 DictionaryTable dict2 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
                 log.debug("Thread2 - Asking to delete");
                 try (TableTransaction trans = TableTransaction.openWriteTransaction(tableLockClass, dict2, dict2.getName(), tm.getLockTimeout())) {
-                    log.debug("Thread2 - Write lock");
+                    log.debug("Thread2 - Got lock");
                     actionList.add("4");
                     dict2.removeFromBucket(dict2.filter().buckets("bucket2").get());
                     trans.commit();
@@ -290,7 +269,7 @@ public class UTestTableLock {
                 DictionaryTable dict3 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
                 String selectRes;
                 try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict3, dict3.getName(), tm.getLockTimeout())) {
-                    log.debug("Thread3 - Read 2 lock");
+                    log.debug("Thread3 - Got lock");
                     actionList.add("6");
                     selectRes = selectStringFilter(dict3.filter().buckets("bucket2"));
                 }
@@ -307,6 +286,7 @@ public class UTestTableLock {
         log.debug("Main - Read 3");
         String selectRes;
         try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict, dict.getName(), tm.getLockTimeout())) {
+            log.debug("Main - Got lock");
             actionList.add("6");
             dict.reload();
             selectRes = selectStringFilter(dict.filter().buckets("bucket2"));
@@ -322,6 +302,7 @@ public class UTestTableLock {
         // Read lock should be released, and the delete executed.
         log.debug("Main - Read 4 ");
         try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict, dict.getName(), tm.getLockTimeout())) {
+            log.debug("Main - Got lock 2");
             actionList.add("7");
             dict.reload();
             selectRes = selectStringFilter(dict.filter().buckets("bucket2"));
@@ -332,6 +313,111 @@ public class UTestTableLock {
         String outputOrder = actionList.stream().collect(Collectors.joining(","));
         log.debug("Output order: " + outputOrder);
         Assert.assertEquals("", "1,2,2,3,3,4,5,6,6,7", outputOrder);
+
+    }
+
+    public static void testNonReentrantThreadTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
+
+        String baseName = String.format("gortable_filelock_%s", tableLockClass.getName());
+        File gordFile = new File(tableWorkDir.toFile(), baseName + ".gord");
+
+        TableManager tm = TableManager.newBuilder().build();
+
+        String lockPath = String.format(".%s/%s.%s.lock", baseName, baseName, baseName);
+
+        Files.deleteIfExists(gordFile.toPath());
+        Files.deleteIfExists(Paths.get(tableWorkDir.toString(), lockPath));
+
+        FileUtils.write(gordFile, gort1, (Charset)null);
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+
+        String orgRes = "filepath11.gor|bucket2\ttagI\n" +
+                "filepath12.gor|bucket2\t\tchr1\t1\tchr2\t20000\ttagJ,tagK\n" +
+                "filepath13.gor|bucket2\n" +
+                "filepath14.gor|D|bucket2\ttagL\n" +
+                "filepath15.gor|D|bucket2\n";
+
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        List<Future> futures = new ArrayList<>();
+        List<String> actionList = Collections.synchronizedList(new ArrayList<>());;
+
+        // Get lock and read file (wait after we get lock).
+        actionList.add("1");
+
+        Future f = executor.submit(() -> {
+            try {
+                log.debug("Thread0 - Loading dict");
+                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                log.debug("Thread0 - Asking to delete");
+                try (TableTransaction trans = TableTransaction.openWriteTransaction(tableLockClass, dict1, dict1.getName(), tm.getLockTimeout())) {
+                    log.debug("Thread0 - Got lock");
+                    actionList.add("2");
+                    dict1.removeFromBucket(dict1.filter().buckets("bucket2").get());
+                    trans.commit();
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
+                    actionList.add("3");
+                }
+                log.debug("Thread0 - Done deleting");
+            } catch (Throwable t) {
+                log.warn("Thread2 fail", t);
+                throw t;
+            }
+        }, "TestThrea0");
+        futures.add(f);
+
+        // Give the first thread time to start.
+        Thread.sleep(100);
+
+        // Start thread that should not get lock
+        f = executor.submit(() -> {
+            try {
+                log.debug("Thread1 - Read 1");
+                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict1, dict1.getName(), Duration.ofMillis(10))) {
+                    Assert.fail("Should not get lock");
+                }
+            } catch (AcquireLockException ale) {
+                // Ignore, expected.
+            } catch (Throwable t) {
+                log.warn("Thread1 fail", t);
+                throw t;
+            }
+        }, "TestThread1");
+        futures.add(f);
+
+        // Start thread that should wait for the write lock to be released.
+        f = executor.submit(() -> {
+            try {
+                log.debug("Thread2 - Read 2");
+                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                String selectRes;
+                try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict1, dict1.getName(), tm.getLockTimeout())) {
+                    log.debug("Thread2 - Got lock");
+                    actionList.add("4");
+                    selectRes = selectStringFilter(dict1.filter().buckets("bucket2"));
+                }
+                log.debug("Thread2 - Read 2 Done");
+                Assert.assertEquals("Delete bucket incorrect", "", selectRes);
+            } catch (Throwable t) {
+                log.warn("Thread2 fail", t);
+                throw t;
+            }
+        }, "TestThread2");
+        futures.add(f);
+
+        // Wait for all threads.
+        for (Future future : futures) {
+            // Throws an exception if an exception was thrown by the task.
+            future.get();
+        }
+
+        String outputOrder = actionList.stream().collect(Collectors.joining(","));
+        log.debug("Output order: " + outputOrder);
+        Assert.assertEquals("", "1,2,3,4", outputOrder);
 
     }
 
@@ -366,7 +452,7 @@ public class UTestTableLock {
         // Reading after write lock requested, short wait so we should not get it.
         try {
             debugReadLock(tableLockClass, Duration.ofMillis(10), null, table, lockName, Duration.ofMillis(10));
-            Assume.assumeTrue("Should not be able to get lock.", false);
+            Assert.fail("Should not be able to get lock.");
         } catch (AcquireLockException e) {
             // Ignore
         }
@@ -389,8 +475,8 @@ public class UTestTableLock {
         //Assert.assertEquals("Incorrect order", "R1bR1cW2bW2cR3bR3c", story.replaceAll("[RW].a", ""));
         String storyWithoutStart = story.replaceAll("[RW].a", "");
         Assert.assertEquals(0, storyWithoutStart.indexOf("R1bR1c"));
-        Assume.assumeTrue("W2bW2c".indexOf(storyWithoutStart.replaceAll("[RW].a", "")) > 0);
-        Assume.assumeTrue("R3bR3c".indexOf(storyWithoutStart.replaceAll("[RW].a", "")) > 0);
+        Assert.assertTrue(storyWithoutStart.indexOf("W2bW2c") > 0);
+        Assert.assertTrue(storyWithoutStart.indexOf("R3bR3c") > 0);
     }
 
     public static void testMultiProcessUpdateTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
@@ -426,7 +512,7 @@ public class UTestTableLock {
         String lockName = "LockRenew";
         BaseTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
 
-        long reserveTime = 400;
+        long reserveTime = 4000;
 
         if (drlp != null) {
             drlp.set(null, Duration.ofMillis(reserveTime));
@@ -439,7 +525,7 @@ public class UTestTableLock {
 
             long startTime = System.currentTimeMillis();
             long initialReservedTo = lock.reservedTo();
-            while (startTime + 3 * reserveTime >= System.currentTimeMillis()) {
+            while (startTime + 2 * reserveTime >= System.currentTimeMillis()) {
                 Thread.sleep(reserveTime);
                 Assert.assertTrue("Lock not renewed!", lock.isValid());
             }
@@ -448,7 +534,7 @@ public class UTestTableLock {
 
         // Get hold of the renew scheduler and shut it down.
         
-        Field schedField = ProcessLock.class.getDeclaredField("scheduler");
+        Field schedField = RenewableLockHelper.class.getDeclaredField("scheduler");
         schedField.setAccessible(true);
         Field modifiersField = Field.class.getDeclaredField("modifiers");
         modifiersField.setAccessible(true);
@@ -481,11 +567,11 @@ public class UTestTableLock {
         //debugWriteLock(tableLockClass, Duration.ofHours(10), table,  "CrashLockStandard", Duration.ofMillis(10));
         //main(new String[]{tableLockClass.getCanonicalName(), "WRITE", "100000000", "100", "CrashLockStandard", tableWorkDir.toString(), "W0", storyName});
 
-        Process p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(100), table, "CrashLockStandard", tableWorkDir, "W1", storyName, dataFileName);
-        Thread.sleep(2000); // Must wait a little while the external process starts.
-
+        Process p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(1000), table, "CrashLockStandard", tableWorkDir, "W1", storyName, dataFileName);
+        Thread.sleep(4000); // Must wait a little while the external process starts.
+        System.out.write("Stuff".getBytes(), 0, 3);
         try {
-            debugReadLock(tableLockClass, Duration.ofMillis(10), null, table, "CrashLockStandard", Duration.ofMillis(10));
+            debugReadLock(tableLockClass, Duration.ofMillis(100), null, table, "CrashLockStandard", Duration.ofMillis(1000));
             // Should not be here.
             p.destroy(); // clean up.
             Assert.fail("Should not be able to get lock.");
@@ -493,16 +579,16 @@ public class UTestTableLock {
             // Ignore
         }
         p.destroy();
-        Thread.sleep(100);  // Again must wait while the process exits and cleans up.
+        Thread.sleep(3000);  // Again must wait while the process exits and cleans up.
         // Should clean up. Try getting the lock, get exception if fails.
-        debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockStandard", Duration.ofMillis(10));
+        debugWriteLock(tableLockClass, Duration.ofMillis(100), table, "CrashLockStandard", Duration.ofMillis(1000));
 
         // Finally some negative testing (to make sure the first half is not working by chance).
 
         p = startLockingProcess(tableLockClass, "WRITE", Duration.ofHours(1), Duration.ofMillis(100), table, "CrashLockForce", tableWorkDir, "W2", storyName, dataFileName);
-        Thread.sleep(2000); // Must wait a little while the external process starts.
+        Thread.sleep(4000); // Must wait a little while the external process starts.
         try {
-            debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockForce", Duration.ofMillis(10));
+            debugWriteLock(tableLockClass, Duration.ofMillis(100), table, "CrashLockForce", Duration.ofMillis(1000));
             // Should not be here.
             p.destroy(); // clean up.
             Assert.fail("Should not be able to get lock.");
@@ -510,11 +596,11 @@ public class UTestTableLock {
             // Ignore
         }
         p.destroyForcibly();
-        Thread.sleep(100);  // Again must wait while the process exits and cleans up.
+        Thread.sleep(3000);  // Again must wait while the process exits and cleans up.
         // Should not clean up. Try getting the lock, get exception if fails.
         try {
-            debugWriteLock(tableLockClass, Duration.ofMillis(10), table, "CrashLockForce", Duration.ofMillis(10));
-            Assume.assumeTrue("Should not be able to get this lock as no clean up should have been performed.", false);
+            debugWriteLock(tableLockClass, Duration.ofMillis(100), table, "CrashLockForce", Duration.ofMillis(1000));
+            Assert.fail("Should not be able to get this lock as no clean up should have been performed.");
         } catch (AcquireLockException e) {
             // Ignore, should get this as no clean up was performed.
         }
@@ -594,7 +680,7 @@ public class UTestTableLock {
 
         Process p = pb.start();
         // For now just direct the output to the null streams.
-        startProcessStreamEaters(p, new OutputStreamWriter(new NullOutputStream()), new OutputStreamWriter(new NullOutputStream()));
+        startProcessStreamEaters(p, new OutputStreamWriter(System.out), new OutputStreamWriter(System.err));
         return p;
     }
 
@@ -630,16 +716,19 @@ public class UTestTableLock {
     private static void startProcessStreamEaters(Process p, Writer outWriter, Writer errWriter) {
         new Thread(() -> {
             try {
-                IOUtils.copy(p.getInputStream(), outWriter, (Charset)null);
-            } catch (IOException e) {
-                // Ignore
+                IOUtils.copy(p.getInputStream(), outWriter, (Charset) null);
+                outWriter.write("Moree Stuff");
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
             }
         }).start();
         new Thread(() -> {
             try {
                 IOUtils.copy(p.getErrorStream(), errWriter, (Charset)null);
-            } catch (IOException e) {
-                // Ignore
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
             }
         }).start();
     }
@@ -652,6 +741,8 @@ public class UTestTableLock {
     private static String dataFileAfterLock; // Only used in main.
 
     public static void main(String[] args) throws ClassNotFoundException, IOException {
+        System.out.println("Starting");
+        log.info("Starting main");
         Class lockClass = Class.forName(args[0]);
         String lockType = args[1];
         Duration holdDuration = Duration.ofMillis(Long.parseLong(args[2]));
@@ -700,7 +791,9 @@ public class UTestTableLock {
 
         }
         FileUtils.writeStringToFile(storyFile, id + "c", Charset.defaultCharset(), true);
-    }
 
+        log.info("Done main");
+    }
+     
 
 }

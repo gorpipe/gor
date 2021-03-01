@@ -44,4 +44,4 @@ For example, the following query:
 
     gor #dbSNP# | log -t 10 logs every ten seconds.
 
-The log goes to stderr in gorpipe and the monitor window in the gorviewer.
+The log goes to stderr in GORpipe and the monitor window in the gorviewer.

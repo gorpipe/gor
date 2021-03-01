@@ -22,10 +22,10 @@
 
 package gorsat.Commands
 
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class Inset extends CommandInfo("INSET",
-  CommandArguments("-s -b -h -e -cis -not -cartesian", "-c -m -n", 1, 1),
+  CommandArguments("-s -b -h -e -cis -not -cartesian -ordered", "-c -m -n", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true))
 {
 

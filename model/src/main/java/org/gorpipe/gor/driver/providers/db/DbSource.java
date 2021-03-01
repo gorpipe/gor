@@ -22,21 +22,22 @@
 
 package org.gorpipe.gor.driver.providers.db;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.gorserver.GorSource;
-import org.gorpipe.model.genome.files.gor.DbGenomicIterator;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.util.string.StringUtil;
+import org.gorpipe.gor.model.DbGenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * Represents a data source accessed through a database.
@@ -46,12 +47,12 @@ import org.slf4j.LoggerFactory;
 public class DbSource implements GorSource {
     private static final Logger log = LoggerFactory.getLogger(DbSource.class);
 
-    private SourceReference sourceReference;
+    private final SourceReference sourceReference;
 
     private final String databaseSource;
     private String chrColName = "chromo";
     private String posColName = "pos";
-    private String tableName = null;
+    private String tableName;
 
     public DbSource(SourceReference sourceReference) {
         this.sourceReference = sourceReference;
@@ -101,7 +102,7 @@ public class DbSource implements GorSource {
         List<DbScope> dbScopes = DbScope.parse(this.sourceReference.getSecurityContext());
 
         return new DbGenomicIterator(this.sourceReference.getLookup(), databaseSource, tableName, chrColName, posColName,
-                this.sourceReference.getColumns(), dbScopes, sourceReference.securityContext);
+                dbScopes, sourceReference.securityContext);
     }
 
 
@@ -128,7 +129,7 @@ public class DbSource implements GorSource {
     @Override
     public boolean exists() {
         if (tableName != null) {
-            final org.gorpipe.model.genome.files.gor.DbSource dbsource = org.gorpipe.model.genome.files.gor.DbSource.lookup(databaseSource);
+            final org.gorpipe.gor.model.DbSource dbsource = org.gorpipe.gor.model.DbSource.lookup(databaseSource);
             if (dbsource == null) {
                 log.warn("Database not found: {}", databaseSource);
                 return false;
@@ -153,7 +154,7 @@ public class DbSource implements GorSource {
     public SourceMetadata getSourceMetadata() {
         long timestamp = System.currentTimeMillis();
         if (tableName != null) {
-            final org.gorpipe.model.genome.files.gor.DbSource dbsource = org.gorpipe.model.genome.files.gor.DbSource.lookup(databaseSource);
+            final org.gorpipe.gor.model.DbSource dbsource = org.gorpipe.gor.model.DbSource.lookup(databaseSource);
             if (dbsource != null) {
                 timestamp = dbsource.queryDefaultTableChange(tableName);
             }

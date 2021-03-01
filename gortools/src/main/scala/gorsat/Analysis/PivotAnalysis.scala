@@ -23,7 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands._
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 
 object PivotAnalysis {
@@ -74,32 +74,27 @@ object PivotAnalysis {
     def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
       for (key <- groupMap.keys) {
         allColumns = groupMap(key)
-        var theOtherCols = key
+        val theOtherCols = new StringBuilder
+        theOtherCols.append(key)
         var i = 0
         while (i < pivotMap.size) {
           var j = 0
           while (j < valueCols.length) {
-            if (j == 0) {
-              if (allColumns(i)(j)._2) {
-                theOtherCols += allColumns(i)(j)._1
-              }
-              else {
-                theOtherCols += emptyString
-              }
-            } else {
-              if (allColumns(i)(j)._2) {
-                theOtherCols += "\t" + allColumns(i)(j)._1
-              }
-              else {
-                theOtherCols += "\t" + emptyString
-              }
+            if (j > 0) {
+              theOtherCols.append("\t")
+            }
+            if (allColumns(i)(j)._2) {
+              theOtherCols.append(allColumns(i)(j)._1)
+            }
+            else {
+              theOtherCols.append(emptyString)
             }
             j += 1
           }
           i += 1
-          if (i < pivotMap.size) theOtherCols += "\t"
+          if (i < pivotMap.size) theOtherCols.append("\t")
         }
-        val outRow = RowObj(bi.chr, bi.sto, theOtherCols)
+        val outRow = RowObj(bi.chr, bi.sto, theOtherCols.toString())
         nextProcessor.process(outRow)
       }
     }

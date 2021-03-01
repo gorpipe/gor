@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.gorgz;
 
-import org.gorpipe.model.genome.files.binsearch.GorSeekableIterator;
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import com.google.auto.service.AutoService;
+import htsjdk.samtools.util.BlockCompressedInputStream;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.BlockCompressedSeekableFile;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -31,11 +31,13 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.datatypes.tabix.TabixIndexedFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import htsjdk.samtools.util.BlockCompressedInputStream;
+import org.gorpipe.gor.binsearch.GorSeekableIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 
+@AutoService(StreamSourceIteratorFactory.class)
 public class GorGzIteratorFactory implements StreamSourceIteratorFactory {
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) throws IOException {

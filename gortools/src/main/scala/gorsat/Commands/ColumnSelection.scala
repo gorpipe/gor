@@ -22,9 +22,9 @@
 
 package gorsat.Commands
 
-import gorsat.IteratorUtilities
+import gorsat.Utilities.IteratorUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 /**
   * ColumnSelection represents a selection of columns from the given header. The selection can be specified
@@ -89,6 +89,7 @@ case class ColumnSelection(
   }
 
   def addPosColumns(): Unit = {
+    if(isRange) populateColumnsFromRange()
     columnValues = (List(0, 1) ::: columnValues).distinct
     isEmpty = false
   }

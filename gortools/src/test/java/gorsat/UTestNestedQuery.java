@@ -153,7 +153,7 @@ public class UTestNestedQuery {
         // filtering on non .gord file should not fail
         int count = TestUtils.runGorPipeCount(query);
 
-        Assert.assertEquals(count, 0);
+        Assert.assertEquals(0, count);
     }
 
     @Test

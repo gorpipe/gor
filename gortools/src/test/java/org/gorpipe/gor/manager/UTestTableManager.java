@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.manager;
 
+import gorsat.TestUtils;
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
 import org.gorpipe.gor.table.Dictionary;
@@ -31,8 +33,6 @@ import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.SlowTests;
-import gorsat.TestUtils;
-import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
@@ -55,7 +55,7 @@ import java.util.stream.IntStream;
 /**
  * Created by gisli on 18/08/16.
  */
-@Category(SlowTests.class)
+//@Category(SlowTests.class)
 public class UTestTableManager {
 
     private static final Logger log = LoggerFactory.getLogger(UTestTableManager.class);
@@ -105,7 +105,6 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
-
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
 
@@ -126,6 +125,7 @@ public class UTestTableManager {
         TableManager manNoHist = TableManager.newBuilder().useHistory(false).build();
         String noHistDict = "noHistDict";
         BaseTable<BucketableTableEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        table.save();
         manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
         Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseTable.HISTORY_DIR_NAME)));
@@ -134,8 +134,10 @@ public class UTestTableManager {
         TableManager manHist = TableManager.newBuilder().useHistory(true).build();
         String histDict = "histDict";
         table = manHist.initTable(workDirPath.resolve(histDict + ".gord"));
+        table.save();
         manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        table.reload();
         Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(BaseTable.HISTORY_DIR_NAME)));
         Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(BaseTable.HISTORY_DIR_NAME)).count()); // 1 action log.
     }
@@ -143,7 +145,7 @@ public class UTestTableManager {
     @Test
     public void testMultiProcessInsert() throws Exception {
         String name = "test_multiprocess_insert";
-        int fileCount = 10;
+        int fileCount = 5;
         String[] sources = IntStream.range(1, fileCount + 1).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
@@ -166,7 +168,7 @@ public class UTestTableManager {
 
         // Wait for all the processes to finish.
         for (Process p : processes) {
-            boolean noTimeout = p.waitFor(20, TimeUnit.SECONDS);
+            boolean noTimeout = p.waitFor(30, TimeUnit.SECONDS);
             int errCode = -1;
             if (noTimeout) errCode = p.exitValue();
             if (errCode != 0) {
@@ -203,7 +205,7 @@ public class UTestTableManager {
         DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
 
         // Bucketize in process.
-        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1"}, ".");
+        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100"}, ".");
 
         // Wait for the thread to get the bucketize lock (so we are waiting for getting inValid lock).
         testTableManagerUtil.waitForBucketizeToStart(table, p);
@@ -262,13 +264,13 @@ public class UTestTableManager {
         buc.setBucketSize(100);
 
         // Bucketize in process.
-        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1"}, ".");
+        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "10"}, ".");
 
         // Wait for the thread to get the bucketize lock (so we are waiting for getting inValid lock).
         testTableManagerUtil.waitForBucketizeToStart(table, p);
 
         // Bucketize in main - should return immediately.
-        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1, -1);
+        int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1000);
 
         // Wait for the thread and print out stuff.
         log.debug(testTableManagerUtil.waitForProcessPlus(p));
@@ -298,14 +300,13 @@ public class UTestTableManager {
         long startTime = System.currentTimeMillis();
         log.info("Time select all: {}", startTime);
         table.reloadForce();
-        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("ABC1234"), false);
-
+        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap(    "PN100"), false);
         long newTime = System.currentTimeMillis() - startTime;
-        log.info("Time using table manager: {}", newTime);
+        log.info("Time using table manager (filter by tag): {}", newTime);
 
         startTime = System.currentTimeMillis();
-        Dictionary d = new Dictionary(table.getPath().toString(), true, table.tagset("ABC1234"), ".", "", false);
-        Dictionary.DictionaryLine[] oldFiles = d.getFiles();
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN100"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
 
@@ -324,16 +325,16 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+            DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
 
         startTime = System.currentTimeMillis();
-        Dictionary d = new Dictionary(table.getPath().toString(), true, table.tagset("ABC1234"), ".", "", false);
-        Dictionary.DictionaryLine[] oldFiles = d.getFiles();
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN515218"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
 
         startTime = System.currentTimeMillis();
         table.reloadForce();
-        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("ABC1234"), false);
+        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("PN515218"), false);
         long newTime = System.currentTimeMillis() - startTime;
 
         log.info("Time using table manager: {}", newTime);
@@ -350,10 +351,10 @@ public class UTestTableManager {
         String name = "testSelectFromLargeDictionary";
 
         long startTime = 0;
-        String tags = "PN1000,PN10000,PN500000,PN900000";
+        String tags = "PN345789,PN620307,PN580941";
 
         startTime = System.currentTimeMillis();
-        String res = TestUtils.runGorPipe("nor -asdict ../../testing/misc_data/1m/1m.gord | where (#2 == 'PN1000' or #2 == 'PN10000' or #2 == 'PN500000' or #2 == 'PN900000')");
+        String res = TestUtils.runGorPipe("nor -asdict ../../testing/data/1m/1m.gord | where (#2 == 'PN345789' or #2 == 'PN620307' or #2 == 'PN580941')");
         long gorpipeTime = System.currentTimeMillis() - startTime;
         log.info("Filtering lines with gorpipe from large dict: {}", gorpipeTime);
 
@@ -362,7 +363,7 @@ public class UTestTableManager {
         man.setBucketSize(100);
 
         startTime = System.currentTimeMillis();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         List<DictionaryEntry> entries = table.filter().tags(tags.split(",")).get();
         long tableLoadAndTagFilterTime = System.currentTimeMillis() - startTime;
         log.info("Filtering entries with dictionary table by tags from large dict: {}", tableLoadAndTagFilterTime);
@@ -378,6 +379,16 @@ public class UTestTableManager {
         }
         long tableEntryFilterTime = System.currentTimeMillis() - startTime;
         log.info("Filtering entries with dictionary table by key from large dict (already loaded): {}", tableEntryFilterTime);
+
+        startTime = System.currentTimeMillis();
+        entries = table.filter().files(entries.stream().map(e -> e.getContent()).toArray(String[]::new)).get();
+        long tableEntryFilterFilesTime = System.currentTimeMillis() - startTime;
+        log.info("Filtering entries with dictionary table by file from large dict (already loaded): {}", tableEntryFilterFilesTime);
+
+        startTime = System.currentTimeMillis();
+        entries = table.filter().tags(tags.split(",")).get();
+        long tableFilesFilterTime = System.currentTimeMillis() - startTime;
+        log.info("Filtering entries with dictionary table by tags from large dict (already loaded): {}", tableTagFilterTime);
     }
 
     @Ignore
@@ -387,7 +398,7 @@ public class UTestTableManager {
         String name = "testDeleteFromLargeDictionary";
 
         Path gord = workDirPath.resolve("deleteFrom1m.gord");
-        Files.copy(Paths.get("../../testing/misc_data/1m/1m.gord"), gord);
+        Files.copy(Paths.get("../../testing/data/1m/1m.gord"), gord);
 
         long startTime = 0;
         String tags = "PN1000,PN10000,PN500000,PN900000";
@@ -411,7 +422,7 @@ public class UTestTableManager {
         log.info("Deleting entries from dictionary from large dict (already loaded): {}", tableDeleteTime);
     }
 
-   /* @Ignore
+    @Ignore
     // Will ignore this for has we don't have access to the large dictionary yet.  Update and enable when we have access to 1m line dict.
     @Test
     public void testSignatureOfLargeDictionaryFewTags() throws Exception {
@@ -419,9 +430,9 @@ public class UTestTableManager {
         String[] tags = new String[]{"PN1000", "PN10000", "PN500000", "PN900000"};
 
         TableManager man = new TableManager();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         long startTime = System.currentTimeMillis();
-        String s1 = table.getSignatureCand(tags);
+        String s1 = table.getSignature(tags);
         long t1 = System.currentTimeMillis() - startTime;
         log.info("Signature (few tags, table not loaded, directly from bytes): {}", t1);
 
@@ -437,7 +448,7 @@ public class UTestTableManager {
 
         Assert.assertEquals("Signature is diffrerent", s1, s2);
         Assert.assertEquals("Signature is diffrerent", s1, s3);
-    }*/
+    }
 
     @Ignore
     // Will ignore this for has we don't have access to the large dictionary yet.  Update and enable when we have access to 1m line dict.
@@ -446,7 +457,7 @@ public class UTestTableManager {
         String name = "testSignatureOfLargeDictionaryManyTags";
 
         TableManager man = new TableManager();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         Random r = new Random();
         String[] tags = table.getAllActiveTags().stream().filter(t -> r.nextFloat() > 0.9).collect(Collectors.toList()).toArray(new String[0]);  // Randomly pick 10% of the tags..
 
@@ -546,7 +557,7 @@ public class UTestTableManager {
         table.insert(entries[0]);
         table.save();
         
-        if (bucketize) man.bucketize(table.getPath(), pack, 1, -1, null);
+        if (bucketize) man.bucketize(table.getPath(), pack, 1, 1000, null);
         TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " | select 1-6");
         TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " -f " + pns[0] + " | select 1-6");
 
@@ -565,7 +576,7 @@ public class UTestTableManager {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            activeEntries.add(entries[i]);
+            activeEntries.add(entries[i]);                                          
 
             if (i > 0 && i % 3 == 0) {
                 // Remove every third pn.
@@ -574,7 +585,7 @@ public class UTestTableManager {
             }
             table.save();
 
-            if (bucketize) man.bucketize(table.getPath(), pack, 1, -1, null);
+            if (bucketize) man.bucketize(table.getPath(), pack, 1, 1000, null);
 
             table.reload();
 
@@ -712,6 +723,5 @@ public class UTestTableManager {
         table.reload();
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
     }
-
 }
     

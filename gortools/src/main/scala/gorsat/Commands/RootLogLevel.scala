@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Analysis.LogLevelAnalysis
 import gorsat.Commands.CommandParseUtilities.stringValueOfOptionWithDefault
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class RootLogLevel extends CommandInfo("ROOTLOGLEVEL",
   CommandArguments("", "-label", 1, 1),

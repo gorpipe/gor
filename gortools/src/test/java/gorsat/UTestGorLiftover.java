@@ -23,7 +23,10 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +76,20 @@ public class UTestGorLiftover {
 
     @Test
     public void testGorLiftoverFilterPInPath() {
+        String query = "gor -p chr12:220000-1100000 ../tests/data/gor/genes.gorz | liftover " + mappath + " -seg -build hg38";
+        int results = TestUtils.runGorPipeCount(query);
+        Assert.assertEquals(21, results);
+    }
+
+    @Test
+    public void testGorLiftoverFilterPInPathSnp() {
+        String query = "gor -p chr12:220000-1100000 ../tests/data/gor/genes.gorz | liftover " + mappath + " -snp -build hg38";
+        int results = TestUtils.runGorPipeCount(query);
+        Assert.assertEquals(21, results);
+    }
+
+    @Test
+    public void testGorLiftoverFilterPInPathVar() {
         String query = "gor -p chr12:220000-1100000 ../tests/data/gor/genes.gorz | liftover " + mappath + " -var -build hg38";
         int results = TestUtils.runGorPipeCount(query);
         Assert.assertEquals(21, results);

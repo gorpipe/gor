@@ -26,7 +26,7 @@ import java.util
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.iterators.RowSource
 
 class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analysis, val theHeader: String) extends RowSource {
@@ -48,7 +48,7 @@ class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analy
   var bufferedPipeStep: Analysis = if (pipeStep != null) pipeStep | BufferAdaptor() else BufferAdaptor()
   bufferedPipeStep.securedSetup(null)
 
-  def hasNext: Boolean = {
+  override def hasNext: Boolean = {
     if (!mustReCheck) return myHasNext
     if (rowQueue.size() > 0) myHasNext = true
     else {
@@ -62,7 +62,7 @@ class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analy
     myHasNext
   }
 
-  def next(): Row = {
+  override def next(): Row = {
     if (hasNext) {
       mustReCheck = true
       myNext = rowQueue.poll()
@@ -72,7 +72,7 @@ class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analy
     }
   }
 
-  def setPosition(seekChr: String, seekPos: Int): Unit = {
+  override def setPosition(seekChr: String, seekPos: Int): Unit = {
     mustReCheck = true
     rowQueue.clear()
     sourceIterator.setPosition(seekChr, seekPos)

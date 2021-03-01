@@ -25,14 +25,14 @@ package gorsat.Commands
 import gorsat.Analysis.GorCsvCC.CsvCCAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class CsvCC extends CommandInfo("CSVCC",
   CommandArguments("-probunphased -probphased", "-gc -vs -s -u -threshold", 2, 2),
-  CommandOptions(gorCommand = true, cancelCommand = true))
+  CommandOptions(gorCommand = true, norCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 

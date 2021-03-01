@@ -25,9 +25,9 @@ package gorsat.Commands
 import gorsat.Analysis.GroupAnalysis
 import gorsat.Analysis.GtLDAnalysis.{LDSelfJoinAnalysis, LDcalculation}
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.IteratorUtilities
+import gorsat.Utilities.IteratorUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 class GtLD extends CommandInfo("GTLD",
   CommandArguments("-sum -calc", "-f", 0, 0),
@@ -36,9 +36,6 @@ class GtLD extends CommandInfo("GTLD",
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
     val binN = 100
     var leftHeader = forcedInputHeader
-
-    val doLeftJoin = true
-    val emptyString = ""
 
     val fuzzFactor = intValueOfOptionWithDefaultWithRangeCheck(args, "-f", 0, 0)
 
@@ -49,10 +46,13 @@ class GtLD extends CommandInfo("GTLD",
     var combinedHeader = leftHeader
     val allCols = leftHeader.split("\t")
 
-    val bucketCol = leftHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "BUCKET" )
-    val valuesCol = leftHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "VALUES" )
-    val useOnlyAsLeftVar = leftHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "USEONLYASLEFTVAR" )
+    val bucketCol = allCols.indexWhere( x => x.toUpperCase == "BUCKET" )
+    val valuesCol = allCols.indexWhere( x => x.toUpperCase == "VALUES" )
+    val useOnlyAsLeftVar = allCols.indexWhere( x => x.toUpperCase == "USEONLYASLEFTVAR" )
     var otherCols: List[Int] = Range(0,allCols.length).toList
+
+    var headerLength = allCols.length
+    var numNewCols = 4
 
     val req = if (bucketCol >= 0) List(bucketCol) else Nil
 
@@ -62,13 +62,15 @@ class GtLD extends CommandInfo("GTLD",
       leftHeader = leftHeader.split("\t").slice(0, 2).mkString("\t") + "\t" + otherCols.map(allCols(_)).mkString("\t")
       combinedHeader = leftHeader + "\tdistance\t" + leftHeader.split("\t").slice(1, leftHeader.length).mkString("\t")
 
-      combinedHeader += "\tLD_x11\tLD_x12\tLD_x21\tLD_x22"
+      combinedHeader += "\tLD_g00\tLD_g10\tLD_g20\tLD_g01\tLD_g11\tLD_g21\tLD_g02\tLD_g12\tLD_g22"
       combinedHeader = IteratorUtilities.validHeader(combinedHeader)
-    }
 
-    val headerLength = combinedHeader.split("\t").length
-    val gcCols = Range(2,headerLength-4).toList
-    val icCols = Range(headerLength-4,headerLength).toList
+      headerLength = combinedHeader.split("\t").length
+      numNewCols = 9
+
+    }
+    val gcCols = Range(2,headerLength - numNewCols).toList
+    val icCols = Range(headerLength - numNewCols, headerLength).toList
 
     val missingSEG = "" // not used here
 
@@ -82,67 +84,31 @@ class GtLD extends CommandInfo("GTLD",
       pipeStep = LDSelfJoinAnalysis(binsize, missingSEG, fuzzFactor, req, otherCols, valuesCol, useOnlyAsLeftVar, binN)
       if (bucketCol >= 0 || hasOption(args, "-calc")) {
         aggrUsed = true
-        pipeStep |= GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false, useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols, Nil, gcCols, 10000, ",", null)
+        pipeStep |= getGroupPipestep(gcCols, icCols)
       }
     }
     if (hasOption(args, "-calc")) {
       if (hasOption(args, "-sum") && !aggrUsed) {
-        pipeStep |= GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false, useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols, Nil, gcCols, 10000, ",", null)
+        pipeStep |= getGroupPipestep(gcCols, icCols)
       }
       if (!hasOption(args, "-sum")) {
-        pipeStep = GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false, useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols, Nil, gcCols, 10000, ",", null)
+        pipeStep = getGroupPipestep(gcCols, icCols)
         // Here we add pipeStep |= calc LD and R
       }
-      val x11Col = combinedHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "LD_X11" )
-      if (x11Col < 0) {
-        throw new GorParsingException("For the -calc option the input must have the columns LD_x11,LD_x12,LD_x21, and LD_x22.  You need to apply -sum as well.")
+      val g00Col = combinedHeader.split("\t",-1).indexWhere( x => x.toUpperCase == "LD_G00" )
+      if (g00Col < 0) {
+        throw new GorParsingException("For the -calc option the input must have the columns LD_g00, g10, g20, g01, ..., and LD_g22.  You need to apply -sum as well.")
       }
-      pipeStep |= LDcalculation(x11Col)
-      combinedHeader += "\tLD_Dp\tLD_r"
+      pipeStep |= LDcalculation(g00Col)
+      combinedHeader += "\tLD_D\tLD_Dp\tLD_r"
     }
 
     CommandParsingResult(pipeStep, combinedHeader)
   }
 
+  private def getGroupPipestep(gcCols: List[Int], icCols: List[Int]) = {
+    GroupAnalysis.Aggregate(1, useCount = false, useCdist = false, useMax = false, useMin = false, useMed = false,
+      useDis = false, useSet = false, useLis = false, useAvg = false, useStd = false, useSum = true, Nil, icCols,
+      Nil, gcCols, 10000, truncate = false, ",", null)
+  }
 }
-
-/*
-create #dummy# = nor <(norrows 1000 | sort -c rownum:n);
-
-create #buckets# = nor [#dummy#] | rename #1 PN | calc bucket 'b_'+str(div(PN,50)+1);
-
-create #loci# = gorrow chr1,1,2 | multimap -cartesian -h <(norrows 20000) | calc Npos #2+RowNum | select 1,Npos | sort genome | rename #2 Pos | calc ref 'G' |  calc alt 'C';
-
-create #gt# = gor [#loci#] | multimap -cartesian -h [#buckets#] | distloc 20000 | hide bucket | calc gt mod(PN,4) | where random()<0.05;
-
-create #cov# = gorrow chr1,0,3000 | multimap -cartesian -h [#buckets#] | where not(bucket='b_2');
-
-test 1:
-
-gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#]
-| csvsel -gc ref,alt -u 3 -vs 1 [#buckets#] <(nor [#buckets#] | select #1)
-| gtld -sum -calc -f 100
-| merge <(gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | gtld -sum -calc -f 100 )
-| group 1 -gc 3- -count | throwif allcount != 2 | where 2=3
-
-test 2:
-
-create yyy = gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | top 100
-| replace values fsvmap(values,1,'if(sin(pos)>0.5,"2","0")','') | gtld -sum -f 100;
-
-gor [yyy] | gtld -calc
-| merge <(gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | top 100
-| replace values fsvmap(values,1,'if(sin(pos)>0.5,"2","0")','') | gtld -sum -f 100 -calc)
-| group 1 -gc 3- -count | throwif allcount != 2 | where 2=3
-
-test 3:
-
-create yyy = gor [#gt#] | replace gt 0 | gtgen -gc ref,alt [#buckets#] [#cov#] | top 100
-| replace values fsvmap(values,1,'if(sin(pos)>0.5,"2","0")','') | gtld -sum -f 100;
-
-
-gor [yyy]  | replace LD_x11 3 | replace LD_x12 1| replace LD_x21 1 | replace LD_x22 3  | gtld -calc
-| throwif abs(ld_dp-0.5)>0.01 or abs(ld_r-0.5)>0.01 | where 2=3
-
-
-*/

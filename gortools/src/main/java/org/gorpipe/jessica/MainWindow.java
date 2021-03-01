@@ -22,9 +22,8 @@
 
 package org.gorpipe.jessica;
 
-import org.gorpipe.model.genome.files.gor.Row;
 import gorsat.Commands.RowHeader;
-import org.gorpipe.jessica.PipeStepInfo;
+import org.gorpipe.gor.model.Row;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -36,7 +35,7 @@ import java.util.Collections;
 import java.util.Vector;
 
 public class MainWindow extends JFrame implements DocumentListener, ActionListener {
-    private transient GorQueryHandler gorQueryHandler;
+    private final transient GorQueryHandler gorQueryHandler;
 
     private final JTextArea input;
     private final JTextArea output;

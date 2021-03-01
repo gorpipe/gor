@@ -22,18 +22,17 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIterator;
 
 /**
  * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.
  */
 public class SourceReferenceBuilder {
-    private String url;
+    private final String url;
     private String securityContext;
     private String commonRoot;
     private GenomicIterator.ChromoLookup lookup;
     private String chrSubset;
-    private int[] columns;
 
     public SourceReferenceBuilder(String url) {
         this.url = url;
@@ -46,11 +45,10 @@ public class SourceReferenceBuilder {
         this.commonRoot = parentSourceReference.commonRoot;
         this.lookup = parentSourceReference.lookup;
         this.chrSubset = parentSourceReference.chrSubset;
-        this.columns = parentSourceReference.columns;
     }
 
     public SourceReference build() {
-        return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, columns);
+        return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset);
     }
 
     public SourceReferenceBuilder securityContext(String securityContext) {
@@ -70,11 +68,6 @@ public class SourceReferenceBuilder {
 
     public SourceReferenceBuilder chrSubset(String chrSubset) {
         this.chrSubset = chrSubset;
-        return this;
-    }
-
-    public SourceReferenceBuilder columns(int[] columns) {
-        this.columns = columns;
         return this;
     }
 }

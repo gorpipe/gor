@@ -1,20 +1,11 @@
 rootProject.name = 'gor'
 rootProject.buildFileName = "build.gradle"
 
-include 'base:test'
-include 'base:exception'
-include 'base:logging'
-include 'base:config'
-
+include 'base'
 include 'model'
-include 'clientbase'
-include 'querydialogs'
 include 'documentation'
 include 'gortools'
-include 'tools'
 include 'drivers'
-include 'util:string'
-include 'util:collection'
-include 'util:gorutil'
-
+include 'util'
+include 'test'
 include 'external'

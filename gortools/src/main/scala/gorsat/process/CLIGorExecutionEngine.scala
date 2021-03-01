@@ -22,15 +22,12 @@
 
 package gorsat.process
 
-import java.io.File
-import java.nio.charset.Charset
-
-import gorsat.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities
-import gorsat.MacroUtilities.replaceAllAliases
+import gorsat.Utilities.MacroUtilities.replaceAllAliases
 import gorsat.Outputs.{NorStdOut, StdOut}
-import org.apache.commons.io.FileUtils
-import org.gorpipe.gor.{GorRunner, GorSession, RequestStats}
+import gorsat.Utilities.AnalysisUtilities
+import org.gorpipe.gor.session.{GorRunner, GorSession}
+import org.gorpipe.gor.RequestStats
 
 /**
   * Execution engine for GOR running as command line. This class takes as input the command line options, construct a
@@ -60,9 +57,9 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     queryToExecute = replaceAllAliases(queryToExecute, fileAliasMap)
 
     val iterator = new PipeInstance(session.getGorContext)
-    iterator.subProcessArguments(queryToExecute, pipeOptions.fileSignature, pipeOptions.virtualFile, pipeOptions.scriptAnalyzer, pipeOptions.stdIn, "")
+    iterator.init(queryToExecute, pipeOptions.stdIn, "")
 
-    var header = iterator.combinedHeader
+    var header = iterator.getHeader
     if (containsWriteCommand(pipeOptions.query)) header = null
 
     // Add steps that return the output of the pipe

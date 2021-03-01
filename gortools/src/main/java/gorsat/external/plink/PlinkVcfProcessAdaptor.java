@@ -23,12 +23,15 @@
 package gorsat.external.plink;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.GorSession;
-import org.gorpipe.model.genome.files.gor.Row;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.model.Row;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -40,8 +43,8 @@ public class PlinkVcfProcessAdaptor extends PlinkProcessAdaptor {
     private FileWriter vcf;
     private String vcfHeader;
 
-    public PlinkVcfProcessAdaptor(GorSession session, PlinkArguments plinkArguments, int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header) throws IOException {
-        super(session, plinkArguments, refIdx, altIdx, rsIdx, valueIdx, hc, th, vcf, header);
+    public PlinkVcfProcessAdaptor(GorSession session, PlinkArguments plinkArguments, int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header, String expectedHeader) throws IOException {
+        super(session, plinkArguments, refIdx, altIdx, rsIdx, valueIdx, hc, th, vcf, expectedHeader);
         if( vcf ) vcfHeader = "#"+header+"\n";
     }
 
@@ -53,32 +56,45 @@ public class PlinkVcfProcessAdaptor extends PlinkProcessAdaptor {
         fw.write(vcfHeader);
     }
 
-    void prepareAndRunPlink(String pgenFilePath) throws ExecutionException, InterruptedException {
+    boolean isWriterInitialized() {
+        return vcf!=null;
+    }
+
+    void prepareAndRunPlink(String vcfFilePath) throws ExecutionException, InterruptedException {
         try {
-            vcf.close();
+            if(isWriterInitialized()) vcf.close();
         } catch (Exception e) {
             throw new GorSystemException(e);
         }
-        if (plinkFuture != null) first = plinkFuture.get();
-        PlinkThread plinkThread = new PlinkThread(session.getProjectContext().getRealProjectRootPath().toFile(), this.writeDir,
-                this.plinkExecutable, pgenFilePath, this.psamFile, this.first,this, this.args, true);
-        plinkFuture = es.submit(plinkThread);
+        Path vcfPath = Paths.get(vcfFilePath+VCF_ENDING);
+        Path rootPath = session.getProjectContext().getRealProjectRootPath();
+        if((vcfPath.isAbsolute() && Files.exists(vcfPath)) || Files.exists(rootPath.resolve(vcfPath))) {
+            if (plinkFuture != null) first = plinkFuture.get();
+            PlinkThread plinkThread = new PlinkThread(session.getProjectContext().getRealProjectRootPath().toFile(), this.writeDir,
+                    this.plinkExecutable, vcfFilePath, this.psamFile, this.first, this, this.args, true);
+            plinkFuture = es.submit(plinkThread);
+        } else plinkFuture = null;
     }
 
-    void setNewTmpFileStream() throws IOException {
-        setNewVcfStream();
+    @Override
+    public void setup() {
+        try {
+            setNewVcfStream();
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
     }
 
     private void setNewVcfStream() throws IOException {
         this.pfnIdx = (this.pfnIdx + 1) & 1;
-        this.vcf = new FileWriter(getCurrentPGenFile() + VCF_ENDING);
+        this.vcf = new FileWriter(getCurrentInputFile() + VCF_ENDING);
         dumpToVcf(vcf, vcfHeader);
     }
 
     @Override
     void processRow(Row row) throws IOException, ExecutionException, InterruptedException {
         if (linesWrittenToCurrentFile > MAXIMUM_NUMBER_OF_LINES) {
-            prepareAndRunPlink(getCurrentPGenFile());
+            prepareAndRunPlink(getCurrentInputFile());
             setNewVcfStream();
             linesWrittenToCurrentFile = 0;
         }

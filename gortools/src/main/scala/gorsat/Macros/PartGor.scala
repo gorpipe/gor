@@ -24,11 +24,11 @@ package gorsat.Macros
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script.{ExecutionBlock, MacroInfo, MacroParsingResult}
+import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import gorsat.{AnalysisUtilities, MacroUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
-import org.gorpipe.gor.{GorContext, GorSession}
-import org.gorpipe.model.genome.files.gor.FileReader
+import org.gorpipe.gor.model.FileReader
+import org.gorpipe.gor.session.{GorContext, GorSession}
 
 import scala.collection.mutable
 
@@ -47,7 +47,8 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
                                           context: GorContext,
                                           doHeader: Boolean,
                                           inputArguments: Array[String],
-                                          options: Array[String]): MacroParsingResult = {
+                                          options: Array[String],
+                                          skipCache: Boolean): MacroParsingResult = {
 
     val tags = AnalysisUtilities.getFilterTags(options, context, doHeader)
     val dictionary = getDictionary(options, context.getSession)
@@ -77,12 +78,12 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
 
       if (!extraCommands.isEmpty) newCmd += extraCommands
 
-      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.dependencies, create.batchGroupName))
+      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.signature, create.dependencies, create.batchGroupName))
       theDependencies ::= parKey
     })
 
     val theCommand = partitions.keys.foldLeft("gordictpart") ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, theDependencies.toArray, create.batchGroupName, isDictionary = true))
+    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
   }
@@ -97,7 +98,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
       val tagsFound = bucketMap.keys.map(x => bucketMap(x)._1).fold(Nil)((t, x) => {
         x ::: t
       }).map(x => x -> true).toMap
-      val temp = tagSet.filter(x => tagsFound.get(x).isEmpty)
+      val temp = tagSet.filter(x => !tagsFound.contains(x))
       if (temp.nonEmpty) {
         throw new GorParsingException("Error in tag set - tags are not found in the dictionary: " + temp.slice(0, 100))
       }
@@ -138,68 +139,77 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
 object PartGor {
   def readDictionaryBucketTagsFromFile(fileName: String, tags: String, fileReader: FileReader): mutable.Map[String, (List[String], Int)] = {
     val dr = MapAndListUtilities.readArray(fileName, fileReader)
-    readDictionaryBucketTags(fileName, tags, dr)
+    val header = dr.head.split("\t")
+    if (header.length == 1) {
+      throw new GorDataException("Dictionary does only have one column and no tags. Check " + fileName)
+    }
+    val dictContents = if (header(0).startsWith("#")) dr.tail else dr
+    readDictionaryBucketTags(tags, header.length, dictContents)
   }
 
-  def readDictionaryBucketTags(fileName: String, tags: String, dr: Array[String]): mutable.Map[String, (List[String], Int)] = {
-    /* (bucket,tag) */
-    val h = dr.head.split("\t")
-    val taglist = tags.split(',').map(x => (x, true)).toMap
-    if (h.length == 1) {
-      throw new GorDataException("Dictionary does only have one column and no tags. Check " + fileName)
-    } else if (h.length == 7) {
-      /* Multi-tag buckets, require chrom range as well */
-      var bucketMap = scala.collection.mutable.HashMap.empty[String, (List[String], Int)]
-      dr.map(x => {
-        val tempcols = x.split("\t")
-        val bucket = tempcols(0)
-        val allrowItems = tempcols(6).split(',').toList
-        (bucket, allrowItems, allrowItems.size)
-      }).map(x => if (tags == "") x else (x._1, x._2.filter(taglist.contains), x._3)).foreach(
-        item => {
-          bucketMap.get(item._1) match {
-            case Some(x) =>
-              bucketMap += (item._1 -> (x._1 ::: item._2, x._2 + item._3))
-            case None =>
-              bucketMap += (item._1 -> (item._2, item._3))
-          }
-        }
-      )
-      bucketMap
-
+  def readDictionaryBucketTags(tags: String, numColumns: Int, dictContents: Array[String]): mutable.Map[String, (List[String], Int)] = {
+    if (numColumns == 7) {
+      getMultiTagBucketMap(tags, dictContents)
     } else {
-      var bucketMap = scala.collection.mutable.HashMap.empty[String, (List[String], Int)]
-      dr.map(x => {
-        val tempcols = x.split("\t")
-        val bucksep = tempcols(0).indexOf('|')
-        var bucket: String = null
-        var rowitem: String = null
-        if (bucksep != -1) {
-          bucket = tempcols(0).slice(bucksep + 1, tempcols(0).length)
-          rowitem = tempcols(1)
-        } else {
-          bucket = ""
-          rowitem = tempcols(1)
-        }
-        val allrowItems = if (rowitem.contains(",")) rowitem.split(',').toList else List(rowitem)
-        (bucket, allrowItems, allrowItems.size)
-      }).collect {
-        case s: (String, List[String], Int) if s._1.slice(0, 2) != "D|" =>
-          if (tags == "") s else (s._1, s._2.filter(taglist.contains), s._3)
-      }.foreach(
-        item => {
-          bucketMap.get(item._1) match {
-            case Some(x) =>
-              bucketMap += (item._1 -> (x._1 ::: item._2, x._2 + item._3))
-            case None =>
-              bucketMap += (item._1 -> (item._2, item._3))
-          }
-        }
-      )
-      bucketMap
+      getBucketMap(tags, dictContents)
     }
   }
 
+
+  private def getBucketMap(tags: String, dictContents: Array[String]) = {
+    val bucketMap = scala.collection.mutable.HashMap.empty[String, (List[String], Int)]
+    val taglist = tags.split(',').map(x => (x, true)).toMap
+    dictContents.map(x => {
+      val tempcols = x.split("\t")
+      val bucksep = tempcols(0).indexOf('|')
+      var bucket: String = null
+      var rowitem: String = null
+      if (bucksep != -1) {
+        bucket = tempcols(0).slice(bucksep + 1, tempcols(0).length)
+        rowitem = tempcols(1)
+      } else {
+        bucket = ""
+        rowitem = tempcols(1)
+      }
+      val allrowItems = if (rowitem.contains(",")) rowitem.split(',').toList else List(rowitem)
+      (bucket, allrowItems, allrowItems.size)
+    }).collect {
+      case s: (String, List[String], Int) if s._1.slice(0, 2) != "D|" =>
+        if (tags == "") s else (s._1, s._2.filter(taglist.contains), s._3)
+    }.foreach(
+      item => {
+        bucketMap.get(item._1) match {
+          case Some(x) =>
+            bucketMap += (item._1 -> (x._1 ::: item._2, x._2 + item._3))
+          case None =>
+            bucketMap += (item._1 -> (item._2, item._3))
+        }
+      }
+    )
+    bucketMap
+  }
+
+  private def getMultiTagBucketMap(tags: String, dictContents: Array[String]) = {
+    /* Multi-tag buckets, require chrom range as well */
+    val bucketMap = scala.collection.mutable.HashMap.empty[String, (List[String], Int)]
+    val taglist = tags.split(',').map(x => (x, true)).toMap
+    dictContents.map(x => {
+      val tempcols = x.split("\t")
+      val bucket = tempcols(0)
+      val allrowItems = tempcols(6).split(',').toList
+      (bucket, allrowItems, allrowItems.size)
+    }).map(x => if (tags == "") x else (x._1, x._2.filter(taglist.contains), x._3)).foreach(
+      item => {
+        bucketMap.get(item._1) match {
+          case Some(x) =>
+            bucketMap += (item._1 -> (x._1 ::: item._2, x._2 + item._3))
+          case None =>
+            bucketMap += (item._1 -> (item._2, item._3))
+        }
+      }
+    )
+    bucketMap
+  }
 
   def groupTagsByBuckets(partitionSplitMethod: (String, Double),
                          bucketTagsCount: scala.collection.mutable.Map[String, (List[String], Int)],

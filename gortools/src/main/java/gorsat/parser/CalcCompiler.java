@@ -22,12 +22,12 @@
 
 package gorsat.parser;
 
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.GorScriptBaseVisitor;
 import org.gorpipe.gor.GorScriptParser;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import scala.collection.Iterator;
 import scala.collection.mutable.ListBuffer;
 

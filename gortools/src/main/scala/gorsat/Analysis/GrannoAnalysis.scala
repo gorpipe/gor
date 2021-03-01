@@ -23,8 +23,8 @@
 package gorsat.Analysis
 
 import gorsat.Commands._
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 
 object GrannoAnalysis {
 
@@ -72,6 +72,25 @@ object GrannoAnalysis {
                        acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
                        sepVal: String, outgoingHeader: RowHeader) extends
     BinAnalysis(RegularRowHandler(binSize), BinAggregator(
+      AggregateFactory(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg, useStd,
+        useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2, 1))
+  {
+    override def isTypeInformationMaintained: Boolean = true
+
+    override def setRowHeader(header: RowHeader): Unit = {
+      rowHeader = header
+      if (pipeTo != null) {
+        pipeTo.setRowHeader(outgoingHeader.propagateTypes(rowHeader))
+      }
+    }
+  }
+
+  case class OrderedAggregate(binSize: Int, useCount: Boolean, useCdist: Boolean, useMax: Boolean, useMin: Boolean,
+                       useMed: Boolean, useDis: Boolean, useSet: Boolean, useLis: Boolean, useAvg: Boolean,
+                       useStd: Boolean, useSum: Boolean,
+                       acCols: List[Int], icCols: List[Int], fcCols: List[Int], grCols: List[Int], setLen: Int,
+                       sepVal: String, outgoingHeader: RowHeader) extends
+    BinAnalysis(GroupingColumnRowHandler(binSize, grCols.toArray), BinAggregator(
       AggregateFactory(binSize, useCount, useCdist, useMax, useMin, useMed, useDis, useSet, useLis, useAvg, useStd,
         useSum, acCols, icCols, fcCols, grCols, setLen, sepVal), 2, 1))
   {

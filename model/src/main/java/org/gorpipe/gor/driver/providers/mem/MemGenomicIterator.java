@@ -22,10 +22,10 @@
 
 package org.gorpipe.gor.driver.providers.mem;
 
-import org.gorpipe.model.genome.files.gor.GenomicIterator;
-import org.gorpipe.model.genome.files.gor.Line;
-
-import java.util.Arrays;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.Row;
+import org.gorpipe.model.gor.RowObj;
 
 /**
  * Simple memory based line generator for testing purposes.
@@ -33,32 +33,18 @@ import java.util.Arrays;
 public class MemGenomicIterator extends GenomicIterator {
     int posit = 0;
     int chromo = 1;
-    final byte[] data1 = "data1".getBytes();
-    final byte[] data = "data".getBytes();
     final int lines;
-    final int[] columns; // source columns to include
-    final int[] columnMap; // map source columns into Line data columns
-    static final String[] COLS = {"Chromo", "Pos", "Col3", "Col4", "Col5"};
+    static final String HEADER = "Chromo\tPos\tCol3\tCol4\tCol5";
     final GenomicIterator.ChromoLookup lookup;
 
-    public MemGenomicIterator(GenomicIterator.ChromoLookup lookup, int lines, int columns[]) {
+    public MemGenomicIterator(GenomicIterator.ChromoLookup lookup, int lines) {
         this.lookup = lookup;
         this.lines = lines;
-        this.columns = columns != null ? columns : new int[]{0, 1, 2, 3, 4};
-        this.columnMap = new int[COLS.length];
-        Arrays.fill(columnMap, -1);
-        for (int i = 2; i < this.columns.length; i++) {
-            columnMap[this.columns[i]] = i - 2;
-        }
     }
 
     @Override
-    public String[] getHeader() {
-        String[] headers = new String[columns.length];
-        for (int i = 0; i < headers.length; i++) {
-            headers[i] = COLS[columns[i]];
-        }
-        return headers;
+    public String getHeader() {
+        return HEADER;
     }
 
     @Override
@@ -75,23 +61,31 @@ public class MemGenomicIterator extends GenomicIterator {
     }
 
     @Override
+    public boolean hasNext() {
+        return posit < lines;
+    }
+
+    @Override
+    public Row next() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(lookup.idToName(chromo));
+        stringBuilder.append("\t");
+        stringBuilder.append(posit);
+        stringBuilder.append("\t");
+        stringBuilder.append("data1");
+        stringBuilder.append("\t");
+        stringBuilder.append(posit % 5);
+        stringBuilder.append("\t");
+        stringBuilder.append("data");
+        stringBuilder.append(posit % 5);
+
+        posit++;
+
+        return RowObj.apply(stringBuilder);
+    }
+
+    @Override
     public boolean next(Line line) {
-        if (posit < lines) {
-            line.chrIdx = chromo;
-            line.chr = lookup.idToName(line.chrIdx);
-            line.pos = posit++;
-            if (columnMap[2] >= 0) {
-                line.cols[columnMap[2]].set(data1);
-            }
-            if (columnMap[3] >= 0) {
-                line.cols[columnMap[3]].set(line.pos % 5);
-            }
-            if (columnMap[4] >= 0) {
-                line.cols[columnMap[4]].set(data);
-                line.cols[columnMap[4]].append(line.pos % 5);
-            }
-            return true;
-        }
-        return false;
+        throw new UnsupportedOperationException();
     }
 }

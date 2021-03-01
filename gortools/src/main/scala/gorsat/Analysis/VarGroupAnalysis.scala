@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorResourceException
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable
@@ -81,12 +81,14 @@ case class VarGroupAnalysis(refCol: Int, altCol: Int, valCol: Int, grCols: List[
   }
 
   private def flushRow: Unit = {
-    val ref = lastRow.colAsString(refCol)
-    val groupId = () => lastRow.selectedColumns(grColsArray)
-    val addAlts = (sb: StringBuilder) => sb.append(lastRow.colAsString(altCol))
-    val valueCol = mapBiAllelic(lastRow.colAsString(valCol).toString)
-    val rowToProcess = getRow(ref, groupId, addAlts, valueCol)
-    super.process(rowToProcess)
+    if(lastRow!=null) {
+      val ref = lastRow.colAsString(refCol)
+      val groupId = () => lastRow.selectedColumns(grColsArray)
+      val addAlts = (sb: StringBuilder) => sb.append(lastRow.colAsString(altCol))
+      val valueCol = mapBiAllelic(lastRow.colAsString(valCol).toString)
+      val rowToProcess = getRow(ref, groupId, addAlts, valueCol)
+      super.process(rowToProcess)
+    }
   }
 
   private def flushColHolders = {

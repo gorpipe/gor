@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.manager;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
@@ -29,13 +30,13 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
-import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Class to manage gor tables (dictionaries and tables).
@@ -115,7 +116,7 @@ public class TableManager {
     }
 
     /**
-     * Set the bucket size.  Also updates the minBucketSize if it is larger than <bucketSize>.
+     * Set the bucket size.  Also updates the minBucketSize if it is larger than {@code bucketSize}.
      *
      * @param bucketSize the requested bucket size.
      */
@@ -140,10 +141,10 @@ public class TableManager {
     }
 
     /**
-     * Initialize the table given by <path>.
+     * Initialize the table given by {@code path}.
      *
      * @param path path to the table.
-     * @return the table given by <path>.
+     * @return the table given by {@code path}.
      */
     public BaseTable initTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {
@@ -288,8 +289,9 @@ public class TableManager {
                 .bucketSize(this.bucketSize)
                 .minBucketSize(this.minBucketSize)
                 .lockType(this.lockType)
+                .bucketCreator(new BucketCreatorGorPipe(workers))
                 .build()
-                .bucketize(packLevel, workers, maxBucketCount, bucketDirs, false);
+                .bucketize(packLevel, maxBucketCount, bucketDirs, false);
     }
 
     /**

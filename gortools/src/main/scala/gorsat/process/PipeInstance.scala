@@ -26,32 +26,29 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 import java.util
 import java.util.Optional
-
-import gorsat.Commands.Analysis
 import gorsat.Analysis._
 import gorsat.Commands.CommandParseUtilities.{hasOption, rangeOfOption, stringValueOfOption}
-import gorsat.Commands._
-import gorsat.IteratorUtilities.validHeader
+import gorsat.Commands.{Analysis, _}
+import gorsat.DynIterator.DynamicRowSource
 import gorsat.Iterators.StdInputSourceIterator
 import gorsat.Monitors.{CancelMonitor, MemoryMonitor, TimeoutMonitor}
 import gorsat.Script.{ScriptEngineFactory, ScriptParsers}
+import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat._
-import gorsat.gorsatGorIterator.gorsatGorIterator
+import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import gorsat.process.GorJavaUtilities.CmdParams
 import gorsat.process.GorPipe.brsConfig
-import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorUserException}
-import org.gorpipe.gor.GorContext
-import org.gorpipe.gor.analysis.GorAnalysisModule
-import org.gorpipe.model.genome.files.gor.{DriverBackedFileReader, FileReader, GorFileReaderContext}
-import org.gorpipe.model.gor.{MemoryMonitorUtil, Pipes}
+import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator, GorFileReaderContext}
+import org.gorpipe.gor.monitor.GorMonitor
+import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.util.StringUtil
 import org.gorpipe.model.gor.iterators.RowSource
-import org.gorpipe.util.string.StringUtil
 import org.slf4j.LoggerFactory
 
 object PipeInstance {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private val consoleLogger = LoggerFactory.getLogger("console." + this.getClass)
 
   val DEFAULT_REQUEST_ID: String = ""
 
@@ -78,19 +75,20 @@ object PipeInstance {
     pipeStep.pipeTo = null
 
     if (next == null) {
-      if (pipeStep.isTypeInformationNeeded && !typesMaintained)
+      if (pipeStep.isTypeInformationNeeded && !typesMaintained) {
         InferColumnTypes() | pipeStep
-      else
+      } else {
         pipeStep
+      }
     } else {
       if (pipeStep.isTypeInformationNeeded && !typesMaintained) {
         val infer = InferColumnTypes()
         infer.setRowHeader(pipeStep.rowHeader)
         infer | pipeStep | injectTypeInferral(next, pipeStep.isTypeInformationMaintained)
       }
-      else
+      else {
         pipeStep | injectTypeInferral(next, pipeStep.isTypeInformationMaintained && typesMaintained)
-
+      }
     }
   }
 }
@@ -100,24 +98,101 @@ object PipeInstance {
   */
 class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
+  private var theIterator : RowSource = _
+  private var usedFiles : List[String] = Nil
+  private var range: GenomicRange.Range = GenomicRange.all
+  private var firstCommand: Int = 0
+  private var nowithin = false
+  private var pipeSteps: Array[String] = _
+  private var theParams = ""
+  private val session = context.getSession
+  private var combinedHeader : String = _
+  private var isClosed: Boolean = false
+
+  var thePipeStep : Analysis = _
+  var theInputSource: GenomicIterator = _
+
   PipeInstance.initialize()
 
-  val memoryMonitorCommands: Array[String] = GorPipeCommands.getMemoryMonitorCommands
-  val availGorCommands: Array[String] = GorPipeCommands.getGorCommands ++ process.GorInputSources.getInputSources
-  val verifyCommands: Array[String] = GorPipeCommands.getVerifyCommands
-  val availNorCommands: Array[String] = GorPipeCommands.getNorCommands ++ process.GorInputSources.getInputSources
-  var availCommands: Array[String] = availGorCommands
+  override def init(params : String, gm : GorMonitor): Unit = {
+    context.getSession.getSystemContext.setMonitor(gm)
+    scalaInit(params)
+    isClosed = false
+  }
+
+  override def getRowSource: RowSource = theIterator
+
+  override def getHeader : String = combinedHeader
+  override def getUsedFiles: List[String] = usedFiles
+
+  def getIterator: RowSource = theIterator
+
+  def createPipestep(iparams : String, forcedInputHeader : String = ""): Analysis = {
+    if (theIterator != null) close()
+    val args = CommandParseUtilities.quoteSafeSplit(iparams + " -stdin",' ')
+    processArguments(args, isNorContext,forcedInputHeader)
+    theParams = iparams
+    theIterator = null
+    thePipeStep
+  }
+
+  override def scalaInit(iparams : String, forcedInputHeader : String = "") {
+    if (theIterator != null) {
+      close()
+    }
+
+    val args = Array(iparams)
+    processArguments(args, isNorContext,forcedInputHeader)
+    theParams = iparams
+  }
+
+  override def hasNext : Boolean = {
+    if (isClosed) {
+      throw new GorSystemException("Iterator is closed", null)
+    }
+    theIterator.hasNext
+  }
+
+  override def next : String = {
+    if (isClosed) {
+      throw new GorSystemException("Iterator is closed", null)
+    }
+    theIterator.next().toString
+  }
+
+  def seek(chr : String, pos : Int) {  // We must re-initialize if seek is applied
+    if (theIterator != null) close()
+    val dynIterator = new DynamicRowSource(theParams, context)
+    dynIterator.setPositionWithoutChrLimits(chr,pos)
+    theIterator = dynIterator
+    isClosed = false
+  }
+
+  override def close() {
+    if (theIterator != null) {
+      theIterator.close()
+      theIterator = null
+    }
+    if (context != null && context.getSession != null) context.getSession.close()
+    isClosed = true
+  }
 
   /**
     * This method takes an argument string, a boolean flag (to execute as a Nor query),
     * a boolean flag (whether this is fromMain or not), and a string header and returns an instance of rowSource.
     */
-  override def processArguments(args: Array[String], executeNor: Boolean, forcedInputHeader: String = ""): RowSource = {
+  override def processArguments(args: Array[String], executeNor: Boolean, forcedInputHeader: String = ""): GenomicIterator = {
     val options = new PipeOptions
     options.parseOptions(args)
     options.norContext = executeNor
-    subProcessArguments(options.query, options.fileSignature, options.virtualFile, options.scriptAnalyzer, options.stdIn, forcedInputHeader)
+    init(options.query, options.stdIn, forcedInputHeader)
   }
+
+  def getSession : GorSession = {
+    context.getSession
+  }
+
+  def getPipeStep : Analysis = thePipeStep
 
   def createFileReader(gorRoot: String): FileReader = {
     if (!StringUtil.isEmpty(gorRoot)) {
@@ -127,56 +202,32 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     }
   }
 
-  /**
-    * This method takes an argument string, boolean flags for whether or not this is fromMain, or fromTest, a whitelisted command file string
-    * and returns an instance of rowSource.
-    */
-  def subProcessArguments(pipeOptions: PipeOptions): RowSource = {
-    subProcessArguments(pipeOptions.query, pipeOptions.fileSignature, pipeOptions.virtualFile, pipeOptions.scriptAnalyzer, pipeOptions.stdIn, "")
+  @Deprecated
+  def subProcessArguments(pipeOptions: PipeOptions): GenomicIterator = {
+    init(pipeOptions.query, pipeOptions.stdIn, "")
   }
 
-  /**
-    * This method takes an argument string, boolean flags for whether or not this is fromMain, or fromTest, a whitelisted command file string
-    * and a header string and returns an instance of rowSource.
-    */
-  def subProcessArguments(inputQuery: String, fileSignature: Boolean, virtualFile: String, scriptAnalyzer: Boolean, useStdin: Boolean, forcedInputHeader: String): RowSource = {
+  @Deprecated
+  def subProcessArguments(inputQuery: String, fileSignature: Boolean, virtualFile: String, scriptAnalyzer: Boolean, useStdin: Boolean, forcedInputHeader: String): GenomicIterator = {
+    init(inputQuery, useStdin, forcedInputHeader)
+  }
+
+  def init(inputQuery: String, useStdin: Boolean = false, forcedInputHeader: String = ""): GenomicIterator = {
 
     DynIterator.createGorIterator = (ctx: GorContext) => PipeInstance.createGorIterator(ctx)
 
-    this.isNorContext = context.getSession.getNorContext
+    isNorContext = context.getSession.getNorContext
     thePipeStep = PlaceHolder()
 
-    val whiteListCmdSet = if (context.getSession.getSystemContext.getCommandWhitelist == null) {
-      new util.HashMap[String, GorJavaUtilities.CmdParams]()
-    } else {
-      context.getSession.getSystemContext.getCommandWhitelist.asInstanceOf[java.util.Map[String, GorJavaUtilities.CmdParams]]
-    }
-
-    val cacheDir = null: String
     var argString = CommandParseUtilities.removeComments(inputQuery)
     val gorCommands = CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';') // In case this is a command line script
 
-    val aScript = fileSignature || virtualFile != null || ScriptParsers.isScript(gorCommands)
-
-
-    if (aScript) {
-
-      val scriptExecutionEngine = ScriptEngineFactory.create(context, scriptAnalyzer)
-
-      if (virtualFile != null) {
-        System.out.println(scriptExecutionEngine.executeVirtualFile(virtualFile, gorCommands))
-        System.exit(0)
-      } else if (fileSignature) {
-        System.out.println(scriptExecutionEngine.executeSuggestName(gorCommands))
-        System.exit(0)
-      } else {
-        argString = scriptExecutionEngine.execute(gorCommands)
-      }
+    if (ScriptParsers.isScript(gorCommands)) {
+      val scriptExecutionEngine = ScriptEngineFactory.create(context)
+      argString = scriptExecutionEngine.execute(gorCommands)
     }
 
-    PipeInstance.consoleLogger.debug("processing: {}", argString)
-
-    var pipeSteps = CommandParseUtilities.quoteSafeSplitAndTrim(argString, '|')
+    pipeSteps = CommandParseUtilities.quoteSafeSplitAndTrim(argString, '|')
 
     if (pipeSteps.length == 0) {
       throw new GorParsingException("Error in GOR query - Empty query found. Are you missing the final gor line in your script?")
@@ -188,76 +239,21 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       gorString = fixGorString(gorString)
     }
 
-    var firstCommand = 0
-    var range = GenomicRange.all
-    var nowithin = false
-    var buffsize: Int = Pipes.rowsToProcessBuffer
-    val inputSourceCommand = commandFromPipeStep(gorString)
-    val inputSourceInfo = GorInputSources.getInfo(inputSourceCommand)
+    val inputSourceCommand: String = prepareInputSource(argString, gorString, useStdin)
+    val inputHeader: String = preparePipeStep(argString, gorString, forcedInputHeader, inputSourceCommand)
 
-    try {
-      var inputSourceResult: InputSourceParsingResult = null
-      firstCommand = 1
-      var arguments = CommandParseUtilities.quoteSafeSplitAndTrim(gorString, ' ')
-      arguments = arguments.slice(1, arguments.length)
+    // todo: get row header from input source, with types if possible
+    thePipeStep.setRowHeader(RowHeader(inputHeader))
 
-      if (inputSourceInfo != null) {
-        inputSourceResult = inputSourceInfo.init(context, combinedHeader, argString, arguments)
-      } else {
-        inputSourceResult = processWhitelistedInputSource(inputSourceCommand, arguments)
-      }
+    theIterator = new BatchedPipeStepIteratorAdaptor(theInputSource, thePipeStep, combinedHeader, brsConfig)
 
-      if (inputSourceResult != null) {
-        theInputSource = inputSourceResult.inputSource
-        combinedHeader = inputSourceResult.header
-        isNorContext = inputSourceResult.isNorContext
-        nowithin = inputSourceResult.noWithin
-        val mergeSteps = inputSourceResult.mergeSteps
-        if (mergeSteps != null && mergeSteps.length > 0) {
-          pipeSteps = mergeSteps ++ pipeSteps.slice(1, pipeSteps.length)
-        }
+    theInputSource
+  }
 
-        if (inputSourceResult.genomicRange != null) {
-          range = inputSourceResult.genomicRange
-        }
-
-        if (inputSourceResult.usedFiles != null) {
-          usedFiles ++= inputSourceResult.usedFiles
-        }
-
-        availCommands = if (isNorContext) availNorCommands else availGorCommands
-      } else if (useStdin) {
-        firstCommand = 0
-        theInputSource = StdInputSourceIterator()
-      } else {
-        // Error input source not found
-        throw new GorParsingException(s"Input source $inputSourceCommand is not a valid input source.")
-      }
-
-      theInputSource match {
-        case processSource: ProcessRowSource =>
-          buffsize = processSource.getBufferSize
-          isNorContext = processSource.nor
-          fixHeader = fixHeader && !isNorContext
-        case _ =>
-      }
-    } catch {
-      case gue: GorUserException =>
-        if (!gue.isCommandSet) {
-          gue.setCommandName(inputSourceCommand)
-          gue.setCommandIndex(firstCommand)
-          gue.setCommandStep(gorString)
-          gue.setRequestID(context.getSession.getRequestId)
-        }
-        throw gue
-    }
-
+  def preparePipeStep(argString: String, gorString: String, forcedInputHeader: String, inputSourceCommand: String): String = {
     var command = ""
     var inputHeader = ""
     try {
-      // External whitelisted commands
-      availCommands = GorJavaUtilities.mergeArrays(availCommands, GorJavaUtilities.toUppercase(whiteListCmdSet.keySet()))
-
       var pushdown: Boolean = true
       for (i <- firstCommand until pipeSteps.length) {
         // This is an embarrassing for-loop
@@ -276,6 +272,8 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
             pushdown = pushdownTop(fullCommand.substring(4).trim)
           } else if (command.equals("WRITE")) {
             pushdown = pushdownWrite(fullCommand.substring(6).trim)
+          } else if (command.equals("CMD")) {
+            pushdown = pushdownCmd(fullCommand.substring(4).trim)
           } else {
             pushdown = theInputSource.pushdownGor(fullCommand)
           }
@@ -285,7 +283,15 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
         }
 
         if (!pushdown) {
-          val (pstep, fc, isrc) = parseCommand(command, argString, i, pipeSteps, firstCommand, theInputSource, isNorContext, cacheDir, whiteListCmdSet)
+          val cacheDir = null: String
+          val whiteListCmdSet = if (context.getSession.getSystemContext.getCommandWhitelist == null) {
+            new util.HashMap[String, CmdParams]()
+          } else {
+            context.getSession.getSystemContext.getCommandWhitelist.asInstanceOf[util.Map[String, CmdParams]]
+          }
+
+          val (pstep, fc, isrc) = parseCommand(command, argString, i, pipeSteps, firstCommand, theInputSource,
+            isNorContext, cacheDir, whiteListCmdSet)
           aPipeStep = pstep
           firstCommand = fc
           theInputSource = isrc
@@ -322,20 +328,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
     thePipeStep = PipeInstance.injectTypeInferral(thePipeStep)
 
-    PipeInstance.logger.debug("starting to run the pipe ")
-
-    // Ensure gor create statements do verify order
-    var addVerifyOrderStep = false
-    if (inputQuery.length > 6 && inputQuery.trim.substring(0, 7).toUpperCase.startsWith("CREATE")) {
-      addVerifyOrderStep = !isNorContext
-    }
-
-    // TODO: Move this to the script execution engine
-    if (addVerifyOrderStep) {
-      thePipeStep = thePipeStep | CheckOrder()
-    }
-
-    // Add timout monitor
+    // Add timeout monitor
     thePipeStep = thePipeStep | TimeoutMonitor()
 
     // Add cancel monitor
@@ -343,12 +336,82 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       thePipeStep = CancelMonitor(context.getSession.getSystemContext.getMonitor) | thePipeStep | CancelMonitor(context.getSession.getSystemContext.getMonitor)
     }
 
-    // todo: get row header from input source, with types if possible
-    thePipeStep.setRowHeader(RowHeader(inputHeader))
+    inputHeader
+  }
 
-    theIterator = new BatchedPipeStepIteratorAdaptor(theInputSource, thePipeStep, combinedHeader, brsConfig)
+  def prepareInputSource(argString: String, gorString: String, useStdin: Boolean): String = {
 
-    theInputSource
+    val inputSourceCommand = commandFromPipeStep(gorString)
+    val inputSourceInfo = GorInputSources.getInfo(inputSourceCommand)
+
+    try {
+      var inputSourceResult: InputSourceParsingResult = null
+      firstCommand = 1
+      var arguments = CommandParseUtilities.quoteSafeSplitAndTrim(gorString, ' ')
+      arguments = expandGetValue(arguments.slice(1, arguments.length))
+
+      if (inputSourceInfo != null) {
+        inputSourceResult = inputSourceInfo.init(context, combinedHeader, argString, arguments)
+      } else {
+        inputSourceResult = processWhitelistedInputSource(inputSourceCommand, arguments)
+      }
+
+      if (inputSourceResult != null) {
+        theInputSource = inputSourceResult.inputSource
+        combinedHeader = inputSourceResult.header
+        isNorContext = inputSourceResult.isNorContext
+        nowithin = inputSourceResult.noWithin
+        val mergeSteps = inputSourceResult.mergeSteps
+        if (mergeSteps != null && mergeSteps.length > 0) {
+          pipeSteps = mergeSteps ++ pipeSteps.slice(1, pipeSteps.length)
+        }
+
+        if (inputSourceResult.genomicRange != null) {
+          range = inputSourceResult.genomicRange
+        }
+
+        if (inputSourceResult.usedFiles != null) {
+          usedFiles ++= inputSourceResult.usedFiles
+        }
+      } else if (useStdin) {
+        firstCommand = 0
+        theInputSource = StdInputSourceIterator()
+      } else {
+        // Error input source not found
+        throw new GorParsingException(s"Input source $inputSourceCommand is not a valid input source.")
+      }
+
+      theInputSource match {
+        case processSource: ProcessRowSource =>
+          isNorContext = processSource.nor
+          fixHeader = fixHeader && !isNorContext
+        case _ =>
+      }
+    } catch {
+      case gue: GorUserException =>
+        if (!gue.isCommandSet) {
+          gue.setCommandName(inputSourceCommand)
+          gue.setCommandIndex(firstCommand)
+          gue.setCommandStep(gorString)
+          gue.setRequestID(context.getSession.getRequestId)
+        }
+        throw gue
+    }
+    inputSourceCommand
+  }
+
+  private def expandGetValue(arguments: Array[String]) = {
+    arguments.map(arg => {
+      if (arg.toUpperCase.startsWith("GETVALUE(") && arg.endsWith(")")) {
+        val getValueArgs = arg.substring(9, arg.length - 1)
+        val lastCommaIx = getValueArgs.lastIndexOf(',')
+        val query = CommandParseUtilities.replaceSingleQuotes(getValueArgs.substring(0, lastCommaIx))
+        val col = getValueArgs.substring(lastCommaIx + 1, getValueArgs.length).trim.toInt
+        new OptionEvaluator(context).getValue(query, col)
+      } else {
+        arg
+      }
+    })
   }
 
   def checkHeader(forcedInputHeader: String, inputSourceCommand: String, firstCommand: Int, gorString: String): String = {
@@ -391,6 +454,10 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
   def pushdownWrite(filename: String): Boolean = {
     theInputSource.pushdownWrite(filename)
+  }
+
+  def pushdownCmd(filename: String): Boolean = {
+    theInputSource.pushdownCmd(filename)
   }
 
   def fixGorString(gorString: String): String = {
@@ -535,7 +602,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
         it.scalaInit(command)
         header = it.getHeader
       } else {
-        it.scalaPipeStepInit(command, leftHeader)
+        it.createPipestep(command, leftHeader)
         header = it.getHeader
       }
     } finally {
@@ -545,8 +612,8 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
   }
 
   def parseCommand(command: String, argString: String, i: Int, pipeSteps: Array[String], firstCmd: Int,
-                   inputSource: RowSource, executeNor: Boolean, cacheDir: String,
-                   whiteListCmdSet: java.util.Map[String, CmdParams]): (Analysis, Int, RowSource) = {
+                   inputSource: GenomicIterator, executeNor: Boolean, cacheDir: String,
+                   whiteListCmdSet: java.util.Map[String, CmdParams]): (Analysis, Int, GenomicIterator) = {
 
     // Handle if there is an empty command
     if (command.trim.isEmpty) {
@@ -557,7 +624,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
     val paramString = pipeSteps(i).slice(command.length, pipeSteps(i).length).trim
     var firstCommand = firstCmd
-    var newInputSource: RowSource = inputSource
+    var newInputSource: GenomicIterator = inputSource
     var aPipeStep: Analysis = null
     var pipeStepFound = false
 
@@ -576,12 +643,14 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
           }
         }
 
-        //If the parsing needs access to the current
-        val commandRuntime = CommandRuntime(thePipeStep, cacheDir, inputSource)
-
+        val commandArgs = CommandParseUtilities.quoteSafeSplit(paramString, ' ')
         if (!commandInfo.isPlaceholder) {
 
-          val result = commandInfo.init(context, executeNor, combinedHeader, argString, CommandParseUtilities.quoteSafeSplit(paramString, ' '), commandRuntime)
+          //If the parsing needs access to the current
+          val commandRuntime = CommandRuntime(thePipeStep, cacheDir, inputSource)
+
+          val args = expandGetValue(commandArgs)
+          val result = commandInfo.init(context, executeNor, combinedHeader, argString, args, commandRuntime)
           aPipeStep = result.step
 
           if (commandInfo.commandOptions.cancelCommand && context.getSession.getSystemContext.getMonitor != null) {
@@ -612,6 +681,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
             firstCommand = i + 1
           }
         } else {
+          commandInfo.validateArguments(commandArgs)
           val (placeholderPipeStep, placeholderHeader, placeholderInputSource, placeholderFirstCommand) = handlePlaceholderCommands(command, i, paramString,
             cacheDir, whiteListCmdSet)
 
@@ -638,12 +708,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
         inputSource.close()
         gue.setCommandName(command)
         gue.setCommandIndex(i + 1)
-
-        gue match {
-          case gpe: GorParsingException => gpe.setCommandStep(command + " " + paramString)
-          case gre: GorResourceException => gre.setCommandStep(command + " " + paramString)
-        }
-
+        gue.setCommandStep(command + " " + paramString)
         gue.setRequestID(context.getSession.getRequestId)
 
         throw gue
@@ -655,7 +720,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     (aPipeStep, firstCommand, newInputSource)
   }
 
-  def processWhitelistedCommands(command: String, whiteListCmdSet: util.Map[String, CmdParams], paramString: String, inputSource: RowSource, executeNor: Boolean): (RowSource, String) = {
+  def processWhitelistedCommands(command: String, whiteListCmdSet: util.Map[String, CmdParams], paramString: String, inputSource: GenomicIterator, executeNor: Boolean): (RowSource, String) = {
     val icmd = GorJavaUtilities.getIgnoreCase(whiteListCmdSet.keySet(), command)
     if (icmd.isPresent) {
       val cmdalias = icmd.get()
@@ -668,7 +733,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       val skip = cmdparams.skipLines()
       val allowerror = cmdparams.allowError()
       val server = cmdparams.useHttpServer()
-      var pip: RowSource = new ProcessIteratorAdaptor(context, command, cmdparams.getAliasName, inputSource, thePipeStep, combinedHeader, skipheader, skip, allowerror, executeNor)
+      val pip: RowSource = new ProcessIteratorAdaptor(context, command, cmdparams.getAliasName, inputSource, thePipeStep, combinedHeader, skipheader, skip, allowerror, executeNor)
       val newHeader = pip.getHeader
       if (newHeader != null) combinedHeader = validHeader(newHeader)
       (pip, newHeader)
@@ -678,9 +743,9 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
   }
 
   def handlePlaceholderCommands(command: String, commandNumber: Int, paramString: String, cacheDir: String,
-                                whiteListCmdSet: java.util.Map[String, CmdParams]): (Analysis, String, RowSource, Int) = {
+                                whiteListCmdSet: java.util.Map[String, CmdParams]): (Analysis, String, GenomicIterator, Int) = {
 
-    var newInputSource: RowSource = null
+    var newInputSource: GenomicIterator = null
     var header: String = null
     var pipeStep: Analysis = null
     var firstCommand = -1
@@ -703,13 +768,6 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       }
       firstCommand = commandNumber + fCmd
     } else if (command.toUpperCase == "TOGOR") {
-      availCommands = availGorCommands
-      val gorAnalysers = GorAnalysisModule.gorAnalysers()
-      if (gorAnalysers != null) {
-        val newCommands = GorAnalysisModule.gorAnalysers().getCommandNames
-        availCommands = GorJavaUtilities.mergeArrays(availCommands, newCommands)
-      }
-      availCommands = GorJavaUtilities.mergeArrays(availCommands, GorJavaUtilities.toUppercase(whiteListCmdSet.keySet()))
       isNorContext = false
       pipeStep = new NorToGorPipeStep(combinedHeader)
       header = pipeStep.getHeader()

@@ -24,7 +24,6 @@ package gorsat.process;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Genotype lookup utilities for generating vcf files from horizontal got gt data

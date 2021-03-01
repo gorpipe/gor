@@ -22,12 +22,10 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bgen;
 
-import org.gorpipe.model.genome.files.gor.BGenIterator;
-
-import java.io.IOException;
+import org.gorpipe.gor.driver.bgenreader.BGenIterator;
 
 public class BGenFileIterator extends BGenIterator {
-    BGenFileIterator(BGenFile bGenFile) throws IOException {
-        super(bGenFile.getName());
+    BGenFileIterator(BGenFile bGenFile) {
+        super(bGenFile);
     }
 }

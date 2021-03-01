@@ -23,8 +23,8 @@
 package gorsat
 
 import Outputs.NullOut
-import org.gorpipe.model.gor.RowObj
 import process.{GenericSessionFactory, GorPipeCommands}
+import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FunSuite}

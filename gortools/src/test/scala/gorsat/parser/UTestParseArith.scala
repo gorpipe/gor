@@ -23,7 +23,7 @@
 package gorsat.parser
 
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.ColumnValueProvider
+import org.gorpipe.gor.model.ColumnValueProvider
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -565,6 +565,20 @@ class UTestParseArith extends FlatSpec {
     assertDoubleExpression(Array(Column("a", "L", 1L), Column("b", "I", 2)), "if(1>2,float('NaN'),a/b)", 0.5)
     assertDoubleExpression(Array(Column("a", "L", 1L), Column("b", "I", 2)), "if(1>2,float('NaN'),(a)/(b))", 0.5)
     assertDoubleExpression(Array(Column("a", "L", 1L), Column("b", "I", 2)), "if(1>2,float('NaN'),((a)/(b)))", 0.5)
+  }
+
+  "Column names with dot" should "work in calc" in {
+    val p = ParseArith()
+    val cvp = MockCvp(Array(Column("a.1", "I", 1)), p)
+    p.compileCalculation("a.1 + 1")
+    assert(p.evalIntFunction(cvp) == 2)
+  }
+
+  it should "work in filter" in {
+    val p = ParseArith()
+    val cvp = MockCvp(Array(Column("a.1", "I", 1)), p)
+    p.compileFilter("a.1 > 0")
+    assert(p.evalBooleanFunction(cvp))
   }
 
   private def assertConditionalExpression(columns: Array[Column], expr: String): Unit = {

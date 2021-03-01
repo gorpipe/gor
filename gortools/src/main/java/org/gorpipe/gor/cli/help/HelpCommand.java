@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.cli.help;
 
-import org.gorpipe.gor.cli.HelpOptions;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.cli.HelpOptions;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -89,7 +89,7 @@ public class HelpCommand extends HelpOptions implements Runnable{
     }
 
     private List<String> loadHelpList(File helpFile) throws IOException, URISyntaxException {
-        List<String> helpList = null;
+        List<String> helpList;
 
         if (helpFile != null) {
             helpList = FileUtils.readLines(helpFile, Charset.defaultCharset());

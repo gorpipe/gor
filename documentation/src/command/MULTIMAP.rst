@@ -7,7 +7,10 @@
 ========
 MULTIMAP
 ========
-The :ref:`MULTIMAP` command is similar to the :ref:`MAP` command, however in this case, the map file may contain a one-to-many mapping, which results in multiple output rows per input row.
+The :ref:`MULTIMAP` command is similar to the :ref:`MAP` command, however in this case, the map file may contain a
+one-to-many mapping, which results in multiple output rows per input row.
+
+See the :ref:`MAP` command for options and arguments.
 
 Usage
 =====

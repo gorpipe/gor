@@ -23,7 +23,7 @@
 package gorsat.Script
 
 import gorsat.QueryHandlers.{GeneralQueryHandler, QueryHandler}
-import org.gorpipe.gor.GorContext
+import org.gorpipe.gor.session.GorContext
 
 /**
   * Static method to create an instance of ScriptExecutionEngine based on the current configuration represented in
@@ -31,20 +31,17 @@ import org.gorpipe.gor.GorContext
   */
 object ScriptEngineFactory {
 
-  def create(context: GorContext, scriptAnalyser: Boolean) : ScriptExecutionEngine = {
-    create(context, scriptAnalyser, doHeader = true)
-  }
+  def create(context: GorContext) : ScriptExecutionEngine = {
+    {
+      val remoteQueryHandler = if (context.getSession.getProjectContext.getQueryHandler != null) {
+        context.getSession.getProjectContext.getQueryHandler
+      } else {
+        new QueryHandler(context)
+      }
 
-  def create(context: GorContext, scriptAnalyser: Boolean, doHeader: Boolean) : ScriptExecutionEngine = {
-    val remoteQueryHandler = if (context.getSession.getProjectContext.getQueryHandler != null) {
-      context.getSession.getProjectContext.getQueryHandler
-    } else {
-      new QueryHandler(context)
+      val localQueryHandler = new GeneralQueryHandler(context, false)
+      new ScriptExecutionEngine(remoteQueryHandler, localQueryHandler, context)
     }
-
-    val localQueryHandler = new GeneralQueryHandler(context, doHeader)
-    val analyzer:ScriptExecutionListener = if(scriptAnalyser) new ConsoleLogListener() else new DefaultListener
-
-    new ScriptExecutionEngine(remoteQueryHandler, localQueryHandler, context, analyzer)
   }
-}
+
+  }

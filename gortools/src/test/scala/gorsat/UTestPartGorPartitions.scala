@@ -22,10 +22,10 @@
 
 package gorsat
 
+import Macros.PartGor
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import Macros.PartGor
 
 @RunWith(classOf[JUnitRunner])
 class UTestPartGorPartitions extends FunSuite {
@@ -33,7 +33,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: parts") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(1,300), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,300), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("parts",3), buckmap, server = false)
 
     assert(partitions.size == 3)
@@ -46,7 +46,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: parts with size larger than max bucket size") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(1,400), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,400), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("parts",3), buckmap, server = false)
 
     assert(partitions.size == 3)
@@ -60,7 +60,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: partsize") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(1,300), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,300), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partsize",50), buckmap, server = false)
 
     assert(partitions.size == 6)
@@ -73,7 +73,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: partsize larger than bucket size") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(1,500), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,500), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partsize",150), buckmap, server = false)
 
     assert(partitions.size == 3)
@@ -86,7 +86,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: partsize, uneven bucketsizes") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(30,270), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(30,270), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partsize",50), buckmap, server = false)
 
     assert(partitions.size == 5)
@@ -99,7 +99,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: partsize, one bucket not full") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(30,70), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(30,70), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partsize",50), buckmap, server = false)
 
     assert(partitions.size == 1)
@@ -112,7 +112,7 @@ class UTestPartGorPartitions extends FunSuite {
   test("PGOR split test: partscale") {
     val buckets = createBuckets(5, 100)
 
-    val buckmap = PartGor.readDictionaryBucketTags("Foo", createPeonList(1,100), buckets)
+    val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,100), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partscale",0.5), buckmap, server = false)
 
     assert(partitions.size == 2)
@@ -122,12 +122,12 @@ class UTestPartGorPartitions extends FunSuite {
     }
   }
 
-  def createBuckets(numberOfBuckets: Int, numberOfFilesPerBucker: Int): Array[String] = {
+  def createBuckets(numberOfBuckets: Int, numberOfFilesPerBucket: Int): Array[String] = {
     var result = new scala.collection.mutable.ArrayBuffer[String]()
     var peonCount = 1
 
     for (bucketNumber <- 1 to numberOfBuckets) {
-      for (fileNumber <- 1 to numberOfFilesPerBucker) {
+      for (fileNumber <- 1 to numberOfFilesPerBucket) {
         result += "File_" + bucketNumber + "_" + fileNumber + "|Bucket_" + bucketNumber + "\tPN_" + peonCount
         peonCount += 1
       }

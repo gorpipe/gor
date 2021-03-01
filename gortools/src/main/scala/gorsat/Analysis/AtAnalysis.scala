@@ -25,8 +25,8 @@ package gorsat.Analysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Commands._
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.GorSession
-import org.gorpipe.model.genome.files.gor.Row
+import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorSession
 
 
 object AtAnalysis {
@@ -125,6 +125,13 @@ object AtAnalysis {
     override def isTypeInformationMaintained: Boolean = true
   }
 
+  case class OrderedAt(binSize: Int, testColumn: Int, groupColumns: Array[Int], parameters: Parameters) extends
+    BinAnalysis(GroupingColumnRowHandler(binSize, groupColumns), BinAggregator(
+      AtFactory(binSize, testColumn, groupColumns, parameters), 2, 1))
+  {
+    override def isTypeInformationMaintained: Boolean = true
+  }
+
   case class ChromAt(session: GorSession, testColumn: Int, groupColumns: Array[Int], parameters: Parameters) extends
     BinAnalysis(ChromRowHandler(session), BinAggregator(
       AtFactory(1, testColumn, groupColumns, parameters), 2, 1))
@@ -150,6 +157,8 @@ object AtAnalysis {
       throw new GorParsingException("Too few input arguments supplied for atmin/atmax.")
     }
 
+    val assumeOrdered = hasOption(args, "-ordered")
+
     val parameters = Parameters()
 
     parameters.useLast = hasOption(args, "-last")
@@ -174,7 +183,10 @@ object AtAnalysis {
     } else if (binSizeDescription.startsWith("GEN")) {
       pipeStep = GenomeAt(testColumn, groupColumns.toArray, parameters)
     } else {
-      pipeStep = At(binSize, testColumn, groupColumns.toArray, parameters)
+      pipeStep = if (assumeOrdered)
+        OrderedAt(binSize, testColumn, groupColumns.toArray, parameters)
+      else
+        At(binSize, testColumn, groupColumns.toArray, parameters)
     }
 
     CommandParsingResult(pipeStep, forcedInputHeader)

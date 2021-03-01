@@ -194,8 +194,8 @@ public class DictionaryRawEntry extends DictionaryEntry {
     }
 
     private static class RowParser {
-        private CharSequence sequence;
-        private int[] splits;   // Location of delimters (the first, which is imaginary one, is located at -1).
+        private final CharSequence sequence;
+        private final int[] splits;   // Location of delimters (the first, which is imaginary one, is located at -1).
 
         private RowParser(CharSequence sequence, char splitter, int maxSplits, int offset) {
             this.sequence = sequence;

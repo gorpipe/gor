@@ -22,12 +22,6 @@
 
 package gorsat;
 
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.manager.BucketManager;
-import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.test.GorDictionarySetup;
-import org.gorpipe.test.SlowTests;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Macros.PartGor;
 import gorsat.Script.ExecutionBlock;
@@ -35,10 +29,18 @@ import gorsat.Script.MacroInfo;
 import gorsat.Script.MacroParsingResult;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.GorPipeMacros;
+import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.manager.BucketManager;
+import org.gorpipe.gor.manager.TableManager;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.test.GorDictionarySetup;
+import org.gorpipe.test.SlowTests;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,8 +94,8 @@ public class UTestPartGor {
         String[] args = CommandParseUtilities.quoteSafeSplit(query, ' ');
         String[] finalArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        MacroParsingResult result =  info.init("[test]", new ExecutionBlock("[group1]", query, dependencies, "group1", true),
-                new GenericSessionFactory().create().getGorContext(), false, finalArgs);
+        MacroParsingResult result =  info.init("[test]", new ExecutionBlock("[group1]", query, null, dependencies, "group1", null,true),
+                new GenericSessionFactory().create().getGorContext(), false, finalArgs, false);
 
         Assert.assertEquals(11, result.createCommands().size());
 
@@ -106,6 +108,29 @@ public class UTestPartGor {
         query = query + " | top 10";
         lines = TestUtils.runGorPipeLinesNoHeader(query);
         Assert.assertEquals(100, lines.length);
+    }
+
+    @Test
+    public void partGorWithDictWithHeader() throws IOException {
+        String contents = "#col1\tcol2\tcol3\tcol4\tcol5\tcol6\tlis_PN\n" +
+                "data/bucket_1.gorz\tbucket_1\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000001\n" +
+                "data/bucket_10.gorz\tbucket_10\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000010\n" +
+                "data/bucket_11.gorz\tbucket_11\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000011\n" +
+                "data/bucket_12.gorz\tbucket_12\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000012\n" +
+                "data/bucket_13.gorz\tbucket_13\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000013\n" +
+                "data/bucket_14.gorz\tbucket_14\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000014\n" +
+                "data/bucket_15.gorz\tbucket_15\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000015\n" +
+                "data/bucket_16.gorz\tbucket_16\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000016\n";
+
+        String expected = "chrom\tbpStart\tbpStop\tx\n" +
+                "chr1\t1\t1\t'SAMPLE_SIM842_000001','SAMPLE_SIM842_000010','SAMPLE_SIM842_000011','SAMPLE_SIM842_000012','SAMPLE_SIM842_000013','SAMPLE_SIM842_000014','SAMPLE_SIM842_000015','SAMPLE_SIM842_000016'\n";
+
+        File dictFile = FileTestUtils.createTempFile(workDir.getRoot(), "variants.gord", contents);
+
+        String query = "create #x = partgor -dict " + dictFile.getAbsolutePath() + " <(gorrow chr1,1,1| calc x \"#{tags:q}\");gor [#x]";
+        String results = TestUtils.runGorPipe(query);
+
+        Assert.assertEquals(expected, results);
     }
 
     @Test

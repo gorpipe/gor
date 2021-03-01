@@ -22,9 +22,6 @@
 
 package org.gorpipe.gor.tools;
 
-import org.gorpipe.model.genome.files.binsearch.GorIndexFile;
-import org.gorpipe.model.genome.files.binsearch.GorIndexType;
-import org.gorpipe.model.util.ConfigUtil;
 import de.tototec.cmdoption.CmdCommand;
 import de.tototec.cmdoption.CmdOption;
 import de.tototec.cmdoption.CmdlineParser;
@@ -33,10 +30,16 @@ import de.tototec.cmdoption.handler.CmdOptionHandler;
 import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
 import gorsat.process.GorPipeMacros;
+import org.gorpipe.logging.GorLogbackUtil;
+import org.gorpipe.gor.binsearch.GorIndexFile;
+import org.gorpipe.gor.binsearch.GorIndexType;
+import org.gorpipe.gor.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -55,6 +58,7 @@ public class GorToolsCLI {
      * @param args commandline arguments.
      */
     static public void main(String[] args) {
+        GorLogbackUtil.initLog("gortool");
         log.trace("GorToolsCLI starting");
         try {
             runCLI(args);
@@ -212,8 +216,8 @@ public class GorToolsCLI {
      */
     private static class GenericOptions {
         @CmdOption(names = {"-h", "--help", "help"}, description = "Display this help.", isHelp = true)
-        private boolean help = false;
+        private final boolean help = false;
         @CmdOption(names = {"-v", "--version", "version"}, description = "Display version info.", isHelp = true)
-        private boolean version = false;
+        private final boolean version = false;
     }
 }

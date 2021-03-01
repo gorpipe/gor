@@ -22,8 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.http;
 
-import com.google.inject.Inject;
+import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
@@ -33,9 +34,11 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import java.io.IOException;
 import java.util.Set;
 
+@AutoService(SourceProvider.class)
 public class HTTPSourceProvider extends StreamSourceProvider {
 
-    @Inject
+    public HTTPSourceProvider() {}
+
     public HTTPSourceProvider(GorDriverConfig config, FileCache cache,
                               Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, cache, initialFactories);
