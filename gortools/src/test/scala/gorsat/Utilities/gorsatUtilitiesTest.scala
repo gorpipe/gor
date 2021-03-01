@@ -43,17 +43,17 @@ import org.scalatest.{BeforeAndAfter, FunSuite, Ignore}
 import scala.collection.mutable.ListBuffer
 
 /**
- * Test PhaseReadVariants
- *
- * Exptected input and output format:
- *
- *   chr pos ref alt varpos varqual id [other columns]
- *
- * Reference for chr1:1000 and chr2:1000 are cut out of hg19 with 1000 matching 100000.
- * 0123456789012345678901234567890
- * cactaagcacacagagaataatgtctagaat
- *
- */
+  * Test PhaseReadVariants
+  *
+  * Exptected input and output format:
+  *
+  * chr pos ref alt varpos varqual id [other columns]
+  *
+  * Reference for chr1:1000 and chr2:1000 are cut out of hg19 with 1000 matching 100000.
+  * 0123456789012345678901234567890
+  * cactaagcacacagagaataatgtctagaat
+  *
+  */
 @RunWith(classOf[JUnitRunner])
 class UTestPhaseReadVariants extends FunSuite with BeforeAndAfter with MockitoSugar {
 
@@ -82,7 +82,7 @@ class UTestPhaseReadVariants extends FunSuite with BeforeAndAfter with MockitoSu
   // This test supports both using the mock session and to use external config files.
   val gorPipeSession: GorSession = mockGorPipeSession
 
-  def runListTest(inputList : List[Row], expectedList : List[Row], maxMergeDist : Int = maxBpMergeDist): Unit = {
+  def runListTest(inputList: List[Row], expectedList: List[Row], maxMergeDist: Int = maxBpMergeDist): Unit = {
     val outputRowList = new ListBuffer[Row]
     val runner = new GenericGorRunner()
     runner.run(RowListIterator(inputList), PhaseReadVariants(maxMergeDist, gorPipeSession) | ToList(outputRowList))
@@ -582,14 +582,14 @@ class UTestPhaseReadVariants extends FunSuite with BeforeAndAfter with MockitoSu
 }
 
 /**
- * Test MemoryMonitorUtil.
- *
- */
+  * Test MemoryMonitorUtil.
+  *
+  */
 @RunWith(classOf[JUnitRunner])
 class UTestMemoryMonitorUtil extends FunSuite {
 
   test("NotOutOfMemory") {
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       assert(false)
     }, rowsBetweenChecks = 1, reqMinFreeMemMB = 100)
 
@@ -598,9 +598,9 @@ class UTestMemoryMonitorUtil extends FunSuite {
 
   test("OutOfMemory") {
     var gotError = false
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       gotError = true
-    }, rowsBetweenChecks = 1, reqMinFreeMemMB = 100000000, reqMinFreeMemRatio=1)
+    }, rowsBetweenChecks = 1, reqMinFreeMemMB = 100000000, reqMinFreeMemRatio = 1)
 
     mmu.check()
     assert(gotError)
@@ -608,9 +608,9 @@ class UTestMemoryMonitorUtil extends FunSuite {
 
   test("ErrorParam") {
     var errorParam = -1
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       errorParam = args.head.asInstanceOf[Int]
-    }, rowsBetweenChecks = 1, reqMinFreeMemMB = 100000000, reqMinFreeMemRatio=1)
+    }, rowsBetweenChecks = 1, reqMinFreeMemMB = 100000000, reqMinFreeMemRatio = 1)
 
     mmu.check(781)
     assert(errorParam == 781)
@@ -619,20 +619,20 @@ class UTestMemoryMonitorUtil extends FunSuite {
   test("CallNum") {
     val rowsBetweenCheck = 100
     var errorCount = 0
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       errorCount += 1
-    }, rowsBetweenChecks = rowsBetweenCheck, reqMinFreeMemMB = 100000000, reqMinFreeMemRatio=1)
+    }, rowsBetweenChecks = rowsBetweenCheck, reqMinFreeMemMB = 100000000, reqMinFreeMemRatio = 1)
 
     val callCount = 200
-    for(i <- 1 to callCount) {
+    for (i <- 1 to callCount) {
       mmu.check()
     }
     assert(mmu.lineNum == callCount)
-    assert(errorCount == callCount/rowsBetweenCheck)
+    assert(errorCount == callCount / rowsBetweenCheck)
   }
 
   test("NotOutOfMemoryRatio") {
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       assert(false)
     }, rowsBetweenChecks = 1, reqMinFreeMemRatio = 0.1f)
 
@@ -641,7 +641,7 @@ class UTestMemoryMonitorUtil extends FunSuite {
 
   test("OutOfMemoryRatio") {
     var gotError = false
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       gotError = true
     }, rowsBetweenChecks = 1, reqMinFreeMemRatio = 1)
 
@@ -650,7 +650,7 @@ class UTestMemoryMonitorUtil extends FunSuite {
   }
 
   test("DefaultParams") {
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       // Should be default off.
       assert(false)
     }, rowsBetweenChecks = 1)
@@ -660,7 +660,7 @@ class UTestMemoryMonitorUtil extends FunSuite {
   }
 
   test("NotOutOfMemoryRatio_NoGC") {
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       assert(false)
     }, rowsBetweenChecks = 1, reqMinFreeMemRatio = 0.1f, gcRatio = 1.1f)
 
@@ -669,12 +669,20 @@ class UTestMemoryMonitorUtil extends FunSuite {
   }
 
   test("NotOutOfMemoryRatio_GC") {
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       assert(false)
     }, rowsBetweenChecks = 1, reqMinFreeMemRatio = 0.1f, gcRatio = 10)
 
     mmu.check()
     assert(mmu.lastGCTime > 0)
+  }
+
+  test("Query contains write") {
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | WRITE output.gor"))
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | write output.gor"))
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | BINARYWRITE output.gor"))
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | binarywrite output.gor"))
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 ") == false)
   }
 
 }
@@ -691,15 +699,15 @@ class UTestMemoryMonitorUtil extends FunSuite {
 class UTestSlowMemoryMonitorUtil extends FunSuite {
   test("OutOfMemory_defaultRatio") {
     var gotError = false
-    val mmu : MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem : Long, args : List[_]) => {
+    val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
       gotError = true
     }, rowsBetweenChecks = 1, reqMinFreeMemMB = 100000000)
 
     // Ask for the menFreeMem to be 10TB but the ratio will use 1/4 of the max mem instead.
-    val bytesHog =  ((Runtime.getRuntime.freeMemory() + Runtime.getRuntime.maxMemory() - Runtime.getRuntime.totalMemory()) * 0.8).toLong
+    val bytesHog = ((Runtime.getRuntime.freeMemory() + Runtime.getRuntime.maxMemory() - Runtime.getRuntime.totalMemory()) * 0.8).toLong
     val memoryHog = scala.collection.mutable.ListBuffer.empty[Array[Byte]]
     for (i <- 1 to 1000) {
-      memoryHog += Array.fill[Byte]((bytesHog/1000).toInt)(0.toByte)
+      memoryHog += Array.fill[Byte]((bytesHog / 1000).toInt)(0.toByte)
     }
 
     mmu.check()
@@ -709,13 +717,13 @@ class UTestSlowMemoryMonitorUtil extends FunSuite {
 }
 
 /**
- * Test MemoryMonitor.
- */
+  * Test MemoryMonitor.
+  */
 @RunWith(classOf[JUnitRunner])
 class UTestMemoryMonitor extends FunSuite {
 
   test("NotOutOfMemory") {
-    val mm = MemoryMonitor("TestMemoryMonitor", minFreeMemMB = 100) ;
+    val mm = MemoryMonitor("TestMemoryMonitor", minFreeMemMB = 100);
     val pipe = mm | SkipAnalysis(Integer.MAX_VALUE)
 
     for (i <- 1 to 5000) {
@@ -732,14 +740,14 @@ class UTestMemoryMonitor extends FunSuite {
     val mm = MemoryMonitor("TestMemoryMonitor", minFreeMemMB = (max / 1000000 / 5).toInt)
     val pipe = mm | SkipAnalysis(Integer.MAX_VALUE)
 
-    val bytesHog =  ((Runtime.getRuntime.freeMemory() + Runtime.getRuntime.maxMemory() - Runtime.getRuntime.totalMemory()) * 0.9).toLong
+    val bytesHog = ((Runtime.getRuntime.freeMemory() + Runtime.getRuntime.maxMemory() - Runtime.getRuntime.totalMemory()) * 0.9).toLong
     val increments = 100000
     val memoryHog = scala.collection.mutable.ListBuffer.empty[Array[Byte]]
 
     try {
       for (i <- 1 to increments) {
-        memoryHog += Array.fill[Byte]((bytesHog/increments).toInt)(0.toByte)
-        pipe.process(new RowBase("chr1", i,  "Test Row", null, null))
+        memoryHog += Array.fill[Byte]((bytesHog / increments).toInt)(0.toByte)
+        pipe.process(new RowBase("chr1", i, "Test Row", null, null))
       }
     } catch {
       case e: Exception => gotError = e.getMessage
@@ -747,5 +755,5 @@ class UTestMemoryMonitor extends FunSuite {
 
     assert(gotError.startsWith("MemoryMonitor: Out of memory executing TestMemoryMonitor"))
   }
-  
+
 }

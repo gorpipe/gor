@@ -25,6 +25,8 @@ package gorsat.Utilities
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
 
+import gorsat.Commands.{Write, BinaryWrite, CommandInfo}
+
 import scala.collection.JavaConverters._
 
 object Utilities {
@@ -40,5 +42,27 @@ object Utilities {
     val perms = Set(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ)
     Files.setPosixFilePermissions(cacheFile, perms.asJava)
     cacheFile.toAbsolutePath.toString
+  }
+
+  /**
+    * Check if a query contains a certain command
+    *
+    * @param query
+    * @param commandInfo
+    * @return
+    */
+  def queryContainsCommand(query: String, commandInfo: CommandInfo): Boolean = {
+    query.toUpperCase.contains(commandInfo.name)
+  }
+
+  /**
+    * Check if a query contains a WRITE command
+    *
+    * @param query
+    * @return
+    */
+  def queryContainsWriteCommand(query: String): Boolean = {
+    queryContainsCommand(query, new Write) ||
+      queryContainsCommand(query, new BinaryWrite)
   }
 }
