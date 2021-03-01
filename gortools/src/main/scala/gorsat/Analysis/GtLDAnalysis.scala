@@ -27,15 +27,14 @@ import gorsat.Commands._
 import gorsat.Iterators.{ChromBoundedIteratorSource, RowListIterator}
 import gorsat.process.GenericGorRunner
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
-import org.gorpipe.model.gor.iterators.RowSource
 
 object GtLDAnalysis {
 
 
-  case class LDSegOverlap(ph: ParameterHolder, inRightSource: RowSource, missingSeg: String, leftJoin: Boolean, fuzzFactor: Int, iJoinType: String,
+  case class LDSegOverlap(ph: ParameterHolder, inRightSource: GenomicIterator, missingSeg: String, leftJoin: Boolean, fuzzFactor: Int, iJoinType: String,
                         lstop: Int, rstop: Int, lleq: List[Int], lreq: List[Int], otherCols : Array[Int], valuesCol : Int, maxSegSize: Int, plain: Boolean, inclusOnly: Boolean = false) extends Analysis {
 
     var rightSource = new ChromBoundedIteratorSource(inRightSource)
@@ -126,8 +125,8 @@ object GtLDAnalysis {
         if (lr.chr == lastSeekChr && !rightSource.hasNext) {
           /* do nothing */
         } else if (lr.chr > lastRightChr) {
-          if (snpsnp || segsnp) rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor).max(0))
-          else rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
+          if (snpsnp || segsnp) rightSource.seek(lr.chr, (lr.pos - fuzzFactor).max(0))
+          else rightSource.seek(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
           lastSeekChr = lr.chr
         } else if (lr.chr == lastRightChr && lr.pos - fuzzFactor - maxSegSize > lastRightPos) {
           if (snpsnp || segsnp) rightSource.moveToPosition(lr.chr, (lr.pos - fuzzFactor).max(0))
@@ -256,7 +255,7 @@ object GtLDAnalysis {
     }
   }
 
-  case class LDSnpJoinSnpOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class LDSnpJoinSnpOverlap(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                leq: List[Int], req: List[Int], otherCols : Array[Int], valuesCol : Int, plain: Boolean) extends Analysis {
     this | LDSegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpsnp", 2, 2, leq, req, otherCols, valuesCol, 1, plain)
   }

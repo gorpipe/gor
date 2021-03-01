@@ -28,8 +28,8 @@ import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.NordIterator
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 object Nor
 {
@@ -44,7 +44,7 @@ object Nor
     }
     val showModificationDate = hasOption(args, "-m")
     val inputParams = iargs(0)
-    var inputSource: RowSource = null
+    var inputSource: GenomicIterator = null
 
     try {
       if (CommandParseUtilities.isNestedCommand(inputParams)) {
@@ -148,7 +148,7 @@ object Nor
     }
   }
 
-  def createNordIterator(fileName: String, args: Array[String], context: GorContext): RowSource = {
+  def createNordIterator(fileName: String, args: Array[String], context: GorContext): GenomicIterator = {
     val hasFileFilter = CommandParseUtilities.hasOption(args, "-ff")
     val hasFilter = CommandParseUtilities.hasOption(args, "-f")
     val tags = AnalysisUtilities.getFilterTags(args, context, doHeader = false).split(',').filter(x => x.nonEmpty)

@@ -23,8 +23,8 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -89,7 +89,7 @@ public class UTestGorMapMultimap {
     public void testMap() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | map -c Gene_Symbol " + mapJoin.getCanonicalPath() + "";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 Row r = rs.next();
@@ -104,7 +104,7 @@ public class UTestGorMapMultimap {
     public void testMapNoHashHeader() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | map -c Gene_Symbol -h " + mapJoinNoHashInHeader.getCanonicalPath() + "";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 Row r = rs.next();
@@ -119,7 +119,7 @@ public class UTestGorMapMultimap {
     public void testMapNoHashHeaderWithNOption() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | map -c Gene_Symbol -n elvis " + mapJoinNoHashInHeader.getCanonicalPath() + "";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 Row r = rs.next();
@@ -134,7 +134,7 @@ public class UTestGorMapMultimap {
     public void testMapNoHeader() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | map -c Gene_Symbol " + mapJoinNoHeader.getCanonicalPath() + "";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 Row r = rs.next();
@@ -211,7 +211,7 @@ public class UTestGorMapMultimap {
     public void testMultiMap() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | multimap -c Gene_Symbol " + mapJoin.getCanonicalPath() + "";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 rs.next();
@@ -270,7 +270,7 @@ public class UTestGorMapMultimap {
         String patientsPath = createPatientsFile();
         String query = "nor -h " + patientsPath + " | dagmap -c patient_id " + patientRelationsPath;
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             int deepestDepth = 0; // cool name
             while (rs.hasNext()) {
@@ -291,7 +291,7 @@ public class UTestGorMapMultimap {
         String patientsPath = createPatientsFile();
         String query = "nor -h " + patientsPath + " | dagmap -c patient_id -dp " + patientRelationsPath;
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             int deepestDepth = 0; // cool name
             while (rs.hasNext()) {
@@ -313,7 +313,7 @@ public class UTestGorMapMultimap {
         String patientsPath = createPatientsFile();
         String query = "nor -h " + patientsPath + " | dagmap -c patient_id -dp -ps ';' " + patientRelationsPath;
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 Row currentRow = rs.next();
@@ -332,7 +332,7 @@ public class UTestGorMapMultimap {
         String patientsPath = createPatientsFile();
         String query = "nor -h " + patientsPath + " | dagmap -c patient_id -dp -dl 1 " + patientRelationsPath;
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             int deepestDepth = 0; // cool name
             while (rs.hasNext()) {

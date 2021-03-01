@@ -27,9 +27,9 @@ import gorsat.Iterators.ChromBoundedIteratorSource
 import gorsat.gorsatGorIterator.{MapAndListUtilities, MemoryMonitorUtil}
 import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.{LineIterator, RowSource}
+import org.gorpipe.model.gor.iterators.LineIterator
 import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable
@@ -141,7 +141,7 @@ object GtGenAnalysis {
 
   case class CovSEGinfo(start: Int, stop: Int, r : Row, var buckPos : Int, var values : mutable.StringBuilder)
 
-  case class TheSegOverlap(inRightSource: RowSource, bucketCol : Int, PNcol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
+  case class TheSegOverlap(inRightSource: GenomicIterator, bucketCol : Int, PNcol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
 
     var pbt: PnBucketTable = _
 
@@ -231,7 +231,7 @@ object GtGenAnalysis {
         if (lr.chr == lastSeekChr && !rightSource.hasNext) {
           /* do nothing */
         } else if (lr.chr > lastRightChr) {
-          rightSource.setPosition(lr.chr, (lr.pos - maxSegSize).max(0))
+          rightSource.seek(lr.chr, (lr.pos - maxSegSize).max(0))
           lastSeekChr = lr.chr
         } else if (lr.chr == lastRightChr && lr.pos - maxSegSize > lastRightPos) {
           rightSource.moveToPosition(lr.chr, lr.pos - maxSegSize)
@@ -351,7 +351,7 @@ object GtGenAnalysis {
     }
   }
 
-  case class CoverageOverlap(rightSource: RowSource, bucketCol : Int, PNCol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
+  case class CoverageOverlap(rightSource: GenomicIterator, bucketCol : Int, PNCol : Int, maxSegSize: Int, context: GorContext, lookupSignature : String) extends Analysis {
     this | TheSegOverlap(rightSource, bucketCol, PNCol, maxSegSize, context, lookupSignature)
   }
 

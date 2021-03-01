@@ -23,17 +23,16 @@
 package gorsat.Iterators
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase, Row}
 import org.gorpipe.gor.model.Row.SortInfo
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable
 
 class DuoSourceGen(leftList: List[String], rightList: List[String],
-                   lsl: List[RowSource], rsl: List[RowSource], sourceType: String, fileMap: mutable.Map[String, String], gorRoot: String, sortInfo: Array[SortInfo], context: GorContext) extends RowSource {
-  var leftsource: RowSource = _
-  var rightsource: RowSource = _
+                   lsl: List[GenomicIterator], rsl: List[GenomicIterator], sourceType: String, fileMap: mutable.Map[String, String], gorRoot: String, sortInfo: Array[SortInfo], context: GorContext) extends GenomicIteratorBase {
+  var leftsource: GenomicIterator = _
+  var rightsource: GenomicIterator = _
   if (sourceType == "Files") {
     if (leftList.length < 2) {
       if (fileMap != null) leftsource = new SingleFileSource(leftList.head, gorRoot, context)
@@ -108,11 +107,12 @@ class DuoSourceGen(leftList: List[String], rightList: List[String],
     leftHasNext || rightHasNext
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {
-    leftsource.setPosition(seekChr, seekPos)
-    rightsource.setPosition(seekChr, seekPos)
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
+    leftsource.seek(seekChr, seekPos)
+    rightsource.seek(seekChr, seekPos)
     posSet = true
     notCalledHasNext = true
+    true
   }
 
   def close(): Unit = {

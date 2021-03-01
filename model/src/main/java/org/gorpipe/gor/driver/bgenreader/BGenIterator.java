@@ -27,8 +27,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.bgen.BGenFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,7 @@ import java.sql.*;
 import static org.gorpipe.gor.driver.bgenreader.Utils.ensureCapacity;
 import static org.gorpipe.gor.driver.bgenreader.Utils.parseUnsignedInt;
 
-public class BGenIterator extends GenomicIterator {
+public class BGenIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(BGenIterator.class);
     private final Connection connection;
     private final VariantDataBlockParser parser;
@@ -184,11 +183,6 @@ public class BGenIterator extends GenomicIterator {
         if (total != len) {
             throw new IllegalStateException("Could not read " + len + " bytes from file.");
         }
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

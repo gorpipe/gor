@@ -99,7 +99,6 @@ public class UTestSeqBasesGenomicIterator {
             final DefaultChromoLookup lookup = new DefaultChromoLookup();
             final SeqBasesGenomicIterator iterator = new SeqBasesGenomicIterator(path, lookup);
             iterator.init(null);
-            iterator.setColnum(1);
             return iterator;
         } catch (IOException e) {
             log.warn("Couldn't create SeqBasesGenomicIterator", e);

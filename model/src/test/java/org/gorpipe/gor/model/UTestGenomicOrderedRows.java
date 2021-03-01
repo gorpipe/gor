@@ -24,11 +24,8 @@ package org.gorpipe.gor.model;
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorException;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.GorDictionarySetup;
-import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.test.SlowTests;
-import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -121,7 +118,7 @@ public class UTestGenomicOrderedRows {
             TestUtils.runGorPipe(String.format("gor %s -Y -s TagName | write %s", dictionary, mergeFile));
 
             // Check that source name is as expected
-            RowSource iterator = TestUtils.runGorPipeIterator(mergeFile);
+            GenomicIterator iterator = TestUtils.runGorPipeIterator(mergeFile);
             Assert.assertEquals("TagName", iterator.getHeader().split("\t")[5]);
             iterator.close();
             iterator = TestUtils.runGorPipeIterator(dictionary + " -f tag0,tag1,tag2,tag3 -s TagName");
@@ -270,7 +267,7 @@ public class UTestGenomicOrderedRows {
      */
     @Test
     public void testSourceColumn() {
-        try (RowSource iterator = TestUtils.runGorPipeIterator("1.mem -s MyStuff | top 10")) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator("1.mem -s MyStuff | top 10")) {
             int cnt = 0;
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -285,23 +282,12 @@ public class UTestGenomicOrderedRows {
         }
     }
 
-    private void testSourceColumnHelper(String baseQuery, String[] expectedHeader, String lastColumnValue) {
-        try (RowSource iterator = TestUtils.runGorPipeIterator(String.format("%s | top 1", baseQuery))) {
-            String[] header = iterator.getGorHeader().getColumns();
-            Assert.assertEquals(expectedHeader, header);
-            while (iterator.hasNext()) {
-                Row row = iterator.next();
-                Assert.assertEquals(lastColumnValue, row.colAsString(row.numCols()).toString());
-            }
-        }
-    }
-    
     /**
      * Test single pos filtering
      */
     @Test
     public void testSinglePosFiltering() {
-        try (RowSource iterator = TestUtils.runGorPipeIterator("1.mem -p chr1:3")) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator("1.mem -p chr1:3")) {
             int count = 0;
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -311,7 +297,7 @@ public class UTestGenomicOrderedRows {
             Assert.assertEquals(1, count);
         }
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator("1.mem -p chr1:3-3")) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator("1.mem -p chr1:3-3")) {
             int count = 0;
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -339,7 +325,7 @@ public class UTestGenomicOrderedRows {
             }
             final String content = sb.toString(); //"chrMyMy\t10\ta\nchrMyMy\t20\tb\nchrNuts\t101\tc\nchrNutButs\t102";
             writeTestFileWith(file, content);
-            try (RowSource iterator = TestUtils.runGorPipeIterator(file.getAbsolutePath())) {
+            try (GenomicIterator iterator = TestUtils.runGorPipeIterator(file.getAbsolutePath())) {
 
                 Set<String> chromosomes = new HashSet<>();
 

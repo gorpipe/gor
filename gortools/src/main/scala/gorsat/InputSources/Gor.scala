@@ -30,9 +30,9 @@ import gorsat.DynIterator._
 import gorsat.Iterators.ServerGorSource
 import gorsat.process.PipeOptions
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.Pipes
-import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable.ListBuffer
 
@@ -44,7 +44,7 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
                                 args: Array[String]): InputSourceParsingResult = {
 
     var usedFiles = ListBuffer.empty[String]
-    var inputSource: RowSource = null
+    var inputSource: GenomicIterator = null
     var mergeSteps: Array[String] = null
     var inputFile = iargs(0)
     var range:Range = null

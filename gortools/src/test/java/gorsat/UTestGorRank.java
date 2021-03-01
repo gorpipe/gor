@@ -23,8 +23,8 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +38,7 @@ public class UTestGorRank {
         int count = 0;
         int maxRank = 0;
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             String columnHeaders = iterator.getHeader();
             Assert.assertTrue(columnHeaders.contains("rank_POS"));
             while (iterator.hasNext()) {
@@ -59,7 +59,7 @@ public class UTestGorRank {
         int count = 0;
         int maxRank = 0;
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             String columnHeaders = iterator.getHeader();
             Assert.assertTrue(columnHeaders.contains("rank_POS"));
             while (iterator.hasNext()) {
@@ -77,7 +77,7 @@ public class UTestGorRank {
     public void testGorRankTestRankDistribution() {
         String query = "gor ../tests/data/gor/dbsnp_test.gorz | rank 1000 POS -q | top 10";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             String columnHeaders = iterator.getHeader();
             Assert.assertTrue(columnHeaders.contains("rank_POS"));
@@ -110,7 +110,7 @@ public class UTestGorRank {
     public void testGorRankTestTotalCount() {
         String query = "gor ../tests/data/gor/dbsnp_test.gorz | rank 1000 POS -c -rmax 1 | top 10";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             String columnHeaders = iterator.getHeader();
             Assert.assertTrue(columnHeaders.contains("rank_POS"));
@@ -130,7 +130,7 @@ public class UTestGorRank {
     public void testGorRankTestReportVAlueAtRAnk1() {
         String query = "gor ../tests/data/gor/dbsnp_test.gorz | rank chrom POS -b | top 10";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             String columnHeaders = iterator.getHeader();
             Assert.assertTrue(columnHeaders.contains("rank_POS"));
@@ -157,7 +157,7 @@ public class UTestGorRank {
     public void testGorRankWithGroup() {
         String query = "gor ../tests/data/gor/dbsnp_test.gorz | rank chrom POS -gc #4 | top 10";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             int maxRank = 0;
             String columnHeaders = iterator.getHeader();
@@ -178,7 +178,7 @@ public class UTestGorRank {
     public void testGorRankWithUniqueGroup() {
         String query = "gor ../tests/data/gor/dbsnp_test.gorz | rank chrom POS -gc #3,#4 | top 10";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             int maxRank = 0;
             String columnHeaders = iterator.getHeader();

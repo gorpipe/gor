@@ -25,10 +25,10 @@ package gorsat;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.monitor.GorMonitor;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Created by sigmar on 21/11/2016.
  */
-public class BatchedReadSource extends RowSource {
+public class BatchedReadSource extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(BatchedReadSource.class);
 
     private final Row endRow = RowObj.StoR("chrN\t-1");
@@ -63,6 +63,18 @@ public class BatchedReadSource extends RowSource {
     private int bavgCount = 0;
 
     private final GorMonitor gorMonitor;
+
+    private Throwable ex = null;
+
+    public void setEx(Throwable throwable) {
+        if (ex == null || throwable == null) {
+            ex = throwable;
+        }
+    }
+
+    public Throwable getEx() {
+        return ex;
+    }
 
     public void updateTimeMeasurement(long deltaTimeNs, RowBuffer current) {
         ++avgCount;
@@ -306,10 +318,10 @@ public class BatchedReadSource extends RowSource {
     int seekCount;
 
     @Override
-    public void setPosition(String seekChr, int seekPos) {
+    public boolean seek(String seekChr, int seekPos) {
         long t = System.nanoTime();
         try {
-            if( sourceIterator instanceof RowSource ) ((RowSource)sourceIterator).setPosition(seekChr, seekPos);
+            if( sourceIterator instanceof GenomicIterator ) ((GenomicIterator)sourceIterator).seek(seekChr, seekPos);
             if (readerThread != null) {
                 readerThread.stopProcessing();
                 readerThread.poll();
@@ -317,10 +329,11 @@ public class BatchedReadSource extends RowSource {
                 readerThread = null;
             }
         } catch (InterruptedException e) {
-            throw new GorSystemException("rowQueue take interrupted on setPosition", e);
+            throw new GorSystemException("rowQueue take interrupted on seek", e);
         }
         avgSeekTimeMilliSecond = ((seekCount * avgSeekTimeMilliSecond + (System.nanoTime() - t) / 1000000.0) / (seekCount + 1));
         seekCount++;
+        return true;
     }
 
     public boolean isCancelled() {
@@ -328,7 +341,7 @@ public class BatchedReadSource extends RowSource {
     }
 
     private void closeSourceIterator() {
-        if (sourceIterator instanceof RowSource) ((RowSource) sourceIterator).close();
+        if (sourceIterator instanceof GenomicIterator) ((GenomicIterator) sourceIterator).close();
     }
 
     @Override

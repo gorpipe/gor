@@ -23,11 +23,11 @@
 package gorsat.process;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.model.DbSource;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
@@ -287,7 +286,7 @@ public class GorJavaUtilities {
         return myCommand;
     }
 
-    public static RowSource getDbIteratorSource(String sqlQuery, boolean gortable, final String source, boolean scoping) {
+    public static GenomicIterator getDbIteratorSource(String sqlQuery, boolean gortable, final String source, boolean scoping) {
         Supplier<Stream<String>> streamSupplier = () -> DbSource.getDBLinkStream("//db:" + sqlQuery, new Object[]{}, source);
         gorsat.Iterators.IteratorSource its;
         its = gortable ? new GorStreamIterator(streamSupplier, scoping) : new NorStreamIterator(streamSupplier);

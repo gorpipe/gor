@@ -22,43 +22,9 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.gor.model.{GenomicIterator, Line, Row}
+import org.gorpipe.gor.model.{GenomicIteratorBase}
 import org.gorpipe.model.gor.Pipes
 
-abstract class RowSource extends GenomicIterator with AutoCloseable {
-  var bufferSize: Int = Pipes.rowsToProcessBuffer
-  var parent : RowSource = _
-
-  def getParent : RowSource = parent
-  def setParent(rs : RowSource): Unit = { parent = rs }
-  def getAvgSeekTimeMilliSecond = 0.0
-  def getAvgRowsPerMilliSecond = 0.0
-  def getAvgBasesPerMilliSecond = 0.0
-  def getAvgBatchSize = 0.0
-  def getCurrentBatchSize = 0
-  def getCurrentBatchLoc = 0
-  def getCurrentBatchRow( i : Int ) : Row = null
-  def setPosition(seekChr: String, seekPos : Int)
-  def moveToPosition(seekChr: String, seekPos : Int, maxReads: Int = 10000): Unit = setPosition(seekChr, seekPos)
-  def close()
-  def terminateReading() { /* do nothing */ }
-  def getBufferSize : Int = bufferSize
-  def setBufferSize( bs : Int ) { bufferSize = bs }
-
-  def getGorHeader: GorHeader = null
-
-  override def next(line: Line): Boolean = {
-    if( hasNext ) {
-      val row = next()
-      line.copyColumnsFrom(row)
-      return true
-    }
-    false
-  }
-
-  override def seek(seekChr: String, seekPos: Int): Boolean = {
-    setPosition(seekChr, seekPos)
-    true
-  }
+@Deprecated
+abstract class RowSource extends GenomicIteratorBase {
 }

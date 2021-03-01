@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,8 +31,8 @@ import org.junit.Test;
  */
 public class UTestJoinICIROptions {
     private void testJoinICIR(String query1, String query2, int expected) {
-        try (RowSource iterator1 = TestUtils.runGorPipeIterator(query1)) {
-            try (RowSource iterator2 = TestUtils.runGorPipeIterator(query2)) {
+        try (GenomicIterator iterator1 = TestUtils.runGorPipeIterator(query1)) {
+            try (GenomicIterator iterator2 = TestUtils.runGorPipeIterator(query2)) {
                 int count = 0;
                 boolean pih = iterator1.hasNext();
                 while (pih) {

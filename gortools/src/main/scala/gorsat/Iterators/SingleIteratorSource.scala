@@ -23,11 +23,10 @@
 package gorsat.Iterators
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIteratorBase, Row}
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RowSource
 
-class SingleIteratorSource(protected val theIterator: IteratorSource, protected val iterName: String) extends RowSource {
+class SingleIteratorSource(protected val theIterator: IteratorSource, protected val iterName: String) extends GenomicIteratorBase {
   protected var myNext: Row = _
   protected var myHasNext: Boolean = false
   protected var posSet: Boolean = false
@@ -55,11 +54,12 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
     }
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
     //	val e = new Exception; e.printStackTrace
     posSet = true
     mustReCheck = true
     theIterator.setPosition(seekChr, seekPos)
+    true
   }
 
   override def moveToPosition(seekChr: String, seekPos: Int, maxReads: Int = 10000) {
@@ -76,7 +76,7 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
       mustReCheck = false
       myNext = theNext
     }
-    else if (hasNext) setPosition(seekChr, seekPos)
+    else if (hasNext) seek(seekChr, seekPos)
   }
 
   def close: Unit = theIterator.close()

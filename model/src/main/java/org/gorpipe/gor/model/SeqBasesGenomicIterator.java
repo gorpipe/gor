@@ -35,7 +35,7 @@ import java.util.Arrays;
 /**
  * Simple memory based line generator for testing purposes
  */
-class SeqBasesGenomicIterator extends GenomicIterator {
+class SeqBasesGenomicIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(SeqBasesGenomicIterator.class);
 
     int chromo;  // The index of the current chromosome
@@ -165,10 +165,5 @@ class SeqBasesGenomicIterator extends GenomicIterator {
             }
         }
         return null;
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 }

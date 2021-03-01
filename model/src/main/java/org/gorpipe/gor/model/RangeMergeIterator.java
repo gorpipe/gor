@@ -64,7 +64,7 @@ import java.util.stream.IntStream;
  *
  * @author Hjalti Thor Isleifsson
  */
-public class RangeMergeIterator extends GenomicIterator {
+public class RangeMergeIterator extends GenomicIteratorBase {
     private final int numberOfSources;
     private final List<SourceRef> sources;
     private final GenomicIterator[] iterators;
@@ -347,11 +347,6 @@ public class RangeMergeIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void close() {
         for (final GenomicIterator git : this.iterators) {
             if (git != null) {
@@ -377,12 +372,5 @@ public class RangeMergeIterator extends GenomicIterator {
         } else {
             return Integer.compare(pos1, pos2);
         }
-    }
-
-    @Override
-    public GenomicIterator select(int[] cols) {
-        this.cols = cols;
-        super.selectHeader(cols);
-        return this;
     }
 }

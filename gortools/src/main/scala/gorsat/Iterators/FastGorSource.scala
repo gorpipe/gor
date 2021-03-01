@@ -147,7 +147,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     if (soughtTwice && dist < maxDist) {
       carefulRunner(seekChr, seekPos, dist)
     } else if (hasNext) {
-      setPosition(seekChr, seekPos)
+      seek(seekChr, seekPos)
     }
   }
 
@@ -168,7 +168,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
       mustReCheck = false
       myNext = theNext
     } else if (hasNext) {
-      setPosition(seekChr, seekPos)
+      seek(seekChr, seekPos)
     }
   }
 
@@ -179,10 +179,10 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     var theNext: Row = null
     var count = 0
     var modCounter = 0
-    var seek = false
+    var didSeek = false
     val startTime = System.nanoTime
     var distLeft = dist
-    while (!reachedPos && !seek && hasNext) {
+    while (!reachedPos && !didSeek && hasNext) {
       count += 1
       modCounter += 1
       theNext = next()
@@ -199,8 +199,8 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
           updateEstimates(count, tmpDist, time)
           count = 0
           if ((late || distLeft > maxDist) && hasNext) {
-            seek = true
-            setPosition(seekChr,seekPos)
+            didSeek = true
+            seek(seekChr,seekPos)
           }
           late = true //If we are late again we will seek.
         }
@@ -225,7 +225,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     maxDistEstimated = true; check = maxReads / checksPerMaxRun
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
     posSet = true
     mustReCheck = true
     if (useAdaptiveMTP) {
@@ -233,6 +233,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     } else {
       oldSetPosition(seekChr, seekPos)
     }
+    true
   }
 
   def newSetPosition(seekChr: String, seekPos: Int): Unit = {

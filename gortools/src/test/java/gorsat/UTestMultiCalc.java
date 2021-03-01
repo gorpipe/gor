@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +56,7 @@ public class UTestMultiCalc {
     public void testMultiCalc() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | calc a,b,c max(5,6),upper('y'),'simmi'";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             String[] header = rs.getHeader().split("\t");
             count = getCount(rs, count, header);
@@ -64,7 +64,7 @@ public class UTestMultiCalc {
         }
     }
 
-    private int getCount(RowSource rs, int count, String[] header) {
+    private int getCount(GenomicIterator rs, int count, String[] header) {
         while (rs.hasNext()) {
             String line = rs.next().toString();
             String[] split = line.split("\t");
@@ -78,7 +78,7 @@ public class UTestMultiCalc {
     public void testMultiCalcLargeFile() {
         String query = "gor ../tests/data/gor/genes.gor | calc a,b,c max(5,6),upper('y'),'newcolumn'";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             String header = rs.getHeader();
             String[] headersplit = header.split("\t");
@@ -91,7 +91,7 @@ public class UTestMultiCalc {
     public void testCalcIfWoMulticalc() throws IOException {
         String query = "gor " + gorFile.getCanonicalPath() + " | calc n if(gene_start==0, 'nm', '0')";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (rs.hasNext()) {
                 rs.next();

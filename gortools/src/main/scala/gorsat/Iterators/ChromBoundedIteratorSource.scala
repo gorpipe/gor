@@ -22,9 +22,9 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.GenomicIterator
 
-class ChromBoundedIteratorSource(protected val theIteratorx: RowSource) extends SingleRowIteratorSource(theIteratorx) {
+class ChromBoundedIteratorSource(protected val theIteratorx: GenomicIterator) extends SingleRowIteratorSource(theIteratorx) {
   var nextHasNext = true
 
   override def hasNext: Boolean = {
@@ -32,10 +32,11 @@ class ChromBoundedIteratorSource(protected val theIteratorx: RowSource) extends 
     else false
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
     nextHasNext = true
-    super.setPosition(seekChr, seekPos)
+    super.seek(seekChr, seekPos)
     if (!super.hasNext) nextHasNext = false
     else if (myNext.chr > seekChr) nextHasNext = false
+    true
   }
 }

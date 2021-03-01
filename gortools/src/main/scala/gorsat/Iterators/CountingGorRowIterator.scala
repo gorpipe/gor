@@ -24,11 +24,10 @@ package gorsat.Iterators
 
 import gorsat.Commands._
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIteratorBase, Row}
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RowSource
 
-case class CountingGorRowIterator(genomicRange: GenomicRange.Range, segmentValue: Int, stepValue: Int) extends RowSource {
+case class CountingGorRowIterator(genomicRange: GenomicRange.Range, segmentValue: Int, stepValue: Int) extends GenomicIteratorBase {
   var chromPosition: Int = genomicRange.start
 
   override def hasNext: Boolean = chromPosition < genomicRange.stop
@@ -54,20 +53,7 @@ case class CountingGorRowIterator(genomicRange: GenomicRange.Range, segmentValue
       )
   }
 
-
-  override def getGorHeader: GorHeader = {
-    val header = new GorHeader()
-    header.addColumn("chrom", "S")
-    if(segmentValue > Int.MinValue) {
-      header.addColumn("bpStart", "I")
-      header.addColumn("bpStop", "I")
-    } else {
-      header.addColumn("pos", "I")
-    }
-    header
-  }
-
-  override def setPosition(seekChr: String, seekPos: Int) {}
+  override def seek(seekChr: String, seekPos: Int): Boolean = true
 
   def close {}
 }

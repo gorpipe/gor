@@ -22,8 +22,8 @@
 
 package gorsat;
 
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class UTestGorVcfWithHtsjdk {
         String query = gor + " " + curdir.substring(0, curdir.length() - 1) + file + " | top " + top;
 
         StringBuilder ret = new StringBuilder();
-        RowSource rs = TestUtils.runGorPipeIterator(query);
+        GenomicIterator rs = TestUtils.runGorPipeIterator(query);
         int count = 0;
         while (rs.hasNext()) {
             Row row = rs.next();

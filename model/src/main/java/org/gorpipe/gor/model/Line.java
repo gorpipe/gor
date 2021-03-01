@@ -323,7 +323,7 @@ public class Line extends Row {
     @Override
     public String toColString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < numCols(); i++) {
+        for (int i = 0; i < cols.length; i++) {
             sb.append("(").append(cols[i].toString()).append(") ");
         }
         return sb.toString();
@@ -342,7 +342,7 @@ public class Line extends Row {
     }
 
     @Override
-    public Long colAsLong(int col) {
+    public long colAsLong(int col) {
         return col == 1 ? (long) pos : cols[col - 2].toLong();
     }
 

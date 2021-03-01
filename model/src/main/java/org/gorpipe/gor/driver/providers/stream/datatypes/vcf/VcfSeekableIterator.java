@@ -27,10 +27,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.binsearch.SeekableIterator;
 import org.gorpipe.gor.binsearch.StringIntKey;
-import org.gorpipe.gor.model.ContigDataScheme;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.*;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Comparator;
 
-public class VcfSeekableIterator extends GenomicIterator {
+public class VcfSeekableIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(VcfSeekableIterator.class);
 
     private final SeekableIterator seekableIterator;
@@ -98,11 +95,6 @@ public class VcfSeekableIterator extends GenomicIterator {
         } else {
             return false;
         }
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -184,10 +176,5 @@ public class VcfSeekableIterator extends GenomicIterator {
                 this.reachedEnd = true;
             }
         }
-    }
-
-    @Override
-    protected void selectHeader(int[] cols) {
-        this.gh = this.gh.select(cols);
     }
 }

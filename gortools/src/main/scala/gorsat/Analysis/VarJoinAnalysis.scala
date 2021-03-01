@@ -26,9 +26,8 @@ import gorsat.Commands.Analysis
 import gorsat.Iterators.ChromBoundedIteratorSource
 import gorsat.gorsatGorIterator.MemoryMonitorUtil
 import gorsat.parser.ParseUtilities.{allelesFoundVCF, varSignature}
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorSession
-import org.gorpipe.model.gor.iterators.RowSource
 import org.gorpipe.model.gor.RowObj
 
 object VarJoinAnalysis {
@@ -39,7 +38,7 @@ object VarJoinAnalysis {
 
   // More or less the same logic as in SegOverlap (in gorsatUtilities.scala)
 
-  case class SegVarOverlap(session: GorSession, ph: ParameterHolder, inRightSource : RowSource, missingSeg : String, exactJoin : Boolean, leftJoin : Boolean, fuzzFactor : Int, joinType : String,
+  case class SegVarOverlap(session: GorSession, ph: ParameterHolder, inRightSource : GenomicIterator, missingSeg : String, exactJoin : Boolean, leftJoin : Boolean, fuzzFactor : Int, joinType : String,
                            lleq : List[Int], lreq : List[Int], caseInsensitive : Boolean, maxSegSize : Int, lRefCol : Int, lAltCol : Int, rRefCol : Int, rAltCol : Int, allShare : Int,
                            plainCols : Array[Int], negjoin:Boolean, inclusOnly : Boolean) extends Analysis {
 
@@ -108,7 +107,7 @@ object VarJoinAnalysis {
         (lastRightChr < lr.chr || (lastRightChr == lr.chr && lastRightPos <= leftStop + fuzzFactor))) {
         if (lr.chr == lastSeekChr && !rightSource.hasNext) { /* do nothing */ }
         else if (lr.chr > lastRightChr) {
-          rightSource.setPosition(lr.chr,(lr.pos-fuzzFactor-maxSegSize).max(0))
+          rightSource.seek(lr.chr,(lr.pos-fuzzFactor-maxSegSize).max(0))
           lastSeekChr = lr.chr
         } else if (lr.chr == lastRightChr && lr.pos - fuzzFactor - maxSegSize > lastRightPos) {
           rightSource.moveToPosition(lr.chr,lr.pos-fuzzFactor-maxSegSize)
@@ -237,12 +236,12 @@ object VarJoinAnalysis {
     }
   }
 
-  case class SegVarJoinSegOverlap(session: GorSession, ph: ParameterHolder, rightSource : RowSource, missingB : String, exactJoin : Boolean, leftJoin : Boolean, fuzz : Int,
+  case class SegVarJoinSegOverlap(session: GorSession, ph: ParameterHolder, rightSource : GenomicIterator, missingB : String, exactJoin : Boolean, leftJoin : Boolean, fuzz : Int,
                                   leq : List[Int], req : List[Int], caseInsensitive : Boolean, maxSegSize : Int,
                                   lRef : Int, lAlt : Int, rRef : Int, rAlt : Int, allShare : Int, plainCols : Array[Int], negjoin:Boolean) extends Analysis {
     this | SegVarOverlap(session, ph,rightSource, missingB, exactJoin, leftJoin, fuzz, "segseg", leq, req, caseInsensitive, maxSegSize, lRef, lAlt, rRef, rAlt, allShare, plainCols, negjoin, inclusOnly = false)
   }
-  case class SegVarJoinSegOverlapInclusOnly(session: GorSession, ph: ParameterHolder, rightSource : RowSource, missingB : String, exactJoin : Boolean, leftJoin : Boolean, fuzz : Int,
+  case class SegVarJoinSegOverlapInclusOnly(session: GorSession, ph: ParameterHolder, rightSource : GenomicIterator, missingB : String, exactJoin : Boolean, leftJoin : Boolean, fuzz : Int,
                                             leq : List[Int], req : List[Int], caseInsensitive : Boolean, maxSegSize : Int,
                                             lRef : Int, lAlt : Int, rRef : Int, rAlt : Int, allShare : Int, plainCols : Array[Int], negjoin:Boolean) extends Analysis {
     this | SegVarOverlap(session, ph,rightSource, missingB, exactJoin, leftJoin, fuzz, "segseg", leq, req, caseInsensitive, maxSegSize, lRef, lAlt, rRef, rAlt, allShare, plainCols, negjoin, inclusOnly = true)

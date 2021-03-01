@@ -33,6 +33,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
+import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;

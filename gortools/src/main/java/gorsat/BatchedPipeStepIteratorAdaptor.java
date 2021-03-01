@@ -26,9 +26,9 @@ import gorsat.Commands.Analysis;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ import java.util.stream.StreamSupport;
 /**
  * Created by sigmar on 05/05/2017.
  */
-public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliterator<Row> {
+public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implements Spliterator<Row> {
     private static final Logger log = LoggerFactory.getLogger(BatchedPipeStepIteratorAdaptor.class);
 
     private final Iterator<? extends Row> sourceIterator;
@@ -73,6 +73,17 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
 
     private final BatchedReadSourceConfig brsConfig;
     private final boolean autoclose;
+
+    private Throwable ex = null;
+    public void setEx(Throwable throwable) {
+        if (ex == null || throwable == null) {
+            ex = throwable;
+        }
+    }
+
+    public Throwable getEx() {
+        return ex;
+    }
 
     public void setCurrentChrom(String chrom) {
         this.currentChrom = chrom;
@@ -153,7 +164,7 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
 
     @Override
     public BatchedPipeStepIteratorAdaptor clone() throws CloneNotSupportedException {
-        GenomicIterator cl = ((GenomicIterator) sourceIterator).clone();
+        GenomicIterator cl = ((GenomicIteratorBase) sourceIterator).clone();
         return new BatchedPipeStepIteratorAdaptor(sourceIterator, pipeStep.clone(), getHeader(), brsConfig);
     }
 
@@ -167,13 +178,13 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
             } catch (CloneNotSupportedException e) {
                 throw new GorSystemException("Trying to clone non clonable object", e);
             }
-            splitbpia.setPosition(currentChrom, 0);
+            splitbpia.seek(currentChrom, 0);
             currentChrom = nextChrom;
             return splitbpia;
         }
 
         if( !nosplit ) {
-            this.setPosition(currentChrom, 0);
+            this.seek(currentChrom, 0);
             nosplit = true;
         }
 
@@ -511,15 +522,15 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
     int seekCount = 0;
 
     @Override
-    public void setPosition(String seekChr, int seekPos) {
+    public boolean seek(String seekChr, int seekPos) {
         long t = System.nanoTime();
         try {
             if (readerThread != null) {
                 readerThread.stopProcessing( "Stop processing seeking to " + seekChr + " " + seekPos );
                 readerThread.poll();
                 readerThread.join();
-                if (sourceIterator instanceof RowSource) {
-                    ((RowSource) sourceIterator).setPosition(seekChr, seekPos);
+                if (sourceIterator instanceof GenomicIterator) {
+                    ((GenomicIterator) sourceIterator).seek(seekChr, seekPos);
                 } else {
                     Row next;
                     while( sourceIterator.hasNext() && ((next = sourceIterator.next()).chr.compareTo(seekChr) < 0 || (next.chr.compareTo(seekChr) == 0 && next.pos < seekPos)) );
@@ -532,14 +543,15 @@ public class BatchedPipeStepIteratorAdaptor extends RowSource implements Spliter
                 readerThread.start();
             }
         } catch (InterruptedException e) {
-            throw new GorSystemException("rowQueue take interrupted on setPosition", e);
+            throw new GorSystemException("rowQueue take interrupted on seek", e);
         }
         avgSeekTimeMilliSecond = ((seekCount * avgSeekTimeMilliSecond + (System.nanoTime() - t) / 1000000.0) / (seekCount + 1));
         seekCount++;
+        return true;
     }
 
     private void closeSourceIterator() {
-        if (sourceIterator instanceof RowSource) ((RowSource)sourceIterator).close();
+        if (sourceIterator instanceof GenomicIterator) ((GenomicIterator)sourceIterator).close();
     }
 
     @Override

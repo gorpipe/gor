@@ -22,9 +22,9 @@
 
 package gorsat.process;
 
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.iterators.RowSource;
 
 public class OptionEvaluator {
     private final GorContext context;
@@ -36,7 +36,7 @@ public class OptionEvaluator {
     String getValue(String query, int column) {
         PipeInstance pipeInstance = new PipeInstance(context);
         pipeInstance.init(query, false, "");
-        RowSource iterator = pipeInstance.getRowSource();
+        GenomicIterator iterator = pipeInstance.getRowSource();
         if (iterator.hasNext()) {
             Row row = iterator.next();
             return row.stringValue(column - 1);

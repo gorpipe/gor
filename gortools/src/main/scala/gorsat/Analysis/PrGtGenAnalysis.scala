@@ -5,11 +5,11 @@ import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gtgen.GPParser.{glToGp, parseDoubleTriplet, plToGp}
 import gorsat.gtgen.GTGen
 import gorsat.{PnBucketParsing, PnBucketTable}
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.RowObj.BinaryHolder
-import org.gorpipe.model.gor.iterators.{LineIterator, RowSource}
+import org.gorpipe.model.gor.iterators.LineIterator
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -130,7 +130,7 @@ object PrGtGenAnalysis {
     def unregisterUser(user: AnyRef): Unit = users -= user
   }
 
-  case class AFANSourceAnalysis(afSource: RowSource, context: GorContext, lookupSignature: String, grCols: List[Int], pabCol: Int, pbbCol: Int, anCol: Int) extends Analysis {
+  case class AFANSourceAnalysis(afSource: GenomicIterator, context: GorContext, lookupSignature: String, grCols: List[Int], pabCol: Int, pbbCol: Int, anCol: Int) extends Analysis {
     val ti = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
     ti.registerUser(this)
 
@@ -201,7 +201,7 @@ object PrGtGenAnalysis {
     }
   }
 
-  case class RightSourceAnalysis(rightSource: RowSource, context: GorContext, lookupSignature: String,
+  case class RightSourceAnalysis(rightSource: GenomicIterator, context: GorContext, lookupSignature: String,
                                  depthCol: Int, pnCol: Int, threshold: Double, maxSegSize: Int, maxIt: Int = 20, tol: Double = 1e-5,
                                  tripSep: Char = ';', sepOut: Boolean = false, outSep: Char = ',') extends Analysis {
 

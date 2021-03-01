@@ -25,7 +25,7 @@ package org.gorpipe.gor.model;
 /**
  * Naive implementation of the DefaultChromoLookup
  */
-public class DefaultChromoLookup implements GenomicIterator.ChromoLookup {
+public class DefaultChromoLookup implements ChromoLookup {
 
     private final ChromoCache lookupCache;
 

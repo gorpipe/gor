@@ -29,9 +29,9 @@ import gorsat.Iterators.RowArrayIterator;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import scala.collection.Iterator;
 
@@ -104,7 +104,7 @@ public class AnalysisTestEngine {
         }
     }
 
-    public void run(Analysis processor, RowSource inputIterator, RowSource outputIterator, RowHeader header) {
+    public void run(Analysis processor, GenomicIterator inputIterator, GenomicIterator outputIterator, RowHeader header) {
         AnalysisSink sink = new AnalysisSink();
 
         processor.$bar(sink);

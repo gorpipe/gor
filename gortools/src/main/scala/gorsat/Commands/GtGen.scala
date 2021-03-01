@@ -28,8 +28,8 @@ import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 class GtGen extends CommandInfo("GTGEN",
   CommandArguments("", "-tag -gc -maxseg", 2, 2),
@@ -80,7 +80,7 @@ class GtGen extends CommandInfo("GTGEN",
     }
 
     val segFile: String = iargs.last.trim
-    var segSource: RowSource = null
+    var segSource: GenomicIterator = null
     var rightHeader = ""
     try {
       val inputSource = new SourceProvider(segFile, context, executeNor = executeNor, isNor = false)

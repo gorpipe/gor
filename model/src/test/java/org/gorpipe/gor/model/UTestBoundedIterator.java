@@ -103,15 +103,6 @@ public class UTestBoundedIterator {
         assertFalse(bit.hasNext());
     }
 
-    @Test
-    //The behaviour defined by this test is actually wrong and we want to change it. When that is done, this test
-    //should be deleted.
-    public void minusPWithoutChr() {
-        final BoundedIterator bit = getChromBoundedIterator("-p 1 ../tests/data/gor/dbsnp_test.gor");
-        Assert.assertTrue(bit.seek("1", 1));
-        Assert.assertTrue(bit.hasNext());
-    }
-
     private int countRows(BoundedIterator bit) {
         int counter = 0;
         while(bit.hasNext()) {

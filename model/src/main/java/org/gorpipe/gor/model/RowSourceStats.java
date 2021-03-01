@@ -20,13 +20,42 @@
  *  END_COPYRIGHT
  */
 
-package gorsat.Commands
+package org.gorpipe.gor.model;
 
-import org.gorpipe.gor.model.GenomicIterator
+import org.gorpipe.model.gor.Pipes;
 
-case class CommandParsingResult(step: Analysis,
-                                header: String,
-                                usedFiles: Array[String] = null,
-                                newInputSource: GenomicIterator = null) {
-  var excludeValidation:Boolean = false
+public interface RowSourceStats {
+    default double getAvgSeekTimeMilliSecond() {
+        return 0.0;
+    }
+
+    default double getAvgRowsPerMilliSecond() {
+        return 0.0;
+    }
+
+    default double getAvgBasesPerMilliSecond() {
+        return 0.0;
+    }
+
+    default double getAvgBatchSize() {
+        return 0.0;
+    }
+
+    default int getCurrentBatchSize() {
+        return 0;
+    }
+
+    default int getCurrentBatchLoc() {
+        return 0;
+    }
+
+    default Row getCurrentBatchRow(int i) {
+        return null;
+    }
+
+    default int getBufferSize() {
+        return Pipes.rowsToProcessBuffer();
+    }
+
+    default void setBufferSize(int bs) {}
 }

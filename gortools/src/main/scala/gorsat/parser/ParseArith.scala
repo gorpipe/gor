@@ -30,9 +30,9 @@ import gorsat.parser.FunctionTypes._
 import gorsat.parser.ParseUtilities._
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
 import org.gorpipe.gor.SyntaxChecker
-import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.model.{ColumnValueProvider, GenomicIterator}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.{RefSeq, RowSource}
+import org.gorpipe.model.gor.iterators.RefSeq
 
 import scala.collection.mutable
 import scala.util.parsing.combinator.JavaTokenParsers
@@ -43,7 +43,7 @@ case class ColumnInfo(name: String, dataType: String) {}
   * The ParseArith class is used to compile and evaluate expressions used in CALC and WHERE commands.
   * @param rs An optional row source (not sure if this is really used)
   */
-class ParseArith(rs: RowSource = null) extends JavaTokenParsers {
+class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
 
   private val functions = CalcFunctions.registry
 

@@ -41,7 +41,7 @@ import java.util.function.Predicate;
  *
  *
  */
-public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
+public abstract class GenomicIteratorAdapterBase extends GenomicIteratorBase {
 
     GenomicIterator iterator;
 
@@ -57,7 +57,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
             this.iterator.close();
         }
         iterator = it;
-        setColnum(it.getColnum());
         setSourceAlreadyInserted(it.isSourceAlreadyInserted());
         setSourceName(it.getSourceName());
     }
@@ -85,22 +84,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     }
 
     @Override
-    public int getColnum() {
-        return iterator.getColnum();
-    }
-
-    @Override
-    public void setColnum(int colnum) {
-        super.setColnum(colnum);
-        iterator.setColnum(colnum);
-    }
-
-    @Override
-    public ChromoLookup getLookup() {
-        return iterator.getLookup();
-    }
-
-    @Override
     public String getHeader() {
         return iterator.getHeader();
     }
@@ -118,11 +101,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     @Override
     public boolean seek(String chr, int pos, int end) {
         return iterator.seek(chr, pos, end);
-    }
-
-    @Override
-    public boolean next(Line line) {
-        return iterator.next(line);
     }
 
     @Override
@@ -155,11 +133,6 @@ public abstract class GenomicIteratorAdapterBase extends GenomicIterator {
     public GenomicIterator select(int[] cols) {
         this.iterator = this.iterator.select(cols);
         return this;
-    }
-
-    @Override
-    protected void selectHeader(int[] cols) {
-        this.iterator.selectHeader(cols);
     }
 
     @Override

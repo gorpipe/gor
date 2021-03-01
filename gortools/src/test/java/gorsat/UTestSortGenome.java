@@ -29,11 +29,11 @@ import gorsat.Iterators.PipeStepIteratorAdaptor;
 import gorsat.process.GenericSessionFactory;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorSession;
 import gorsat.process.GorSessionFactory;
 import org.gorpipe.gor.model.Row;
 import gorsat.Iterators.FastGorSource;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -79,7 +79,7 @@ public class UTestSortGenome {
                 "| sort genome\n" +
                 "| verifyorder";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(gorcmd)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(gorcmd)) {
             Row prev = null;
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -93,7 +93,7 @@ public class UTestSortGenome {
     public void testSortGenomeVcf() {
         String gorcmd = "gor ../tests/data/external/samtools/test.vcf | sort genome";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(gorcmd)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(gorcmd)) {
             Row prev = null;
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -117,7 +117,7 @@ public class UTestSortGenome {
     @Test
     public void testVcfGorOrder() {
         String curdir = new File(".").getAbsolutePath();
-        RowSource inputSource = new FastGorSource("../tests/data/external/samtools/test.vcf", curdir, null, false, null, 0);
+        GenomicIterator inputSource = new FastGorSource("../tests/data/external/samtools/test.vcf", curdir, null, false, null, 0);
         Analysis analyser = new TopN(10);
         PipeStepIteratorAdaptor pit = new PipeStepIteratorAdaptor(inputSource, analyser, null);
 
@@ -137,7 +137,7 @@ public class UTestSortGenome {
     @Test
     public void testGorOrder() throws IOException {
         String curdir = new File(".").getAbsolutePath();
-        RowSource inputSource = new FastGorSource(orderGor.getCanonicalPath(), curdir, null, false, null, 0);
+        GenomicIterator inputSource = new FastGorSource(orderGor.getCanonicalPath(), curdir, null, false, null, 0);
         String header = inputSource.getHeader();
         Path dir = Files.createTempDirectory("sorttest");
         GorSessionFactory factory = new GenericSessionFactory("", dir.toAbsolutePath().toString());

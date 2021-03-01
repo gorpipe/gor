@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  * layout, and lines are interleaved in genomic order. This is effectively doing a merge-sort on
  * the iterators.
  */
-public class MergeIterator extends GenomicIterator {
+public class MergeIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(MergeIterator.class);
 
     private static final String DEFAULT_SOURCE_COLUMN_NAME = "Source";
@@ -182,11 +182,6 @@ public class MergeIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
-        throw new GorSystemException("next filling Line should not be used from MergeIterator", null);
-    }
-
-    @Override
     public void close() {
         doClose();
         isClosed = true;
@@ -205,7 +200,6 @@ public class MergeIterator extends GenomicIterator {
             String header = getHeader();
             if (header.length() == 0) {
                 setHeader(String.join("\t",headerWithOptionalSourceColumn));
-                setColnum(headerWithOptionalSourceColumn.length - 2);
                 firstName = it.getSourceName();
             } else {
                 String[] headerSplit = header.split("\t");
@@ -217,7 +211,6 @@ public class MergeIterator extends GenomicIterator {
                     throw new GorDataException(message);
                 }
             }
-            it.setColnum(getColnum());
         }
     }
 

@@ -22,13 +22,13 @@
 
 package gorsat.process;
 
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 
 import java.io.InputStream;
 
 /**
  * Created by sigmar on 12/02/16.
  */
-public abstract class ProcessSource extends RowSource {
+public abstract class ProcessSource extends GenomicIteratorBase {
     public abstract InputStream setRange(String seekChr, int seekPos, int endPos);
 }

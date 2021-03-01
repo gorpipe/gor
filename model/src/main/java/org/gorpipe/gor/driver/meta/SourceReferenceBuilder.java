@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.ChromoLookup;
 
 /**
  * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.
@@ -31,7 +31,7 @@ public class SourceReferenceBuilder {
     private final String url;
     private String securityContext;
     private String commonRoot;
-    private GenomicIterator.ChromoLookup lookup;
+    private ChromoLookup lookup;
     private String chrSubset;
 
     public SourceReferenceBuilder(String url) {
@@ -61,7 +61,7 @@ public class SourceReferenceBuilder {
         return this;
     }
 
-    public SourceReferenceBuilder lookup(GenomicIterator.ChromoLookup lookup) {
+    public SourceReferenceBuilder lookup(ChromoLookup lookup) {
         this.lookup = lookup;
         return this;
     }

@@ -27,7 +27,7 @@ import htsjdk.tribble.readers.TabixReader.Iterator;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.StringIntKey;
-import org.gorpipe.gor.util.ByteTextBuilder;
+import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -37,78 +37,35 @@ import java.util.TreeSet;
 /**
  * Simple genomic iterator for zipped vcf files, can not be seeked into
  */
-public class GorGzGenomicIterator extends GenomicIterator {
-    private Line line;
-    private StringIntKey chrPosKey;
+public class GorGzGenomicIterator extends GenomicIteratorBase {
     private TabixReader reader; // The reader to use
     Iterator iterator;
-    private GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
-    int[] columns; // source columns to include
     String filename;
     String firstChr;
+    private Row nextRow = null;
 
-    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, String idxfile, int[] cols) throws IOException {
-        this(lookup, file, idxfile, cols, StringIntKey.cmpLexico);
+    public GorGzGenomicIterator(ChromoLookup lookup, String file, String idxfile) throws IOException {
+        this(lookup, file, idxfile, StringIntKey.cmpLexico);
     }
 
-    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, StreamSource file, StreamSource idxfile, int[] cols) throws IOException {
-        init(lookup, new TabixReader(file.getName(), idxfile.getName(), new StreamSourceSeekableStream(file)), cols, StringIntKey.cmpLexico);
+    public GorGzGenomicIterator(ChromoLookup lookup, StreamSource file, StreamSource idxfile) throws IOException {
+        init(lookup, new TabixReader(file.getName(), idxfile.getName(), new StreamSourceSeekableStream(file)), StringIntKey.cmpLexico);
     }
 
-    public GorGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, String idxfile, int[] cols, Comparator<StringIntKey> comparator) throws IOException {
-        init(lookup, new TabixReader(file, idxfile), cols, comparator);
+    public GorGzGenomicIterator(ChromoLookup lookup, String file, String idxfile, Comparator<StringIntKey> comparator) throws IOException {
+        init(lookup, new TabixReader(file, idxfile), comparator);
     }
 
-    private void init(GenomicIterator.ChromoLookup lookup, TabixReader reader, int[] cols, Comparator<StringIntKey> comparator) throws IOException {
+    private void init(ChromoLookup lookup, TabixReader reader, Comparator<StringIntKey> comparator) throws IOException {
         this.reader = reader;
         filename = reader.getSource();
-        this.lookup = lookup;
-        chrPosKey = columns == null ? new StringIntKey(0, 1, comparator) : new StringIntKey(columns[0], columns[1], comparator);
         Set<String> chrSet = new TreeSet(reader.getChromosomes());
         for (String chr : chrSet) {
             firstChr = chr;
             break;
         }
-        setColumns(cols);
-        line = new Line(getHeader().split("\t").length);
-    }
-
-    private void setColumns(int[] cols) throws IOException {
-        String header = reader.readLine();
-        String[] headerSplit = header.split("\t");
-        if (cols == null) {
-            columns = createAllCols(headerSplit.length - 2);
-            setHeader(header);
-        } else {
-            columns = new int[cols.length - 2];
-            String[] filteredHeader = new String[cols.length];
-            filteredHeader[0] = headerSplit[cols[0]];
-            filteredHeader[1] = headerSplit[cols[1]];
-            for (int col = 2; col < cols.length; col++) {
-                filteredHeader[col] = headerSplit[cols[col]];
-                columns[col - 2] = cols[col];
-            }
-            setHeader(String.join("\t",filteredHeader));
-        }
-    }
-
-    @Override
-    public boolean next(Line l) {
-        try {
-            String buf = iterator == null ? reader.readLine() : iterator.next();
-            if (buf != null) {
-                line.setData(buf.getBytes(), 0);
-                final ByteTextBuilder chrcol = line.cols[chrPosKey.chrCol];
-                l.chrIdx = lookup.prefixedChrToId(chrcol.peekAtBuffer(), 0, chrcol.length()); // Encodes chrM as 0 as used by gor
-                l.chr = l.chrIdx >= 0 ? lookup.idToName(l.chrIdx) : null;
-                l.pos = line.cols[chrPosKey.posCol].toInt();
-                for (int i = 0; i < columns.length; i++) {
-                    l.cols[i].set(line.cols[columns[i]].getBytes());
-                }
-                return true;
-            }
-        } catch (IOException e) { /* ignore */ }
-        return false;
+        String header = this.reader.readLine();
+        setHeader(header);
     }
 
     @Override
@@ -133,5 +90,41 @@ public class GorGzGenomicIterator extends GenomicIterator {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    @Override
+    public boolean hasNext() {
+        if (nextRow != null) {
+            return true;
+        }
+        nextRow = next();
+        return nextRow != null;
+    }
+
+    @Override
+    public Row next() {
+        if (nextRow != null) {
+            Row row = nextRow;
+            nextRow = null;
+            return row;
+        }
+        try {
+            String buf;
+            if (iterator != null) {
+                buf = iterator.next();
+                if (buf == null) {
+                    buf = reader.readLine();
+                    iterator = null;
+                }
+            } else {
+                buf = reader.readLine();
+            }
+            if (buf != null) {
+                return RowObj.apply(buf);
+            }
+        } catch (IOException e) {
+            // Ignore
+        }
+        return null;
     }
 }

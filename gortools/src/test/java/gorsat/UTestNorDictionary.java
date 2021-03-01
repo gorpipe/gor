@@ -28,7 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.test.SlowTests;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
@@ -69,7 +69,7 @@ public class UTestNorDictionary {
     public void testNorDictionaryHeader() throws IOException {
         String query = "nor -asdict " + dictionaryFile.getCanonicalPath();
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             String header = rs.getHeader();
             int count = 0;
             while (rs.hasNext()) {

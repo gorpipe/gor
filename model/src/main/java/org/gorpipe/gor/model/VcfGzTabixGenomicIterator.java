@@ -25,14 +25,10 @@ package org.gorpipe.gor.model;
 import htsjdk.tribble.readers.TabixReader;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.util.ByteTextBuilder;
 import org.gorpipe.gor.util.StringUtil;
-import org.gorpipe.gor.util.Util;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.util.collection.ByteArray;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +38,7 @@ import java.util.List;
 /**
  * Simple genomic iterator for zipped vcf files with index
  */
-public class VcfGzTabixGenomicIterator extends GenomicIterator {
+public class VcfGzTabixGenomicIterator extends GenomicIteratorBase {
     private TabixReader reader;
     private TabixReader.Iterator iterator;
     private List<String> chrs;
@@ -50,20 +46,15 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
 
     private Row nextRow = null;
 
-    GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
+    ChromoLookup lookup; // chromosome name lookup service
     private final String fileName;
 
-    @Override
-    public ChromoLookup getLookup() {
-        return lookup;
-    }
-
-    public VcfGzTabixGenomicIterator(GenomicIterator.ChromoLookup lookup, StreamSource file, StreamSource idxfile) throws IOException {
+    public VcfGzTabixGenomicIterator(ChromoLookup lookup, StreamSource file, StreamSource idxfile) throws IOException {
         fileName = file.getName();
         init(lookup, new TabixReader(fileName, idxfile.getName(), new StreamSourceSeekableStream(file)));
     }
 
-    private void init(GenomicIterator.ChromoLookup lookup, TabixReader reader) throws IOException {
+    private void init(ChromoLookup lookup, TabixReader reader) throws IOException {
         this.reader = reader;
         this.lookup = lookup;
         findHeader();
@@ -173,11 +164,6 @@ public class VcfGzTabixGenomicIterator extends GenomicIterator {
         }
 
         return null;
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

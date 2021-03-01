@@ -23,10 +23,7 @@
 package gorsat;
 
 import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
-import org.gorpipe.gor.model.DefaultChromoLookup;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +35,7 @@ public class UTestBamTagParsing {
 
     @Test
     public void testBamTagParse() {
-        GenomicIterator.ChromoLookup lookup = new DefaultChromoLookup();
+        ChromoLookup lookup = new DefaultChromoLookup();
         BamIterator bamit = new BamIterator(lookup, "../tests/data/external/samtools/serialization_test.bam");
 
         while (bamit.hasNext()) {

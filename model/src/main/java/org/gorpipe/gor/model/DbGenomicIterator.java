@@ -40,13 +40,13 @@ import java.util.List;
  * static filtering on columns, for an example allowing project scoping in the RDA use case.
  * @version $Id$
  */
-public class DbGenomicIterator extends GenomicIterator {
+public class DbGenomicIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(DbGenomicIterator.class);
     private final String securityContext;
     private Connection conn;
     private PreparedStatement stmt;
     private ResultSet rs;
-    private final GenomicIterator.ChromoLookup lookup;
+    private final ChromoLookup lookup;
     private final String sqlbase;
     private boolean hasNext;
     private final String chrColName;
@@ -280,11 +280,6 @@ public class DbGenomicIterator extends GenomicIterator {
         } catch (SQLException ex) {
             throw new GorDataException("Error reading Db - " + DbScope.dbScopesToString(dbScopes) + " securityContext: " + securityContext + ex.getMessage(), ex);
         }
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

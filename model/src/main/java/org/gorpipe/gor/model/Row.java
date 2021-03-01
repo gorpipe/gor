@@ -186,7 +186,7 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
      * @param colNum Column index (zero based)
      * @return Column value as long
      */
-    public abstract Long colAsLong(int colNum);
+    public abstract long colAsLong(int colNum);
 
     /**
      * Returns the value of the given column as a string

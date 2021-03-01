@@ -27,9 +27,6 @@ import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.tabix.TabixIndex;
 import htsjdk.variant.vcf.VCFCodec;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
-import org.gorpipe.gor.model.DefaultChromoLookup;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.VcfGzTabixGenomicIterator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,7 +43,7 @@ public class UTestVcfTabixGenomicIterator {
     TabixIndex ti;
     FileSource fs;
     FileSource fi;
-    GenomicIterator.ChromoLookup cl;
+    ChromoLookup cl;
     String ipath = "../tests/data/external/samtools/testTabixIndex.vcf.gz.tbi";
 
     @Before

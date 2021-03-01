@@ -28,8 +28,8 @@ import gorsat.Iterators.SingleFileSource
 import gorsat.Utilities.IteratorUtilities
 import gorsat.{DynIterator, Iterators}
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 /**
   * SourceProvider simplifies access to sources used by various commands, where the source can be either
@@ -40,7 +40,7 @@ case class SourceProvider(inputSource: String, context: GorContext, executeNor: 
   var iteratorCommand = ""
   var usedFiles = Array.empty[String]
   var header = ""
-  var source: RowSource = _
+  var source: GenomicIterator = _
   var dynSource: DynIterator.DynamicRowSource = _
 
   if (inputSource.slice(0, 2) == "<(") {

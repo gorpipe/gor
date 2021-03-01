@@ -22,17 +22,35 @@
 
 package org.gorpipe.gor.model;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class SelectIterator extends GenomicIteratorAdapterBase {
     private final int[] cols;
+    private String selectHeader;
 
     public SelectIterator(GenomicIterator git, int[] cols) {
         super(git);
-        this.iterator.selectHeader(cols);
+
+        selectHeader(cols);
         this.cols = cols;
     }
 
     @Override
     public Row next() {
         return this.iterator.next().rowWithSelectedColumns(this.cols);
+    }
+
+    @Override
+    public String getHeader() {
+        return selectHeader;
+    }
+
+    protected void selectHeader(int[] cols) {
+        String header = iterator.getHeader();
+        if (header != null && !header.equals("")) {
+            final String[] headerCols = header.split("\t");
+            selectHeader = Arrays.stream(cols).mapToObj(i -> headerCols[i]).collect(Collectors.joining("\t"));
+        }
     }
 }

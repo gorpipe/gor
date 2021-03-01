@@ -22,11 +22,10 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIteratorBase, Row}
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RowSource
 
-case class RowArrayIterator(lineList: Array[Row], length: Int) extends RowSource {
+case class RowArrayIterator(lineList: Array[Row], length: Int) extends GenomicIteratorBase {
   var l: Array[Row] = lineList
   var index = 0
 
@@ -36,7 +35,7 @@ case class RowArrayIterator(lineList: Array[Row], length: Int) extends RowSource
     val r = l(index); index += 1; r
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {}
+  override def seek(seekChr: String, seekPos: Int): Boolean = true
 
   def close {}
 }

@@ -97,9 +97,4 @@ public class GorpIterator extends GenomicIteratorAdapterBase {
         return new SourceRef(sourcePath, null, null, null, startChr, startPos, stopChr, stopPos,
                 null, null, false, this.securityContext, this.commonRoot);
     }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
-    }
 }

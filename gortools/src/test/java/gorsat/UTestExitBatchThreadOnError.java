@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ public class UTestExitBatchThreadOnError {
     @Test
     public void testExitBatchThreadOnError() throws InterruptedException {
         String query = "gor ../tests/data/gor/genes.gor | rownum | throwif rownum=21432 | group genome -count";
-        RowSource iterator = TestUtils.runGorPipeIterator(query);
+        GenomicIterator iterator = TestUtils.runGorPipeIterator(query);
         Thread t = new Thread(() -> {
             while (iterator.hasNext()) {
                 iterator.next();
@@ -48,7 +48,7 @@ public class UTestExitBatchThreadOnError {
     @Test
     public void testExitBatchThreadOnBug() throws InterruptedException {
         String query = "gor ../tests/data/gor/genes.gorz | bug process:0.01 | rownum | join -segseg ../tests/data/gor/genes.gorz | bug process:0.01 | group chrom -count";
-        RowSource iterator = TestUtils.runGorPipeIterator(query);
+        GenomicIterator iterator = TestUtils.runGorPipeIterator(query);
         Thread t = new Thread(() -> {
             while (iterator.hasNext()) {
                 iterator.next();

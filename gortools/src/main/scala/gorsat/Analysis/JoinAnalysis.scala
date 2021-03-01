@@ -32,9 +32,8 @@ import gorsat.process.SourceProvider
 import gorsat.Analysis
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
 import org.gorpipe.gor.GorConstants
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 import org.gorpipe.model.gor.RowObj
 import org.slf4j.LoggerFactory
 
@@ -46,7 +45,7 @@ object  JoinAnalysis {
 
   case class ParameterHolder(varsegleft: Boolean, varsegright: Boolean, lref: Int, rref: Int, negjoin: Boolean, caseInsensitive: Boolean, ic: Boolean, ir: Boolean)
 
-  case class SegOverlap(ph: ParameterHolder, inRightSource: RowSource, missingSeg: String, leftJoin: Boolean, fuzzFactor: Int, iJoinType: String,
+  case class SegOverlap(ph: ParameterHolder, inRightSource: GenomicIterator, missingSeg: String, leftJoin: Boolean, fuzzFactor: Int, iJoinType: String,
                         lstop: Int, rstop: Int, lleq: List[Int], lreq: List[Int], maxSegSize: Int, plain: Boolean, inclusOnly: Boolean = false) extends Analysis {
 
     var rightSource = new ChromBoundedIteratorSource(inRightSource)
@@ -220,9 +219,9 @@ object  JoinAnalysis {
         }
         else if (lr.chr > lastRightChr) {
           if (snpsnp || segsnp) {
-            rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
+            rightSource.seek(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
           } else {
-            rightSource.setPosition(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
+            rightSource.seek(lr.chr, (lr.pos - fuzzFactor - maxSegSize).max(0))
           }
           lastSeekChr = lr.chr
         } else if (lr.chr == lastRightChr && lr.pos - fuzzFactor - maxSegSize > lastRightPos) {
@@ -370,42 +369,42 @@ object  JoinAnalysis {
     }
   }
 
-  case class SegJoinSegOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SegJoinSegOverlap(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                lstop: Int, rstop: Int, leq: List[Int], req: List[Int], maxSegSize: Int, plain: Boolean) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "segseg", lstop, rstop, leq, req, maxSegSize, plain)
   }
 
-  case class SegJoinSegOverlapInclusOnly(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SegJoinSegOverlapInclusOnly(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                          lstop: Int, rstop: Int, leq: List[Int], req: List[Int], maxSegSize: Int) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "segseg", lstop, rstop, leq, req, maxSegSize, plain = false, inclusOnly = true)
   }
 
-  case class SegJoinSnpOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SegJoinSnpOverlap(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                lstop: Int, leq: List[Int], req: List[Int], maxSegSize: Int, plain: Boolean) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "segsnp", lstop, 2, leq, req, maxSegSize, plain)
   }
 
-  case class SegJoinSnpOverlapInclusOnly(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SegJoinSnpOverlapInclusOnly(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                          lstop: Int, leq: List[Int], req: List[Int], maxSegSize: Int) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "segsnp", lstop, 2, leq, req, maxSegSize, plain = false, inclusOnly = true)
   }
 
-  case class SnpJoinSegOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SnpJoinSegOverlap(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                rstop: Int, leq: List[Int], req: List[Int], maxSegSize: Int, plain: Boolean) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpseg", 2, rstop, leq, req, maxSegSize, plain)
   }
 
-  case class SnpJoinSegOverlapInclusOnly(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SnpJoinSegOverlapInclusOnly(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                          rstop: Int, leq: List[Int], req: List[Int], maxSegSize: Int) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpseg", 2, rstop, leq, req, maxSegSize, plain = false, inclusOnly = true)
   }
 
-  case class SnpJoinSnpOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SnpJoinSnpOverlap(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                leq: List[Int], req: List[Int], maxSegSize: Int, plain: Boolean) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpsnp", 2, 2, leq, req, maxSegSize, plain)
   }
 
-  case class SnpJoinSnpOverlapInclusOnly(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+  case class SnpJoinSnpOverlapInclusOnly(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                                          leq: List[Int], req: List[Int], maxSegSize: Int) extends Analysis {
     this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpsnp", 2, 2, leq, req, maxSegSize, plain = false, inclusOnly = true)
   }
@@ -489,8 +488,8 @@ object  JoinAnalysis {
 
     var doLeftJoin = hasOption(args, "-l")
     var rightFile: String = null
-    var stdInput: RowSource = null
-    var segSource: RowSource = null
+    var stdInput: GenomicIterator = null
+    var segSource: GenomicIterator = null
     var isSourceSet = false
     var rightHeader = ""
     val leftHeader = forcedInputHeader

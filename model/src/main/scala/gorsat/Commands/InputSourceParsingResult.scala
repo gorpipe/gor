@@ -23,9 +23,9 @@
 package gorsat.Commands
 
 import gorsat.Commands.GenomicRange.Range
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.GenomicIterator
 
-case class InputSourceParsingResult(inputSource: RowSource,
+case class InputSourceParsingResult(inputSource: GenomicIterator,
                                     header:String,
                                     isNorContext: Boolean,
                                     genomicRange: Range = null,

@@ -62,10 +62,9 @@ public class UTestDbGenomicIterator {
     @Test
     public void next_FillingLine_FirstLine() {
         try (final GenomicIterator iterator = getIterator()) {
-            Line line = new Line(48);
-            boolean b = iterator.next(line);
-            assertTrue(b);
-            assertEquals("chr1\t13896\tC\tA\tIO_GIAB_FATHER\tSampleAnnotation\t\t\t\t2018-11-16 10:10:43.31346\tcd14b640-cbb5-0136-d79a-0242ac11000a\t\t\tWASH7P\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t1\t\t\t\t137\tGenome-In-A-Bottle-ACMG", line.getAllCols().toString());
+            Row row = iterator.next();
+            String expected = "chr1\t13896\tC\tA\tIO_GIAB_FATHER\tSampleAnnotation\t\t\t\t2018-11-16 10:10:43.31346\tcd14b640-cbb5-0136-d79a-0242ac11000a\t\t\tWASH7P\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t1\t\t\t\t137\tGenome-In-A-Bottle-ACMG";
+            assertEquals(expected, row.toString());
         }
     }
 
@@ -165,9 +164,6 @@ public class UTestDbGenomicIterator {
         assertNotNull(iterator);
 
         iterator.init(null);
-
-        // This is done in LineSource - next doesn't work correctly without this
-        iterator.setColnum(iterator.getHeader().split("\t").length - 2);
 
         return iterator;
     }

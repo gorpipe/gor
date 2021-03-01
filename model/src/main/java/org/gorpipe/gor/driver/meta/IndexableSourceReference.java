@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.driver.meta;
 
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.ChromoLookup;
 
 /**
  * Created by sigmar on 20/05/16.
@@ -31,7 +31,7 @@ public class IndexableSourceReference extends SourceReference {
     private final String indexSource;
     private final String referenceSource;
 
-    public IndexableSourceReference(String url, String indexSource, String referenceSource, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) {
+    public IndexableSourceReference(String url, String indexSource, String referenceSource, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset) {
         super(url, securityContext, commonRoot, lookup, chrSubset);
 
         this.indexSource = indexSource;

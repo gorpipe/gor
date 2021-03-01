@@ -27,8 +27,8 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Utilities.AnalysisUtilities;
 import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorSession;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,7 +126,7 @@ public class TestUtils {
         }
     }
 
-    public static RowSource runGorPipeIterator(String query) {
+    public static GenomicIterator runGorPipeIterator(String query) {
         PipeInstance pipe = createPipeInstance(false);
         pipe.init(query, null);
         return pipe.getRowSource();

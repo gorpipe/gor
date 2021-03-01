@@ -362,7 +362,7 @@ public class SourceRef {
      * @return The GenomicIterator from this source
      * @throws IOException
      */
-    public GenomicIterator iterate(GenomicIterator.ChromoLookup lookup, String chrSubset) throws IOException {
+    public GenomicIterator iterate(ChromoLookup lookup, String chrSubset) throws IOException {
         // All files, except specific endings are assumed to be tab delimited text files in genomic order
         // With first two fields as chromosome and position
         if (isStandardIn()) {
@@ -372,7 +372,7 @@ public class SourceRef {
         return iterateFile(file, indexFile, referenceFile, securityContext, commonRoot, lookup, chrSubset);
     }
 
-    private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) throws IOException {
+    private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset) throws IOException {
         try {
             if (GorDriverFactory.fromConfig().config().enabled()) {
                 SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext, commonRoot, lookup, chrSubset);

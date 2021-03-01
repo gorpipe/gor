@@ -30,16 +30,16 @@ import javax.swing.table.TableModel;
 /**
  * @version $Id:  $
  */
-public class TableModelIterator extends GenomicIterator {
+public class TableModelIterator extends GenomicIteratorBase {
     private final TableModel tableModel;
     Row nextRow = null;
 
     private int currentRowId;
-    private final GenomicIterator.ChromoLookup lookup;
+    private final ChromoLookup lookup;
 
     private static class DefaultLookup {
         final ChromoCache chrcache = new ChromoCache();
-        public final GenomicIterator.ChromoLookup chrlookup = new GenomicIterator.ChromoLookup() {
+        public final ChromoLookup chrlookup = new ChromoLookup() {
             @Override
             public String idToName(int id) {
                 return chrcache.toName(id);
@@ -88,7 +88,7 @@ public class TableModelIterator extends GenomicIterator {
      * @param model  table model
      * @param lookup chromosome lookup
      */
-    public TableModelIterator(TableModel model, GenomicIterator.ChromoLookup lookup) {
+    public TableModelIterator(TableModel model, ChromoLookup lookup) {
         this.tableModel = model;
         this.currentRowId = 0;
         this.lookup = lookup;
@@ -187,10 +187,5 @@ public class TableModelIterator extends GenomicIterator {
         }
         currentRowId++;
         return RowObj.apply(stringBuilder);
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 }
