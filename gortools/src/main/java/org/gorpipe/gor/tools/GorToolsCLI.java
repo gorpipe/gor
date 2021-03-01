@@ -2,7 +2,7 @@
  *  BEGIN_COPYRIGHT
  *
  *  Copyright (C) 2011-2013 deCODE genetics Inc.
- *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  Copyright (C) 2013-2021 WuXi NextCode Inc.
  *  All Rights Reserved.
  *
  *  GORpipe is free software: you can redistribute it and/or modify
@@ -179,7 +179,7 @@ public class GorToolsCLI {
         cp.unregisterHandler(AddToCollectionHandler.class);
         cp.registerHandler(new ListAddToCollectionHandler());
         cp.setProgramName("gortool");
-        cp.setAboutLine("Copyright (c) 2018 WuxiNextCode.");
+        cp.setAboutLine("Copyright (c) 2021 WuxiNextCode.");
         IndexFile idxFile = new IndexFile();
         cp.addObject(idxFile);
         GorCommandInfo gorCommandInfo = new GorCommandInfo();
@@ -195,7 +195,7 @@ public class GorToolsCLI {
 
         String cmdName = cp.getParsedCommandName();
         if (genericOpts.version) {
-            System.out.println(String.format("Gor File Indexer - Copyright (c) 2018 WuxiNextCode.  Version: %s",
+            System.out.println(String.format("Gor File Indexer - Copyright (c) 2021 WuxiNextCode.  Version: %s",
                     GorToolsCLI.class.getPackage().getImplementationVersion()));
         } else if (genericOpts.help) {
             if (cmdName != null) {

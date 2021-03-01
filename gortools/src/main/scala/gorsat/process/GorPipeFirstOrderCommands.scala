@@ -2,7 +2,7 @@
  *  BEGIN_COPYRIGHT
  *
  *  Copyright (C) 2011-2013 deCODE genetics Inc.
- *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  Copyright (C) 2013-2021 WuXi NextCode Inc.
  *  All Rights Reserved.
  *
  *  GORpipe is free software: you can redistribute it and/or modify
@@ -36,8 +36,8 @@ trait GorPipeFirstOrderCommands {
     var message = ""
 
     if (args.length < 2) {
-      message = "\ngorpipe, version " + gorsat.process.GorPipe.version + ", (c) WuXiNextCODE, 2018\n\n" +
-        //  var message = "\ngorpipe, evaluation version. (c) WuXiNextCODE, 2014\n\n" +
+      message = "\ngorpipe, version " + gorsat.process.GorPipe.version + ", (c) WuXiNextCODE, 2021\n\n" +
+        //  var message = "\ngorpipe, evaluation version. (c) WuXiNextCODE, 2021\n\n" +
         "gorpipe is a software tool used to execute GOR queries within a command shell locally. \n\n" +
         "Options:\n\n" +
         " -aliases name.txt    File alias lookup file, e.g. $gene path/genes.gor.\n" +

@@ -2,7 +2,7 @@
  *  BEGIN_COPYRIGHT
  *
  *  Copyright (C) 2011-2013 deCODE genetics Inc.
- *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  Copyright (C) 2013-2021 WuXi NextCode Inc.
  *  All Rights Reserved.
  *
  *  GORpipe is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@ public class TableManagerCLI {
         cp.unregisterHandler(AddToCollectionHandler.class);
         cp.registerHandler(new ListAddToCollectionHandler());
         cp.setProgramName("gormanager");
-        cp.setAboutLine("Copyright (c) 2017 WuxiNextCode.");
+        cp.setAboutLine("Copyright (c) 2021 WuxiNextCode.");
         cp.addObject(
                 new CommandInsert(),
                 new CommandMultiInsert(),

@@ -2,7 +2,7 @@
  *  BEGIN_COPYRIGHT
  *
  *  Copyright (C) 2011-2013 deCODE genetics Inc.
- *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  Copyright (C) 2013-2021 WuXi NextCode Inc.
  *  All Rights Reserved.
  *
  *  GORpipe is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 package gorsat.Utilities
 
 /**
-  * Copyright (c) 2018 WuxiNextCode Inc.
+  * Copyright (c) 2021 WuxiNextCode Inc.
   * All Rights Reserved.
   *
   * This software is the confidential and proprietary information of

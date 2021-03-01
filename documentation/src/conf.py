@@ -57,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GOR Open Source'
-copyright = u'2020 GOR Open Source Project'
+copyright = u'2021 GOR Open Source Project'
 author = u'GOR Open Source Project'
 
 # The version info for the project you're documenting, acts as replacement for

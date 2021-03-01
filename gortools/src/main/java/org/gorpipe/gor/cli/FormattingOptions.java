@@ -2,7 +2,7 @@
  *  BEGIN_COPYRIGHT
  *
  *  Copyright (C) 2011-2013 deCODE genetics Inc.
- *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  Copyright (C) 2013-2021 WuXi NextCode Inc.
  *  All Rights Reserved.
  *
  *  GORpipe is free software: you can redistribute it and/or modify
@@ -30,6 +30,6 @@ import picocli.CommandLine;
         optionListHeading    = "%nOptions:%n%n",
         commandListHeading   = "%nCommands:%n%n",
         header="GOR Command Line",
-        footer="%n(c) WuxiNextcode 2019")
+        footer="%n(c) WuxiNextcode 2021")
 public class FormattingOptions {
 }
