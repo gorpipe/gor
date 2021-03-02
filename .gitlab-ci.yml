@@ -2,22 +2,31 @@
 # Gitlab build file for GOR.
 #
 
+include:
+  - project: wuxi-nextcode/sdev/gitlab-ci-scripts
+    file: /auto-ci-workflow.yml
+
 variables:
+  DOCKER_DRIVER: overlay2
   JAVA_BUILDER_IMAGE: nextcode/builderimg-java:openjdk11
   GIT_SUBMODULE_STRATEGY: none
+  GIT_DEPTH: 2
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true"
+  SECURITY_SCAN: "false"
+
+  # Vars needed for the Genuity Auto-CI
   RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
   # Vars for build resources
   KUBERNETES_CPU_REQUEST: 4
   KUBERNETES_CPU_LIMIT: 6
   KUBERNETES_MEMORY_REQUEST: 2Gi
-  KUBERNETES_MEMORY_LIMIT: 4Gi
+  KUBERNETES_MEMORY_LIMIT: 6Gi
 
-.on-branches:
-  rules:
-    - if: '$CI_COMMIT_BRANCH'
+# Temporary overwrite of tasks from the auto git.
+
+# Triggers running on branch that should be releasable (by tagging later), must start with v so we don't pick merge requests.
 
 .on-releasable-branch-only:
   rules:
@@ -42,7 +51,9 @@ stages:
   - build
   - test
   - publish
-  - trigger-cross-projects
+  - promote
+  - release
+  - deploy
 
 
 before_script:
@@ -58,16 +69,20 @@ before_script:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
     paths:
-      - "build"
-      - "**/build"
-      - ".gradle"
+      - .gradle/wrapper
+      - .gradle/caches
+
 
 build:
   extends: .build_with_cache
+  image: "$JAVA_BUILDER_IMAGE"
   stage: build
   script: ./gradlew classes
   cache:
     policy: pull-push
+  artifacts:
+    paths:
+      - "**/build/libs/*.jar"
 
 
 .test:
@@ -75,6 +90,7 @@ build:
   stage: test
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.documentation=true"
   artifacts:
     reports:
       junit:
@@ -106,23 +122,14 @@ code_quality:
   stage: test
   tags:
     - gitlab-build-01
+  variables:
+    #CODECLIMATE_DEBUG: "1"
+    ENGINE_MEMORY_LIMIT_BYTES: "3221223823"
   artifacts:
     reports:
       codequality: gl-code-quality-report.json
     paths: [gl-code-quality-report.json]
     expire_in: 1 week
-
-
-license_scanning:
-  extends:
-    - .build_with_cache
-    - .on-releasable-or-release-branch-only
-  stage: test
-  variables:
-    # There is no need to run tests or generate sphinx documentation for license management
-    # analysis, however, the license management plugin calls the build task so we have to manually
-    # disable tests and documentation generation.
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
 
 
 dependency_scanning:
@@ -134,10 +141,19 @@ dependency_scanning:
     # There is no need to run tests or generate sphinx documentation for license management
     # analysis, however, the license management plugin calls the build task so we have to manually
     # disable tests and documentation generation.
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true -Dskip.documentation=true"
   artifacts:
     paths: [gl-dependency-scanning-report.json]
 
+
+spotbugs-sast:
+  variables:
+    SAST_JAVA_VERSION: "11"
+    JAVA_OPTS: "-Xmx4G"
+    #SECURE_LOG_LEVEL: "debug"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true -Dskip.documentation=true"
+  rules:
+    - if: '$SECURITY_SCAN == "true"'
 
 publish:
   extends:
@@ -146,16 +162,14 @@ publish:
   stage: publish
   script: ./gradlew publish -x test -x slowTest -x integrationTest
 
-# TODO:  The trigger starts the gor-services with wrong variables.  Needs some tuning.
-#gor-services:
-#  extends: .on-releasable-branch-only
-#  stage: trigger-cross-projects
-#  trigger:
-#    project:  wuxi-nextcode/wxnc-gor/gor-services
-#    branch:   develop
+
+# Disable default tasks that should not be triggered.
+
+container_scanning:
+  rules:
+    - when: never
 
 
-include:
-  - template: Code-Quality.gitlab-ci.yml
-  - template: License-Scanning.gitlab-ci.yml
-  - template: Dependency-Scanning.gitlab-ci.yml
+push-feature-branch-docker-to-dockerhub:
+  rules:
+    - when: never

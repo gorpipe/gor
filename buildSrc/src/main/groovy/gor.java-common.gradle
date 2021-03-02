@@ -181,6 +181,9 @@ tasks.withType(Test) {
     }
 }
 
+// Skips tests if you provide prod project property from command line
+test.onlyIf {! Boolean.getBoolean('skip.tests') }
+
 test {
     useJUnit {
         excludeCategories 'org.gorpipe.test.IntegrationTests'
