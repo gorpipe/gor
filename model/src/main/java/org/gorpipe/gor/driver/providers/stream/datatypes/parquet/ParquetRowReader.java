@@ -24,7 +24,7 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.hadoop.ParquetReader;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.model.ParquetLine;
 import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public class ParquetRowReader implements Comparable<ParquetRowReader>, Iterator<
 
     Function<Group, ParquetLine> lineProvider;
 
-    public ParquetRowReader(ParquetReader<Group> reader, GenomicIterator.ChromoLookup lookup, String part) {
+    public ParquetRowReader(ParquetReader<Group> reader, ChromoLookup lookup, String part) {
         this(reader, (Group group) -> new ParquetLine(group, lookup), part);
     }
 

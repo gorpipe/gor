@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -80,13 +80,13 @@ public class UTestNestedQuery {
     public void testNestedQueryGorNorQuery() {
         String query = "gor <(nor ../tests/data/gor/dbsnp_test.gor)";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = testIterator(rs, 5);
             Assert.assertEquals(48, count);
         }
     }
 
-    private int testIterator(RowSource rs, int expectedValue) {
+    private int testIterator(GenomicIterator rs, int expectedValue) {
         int count = 0;
         while (rs.hasNext()) {
             String line = rs.next().toString();
@@ -102,7 +102,7 @@ public class UTestNestedQuery {
     public void testNestedQueryGorNorCmdQuery() {
         String query = "gor <(cmd {cat ../tests/data/gor/dbsnp_test.gor})";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = testIterator(rs, 5);
             Assert.assertEquals(48, count);
         }
@@ -112,7 +112,7 @@ public class UTestNestedQuery {
     public void testNestedQueryGorNorNestedNorCmdQuery() {
         String query = "gor <(nor <(cmd -n {cat ../tests/data/gor/dbsnp_test.gor}))";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = testIterator(rs, 5);
             Assert.assertEquals(48, count);
         }
@@ -122,7 +122,7 @@ public class UTestNestedQuery {
     public void testNestedQueryGorNorNestedCmdQuery() {
         String query = "gor <(nor <(cmd {cat ../tests/data/gor/dbsnp_test.gor}))";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = testIterator(rs, 5);
             Assert.assertEquals(48, count);
         }
@@ -132,7 +132,7 @@ public class UTestNestedQuery {
     public void testNestedQueryGorNorGorQuery() throws IOException {
         String query = "gor <(nor <(gor <(gorrow chr1,1,2)))";
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             int count = testIterator(rs, 3);
             Assert.assertEquals(1, count);
         }
@@ -185,7 +185,7 @@ public class UTestNestedQuery {
         String query = "gor ../tests/data/gor/genes.gorz | top 0 | cmd {cat <(gor ../tests/data/gor/genes.gorz | top 10)}";
         int count = 0;
 
-        try (RowSource rs = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
             while (rs.hasNext()) {
                 rs.next();
                 count++;

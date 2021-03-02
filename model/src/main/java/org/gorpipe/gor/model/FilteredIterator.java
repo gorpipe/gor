@@ -71,10 +71,5 @@ class FilteredIterator extends GenomicIteratorAdapterBase {
             return this.myHasNext;
         }
     }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
-    }
 }
 

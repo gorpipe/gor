@@ -27,8 +27,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class GorSeekableIterator extends GenomicIterator {
+public class GorSeekableIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(GorSeekableIterator.class);
 
     private final SeekableIterator iterator;
@@ -94,11 +93,6 @@ public class GorSeekableIterator extends GenomicIterator {
     }
 
     @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void close() {
         try {
             this.iterator.close();
@@ -114,11 +108,6 @@ public class GorSeekableIterator extends GenomicIterator {
         String headerString = headerAsString.substring(i);
         this.header = new GorHeader(headerString.split("\t"));
         setHeader(headerString);
-    }
-
-    @Override
-    protected void selectHeader(int[] cols) {
-        this.header = this.header.select(cols);
     }
 }
 

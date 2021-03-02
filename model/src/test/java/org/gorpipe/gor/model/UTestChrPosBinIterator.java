@@ -54,9 +54,6 @@ public class UTestChrPosBinIterator {
 
         iterator.init(null);
 
-        // This is done in LineSource - next doesn't work correctly without this
-        iterator.setColnum(iterator.getHeader().split("\t").length - 2);
-
         return iterator;
     }
 

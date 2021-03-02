@@ -29,7 +29,7 @@ import org.gorpipe.util.collection.ByteArray;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-class StdInGenomicIterator extends GenomicIterator {
+class StdInGenomicIterator extends GenomicIteratorBase {
     private final byte[] buf;
     private int begin = 0;
     private int end = 0;
@@ -155,11 +155,6 @@ class StdInGenomicIterator extends GenomicIterator {
             return RowObj.apply(stringBuilder);
         }
         return null;
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

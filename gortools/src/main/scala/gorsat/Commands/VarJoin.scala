@@ -30,8 +30,8 @@ import gorsat.Utilities.IteratorUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.GorConstants
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable.ListBuffer
 
@@ -83,8 +83,8 @@ class VarJoin extends CommandInfo("VARJOIN",
     var doLeftJoin = hasOption(args,"-l")
 
     var rightFile : String = null
-    var stdInput : RowSource = null
-    var segSource : RowSource = null
+    var stdInput : GenomicIterator = null
+    var segSource : GenomicIterator = null
     var rightColStart = 1
 
     var aPipeStep : Analysis = null // Unshielded pipe step

@@ -28,13 +28,12 @@ package gorsat.gorsatGorIterator
 
 import org.gorpipe.gor.model.{GenomicIterator, GorIterator}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
   var fixHeader : Boolean = true
   var isNorContext = false
 
-  def getRowSource: RowSource
+  def getRowSource: GenomicIterator
   def getUsedFiles: List[String]
   def processArguments(args : Array[String], executeNor : Boolean, forcedInputHeader : String = ""): GenomicIterator
 

@@ -271,7 +271,7 @@ public class RowBase extends Row implements Serializable {
     }
 
     @Override
-    public Long colAsLong(int n) {
+    public long colAsLong(int n) {
         testColumnIndex(n);
         return RowObj.colLong(n, allCols, splitArray);
     }

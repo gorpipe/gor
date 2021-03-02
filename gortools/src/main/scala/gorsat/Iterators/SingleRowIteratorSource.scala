@@ -23,11 +23,9 @@
 package gorsat.Iterators
 
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.gor.model.Row
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase, Row}
 
-class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
+class SingleRowIteratorSource(theIterator: GenomicIterator) extends GenomicIteratorBase {
   protected var myNext : Row = _
   protected var myHasNext : Boolean = false
   protected var posSet : Boolean = false
@@ -62,10 +60,10 @@ class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
     }
   }
 
-  override def setPosition(seekChr : String, seekPos : Int) {
+  override def seek(seekChr : String, seekPos : Int): Boolean = {
     posSet = true
     mustReCheck = true
-    theIterator.setPosition(seekChr,seekPos)
+    theIterator.seek(seekChr,seekPos)
   }
 
   override def moveToPosition(seekChr : String, seekPos : Int, maxReads: Int = 10000) {
@@ -76,8 +74,6 @@ class SingleRowIteratorSource(theIterator: RowSource) extends RowSource{
     theIterator.close()
   }
   override def getHeader: String = theIterator.getHeader
-
-  override def getGorHeader: GorHeader = theIterator.getGorHeader
 
   override def pushdownFilter(gorwhere: String): Boolean = theIterator.pushdownFilter(gorwhere)
 

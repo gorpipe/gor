@@ -27,7 +27,6 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -230,7 +229,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnPlainDictionary() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath())) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath())) {
             Assert.assertEquals("Plain dictionary should include source column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol", rs.getHeader());
         }
@@ -238,7 +237,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnBucketsDictionary() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath())) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath())) {
             Assert.assertEquals("Buckets dictionary should include source column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", rs.getHeader());
         }
@@ -246,7 +245,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnPlainDictionaryWithFFlag() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath() + " -f a")) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath() + " -f a")) {
             Assert.assertEquals("Plain dictionary with -f should include Source column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", rs.getHeader());
         }
@@ -254,7 +253,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnBucketsDictionaryWithFFlag() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath() + " -f a")) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath() + " -f a")) {
             Assert.assertEquals("Buckets dictionary with -f should include Source column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", rs.getHeader());
         }
@@ -262,7 +261,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnPlainDictionaryWithSFlag() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath() + " -s Source")) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath() + " -s Source")) {
             Assert.assertEquals("Plain dictionary with -s should include Source column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", rs.getHeader());
         }
@@ -270,7 +269,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnBucketsDictionaryWithSFlag() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath() + " -s Source")) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath() + " -s Source")) {
             Assert.assertEquals("Buckets dictionary with -s should include Source column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", rs.getHeader());
         }
@@ -278,7 +277,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnPlainDictionaryWithSFlagPN() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath() + " -s PN")) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath() + " -s PN")) {
             Assert.assertEquals("Plain dictionary with -s PN should include PN column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tPN", rs.getHeader());
         }
@@ -286,7 +285,7 @@ public class UTestDictionary {
 
     @Test
     public void testSourceColumnOnBucketsDictionaryWithSFlagPN() throws IOException {
-        try(RowSource rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath() + " -s PN")) {
+        try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dicionaryFileWihtBuckets.getCanonicalPath() + " -s PN")) {
             Assert.assertEquals("Buckets dictionary with -s PN should include PN column",
                     "Chrom\tgene_start\tgene_end\tGene_Symbol\tPN", rs.getHeader());
         }

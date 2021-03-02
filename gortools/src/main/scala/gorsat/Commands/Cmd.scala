@@ -28,8 +28,8 @@ import gorsat.Utilities.AnalysisUtilities
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.process.ProcessIteratorAdaptor
 import gorsat.Utilities.Utilities.makeTempFile
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 object Cmd {
 
@@ -68,7 +68,7 @@ object Cmd {
 
       val pip = new ProcessIteratorAdaptor(context, paramString, "cmd", commandRuntime.inputSource, commandRuntime.activePipeStep, forcedInputHeader, skipheader, skip, allowerror, executeNor)
 
-      CommandParsingResult(null, pip.getHeader, null, pip.asInstanceOf[RowSource])
+      CommandParsingResult(null, pip.getHeader, null, pip.asInstanceOf[GenomicIterator])
     }
   }
 }

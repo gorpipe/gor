@@ -78,8 +78,8 @@ public class UTestGorTabix {
 
     @Test
     public void testCompareOutputs(){
-        String resGor = TestUtils.runGorPipeNoHeader("gor  ../tests/data/gor/dbsnp_test.gor | top 10");
-        String resGorGz = TestUtils.runGorPipeNoHeader("gor ../tests/data/gor/dbsnp_test.gor.gz | top 10");
+        String resGor = TestUtils.runGorPipeNoHeader("gor  ../tests/data/gor/dbsnp_test.gor");
+        String resGorGz = TestUtils.runGorPipeNoHeader("gor ../tests/data/gor/dbsnp_test.gor.gz");
         Assert.assertEquals(Extract.md5(resGor),Extract.md5(resGorGz));
     }
 

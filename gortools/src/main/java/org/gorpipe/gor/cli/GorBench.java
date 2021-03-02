@@ -26,7 +26,6 @@ import org.gorpipe.gor.driver.GorDriver;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,7 +96,6 @@ public class GorBench {
         Random random;
         long seekNanos = 0;
         long actualLines;
-        Line line = new Line(100);
 
         public BenchmarkThread(String file) {
             this.file = file;
@@ -113,9 +111,10 @@ public class GorBench {
                     iter = gorDriver.createIterator(new SourceReferenceBuilder(file).chrSubset(subset).build());
                     if (seeks == 0) {
                         for (int j = 0; j < readBases - 1; j++) {
-                            if (!iter.next(line)) {
+                            if (!iter.hasNext()) {
                                 break;
                             }
+                            iter.next();
                             actualLines++;
                         }
 
@@ -132,12 +131,13 @@ public class GorBench {
                             int pos = random.nextInt(chrBases[chromIndex] - 10 * readBases);
                             long seekStart = System.nanoTime();
                             iter.seek(chrom, pos);
-                            iter.next(line);
+                            iter.next();
                             seekNanos += (System.nanoTime() - seekStart);
                             for (int j = 0; j < readBases - 1; j++) {
-                                if (!iter.next(line)) {
+                                if (!iter.hasNext()) {
                                     break;
                                 }
+                                iter.next();
                                 actualLines++;
                             }
                             if (newSource) {

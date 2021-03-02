@@ -30,10 +30,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.StringIntKey;
-import org.gorpipe.gor.model.ChrDataScheme;
-import org.gorpipe.gor.model.ChromoCache;
-import org.gorpipe.gor.model.ContigDataScheme;
-import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -120,7 +117,7 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
                         finalDataScheme = dataScheme;
                         ChromoCache lookupCache = new ChromoCache(dataScheme);
                         comparator = StringIntKey.customComparator(lookupCache);
-                        GenomicIterator.ChromoLookup lookup = new GenomicIterator.ChromoLookup() {
+                        ChromoLookup lookup = new ChromoLookup() {
                             @Override
                             public final String idToName(int id) {
                                 return lookupCache.toName(dataScheme, id);

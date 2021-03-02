@@ -22,12 +22,9 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader
-import org.gorpipe.gor.model.Row
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.{GenomicIteratorBase, Row}
 
-case class RowListIterator(lineList: List[Row]) extends RowSource {
-  private var gorHeader: GorHeader = _
+case class RowListIterator(lineList: List[Row]) extends GenomicIteratorBase {
   var l: List[Row] = lineList
 
   override def hasNext: Boolean = l.nonEmpty
@@ -36,10 +33,7 @@ case class RowListIterator(lineList: List[Row]) extends RowSource {
     val r = l.head; l = l.tail; r
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {}
+  override def seek(seekChr: String, seekPos: Int): Boolean = true
 
   def close() {}
-
-  override def getGorHeader: GorHeader = gorHeader
-  def setGorHeader(gh: GorHeader): Unit = gorHeader = gh
 }

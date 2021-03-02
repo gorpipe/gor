@@ -22,10 +22,6 @@
 
 package org.gorpipe.gor.model;
 
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
-import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.model.RowBase;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -61,7 +57,7 @@ public class UTestSelectIterator {
             chrToIdx.put(chromosomes[i], i);
         }
 
-        return new GenomicIterator() {
+        return new GenomicIteratorBase() {
             int chrIdx = 0;
             int posIdx = 1;
 
@@ -76,11 +72,6 @@ public class UTestSelectIterator {
                     posIdx = pos;
                 }
                 return hasNext();
-            }
-
-            @Override
-            public boolean next(Line line) {
-                throw new UnsupportedOperationException();
             }
 
             @Override

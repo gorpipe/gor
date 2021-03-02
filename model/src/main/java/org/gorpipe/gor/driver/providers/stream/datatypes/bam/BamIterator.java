@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
@@ -43,7 +44,7 @@ import java.util.function.ToIntFunction;
  *
  * @version $Id$
  */
-public class BamIterator extends GenomicIterator {
+public class BamIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(BamIterator.class);
     private int chrId = Integer.MIN_VALUE; // Min-value indicates no query has been initiated, -1 indicates reading all bam, else the id of chromsome last saught
     protected int hgSeekIndex = -1; // index into ChromoCache.HG_IN_LEXICO last sought for data in hg reference standard ordering, -1 indicate not being used
@@ -55,7 +56,7 @@ public class BamIterator extends GenomicIterator {
     private int[] columns; // source columns to include
     private ToIntFunction<SAMRecord>[] defaultReverseIntMap;
     private Function<SAMRecord, String>[] defaultReverseStringMap;
-    private GenomicIterator.ChromoLookup lookup;
+    private ChromoLookup lookup;
     public byte chrnamesystem = -1; // -1 indicates not specified, 0 is lexicographical ordering witch chr prefix,
     // 1 is Human genome reference consortium standard ordering and names, 2 is like 0 except starting with chrM
 
@@ -73,7 +74,7 @@ public class BamIterator extends GenomicIterator {
      * @param lookup  The lookup service for chromosome name to ids
      * @param file    The BAM File to iterate through
      */
-    public BamIterator(GenomicIterator.ChromoLookup lookup, String file) {
+    public BamIterator(ChromoLookup lookup, String file) {
         this(lookup, SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT).open(new File(file)));
     }
 
@@ -83,11 +84,11 @@ public class BamIterator extends GenomicIterator {
      * @param lookup  The lookup service for chromosome name to ids
      * @param reader  The BAM Reader to use for accessing the bam file
      */
-    public BamIterator(GenomicIterator.ChromoLookup lookup, SamReader reader) {
+    public BamIterator(ChromoLookup lookup, SamReader reader) {
         init(lookup, reader, false);
     }
 
-    public void init(GenomicIterator.ChromoLookup lookup, SamReader reader, boolean isCRAM) {
+    public void init(ChromoLookup lookup, SamReader reader, boolean isCRAM) {
         this.isCRAM = isCRAM;
         this.reader = reader;
         this.samFileHeader = reader.getFileHeader();
@@ -212,7 +213,7 @@ public class BamIterator extends GenomicIterator {
 
     protected void initIterator() {
         if (this.initialize) {
-            int colnumWithPos = getColnum()+2;
+            int colnumWithPos = getHeader().split("\t").length;
             if( colnumWithPos > defaultReverseStringMap.length ) {
                 resizeDefaultColumnMaps( colnumWithPos );
             }
@@ -241,24 +242,6 @@ public class BamIterator extends GenomicIterator {
             }
             chrId = -1;
         }
-    }
-
-    private boolean seekToNextChrom(Line line) {
-        if (hgSeekIndex >= 0) { // Is seeking through differently ordered data
-            while (++hgSeekIndex < ChrDataScheme.ChrLexico.order2id.length) {
-                String name = getChromName();
-                if (samFileHeader.getSequenceIndex(name) > -1) {
-                    createIterator(name, 0);
-                    return next(line);
-                }
-            }
-        }
-        return false; // All human genome chromosomes have been read, so nothing more to return
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     private String assemblyBasedOnChrOneLength() {
@@ -385,7 +368,7 @@ public class BamIterator extends GenomicIterator {
         }
     }
 
-    public class SAMRecordRow extends Line {
+    public class SAMRecordRow extends Row {
         public SAMRecord record;
         Function<SAMRecord, String>[] reverseStringMap;
         ToIntFunction<SAMRecord>[] reverseIntMap;
@@ -393,7 +376,6 @@ public class BamIterator extends GenomicIterator {
         SAMRecordRow(SAMRecord record, Function<SAMRecord, String>[] reverseStringMap, ToIntFunction<SAMRecord>[] reverseIntMap) {
             super();
             this.record = record;
-            chrIdx = lookup.chrToId(record.getReferenceName());
             chr = lookup.chrToName(record.getReferenceName()); //chrIdx >= 0 ? lookup.idToName(chrIdx) : record.getReferenceName(); // Allways report chromosome name on choosen gor form, but fallback to reference name if id lookup failed
             pos = record.getAlignmentStart();
 
@@ -421,6 +403,11 @@ public class BamIterator extends GenomicIterator {
         }
 
         @Override
+        public long colAsLong(int colNum) {
+            return reverseIntMap[colNum].applyAsInt(record);
+        }
+
+        @Override
         public String colAsString(int colNum) {
             return reverseStringMap[colNum].apply(record);
         }
@@ -436,6 +423,11 @@ public class BamIterator extends GenomicIterator {
         }
 
         @Override
+        public long longValue(int col) {
+            return colAsLong(col);
+        }
+
+        @Override
         public double doubleValue(int col) {
             return reverseIntMap[col].applyAsInt(record);
         }
@@ -445,6 +437,11 @@ public class BamIterator extends GenomicIterator {
             StringBuilder sb = new StringBuilder();
             otherCols(sb);
             return sb.toString();
+        }
+
+        @Override
+        public CharSequence colsSlice(int startCol, int stopCol) {
+            return null;
         }
 
         private void otherCols(StringBuilder sb) {
@@ -472,8 +469,8 @@ public class BamIterator extends GenomicIterator {
         }
 
         @Override
-        public int numOtherCols() {
-            return reverseStringMap.length - 2;
+        public int length() {
+            return getAllCols().length();
         }
 
         private void appendColumn(StringBuilder sb, int i) {
@@ -503,7 +500,8 @@ public class BamIterator extends GenomicIterator {
 
         @Override
         public void addSingleColumnToRow(String rowString) {
-            System.err.println("d");
+            addColumns(1);
+            setColumn(numCols() - 3, rowString);
         }
 
         @Override
@@ -530,8 +528,13 @@ public class BamIterator extends GenomicIterator {
         }
 
         @Override
+        public void writeRow(Writer outputStream) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public int sa(int i) {
-            return 0;
+            throw new UnsupportedOperationException();
         }
 
         void resizeColumnMaps(int newsize) {
@@ -558,13 +561,18 @@ public class BamIterator extends GenomicIterator {
         }
 
         @Override
-        public void set(int i, String val) {
-            setColumn(i, val);
+        public void addColumns(int num) {
+            resize(numCols() + num);
         }
 
         @Override
-        public void addColumns(int num) {
-            resize(numCols() + num);
+        public void removeColumn(int n) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public char peekAtColumn(int n) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

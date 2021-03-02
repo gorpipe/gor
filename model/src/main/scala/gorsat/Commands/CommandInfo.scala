@@ -24,7 +24,7 @@ package gorsat.Commands
 
 import gorsat.Commands.CommandParseUtilities.validateCommandArguments
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.model.GenomicIterator
+import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase}
 import org.gorpipe.gor.session.GorContext
 
 

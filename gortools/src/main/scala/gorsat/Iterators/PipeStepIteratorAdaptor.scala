@@ -26,10 +26,9 @@ import java.util
 
 import gorsat.Commands.Analysis
 import org.gorpipe.exceptions.GorSystemException
-import org.gorpipe.gor.model.Row
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase, Row}
 
-class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analysis, val theHeader: String) extends RowSource {
+class PipeStepIteratorAdaptor(var sourceIterator: GenomicIterator, val pipeStep: Analysis, val theHeader: String) extends GenomicIteratorBase {
   var rowQueue = new util.LinkedList[Row]
   var mustReCheck = true
   var myHasNext = false
@@ -72,10 +71,10 @@ class PipeStepIteratorAdaptor(var sourceIterator: RowSource, val pipeStep: Analy
     }
   }
 
-  override def setPosition(seekChr: String, seekPos: Int): Unit = {
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
     mustReCheck = true
     rowQueue.clear()
-    sourceIterator.setPosition(seekChr, seekPos)
+    sourceIterator.seek(seekChr, seekPos)
   }
 
   def close: Unit = {

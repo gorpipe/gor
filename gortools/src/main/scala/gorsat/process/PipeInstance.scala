@@ -26,6 +26,7 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 import java.util
 import java.util.Optional
+
 import gorsat.Analysis._
 import gorsat.Commands.CommandParseUtilities.{hasOption, rangeOfOption, stringValueOfOption}
 import gorsat.Commands.{Analysis, _}
@@ -39,11 +40,10 @@ import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import gorsat.process.GorJavaUtilities.CmdParams
 import gorsat.process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator, GorFileReaderContext}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator, GenomicIteratorBase, GorFileReaderContext}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.util.StringUtil
-import org.gorpipe.model.gor.iterators.RowSource
 import org.slf4j.LoggerFactory
 
 object PipeInstance {
@@ -98,7 +98,7 @@ object PipeInstance {
   */
 class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
-  private var theIterator : RowSource = _
+  private var theIterator : GenomicIterator = _
   private var usedFiles : List[String] = Nil
   private var range: GenomicRange.Range = GenomicRange.all
   private var firstCommand: Int = 0
@@ -120,12 +120,12 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     isClosed = false
   }
 
-  override def getRowSource: RowSource = theIterator
+  override def getRowSource: GenomicIterator = theIterator
 
   override def getHeader : String = combinedHeader
   override def getUsedFiles: List[String] = usedFiles
 
-  def getIterator: RowSource = theIterator
+  def getIterator: GenomicIterator = theIterator
 
   def createPipestep(iparams : String, forcedInputHeader : String = ""): Analysis = {
     if (theIterator != null) close()
@@ -720,7 +720,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
     (aPipeStep, firstCommand, newInputSource)
   }
 
-  def processWhitelistedCommands(command: String, whiteListCmdSet: util.Map[String, CmdParams], paramString: String, inputSource: GenomicIterator, executeNor: Boolean): (RowSource, String) = {
+  def processWhitelistedCommands(command: String, whiteListCmdSet: util.Map[String, CmdParams], paramString: String, inputSource: GenomicIterator, executeNor: Boolean): (GenomicIterator, String) = {
     val icmd = GorJavaUtilities.getIgnoreCase(whiteListCmdSet.keySet(), command)
     if (icmd.isPresent) {
       val cmdalias = icmd.get()
@@ -733,7 +733,7 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
       val skip = cmdparams.skipLines()
       val allowerror = cmdparams.allowError()
       val server = cmdparams.useHttpServer()
-      val pip: RowSource = new ProcessIteratorAdaptor(context, command, cmdparams.getAliasName, inputSource, thePipeStep, combinedHeader, skipheader, skip, allowerror, executeNor)
+      val pip: GenomicIterator = new ProcessIteratorAdaptor(context, command, cmdparams.getAliasName, inputSource, thePipeStep, combinedHeader, skipheader, skip, allowerror, executeNor)
       val newHeader = pip.getHeader
       if (newHeader != null) combinedHeader = validHeader(newHeader)
       (pip, newHeader)

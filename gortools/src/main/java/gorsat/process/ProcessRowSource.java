@@ -172,7 +172,6 @@ public class ProcessRowSource extends ProcessSource {
             if( range.chromosome() != null ) it.seek(range.chromosome(), range.start(), range.stop());
             String header = it.getHeader();
             String[] headerArray = header.split("\t");
-            it.setColnum(headerArray.length-2);
             setHeader(String.join("\t", header));
         } catch (IOException e) {
             throw new GorResourceException("unable to get header from process " + commands.get(0), "", e);
@@ -187,7 +186,7 @@ public class ProcessRowSource extends ProcessSource {
             throw new GorSystemException("Running external process: " + String.join(" ", headercommands) + " with error: " + errorStr, null);
         }
         if (nor) setHeader("ChromNOR\tPosNOR\t" + getHeader().replace(" ", "_").replace(":", "") );
-        return new GenomicIterator() {
+        return new GenomicIteratorBase() {
             BufferedReader reader = br;
             String next = readLine();
 
@@ -233,11 +232,6 @@ public class ProcessRowSource extends ProcessSource {
             }
 
             @Override
-            public boolean next(Line line) {
-                return false;
-            }
-
-            @Override
             public void close() {
                 try {
                     reader.close();
@@ -251,7 +245,7 @@ public class ProcessRowSource extends ProcessSource {
 
     private GenomicIterator vcfIterator( InputStream is ) {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        GenomicIterator.ChromoLookup lookup = createChromoLookup();
+        ChromoLookup lookup = createChromoLookup();
         GenomicIterator vcfit;
         try {
             vcfit = new VcfGzGenomicIterator(lookup, "filename", br) {
@@ -308,7 +302,7 @@ public class ProcessRowSource extends ProcessSource {
     }
 
     private GenomicIterator bamIterator( InputStream is ) {
-        GenomicIterator.ChromoLookup lookup = createChromoLookup();
+        ChromoLookup lookup = createChromoLookup();
         SamReaderFactory srf = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
         SamInputResource sir = SamInputResource.of(is);
         SamReader samreader = srf.open(sir);
@@ -408,7 +402,6 @@ public class ProcessRowSource extends ProcessSource {
         if (pos != -1) {
             if (endPos == -1) {
                 int len = Integer.MAX_VALUE;
-                if( it != null && it.getLookup() != null ) it.getLookup().chrToLen(seekChr);
                 seek = seek.replace("pos", (startPos + 1) + "").replace("end", len + "");
             } else {
                 seek = seek.replace("pos", (startPos + 1) + "").replace("end", endPos + "");
@@ -526,8 +519,8 @@ public class ProcessRowSource extends ProcessSource {
     }
 
     @Override
-    public void setPosition(String seekChr, int seekPos) {
-        it.seek(seekChr, seekPos);
+    public boolean seek(String seekChr, int seekPos) {
+        return it.seek(seekChr, seekPos);
     }
 
     @Override
@@ -543,7 +536,7 @@ public class ProcessRowSource extends ProcessSource {
         return true;
     }
 
-    public static GenomicIterator.ChromoLookup createChromoLookup() {
+    public static ChromoLookup createChromoLookup() {
         final ChromoCache lookupCache = new ChromoCache();
         final boolean addAnyChrToCache = true;
         final ChrDataScheme dataOutputScheme = ChrDataScheme.ChrLexico;

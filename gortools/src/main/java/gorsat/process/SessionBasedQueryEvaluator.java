@@ -22,9 +22,9 @@
 
 package gorsat.process;
 
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.model.QueryEvaluator;
-import org.gorpipe.model.gor.iterators.RowSource;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +42,7 @@ public class SessionBasedQueryEvaluator extends QueryEvaluator {
         List<String> result = new LinkedList<>();
         try (PipeInstance pipe = PipeInstance.createGorIterator(session.getGorContext())) {
             pipe.init(query, null);
-            RowSource iterator = pipe.getRowSource();
+            GenomicIterator iterator = pipe.getRowSource();
 
             while (iterator.hasNext()) {
                 result.add(iterator.next().otherCols());

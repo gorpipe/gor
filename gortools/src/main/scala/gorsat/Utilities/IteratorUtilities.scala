@@ -147,7 +147,7 @@ object IteratorUtilities {
 
     val sessionFactory = new GenericSessionFactory()
     val rowsource = new MultiFileSource(ordFileList, gorRoot, null, sessionFactory.create().getGorContext)
-    rowsource.setPosition("chr1", 0)
+    rowsource.seek("chr1", 0)
     while (rowsource.hasNext) {
       val arow = rowsource.next()
       out.write(arow + "\n")

@@ -31,9 +31,8 @@ import Commands.CommandParseUtilities
 import process.{GenericSessionFactory, GorInputSources, GorPipeCommands, PipeInstance}
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
-import org.gorpipe.gor.model.DbSource
+import org.gorpipe.gor.model.{DbSource, GenomicIterator}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -142,7 +141,7 @@ class UTestInputSourceParsing extends FunSuite with BeforeAndAfter with MockitoS
         if (inputSourceInfo == null) assert(inputSourceInfo == null, "Input source not found!")
 
         var succeeded = x.testShouldSucceed
-        var rowSource: RowSource = null
+        var rowSource: GenomicIterator = null
 
         try {
           val result = inputSourceInfo.init(context, "", x.inputSource + " " + x.arguments, arguments)

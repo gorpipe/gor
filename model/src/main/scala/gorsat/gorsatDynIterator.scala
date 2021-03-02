@@ -28,10 +28,10 @@ package gorsat
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.util.Util
-import org.gorpipe.model.gor.iterators.{LineIterator, RowSource, TimedRowSource}
+import org.gorpipe.model.gor.iterators.{LineIterator, TimedRowSource}
 import org.gorpipe.model.gor.{Pipes, RowObj}
 import org.gorpipe.util.Pair
 import org.slf4j.LoggerFactory
@@ -83,7 +83,7 @@ def addStartSelector(cmd : String, seekChr : String, seekPos : Int, endPos : Int
 class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader : Boolean = true) extends TimedRowSource {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  protected var theSource : RowSource = _
+  protected var theSource : GenomicIterator = _
   protected var itDyn : gorsatGorIterator = _
   protected var seekedChr = ""
   protected var seekedPos = 0
@@ -160,7 +160,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     val gorcmd = creates(creates.length-1)
     val pipeSteps = CommandParseUtilities.quoteSafeSplit(gorcmd,'|').map( _.trim )
     var i = 0
-    val buffsize = if( this.bufferSize == Pipes.rowsToProcessBuffer ) -1 else bufferSize
+    val buffsize = if(getBufferSize == Pipes.rowsToProcessBuffer ) -1 else getBufferSize
     while (i < pipeSteps.length) {
       if (i == 0) {
         var inest = pipeSteps(0).indexOf("<(")
@@ -213,12 +213,13 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     mustReCheck = true
   }
 
-  override def setPosition(seekChr: String, seekPos : Int) {
-    incStat("setPosition")
+  override def seek(seekChr: String, seekPos : Int): Boolean = {
+    incStat("seek")
     val t = System.nanoTime()
     setRange(seekChr,seekPos,-1)
     avgSeekTimeMillis = (seekCount*avgSeekTimeMillis+System.nanoTime()-t)/(seekCount+1)/1000000
     seekCount += 1
+    true
   }
 
   override def moveToPosition(seekChr : String, seekPos : Int, maxReads: Int = 10000) {
@@ -310,6 +311,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   class DynamicNorGorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) {
     override def next() : Row = { val x = super.next(); RowObj("chr1",0,x.toString) }
     override def getHeader : String = { "ChromNOR\tPosNOR\t"+super.getHeader }
+
   }
 
   class DynamicGorNorSource(iteratorCommand : String, context: GorContext) extends DynamicRowSource(iteratorCommand, context) {
@@ -328,8 +330,10 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
           throw exception
       }
     }
+
     override def getHeader : String = {
       val h = super.getHeader
-      h.substring(h.indexOf('\t',h.indexOf('\t')+1)+1) }
+      h.substring(h.indexOf('\t',h.indexOf('\t')+1)+1)
+    }
   }
 }

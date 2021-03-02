@@ -26,6 +26,7 @@ import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;

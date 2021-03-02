@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.gorpipe.model.gor.iterators.RowSource;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -74,7 +74,7 @@ public class UTestGorMerge {
     public void testMergeWithNor() {
         String query = "nor ../tests/data/gor/dbsnp_test.gorz | merge ../tests/data/gor/dbsnp_test.gorz";
 
-        try (RowSource pi = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator pi = TestUtils.runGorPipeIterator(query)) {
             while (pi.hasNext()) {
                 String next = pi.next().toString();
                 Assert.assertEquals("Merging with nor failed", 7, next.split("\t").length);
@@ -88,7 +88,7 @@ public class UTestGorMerge {
         Path p = Paths.get("test.tsv");
         String query = "nor <(nor test.tsv | merge test.tsv)";
         Files.write(p, fileCont.getBytes());
-        try (RowSource pi = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator pi = TestUtils.runGorPipeIterator(query)) {
             while (pi.hasNext()) {
                 String next = pi.next().toString();
                 Assert.assertEquals("Merging with nor failed", 4, next.split("\t").length);
@@ -102,7 +102,7 @@ public class UTestGorMerge {
     public void testMergeWithNorNonGorFile() throws IOException {
         String query = "nor " + gorFile.getCanonicalPath() + " | merge " + gorFile.getCanonicalPath() + "";
 
-        try (RowSource pi = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator pi = TestUtils.runGorPipeIterator(query)) {
             while (pi.hasNext()) {
                 String next = pi.next().toString();
                 Assert.assertEquals("Merging with nor failed", 6, next.split("\t").length);

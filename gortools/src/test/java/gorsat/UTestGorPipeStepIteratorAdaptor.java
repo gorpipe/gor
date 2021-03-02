@@ -26,9 +26,9 @@ import gorsat.Analysis.TopN;
 import gorsat.Commands.Analysis;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.ProcessIteratorAdaptor;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import gorsat.process.GorSessionFactory;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -50,7 +50,7 @@ public class UTestGorPipeStepIteratorAdaptor {
     public void testProcessIteratorAdaptor() throws IOException {
         GorSessionFactory factory = new GenericSessionFactory();
         GorContext context = factory.create().getGorContext();
-        RowSource inputSource = new DynIterator.DynamicRowSource("gor ../tests/data/gor/genes.gorz", context, true);
+        GenomicIterator inputSource = new DynIterator.DynamicRowSource("gor ../tests/data/gor/genes.gorz", context, true);
         Analysis an = new TopN(1000000);
         ProcessIteratorAdaptor pia = new ProcessIteratorAdaptor(context, "head -n 5", "head", inputSource, an, "Chrom\tgene_start\tgene_end\tGene_Symbol", false, Optional.empty(), true, false);
 

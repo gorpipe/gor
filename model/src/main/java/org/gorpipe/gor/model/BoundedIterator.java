@@ -49,10 +49,9 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
     public BoundedIterator(GenomicIterator it, String chr, int start, String stopChr, int stop) {
         super(it);
 
-        final ChromoLookup chromoLookup = it.getLookup() == null ? new DefaultChromoLookup() : it.getLookup();
-        startChromosome = chr == null ? null : chromoLookup.idToName(chromoLookup.chrToId(chr));
+        startChromosome = chr;
         startPosition = start;
-        stopChromosome = stopChr == null ? null : chromoLookup.idToName(chromoLookup.chrToId(stopChr));
+        stopChromosome = stopChr;
         stopPosition = stop == -1 ? Integer.MAX_VALUE : stop;
 
         if(startChromosome.equals(stopChromosome) && startPosition == stopPosition) {
@@ -92,11 +91,6 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
             isOutOfRange = true;
             return false;
         }
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new GorSystemException("next filling Line should not be used from BoundedIterator", null);
     }
 
     @Override

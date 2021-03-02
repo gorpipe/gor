@@ -28,8 +28,8 @@ import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 class PrGtGen extends CommandInfo("PRGTGEN",
   CommandArguments("", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
@@ -95,7 +95,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     }
 
     val priorFile: String = iargs(1).trim
-    var priorSource: RowSource = null
+    var priorSource: GenomicIterator = null
     var priorHeader = ""
     var prgcCols: List[Int] = List(2,3)
     if (iargs.length == 3) {
@@ -126,7 +126,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     } else -1
 
     val segFile: String = iargs.last.trim
-    var segSource: RowSource = null
+    var segSource: GenomicIterator = null
     var rightHeader = ""
     try {
       val inputSource = new SourceProvider(segFile, context, executeNor = executeNor, isNor = false)

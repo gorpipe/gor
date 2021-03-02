@@ -22,22 +22,22 @@
 
 package org.gorpipe.gor.driver.providers.mem;
 
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.ChromoLookup;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 
 /**
  * Simple memory based line generator for testing purposes.
  */
-public class MemGenomicIterator extends GenomicIterator {
+public class MemGenomicIterator extends GenomicIteratorBase {
     int posit = 0;
     int chromo = 1;
     final int lines;
     static final String HEADER = "Chromo\tPos\tCol3\tCol4\tCol5";
-    final GenomicIterator.ChromoLookup lookup;
+    final ChromoLookup lookup;
 
-    public MemGenomicIterator(GenomicIterator.ChromoLookup lookup, int lines) {
+    public MemGenomicIterator(ChromoLookup lookup, int lines) {
         this.lookup = lookup;
         this.lines = lines;
     }
@@ -82,10 +82,5 @@ public class MemGenomicIterator extends GenomicIterator {
         posit++;
 
         return RowObj.apply(stringBuilder);
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 }

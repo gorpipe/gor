@@ -24,9 +24,9 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -90,7 +90,7 @@ public class UTestNor {
         String curdir = new File(".").getAbsolutePath();
         String query = "nor " + curdir.substring(0, curdir.length() - 1) + "src/test/java/gorsat/";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (iterator.hasNext()) {
                 String next = iterator.next().toString();
@@ -132,7 +132,7 @@ public class UTestNor {
     public void testAutoNorOutput() {
         String query = "nor ../tests/data/external/samtools/noheader.vcf | top 1";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int count = 0;
             while (iterator.hasNext()) {
                 String next = iterator.next().toString();
@@ -146,7 +146,7 @@ public class UTestNor {
     public void testDepthRangeNoringFolderTopLevel() {
         String query = "nor ../tests";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int depthRange = getDepthRangeFromIterator(iterator);
             Assert.assertEquals("Depth should be 1 when only scanning top level folder.", 1, depthRange);
         }
@@ -156,7 +156,7 @@ public class UTestNor {
     public void testDepthRangeNoringFolderUnlimited() {
         String query = "nor ../tests -r";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int depthRange = getDepthRangeFromIterator(iterator);
             Assert.assertTrue("Depth should be greater than 3 when scanning with no limit.", depthRange > 3);
         }
@@ -166,7 +166,7 @@ public class UTestNor {
     public void testDepthRangeNoringFolderLimit2() {
         String query = "nor ../tests -r -d 2";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             int depthRange = getDepthRangeFromIterator(iterator);
             Assert.assertEquals("Depth should be 2 when scanning with -d 2 limit.", 2, depthRange);
         }
@@ -176,7 +176,7 @@ public class UTestNor {
     public void testNoringFolderWithModificationDate() {
         String query = "nor ../tests -m | top 0";
 
-        try (RowSource iterator = TestUtils.runGorPipeIterator(query)) {
+        try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
             Assert.assertTrue("Header should contain the modification date.", iterator.getHeader().contains("Modified"));
         }
     }
@@ -200,7 +200,7 @@ public class UTestNor {
         Assert.assertFalse(results2.contains(gorRoot));
     }
 
-    private int getDepthRangeFromIterator(RowSource iterator) {
+    private int getDepthRangeFromIterator(GenomicIterator iterator) {
         int minDepth = Integer.MAX_VALUE;
         int maxDepth = Integer.MIN_VALUE;
         while (iterator.hasNext()) {

@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.model;
 
-public class MonitorIterator extends GenomicIterator {
+public class MonitorIterator extends GenomicIteratorBase {
     private final GenomicIterator iterator;
     private final ReadListener gorMonitor;
     private final long notifyIntervalMs;
@@ -65,11 +65,6 @@ public class MonitorIterator extends GenomicIterator {
             handleNotify(row);
         }
         return row;
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

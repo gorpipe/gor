@@ -28,11 +28,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.model.DefaultChromoLookup;
-import org.gorpipe.gor.model.GenomicIterator;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -46,7 +45,7 @@ public class SourceReference {
     public final String securityContext;
     public final String commonRoot; // TODO: This should be removed?
     @JsonIgnore
-    GenomicIterator.ChromoLookup lookup;
+    ChromoLookup lookup;
     public final String chrSubset;
     private final String linkSubPath;
 
@@ -64,7 +63,7 @@ public class SourceReference {
      * @param lookup
      * @param chrSubset
      */
-    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset) {
+    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset) {
         this(url, securityContext, commonRoot, lookup, chrSubset, null);
     }
 
@@ -77,7 +76,7 @@ public class SourceReference {
      * @param chrSubset
      * @param linkSubPath
      */
-    public SourceReference(String url, String securityContext, String commonRoot, GenomicIterator.ChromoLookup lookup, String chrSubset, String linkSubPath) {
+    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, String linkSubPath) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -137,11 +136,11 @@ public class SourceReference {
         return commonRoot;
     }
 
-    public GenomicIterator.ChromoLookup getLookup() {
+    public ChromoLookup getLookup() {
         return lookup;
     }
 
-    public void setLookup(GenomicIterator.ChromoLookup lookup) {
+    public void setLookup(ChromoLookup lookup) {
         this.lookup = lookup;
     }
 
@@ -208,7 +207,7 @@ public class SourceReference {
         private final String url;
         private String securityContext;
         private String commonRoot;
-        private GenomicIterator.ChromoLookup lookup;
+        private ChromoLookup lookup;
         private String chrSubset;
         private int[] columns;
         private String linkSubPath;
@@ -241,7 +240,7 @@ public class SourceReference {
             return this;
         }
 
-        public Builder lookup(GenomicIterator.ChromoLookup lookup) {
+        public Builder lookup(ChromoLookup lookup) {
             this.lookup = lookup;
             return this;
         }

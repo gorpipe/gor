@@ -24,7 +24,6 @@ package org.gorpipe.gor.model;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.gor.model.*;
 import org.gorpipe.test.GorDictionarySetup;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
@@ -520,7 +519,7 @@ public class UTestMergeIterator {
             chrToIdx.put(chromosomes[i], i);
         }
 
-        return new GenomicIterator() {
+        return new GenomicIteratorBase() {
             int chrIdx = 0;
             int currPos = 1;
             int currIdx = -1;
@@ -561,11 +560,6 @@ public class UTestMergeIterator {
                     }
                 }
                 return toReturn;
-            }
-
-            @Override
-            public boolean next(Line line) {
-                throw new UnsupportedOperationException();
             }
 
             @Override

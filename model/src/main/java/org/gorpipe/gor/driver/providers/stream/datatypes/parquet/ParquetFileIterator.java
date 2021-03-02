@@ -41,6 +41,8 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.ChromoLookup;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
@@ -48,7 +50,6 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.standalone.GorStandalone;
@@ -62,11 +63,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-public class ParquetFileIterator extends GenomicIterator {
+public class ParquetFileIterator extends GenomicIteratorBase {
     private final PriorityQueue<ParquetRowReader> mergeParquet = new PriorityQueue<>();
     private List<Path> parquetPaths = new ArrayList<>();
     private List<Path> parquetPathsForSeek = new ArrayList<>();
-    private final GenomicIterator.ChromoLookup lookup;
+    private final ChromoLookup lookup;
     private boolean nor = false;
     private java.nio.file.Path resultPath;
     private int[] sortCols;
@@ -279,11 +280,6 @@ public class ParquetFileIterator extends GenomicIterator {
         return true;
     }
 
-    @Override
-    public boolean next(Line line) {
-        return false;
-    }
-
     private Row row;
 
     @Override
@@ -437,6 +433,14 @@ public class ParquetFileIterator extends GenomicIterator {
         return false;
     }
 
+    protected void selectHeader(int[] cols) {
+        if (getHeader() != null && !getHeader().equals("")) {
+            final String[] headerCols = getHeader().split("\t");
+            setHeader(Arrays.stream(cols).mapToObj(i -> headerCols[i]).collect(Collectors.joining("\t")));
+        }
+    }
+
+
     @Override
     public GenomicIterator select(int[] cols) {
         final StringBuilder sb = new StringBuilder();
@@ -448,8 +452,8 @@ public class ParquetFileIterator extends GenomicIterator {
         }
         sb.append("}");
         final String readSchema = sb.toString();
-        this.configuration.set(ReadSupport.PARQUET_READ_SCHEMA, readSchema);
-        this.selectHeader(cols);
+        configuration.set(ReadSupport.PARQUET_READ_SCHEMA, readSchema);
+        selectHeader(cols);
         return this;
     }
 }

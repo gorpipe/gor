@@ -22,11 +22,10 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIteratorBase, Row}
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RowSource
 
-case class CountingNorRowIterator(count: Int, offset: Int = 0, step: Int = 1) extends RowSource {
+case class CountingNorRowIterator(count: Int, offset: Int = 0, step: Int = 1) extends GenomicIteratorBase {
   var counter: Int = 0
 
   override def hasNext: Boolean = counter < count
@@ -39,7 +38,7 @@ case class CountingNorRowIterator(count: Int, offset: Int = 0, step: Int = 1) ex
 
   override def getHeader: String = "ChromNOR\tPosNOR\t" + super.getHeader
 
-  override def setPosition(seekChr: String, seekPos: Int) {}
+  override def seek(seekChr: String, seekPos: Int): Boolean = true
 
   def close {}
 }

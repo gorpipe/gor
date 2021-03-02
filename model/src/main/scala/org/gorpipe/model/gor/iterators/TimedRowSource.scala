@@ -22,9 +22,9 @@
 
 package org.gorpipe.model.gor.iterators
 
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIteratorBase, Row}
 
-abstract class TimedRowSource extends RowSource {
+abstract class TimedRowSource extends GenomicIteratorBase {
   var myHasNext: Boolean = false
   var myNext: Row = _
   var mustReCheck: Boolean = true
@@ -50,7 +50,7 @@ abstract class TimedRowSource extends RowSource {
     if (reachedPos) {
       myHasNext = true; mustReCheck = false; myNext = theNext
     } else if (hasNext) {
-      setPosition(seekChr,seekPos)
+      seek(seekChr,seekPos)
     }
   }
 }

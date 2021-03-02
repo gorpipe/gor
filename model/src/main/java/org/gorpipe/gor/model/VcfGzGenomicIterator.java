@@ -26,12 +26,9 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.util.ByteTextBuilder;
 import org.gorpipe.gor.util.NCGZIPInputStream;
 import org.gorpipe.gor.util.StringUtil;
-import org.gorpipe.gor.util.Util;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.util.collection.ByteArray;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,10 +38,10 @@ import java.util.zip.GZIPInputStream;
 /**
  * Simple genomic iterator for zipped vcf files, can not be seeked into
  */
-public class VcfGzGenomicIterator extends GenomicIterator {
+public class VcfGzGenomicIterator extends GenomicIteratorBase {
     public BufferedReader reader;
     private StreamSource streamSource;
-    final GenomicIterator.ChromoLookup lookup; // chromosome name lookup service
+    final ChromoLookup lookup; // chromosome name lookup service
     public String next;
     public ChrNameSystem chrNameSystem;
 
@@ -60,12 +57,12 @@ public class VcfGzGenomicIterator extends GenomicIterator {
         this.lookup = lookup;
     }
 
-    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, StreamSource streamsource, boolean compressed) throws IOException {
+    public VcfGzGenomicIterator(ChromoLookup lookup, String file, StreamSource streamsource, boolean compressed) throws IOException {
         this(lookup, file, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
         this.streamSource = streamsource;
     }
 
-    public VcfGzGenomicIterator(GenomicIterator.ChromoLookup lookup, String file, BufferedReader reader) throws IOException {
+    public VcfGzGenomicIterator(ChromoLookup lookup, String file, BufferedReader reader) throws IOException {
         this(lookup);
         init(file, reader);
     }
@@ -158,16 +155,6 @@ public class VcfGzGenomicIterator extends GenomicIterator {
         Row row = createRow(next);
         next = null;
         return row;
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ChromoLookup getLookup() {
-        return lookup;
     }
 
     @Override

@@ -22,15 +22,14 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase, Row}
 import org.gorpipe.gor.model.Row.SortInfo
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable
 
-class MultiFileSource(fileList: List[String], fileMap: mutable.Map[String, String], gorRoot: String, sortInfo: Array[SortInfo], context: GorContext) extends RowSource {
-  var rowsource: RowSource = _
+class MultiFileSource(fileList: List[String], fileMap: mutable.Map[String, String], gorRoot: String, sortInfo: Array[SortInfo], context: GorContext) extends GenomicIteratorBase {
+  var rowsource: GenomicIterator = _
   if (fileList.length < 2) {
     if (fileMap != null) rowsource = new SingleFileSource(fileList.head, gorRoot, context)
     else rowsource = new SingleFileSource(fileList.head,  gorRoot, context)
@@ -45,7 +44,7 @@ class MultiFileSource(fileList: List[String], fileMap: mutable.Map[String, Strin
 
   override def next(): Row = rowsource.next()
 
-  override def setPosition(seekChr: String, seekPos: Int): Unit = rowsource.setPosition(seekChr, seekPos)
+  override def seek(seekChr: String, seekPos: Int): Boolean = rowsource.seek(seekChr, seekPos)
 
   def close(): Unit = rowsource.close()
 

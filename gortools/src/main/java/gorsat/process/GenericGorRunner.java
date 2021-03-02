@@ -26,7 +26,6 @@ import gorsat.BatchedReadSource;
 import gorsat.Commands.Processor;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorRunner;
-import org.gorpipe.model.gor.iterators.RowSource;
 
 /**
  * This class handles the most basic gor pipe execution. This includes setup, process and finish phases.
@@ -45,6 +44,7 @@ public class GenericGorRunner extends GorRunner {
     }
 
     private void runProcessorHelper(GenomicIterator iterator, Processor processor) {
+        Exception exception = null;
         GenomicIterator brs = iterator.isBuffered() ? iterator : new BatchedReadSource(iterator, GorPipe.brsConfig());
         try {
             processor.rs_$eq(iterator);
@@ -53,11 +53,11 @@ public class GenericGorRunner extends GorRunner {
                 processor.process(brs.next());
             }
         } catch (Exception ex) {
-            brs.setEx(ex);
+            exception = ex;
             throw ex;
         } finally {
             try {
-                processor.securedFinish(brs.getEx());
+                processor.securedFinish(exception);
             } finally {
                 brs.close();
             }

@@ -29,8 +29,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Line;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
@@ -47,7 +46,7 @@ import java.util.Map;
 import java.util.zip.DataFormatException;
 import java.util.zip.InflaterOutputStream;
 
-public class GorzSeekableIterator extends GenomicIterator {
+public class GorzSeekableIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(GorzSeekableIterator.class);
 
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
@@ -153,11 +152,6 @@ public class GorzSeekableIterator extends GenomicIterator {
             }
         }
         return RowObj.apply(this.bufferIterator.getNextAsString());
-    }
-
-    @Override
-    public boolean next(Line line) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -284,10 +278,5 @@ public class GorzSeekableIterator extends GenomicIterator {
                 return BlockPacker.decode(this.buffer, 0, out, offset, this.mapExtTable);
             }
         }
-    }
-
-    @Override
-    protected void selectHeader(int[] cols) {
-        this.header = this.header.select(cols);
     }
 }

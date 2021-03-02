@@ -35,6 +35,6 @@ import java.io.IOException;
 public class GorIndexedFileIterator extends GorGzGenomicIterator {
     public GorIndexedFileIterator(TabixIndexedFile source) throws IOException {
         super(source.getFileSource().getSourceReference().getLookup(), source.getFileSource(),
-                source.getIndexSource(), source.getFileSource().getSourceReference().getColumns());
+                source.getIndexSource());
     }
 }

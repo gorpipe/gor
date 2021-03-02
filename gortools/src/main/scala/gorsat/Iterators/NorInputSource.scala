@@ -28,15 +28,14 @@ import java.util.stream
 import java.util.zip.GZIPInputStream
 
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.model.{FileReader, Row}
+import org.gorpipe.gor.model.{FileReader, GenomicIteratorBase, Row}
 import org.gorpipe.gor.stats.StatsCollector
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RowSource
 
 import scala.collection.mutable
 import scala.io.StdIn
 
-class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends RowSource {
+class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends GenomicIteratorBase {
   private var stats: StatsCollector = _
   private var statsSenderId = -1
 
@@ -100,8 +99,9 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     RowObj("chrN\t0\t" + nextLine())
   }
 
-  override def setPosition(seekChr: String, seekPos: Int) {
+  override def seek(seekChr: String, seekPos: Int): Boolean = {
     /* do nothing */
+    true
   }
 
   // def close = { allNORrows = Nil }

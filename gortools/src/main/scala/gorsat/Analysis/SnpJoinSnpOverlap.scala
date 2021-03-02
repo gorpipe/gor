@@ -24,9 +24,9 @@ package gorsat.Analysis
 
 import gorsat.Utilities.AnalysisUtilities.ParameterHolder
 import gorsat.Commands.Analysis
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.GenomicIterator
 
-case class SnpJoinSnpOverlap(ph: ParameterHolder, rightSource: RowSource, missingB: String, leftJoin: Boolean, fuzz: Int,
+case class SnpJoinSnpOverlap(ph: ParameterHolder, rightSource: GenomicIterator, missingB: String, leftJoin: Boolean, fuzz: Int,
                              leq: List[Int], req: List[Int], plain: Boolean) extends Analysis {
   this | SegOverlap(ph, rightSource, missingB, leftJoin, fuzz, "snpsnp", 2, 2, leq, req, 1, plain)
 }

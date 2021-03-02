@@ -26,11 +26,12 @@ import gorsat.Commands.Analysis;
 import gorsat.Commands.CommandParseUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ import java.util.regex.Pattern;
 /**
  * Created by sigmar on 03/11/15.
  */
-public class ProcessIteratorAdaptor extends RowSource implements Serializable {
+public class ProcessIteratorAdaptor extends GenomicIteratorBase implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(ProcessIteratorAdaptor.class);
     private static final Pattern pattern = Pattern.compile("'(?:[^']|'')+'|[^ ]+");
 
@@ -161,8 +162,8 @@ public class ProcessIteratorAdaptor extends RowSource implements Serializable {
                     processPipeStep.process(row);
                 }
             } finally {
-                if(rs instanceof RowSource) {
-                    ((RowSource)rs).close();
+                if(rs instanceof GenomicIterator) {
+                    ((GenomicIterator)rs).close();
                 }
             }
         }
@@ -344,11 +345,12 @@ public class ProcessIteratorAdaptor extends RowSource implements Serializable {
     }
 
     @Override
-    public void setPosition(String seekChr, int seekPos) {
+    public boolean seek(String seekChr, int seekPos) {
         mustReCheck = true;
-        if(rowSource instanceof RowSource) {
-            ((RowSource)rowSource).setPosition(seekChr, seekPos);
+        if(rowSource instanceof GenomicIterator) {
+            ((GenomicIterator)rowSource).seek(seekChr, seekPos);
         }
+        return true;
     }
 
     @Override

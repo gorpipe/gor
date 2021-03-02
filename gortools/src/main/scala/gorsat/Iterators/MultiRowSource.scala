@@ -22,11 +22,10 @@
 
 package gorsat.Iterators
 
-import org.gorpipe.gor.model.Row
-import org.gorpipe.model.gor.iterators.RowSource
+import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase, Row}
 
-class MultiRowSource(sourceList: List[RowSource]) extends RowSource {
-  var rowsource: RowSource = _
+class MultiRowSource(sourceList: List[GenomicIterator]) extends GenomicIteratorBase {
+  var rowsource: GenomicIterator = _
   if (sourceList.length < 2) {
     rowsource = sourceList.head
   } else {
@@ -38,7 +37,7 @@ class MultiRowSource(sourceList: List[RowSource]) extends RowSource {
 
   override def next(): Row = rowsource.next()
 
-  override def setPosition(seekChr: String, seekPos: Int): Unit = rowsource.setPosition(seekChr, seekPos)
+  override def seek(seekChr: String, seekPos: Int): Boolean = rowsource.seek(seekChr, seekPos)
 
   def close: Unit = rowsource.close
 

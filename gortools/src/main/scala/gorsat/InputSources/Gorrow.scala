@@ -69,7 +69,6 @@ class Gorrow() extends InputSourceInfo("GORROW", CommandArguments("","", 1, 1)) 
     val lRows = List(RowObj(rowValues))
     val inputSource = RowListIterator(lRows)
     inputSource.setHeader(headerValues)
-    inputSource.setGorHeader(gorHeader)
 
     InputSourceParsingResult(inputSource, headerValues, isNorContext = false)
   }

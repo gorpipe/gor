@@ -23,11 +23,10 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RowSource
 
-case class MergeSources(rightSource : RowSource, empty : String, addRightLeft : Boolean, ilCols : Array[Int], irCols : Array[Int], same : Boolean, sortInfo: Array[Row.SortInfo]) extends Analysis {
+case class MergeSources(rightSource : GenomicIterator, empty : String, addRightLeft : Boolean, ilCols : Array[Int], irCols : Array[Int], same : Boolean, sortInfo: Array[Row.SortInfo]) extends Analysis {
   var lastRightRow : Row = _
   val rCols = irCols
   val lCols = ilCols

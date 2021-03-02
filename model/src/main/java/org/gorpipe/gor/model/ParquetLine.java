@@ -32,22 +32,22 @@ import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("squid:S2160") // equals is implemented correctly in parent
-public class ParquetLine extends Line {
+public class ParquetLine extends Row {
     protected Group group;
 
     ParquetLine() {}
 
-    public ParquetLine(Group grp, GenomicIterator.ChromoLookup lookup) {
+    public ParquetLine(Group grp, ChromoLookup lookup) {
         this.group = grp;
         chr = group.getString(0, 0);
         pos = group.getType().getFields().get(1).asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.INT64) ? (int)group.getLong(1, 0) : group.getInteger(1, 0);
-        if (lookup != null) chrIdx = lookup.chrToId(chr);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class ParquetLine extends Line {
     }
 
     @Override
-    public Long colAsLong(int colNum) {
+    public long colAsLong(int colNum) {
         return group.getLong(colNum, 0);
     }
 
@@ -154,6 +154,11 @@ public class ParquetLine extends Line {
     @Override
     public Row rowWithAddedColumn(CharSequence s) {
         return RowObj.apply(getAllColumns().append('\t').append(s));
+    }
+
+    @Override
+    public void writeRow(Writer outputStream) throws IOException {
+
     }
 
     @Override
@@ -288,6 +293,16 @@ public class ParquetLine extends Line {
             }
         }
         group = simpleGroup;
+    }
+
+    @Override
+    public void removeColumn(int n) {
+
+    }
+
+    @Override
+    public char peekAtColumn(int n) {
+        return 0;
     }
 
 }

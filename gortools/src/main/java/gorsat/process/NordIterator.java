@@ -27,12 +27,13 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.gorpipe.gor.util.StringUtil;
 
 import java.io.File;
@@ -70,7 +71,7 @@ import java.util.stream.Stream;
  * <p>Nor dictionaries do not support bucketization as there only one file open at a time.
  *
  */
-public class NordIterator extends RowSource {
+public class NordIterator extends GenomicIteratorBase {
 
     private final Map<String,String> properties = new HashMap<>();
     private final boolean useFilter;
@@ -84,7 +85,7 @@ public class NordIterator extends RowSource {
     private final boolean forceReadOfHeader;
     private boolean addSourceColumn;
     private boolean showSourceColumn = true;
-    private RowSource activeIterator;
+    private GenomicIterator activeIterator;
     private Iterator<NordIteratorEntry> nordEntriesIterator;
     private NordIteratorEntry activeEntry = null;
     private int headerSize = 0;
@@ -164,7 +165,7 @@ public class NordIterator extends RowSource {
     }
 
     @Override
-    public void setPosition(String seekChr, int seekPos) {
+    public boolean seek(String seekChr, int seekPos) {
         throw new GorSystemException("Nor dictionary iterator does not support seek", null);
     }
 
@@ -304,7 +305,7 @@ public class NordIterator extends RowSource {
         }
     }
 
-    private void getHeaderFromIterator(RowSource inputSource) {
+    private void getHeaderFromIterator(GenomicIterator inputSource) {
         String iteratorHeader = inputSource.getHeader();
         if(iteratorHeader.isEmpty()) {
             throw new GorDataException("Missing header for: " + activeEntry.getTag());

@@ -42,7 +42,6 @@ import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
-import org.gorpipe.model.gor.iterators.RowSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
@@ -459,14 +458,6 @@ public class GorOptions {
         }
         i.setSourceAlreadyInserted(ref.sourceAlreadyInserted);
 
-        String header = i.getHeader();
-        if (!header.equals("")) {
-            int colnum = header.split("\t").length - 2;
-            if (colnum < 0) {
-                throw new GorResourceException("Not enough columns in file", ref.getName());
-            }
-            i.setColnum(colnum);
-        }
         return i;
     }
 
@@ -508,7 +499,7 @@ public class GorOptions {
     }
 
     private void loadTagsFromIterator(GorContext context, Set<String> tags, String iteratorCommand) {
-        try (RowSource dSource = new DynIterator.DynamicRowSource(iteratorCommand, context, true)) {
+        try (GenomicIterator dSource = new DynIterator.DynamicRowSource(iteratorCommand, context, true)) {
             while (dSource.hasNext()) {
                 final String line = dSource.next().toString();
                 final int i = line.indexOf('\t', line.indexOf('\t') + 1);

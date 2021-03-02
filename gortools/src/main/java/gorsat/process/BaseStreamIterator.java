@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 
 /**
  * Iterator that is based on stream coming from the Supplier provided.
- * Supports reinitialization of the stream and iterator when setPosition is called.
+ * Supports reinitialization of the stream and iterator when seek is called.
  */
 public abstract class BaseStreamIterator extends gorsat.Iterators.IteratorSource {
 
