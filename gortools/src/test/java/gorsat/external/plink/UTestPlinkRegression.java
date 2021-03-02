@@ -33,6 +33,17 @@ import java.nio.file.Paths;
 public class UTestPlinkRegression {
     String vcfheader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\ta\tb\tc\td\te\tf\tg\ti\tj\n";
     String regorheader = "Chrom\tPos\tid\tref\talt\tvalues\n";
+    String zeroonepheno = "#IID\tpheno\n" +
+            "a\t0\n"+
+            "b\t1\n"+
+            "c\t0\n"+
+            "d\t1\n"+
+            "e\t0\n"+
+            "f\t1\n"+
+            "g\t0\n"+
+            "h\t1\n"+
+            "i\t0\n"+
+            "j\t1\n";
     String pheno = "#IID\tpheno\n" +
             "a\t1\n"+
             "b\t2\n"+
@@ -105,7 +116,7 @@ public class UTestPlinkRegression {
         try {
             Files.write(corePath, new byte[] {1});
             Assert.assertTrue(Files.exists(corePath));
-            PlinkArguments args = new PlinkArguments("","",false,false,false,false,false,false,false,0.1f,0.1f, 0.1f);
+            PlinkArguments args = new PlinkArguments("","",false,false,false,false,false,false,false, false,0.1f,0.1f, 0.1f);
             PlinkThread plinkThread = new PlinkThread(projectPath.toFile(), projectPath, new String[] {"bash","-c","exit 1"}, ".", "sample", true, null, args, true);
             try {
                 Thread.sleep(1000);
@@ -203,6 +214,25 @@ public class UTestPlinkRegression {
             Files.write(pg, regor.getBytes());
             Files.write(pp, pheno.getBytes());
             String query = "gor reg.gor | plinkregression pheno.txt";
+            String results = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n", results);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
+    public void testPlinkRegressionZeroOne() throws IOException {
+        Path pg = Paths.get("reg.gor");
+        Path pp = Paths.get("pheno.txt");
+        String regor = regorheader + "chr1\t1\trs1\tA\tC\t0101010101\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, zeroonepheno.getBytes());
+            String query = "gor reg.gor | plinkregression -1 pheno.txt";
             String results = TestUtils.runGorPipe(query);
             Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
                     "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n", results);

@@ -36,11 +36,12 @@ public class PlinkArguments {
     boolean vs;
     boolean qn;
     boolean cvs;
+    boolean controlZero;
     float hweThreshold;
     float genoThreshold;
     float mafThreshold;
 
-    public PlinkArguments(String pheno, String covar, boolean firth, boolean hideCovar, boolean dom, boolean rec, boolean vs, boolean qn, boolean cvs,
+    public PlinkArguments(String pheno, String covar, boolean firth, boolean hideCovar, boolean dom, boolean rec, boolean vs, boolean qn, boolean cvs, boolean controlZero,
                           float hweThreshold, float genoThreshold, float mafThreshold) {
         this.pheno = pheno;
         this.covar = covar;
@@ -51,6 +52,7 @@ public class PlinkArguments {
         this.vs = vs;
         this.qn = qn;
         this.cvs = cvs;
+        this.controlZero = controlZero;
         this.hweThreshold = hweThreshold;
         this.genoThreshold = genoThreshold;
         this.mafThreshold = mafThreshold;

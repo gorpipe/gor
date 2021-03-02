@@ -29,7 +29,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",
-  CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf", "-covar -threshold -hwe -geno -maf", 1, 1),
+  CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf -1", "-covar -threshold -hwe -geno -maf", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String, commandRuntime:CommandRuntime): CommandParsingResult = {
@@ -42,6 +42,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val vsOption = "-vs"
     val qnOption = "-qn"
     val vcfOption = "-vcf"
+    val phenoOption = "-1"
 
     val covarOption = "-covar"
     val thresholdOption = "-threshold"
@@ -60,6 +61,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val qn = hasOption(args, qnOption)
     val hc = hasOption(args, hideCovarOption)
     val vcf = hasOption(args, vcfOption)
+    val ph = hasOption(args, phenoOption)
 
     if (!imputed && thresholdSet) throw new GorParsingException("The -threshold option is only allowed together with the -imp option.")
 
@@ -70,7 +72,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val geno = doubleValueOfOptionWithDefaultWithRangeCheck(args, genoOption, -1).toFloat
     val maf = doubleValueOfOptionWithDefaultWithRangeCheck(args, mafOption, -1).toFloat
 
-    val plinkArguments = new PlinkArguments(pheno, covar, firth, hc, dom, rec, vs, qn, cvs, hwe, geno, maf)
+    val plinkArguments = new PlinkArguments(pheno, covar, firth, hc, dom, rec, vs, qn, cvs, ph, hwe, geno, maf)
 
     val inHeaderCols = forcedInputHeader.split('\t')
     val colIndices = if(vcf) getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*") else getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*", "VALUE.*")

@@ -49,6 +49,8 @@ Options
 +------------------+----------------------------------------------------------------------+
 | ``-hc``          | The hide-covar option on plink2 regression.                          |
 +------------------+----------------------------------------------------------------------+
+| ``-1``           | Use 0/1 phenotypes instead of 1/2.                                   |
++------------------+----------------------------------------------------------------------+
 
 Flags used in this command are directly from the PLINK2 command line tool, which is documented on the following website.
 
