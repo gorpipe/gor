@@ -42,14 +42,13 @@ project(':model') {
         implementation "commons-configuration:commons-configuration:1.10"
         implementation "com.github.samtools:htsjdk:2.23.0"
         implementation "com.github.luben:zstd-jni:1.4.4-3"  // TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
-        implementation "com.zaxxer:HikariCP:4.0.1"
         implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
         implementation 'org.apache.parquet:parquet-common:1.11.1'
         implementation 'org.apache.parquet:parquet-column:1.11.1'
         implementation 'org.apache.parquet:parquet-hadoop:1.11.1'
         implementation 'org.apache.hadoop:hadoop-common:3.3.0'
         implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
-
+        implementation "com.zaxxer:HikariCP:4.0.1"
         runtime "org.xerial:sqlite-jdbc:3.34.0"
         // Exclude slf4j bindings we dont want.
         runtime("org.postgresql:postgresql:42.2.7")

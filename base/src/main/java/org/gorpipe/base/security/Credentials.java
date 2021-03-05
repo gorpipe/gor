@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.security;
+package org.gorpipe.base.security;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

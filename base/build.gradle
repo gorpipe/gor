@@ -30,7 +30,9 @@ project(':base') {
         implementation "commons-io:commons-io:2.6"
         implementation "commons-lang:commons-lang:2.6"
         implementation 'org.slf4j:slf4j-api:1.7.30'
-        implementation 'ch.qos.logback:logback-classic:1.2.3' // Must be compile dependency due to Logback Metrics collection.
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
+        // Must be compile dependency due to Logback Metrics collection.
         implementation "ch.qos.logback:logback-core:1.2.3"
         implementation 'org.fusesource.jansi:jansi:1.18' // Needs to be included for Windows
         implementation 'org.slf4j:jcl-over-slf4j:1.7.30'

@@ -29,6 +29,7 @@ project(':util') {
         implementation project(':base')
 
         implementation "commons-lang:commons-lang:2.6"
+        implementation "com.zaxxer:HikariCP:4.0.1"
 
         testRuntimeOnly project(':test')
 

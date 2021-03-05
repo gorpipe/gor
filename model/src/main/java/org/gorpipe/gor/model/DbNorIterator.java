@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.model;
 
-import org.gorpipe.gor.db.ConnectionPool;
+import org.gorpipe.util.db.ConnectionPool;
 import org.gorpipe.util.Pair;
 
 import java.sql.*;
