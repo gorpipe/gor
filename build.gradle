@@ -35,9 +35,6 @@ buildscript {
         // TODO:  Do we use those:
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.10.0"
         classpath 'de.undercouch:gradle-download-task:4.0.4'
-
-        // For GitLab licences scanning
-        classpath "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:latest.release"
     }
 }
 
@@ -48,7 +45,6 @@ plugins {
 
     // Plugins not applied everywhere.
     id "org.sonarqube" version "3.0" apply false
-    id "com.github.hierynomus.license" version "0.15.0" apply false
     id "com.google.protobuf" version "0.8.13" apply false
     id 'com.github.johnrengelman.shadow' version '6.1.0' apply false
 

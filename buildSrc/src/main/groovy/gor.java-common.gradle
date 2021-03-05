@@ -29,7 +29,6 @@ plugins {
     id 'jacoco'
     id "org.sonarqube"
     id 'nebula.lint'
-    id "com.github.hierynomus.license"
     id "org.owasp.dependencycheck"
     id 'com.github.ben-manes.versions'
     id "com.adarshr.test-logger"
@@ -253,9 +252,6 @@ dependencyGraph {
 dependencyLocking {
     lockAllConfigurations()
 }
-
-licenseMain.onlyIf { rootProject.file('LICENSE ').exists() }
-licenseTest.onlyIf { rootProject.file('LICENSE ').exists() }
 
 
 sonarqube {

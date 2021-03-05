@@ -169,7 +169,18 @@ container_scanning:
   rules:
     - when: never
 
+promote-container:
+  rules:
+    - when: never
+
+push-snapshot-to-dockerhub:
+  rules:
+    - when: never
 
 push-feature-branch-docker-to-dockerhub:
+  rules:
+    - when: never
+
+push-version-to-dockerhub:
   rules:
     - when: never
