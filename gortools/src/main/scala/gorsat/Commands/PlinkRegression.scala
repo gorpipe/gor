@@ -78,7 +78,8 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
       throw new GorParsingException("There must be a reference allele column, alternative allele column and value column.")
     }
 
-    val phenotype = GorJavaUtilities.getPhenotype(pheno)
+    val phenoStream = context.getSession.getProjectContext.getFileReader.readFile(pheno)
+    val phenotype = GorJavaUtilities.getPhenotype(phenoStream)
 
     val headerBuilder = new StringBuilder()
     headerBuilder.append(inHeaderCols(0))
