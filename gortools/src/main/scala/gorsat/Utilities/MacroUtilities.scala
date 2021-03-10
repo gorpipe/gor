@@ -187,14 +187,18 @@ object MacroUtilities {
   }
 
   private def parCmdReplacer(input: String, matchPatt: String, replCmd: String): String = {
-    if (matchPatt.endsWith("($n)")) oneParCmdReplacer(input, matchPatt, replCmd)
-    else if (matchPatt.endsWith("($1)")) nParCmdReplacer(1, input, matchPatt, replCmd)
-    else if (matchPatt.endsWith("($1,$2)")) nParCmdReplacer(2, input, matchPatt, replCmd)
-    else if (matchPatt.endsWith("($1,$2,$3)")) nParCmdReplacer(3, input, matchPatt, replCmd)
-    else if (matchPatt.endsWith("($1,$2,$3,$4)")) nParCmdReplacer(4, input, matchPatt, replCmd)
-    else if (matchPatt.endsWith("($1,$2,$3,$4,$5)")) nParCmdReplacer(5, input, matchPatt, replCmd)
-    else if (matchPatt.endsWith("($1,$2,$3,$4,$5,$6)")) nParCmdReplacer(6, input, matchPatt, replCmd)
-    else zeroParCmdReplacer(input, matchPatt, replCmd)
+    // If the replCmd has any backslashes (Windows file names, for example) they get
+    // lost in the replacements done below with regexes
+    val replCmdFixup = replCmd.replace("\\", "\\\\")
+
+    if (matchPatt.endsWith("($n)")) oneParCmdReplacer(input, matchPatt, replCmdFixup)
+    else if (matchPatt.endsWith("($1)")) nParCmdReplacer(1, input, matchPatt, replCmdFixup)
+    else if (matchPatt.endsWith("($1,$2)")) nParCmdReplacer(2, input, matchPatt, replCmdFixup)
+    else if (matchPatt.endsWith("($1,$2,$3)")) nParCmdReplacer(3, input, matchPatt, replCmdFixup)
+    else if (matchPatt.endsWith("($1,$2,$3,$4)")) nParCmdReplacer(4, input, matchPatt, replCmdFixup)
+    else if (matchPatt.endsWith("($1,$2,$3,$4,$5)")) nParCmdReplacer(5, input, matchPatt, replCmdFixup)
+    else if (matchPatt.endsWith("($1,$2,$3,$4,$5,$6)")) nParCmdReplacer(6, input, matchPatt, replCmdFixup)
+    else zeroParCmdReplacer(input, matchPatt, replCmdFixup)
   }
 
   def extractAliases(commands: Array[String]): singleHashMap = {
