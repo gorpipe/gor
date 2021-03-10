@@ -74,6 +74,9 @@ class PlinkThread implements Callable<Boolean> {
             plinkArgList.add("--psam");
             plinkArgList.add(sampleFile);
         }
+        if (args.controlZero) {
+            plinkArgList.add("--1");
+        }
         if (args.mafThreshold != -1) {
             plinkArgList.add("--maf");
             plinkArgList.add(String.valueOf(args.mafThreshold));

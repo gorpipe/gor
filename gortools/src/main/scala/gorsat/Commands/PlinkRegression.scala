@@ -25,11 +25,14 @@ package gorsat.Commands
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.external.plink.{PlinkArguments, PlinkProcessAdaptor, PlinkVcfProcessAdaptor}
 import gorsat.process.GorJavaUtilities
+import gorsat.process.GorJavaUtilities.Phenotypes
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
+import java.nio.file.{Files, Paths}
+
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",
-  CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf", "-covar -threshold -hwe -geno -maf", 1, 1),
+  CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf -1", "-covar -threshold -hwe -geno -maf", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String, commandRuntime:CommandRuntime): CommandParsingResult = {
@@ -42,6 +45,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val vsOption = "-vs"
     val qnOption = "-qn"
     val vcfOption = "-vcf"
+    val phenoOption = "-1"
 
     val covarOption = "-covar"
     val thresholdOption = "-threshold"
@@ -60,6 +64,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val qn = hasOption(args, qnOption)
     val hc = hasOption(args, hideCovarOption)
     val vcf = hasOption(args, vcfOption)
+    val ph = hasOption(args, phenoOption)
 
     if (!imputed && thresholdSet) throw new GorParsingException("The -threshold option is only allowed together with the -imp option.")
 
@@ -70,7 +75,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val geno = doubleValueOfOptionWithDefaultWithRangeCheck(args, genoOption, -1).toFloat
     val maf = doubleValueOfOptionWithDefaultWithRangeCheck(args, mafOption, -1).toFloat
 
-    val plinkArguments = new PlinkArguments(pheno, covar, firth, hc, dom, rec, vs, qn, cvs, hwe, geno, maf)
+    val plinkArguments = new PlinkArguments(pheno, covar, firth, hc, dom, rec, vs, qn, cvs, ph, hwe, geno, maf)
 
     val inHeaderCols = forcedInputHeader.split('\t')
     val colIndices = if(vcf) getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*") else getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*", "VALUE.*")
@@ -78,7 +83,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
       throw new GorParsingException("There must be a reference allele column, alternative allele column and value column.")
     }
 
-    val phenotype = GorJavaUtilities.getPhenotype(pheno)
+    val phenotype = getPhenotype(pheno, context)
 
     val headerBuilder = new StringBuilder()
     headerBuilder.append(inHeaderCols(0))
@@ -99,6 +104,22 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val pip = if( vcf ) new PlinkVcfProcessAdaptor(context.getSession, plinkArguments, colIndices(1), colIndices(2), colIndices(0), if( colIndices.length == 4 ) colIndices(3) else -1, !imputed, threshold, vcf, forcedInputHeader, header)
     else new PlinkProcessAdaptor(context.getSession, plinkArguments, colIndices(1), colIndices(2), colIndices(0), if( colIndices.length == 4 ) colIndices(3) else -1, !imputed, threshold, vcf, header)
     CommandParsingResult(pip, header)
+  }
+
+  private def getPhenotype(pheno: String, gorContext: GorContext) : Phenotypes = {
+    var phenoPath = Paths.get(pheno)
+    if(!phenoPath.isAbsolute) {
+      val root = gorContext.getSession.getProjectContext.getRoot
+      val rootPath = Paths.get(root)
+      phenoPath = rootPath.resolve(phenoPath)
+    }
+    var phenotype = Phenotypes.BINARY
+    if(Files.exists(phenoPath)) {
+      val phenoStream = Files.newBufferedReader(phenoPath).lines()
+      val opt = GorJavaUtilities.getPhenotype(phenoStream)
+      if(opt.isPresent) phenotype = opt.get()
+    }
+    phenotype
   }
 
   private def getColumnIndices(inHeader: Array[String], cols: String*): Array[Int] = {

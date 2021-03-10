@@ -1,7 +1,7 @@
-package org.gorpipe.gor.security;
+package org.gorpipe.base.security;
 
-import org.gorpipe.gor.security.BundledCredentials;
-import org.gorpipe.gor.security.Credentials;
+import org.gorpipe.base.security.BundledCredentials;
+import org.gorpipe.base.security.Credentials;
 import org.junit.Assert;
 import org.junit.Test;
 

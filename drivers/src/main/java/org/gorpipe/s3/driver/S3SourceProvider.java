@@ -37,8 +37,8 @@ import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.utils.CredentialClientCache;
-import org.gorpipe.gor.security.BundledCredentials;
-import org.gorpipe.gor.security.Credentials;
+import org.gorpipe.base.security.BundledCredentials;
+import org.gorpipe.base.security.Credentials;
 
 import java.io.IOException;
 import java.util.Set;

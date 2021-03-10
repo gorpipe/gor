@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.db;
+package org.gorpipe.util.db;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

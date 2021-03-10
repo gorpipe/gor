@@ -20,11 +20,10 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.security;
+package org.gorpipe.base.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
-import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,6 +168,27 @@ public class BundledCredentials implements CredentialsProvider {
     }
 
     /**
+     * Extract a substring from the text, that starts after the prefix and ends prior to the suffix	(wich is
+     * the rest of the text string if the suffix is not found).
+     *
+     * @param text   The text to extract substring from
+     * @param prefix The prefix text
+     * @param suffix The suffix text
+     * @return The substring
+     */
+    public static String substring(String text, String prefix, String suffix) {
+        if (text != null) {
+            final int prefixIdx = text.indexOf(prefix);
+            if (prefixIdx >= 0) {
+                final int suffixIdx = text.indexOf(suffix, prefixIdx);
+                return text.substring(prefixIdx + prefix.length(), suffixIdx > 0 ? suffixIdx : text.length());
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Clone credentials
      */
     public BundledCredentials clone() {
@@ -182,7 +202,7 @@ public class BundledCredentials implements CredentialsProvider {
     public static BundledCredentials fromSecurityContext(String securityContext) {
         log.debug("Creating bundle from securityContext: {}", securityContext);
         if (securityContext != null && securityContext.contains("cred_bundle=")) {
-            String credString = StringUtil.substring(securityContext, "cred_bundle=", "|||");
+            String credString = substring(securityContext, "cred_bundle=", "|||");
             // It looks like the 'securityContext' can include other options after it(e.g. -H1)
             // We need to assume that context is enclosed in quotes (trailing ')
             credString = credString.replaceAll(" .*|'", "");

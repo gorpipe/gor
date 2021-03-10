@@ -20,16 +20,37 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.db;
+package org.gorpipe.util.db;
 
-import java.time.Instant;
+import java.sql.Connection;
+import java.sql.SQLException;
 
-class ConnectionInfo {
-    private final String poolKey;
-    private final Instant leaseStart;
+/**
+ * Simple Wrapping interface for accessing connection pool implementation
+ */
+public interface ConnectionPool {
+    /**
+     * @return A Connection to use
+     * @throws SQLException
+     */
+    Connection getConnection() throws SQLException;
 
-    public ConnectionInfo(String poolKey, Instant leaseStart) {
-        this.poolKey = poolKey;
-        this.leaseStart = leaseStart;
+    /**
+     * Close the connection pool, cleanup up resources
+     *
+     * @throws SQLException
+     */
+    void close() throws SQLException;
+
+    /**
+     * Static Interface method to make sure all are using the same method to compose
+     * the pool key.
+     *
+     * @param dbUrl
+     * @param user
+     * @return
+     */
+    static String composePoolKey(String dbUrl, String user) {
+        return dbUrl + "-" + user;
     }
 }

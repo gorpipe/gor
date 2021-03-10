@@ -62,7 +62,7 @@ public class QueryArgument extends Argument {
         List<Object> values = new ArrayList<>();
         List<String> queryResults = queryEvaluator.asList(query);
         for (String line : queryResults) {
-            values.add(line.split("\t"));
+            values.add(parseValue(line));
         }
         allowedValues = values;
         fireContentsChanged(0, allowedValues.size());

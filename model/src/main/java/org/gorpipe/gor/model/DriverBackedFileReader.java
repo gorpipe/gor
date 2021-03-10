@@ -241,7 +241,7 @@ public class DriverBackedFileReader extends FileReader {
 
         BufferedReader br = readSource(source, resolvedUrl);
         Stream<String> lineStream = br.lines();
-        lineStream.onClose(() -> {
+        return lineStream.onClose(() -> {
             try {
                 br.close();
                 source.close();
@@ -249,7 +249,6 @@ public class DriverBackedFileReader extends FileReader {
                 log.warn("Could not close file!", e);
             }
         });
-        return lineStream;
     }
 
 }

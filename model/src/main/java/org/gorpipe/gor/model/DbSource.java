@@ -24,8 +24,8 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.db.ConnectionPool;
-import org.gorpipe.gor.db.Db;
+import org.gorpipe.util.db.ConnectionPool;
+import org.gorpipe.util.db.Db;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

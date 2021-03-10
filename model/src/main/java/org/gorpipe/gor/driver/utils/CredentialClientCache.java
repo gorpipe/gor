@@ -24,8 +24,8 @@ package org.gorpipe.gor.driver.utils;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.gorpipe.gor.security.Credentials;
-import org.gorpipe.gor.security.CredentialsProvider;
+import org.gorpipe.base.security.Credentials;
+import org.gorpipe.base.security.CredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

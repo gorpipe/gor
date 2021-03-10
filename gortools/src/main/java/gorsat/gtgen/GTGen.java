@@ -149,9 +149,7 @@ public class GTGen {
     public boolean impute(double[] gts, double tol, int maxIt) {
         if (this.covCount > 0) {
             boolean converged = computeAf(tol, maxIt);
-            if (converged) {
-                fillGenotypes(gts);
-            }
+            fillGenotypes(gts);
             return converged;
         } else {
             Arrays.fill(gts, 0.0);

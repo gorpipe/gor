@@ -28,7 +28,7 @@ object PrGtGenAnalysis {
 
     val addToGtGen = if (crCol != -1 && dCol != -1) {
       (r: Row, idx: Int, gtGen: GTGen) => {
-        val d = r.colAsInt(dCol)
+        val d = Math.min(99,r.colAsInt(dCol))
         val c = math.round(d * r.colAsDouble(crCol)).toInt
         gtGen.addData(idx, c, d)
       }

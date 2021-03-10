@@ -25,7 +25,8 @@ package gorsat.Utilities
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
 
-import gorsat.Commands.{Write, BinaryWrite, CommandInfo}
+import gorsat.Commands.{BinaryWrite, CommandInfo, CommandParseUtilities, Write}
+import org.gorpipe.exceptions.GorParsingException
 
 import scala.collection.JavaConverters._
 
@@ -65,4 +66,39 @@ object Utilities {
     queryContainsCommand(query, new Write) ||
       queryContainsCommand(query, new BinaryWrite)
   }
+
+  /**
+    * Get the filename of the output file of the WRITE command, null if none
+    *
+    * @param query
+    * @return
+    */
+  def getWriteFilename(query: String): String = {
+    val command = getWriteCommand(query)
+    if (command == null) return null
+    val writeIndex = query.toUpperCase.indexOf(command.name + " ")
+    if (writeIndex < 0) {
+      throw new GorParsingException(s"Unable to get the filename for the write command of ", query, "")
+    }
+    val queryRemainder = query.substring(writeIndex + command.name.length + 1)
+    val commandRemainder = CommandParseUtilities.quoteSafeSplit(queryRemainder, '|')(0)
+    val commandArgs = CommandParseUtilities.quoteSafeSplit(commandRemainder, ' ')
+    val arguments = command.validateArguments(commandArgs)
+    arguments(0)
+  }
+
+  /**
+    * Get what WRITE command is used in the query, null if none
+    *
+    * @param query
+    * @return
+    */
+  def getWriteCommand(query: String): CommandInfo = {
+    if (Utilities.queryContainsCommand(query, new Write))
+      return new Write
+    else if (Utilities.queryContainsCommand(query, new BinaryWrite))
+      return new BinaryWrite
+    null
+  }
+
 }

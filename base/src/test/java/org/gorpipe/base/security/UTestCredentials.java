@@ -20,9 +20,9 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.security;
+package org.gorpipe.base.security;
 
-import org.gorpipe.gor.security.Credentials;
+import org.gorpipe.base.security.Credentials;
 import org.junit.Before;
 import org.junit.Test;
 
