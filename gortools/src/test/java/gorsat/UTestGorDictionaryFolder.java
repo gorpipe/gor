@@ -96,9 +96,10 @@ public class UTestGorDictionaryFolder {
         TestUtils.runGorPipe("gor -p chr21 ../tests/data/gor/genes.gor | calc c substr(gene_symbol,0,1) | write -card c " + path);
         Path metapath = Paths.get("gorfile.gorz.meta");
         String metainfo = Files.readString(metapath);
-        Assert.assertEquals("Wrong results in meta file", "##RANGE: chr21\t9683190\tchr21\t48110675\n" +
-                "##MD5: 162498408aa03202fa1d2327b2cf9c4f\n" +
-                "##CARDCOL[c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z",
+        Assert.assertEquals("Wrong results in meta file", "## RANGE: chr21\t9683190\tchr21\t48110675\n" +
+                "## MD5: 162498408aa03202fa1d2327b2cf9c4f\n" +
+                "## LINES: 669\n" +
+                "## CARDCOL[c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z",
                 metainfo);
         try {
             Files.delete(path);

@@ -277,7 +277,7 @@ object GeneralQueryHandler {
         val metaPath = Paths.get(f + ".meta")
         val opt: Optional[String] = if (Files.exists(metaPath)) {
           Files.lines(metaPath)
-            .filter(l => l.startsWith("##RANGE:"))
+            .filter(l => l.startsWith("## RANGE:"))
             .map(s => s.substring(8).trim)
             .asInstanceOf[java.util.stream.Stream[String]]
             .filter(f => f.nonEmpty).map(s => prefix + s)
