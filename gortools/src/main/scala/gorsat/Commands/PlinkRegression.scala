@@ -25,8 +25,11 @@ package gorsat.Commands
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.external.plink.{PlinkArguments, PlinkProcessAdaptor, PlinkVcfProcessAdaptor}
 import gorsat.process.GorJavaUtilities
+import gorsat.process.GorJavaUtilities.Phenotypes
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
+
+import java.nio.file.{Files, Paths}
 
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",
   CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf", "-covar -threshold -hwe -geno -maf", 1, 1),
@@ -78,7 +81,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
       throw new GorParsingException("There must be a reference allele column, alternative allele column and value column.")
     }
 
-    val phenotype = GorJavaUtilities.getPhenotype(pheno)
+    val phenotype = getPhenotype(pheno, context)
 
     val headerBuilder = new StringBuilder()
     headerBuilder.append(inHeaderCols(0))
@@ -99,6 +102,22 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val pip = if( vcf ) new PlinkVcfProcessAdaptor(context.getSession, plinkArguments, colIndices(1), colIndices(2), colIndices(0), if( colIndices.length == 4 ) colIndices(3) else -1, !imputed, threshold, vcf, forcedInputHeader, header)
     else new PlinkProcessAdaptor(context.getSession, plinkArguments, colIndices(1), colIndices(2), colIndices(0), if( colIndices.length == 4 ) colIndices(3) else -1, !imputed, threshold, vcf, header)
     CommandParsingResult(pip, header)
+  }
+
+  private def getPhenotype(pheno: String, gorContext: GorContext) : Phenotypes = {
+    var phenoPath = Paths.get(pheno)
+    if(!phenoPath.isAbsolute) {
+      val root = gorContext.getSession.getProjectContext.getRoot
+      val rootPath = Paths.get(root)
+      phenoPath = rootPath.resolve(phenoPath)
+    }
+    var phenotype = Phenotypes.BINARY
+    if(Files.exists(phenoPath)) {
+      val phenoStream = Files.newBufferedReader(phenoPath).lines()
+      val opt = GorJavaUtilities.getPhenotype(phenoStream)
+      if(opt.isPresent) phenotype = opt.get()
+    }
+    phenotype
   }
 
   private def getColumnIndices(inHeader: Array[String], cols: String*): Array[Int] = {

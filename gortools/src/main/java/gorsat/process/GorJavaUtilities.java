@@ -84,27 +84,27 @@ public class GorJavaUtilities {
         MIXED
     }
 
-    public static Phenotypes getPhenotype(String pheno) throws IOException {
-        Phenotypes pt = Phenotypes.BINARY;
-        if (pheno!=null&&pheno.length()>0) {
-            var p = Paths.get(pheno);
-            if(Files.exists(p)) {
-                String[] common = Files.lines(p).skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
-                    for (int i = 0; i < r1.length; i++) {
-                        try {
-                            Integer.parseInt(r1[i]);
-                            r1[i] = r2[i];
-                        } catch (NumberFormatException e) {
-                            // Keep non integers fore reduction
-                        }
-                    }
-                    return r1;
-                }).get();
+    public static Optional<Phenotypes> getPhenotype(Stream<String> pheno) {
+        Optional<String[]> ocommon = pheno.skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
+            for (int i = 0; i < r1.length; i++) {
+                try {
+                    Integer.parseInt(r1[i]);
+                    r1[i] = r2[i];
+                } catch (NumberFormatException e) {
+                    // Keep non integers fore reduction
+                }
+            }
+            return r1;
+        });
 
-                pt = null;
-                for (int i = 0; i < common.length; i++) {
+        Optional<Phenotypes> phenotypes = Optional.empty();
+        if(ocommon.isPresent()) {
+            String[] common = ocommon.get();
+            if (common.length>0) {
+                Phenotypes pt = null;
+                for (String s : common) {
                     try {
-                        Integer.parseInt(common[i]);
+                        Integer.parseInt(s);
                         if (pt == null) pt = Phenotypes.BINARY;
                         else if (pt.equals(Phenotypes.QUANTITATIVE)) pt = Phenotypes.MIXED;
                     } catch (NumberFormatException e) {
@@ -112,9 +112,10 @@ public class GorJavaUtilities {
                         else if (pt.equals(Phenotypes.BINARY)) pt = Phenotypes.MIXED;
                     }
                 }
+                phenotypes = Optional.of(pt);
             }
         }
-        return pt;
+        return phenotypes;
     }
 
     public static class PRPRPRValue extends GorJavaUtilities.PRPRValue {
