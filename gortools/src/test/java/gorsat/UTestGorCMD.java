@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -47,6 +48,8 @@ public class UTestGorCMD {
 
     @Before
     public void setUpTest() throws IOException {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         tempFile = FileTestUtils.createTempFile(workDir.getRoot(), "allowedCmds.txt",
                 "head -h\t[head]\n" +
                         "top10 -h\t[head -n 10]\n" +

@@ -24,14 +24,12 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -69,6 +67,9 @@ public class UTestNor {
     }
 
     private void createSymbolicLink() throws IOException {
+        // Administrator privileges are required on Windows to create a symbolic link
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String userDataFolder = projectContext.getRealProjectRoot() + "/user_data";
         File dir = new File(userDataFolder);
         dir.mkdir();

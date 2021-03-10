@@ -29,6 +29,7 @@ import gorsat.Utilities.ReportUtilities;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.gor.session.GorSession;
 import gorsat.process.GorSessionFactory;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -277,6 +278,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomEntryCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml::TestReport(echo)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -285,6 +288,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryFunctionSyntaxCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml(echo)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -292,6 +297,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryFunctionSyntaxDefaultCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test5.yml} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -299,6 +306,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryFunctionParamSyntaxCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml::TestReport(echo,stuff=stuff)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
