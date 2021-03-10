@@ -84,27 +84,27 @@ public class GorJavaUtilities {
         MIXED
     }
 
-    public static Phenotypes getPhenotype(Stream<String> pheno) {
+    public static Phenotypes getPhenotype(String pheno) throws IOException {
         Phenotypes pt = Phenotypes.BINARY;
-        Optional<String[]> ocommon = pheno.skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
-            for (int i = 0; i < r1.length; i++) {
-                try {
-                    Integer.parseInt(r1[i]);
-                    r1[i] = r2[i];
-                } catch (NumberFormatException e) {
-                    // Keep non integers fore reduction
-                }
-            }
-            return r1;
-        });
+        if (pheno!=null&&pheno.length()>0) {
+            var p = Paths.get(pheno);
+            if(Files.exists(p)) {
+                String[] common = Files.lines(p).skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
+                    for (int i = 0; i < r1.length; i++) {
+                        try {
+                            Integer.parseInt(r1[i]);
+                            r1[i] = r2[i];
+                        } catch (NumberFormatException e) {
+                            // Keep non integers fore reduction
+                        }
+                    }
+                    return r1;
+                }).get();
 
-        if(ocommon.isPresent()) {
-            String[] common = ocommon.get();
-            if (common.length>0) {
                 pt = null;
-                for (String s : common) {
+                for (int i = 0; i < common.length; i++) {
                     try {
-                        Integer.parseInt(s);
+                        Integer.parseInt(common[i]);
                         if (pt == null) pt = Phenotypes.BINARY;
                         else if (pt.equals(Phenotypes.QUANTITATIVE)) pt = Phenotypes.MIXED;
                     } catch (NumberFormatException e) {
