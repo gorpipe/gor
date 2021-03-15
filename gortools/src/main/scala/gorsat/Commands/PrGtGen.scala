@@ -32,7 +32,7 @@ import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
 
 class PrGtGen extends CommandInfo("PRGTGEN",
-  CommandArguments("", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
+  CommandArguments("-combgt", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -65,6 +65,8 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val tol = doubleValueOfOptionWithDefault(args, "-tol", 1e-5)
 
     val threshold = doubleValueOfOptionWithDefault(args, "-th", -1)
+
+    val combGt = hasOption(args, "-combgt")
 
     val pSep = if (hasOption(args, "-psep")) charValueOfOption(args, "-psep") else ';'
     val writeOutTriplets = hasOption(args, "-osep")
@@ -157,10 +159,10 @@ class PrGtGen extends CommandInfo("PRGTGEN",
       if (iargs.length == 3) {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
           AFANSourceAnalysis(priorSource, context, lookupSignature, prgcCols, pabc, pbbc, anc) |
-          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
+          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep, combineGt = combGt)
       } else {
         LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
-          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep)
+          RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep, combineGt = combGt)
       }
     CommandParsingResult(pipeStep, combinedHeader)
   }
