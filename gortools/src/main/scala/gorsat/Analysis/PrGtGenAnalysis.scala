@@ -203,7 +203,7 @@ object PrGtGenAnalysis {
 
   case class RightSourceAnalysis(rightSource: RowSource, context: GorContext, lookupSignature: String,
                                  depthCol: Int, pnCol: Int, threshold: Double, maxSegSize: Int, maxIt: Int = 20, tol: Double = 1e-5,
-                                 tripSep: Char = ';', sepOut: Boolean = false, outSep: Char = ',') extends Analysis {
+                                 tripSep: Char = ';', sepOut: Boolean = false, outSep: Char = ',', combineGt: Boolean = false) extends Analysis {
 
     val ti = context.getSession.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[TagInfo]
     ti.registerUser(this)
@@ -393,10 +393,13 @@ object PrGtGenAnalysis {
         } else if (gts(3 * idx + 2) >= threshold) {
           sb.append('2')
         } else {
-          sb.append('3')
+          if(combineGt && gts(3 * idx + 1) + gts(3 * idx + 2) >= threshold) {
+            if (gts(3 * idx + 1) > gts(3 * idx + 2)) sb.append('1')
+            else sb.append('2')
+          } else sb.append('3')
         }
       } else {
-        sb.append('3')
+         sb.append('3')
       }
     }
 
