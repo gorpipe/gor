@@ -110,7 +110,8 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     var phenoPath = Paths.get(pheno)
     if(!phenoPath.isAbsolute) {
       val root = gorContext.getSession.getProjectContext.getRoot
-      val rootPath = Paths.get(root)
+      val rootExtract = root.split("[ \t]+")(0)
+      val rootPath = Paths.get(rootExtract)
       phenoPath = rootPath.resolve(phenoPath)
     }
     var phenotype = Phenotypes.BINARY
