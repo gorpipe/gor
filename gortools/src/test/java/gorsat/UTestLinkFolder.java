@@ -1,17 +1,25 @@
 package gorsat;
 
 import org.junit.*;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 
 public class UTestLinkFolder {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Before
+    public void init() {
+        System.setProperty("GOR_DRIVER_LINK_FOLDERS","true");
+    }
 
     @Test
     public void testUrlLinkFolder() throws IOException {

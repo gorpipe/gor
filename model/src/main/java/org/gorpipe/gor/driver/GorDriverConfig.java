@@ -142,6 +142,12 @@ public interface GorDriverConfig extends Config {
     @ConverterClass(ByteSizeConverter.class)
     ByteSize maxSize();
 
+    @Documentation("Whether to enable link folders.")
+    @Key("GOR_DRIVER_LINK_FOLDERS")
+    @DefaultValue("false")
+    @ConverterClass(EnhancedBooleanConverter.class)
+    boolean supportLinkFolders();
+
     @Documentation("Plink executable.")
     @Key("org.gorpipe.gor.driver.plink.executable")
     @DefaultValue("plink2")

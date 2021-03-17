@@ -240,10 +240,13 @@ public class PluggableGorDriver implements GorDriver {
             // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
             return fallbackLinkSource;
         } else {
-            Path p = Paths.get(url);
-            Path newLinkSubPath = p.getFileName();
-            Path parent = p.getParent();
-            if(parent!=null) return recursiveLinkFallBack(source, parent, newLinkSubPath);
+            String useLinkFolders = System.getProperty("GOR_DRIVER_LINK_FOLDERS","false");
+            if (useLinkFolders.equals("true")) {
+                Path p = Paths.get(url);
+                Path newLinkSubPath = p.getFileName();
+                Path parent = p.getParent();
+                if (parent != null) return recursiveLinkFallBack(source, parent, newLinkSubPath);
+            }
         }
         return source;
     }
