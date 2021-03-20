@@ -28,6 +28,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
+import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +76,12 @@ public class FileSource implements StreamSource {
         String fileName = sourceReference.getUrl();
         if (fileName.startsWith("file://")) {
             fileName = fileName.substring(7);
+
+            // Windows full path hack
+            if (fileName.length() > 3 && fileName.charAt(2) == ':' && Util.isWindowsOS() ) {
+                fileName = fileName.substring(1);
+            }
+
             sourceReference = new SourceReference(fileName, sourceReference);
         }
         if (fileName.startsWith("file:")) {
