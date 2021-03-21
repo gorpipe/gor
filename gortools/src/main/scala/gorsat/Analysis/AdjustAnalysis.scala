@@ -108,7 +108,19 @@ case class AdjustAnalysis(adOpt: AdjustOptions, pCol: Int, grCols: List[Int]) ex
       }
     }
 
-    statHolders.foreach(sh => FileUtils.forceDelete(sh.file))
+    deleteFiles(statHolders)
+  }
+
+  private def deleteFiles(statHolders: Array[StatHolder]) = {
+    statHolders.foreach(sh => {
+      try {
+        FileUtils.forceDelete(sh.file)
+      } catch {
+        case _: IOException =>
+          System.gc()
+          FileUtils.forceDelete(sh.file)
+      }
+    })
   }
 
   private def initializeQueue(rowIterators: Array[Iterator[Row]], queue: mutable.PriorityQueue[(Row, Int)]) = {
