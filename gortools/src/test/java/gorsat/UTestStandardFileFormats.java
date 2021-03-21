@@ -33,7 +33,11 @@ public class UTestStandardFileFormats {
 
     @AfterClass
     public static void tearDown() throws IOException {
-        FileUtils.deleteDirectory(tmpDir);
+        try {
+            FileUtils.deleteDirectory(tmpDir);
+        } catch (IOException e) {
+            // Don't care
+        }
     }
 
     private static String writeLinesToFile(String[] lines, String path, boolean zip) throws IOException {
