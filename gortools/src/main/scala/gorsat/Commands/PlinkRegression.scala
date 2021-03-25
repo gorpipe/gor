@@ -32,12 +32,13 @@ import org.gorpipe.gor.session.GorContext
 import java.nio.file.{Files, Paths}
 
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",
-  CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf -1", "-covar -threshold -hwe -geno -maf", 1, 1),
+  CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf -1", "-residualize -covar -threshold -hwe -geno -maf", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String, commandRuntime:CommandRuntime): CommandParsingResult = {
     val hideCovarOption = "-hc"
     val firthOption = "-firth"
+    val residualizeOption = "-residualize"
     val impOption = "-imp"
     val domOption = "-dom"
     val recOption = "-rec"
@@ -74,8 +75,9 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val hwe = doubleValueOfOptionWithDefaultWithRangeCheck(args, hweOption, -1).toFloat
     val geno = doubleValueOfOptionWithDefaultWithRangeCheck(args, genoOption, -1).toFloat
     val maf = doubleValueOfOptionWithDefaultWithRangeCheck(args, mafOption, -1).toFloat
+    val residualize = stringValueOfOptionWithDefault(args, residualizeOption, "")
 
-    val plinkArguments = new PlinkArguments(pheno, covar, firth, hc, dom, rec, vs, qn, cvs, ph, hwe, geno, maf)
+    val plinkArguments = new PlinkArguments(pheno, covar, residualize, firth, hc, dom, rec, vs, qn, cvs, ph, hwe, geno, maf)
 
     val inHeaderCols = forcedInputHeader.split('\t')
     val colIndices = if(vcf) getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*") else getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*", "VALUE.*")

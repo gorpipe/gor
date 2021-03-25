@@ -29,6 +29,7 @@ package gorsat.external.plink;
 public class PlinkArguments {
     String pheno;
     String covar;
+    String residualize;
     boolean firth;
     boolean hideCovar;
     boolean dom;
@@ -41,11 +42,12 @@ public class PlinkArguments {
     float genoThreshold;
     float mafThreshold;
 
-    public PlinkArguments(String pheno, String covar, boolean firth, boolean hideCovar, boolean dom, boolean rec, boolean vs, boolean qn, boolean cvs, boolean controlZero,
+    public PlinkArguments(String pheno, String covar, String residualize, boolean firth, boolean hideCovar, boolean dom, boolean rec, boolean vs, boolean qn, boolean cvs, boolean controlZero,
                           float hweThreshold, float genoThreshold, float mafThreshold) {
         this.pheno = pheno;
         this.covar = covar;
         this.firth = firth;
+        this.residualize = residualize;
         this.hideCovar = hideCovar;
         this.dom = dom;
         this.rec = rec;
