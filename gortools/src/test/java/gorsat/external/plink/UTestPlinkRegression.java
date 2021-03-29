@@ -116,7 +116,7 @@ public class UTestPlinkRegression {
         try {
             Files.write(corePath, new byte[] {1});
             Assert.assertTrue(Files.exists(corePath));
-            PlinkArguments args = new PlinkArguments("","",false,false,false,false,false,false,false, false,0.1f,0.1f, 0.1f);
+            PlinkArguments args = new PlinkArguments("","","", false, false,false,false,false,false,false, false,0.1f,0.1f, 0.1f);
             PlinkThread plinkThread = new PlinkThread(projectPath.toFile(), projectPath, new String[] {"bash","-c","exit 1"}, ".", "sample", true, null, args, true);
             try {
                 Thread.sleep(1000);
@@ -295,6 +295,46 @@ public class UTestPlinkRegression {
             Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
                     "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t120.985\t2.28825\t2.09578\t0.0361018\t.\tpheno\n" +
                     "chr1\t1\trs1\tA\tC\tC\tN\tADD\t10\t2.25\t1.29099\t0.628144\t0.52991\t.\tpheno2\n", results);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
+    public void testMultiphenoPlinkRegressionResidualize() throws IOException {
+        Path pg = Paths.get("reg.gor");
+        Path pp = Paths.get("pheno.txt");
+        String regor = regorheader + "chr1\t1\trs1\tA\tC\t0101010101\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, multipheno.getBytes());
+            String query = "gor reg.gor | plinkregression -residualize cc -hc pheno.txt";
+            String results = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t440.999\t3.03629\t2.00542\t0.0449177\t.\tpheno\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tN\tADD\t10\t2.25\t1.29099\t0.628144\t0.52991\t.\tpheno2\n", results);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
+    public void testMultiphenoPlinkRegressionResidualizeFirth() throws IOException {
+        Path pg = Paths.get("reg.gor");
+        Path pp = Paths.get("pheno.txt");
+        String regor = regorheader + "chr1\t1\trs1\tA\tC\t0101010101\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, multipheno.getBytes());
+            String query = "gor reg.gor | plinkregression -residualize firth -hc pheno.txt";
+            String results = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t440.999\t3.03629\t2.00542\t0.0449177\t.\tpheno\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tY\tADD\t10\t2.08643\t1.28635\t0.571738\t0.5675\t.\tpheno2\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);

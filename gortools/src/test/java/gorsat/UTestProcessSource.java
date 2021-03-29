@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.model.DbSource;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -48,6 +49,9 @@ public class UTestProcessSource {
 
     @Test
     public void testNestedProcess() {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "cmd {cat <(gor ../tests/data/gor/genes.gor | top 5) <(cmd {tail -n +2 ../tests/data/gor/genes.gor} | top 5)} | top 10";
         int count = TestUtils.runGorPipeCount(query);
         Assert.assertEquals(10, count);
@@ -98,6 +102,9 @@ public class UTestProcessSource {
 
     @Test
     public void testSimpleProcessSourceAlias() {
+        // No gunzip on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "gorcmd {gunzip -c ../tests/data/gor/dbsnp_test.gor.gz} | top 10";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(gorcmd));
     }
@@ -105,18 +112,27 @@ public class UTestProcessSource {
 
     @Test
     public void testSimpleProcessSource() {
+        // No gunzip on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "cmd {gunzip -c ../tests/data/gor/dbsnp_test.gor.gz} | top 10";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(gorcmd));
     }
 
     @Test
     public void testVcfProcessSource() {
+        // No gunzip on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "cmd -s vcf {gunzip -c ../tests/data/external/samtools/test.vcf.gz} | top 10";
         Assert.assertEquals(5, TestUtils.runGorPipeCount(gorcmd));
     }
 
     @Test
     public void testSimpleNorProcessSource() throws IOException {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "cmd -n {cat " + gorFile.getCanonicalPath() + "} | top 10";
         Assert.assertEquals(9, TestUtils.runGorPipeCount(gorcmd));
     }
@@ -182,24 +198,36 @@ public class UTestProcessSource {
 
     @Test
     public void testNestedProcessSourceGunzipGor() {
+        // No gunzip on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "gor <(cmd {gunzip -c ../tests/data/gor/dbsnp_test.gor.gz}) | top 10";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(gorcmd));
     }
 
     @Test
     public void testNestedProcessSourceGunzipGorWithAnalyzisStep() {
+        // No gunzip on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "gor <(cmd {gunzip -c ../tests/data/gor/dbsnp_test.gor.gz} | top 10)";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(gorcmd));
     }
 
     @Test
     public void testProcessSourceCatGor() throws IOException {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "gor <(cmd {cat " + gorFile.getCanonicalPath() + "}) | top 5";
         Assert.assertEquals(5, TestUtils.runGorPipeCount(gorcmd));
     }
 
     @Test
     public void testProcessSourceCatNor() throws IOException {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String gorcmd = "nor <(cmd {cat " + gorFile.getCanonicalPath() + "}) | top 5";
         Assert.assertEquals(5, TestUtils.runGorPipeCount(gorcmd));
     }

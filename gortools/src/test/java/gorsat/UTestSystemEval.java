@@ -22,7 +22,9 @@
 
 package gorsat;
 
+import org.apache.commons.lang.SystemUtils;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 /**
@@ -39,6 +41,8 @@ public class UTestSystemEval {
 
     @Test
     public void testSystem() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 10;
         String query = "gor ../tests/data/gor/genes.gor | top 10 | calc date system('date') | calc host system('hostname')";
         int count = TestUtils.runGorPipeCount(query);
@@ -47,6 +51,8 @@ public class UTestSystemEval {
 
     @Test
     public void testSystemWithLongStdout() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 10;
         String query = "gor ../tests/data/gor/genes.gor | top 10 | calc date system('cat ../tests/data/gor/genes.gor') | calc host system('hostname')";
         int count = TestUtils.runGorPipeCount(query);
@@ -55,6 +61,8 @@ public class UTestSystemEval {
 
     @Test
     public void testSystemWithStderr() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 10;
         String query = "gor ../tests/data/gor/genes.gor | top 10 | calc date system('logger -s test') | calc host system('hostname')";
         int count = TestUtils.runGorPipeCount(query);

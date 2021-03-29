@@ -24,18 +24,20 @@ package gorsat.Analysis
 
 import java.io._
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
-
 import gorsat.Commands.Analysis
 import gorsat.process.StatisticalAdjustment
 import org.apache.commons.io.FileUtils
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 case class AdjustAnalysis(adOpt: AdjustOptions, pCol: Int, grCols: List[Int]) extends Analysis {
+  private val logger = LoggerFactory.getLogger(this.getClass)
+
   case class StatHolder(file: File) {
     val pValues = new ArrayBuffer[Double]()
     var bhValues: Array[Double] =_
@@ -108,7 +110,25 @@ case class AdjustAnalysis(adOpt: AdjustOptions, pCol: Int, grCols: List[Int]) ex
       }
     }
 
-    statHolders.foreach(sh => FileUtils.forceDelete(sh.file))
+    deleteFiles(statHolders)
+  }
+
+  private def deleteFiles(statHolders: Array[StatHolder]) = {
+    statHolders.foreach(sh => {
+      try {
+        FileUtils.forceDelete(sh.file)
+      } catch {
+        case _: IOException =>
+          logger.info(s"Couldn't delete file ${sh.file} - retrying after garbage collection")
+          System.gc()
+          try {
+            FileUtils.forceDelete(sh.file)
+          } catch {
+            case _: IOException =>
+              logger.warn(s"Couldn't delete file ${sh.file}")
+          }
+      }
+    })
   }
 
   private def initializeQueue(rowIterators: Array[Iterator[Row]], queue: mutable.PriorityQueue[(Row, Int)]) = {

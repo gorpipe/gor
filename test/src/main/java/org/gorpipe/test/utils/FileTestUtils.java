@@ -27,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,7 +73,7 @@ public class FileTestUtils {
 
     private static void handleTempFile(File tempFile, String data) throws IOException {
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, data, Charset.defaultCharset());
+        FileUtils.writeStringToFile(tempFile, data, StandardCharsets.UTF_8);
     }
 
     /**

@@ -90,7 +90,8 @@ public class UTestIndagFunction {
      */
     @Test
     public void genericIndagTestQuotedDAGFile() throws IOException {
-        String result = TestUtils.runGorPipe("gor 1.mem | top 10 | where '1.0' indag('" + goDag.getCanonicalPath() + "','GO:0000008')");
+        String query = "gor 1.mem | top 10 | where '1.0' indag('" + goDag.getCanonicalPath() + "','GO:0000008')";
+        String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Should return the file header", "Chromo\tPos\tCol3\tCol4\tCol5\n", result);
     }
 

@@ -22,12 +22,10 @@
 
 package gorsat;
 
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +98,9 @@ public class UTestNestedQuery {
 
     @Test
     public void testNestedQueryGorNorCmdQuery() {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor <(cmd {cat ../tests/data/gor/dbsnp_test.gor})";
 
         try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
@@ -110,6 +111,9 @@ public class UTestNestedQuery {
 
     @Test
     public void testNestedQueryGorNorNestedNorCmdQuery() {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor <(nor <(cmd -n {cat ../tests/data/gor/dbsnp_test.gor}))";
 
         try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
@@ -120,6 +124,9 @@ public class UTestNestedQuery {
 
     @Test
     public void testNestedQueryGorNorNestedCmdQuery() {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor <(nor <(cmd {cat ../tests/data/gor/dbsnp_test.gor}))";
 
         try (GenomicIterator rs = TestUtils.runGorPipeIterator(query)) {
@@ -182,6 +189,9 @@ public class UTestNestedQuery {
 
     @Test
     public void testNestedProcessIterator() {
+        // No cat on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor ../tests/data/gor/genes.gorz | top 0 | cmd {cat <(gor ../tests/data/gor/genes.gorz | top 10)}";
         int count = 0;
 

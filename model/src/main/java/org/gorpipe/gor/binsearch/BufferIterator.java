@@ -24,6 +24,7 @@ package org.gorpipe.gor.binsearch;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Provides a seekable iterator interface to ordered lines of text contained in a byte buffer.
@@ -86,7 +87,7 @@ class BufferIterator {
     String getNextAsString() {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
         final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
-        final String toReturn = new String(this.buffer, this.bufferIdx, len);
+        final String toReturn = new String(this.buffer, this.bufferIdx, len, StandardCharsets.UTF_8);
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
         return toReturn;

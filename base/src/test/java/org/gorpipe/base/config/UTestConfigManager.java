@@ -154,8 +154,12 @@ public class UTestConfigManager {
     }
 
     @AfterClass
-    public static void afterClass() throws IOException {
-        FileUtils.deleteDirectory(rootDir);
+    public static void afterClass() {
+        try {
+            FileUtils.deleteDirectory(rootDir);
+        } catch (IOException e) {
+            // Do nothing
+        }
     }
 
     @Test

@@ -90,6 +90,15 @@ class PlinkThread implements Callable<Boolean> {
             plinkArgList.add(String.valueOf(args.genoThreshold));
         }
         plinkArgList.add("--glm");
+        if (args.residualize!=null&&args.residualize.length()>0) {
+            if(args.residualize.equalsIgnoreCase("cc")) {
+                plinkArgList.add("cc-residualize");
+            } else if(args.residualize.equalsIgnoreCase("firth")) {
+                plinkArgList.add("firth-residualize");
+            } else {
+                plinkArgList.add("intercept");
+            }
+        }
         if (args.firth) {
             plinkArgList.add("firth-fallback");
         }

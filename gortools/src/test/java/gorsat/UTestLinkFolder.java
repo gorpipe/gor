@@ -1,17 +1,25 @@
 package gorsat;
 
 import org.junit.*;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 
 public class UTestLinkFolder {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Before
+    public void init() {
+        System.setProperty("GOR_DRIVER_LINK_FOLDERS","true");
+    }
 
     @Test
     public void testUrlLinkFolder() throws IOException {
@@ -23,8 +31,9 @@ public class UTestLinkFolder {
         Files.createDirectories(pdir);
         Path hey = pdir.resolve("hey.link");
         Files.writeString(hey, testDataUrl);
-        String remoteResult = TestUtils.runGorPipe("gor "+testDataUrl+"gor/genes.gorz | top 10");
-        String linkResult = TestUtils.runGorPipe("gor ba/sa/hey/gor/genes.gorz | top 10", "-gorroot", workDirPath.toString());
+        String query = "gor " + testDataUrl + "gor/genes.gor | top 10";
+        String remoteResult = TestUtils.runGorPipe(query);
+        String linkResult = TestUtils.runGorPipe("gor ba/sa/hey/gor/genes.gor | top 10", "-gorroot", workDirPath.toString());
         Assert.assertEquals("Results don't compare", remoteResult, linkResult);
     }
 
@@ -39,8 +48,8 @@ public class UTestLinkFolder {
         Files.createDirectories(pdir);
         Path hey = pdir.resolve("hey.link");
         Files.writeString(hey, testDataUrl);
-        String remoteResult = TestUtils.runGorPipe("gor "+testDataUrl+"gor/genes.gorz | top 10");
-        String linkResult = TestUtils.runGorPipe("gor "+testUrl+"/sa/hey/gor/genes.gorz | top 10");
+        String remoteResult = TestUtils.runGorPipe("gor "+testDataUrl+"gor/genes.gor | top 10");
+        String linkResult = TestUtils.runGorPipe("gor "+testUrl+"/sa/hey/gor/genes.gor | top 10");
         Assert.assertEquals("Results don't compare", remoteResult, linkResult);
     }
 

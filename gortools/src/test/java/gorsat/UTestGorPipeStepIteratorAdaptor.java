@@ -26,10 +26,12 @@ import gorsat.Analysis.TopN;
 import gorsat.Commands.Analysis;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.ProcessIteratorAdaptor;
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import gorsat.process.GorSessionFactory;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,9 @@ public class UTestGorPipeStepIteratorAdaptor {
      */
     @Test
     public void testProcessIteratorAdaptor() throws IOException {
+        // head does not exist on windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         GorSessionFactory factory = new GenericSessionFactory();
         GorContext context = factory.create().getGorContext();
         GenomicIterator inputSource = new DynIterator.DynamicRowSource("gor ../tests/data/gor/genes.gorz", context, true);
@@ -66,6 +71,9 @@ public class UTestGorPipeStepIteratorAdaptor {
 
     @Test
     public void testPipeStepIteratorAdaptorThreadSafety() {
+        // grep does not exist on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor ../tests/data/gor/genes.gorz | join -segseg <(../tests/data/gor/genes.gorz | top 10000) | cmd {grep chr} | verifyorder | group chrom -count";
         int count = TestUtils.runGorPipeCount(query);
         Assert.assertEquals("Incorrect number of lines received from gor command server", 25, count);

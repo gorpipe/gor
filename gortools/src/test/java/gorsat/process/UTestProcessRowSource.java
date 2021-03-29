@@ -22,7 +22,9 @@
 
 package gorsat.process;
 
+import org.apache.commons.lang.SystemUtils;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -41,6 +43,9 @@ public class UTestProcessRowSource {
 
     @Test
     public void testCheckNested() {
+        // No mkfifo on Windows
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         GorSessionFactory factory = new GenericSessionFactory();
         String cmd = "<(gor ../tests/data/dbnsp_test.gor)";
         String out = ProcessRowSource.checkNested(cmd, factory.create(), new StringBuilder());

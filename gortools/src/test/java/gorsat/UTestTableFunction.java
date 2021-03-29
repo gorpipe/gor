@@ -29,6 +29,7 @@ import gorsat.Utilities.ReportUtilities;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.gor.session.GorSession;
 import gorsat.process.GorSessionFactory;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -130,12 +131,18 @@ public class UTestTableFunction {
 
     @Test
     public void testTableFunctionWithColon() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor ../tests/data/reports/test.yml(top=10,bleh=':')";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
     }
 
     @Test
     public void testTableFunctionWithDefaultValues() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String query = "gor ../tests/data/reports/test.yml(top=10,some='thing')";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
     }
@@ -270,6 +277,9 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomEntryNestedFunction() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 12;
         String query = "gor ../tests/data/gor/dbsnp_test.gorz | cmd {../tests/data/reports/test.yml(passthrough)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -277,6 +287,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomEntryCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml::TestReport(echo)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -285,6 +297,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryFunctionSyntaxCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml(echo)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -292,6 +306,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryFunctionSyntaxDefaultCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test5.yml} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -299,6 +315,8 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryFunctionParamSyntaxCmd() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml::TestReport(echo,stuff=stuff)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -306,6 +324,9 @@ public class UTestTableFunction {
 
     @Test
     public void testCustomYamlEntryURLParamSyntaxCmd() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 2;
         String query = "cmd {../tests/data/reports/test.yml?TestReport&query=echo&stuff=stuff} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -313,6 +334,9 @@ public class UTestTableFunction {
 
     @Test
     public void testYamlFile() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 10;
         String query = "gor ../tests/data/reports/test.yml(top=50) | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -326,6 +350,9 @@ public class UTestTableFunction {
 
     @Test
     public void testYamlFileBracketSyntax() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 10;
         String query = "gor ../tests/data/reports/test.yml(top=50) | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
@@ -333,6 +360,9 @@ public class UTestTableFunction {
 
     @Test
     public void testYamlFileBracketSyntaxWithFunction() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         int expected = 10;
         String query = "gor ../tests/data/reports/test.yml::TestReport(top=50) | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));

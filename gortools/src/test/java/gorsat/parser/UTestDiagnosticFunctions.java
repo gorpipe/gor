@@ -23,7 +23,9 @@
 package gorsat.parser;
 
 import gorsat.TestUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.net.InetAddress;
@@ -116,6 +118,8 @@ public class UTestDiagnosticFunctions {
 
     @Test
     public void testOpenFiles() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String calculated = TestUtils.getCalculated("openfiles()");
         double value = Double.parseDouble(calculated);
         Assert.assertTrue(value >= 0.0);
@@ -123,6 +127,8 @@ public class UTestDiagnosticFunctions {
 
     @Test
     public void testMaxFiles() {
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
         String calculated = TestUtils.getCalculated("maxfiles()");
         double value = Double.parseDouble(calculated);
         Assert.assertTrue(value >= 0.0);

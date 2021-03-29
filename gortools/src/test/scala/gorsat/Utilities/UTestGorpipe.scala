@@ -23,10 +23,10 @@
 package gorsat.Utilities
 
 import java.nio.file.Paths
-
 import gorsat.TestUtils
 import gorsat.process.{GenericSessionFactory, PipeInstance}
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.util.Util
 import org.gorpipe.test.SlowTests
 import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
@@ -59,13 +59,15 @@ class UTestGorpipe extends FunSuite {
       assertResult(null, "")(AnalysisUtilities.getWhiteListCommandFilePath(pipe.getSession.getProjectContext.getRealProjectRootPath))
 
       System.setProperty("gor.cmd.whitelist.file", "/mnt/csa")
-      assertResult("/mnt/csa", "")(AnalysisUtilities.getWhiteListCommandFilePath(pipe.getSession.getProjectContext.getRealProjectRootPath).toString)
+      val expected = if (Util.isWindowsOS()) "C:\\mnt\\csa" else "/mnt/csa"
+      assertResult(expected, "")(AnalysisUtilities.getWhiteListCommandFilePath(pipe.getSession.getProjectContext.getRealProjectRootPath).toString)
 
       System.setProperty("gor.cmd.whitelist.file", "test")
       assertResult(currentPath.resolve("test").toString, "")(AnalysisUtilities.getWhiteListCommandFilePath(pipe.getSession.getProjectContext.getRealProjectRootPath).toString)
 
       System.setProperty("gor.cmd.whitelist.file", "test2")
-      assertResult("/tmp/gorroot/test2", "")(AnalysisUtilities.getWhiteListCommandFilePath(Paths.get("/tmp/gorroot")).toString)
+      val expected2 = if (Util.isWindowsOS()) "\\tmp\\gorroot\\test2" else "/tmp/gorroot/test2"
+      assertResult(expected2, "")(AnalysisUtilities.getWhiteListCommandFilePath(Paths.get("/tmp/gorroot")).toString)
 
     } finally {
       System.setProperty("gor.cmd.whitelist.file", if (orginalVal != null) orginalVal else "")

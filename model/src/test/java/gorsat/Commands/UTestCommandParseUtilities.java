@@ -132,6 +132,14 @@ public class UTestCommandParseUtilities {
     }
 
     @Test
+    public void testQuoteSafeSplitWithWindowsPaths() {
+        String input = "abc c:\\test\\this";
+        String result[] = CommandParseUtilities.quoteSafeSplit(input, ' ');
+        Assert.assertEquals("abc", result[0]);
+        Assert.assertEquals("c:\\test\\this", result[1]);
+    }
+
+    @Test
     public void testGetExtensionForQueryEmptyString() {
         String result = CommandParseUtilities.getExtensionForQuery("", false);
         Assert.assertEquals(CommandParseUtilities.DEFAULT_EXTENSION(), result);
