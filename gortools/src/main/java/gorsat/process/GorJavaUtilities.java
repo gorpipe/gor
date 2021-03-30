@@ -31,6 +31,7 @@ import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,26 +79,36 @@ public class GorJavaUtilities {
         }
     }
 
+    public static class PhenoInfo {
+        public Phenotypes  phenotype;
+        public String[] phenotypeNames;
+
+        public PhenoInfo(Phenotypes phenotype, String[] phenotypeNames) {
+            this.phenotype = phenotype;
+            this.phenotypeNames = phenotypeNames;
+        }
+    }
+
     public enum Phenotypes {
         BINARY,
         QUANTITATIVE,
         MIXED
     }
 
-    public static Optional<Phenotypes> getPhenotype(Stream<String> pheno) {
-        Optional<String[]> ocommon = pheno.skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
+    public static PhenoInfo getPhenotype(String phenoHeader, BufferedReader pheno) {
+        Optional<String[]> ocommon = pheno.lines().skip(1).map(s -> s.split("\t")).map(s -> Arrays.copyOfRange(s, 1, s.length)).reduce((r1, r2) -> {
             for (int i = 0; i < r1.length; i++) {
                 try {
-                    Integer.parseInt(r1[i]);
+                    if(!r1[i].equalsIgnoreCase("NA")) Integer.parseInt(r1[i]);
                     r1[i] = r2[i];
                 } catch (NumberFormatException e) {
-                    // Keep non integers fore reduction
+                    // Keep non integers for reduction
                 }
             }
             return r1;
         });
 
-        Optional<Phenotypes> phenotypes = Optional.empty();
+        Phenotypes phenotypes = Phenotypes.BINARY;
         if(ocommon.isPresent()) {
             String[] common = ocommon.get();
             if (common.length>0) {
@@ -112,10 +123,12 @@ public class GorJavaUtilities {
                         else if (pt.equals(Phenotypes.BINARY)) pt = Phenotypes.MIXED;
                     }
                 }
-                phenotypes = Optional.of(pt);
+                phenotypes = pt;
             }
         }
-        return phenotypes;
+        String[] phenoSplit = phenoHeader.split("\t");
+        String[] phenoNames = Arrays.copyOfRange(phenoSplit, 1, phenoSplit.length);
+        return new PhenoInfo(phenotypes, phenoNames);
     }
 
     public static class PRPRPRValue extends GorJavaUtilities.PRPRValue {
