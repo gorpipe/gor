@@ -22,6 +22,7 @@
 
 package gorsat.external.plink;
 
+import gorsat.Commands.CommandParseUtilities;
 import org.gorpipe.exceptions.GorResourceException;
 
 import java.io.*;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static gorsat.external.plink.PlinkProcessAdaptor.PGEN_ENDING;
 import static gorsat.external.plink.PlinkProcessAdaptor.PVAR_ENDING;
@@ -49,9 +51,11 @@ class PlinkThread implements Callable<Boolean> {
     private final PlinkProcessAdaptor ppa;
     private final String pgenPath;
     private final Instant processStart;
+    private final PlinkArguments plinkArguments;
 
     PlinkThread(File projectRoot, Path writeDir, String[] plinkExecutable, String pgenPath, String sampleFile, boolean first, PlinkProcessAdaptor ppa, PlinkArguments args, boolean vcf) {
         processStart = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        this.plinkArguments = args;
         this.tmpPath = writeDir;
         this.projectRoot = projectRoot;
         this.first = first;
@@ -175,17 +179,28 @@ class PlinkThread implements Callable<Boolean> {
         ProcessBuilder pb = new ProcessBuilder(plinkArgList);
         pb.directory(projectRoot);
         Process p = pb.start();
-        String[] reslines;
+        List<String> reslist = new ArrayList<>();
         StringWriter processError = new StringWriter();
         try (InputStream is = p.getInputStream()) {
             Thread esThread = sendProcessErrorStreamToStdErr(p.getErrorStream(), processError);
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
-            reslines = br.lines()
-                    .filter(l -> l.contains("Results written to"))
-                    .map(l -> l.split(" ")[3].trim()).toArray(String[]::new);
+            String res = br.lines().dropWhile(l -> !l.contains("Results written to")).takeWhile(l -> !l.contains("End time")).collect(Collectors.joining(" "));
+            String[] resplit = res.split("Results written to");
+            for(String r : resplit) {
+                if(r.length() > 0) {
+                    String[] split = CommandParseUtilities.quoteAngleBracketsSafeSplit(r.trim(), ' ');
+                    String resultFileTemplate = split[0].trim();
+                    if (resultFileTemplate.contains("<phenotype name>")) {
+                        reslist.addAll(Arrays.stream(plinkArguments.phenonames).map(pn -> resultFileTemplate.replace("<phenotype name>", pn)).collect(Collectors.toList()));
+                    } else {
+                        reslist.add(resultFileTemplate);
+                    }
+                }
+            }
             esThread.join(20000);
         }
+        String[] reslines = reslist.toArray(String[]::new);
         boolean exited = p.waitFor(60, TimeUnit.SECONDS);
         if (exited && p.exitValue() != 0) {
             cleanupCoreDump();

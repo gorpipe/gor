@@ -25,11 +25,12 @@ package gorsat.Commands
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.external.plink.{PlinkArguments, PlinkProcessAdaptor, PlinkVcfProcessAdaptor}
 import gorsat.process.GorJavaUtilities
-import gorsat.process.GorJavaUtilities.Phenotypes
+import gorsat.process.GorJavaUtilities.{PhenoInfo, Phenotypes}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 import java.nio.file.{Files, Paths}
+import java.util.Optional
 
 class PlinkRegression extends CommandInfo("PLINKREGRESSION",
   CommandArguments("-hc -firth -imp -dom -rec -cvs -vs -qn -vcf -1", "-residualize -covar -threshold -hwe -geno -maf", 1, 1),
@@ -77,15 +78,15 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     val maf = doubleValueOfOptionWithDefaultWithRangeCheck(args, mafOption, -1).toFloat
     val residualize = stringValueOfOptionWithDefault(args, residualizeOption, "")
 
-    val plinkArguments = new PlinkArguments(pheno, covar, residualize, firth, hc, dom, rec, vs, qn, cvs, ph, hwe, geno, maf)
-
     val inHeaderCols = forcedInputHeader.split('\t')
     val colIndices = if(vcf) getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*") else getColumnIndices(inHeaderCols, "(RS|ID).*", "REF.*", "ALT.*", "VALUE.*")
     if (colIndices.tail.contains(-1)) {
       throw new GorParsingException("There must be a reference allele column, alternative allele column and value column.")
     }
 
-    val phenotype = getPhenotype(pheno, context)
+    val phenoinfo = getPhenotype(pheno, context)
+    val phenonames = if(phenoinfo.isPresent) phenoinfo.get().phenotypeNames else Array[String]()
+    val plinkArguments = new PlinkArguments(phenonames, pheno, covar, residualize, firth, hc, dom, rec, vs, qn, cvs, ph, hwe, geno, maf)
 
     val headerBuilder = new StringBuilder()
     headerBuilder.append(inHeaderCols(0))
@@ -98,8 +99,10 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     headerBuilder.append('\t')
     headerBuilder.append(inHeaderCols(colIndices(2)))
     headerBuilder.append('\t')
-    if(phenotype.equals(GorJavaUtilities.Phenotypes.BINARY)) headerBuilder.append("A1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO")
-    else if(phenotype.equals(GorJavaUtilities.Phenotypes.MIXED)) headerBuilder.append("A1\tFIRTH?\tTEST\tOBS_CT\tOR\tLOG(OR)_SE\tZ_STAT\tP\tERRCODE\tPHENO")
+
+    val phenotype = if(phenoinfo.isPresent) phenoinfo.get().phenotype else Phenotypes.BINARY
+    if(phenotype.equals(Phenotypes.BINARY)) headerBuilder.append("A1\tFIRTH\tTEST\tOBS_CT\tOR\tLOG_OR_SE\tZ_STAT\tP\tERRCODE\tPHENO")
+    else if(phenotype.equals(Phenotypes.MIXED)) headerBuilder.append("A1\tFIRTH?\tTEST\tOBS_CT\tOR\tLOG(OR)_SE\tZ_STAT\tP\tERRCODE\tPHENO")
     else headerBuilder.append("A1\tTEST\tOBS_CT\tBETA\tSE\tT_STAT\tP\tERRCODE\tPHENO")
 
     val header = headerBuilder.toString()
@@ -108,7 +111,7 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
     CommandParsingResult(pip, header)
   }
 
-  private def getPhenotype(pheno: String, gorContext: GorContext) : Phenotypes = {
+  private def getPhenotype(pheno: String, gorContext: GorContext) : Optional[PhenoInfo] = {
     var phenoPath = Paths.get(pheno)
     if(!phenoPath.isAbsolute) {
       val root = gorContext.getSession.getProjectContext.getRoot
@@ -116,13 +119,13 @@ class PlinkRegression extends CommandInfo("PLINKREGRESSION",
       val rootPath = Paths.get(rootExtract)
       phenoPath = rootPath.resolve(phenoPath)
     }
-    var phenotype = Phenotypes.BINARY
+    var phenoinfo: Optional[PhenoInfo] = Optional.empty()
     if(Files.exists(phenoPath)) {
-      val phenoStream = Files.newBufferedReader(phenoPath).lines()
-      val opt = GorJavaUtilities.getPhenotype(phenoStream)
-      if(opt.isPresent) phenotype = opt.get()
+      val phenoReader = Files.newBufferedReader(phenoPath)
+      val phenoHeader = phenoReader.readLine()
+      phenoinfo = Optional.of(GorJavaUtilities.getPhenotype(phenoHeader, phenoReader))
     }
-    phenotype
+    phenoinfo
   }
 
   private def getColumnIndices(inHeader: Array[String], cols: String*): Array[Int] = {

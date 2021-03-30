@@ -22,11 +22,14 @@
 
 package gorsat.external.plink;
 
+import gorsat.process.GorJavaUtilities;
+
 /**
  * This class stores the phenotype file for plink vcf input header generation
  * Also the argument to the plink external process
  */
 public class PlinkArguments {
+    String[]    phenonames;
     String pheno;
     String covar;
     String residualize;
@@ -42,8 +45,9 @@ public class PlinkArguments {
     float genoThreshold;
     float mafThreshold;
 
-    public PlinkArguments(String pheno, String covar, String residualize, boolean firth, boolean hideCovar, boolean dom, boolean rec, boolean vs, boolean qn, boolean cvs, boolean controlZero,
+    public PlinkArguments(String[] phenonames, String pheno, String covar, String residualize, boolean firth, boolean hideCovar, boolean dom, boolean rec, boolean vs, boolean qn, boolean cvs, boolean controlZero,
                           float hweThreshold, float genoThreshold, float mafThreshold) {
+        this.phenonames = phenonames;
         this.pheno = pheno;
         this.covar = covar;
         this.firth = firth;

@@ -862,7 +862,7 @@ object CommandParseUtilities {
 
   /**
    * See quoteSafeSplit(String, Char) for more information. This method perfoms the quote safe split where additional
-   * '[' and ']' block operators are added.
+   * '{' and '}' block operators are added.
    *
    * @param inputString      String to be split
    * @param splitCharacter   Character used to split the inputString
@@ -871,6 +871,20 @@ object CommandParseUtilities {
   def quoteCurlyBracketsSafeSplit(inputString: String, splitCharacter: Char): Array[String] = {
     val blocks = getDefaultBlocks :+ SplitBlock('{', '}')
     val specialChars = getDefaultSpecialChars ++ Set('{', '}')
+    quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, blocks, specialChars, false)
+  }
+
+  /**
+    * See quoteSafeSplit(String, Char) for more information. This method perfoms the quote safe split where additional
+    * '<' and '>' block operators are added.
+    *
+    * @param inputString      String to be split
+    * @param splitCharacter   Character used to split the inputString
+    * @return                 Split array
+    */
+  def quoteAngleBracketsSafeSplit(inputString: String, splitCharacter: Char): Array[String] = {
+    val blocks = getDefaultBlocks :+ SplitBlock('<', '>')
+    val specialChars = getDefaultSpecialChars ++ Set('<', '>')
     quoteCustomSafeSplit(inputString, splitCharacter, getDefaultQuotes, blocks, specialChars, false)
   }
 

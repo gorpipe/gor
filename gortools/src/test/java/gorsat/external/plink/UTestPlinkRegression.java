@@ -66,6 +66,17 @@ public class UTestPlinkRegression {
             "h\t1.0\n"+
             "i\t0.5\n"+
             "j\t0.0\n";
+    String qtphenomulti = "#IID\tpheno\tpp2\n" +
+            "a\t0.0\t0.24\n"+
+            "b\t1.0\t0.34\n"+
+            "c\t0.5\t0.22\n"+
+            "d\t0.0\t0.24\n"+
+            "e\t1.0\t0.24\n"+
+            "f\t0.5\t0.54\n"+
+            "g\t0.0\t0.24\n"+
+            "h\t1.0\t0.24\n"+
+            "i\t0.5\t0.94\n"+
+            "j\t0.0\t0.19\n";
     String multipheno = "#IID\tpheno\tpheno2\n" +
             "a\t1\t1\n"+
             "b\t2\t1\n"+
@@ -116,7 +127,8 @@ public class UTestPlinkRegression {
         try {
             Files.write(corePath, new byte[] {1});
             Assert.assertTrue(Files.exists(corePath));
-            PlinkArguments args = new PlinkArguments("","","", false, false,false,false,false,false,false, false,0.1f,0.1f, 0.1f);
+            String[] phenonames = {};
+            PlinkArguments args = new PlinkArguments(phenonames,"","","",false,false,false,false,false,false,false, false,0.1f,0.1f, 0.1f);
             PlinkThread plinkThread = new PlinkThread(projectPath.toFile(), projectPath, new String[] {"bash","-c","exit 1"}, ".", "sample", true, null, args, true);
             try {
                 Thread.sleep(1000);
@@ -255,6 +267,26 @@ public class UTestPlinkRegression {
             String results = TestUtils.runGorPipe(query);
             Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tBETA\tSE\tT_STAT\tP\tERRCODE\tPHENO\n" +
                     "chr1\t1\trs1\tA\tC\tC\tADD\t10\t0.1\t0.291548\t0.342997\t0.740439\t.\tpheno\n", results);
+        } finally {
+            Files.delete(pg);
+            Files.delete(pp);
+        }
+    }
+
+    @Ignore("Needs plink2 installed")
+    @Test
+    public void testPlinkRegressionQtMulti() throws IOException {
+        Path pg = Paths.get("reg.gor");
+        Path pp = Paths.get("qtphenomulti.txt");
+        String regor = regorheader + "chr1\t1\trs1\tA\tC\t0101010101\n";
+        try {
+            Files.write(pg, regor.getBytes());
+            Files.write(pp, qtphenomulti.getBytes());
+            String query = "gor reg.gor | plinkregression qtphenomulti.txt";
+            String results = TestUtils.runGorPipe(query);
+            Assert.assertEquals("Wrong regression result", "Chrom\tPos\tid\tref\talt\tA1\tTEST\tOBS_CT\tBETA\tSE\tT_STAT\tP\tERRCODE\tPHENO\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\t0.1\t0.291548\t0.342997\t0.740439\t.\tpheno\n" +
+                    "chr1\t1\trs1\tA\tC\tC\tADD\t10\t-0.066\t0.15426\t-0.42785\t0.680045\t.\tpp2\n", results);
         } finally {
             Files.delete(pg);
             Files.delete(pp);
