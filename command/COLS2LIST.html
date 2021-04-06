@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>COLS2LIST &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,20 +159,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="cols2list">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="cols2list">
 <span id="id1"></span><h1>COLS2LIST<a class="headerlink" href="#cols2list" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>COLS2LIST</strong> command collapses columns into a single column, with a separator between the values.
 The separator defaults to “,”, but can be set to anything.</p>
 <p>The column values can be mapped with an expression if some simple transformation is needed
 on each value. The expression assumes all columns are strings. The current value being processed
 is referred to as ‘x’.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | COLS2LIST columnsToCollapse outputColumn -sep &#39;:&#39; -<span class="no">gc</span> groupingColumns -map expr(x)
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -190,8 +191,8 @@ is referred to as ‘x’.</p>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example will collapse the columns in the column range to a single column
 named val3-12, with the values separated by commas:</p>
@@ -220,8 +221,8 @@ to put each value in lower case:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> file.vcf | cols2list 10- values -map vcfformattag(format,x,&#39;GT&#39;)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

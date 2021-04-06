@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LISTZIP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,14 +159,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="listzip">
+  <section id="listzip">
 <span id="id1"></span><h1>LISTZIP<a class="headerlink" href="#listzip" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LISTZIP</strong> function zips two lists together into a single string separated by a semi-colon.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">LISTZIP(string,string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The following query combines two lists (‘A;B;C’ and ‘X;Y;Z’) into a single list.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> x &#39;A;B;C&#39; | <span class="nb">CALC</span> y &#39;X;Y;Z&#39; | <span class="nb">CALC</span> test listzip(x,y)
@@ -175,8 +176,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> -h SubjectReports/Phenotypes.rep | calc zipped_list listzip(present,code)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LISTFILTER &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="listfilter">
+  <section id="listfilter">
 <span id="id1"></span><h1>LISTFILTER<a class="headerlink" href="#listfilter" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LISTFILTER</strong> function filters a list using the expression provided in second argument. Elements in the list are represented in the expression as <code class="docutils literal notranslate"><span class="pre">x</span></code>, and the index value is represented as <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
 <p>The expression in the second argument must be enclosed in quotation marks, which means that if the elements are compared to strings, the quotations around those quotation marks must be escaped with a backslash (or if single quotations are used for the expression, then double quotation marks can be used for the string.</p>
 <p>All mathematical operators may be used in the expression, but these are only meaningful if the elements are treated as numbers. Elements in a list are treated as strings unless they are specifically cast into integers in the expression (see below).</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(string,expression)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The query shown below will result in a filtered list of ‘a,b,d’ because the filter only lets through elements in the example_list that are not equal to ‘c’.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;a,b,c,d&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;x!=c&#39;)
@@ -193,8 +194,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> example_list &#39;apples,bananas,pears,peaches,apricots&#39; | calc filtered_list <span class="k">listfilter</span>(example_list,&#39;i&gt;2&#39;)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

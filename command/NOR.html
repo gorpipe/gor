@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>NOR &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="nor">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="nor">
 <span id="id1"></span><h1>NOR<a class="headerlink" href="#nor" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#nor"><span class="std std-ref">NOR</span></a> command reads non-ordered relations from a single file or a nested source. File sources are assumed to be
 tab-separated (.tsv, .rep, or .map) and with <code class="docutils literal notranslate"><span class="pre">#</span></code> as the first symbol in the first line to indicate that it is a header.
@@ -166,13 +167,13 @@ Comma-separated files can also be used if they are named .csv. Likewise, .gor an
 <p>The <code class="docutils literal notranslate"><span class="pre">-h</span></code> option can be used to instruct the query to read the first line as a header, but this option is not necessary
 if the first line starts with a <code class="docutils literal notranslate"><span class="pre">#</span></code> symbol.</p>
 <p>It is important to note that NOR queries on very large files can be memory intensive.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> file.tsv | ...
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -212,8 +213,8 @@ Column name will be <code class="docutils literal notranslate"><span class="pre"
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>In the following example, we are using NOR to open the Variant Effect Predictor (VEP) impact map table. We are setting the -h flag on the NOR query in order to read the first line as a header and the -i option to ignore all empty lines.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> -h -i ref/VEP_impact.map
@@ -227,8 +228,8 @@ Column name will be <code class="docutils literal notranslate"><span class="pre"
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span>  custom.nord -<span class="no">f</span> <span class="na">PN</span>-001,<span class="na">PN</span>-005,<span class="na">PN</span>-010 -s <span class="na">PN</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="reserved-metacharacters">
+</section>
+<section id="reserved-metacharacters">
 <h2>Reserved Metacharacters<a class="headerlink" href="#reserved-metacharacters" title="Permalink to this headline">¶</a></h2>
 <p>Note that some characters are reserved in the nor file and will be automatically replaced if used in the data rows:</p>
 <table class="docutils align-default">
@@ -242,8 +243,8 @@ Column name will be <code class="docutils literal notranslate"><span class="pre"
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

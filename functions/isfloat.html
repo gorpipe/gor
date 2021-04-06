@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>ISFLOAT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,23 +159,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="isfloat">
+  <section id="isfloat">
 <span id="id1"></span><h1>ISFLOAT<a class="headerlink" href="#isfloat" title="Permalink to this headline">¶</a></h1>
 <p>An <strong>ISFLOAT</strong> function can be used to check whether a number is a float or int. The function is commonly used as a part of a conditional statement within an <a class="reference internal" href="if.html#if"><span class="std std-ref">IF</span></a>.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>ISFLOAT(col) : Boolean
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>In the example below, we take an integer (‘foo’), change it using a <a class="reference internal" href="float.html#float"><span class="std std-ref">float type conversion</span></a> into a float (at which point it becomes 5.0) and then use the <strong>ISFLOAT</strong> within an <a class="reference internal" href="if.html#if"><span class="std std-ref">IF</span></a> statement to evaluate if it is a float or not. (It is.)</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> foo 5 | <span class="nb">CALC</span> bar <span class="k">float</span>(foo) | <span class="nb">CALC</span> <span class="k">float</span>? <span class="k">IF</span>(ISFLOAT(bar),&#39;true&#39;,&#39;false&#39;)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Pivoting &mdash; GOR Open Source v.2.0 documentation</title>
@@ -182,7 +183,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pivoting">
+  <section id="pivoting">
 <h1>Pivoting<a class="headerlink" href="#pivoting" title="Permalink to this headline">¶</a></h1>
 <p>In this chapter we will discuss how to pivot data in GOR queries. Loosely speaking, pivot commands in GOR perform a partial transpose operation. <a class="reference internal" href="command/PIVOT.html#pivot"><span class="std std-ref">PIVOT</span></a> turns rows into columns and <a class="reference internal" href="command/UNPIVOT.html#unpivot"><span class="std std-ref">UNPIVOT</span></a>  turns columns into rows.</p>
 <p>More specifically, pivot aggregates rows and turns multiple rows into multiple columns on the same row. <a class="reference internal" href="command/PIVOT.html#pivot"><span class="std std-ref">PIVOT</span></a> is useful when we have the same item (defined by some composite key, such as <code class="docutils literal notranslate"><span class="pre">chrom+pos+reference+call</span></code> for variants) occurring multiple times with different values of the pivot column (such as <em>family role</em> values of father, mother, <a class="reference internal" href="glossary.html#term-proband"><span class="xref std std-term">proband</span></a> or sibling) and we want to use the value of that pivot column to control some other logic (such as considering the sequencing depth of the parent samples differently than we consider the sequencing depth of a proband sample).</p>
@@ -210,15 +211,19 @@
 </pre></div>
 </div>
 <p>This result will give us a unique row for each variant with two separate columns for the count of “red” and “green” labels for those variants. The images below show the stream of gor rows before and after the pivot.</p>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="_images/before_pivot.png"><img alt="_images/before_pivot.png" src="_images/before_pivot.png" style="width: 942.0px; height: 175.0px;" /></a>
-<p class="caption"><span class="caption-text">The variants with color labels before pivoting</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</div>
-<div class="figure align-default" id="id2">
+<figcaption>
+<p><span class="caption-text">The variants with color labels before pivoting</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="_images/after_pivot.png"><img alt="_images/after_pivot.png" src="_images/after_pivot.png" style="width: 942.0px; height: 128.0px;" /></a>
-<p class="caption"><span class="caption-text">The variants with color labels after pivoting</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
-</div>
-<div class="section" id="unpivoting-rows-in-gor">
+<figcaption>
+<p><span class="caption-text">The variants with color labels after pivoting</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<section id="unpivoting-rows-in-gor">
 <h2>Unpivoting rows in GOR<a class="headerlink" href="#unpivoting-rows-in-gor" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="command/UNPIVOT.html#unpivot"><span class="std std-ref">UNPIVOT</span></a> takes a single row and breaks it into multiple rows, showing the name and value of the columns that were unpivoted. This can be useful when we have two groups of items (such as variants) and we want to understand exactly what attributes differ between the left and right sources. By unpivoting, we can then do a join and aggregation to identify attributes that were the same or to identify attributes that differed between the two tables.</p>
 <p>The example below takes six columns from the <code class="docutils literal notranslate"><span class="pre">#wesvars#</span></code> table and separates the stream into separate rows for the callcopies and depth columns.</p>
@@ -239,8 +244,8 @@
 | calc label &quot;bam1&quot;)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

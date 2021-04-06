@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GREP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="grep">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="grep">
 <span id="id1"></span><h1>GREP<a class="headerlink" href="#grep" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>GREP</strong> command allows through any rows that match the pattern specified for the given column. Regular expressions can be used in the match pattern. The <code class="docutils literal notranslate"><span class="pre">-s</span></code> and <code class="docutils literal notranslate"><span class="pre">-i</span></code> options are used to specify case sensitivity and insensitivity respectively.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>... | <span class="nb">GREP</span> matchpattern [-c columns] [-i]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -189,8 +190,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following query streams from the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> table and returns only those rows that have a match to the string “BRCA” in the <code class="docutils literal notranslate"><span class="pre">Gene_Symbol</span></code> column.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">GREP</span> &quot;BRCA&quot; -c <span class="na">Gene_Symbol</span>
@@ -200,13 +201,13 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">GREP</span> ^BRCA+ -c <span class="na">Gene_Symbol</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="further-help">
+</section>
+<section id="further-help">
 <h2>Further help<a class="headerlink" href="#further-help" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://regex101.com/">https://regex101.com/</a>
 <a class="reference external" href="https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/">https://www.cheatography.com/davechild/cheat-sheets/regular-expressions/</a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LISTADD &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="listadd">
+  <section id="listadd">
 <span id="id1"></span><h1>LISTADD<a class="headerlink" href="#listadd" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LISTADD</strong> function adds an item to the end of a list.</p>
 <p>The function accepts two parameters:</p>
@@ -168,13 +169,13 @@
 </ul>
 <p>An optional third parameter specifies the separator to use (by default, a comma is used).</p>
 <p>The function returns the result in string format.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>listadd(<span class="k">str</span>, value[, sep]) : <span class="k">str</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>An example of using the <strong>LISTADD</strong> function with an explicitly stated list is shown below.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> listresult LISTADD(&#39;a,b,c,d&#39;, &#39;e&#39;)
@@ -186,8 +187,8 @@
 </pre></div>
 </div>
 <p>Here the result is the list ‘a:b:c:d:e’.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>VERIFYORDER &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,23 +159,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="verifyorder">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="verifyorder">
 <span id="id1"></span><h1>VERIFYORDER<a class="headerlink" href="#verifyorder" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#verifyorder"><span class="std std-ref">VERIFYORDER</span></a> command ensures that the genomic order of the stream is correct and raises an exception if the order of the stream is violated.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VERIFYORDER</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #LD# | <span class="nb">SELECT</span> chrom,pos2,<span class="na">pos</span>,r2 | sort 1000000 | <span class="nb">VERIFYORDER</span>
 </pre></div>
 </div>
 <p>The above command orders the LD data by the second column and ensures that the order is correct, i.e. checks if the binsize that is provided for the sort is large enough.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

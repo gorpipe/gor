@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>ATMIN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,11 +159,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="atmin">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="atmin">
 <span id="id1"></span><h1>ATMIN<a class="headerlink" href="#atmin" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#atmin"><span class="std std-ref">ATMIN</span></a> command allows you to select a single row based on a minimum value of a defined column. Note that the column needs to be a number.</p>
 <p>Using <strong>ATMIN</strong> in a nor query will give an error if <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter is used.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | ATMIN binsize column [ attributes ]
 </pre></div>
@@ -170,8 +171,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | ATMIN column [ attributes ]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -194,8 +195,8 @@
 <p>When using ATMIN in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
 significantly. Note that there are no checks to see if the order is correct - only use this option if the input
 stream is correctly ordered.</p>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | ATMIN 1000 gene_start
 </pre></div>
@@ -205,8 +206,8 @@ stream is correctly ordered.</p>
 </pre></div>
 </div>
 <p>Returns a row with the minimum value_column value per chromosome. Group rows by the date column, each group is represented with a single row. If multiple minimums exist take the last one found.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

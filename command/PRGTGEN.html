@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>PRGTGEN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="prgtgen">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="prgtgen">
 <span id="id1"></span><h1>PRGTGEN<a class="headerlink" href="#prgtgen" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>PRGTGEN</strong> command is a probabilistic version of <strong>GTGEN</strong>, i.e. it does the same but also does a simple joint
 variant calling and returns the genotypes in probabilistic form.</p>
@@ -175,16 +176,16 @@ column with the allele frequencies and an AN column with the number of samples. 
 The tag list from the tag-bucket file is thought of as coming from a larger collection of pns and the allele frequency
 given in the source should be thought of as having been estimated for some number of samples from the cohort, excluding
 the ones we are calling now.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | PRGTGEN tagbucketrelation [optional: prior_gor_source] coverage_gor_source [ attributes ]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example simulating genotypes and comparing incremental joint-calling with single step join-calling */
 
@@ -256,12 +257,12 @@ the ones we are calling now.</p>
 | group 1 -<span class="no">gc</span> an,af,anx,afx,anxx,afxx,value2xx,value2,value2x -sum -<span class="no">ic</span> err* -<span class="no">count</span>
 </pre></div>
 </div>
-<div class="section" id="related-commands">
+<section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

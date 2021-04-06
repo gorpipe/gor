@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GAVA &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="gava">
+  <section id="gava">
 <span id="id1"></span><h1>GAVA<a class="headerlink" href="#gava" title="Permalink to this headline">¶</a></h1>
 <p><strong>GAVA</strong> is a variant association algorithm, based on the VAAST algorithm.
 <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/21700766">http://www.ncbi.nlm.nih.gov/pubmed/21700766</a></p>
@@ -167,7 +168,7 @@ affection status of the subjects is permuted and the test statistic computed usi
 ratio test as described in the VAAST paper.</p>
 <p>Note: This is not an exact implementation and for example we have a bailout parameter to avoid spending
 too much computing time on uninteresting features.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>We need to first set the case and control lists, the disease model (regular, dominant, or recessive),
 and other parameters. Then the procedure is as follows:</p>
@@ -186,8 +187,8 @@ and other parameters. Then the procedure is as follows:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GAVA</span> maxiterations -caselist &lt;subjects&gt; -ctrllist &lt;subjects&gt; [ attributes ]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -231,8 +232,8 @@ and other parameters. Then the procedure is as follows:</p>
 <p class="admonition-title">Warning</p>
 <p>casepene and ctrlpene specify the number of cases and ctrls which DO NOT have to comply with the inheritance model.</p>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

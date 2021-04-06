@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>TOP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,24 +159,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="top">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="top">
 <span id="id1"></span><h1>TOP<a class="headerlink" href="#top" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#top"><span class="std std-ref">TOP</span></a> command specifies how many rows are returned by the query. The command terminates once all the specified number of rows have been returned. If no number is entered in the TOP command, the default of 1 is used and the query will return a single row.</p>
 <p>This command is useful to limit the amount of results from a query that would otherwise return a large number of rows and therefore take a long time to run completely.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | top [number]
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following query will return the first 100 rows from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | top 100
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

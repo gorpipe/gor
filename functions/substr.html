@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SUBSTR &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,14 +159,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="substr">
+  <section id="substr">
 <span id="id1"></span><h1>SUBSTR<a class="headerlink" href="#substr" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SUBSTR</strong> function retrieves a portion of a string based on two integers that indicate the beginning and end point. The function takes three parameters - the source of the string and the start and end position in the string. The position indicators are zero-based, so setting a start point of zero will take the substring from the very beginning of the source string and a start point of one will start from the second character in the string and so on.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SUBSTR(string,integer,integer)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query shown here will return a stream of rows that contain a reference value with a length of 5 bases. It will then create a column called “test” with a substring of the reference column minus the first and last character in the string (i.e. characters 2 to 4 inclusive).</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) = 5 | <span class="nb">CALC</span> test substr(<span class="na">reference</span>,1,4) | <span class="nb">TOP</span> 10
@@ -175,8 +176,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) = 5 | <span class="nb">CALC</span> test substr(<span class="na">reference</span>,2,3) | <span class="nb">TOP</span> 10
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>PGOR &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,11 +159,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="pgor">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="pgor">
 <span id="id1"></span><h1>PGOR<a class="headerlink" href="#pgor" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#pgor"><span class="std std-ref">PGOR</span></a> command is essentially a syntactic sugar for a query with CREATE statement.  The PGOR statement <em>cannot</em> be used within nested-queries.  In the current implementation, the optional attributes must also appear before the file source or nested query.</p>
 <p>When no split attribute is provided, the PGOR command uses the build split configuration file to specify the split partitions.  Typically, such configuration files partition the larger chromosomes into two partitions, separated on the centromeres.  If any of the commands GROUP, GRANNO, RANK, or SORT are present in the query using binsize other than 1 base, only whole chromosomes (contigs) are used, avoiding boundary effect issues arising from partition of query range.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">pgor</span> [attributes] source
 </pre></div>
@@ -172,8 +173,8 @@
 <span class="nd">gor</span> [#tempfile#]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -194,13 +195,13 @@ than 100 partitions can be per chromosome.</p>
 </tr>
 </tbody>
 </table>
-<div class="section" id="examples">
+<section id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>A full discussion of PGOR commands and examples of how to use them can be found in the manual chapter on <a class="reference internal" href="../parallelGOR.html#pgorexamples"><span class="std std-ref">Parallelization in GOR</span></a>.</p>
 <p>See also: <a class="reference internal" href="PARTGOR.html"><span class="doc">PARTGOR</span></a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LISTLAST &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="listlast">
+  <section id="listlast">
 <span id="id1"></span><h1>LISTLAST<a class="headerlink" href="#listlast" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LISTLAST</strong> function retrieves the last item from a list of items. The list is assumed to be comma-separated, but an optional second parameter can specify a different separator. The list can be explicitly stated or it can be a reference to a column (either by name of the column or by its position in the input stream).</p>
 <p>The function accepts two parameters:</p>
@@ -167,13 +168,13 @@
 <li><p>the separator (if the list is not comma-separated).</p></li>
 </ul>
 <p>The function returns the result in string format.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>listlast(<span class="k">str</span>,sep) : <span class="k">str</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>An example of using the <strong>LISTLAST</strong> function with an explicitly stated list is shown below. The calculated column “listresult” here will have a value of “d” for every output row.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> listresult LISTLAST(&#39;a,b,c,d&#39;)
@@ -192,8 +193,8 @@ chr1   <span class="m">10180</span>  rs201694901  T     C    <span class="m">16<
 </pre></div>
 </div>
 <p>The example here would return the first item in the format list, or “PL”.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

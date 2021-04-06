@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>WRITE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,20 +159,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="write">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="write">
 <span id="id1"></span><h1>WRITE<a class="headerlink" href="#write" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#write"><span class="std std-ref">WRITE</span></a> command can be used to write a stream into one or more files simultaneously.</p>
 <p>By specifying a “fork” column, with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, you must also specify the column that is used to fork the output files.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-d</span></code> option can be used to write the fork files to directories instead of spliting filenames with #{fork}.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> option can be used to eliminate the fork column from the output, since it is already represented in the filenames.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write filename [-<span class="no">f</span> forkCol] [-d] [-r] [-c] [-m] [-i type]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -214,8 +215,8 @@ file written. Also support string in single quotes</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1:10020-10051 fileA.gor | write fileB.gorz
 </pre></div>
@@ -229,8 +230,8 @@ file written. Also support string in single quotes</p></td>
 </pre></div>
 </div>
 <p>The query above will write the contents of multiPIDfile.gor into as many files as there are distinct PIDs in the file. In this example a list of PIDs is supplied and the write command will create an empty file for each of the tags listed.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

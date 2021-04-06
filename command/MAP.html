@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>MAP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="map">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="map">
 <span id="id1"></span><h1>MAP<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#map"><span class="std std-ref">MAP</span></a> command is used to join tables in GOR and NOR queries based on a one-to-one relation between columns
 other than chromosome and position. The column specified must exist in both sources, although the match on column name
@@ -173,13 +174,13 @@ map column where no lookup is found.</p>
 <p>If the <code class="docutils literal notranslate"><span class="pre">-h</span></code> option is used, the columns will be named after the header in the map file.</p>
 <p>The mapfile must be a tab-delimited file, preferably with a header, or a nested NOR query definition,
 e.g | map &lt;(nor phenotypes.tsv | where code ~ ‘ICD9.*’ | select subject,code) -c PN</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | map mapfile.tsv -c cols [ Options ]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -229,8 +230,8 @@ and the lookup value in the columns specified with the -c option.</p>
 <p>The -ordered flag can reduce the memory usage significantly, especially when the number of lines in the map file is
 high. Note that there are no checks to see if the order is correct - only use this option
 if the input stream and the map file is correctly ordered.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

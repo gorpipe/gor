@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>AWS S3 &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,10 +159,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="aws-s3">
+  <section id="aws-s3">
 <h1>AWS S3<a class="headerlink" href="#aws-s3" title="Permalink to this headline">¶</a></h1>
 <p>The GOR engine supports live querying of any supported file format stored in an Amazon S3 bucket or with an S3 compatible storage.</p>
-<div class="section" id="formats">
+<section id="formats">
 <h2>Formats<a class="headerlink" href="#formats" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>s3://&lt;bucket&gt;/&lt;path_to_file&gt;
 s3://&lt;provider&gt;:&lt;bucket&gt;/&lt;path_to_file&gt;
@@ -186,8 +187,8 @@ credentials</p></td>
 </tbody>
 </table>
 <p>The former case is intended to support S3 in AWS.  The latter can support any provider with a S3 compatible REST interface.</p>
-</div>
-<div class="section" id="credentials">
+</section>
+<section id="credentials">
 <h2>Credentials<a class="headerlink" href="#credentials" title="Permalink to this headline">¶</a></h2>
 <p>When accessing the data, the GOR engine uses the credential service (if configured) to lookup credentials.
 The following credentials fields are supported:</p>
@@ -229,8 +230,8 @@ i.e. either <code class="docutils literal notranslate"><span class="pre">bucket<
 </tbody>
 </table>
 <p>If no credentials are found, the GOR engine will fall back to the default credential provider chain as described in <a class="reference external" href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html</a></p>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -293,8 +294,8 @@ i.e. either <code class="docutils literal notranslate"><span class="pre">bucket<
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

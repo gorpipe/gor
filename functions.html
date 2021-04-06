@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Functions &mdash; GOR Open Source v.2.0 documentation</title>
@@ -175,7 +176,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="functions">
+  <section id="functions">
 <span id="predefinedfunctions"></span><h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
 <p>The following tables contain all of the functions that can be used in WHERE and CALC expressions in GOR queries.</p>
 <table class="docutils align-default">
@@ -189,7 +190,7 @@
 </tr>
 </tbody>
 </table>
-<div class="section" id="boolean-functions">
+<section id="boolean-functions">
 <h2>Boolean Functions<a class="headerlink" href="#boolean-functions" title="Permalink to this headline">¶</a></h2>
 <p>Certain functions in GOR can be used to return a Boolean result (i.e. 0 for false, 1 for true) or a conditional result. By their nature, Boolean-type functions cannot be used with all CALC and WHERE commands (as other functions can). For example, the IF function returns one of two values based on a condition set in the function. As a result, IF can only be used with CALC commands.</p>
 <table class="colwidths-given docutils align-default" id="id3">
@@ -252,8 +253,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="type-and-string-conversion">
+</section>
+<section id="type-and-string-conversion">
 <h2>Type and String Conversion<a class="headerlink" href="#type-and-string-conversion" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id4">
 <caption><span class="caption-text">Type and string conversion in GOR query language</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
@@ -387,8 +388,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="algebraic-functions">
+</section>
+<section id="algebraic-functions">
 <h2>Algebraic Functions<a class="headerlink" href="#algebraic-functions" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id5">
 <caption><span class="caption-text">Algebraic functions in GOR query language</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
@@ -474,8 +475,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="trigonometric-functions">
+</section>
+<section id="trigonometric-functions">
 <h2>Trigonometric Functions<a class="headerlink" href="#trigonometric-functions" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id6">
 <caption><span class="caption-text">Trigonometric functions in GOR query language</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
@@ -517,8 +518,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="statistical-functions">
+</section>
+<section id="statistical-functions">
 <h2>Statistical Functions<a class="headerlink" href="#statistical-functions" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id7">
 <caption><span class="caption-text">Algebraic functions in GOR query language</span><a class="headerlink" href="#id7" title="Permalink to this table">¶</a></caption>
@@ -584,8 +585,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="list-functions">
+</section>
+<section id="list-functions">
 <span id="id1"></span><h2>List Functions<a class="headerlink" href="#list-functions" title="Permalink to this headline">¶</a></h2>
 <p>The table below shows a complete list of functions for dealing with lists in the GOR query language.</p>
 <p>The first input value for any list function is the source of the list. This can be explicitly set by either by listing elements in quotation marks or by referencing a column in the input stream. The other input values vary depending on the function. String inputs must be input</p>
@@ -751,8 +752,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="genomic-specific-functions">
+</section>
+<section id="genomic-specific-functions">
 <h2>Genomic-Specific Functions<a class="headerlink" href="#genomic-specific-functions" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id9">
 <caption><span class="caption-text">Genomic-Specific functions in GOR query language</span><a class="headerlink" href="#id9" title="Permalink to this table">¶</a></caption>
@@ -855,8 +856,8 @@ parameter is chr.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="genotype-quality-functions">
+</section>
+<section id="genotype-quality-functions">
 <span id="id2"></span><h2>Genotype-quality Functions<a class="headerlink" href="#genotype-quality-functions" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id10">
 <caption><span class="caption-text">Genotype-quality functions in GOR query language</span><a class="headerlink" href="#id10" title="Permalink to this table">¶</a></caption>
@@ -931,8 +932,8 @@ Pr(gt=2) = pfalt * pmalt, where pfalt and pmalt are the chars probabilities valu
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="date-functions">
+</section>
+<section id="date-functions">
 <h2>Date Functions<a class="headerlink" href="#date-functions" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id11">
 <caption><span class="caption-text">Date functions in GOR query language</span><a class="headerlink" href="#id11" title="Permalink to this table">¶</a></caption>
@@ -1027,10 +1028,10 @@ The format is defined in the same way as with date(string) and edate(long, strin
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="administration-functions">
+</section>
+<section id="administration-functions">
 <h2>Administration Functions<a class="headerlink" href="#administration-functions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="diagnostic-functions">
+<section id="diagnostic-functions">
 <h3>Diagnostic Functions<a class="headerlink" href="#diagnostic-functions" title="Permalink to this headline">¶</a></h3>
 <table class="colwidths-given docutils align-default" id="id12">
 <caption><span class="caption-text">Diagnostic functions in GOR query language</span><a class="headerlink" href="#id12" title="Permalink to this table">¶</a></caption>
@@ -1124,8 +1125,8 @@ The format is defined in the same way as with date(string) and edate(long, strin
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="version-information">
+</section>
+<section id="version-information">
 <h3>Version Information<a class="headerlink" href="#version-information" title="Permalink to this headline">¶</a></h3>
 <table class="colwidths-given docutils align-default" id="id13">
 <caption><span class="caption-text">Version information in GOR query language</span><a class="headerlink" href="#id13" title="Permalink to this table">¶</a></caption>
@@ -1159,9 +1160,9 @@ The format is defined in the same way as with date(string) and edate(long, strin
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

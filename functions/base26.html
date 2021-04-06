@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BASE26 &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,21 +159,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="base26">
+  <section id="base26">
 <span id="id1"></span><h1>BASE26<a class="headerlink" href="#base26" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>BASE26</strong> function can be used to convert an integer into the hexavigesimal numeral system, or Base 26. The symbols used in this system are 0-9 and A-P.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">base26(int)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The following example converts the integer 19770612 to Base 26.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> foo 19770612 | <span class="nb">CALC</span> bar base26(foo)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

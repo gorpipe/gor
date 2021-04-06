@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Installation &mdash; GOR Open Source v.2.0 documentation</title>
@@ -174,10 +175,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installation">
+  <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>This page describes how to get started with GORpipe.</p>
-<div class="section" id="prerequisites">
+<section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <p>Before setting up GORpipe the following need to be installed:</p>
 <ul class="simple">
@@ -185,15 +186,15 @@
 <li><p>Open JDK can also be used (<a class="reference external" href="https://openjdk.java.net/install/">https://openjdk.java.net/install/</a>)</p></li>
 <li><p>Gradle (<a class="reference external" href="https://gradle.org/install/">https://gradle.org/install/</a>)</p></li>
 </ul>
-</div>
-<div class="section" id="setting-up-test-data">
+</section>
+<section id="setting-up-test-data">
 <h2>Setting up test data<a class="headerlink" href="#setting-up-test-data" title="Permalink to this headline">¶</a></h2>
 <p>Test data for GOR is obtained by cloning the GOR test data repository (<a class="reference external" href="https://github.com/gorpipe/gor-test-data">https://github.com/gorpipe/gor-test-data</a>) as a submodule into the tests/data folder:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git submodule update --init --recursive
 </pre></div>
 </div>
-</div>
-<div class="section" id="getting-started-with-gorpipe">
+</section>
+<section id="getting-started-with-gorpipe">
 <h2>Getting started with GORPipe<a class="headerlink" href="#getting-started-with-gorpipe" title="Permalink to this headline">¶</a></h2>
 <p>To get started with GORPipe, compile the code:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make build
@@ -217,8 +218,8 @@ chr13   <span class="m">19020013</span>        C       T       rs181615907
 chr13   <span class="m">19020145</span>        G       T       rs28970552
 </pre></div>
 </div>
-</div>
-<div class="section" id="setting-up-gor-shell">
+</section>
+<section id="setting-up-gor-shell">
 <h2>Setting up GOR shell<a class="headerlink" href="#setting-up-gor-shell" title="Permalink to this headline">¶</a></h2>
 <p>GORpipe can be invoked and used through an interactive shell session in a terminal - a sort of REPL for GOR, coined GORshell. Start a GORshell by executing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tools/build/install/tools/bin/gorshell
@@ -233,7 +234,7 @@ chr13   <span class="m">19020145</span>        G       T       rs28970552
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> &lt;(gorrows -<span class="no">p</span> chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian &lt;(norrows 100 | group -lis -sc #1))
 </pre></div>
 </div>
-<div class="section" id="setting-environment-variables">
+<section id="setting-environment-variables">
 <h3>Setting environment variables<a class="headerlink" href="#setting-environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo vim /etc/paths
@@ -245,11 +246,11 @@ chr13   <span class="m">19020145</span>        G       T       rs28970552
 </pre></div>
 </div>
 <p>Then GORpipe and GORshell can be started via <cite>gorpipe</cite> and <cite>gorshell</cite> from any location.</p>
-</div>
-</div>
-<div class="section" id="other">
+</section>
+</section>
+<section id="other">
 <h2>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="citations">
+<section id="citations">
 <h3>Citations<a class="headerlink" href="#citations" title="Permalink to this headline">¶</a></h3>
 <p>If you make use of GORpipe in your research, we would appreciate a citation of the following paper:</p>
 <blockquote>
@@ -257,8 +258,8 @@ chr13   <span class="m">19020145</span>        G       T       rs28970552
 Bioinformatics, Volume 32, Issue 20, 15 October 2016, Pages 3081–3088,
 <a class="reference external" href="https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199">https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199</a></p>
 </div></blockquote>
-</div>
-<div class="section" id="license">
+</section>
+<section id="license">
 <h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>GORpipe is free software: you can redistribute it and/or modify
@@ -271,9 +272,9 @@ the AFFERO GNU General Public License for the complete license terms.</p>
 <p>You should have received a copy of the AFFERO GNU General Public License
 along with GORpipe.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/agpl-3.0.html">http://www.gnu.org/licenses/agpl-3.0.html</a>&gt;</p>
 </div></blockquote>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

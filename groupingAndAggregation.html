@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Grouping and Aggregation &mdash; GOR Open Source v.2.0 documentation</title>
@@ -189,10 +190,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="grouping-and-aggregation">
+  <section id="grouping-and-aggregation">
 <span id="groupingaggregation"></span><h1>Grouping and Aggregation<a class="headerlink" href="#grouping-and-aggregation" title="Permalink to this headline">¶</a></h1>
 <p>The GOR syntax provides two commands to do grouping and aggregation, the <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command and the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command, which is for aggregating and annotating in a single pass.</p>
-<div class="section" id="grouping">
+<section id="grouping">
 <h2>Grouping<a class="headerlink" href="#grouping" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command allows you aggregate your results similarly to the way grouping works in SQL, although the syntax is slightly different. In the GOR language, grouping is always based on a sliding genomic bin size.</p>
 <p>For example, the following GOR query calculates the number of PNs with vars in chr21, i.e. the number of variants per pn and then the number of PNs.</p>
@@ -200,8 +201,8 @@
 </pre></div>
 </div>
 <p>We will now look at a few different types of grouping in the GOR query language.</p>
-</div>
-<div class="section" id="defining-the-binsize">
+</section>
+<section id="defining-the-binsize">
 <h2>Defining the Binsize<a class="headerlink" href="#defining-the-binsize" title="Permalink to this headline">¶</a></h2>
 <p>When performing a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command, the query can be set to group based on an integer to denote a range (in base pairs) or it can be set to chromosome or genome. The following query returns the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> variant table grouped by chromosome with a count of how many SNPs are on each (shown in the allCount column):</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
@@ -314,16 +315,16 @@
 </table>
 <p>The above example shows how many SNPs exist in each segment of 1m base pairs on chromosome 21.</p>
 <p>It is important to note that the binsize can directly impact the performance of your queries. It is advisable to limit the binsize to as small a number as possible (i.e. do not use the “genome” binsize when the “chrom” will do). Often you can limit the binsize to 3 megabases, which is longer than the longest human gene.</p>
-<div class="section" id="introducing-parallel-queries">
+<section id="introducing-parallel-queries">
 <h3>Introducing Parallel Queries<a class="headerlink" href="#introducing-parallel-queries" title="Permalink to this headline">¶</a></h3>
 <p>The query above that shows a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command that returns the number of SNPs on each chromosome, but that query takes a very long time to run because it goes through the genome chromosome by chromosome. A better way to do this is using <a class="reference internal" href="command/PGOR.html#pgor"><span class="std std-ref">PGOR</span></a>. If we were to write the query as follows:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">pgor</span> #dbsnp# | <span class="nb">GROUP</span> chrom -<span class="no">count</span>
 </pre></div>
 </div>
 <p>the query will automatically be split up and will return the count for each chromosome much faster. A full discussion of parallelization can be found in a later chapter specifically on <a class="reference internal" href="parallelGOR.html#parallelgor"><span class="std std-ref">Parallel GOR</span></a>.</p>
-</div>
-</div>
-<div class="section" id="grouping-on-columns">
+</section>
+</section>
+<section id="grouping-on-columns">
 <h2>Grouping on Columns<a class="headerlink" href="#grouping-on-columns" title="Permalink to this headline">¶</a></h2>
 <p>We can specify additional grouping by using the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option, which stands for “grouping column”. To understand this type of group, we could take the same example of the 21st chromosome in the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code>, but in this case we would only look at substitutions as in the table shown below:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
@@ -500,8 +501,8 @@
 </div>
 <p>The example also shows a good example of using the GROUP command twice in a query, first to count the number of variants per PN and then to count the number of PNs.</p>
 <p>As we will see in the next section, we can then use another <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command to perform various statistical calculations in the query.</p>
-</div>
-<div class="section" id="calculating-max-min-avgs">
+</section>
+<section id="calculating-max-min-avgs">
 <h2>Calculating Max, Min, Avgs<a class="headerlink" href="#calculating-max-min-avgs" title="Permalink to this headline">¶</a></h2>
 <p>We can use some options in the <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command to calculate the maximum, minimum, and average number of each type of SNP in each 1 megabase binsize as is shown in the following example. Note that you must specify the type (in this case <code class="docutils literal notranslate"><span class="pre">-ic</span></code> for integer column) and name of the column (or multiple columns, comma delimted) that you wish to perform the calculations for.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>)=1 <span class="ni">AND</span> len(<span class="na">allele</span>)=1
@@ -582,8 +583,8 @@
 </tbody>
 </table>
 <p>As you can see in the table above, the calculated columns are prefixed with the type of calculation that has been performed in each case.</p>
-</div>
-<div class="section" id="using-granno-to-annotate">
+</section>
+<section id="using-granno-to-annotate">
 <h2>Using GRANNO to Annotate<a class="headerlink" href="#using-granno-to-annotate" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command allows you to group and annotate in a single pass. A full description of the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command can be found <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">here</span></a>.</p>
 <p>To illustrate the use of the <strong>GRANNO</strong> command, we could take a look at the previous example. Let’s say that instead of grouping over the whole chromosome, we might want to find out how many different SNPs there are, on average, on each gene. The <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> does not have gene data, so we will have to join to either the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> or <code class="docutils literal notranslate"><span class="pre">#exons#</span></code> table and group on the <code class="docutils literal notranslate"><span class="pre">gene_symbol</span></code> column, as shown in the example below:</p>
@@ -904,8 +905,8 @@
 </table>
 <p>There is a lot going on here, so we can take it line by line. The first line is the join between the tables. The second line does the filtering on the left source and adds the calculated column. The third line runs the <a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a> command as described above, grouping and annotating in a single step to find the <code class="docutils literal notranslate"><span class="pre">min_chromstart</span></code> and <code class="docutils literal notranslate"><span class="pre">max_chromend</span></code> for the genes. Next we group over the whole chromosome to get the count of each type of SNP. Finally, we <a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a> the columns we want to display.</p>
 <p>You’ll note at the end of this query that we have added a <strong>SORT</strong> command to make sure that the genomic order is preserved in the GOR stream. As discussed in a previous section <a class="reference internal" href="basicGORqueries.html#genomicorder"><span class="std std-ref">on genomic order</span></a>, this is often necessary when columns are being moved around so much within a GOR query.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

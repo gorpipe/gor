@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BINARYWRITE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,18 +159,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="binarywrite">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="binarywrite">
 <span id="id1"></span><h1>BINARYWRITE<a class="headerlink" href="#binarywrite" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#binarywrite"><span class="std std-ref">BINARYWRITE</span></a> command can be used to write the content of a GOR stream into a .pgen or .bgen file.</p>
 <p>The incoming stream must have a column containing the reference allele, another containing the alternative allele and a
 third containing genotype values.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | binarywrite filename [-imp] [-gv] [-threshold d]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -190,8 +191,8 @@ The default value is 0.9.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> imputedGenotypeDataInHorizontalBucketFormat.gorz | csvsel buckets.tsv pns.tsv -<span class="no">gc</span> #3,#4,#5 -vs 2 | binarywrite -imp -threshold 0.95 pgenFile.pgen
 </pre></div>
@@ -201,8 +202,8 @@ The default value is 0.9.</p></td>
 </pre></div>
 </div>
 <p>The above query will write the hardcalls from hardCallsInHorizontalBucketFormat.gorz to pgenFile.pgen</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

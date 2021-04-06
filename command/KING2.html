@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>KING2 &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="king2">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="king2">
 <span id="id1"></span><h1>KING2<a class="headerlink" href="#king2" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>KING2</strong> command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
 Bioinformatics, Vol. 26 no. 22 2010, pages 2867–2873).</p>
@@ -177,13 +178,13 @@ based on rare variants only.  The logic in QUEEN is significantly faster and wit
 of tag-pairs that must be analysed with KING2 does not have to bee large.  See also KING that uses different tag input
 and storage model for the genotypes, i.e. stores all genotypes and does not store all states for the tag combinations
 (e.g. pn1 x pn2).</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING2 tagbucketrelation tag1xtag2-relation  [-<span class="no">gc</span> cols] [(-s sep | -vs charsize)]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -211,8 +212,8 @@ and storage model for the genotypes, i.e. stores all genotypes and does not stor
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>The following query:
 
@@ -270,12 +271,12 @@ The query that uses the KING command is MUCH faster when the <span class="na">PN
 The above query example shows how the parameters pi0 and phi (or theta) can be used in a relationship classifier.
 </pre></div>
 </div>
-<div class="section" id="related-commands">
+<section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="QUEEN.html#king"><span class="std std-ref">KING</span></a> <span class="xref std std-ref">QUEEN</span> <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

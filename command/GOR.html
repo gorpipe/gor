@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GOR &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="gor">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="gor">
 <span id="id1"></span><h1>GOR<a class="headerlink" href="#gor" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#gor"><span class="std std-ref">GOR</span></a> command loads a source with genomic ordered relational data with some optional parameters.</p>
 <p>For users of command line interfaces in Linux or Unix systems, the GOR command can be thought of as being similar to the <code class="docutils literal notranslate"><span class="pre">cat</span></code> commands.
@@ -169,13 +170,13 @@ A valid GOR source has chromosome and position in the first two columns, the chr
 <p>A <code class="docutils literal notranslate"><span class="pre">GOR</span></code> file is essentially a tab-delimited file (<code class="docutils literal notranslate"><span class="pre">TSV</span></code>) with a header and genomic ordered rows.  Other examples of
 genomic ordered files are block-compressed <code class="docutils literal notranslate"><span class="pre">GORZ</span></code> files, <code class="docutils literal notranslate"><span class="pre">BAM</span></code> and <code class="docutils literal notranslate"><span class="pre">Tabix</span></code> files.  Note however, that in most cases it
 is meaningless to compare or work with GOR sources with data from different genomic builds, unless the <a class="reference internal" href="LIFTOVER.html#liftover"><span class="std std-ref">LIFTOVER</span></a> command is being used.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> -<span class="no">f</span> -ff -fs -nf -s -w -ref -idx file1 file2 file3 ... fileN
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -216,8 +217,8 @@ reference path defined in te active project.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

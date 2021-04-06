@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GTLD &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="gtld">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="gtld">
 <span id="id1"></span><h1>GTLD<a class="headerlink" href="#gtld" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>GTLD</strong> command is used to calculate linkage disequilibrium between genotypes in different locations.
 The command takes in an input stream and uses a self-join style way to calculate the LD in the surrounding region
@@ -182,13 +183,13 @@ rd = sqrt(p1*(1.0-p1)*q1*(1.0-q1))
 LD_Dp = LD_D/d
 LD_r = LD_D/rd</p>
 </div></blockquote>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTLD [ attributes ]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -209,8 +210,8 @@ from single genotype character values column.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example calculating LD from a stream of (chr,<span class="na">pos</span>,ref,<span class="na">alt</span>,bucket,values) */
 
@@ -281,12 +282,12 @@ simulating haplotypes of biallelic SNPs in disequilibrium and genotypes based on
 | throwif abs(<span class="na">distance</span>) = 1 and abs(LD_D - De)&gt;0.01
 </pre></div>
 </div>
-<div class="section" id="related-commands">
+<section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>WHERE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,30 +159,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="where">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="where">
 <span id="id1"></span><h1>WHERE<a class="headerlink" href="#where" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#where"><span class="std std-ref">WHERE</span></a> command is used to filter rows in a GOR stream and extract only the rows that fulfil a specific conditional expression.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">WHERE</span> expression1 <span class="ni">AND</span> (expression2 OR expression3) <span class="ni">AND</span> <span class="ni">NOT</span> (expression4)
 </pre></div>
 </div>
-<div class="section" id="operators">
+<section id="operators">
 <h3>Operators<a class="headerlink" href="#operators" title="Permalink to this headline">¶</a></h3>
 <p>The standard comparison operators (&lt;,&lt;=,= or ==,&lt;&gt; or !=,=&gt;,&gt;) can be applied for each type: floating point numbers, integers, and strings. Boolean conditions can also be formed as: expr1 AND ( expr2 OR NOT (expr3) ).</p>
 <p>The LIKE and RLIKE operators are also supported for strings. <strong>LIKE</strong> uses standard <code class="docutils literal notranslate"><span class="pre">?</span></code> and <code class="docutils literal notranslate"><span class="pre">*</span></code> notation in the pattern whereas <strong>RLIKE</strong> uses any regular-expression pattern, e.g. #7 rlike ‘.*[a|b].+’.</p>
 <p>The WHERE command supports predicates based on any calculations as described for the <a class="reference internal" href="CALC.html#calc"><span class="std std-ref">CALC</span></a> command.
 Predicates can also be based on ISINT and ISFLOAT, e.g. ISFLOAT(#3) and not( ISINT(#2) ).</p>
 <p>See also <a class="reference internal" href="LEFTWHERE.html#leftwhere"><span class="std std-ref">LEFTWHERE</span></a> to provide generic left-join filtering following the <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a> command.</p>
-</div>
-</div>
-<div class="section" id="examples">
+</section>
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | where Colx &gt; Coly and not (#3 like &#39;*dna*&#39; or #4f &gt; 0.0)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

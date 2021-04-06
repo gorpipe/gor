@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DUNQUOTE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,22 +159,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="dunquote">
+  <section id="dunquote">
 <span id="id1"></span><h1>DUNQUOTE<a class="headerlink" href="#dunquote" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DUNQUOTE</strong> function removes single quotes surrounding a given string. If the string does not start and end
 with a single quote, it is returned unchanged.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DUNQUOTE(string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>This example query removes the quotes from each item in the list.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1 | calc list &#39;&quot;a&quot;,&quot;b&quot;,&quot;c&quot;,&quot;d&quot;&#39; | calc x listmap(list, &#39;dunquote(x)&#39;)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>COLNUM &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,25 +159,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="colnum">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="colnum">
 <span id="id1"></span><h1>COLNUM<a class="headerlink" href="#colnum" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>COLNUM</strong> command prefixes a column number to the cell in the stream (keeping the value of the cell within parentheses). The POS header is prefixed but not the values of the positions. The CHROM column is also omitted from the numbering (since this is assumed to be first in the GOR context. It is used to help you figure out the number of columns in a result and is particularly useful when working with GORpipe on the command-line in a shell that does not have tabular visualisation.</p>
 <p>This command does not take any parameters.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">COLNUM</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1 #dbsnp# | <span class="nb">COLNUM</span> | <span class="nb">TOP</span> 10
 </pre></div>
 </div>
 <p>The above command will output the first ten rows of the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table with the cells prefixed with the column number.</p>
 <img alt="../_images/COLNUM.png" src="../_images/COLNUM.png" />
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

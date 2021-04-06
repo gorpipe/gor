@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>COLUMNSORT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,23 +159,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="columnsort">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="columnsort">
 <span id="id1"></span><h1>COLUMNSORT<a class="headerlink" href="#columnsort" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#columnsort"><span class="std std-ref">COLUMNSORT</span></a> command sorts the columns specified to the beginning of the column list. The rest of the columns will then appear after the specified columns and will be sorted alphabetically based on their name.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">COLUMNSORT</span> column-list
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following query will take the first five rows of chromosome 1 from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table, keep the Chrom and POS columns in the front and then sort the rest of the columns alphabetically. Essential, this command will reverse the order of the Reference and Allele columns.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1 #dbsnp# | <span class="nb">TOP</span> 5 | <span class="nb">COLUMNSORT</span> <span class="na">Chrom</span>,<span class="na">POS</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

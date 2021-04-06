@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>PILEUP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="pileup">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="pileup">
 <span id="id1"></span><h1>PILEUP<a class="headerlink" href="#pileup" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#pileup"><span class="std std-ref">PILEUP</span></a> command describes the base-pair formation at each chromosomal position. It summarizes the base calls of aligned sequence reads to a reference sequence, which facilitates the visual display of SNP/Indel calling and alignment.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> file.bam | ... | <span class="nb">PILEUP</span> [ options ]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -215,8 +216,8 @@ to filter reads on TAG_VALUES in BAM files</p></td>
 </tbody>
 </table>
 <p>The Chi value in the output is based on a calculation where the 3 non-major bases are assumed equally distributed.  The SNP column is 1 or 0 depending on comparison of the most likely genotype, GT, with the reference base.  GT2 is the second most likely genotype and the LOD is the log of the log of the likelihood ratio of GT and GT2.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

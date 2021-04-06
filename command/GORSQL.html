@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GORSQL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,24 +159,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="gorsql">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="gorsql">
 <span id="id1"></span><h1>GORSQL<a class="headerlink" href="#gorsql" title="Permalink to this headline">¶</a></h1>
 <p>The GORSQL command allows you to run arbitrary SQL commands against “the database” (the database here being defined by the content of a file called gor.db.credentials in the config directory). This command is not enabled when running against a gor-server and therefore does not work within the Sequence Miner. It is intended to be used with GORpipe only.</p>
 <p>For GORSQL to work properly, the defined query must access a table have Chrom-POS information as first columns.</p>
 <p>SQL statements need to be encapsulated between curly brackets, e.g. gorsql {sql_query}.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> {&lt;sql_query&gt;} | ...
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> {select <span class="na">Chrom</span>, Pos, <span class="na">Reference</span>, <span class="na">Call</span> from GWAS_Subset <span class="nb">WHERE</span> Phenotype = &#39;Cancer&#39; order by <span class="na">Chrom</span>,Pos} | ...
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

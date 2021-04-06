@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BUG &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,24 +159,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="bug">
+  <section id="bug">
 <span id="id1"></span><h1>BUG<a class="headerlink" href="#bug" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | bug [setup:probability | process:probability | finish:probability]
 </pre></div>
 </div>
 <p>This command is really just for testing the system to see how tolerant it is in handling exceptions arising in different phases of the query process, i.e. setup construction phase, row processing phase, or the query cleanup finish phase.</p>
 <p>This command should not be part of the regular user-manual.</p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | bug process:0.001 | where random() &lt; 0.00001 | join -<span class="no">snpseg</span> &lt;(<span class="nd">gor</span> #genes# | bug setup:0.1 )
 </pre></div>
 </div>
 <p>The above query causes a “BUG process” error with the probability of 1/1000 rows and a “BUG setup” error with 10 chance in the setup of nested query.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

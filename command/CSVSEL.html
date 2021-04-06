@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>CSVSEL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="csvsel">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="csvsel">
 <span id="id1"></span><h1>CSVSEL<a class="headerlink" href="#csvsel" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>CSVSEL</strong> command is used to select a subset of data stored in a horizontal manner, as compared to data on a row level.
 Many analysis commands, such as regression and case-contol can leverage this representation for efficient evaluation.</p>
@@ -174,13 +175,13 @@ denoting missing data.</p>
 the selection on the dictionary typically uses no filtering on the rows, i.e. <code class="docutils literal notranslate"><span class="pre">-nf</span></code>, since it is assumed that a subset of the tags
 should return the entire row.  Thus, the filtering options <code class="docutils literal notranslate"><span class="pre">-f</span></code> and <code class="docutils literal notranslate"><span class="pre">-ff</span></code> in the <a class="reference internal" href="GOR.html#gor"><span class="std std-ref">GOR</span></a> command are not used to filter
 the data, but rather the <a class="reference internal" href="#csvsel"><span class="std std-ref">CSVSEL</span></a> command.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">CSVSEL</span> tagbucketrelation tagselection [-<span class="no">gc</span> cols] [-u undefsymbol] [-tag tagcolname] [-s sep] [-vs charsize]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -225,8 +226,8 @@ Writes the results in separate columns.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example of creating horizontal variations stored in buckets */
 
@@ -262,12 +263,12 @@ Writes the results in separate columns.</p></td>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> source/hvar/transwgs.gord -nf -ff myPNs.tsv | <span class="nb">CSVSEL</span> source/hvar/PNbuckets.tsv myPNs.tsv -<span class="no">gc</span> #3,#4 -u 4
 </pre></div>
 </div>
-<div class="section" id="related-commands">
+<section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

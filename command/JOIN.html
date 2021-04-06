@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>JOIN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="join">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="join">
 <span id="id1"></span><h1>JOIN<a class="headerlink" href="#join" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#join"><span class="std std-ref">JOIN</span></a> command can be used in GOR queries to work with multiple sources (files, tables, or GOR streams) at once based on some overlap condition between the sources. It is possible to define the type of overlap condition and also to structure the output of the query based on some options that are defined in the table below.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> &lt;left_source&gt; | <span class="nb">JOIN</span> &lt;condition&gt; [options] &lt;right_source&gt;
 </pre></div>
 </div>
-</div>
-<div class="section" id="conditions">
+</section>
+<section id="conditions">
 <h2>Conditions<a class="headerlink" href="#conditions" title="Permalink to this headline">¶</a></h2>
 <p>A special set of arguments specify the matching conditions for the key columns in the left and right sources (i.e. <code class="docutils literal notranslate"><span class="pre">snp</span></code>, <code class="docutils literal notranslate"><span class="pre">seg</span></code> and <code class="docutils literal notranslate"><span class="pre">var</span></code>).</p>
 <table class="docutils align-default">
@@ -200,8 +201,8 @@ Otherwise the overlap condition is snpB.pos-fuzzfac &lt;= snpA.pos and snpA.pos 
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <p>Further options on joins are specified in the table below.</p>
 <table class="docutils align-default">
@@ -295,8 +296,8 @@ the join may have to be followed with SORT step to ensure GOR.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following join command joins a <code class="docutils literal notranslate"><span class="pre">snp</span></code> left source (the <code class="docutils literal notranslate"><span class="pre">#dbSNP#</span></code> table) to a right source containing segments (<code class="docutils literal notranslate"><span class="pre">#genes#</span></code>).</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | join -<span class="no">snpseg</span> #genes#
@@ -326,7 +327,7 @@ the join may have to be followed with SORT step to ensure GOR.</p></td>
 | sort 1 -c <span class="na">PN</span> | group 1 -<span class="no">gc</span> 3,4,rsID -lis -sc
 </pre></div>
 </div>
-<div class="section" id="equivalent-queries">
+<section id="equivalent-queries">
 <h3>Equivalent Queries<a class="headerlink" href="#equivalent-queries" title="Permalink to this headline">¶</a></h3>
 <p>The following queries are equivalent and illustrate how to use different commands to achieve the same result.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> -i #genes# == <span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> #genes# | group 1 -<span class="no">gc</span> 3-rsids
@@ -336,9 +337,9 @@ the join may have to be followed with SORT step to ensure GOR.</p></td>
 <span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span> -ir #genes# | sort 3000000 == <span class="nd">gor</span> #dbsnp# | join -<span class="no">snpseg</span>  #genes#  | select rsids[+1]- | sort 3000000
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

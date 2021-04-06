@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LEFTWHERE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="leftwhere">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="leftwhere">
 <span id="id1"></span><h1>LEFTWHERE<a class="headerlink" href="#leftwhere" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LEFTWHERE</strong> command is used to supply additional join condition into a left-join operation. Based on the grouping of all the columns in the left-relation (as specified by the last column in the left-source, the LEFTWHERE command does alway return a single instance of each row in the left-source, even if the conditional expression is always false.  Such row are the replaced with empty values, for each of the columns in the right-source. This is equivalent to the standard behaviour of a general left-join relational operation.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | join -<span class="no">snpsnp</span> -l rightfile.gor | leftwhere lastcolinleftsource cond-expression
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>As an example, this can be used to lookup genotype frequencies:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> genotypes.gor | <span class="nb">SELECT</span> 1,2,ref,<span class="na">allele</span> | <span class="nb">JOIN</span> IceFreq.gor -<span class="no">f</span> 20 -<span class="no">snpsnp</span> -l
@@ -178,8 +179,8 @@
 <p>The above query, does a lookup in IceFreq based on a fuzzy join (allowing 20bp freedom in the specification of equivalent genotypes, with respect to the reference).  If no loci match is found, the column refx will be empty ‘’ as well as the AfIceFreq column (due to the left-join) and interpreted either as 1.0 or 0.0, depending on whether the reference allele is begin looked-up or alternative. Likewise, in the case there is a match in loci, BUT no match based on gtshare, the LEFTWHERE command will return refx and AfIceFreq columns with empty values (‘’).  Note that above query is more easily done with VARJOIN,
 however the LEFTWHERE command is more versatile.</p>
 <p>See the <a class="reference internal" href="WHERE.html#where"><span class="std std-ref">WHERE</span></a> command for more details on conditional expressions.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

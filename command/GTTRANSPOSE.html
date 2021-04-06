@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GTTRANSPOSE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span><div class="section" id="gttranspose">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span><section id="gttranspose">
 <span id="vargroup"></span><h1>GTTRANSPOSE<a class="headerlink" href="#gttranspose" title="Permalink to this headline">¶</a></h1>
 <p>The incoming stream are variants stored in horizontal manner. The command takes in a sources containing
 tag/bucket relations, list of pns and a list of markers. The optional headers in the tag/bucket file and
@@ -169,13 +170,13 @@ marker. (It picks out the given pns from the incoming stream and then transposes
 <p>In order to find the markers in the incoming source, all the columns from the header of the marker source are taken
 and the values in the corresponding columns in the incoming source (we assume they exist, else we throw and error) are
 taken as identifier for the marker.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTTRANSPOSE tagBucketSource pnSource markerSource [-vs w] [-sep s] [-cols]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -198,8 +199,8 @@ marker.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

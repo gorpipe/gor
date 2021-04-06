@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SETCOLTYPE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,26 +159,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="setcoltype">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="setcoltype">
 <span id="id1"></span><h1>SETCOLTYPE<a class="headerlink" href="#setcoltype" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SETCOLTYPE</strong> command explicitly sets the types of columns.</p>
 <p>The command takes two parameters - a list of columns and a list of types. The known types are:
 Integer, Long, Double and String. The type may also be specified by the first character of the type.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | SETCOLTYPE list-of-columns list-of-types
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1 | calc x 42 | calc y 3.14 | calc z x+y | setcoltype x,y,z string,STRING,s | coltype
 </pre></div>
 </div>
 <p>The calc expressions in the command above produce numeric results, but the SETCOLTYPE command changes
 them all to string columns.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

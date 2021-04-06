@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Language Basics &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,9 +159,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="language-basics">
+  <section id="language-basics">
 <h1>Language Basics<a class="headerlink" href="#language-basics" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="data-types">
+<section id="data-types">
 <h2>Data types<a class="headerlink" href="#data-types" title="Permalink to this headline">¶</a></h2>
 <table class="colwidths-given docutils align-default" id="id1">
 <caption><span class="caption-text">Data types in GOR query language</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
@@ -196,8 +197,8 @@
 </table>
 <p>The data type of a column in GOR is not fixed, but is instead inferred from the first 10.000 values of the column. Also, the data type of a column can change depending on modifications that are made to the column by steps in the GOR query.</p>
 <p>Note that if a number is enclosed in quotation marks it is cast as a string and, as a result, any operation performed on the value that expects a number as input will fail.</p>
-</div>
-<div class="section" id="operators">
+</section>
+<section id="operators">
 <h2>Operators<a class="headerlink" href="#operators" title="Permalink to this headline">¶</a></h2>
 <p>Operators are symbols that can be used with two values to produce some result. The table below shows operators that are used in GORql along with some examples of how to use them.</p>
 <table class="colwidths-given docutils align-default" id="id2">
@@ -243,8 +244,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="comments">
+</section>
+<section id="comments">
 <h2>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
 <p>You can use comments in gor using the same notation as in Javascript or CSS. All lines contained within comment notation will be treated as comments, although if you use the commenting tool in the Query Editor in Sequence Miner, it will add comment tags to each line.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/*
@@ -253,20 +254,20 @@ This is a comment
 </pre></div>
 </div>
 <p>Comments can be used to quickly remove certain conditions from a GOR query if the query is well-formatted in the query editor (i.e. with individual conditions placed on single lines).</p>
-</div>
-<div class="section" id="other-punctuation-in-gor">
+</section>
+<section id="other-punctuation-in-gor">
 <h2>Other Punctuation in GOR<a class="headerlink" href="#other-punctuation-in-gor" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="quotation-marks">
+<section id="quotation-marks">
 <h3>Quotation marks<a class="headerlink" href="#quotation-marks" title="Permalink to this headline">¶</a></h3>
 <p>Single and double quotation marks can be used interchangeably when writing GOR queries, but you must take care to be consistent. For readability, if you are using both single and double quotation marks then it can be better to use the single quotation marks inside the double where necessary as opposed to the other way around, as this is the convention also used when writing text.</p>
 <p>If quotation marks need to be used as part of a string and should not be interpreted as part of the syntax of the language itself, then they can be escaped using a backslash.</p>
-</div>
-<div class="section" id="hashes">
+</section>
+<section id="hashes">
 <h3>Hashes<a class="headerlink" href="#hashes" title="Permalink to this headline">¶</a></h3>
 <p>Sections of reusable GOR queries can be defined through the use of <a class="reference internal" href="command/CREATE.html#create"><span class="std std-ref">CREATE</span></a> statements. The convention in GOR is to set the name of the section inside hash symbols, such as <code class="docutils literal notranslate"><span class="pre">#name_of_statement#</span></code>. This statement can then be called elsewhere in the code by putting the full name of the statement (and the hash symbols) inside square brackets, as in <code class="docutils literal notranslate"><span class="pre">[#name_of_statement#]</span></code></p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

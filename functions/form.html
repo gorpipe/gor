@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>FORM &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="form">
+  <section id="form">
 <span id="id1"></span><h1>FORM<a class="headerlink" href="#form" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>form</strong> function formats a number, specifying the space and decimals (C-style %x.yf format style).</p>
 <p>The function takes three parameters: the number you are formatting, the width of the output, and the number of
 decimal places to include.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">FORM(num,integer,integer)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The query below formats the number given to 2 decimal places, resulting in an output of 3.14.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> test FORM(3.14159,1,2)
@@ -177,8 +178,8 @@ decimal places to include.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> test FORM(3.14159,5,2) | <span class="nb">CALC</span> new &#39;this is a number&#39;+test
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

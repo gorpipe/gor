@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Sequence Reads &mdash; GOR Open Source v.2.0 documentation</title>
@@ -188,20 +189,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="sequence-reads">
+  <section id="sequence-reads">
 <span id="sequencereads"></span><h1>Sequence Reads<a class="headerlink" href="#sequence-reads" title="Permalink to this headline">¶</a></h1>
 <p>The sequence data that is imported into the WuXi NextCODE system is part of an analysis pipeline that begins with the DNA samples taken from a subject, which are sequenced using next-generation sequencing (NGS). The overlapping sequence reads are then aligned to the reference genome and compiled into a coverage file. Individual sequence reads can be up to 250 base-pairs long.</p>
 <p>Finally, this coverage file is compared to known variants that have been annotated with regards to their effects on the individual (i.e. their genetic traits or the likelihood of developing certain diseases). The WXNC tools are developed specifically to work with this last step in the pipeline.</p>
 <p>In the following chapter, we will introduce some commands for working with sequence read data in the GOR query language, in particular sequence read data that is stored in BAM files.</p>
-<div class="section" id="viewing-sequence-reads-in-sequence-miner">
+<section id="viewing-sequence-reads-in-sequence-miner">
 <h2>Viewing Sequence Reads in Sequence Miner<a class="headerlink" href="#viewing-sequence-reads-in-sequence-miner" title="Permalink to this headline">¶</a></h2>
 <p>Before we show each of the commands that can be performed with sequence read data, we will first show how to open the data in Sequence Miner and describe how the data can be interpreted using the tool. In the following video example, we show how to open the variation and BAM files for participants in a study and view the BAM tracks in the genome browser.</p>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/uRps0kZdWOY" frameborder="0" allowfullscreen></iframe></div>
-<div class="section" id="pileup">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uRps0kZdWOY" frameborder="0" allowfullscreen></iframe></section>
+<section id="pileup">
 <h2>Pileup<a class="headerlink" href="#pileup" title="Permalink to this headline">¶</a></h2>
 <p>The <strong>PILEUP</strong> command describes the base-pair formation at each chromosomal position. It summarizes the base calls of aligned sequence reads to a reference sequence.</p>
-</div>
-<div class="section" id="bamflag">
+</section>
+<section id="bamflag">
 <h2>Bamflag<a class="headerlink" href="#bamflag" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">FLAG</span></code> column in the sequence reads indicates settings for a number of different parameters. The <strong>BAMFLAG</strong> command expands the FLAG bitmap column into multiple Boolean (1/0) columns, which are easier to read. The table below has a list of the different parameters and their corresponding bit in the flag value.</p>
 <table class="colwidths-given docutils align-default" id="id1">
@@ -296,24 +297,24 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="cigarsegs">
+</section>
+<section id="cigarsegs">
 <h2>Cigarsegs<a class="headerlink" href="#cigarsegs" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/CIGARSEGS.html#cigarsegs"><span class="std std-ref">CIGARSEGS</span></a> command takes sequence reads from a BAM-like stream and splits them into multiple reads based on the <code class="docutils literal notranslate"><span class="pre">CIGAR</span></code> column in the stream.</p>
-</div>
-<div class="section" id="bases">
+</section>
+<section id="bases">
 <h2>Bases<a class="headerlink" href="#bases" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/BASES.html#bases"><span class="std std-ref">BASES</span></a> command splits the <code class="docutils literal notranslate"><span class="pre">SEQ</span></code> column in the BAM file into the individual bases, showing the relative position within the read and the <a class="reference internal" href="glossary.html#term-base-quality"><span class="xref std std-term">base-quality</span></a>.</p>
-</div>
-<div class="section" id="variants">
+</section>
+<section id="variants">
 <h2>Variants<a class="headerlink" href="#variants" title="Permalink to this headline">¶</a></h2>
 <p>The <strong>VARIANTS</strong> command returns the variants found in sequence reads and their associated quality. The variant quality is simply the <a class="reference internal" href="glossary.html#term-base-quality"><span class="xref std std-term">base-quality</span></a> of the first position in the <a class="reference internal" href="glossary.html#term-variants"><span class="xref std std-term">variants</span></a>. The VARIANTS command uses sliding window sort so that variants from overlapping reads are returned in genomic order.</p>
-</div>
-<div class="section" id="liftover">
+</section>
+<section id="liftover">
 <h2>Liftover<a class="headerlink" href="#liftover" title="Permalink to this headline">¶</a></h2>
 <p>The <strong>LIFTOVER</strong> command is used to convert GOR data from one reference genome build to another, for example from hg19 to hg38.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

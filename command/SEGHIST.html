@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SEGHIST &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,17 +159,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="seghist">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="seghist">
 <span id="id1"></span><h1>SEGHIST<a class="headerlink" href="#seghist" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SEGHIST</strong> command turns a stream of annotations into a stream of non-overlapping segments.
 The output is Chrom, bpStart, bpStop, and Count where count is the number of annotations in the input.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | seghist <span class="no">max</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #exons# | group 10000 -<span class="no">count</span> | seghist  1000
 
@@ -177,8 +178,8 @@ The output is Chrom, bpStart, bpStop, and Count where count is the number of ann
 </pre></div>
 </div>
 <p>The above command returns a segments containing max number of annotation.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

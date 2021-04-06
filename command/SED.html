@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SED &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,18 +159,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="sed">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="sed">
 <span id="id1"></span><h1>SED<a class="headerlink" href="#sed" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SED</strong> command works as a search and replace on the GOR stream to which it is applied. You can use the <code class="docutils literal notranslate"><span class="pre">-c</span></code> option to specify which columns you wish to apply the command to, but the default is all columns.</p>
 <p>The patterns for match and replace are in the form of regular expressions. To make the regular expressions case-insensitive, you can use the <code class="docutils literal notranslate"><span class="pre">-i</span></code> option, but this does not work in regular expressions with binding/group variables.</p>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option to only replace the first match in each column.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">SED</span> matchpattern replacepattern [-c columns] [-i] [-<span class="no">f</span>]
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -190,8 +191,8 @@ The pattern is applied for each column specified (except columns #1 and #2).</p>
 </tbody>
 </table>
 <p>For more information on regular expressions, the user can refer to any number of online guides, such as <a class="reference external" href="https://www.regular-expressions.info/refquick.html">https://www.regular-expressions.info/refquick.html</a>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>RENAME &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="rename">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="rename">
 <span id="id1"></span><h1>RENAME<a class="headerlink" href="#rename" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#rename"><span class="std std-ref">RENAME</span></a> command enables you to rename the column in the output of the GOR query. The column that you are
 renaming does not need to be referred to by name, but may be referred to by it’s column number in the same way as is
@@ -166,13 +167,13 @@ used by the <a class="reference internal" href="SELECT.html"><span class="doc">S
 <p>As with other column renaming commands, any collisions in column names will result in an “x” being appended to one of
 the column names in the GOR query  output.</p>
 <p>Rename does also supports regular-expression with binding variables to rename multiple columns.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">RENAME</span> oldColname newColname
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -185,8 +186,8 @@ the column names in the GOR query  output.</p>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following query will eliminate set_ from the beginning of column names:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">RENAME</span> set\_(.*) #{1}
@@ -197,8 +198,8 @@ the column names in the GOR query  output.</p>
 </pre></div>
 </div>
 <p>will rename columns like set_VEPa and lis_VEPb to VEPa and VEPb, respectively.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

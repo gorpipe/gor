@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SEGDIST &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,15 +159,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="segdist">
+  <section id="segdist">
 <span id="id1"></span><h1>SEGDIST<a class="headerlink" href="#segdist" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SEGDIST</strong> function calculates the distance between two segments (<code class="docutils literal notranslate"><span class="pre">x-y</span></code> and <code class="docutils literal notranslate"><span class="pre">a-b</span></code> in the examples below), which is inclusive of the start and end points of the segments that are being compared. If there is no distance between them, the segments are overlapping and the function returns 0.</p>
 <p>It doesn’t matter which segment is defined first. The distance can be determined whether x-y comes before or after a-b.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SEGDIST(x,y,a,b)</span> <span class="pre">:</span> <span class="pre">int</span></code></p>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example shows a single NOR row with two segments <code class="docutils literal notranslate"><span class="pre">x-y</span></code> and <code class="docutils literal notranslate"><span class="pre">a-b</span></code>. The difference between the end of the first segment and the beginning of the second is 6 (inclusive of the end and start points).</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>NORROWS 1 | <span class="nb">CALC</span> x 10 | <span class="nb">CALC</span> y 20 | <span class="nb">CALC</span> a 25 | <span class="nb">CALC</span> b 35 | <span class="nb">CALC</span> test segdist(x,y,a,b)
@@ -180,12 +181,12 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>NORROWS 1 | <span class="nb">CALC</span> x 10 | <span class="nb">CALC</span> y 20 | <span class="nb">CALC</span> a 15 | <span class="nb">CALC</span> b 25 | <span class="nb">CALC</span> test segdist(x,y,a,b)
 </pre></div>
 </div>
-</div>
-<div class="section" id="related-functions">
+</section>
+<section id="related-functions">
 <h2>Related Functions<a class="headerlink" href="#related-functions" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="segoverlap.html#segoverlap"><span class="std std-ref">SEGOVERLAP</span></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DATE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,24 +159,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="date">
+  <section id="date">
 <span id="id1"></span><h1>DATE<a class="headerlink" href="#date" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DATE</strong> function returns the current date and time in the given format, or ‘yyyy-MM-dd HH:mm:ss’ if
 no format is given.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">date()</span> <span class="pre">:</span> <span class="pre">date</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">date(format)</span> <span class="pre">:</span> <span class="pre">date</span></code></p>
 <p>See <a class="reference internal" href="#date"><span class="std std-ref">DATE</span></a> for a description of the date format.</p>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example adds a column <code class="docutils literal notranslate"><span class="pre">x</span></code> with the current date and time.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>... | <span class="nb">CALC</span> x date() | ...
 </pre></div>
 </div>
-</div>
-<div class="section" id="date-format">
+</section>
+<section id="date-format">
 <h2>Date Format<a class="headerlink" href="#date-format" title="Permalink to this headline">¶</a></h2>
 <p>You can use the following symbols in your formatting pattern:</p>
 <table class="docutils align-default">
@@ -250,8 +251,8 @@ no format is given.</p>
 the formatted dates.</p>
 <p>Some characters can be used in different numbers. For instance, you can write either yy for a 2-character
 version of the year (e.g. 12), or you can write yyyy for a 4-character version of the year (e.g. 2012).</p>
-</div>
-<div class="section" id="pattern-examples">
+</section>
+<section id="pattern-examples">
 <h2>Pattern Examples<a class="headerlink" href="#pattern-examples" title="Permalink to this headline">¶</a></h2>
 <p>Here are a few date pattern examples:</p>
 <table class="docutils align-default">
@@ -289,8 +290,8 @@ version of the year (e.g. 12), or you can write yyyy for a 4-character version o
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

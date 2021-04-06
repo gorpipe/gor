@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>MIN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,14 +159,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="min">
+  <section id="min">
 <span id="id1"></span><h1>MIN<a class="headerlink" href="#min" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>MIN</strong> function compares two numbers and returns the minimum of the two. The supplied numbers can be references to columns.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">MIN(number,number)</span> <span class="pre">:</span> <span class="pre">float</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query here explicitly lists two numbers (4 and 5) and creates a calculated column called “test” with the minimum number (4).</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> test <span class="no">min</span>(4,5)
@@ -187,12 +188,12 @@ chr1     <span class="m">1</span>       <span class="m">1</span>      <span clas
 chr1     <span class="m">1</span>       <span class="m">1</span>      <span class="m">3</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="related-functions">
+</section>
+<section id="related-functions">
 <h2>Related Functions<a class="headerlink" href="#related-functions" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="max.html#max"><span class="std std-ref">MAX</span></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

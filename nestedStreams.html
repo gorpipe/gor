@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Nested Streams &mdash; GOR Open Source v.2.0 documentation</title>
@@ -188,17 +189,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="nested-streams">
+  <section id="nested-streams">
 <span id="nestedstreams"></span><h1>Nested Streams<a class="headerlink" href="#nested-streams" title="Permalink to this headline">¶</a></h1>
 <p>As the GOR framework is multi-threaded, it is possible for us to create efficient queries with many pipe steps and to create declarative and nested streams which are seekable. When a nested stream is included in a GOR query, the nested stream is run before the rest of the query and any data that is generated can be utilised in the rest of the GOR query.</p>
-<div class="section" id="special-notation">
+<section id="special-notation">
 <h2>Special Notation<a class="headerlink" href="#special-notation" title="Permalink to this headline">¶</a></h2>
 <p>There is a special notation used for nested streams. It begins with a left angled bracket and the query in the nested stream is contained within parentheses or “round brackets”, as shown in the example below:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> left_stream | ... &lt;(<span class="nd">gor</span> right_stream)
 </pre></div>
 </div>
-</div>
-<div class="section" id="merging-streams">
+</section>
+<section id="merging-streams">
 <span id="mergetables"></span><h2>Merging Streams<a class="headerlink" href="#merging-streams" title="Permalink to this headline">¶</a></h2>
 <p>As stated in the section on the use of <a class="reference internal" href="basicGORqueries.html#multiple-files"><span class="std std-ref">multiple files</span></a> with the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command, we are inherently merging data by specifying any number of files after the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command. For example, if we wanted to merge the variation data from two subjects, we might have a command like the following:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> SUBJECT_A.wgs.genotypes.gorz SUBJECT_B.wgs.genotypes.gorz
@@ -216,26 +217,26 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr21 &lt;(#wgsVars# | <span class="nb">MERGE</span> #VEP#)
 </pre></div>
 </div>
-</div>
-<div class="section" id="further-examples">
+</section>
+<section id="further-examples">
 <h2>Further Examples<a class="headerlink" href="#further-examples" title="Permalink to this headline">¶</a></h2>
 <p>The main advantage of using nested streams in your GOR queries is that the streams are fully seekable, meaning that you can specify commands for the right source in the cases of joins or merges that you would not be able to do without nesting the queries. In the following sections we will discuss some useful examples of this.</p>
-<div class="section" id="joining-to-a-gor-stream">
+<section id="joining-to-a-gor-stream">
 <h3>Joining to a GOR stream<a class="headerlink" href="#joining-to-a-gor-stream" title="Permalink to this headline">¶</a></h3>
 <p>As with the <a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a> command, the right-source in a GOR join can be specified as a nested GOR stream, as shown in the example below:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> left_source.gor | <span class="nb">JOIN</span> -<span class="no">snpsnp</span> &lt;(<span class="nd">gor</span> right_source.gor)
 </pre></div>
 </div>
-</div>
-<div class="section" id="nested-nor-queries">
+</section>
+<section id="nested-nor-queries">
 <span id="nested-nor"></span><h3>Nested NOR queries<a class="headerlink" href="#nested-nor-queries" title="Permalink to this headline">¶</a></h3>
 <p>Nested queries can also be used in both NOR and GOR queries. As the next example shows, we are able to bring the file “genes.gor” into a NOR context and merge it with the NOR stream from the right source, which is a tab-delimited file:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> &lt;(<span class="nd">gor</span> -<span class="no">p</span> genes.gor) | <span class="nb">MERGE</span> &lt;(<span class="nd">nor</span> file2.tsv)
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

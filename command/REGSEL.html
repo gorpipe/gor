@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>REGSEL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="regsel">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="regsel">
 <span id="id1"></span><h1>REGSEL<a class="headerlink" href="#regsel" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>REGSEL</strong> uses a regular expression to select parts of a given column and output them in new columns.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | REGSEL columns sourceColumn expression (-e emptyValue)
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -181,8 +182,8 @@ This is used when the expression doesn’t produce a match.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The example shown below will match the content of the ‘source’ column and split the content of that column into separate columns ‘abc’, ‘def’, and ‘ghi’ according to the provided matching expression. Notice that there are three pairs of curved brackets in the matching expression, which correspond to the three new columns.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> source &#39;41000_1_1&#39; | REGSEL abc,<span class="nd">def</span>,ghi source &#39;(.*)_(.*)_(.*)&#39;
@@ -193,8 +194,8 @@ This is used when the expression doesn’t produce a match.</p></td>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> source &#39;41000_1&#39; | REGSEL abc,<span class="nd">def</span>,ghi source &#39;(.*)_(.*)_(.*)&#39; -e 0
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

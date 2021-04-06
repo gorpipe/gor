@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>CALC &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,7 +159,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="calc">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="calc">
 <span id="id1"></span><h1>CALC<a class="headerlink" href="#calc" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#calc"><span class="std std-ref">CALC</span></a> command supports integer, floating point, and string-based calculations. It adds a single new column (named according to the parameter colname) to the output. The command can be used repeatedly to create multiple new columns.</p>
 <p>Reference to columns and functions is case-insensitive. The column data type (int,float, or string) is inferred from the first 10000 rows in the input stream.</p>
@@ -167,15 +168,15 @@
 <p>Examples of arithmetic expressions are: (#3 + 4.0) or for instance IF(#4 &gt; 1.0,log(#3),exp(#3))</p>
 <p>The CALC command also allows equal sign, e.g. calc colname = expression.</p>
 <p>See the <a class="reference internal" href="../functions.html#predefinedfunctions"><span class="std std-ref">functions</span></a> to get a list of available functions and <a class="reference internal" href="WHERE.html#where"><span class="std std-ref">WHERE</span></a> for the structure of functions.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">CALC</span> colname expression
 
 <span class="nd">gor</span> ... | <span class="nb">CALC</span> colname1,colname2 expression1,expression2
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>In the following examples, we use the <a class="reference internal" href="GORROW.html#gorrow"><span class="std std-ref">GORROW</span></a> command to generate a single row, which we will then use to demonstrate various different calculations using the CALC command.</p>
 <p>The following query example shows a string concatenation that combines two calculated columns in a third and then calculates the length of the string using the <code class="docutils literal notranslate"><span class="pre">len</span></code> function.</p>
@@ -196,8 +197,8 @@
 </pre></div>
 </div>
 <p>If the column name is a nucleotide, the column name must be uppercase.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

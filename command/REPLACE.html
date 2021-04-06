@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>REPLACE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,24 +159,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="replace">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="replace">
 <span id="id1"></span><h1>REPLACE<a class="headerlink" href="#replace" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#replace"><span class="std std-ref">REPLACE</span></a> command is similar to the <a class="reference internal" href="CALC.html#calc"><span class="std std-ref">CALC</span></a> command, except that the column specifier (<code class="docutils literal notranslate"><span class="pre">col</span></code>) in the expression indicates an existing column (or columns) that will be replaced with the expression value. It is possible to refer to the column being changed via <code class="docutils literal notranslate"><span class="pre">#rc</span></code>, which denotes the “column at hand/in context” when a multicolumn expression is done in replace.</p>
 <p>Note <code class="docutils literal notranslate"><span class="pre">#rc</span></code> is always a string so if you want to compare with size then use something like: if(isfloat(#rc),if(float(#rc)&gt;2.0,2.0,float(#rc)),‘NaN’)</p>
 <p>It can be preferable to use this command instead of the <strong>SED</strong> command in many cases.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">REPLACE</span> col(s) expression
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>... | <span class="nb">REPLACE</span> colx,coly,sum_* <span class="k">IF</span>(#rc in (&#39;.&#39;,&#39;;&#39;),&#39;&#39;,#rc).
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

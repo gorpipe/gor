@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>IF &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,18 +159,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="if">
+  <section id="if">
 <span id="id1"></span><h1>IF<a class="headerlink" href="#if" title="Permalink to this headline">¶</a></h1>
 <p>An <strong>IF</strong> conditional expression can be used in <a class="reference internal" href="../command/CALC.html#calc"><span class="std std-ref">CALC</span></a> commands in GOR to return one value if the condition defined in the function returns true and another if false. <a class="reference internal" href="#if"><span class="std std-ref">IF</span></a> cannot be used within a <a class="reference internal" href="../command/WHERE.html#where"><span class="std std-ref">WHERE</span></a> command, which is itself a conditional expression.</p>
 <p>Columns can be referred to within the IF statement by their names or by their column number, although using the names of the columns is preferable for readability of GOR queries. Strings need to be contained within quotation marks.</p>
 <p>IF statements can be nested. I.e., both the true and the false result in an IF statement</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>if(<span class="k">str</span>,any,any) : string
 </pre></div>
 </div>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following query would always return the value ‘red’, since the condition (‘1=1’) is always true.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> example.vcf | <span class="nb">CALC</span> result_column <span class="k">IF</span>(1=1,&#39;red&#39;,&#39;blue&#39;)
@@ -187,8 +188,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wesvars# | <span class="nb">TOP</span> 1000 | <span class="nb">CALC</span> x <span class="k">IF</span>(len(<span class="na">Reference</span>) = len(<span class="na">Call</span>),&#39;substitution&#39;, if(len(<span class="na">Reference</span>) &lt; len(<span class="na">Call</span>), &#39;insertion&#39;, &#39;deletion&#39;))
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

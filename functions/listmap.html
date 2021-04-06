@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LISTMAP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,16 +159,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="listmap">
+  <section id="listmap">
 <span id="id1"></span><h1>LISTMAP<a class="headerlink" href="#listmap" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LISTMAP</strong> function translates the given list using the expression in the second argument. It can be used to perform a <code class="docutils literal notranslate"><span class="pre">+</span></code> operation, whether to add a number to every number or to append text to elements in a list.</p>
 <p>Each element in the list is referred to as <code class="docutils literal notranslate"><span class="pre">x</span></code> in the expression in the second argument.</p>
 <p>The expression in the second argument must be in quotation marks and any additional quotation marks that are contained in the expression must be escaped with a backslash. This would be the case if you are appending text to elements in the given list as is shown in the examples below.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">LISTMAP(string,expression)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The query shown here uses the GOR alias <code class="docutils literal notranslate"><span class="pre">#ClinicalGenes#</span></code> as an example. The Gene_diseases column contains a list of diseases associated with each gene in a comma-separated list. The CALC step here appends the text ‘xoxox’ to each element in the list. Note that the element in the list is referred to as <code class="docutils literal notranslate"><span class="pre">x</span></code> in the function.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #ClinicalGenes# | <span class="nb">SELECT</span> 1-3,Gene_diseases | <span class="nb">TOP</span> 100 | <span class="nb">CALC</span> test LISTMAP(Gene_diseases,&#39;x+\&#39;xoxox\&#39;&#39;)
@@ -177,8 +178,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #ClinicalGenes# | <span class="nb">SELECT</span> 1-3,Gene_diseases | <span class="nb">TOP</span> 100 | <span class="nb">CALC</span> test LISTMAP(gene_start,&#39;x+1&#39;)
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GORCMD &mdash; GOR Open Source v.2.0 documentation</title>
@@ -158,18 +159,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="gorcmd">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="gorcmd">
 <span id="id1"></span><h1>GORCMD<a class="headerlink" href="#gorcmd" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#gorcmd"><span class="std std-ref">GORCMD</span></a> command allows you to execute operating system commands that return data that you assume is tabular data within GOR queries. When we run GORCMD, we assume that the external command returns data that is genomic-ordered.</p>
 <p>The GORCMD command supports nested queries such as: gorcmd python my.py &lt;(gor #genes# | where gene_start-gene_stop &lt; 10000)</p>
 <p>External commands need to be encapsulated between curly brackets, e.g. gorcmd {command}.</p>
-<div class="section" id="usage">
+<section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorcmd</span> {&lt;OS_command&gt;} | ...
 </pre></div>
 </div>
-</div>
-<div class="section" id="options">
+</section>
+<section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
@@ -182,14 +183,14 @@
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorcmd</span> {myscript.py} | ...
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

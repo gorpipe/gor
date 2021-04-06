@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Materialized Views &mdash; GOR Open Source v.2.0 documentation</title>
@@ -186,11 +187,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="materialized-views">
+  <section id="materialized-views">
 <span id="materializedviews"></span><h1>Materialized Views<a class="headerlink" href="#materialized-views" title="Permalink to this headline">¶</a></h1>
 <p>The GOR Query Language has a <a class="reference internal" href="command/DEF.html#def"><span class="std std-ref">DEF</span></a> command to define simple C-like preprocessing macros and aliases and a <a class="reference internal" href="command/CREATE.html#create"><span class="std std-ref">CREATE</span></a> command that allows query expressions to be materialized into intermediate tables. These can be useful to build queries or <em>make queries</em> in stages and can reduce computation time if they are often referred to, especially when computation to disk-space ratio is high.</p>
 <p>In other words, GOR allows you to define virtual tables and macros for result sets that you may wish to reuse when writing queries.</p>
-<div class="section" id="virtual-relations">
+<section id="virtual-relations">
 <span id="virtualrelations"></span><h2>Virtual Relations<a class="headerlink" href="#virtual-relations" title="Permalink to this headline">¶</a></h2>
 <p>To create an intermediate table a special notation is often used wrapping the name of the intermediate table like <code class="docutils literal notranslate"><span class="pre">##Name##</span></code>. However, any alphanumeric string can be used. The whole statement must end in a semi-colon to separate it from the rest of the query. A <a class="reference internal" href="command/CREATE.html#create"><span class="std std-ref">CREATE</span></a> statement can be written for any valid gor query. For example, the following:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> ##VEP_Relevant## = <span class="nd">gor</span> #VEP# | <span class="nb">WHERE</span> <span class="na">Max_Impact</span> IN (&#39;HIGH&#39;,&#39;MODERATE&#39;);
@@ -201,8 +202,8 @@
 </pre></div>
 </div>
 <p>As you can see above, the name of the intermediate table must be referred to in square brackets containing the name of table.</p>
-</div>
-<div class="section" id="defining-macros">
+</section>
+<section id="defining-macros">
 <span id="definingmacros"></span><h2>Defining Macros<a class="headerlink" href="#defining-macros" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/DEF.html#def"><span class="std std-ref">DEF</span></a> command allows you to define macros with any number of input variables, which can be used and reused in gor queries. The general syntax of defining a macros using <a class="reference internal" href="command/DEF.html#def"><span class="std std-ref">DEF</span></a> is shown in the following example where we are creating a macro called <code class="docutils literal notranslate"><span class="pre">macro_name</span></code> with two variables.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> macro_name($1,$2) = macro_definition;
@@ -222,8 +223,8 @@
 <p class="admonition-title">Note</p>
 <p>A list of pre-defined functions can be found on the <a class="reference internal" href="functions.html#predefinedfunctions"><span class="std std-ref">chapter on Functions</span></a>.</p>
 </div>
-</div>
-<div class="section" id="reusing-virtual-relations">
+</section>
+<section id="reusing-virtual-relations">
 <span id="reusingvirtualrelations"></span><h2>Reusing Virtual Relations<a class="headerlink" href="#reusing-virtual-relations" title="Permalink to this headline">¶</a></h2>
 <p>Intermediate relations are most useful when referring to a result set multiple times within a query. In the following example, we are only interested in GWAS results of high significance and for a subset of phenotypes, e.g. related to cancer. We can inspect if SNPs associated with cancer are closely spaced in the genome, as in the following example:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> ##GWASsubset## = <span class="nd">gor</span> snp_gwas_results.gorz | <span class="nb">WHERE</span> pval &lt; 1.0e-4 and contains(phenotype,’cancer’);
@@ -235,8 +236,8 @@
 </pre></div>
 </div>
 <p>In this example, we form a join beween all the strongly significant cancer associations and other weakly significant associations within a 100kb distance. For each locus from the left-source, we rank the associations from the right-source and return only the top-ten most interesting associations. If we change for instance the allowed overlap distance, the virtual relation [##GWASsubset##] will not have to be re-executed, unless the source file snp_gwas_results.gorz is modified or the create definition changed.</p>
-</div>
-<div class="section" id="using-virtual-relations-within-functions">
+</section>
+<section id="using-virtual-relations-within-functions">
 <h2>Using Virtual Relations Within Functions<a class="headerlink" href="#using-virtual-relations-within-functions" title="Permalink to this headline">¶</a></h2>
 <p>For the next step, let’s say we had already calculated the linkage disequilibrium between every marker in a 10Mbase window and stored this in one very large relation (approx. 50 billion rows) of the form (chrom,pos1,maker1,pos2,marker2,rsquare). If we assume that this relation is represented with the alias <code class="docutils literal notranslate"><span class="pre">#LD#</span></code>, an LD version of previous example can be written as:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> LDjoin($1,$2) = <span class="nb">PREFIX</span> #2- A | <span class="nb">JOIN</span> -<span class="no">snpsnp</span> #LD# | <span class="nb">WHERE</span> A_mrkName = marker1
@@ -254,8 +255,8 @@
 </div>
 <p>The above <strong>LDjoin</strong> definition, which takes two parameters, can be considered as a parameterised SQL view definition. Notice how the LDjoin uses the <a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a> command to move pos2 column into the “GOR position column”, because the <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> command only performs spatial joins on the first columns. Since this operation cannot guarantee genomic order, where there are multiple rows in the left-stream, we have to apply the <a class="reference internal" href="command/SORT.html#sort"><span class="std std-ref">SORT</span></a> command. The sort window takes into account the maximum deviation from genomic order. This deviation is governed by the #LD# relation and the filtering “abs(pos2-A_pos)”.</p>
 <p>Again, the fact that the <a class="reference internal" href="command/SORT.html#sort"><span class="std std-ref">SORT</span></a> command has a very efficient sliding window implementation makes it possible to perform the sort without saving data into temporary files and with minimum memory usage.</p>
-</div>
-<div class="section" id="table-functions">
+</section>
+<section id="table-functions">
 <span id="tablefunctions"></span><h2>Table Functions<a class="headerlink" href="#table-functions" title="Permalink to this headline">¶</a></h2>
 <p>In certain case, for example when testing report builder modules, it may be necessary to access .yml files from the command line using <span class="xref std std-ref">gorpipe</span>. In this case you can use the following syntax:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorpipe &quot; <span class="nd">gor</span> /&lt;path&gt;/&lt;to&gt;/&lt;report_builder.yml&gt;
@@ -268,8 +269,8 @@
 ref_path=/mnt/csa/volumes/ref01/ref/versions/hg19/HG19-85-5-4) &quot;
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
