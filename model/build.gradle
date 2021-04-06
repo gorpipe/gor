@@ -26,9 +26,6 @@ plugins {
 }
 
 project(':model') {
-
-
-
     dependencies {
         implementation project(':base')
         implementation project(':util')

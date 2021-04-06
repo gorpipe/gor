@@ -785,7 +785,7 @@ public final class IntArray implements Serializable, Iterable<Integer> {
      *
      * @param a   The array to search
      * @param key The key to find
-     * @return index of the search key, if it is contained in the array else <tt>(-(<i>insertion point</i>) - 1)</tt>.
+     * @return index of the search key, if it is contained in the array else <code>(-(<i>insertion point</i>) - 1)</code>.
      */
     public static int binarySearch(short[] a, short key) {
         int low = 0;

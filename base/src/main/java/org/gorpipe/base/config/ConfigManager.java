@@ -341,9 +341,9 @@ public class ConfigManager {
 
     /**
      * Return major.minor version number extracted from version
-     * 7.0-fo => 7.0
-     * 7.0.1 => 7.0
-     * fofof7.0.1fofo => 7.0
+     * 7.0-fo =&gt; 7.0
+     * 7.0.1 =&gt; 7.0
+     * fofof7.0.1fofo =&gt; 7.0
      *
      * @param version The version string to extract from
      * @return major.minor version number
