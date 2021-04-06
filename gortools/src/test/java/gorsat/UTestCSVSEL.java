@@ -164,6 +164,21 @@ public class UTestCSVSEL {
     }
 
     @Test
+    public void testCvsselNoparallel() {
+        String[] args = new String[]{"create #dummy# = gorrow chr1,1,2 | signature -timeres 1 | calc x '0,1,2,3,4,5,6,7,8,9' | calc y x | calc z x | split x | split y | split z | calc rownum int(x)+10*int(y)+100*int(z) | sort 1 -c rownum:n;\n" +
+                "\n" +
+                "    create #pnbuck# = nor [#dummy#] | select rownum | calc bucket 'bucket'+str(1+div(rownum,100)) | rename rownum PN | select PN,bucket | top 352 | sort -c bucket,pn;\n" +
+                "\n" +
+                "    gorrow chr1,1,2 | calc x '1,2,3' | split x | select 1,x | calc ref 'G' | calc alt 'A'  | select 1-4 | distinct | top 100 | multimap -cartesian -h [#pnbuck#] | sort 1 -c #3,#4,bucket,PN\n" +
+                "    | group 1 -gc #3,#4,bucket -lis -sc pn | rename lis_PN values\n" +
+                "    | csvsel -nopar -s ',' -gc #3,#4 -tag pn [#pnbuck#] <( nor [#pnbuck#]  | select #1 | where random()<0.5 )\n" +
+                "    | where pn != value\n"};
+
+        int count = TestUtils.runGorPipeCount(args);
+        Assert.assertEquals(0, count);
+    }
+
+    @Test
     public void testCsvselTruncatedLines() {
         String[] args = new String[]{"create #dummy# = gorrow chr1,1,2 | signature -timeres 1 | calc x '0,1,2,3,4,5,6,7,8,9' | calc y x | calc z x | split x | split y | split z | calc rownum int(x)+10*int(y)+100*int(z) | sort 1 -c rownum:n | signature -timeres 1;" +
                 "create #pnbuck# = nor [#dummy#] | select rownum | calc bucket 'bucket'+str(1+div(rownum,10)) | rename rownum PN | select PN,bucket | sort -c bucket,pn;" +
