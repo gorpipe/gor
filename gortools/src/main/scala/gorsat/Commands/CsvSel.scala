@@ -34,7 +34,7 @@ import org.gorpipe.gor.session.GorContext
 import scala.collection.mutable
 
 class CsvSel extends CommandInfo("CSVSEL",
-  CommandArguments("-dose -vcf", "-gc -vs -s -tag -u -hide -threshold", 2),
+  CommandArguments("-dose -vcf -nopar", "-gc -vs -s -tag -u -hide -threshold", 2),
   CommandOptions(gorCommand = true, norCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -61,6 +61,8 @@ class CsvSel extends CommandInfo("CSVSEL",
     val hideSome = hasOption(args, "-hide")
 
     val toVCF = hasOption(args, "-vcf")
+
+    val parallel = !hasOption(args, "-nopar")
 
     val hasThreshold = hasOption(args, "-threshold")
 
@@ -120,7 +122,7 @@ class CsvSel extends CommandInfo("CSVSEL",
       }
 
       val toHide = if (hideSome) stringValueOfOption(args, "-hide").split(",").map(_.replace("\'","")).to[mutable.HashSet] else null
-      val pipeStep = CsvSelAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv, context.getSession)
+      val pipeStep = CsvSelAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv, parallel, context.getSession)
 
       val hcol = inputHeader.split("\t")
       val outputHeaderBuilder = new StringBuilder(hcol.slice(0, 2).mkString("\t"))

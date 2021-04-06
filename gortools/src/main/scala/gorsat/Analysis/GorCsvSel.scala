@@ -35,6 +35,7 @@ import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 
+import java.util.stream.IntStream
 import scala.collection.mutable
 
 object GorCsvSel {
@@ -89,6 +90,16 @@ object GorCsvSel {
     }
   }
 
+  def colCharMoveFixedSize(buckPos: Int, str: CharSequence, offset: Int, rowStringBuilder: java.lang.StringBuilder, outCol: Int, valSize: Int): Unit = {
+    val start = offset + buckPos * valSize
+    val stop = start + valSize
+    var i = start
+    while (i < stop) {
+      rowStringBuilder.setCharAt(outCol+i-start, str.charAt(i))
+      i += 1
+    }
+  }
+
   case class CsvSelState(session: GorSession,
                          lookupSignature: String,
                          buckCol: Int,
@@ -102,7 +113,8 @@ object GorCsvSel {
                          toVCF: Boolean,
                          vcfThreshold: Double,
                          doseOption: Boolean,
-                         uv: String) extends BinState {
+                         uv: String,
+                         parallel: Boolean) extends BinState {
 
     case class ColHolder() {
       var buckRows: Array[CharSequence] = _
@@ -206,6 +218,80 @@ object GorCsvSel {
 
     }
 
+    def parallelFixedSizeWithSeperator(sh: ColHolder, pipeFrom: Processor): Unit = {
+      val originalLength = ladd.length()
+      ladd.setLength(originalLength+pbt.numberOfPns*valSize+pbt.numberOfPns-1)
+      IntStream.range(0, pbt.numberOfPns).parallel().forEach(outCol => {
+        val buckNo = pbt.pnIdxToBuckIdx(outCol)
+        val buckPos = pbt.pnIdxToBuckPos(outCol)
+        val bucketRow = sh.buckRows(buckNo)
+        if (bucketRow == null) {
+          if (unknown) {
+            val start = outCol*(valSize+1)
+            if (outCol != 0 && sepSize != 0) ladd.setCharAt(start-1, sepval)
+            var i = 0
+            while(i < valSize) {
+              ladd.setCharAt(start+i, unknownVal.charAt(i))
+              i += 1
+            }
+          } else if (!pipeFrom.wantsNoMore) {
+            throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
+          }
+        } else {
+          val offset = sh.offsetArray(buckNo)
+          if (outCol != 0 && sepSize != 0) ladd.setCharAt(outCol*(valSize+1)-1, sepval)
+          colCharMoveFixedSize(buckPos, bucketRow, offset, ladd, outCol*(valSize+1)+originalLength, valSize)
+        }
+      })
+    }
+
+    def parallelFixedSize(sh: ColHolder, pipeFrom: Processor): Unit = {
+      val originalLength = ladd.length()
+      ladd.setLength(originalLength+pbt.numberOfPns*valSize)
+      IntStream.range(0, pbt.numberOfPns).parallel().forEach(outCol => {
+        val buckNo = pbt.pnIdxToBuckIdx(outCol)
+        val buckPos = pbt.pnIdxToBuckPos(outCol)
+        val bucketRow = sh.buckRows(buckNo)
+        if (bucketRow == null) {
+          if (unknown) {
+            val start = outCol*valSize
+            var i = 0
+            while(i < valSize) {
+              ladd.setCharAt(start+i, unknownVal.charAt(i))
+              i += 1
+            }
+          } else if (!pipeFrom.wantsNoMore) {
+            throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
+          }
+        } else {
+          val offset = sh.offsetArray(buckNo)
+          colCharMoveFixedSize(buckPos, bucketRow, offset, ladd, outCol*valSize+originalLength, valSize)
+        }
+      })
+    }
+
+    def parallelFixedSizeSingleVal(sh: ColHolder, pipeFrom: Processor): Unit = {
+      val originalLength = ladd.length()
+      ladd.setLength(originalLength+pbt.numberOfPns*valSize)
+      IntStream.range(0, pbt.numberOfPns).parallel().forEach(outCol => {
+        val buckNo = pbt.pnIdxToBuckIdx(outCol)
+        val buckPos = pbt.pnIdxToBuckPos(outCol)
+        val bucketRow = sh.buckRows(buckNo)
+        if (bucketRow == null) {
+          if (unknown) {
+            val start = outCol*valSize
+            ladd.setCharAt(start, unknownVal.charAt(0))
+          } else if (!pipeFrom.wantsNoMore) {
+            throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
+          }
+        } else {
+          val offset = sh.offsetArray(buckNo)
+          val start = offset + buckPos * valSize
+          ladd.setCharAt(outCol+originalLength, bucketRow.charAt(start))
+        }
+      })
+    }
+
     var lastSize = 0
     def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
       for (key <- groupMap.keys.toList.sorted) {
@@ -303,47 +389,52 @@ object GorCsvSel {
             }
           } else {
             ladd.append('\t')
-            while (outCol < pbt.numberOfPns && !nextProcessor.wantsNoMore) {
-              val buckNo = pbt.getBucketIdxFromPn(outCol)
-              val buckPos = pbt.getBucketPos(outCol)
-              r = sh.buckRows(buckNo)
-              if (r == null) {
-                if (unknown) {
-                  if (outputRows) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), unknownVal)))
-                  else {
-                    if (outCol != 0 && sepSize != 0) ladd.append(sepval)
-                    ladd.append(unknownVal)
-                  }
-                } else if(!nextProcessor.pipeFrom.wantsNoMore) {
-                  throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
-                }
-              } else {
-                val offset = sh.offsetArray(buckNo)
-                if (valSize == -1) {
-                  if (outputRows) {
-                    val cs = colString(buckPos, r, offset, sh.splitArr(buckNo))
-                    if (!(hideSome && toHide.contains(cs))) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), cs)))
-                  }
-                  else {
-                    if (outCol != 0 && sepSize != 0) ladd.append(sepval)
-                    colCharMove(buckPos, r, offset, sh.splitArr(buckNo), ladd)
+            if( parallel && !outputRows && valSize != -1) {
+              if(sepSize != 0) parallelFixedSizeWithSeperator(sh, nextProcessor.pipeFrom)
+              else if(valSize == 1) parallelFixedSizeSingleVal(sh, nextProcessor.pipeFrom)
+              else parallelFixedSize(sh, nextProcessor.pipeFrom)
+            } else {
+              while (outCol < pbt.numberOfPns && !nextProcessor.wantsNoMore) {
+                val buckNo = pbt.getBucketIdxFromPn(outCol)
+                val buckPos = pbt.getBucketPos(outCol)
+                r = sh.buckRows(buckNo)
+                if (r == null) {
+                  if (unknown) {
+                    if (outputRows) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), unknownVal)))
+                    else {
+                      if (outCol != 0 && sepSize != 0) ladd.append(sepval)
+                      ladd.append(unknownVal)
+                    }
+                  } else if (!nextProcessor.pipeFrom.wantsNoMore) {
+                    throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
                   }
                 } else {
-                  if (outputRows) {
-                    val csf = colStringFixed(buckPos, r, offset, valSize, sepSize)
-                    if (!(hideSome && toHide.contains(csf))) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), csf)))
-                  }
-                  else {
-                    if (outCol != 0 && sepSize != 0) ladd.append(sepval)
-                    colCharMoveFixed(buckPos, r, offset, ladd, valSize, sepSize)
+                  val offset = sh.offsetArray(buckNo)
+                  if (valSize == -1) {
+                    if (outputRows) {
+                      val cs = colString(buckPos, r, offset, sh.splitArr(buckNo))
+                      if (!(hideSome && toHide.contains(cs))) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), cs)))
+                    }
+                    else {
+                      if (outCol != 0 && sepSize != 0) ladd.append(sepval)
+                      colCharMove(buckPos, r, offset, sh.splitArr(buckNo), ladd)
+                    }
+                  } else {
+                    if (outputRows) {
+                      val csf = colStringFixed(buckPos, r, offset, valSize, sepSize)
+                      if (!(hideSome && toHide.contains(csf))) nextProcessor.process(RowObj(String.join("\t", line, pbt.getPnNameFromIdx(outCol), csf)))
+                    }
+                    else {
+                      if (outCol != 0 && sepSize != 0) ladd.append(sepval)
+                      colCharMoveFixed(buckPos, r, offset, ladd, valSize, sepSize)
+                    }
                   }
                 }
+                outCol += 1
               }
-              outCol += 1
             }
             if (!outputRows && !nextProcessor.wantsNoMore) {
               if( i < sa.length ) sa(i) = ladd.length()
-              lastSize = Math.max(lastSize, ladd.length())
               nextProcessor.process(new RowBase(bi.chr, bi.sta+1, ladd, sa, null))
             }
           }
@@ -372,14 +463,15 @@ object GorCsvSel {
                            toVCF: Boolean,
                            vcfThreshold: Double,
                            doseOption: Boolean,
-                           uv: String) extends BinFactory {
+                           uv: String,
+                           parallel: Boolean) extends BinFactory {
     def create: BinState =
-      CsvSelState(session, lookupSignature, buckCol, valCol, grCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv)
+      CsvSelState(session, lookupSignature, buckCol, valCol, grCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv, parallel)
   }
 
   case class CsvSelAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, buckCol: Int, valCol: Int,
-                            grCols: List[Int], sepVal: String, outputRows: Boolean, hideSome: Boolean, toHide: mutable.Set[String] = null, valSize: Int, toVCF: Boolean, vcfThreshold: Double, doseOption: Boolean, uv: String, session: GorSession) extends
-    BinAnalysis(RegularRowHandler(1), BinAggregator(CsvSelFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, buckCol, valCol, grCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv), 2, 1)) {
+                            grCols: List[Int], sepVal: String, outputRows: Boolean, hideSome: Boolean, toHide: mutable.Set[String] = null, valSize: Int, toVCF: Boolean, vcfThreshold: Double, doseOption: Boolean, uv: String, parallel: Boolean, session: GorSession) extends
+    BinAnalysis(RegularRowHandler(1), BinAggregator(CsvSelFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, buckCol, valCol, grCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv, parallel), 2, 1)) {
 
     val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
 
