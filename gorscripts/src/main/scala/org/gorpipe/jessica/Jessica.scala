@@ -24,13 +24,14 @@ package org.gorpipe.jessica
 
 import gorsat.BatchedReadSourceConfig
 import gorsat.process.PipeOptions
+
 import javax.swing.SwingUtilities
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.ExceptionUtilities
 import org.gorpipe.gor.model.DbSource
 import org.gorpipe.gor.servers.GorConfig
-import org.gorpipe.gor.util.ConfigUtil
 import org.gorpipe.logging.GorLogbackUtil
+import org.gorpipe.util.ConfigUtil
 import org.slf4j.LoggerFactory
 
 object Jessica extends App {

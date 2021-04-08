@@ -30,7 +30,7 @@ import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.model.DbSource;
-import org.gorpipe.gor.util.ConfigUtil;
+import org.gorpipe.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;

@@ -20,9 +20,8 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.util;
+package org.gorpipe.util;
 
-import org.gorpipe.gor.util.ConfigUtil;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
