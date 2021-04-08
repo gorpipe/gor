@@ -448,10 +448,10 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     /**
-     * Initialize the temp table given by <path>.  It will be based on the master original table.
+     * Initialize the temp table given by path.  It will be based on the master original table.
      *
      * @param path path to the table.
-     * @return the table given by <path>.
+     * @return the table given by path.
      */
     private BaseTable initTempTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {

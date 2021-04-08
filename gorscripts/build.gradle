@@ -1,0 +1,147 @@
+/*
+ *  BEGIN_COPYRIGHT
+ *
+ *  Copyright (C) 2011-2013 deCODE genetics Inc.
+ *  Copyright (C) 2013-2019 WuXi NextCode Inc.
+ *  All Rights Reserved.
+ *
+ *  GORpipe is free software: you can redistribute it and/or modify
+ *  it under the terms of the AFFERO GNU General Public License as published by
+ *  the Free Software Foundation.
+ *
+ *  GORpipe is distributed "AS-IS" AND WITHOUT ANY WARRANTY OF ANY KIND,
+ *  INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+ *  NON-INFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE. See
+ *  the AFFERO GNU General Public License for the complete license terms.
+ *
+ *  You should have received a copy of the AFFERO GNU General Public License
+ *  along with GORpipe.  If not, see <http://www.gnu.org/licenses/agpl-3.0.html>
+ *
+ *  END_COPYRIGHT
+ */
+plugins {
+    id 'gor.java-library'
+    id 'gor.java-application'
+    id 'antlr'
+    id 'gor.scala-common'
+}
+
+project(':gorscripts') {
+
+    generateGrammarSource {
+        arguments += ["-visitor"]
+    }
+
+    sourceSets.main.scala.srcDirs file("${projectDir}/build/generated-src/antlr/main")
+
+    dependencies {
+        implementation project(':gortools')
+        implementation project(':model')
+        implementation project(':base')
+        implementation project(':util')
+
+        implementation "org.aeonbits.owner:owner:1.0.12"
+        implementation 'ch.qos.logback:logback-classic:1.2.3'
+        implementation "info.picocli:picocli:4.6.1"
+        implementation 'info.picocli:picocli-shell-jline3:4.6.1'
+        implementation "commons-io:commons-io:2.6"
+        implementation "commons-lang:commons-lang:2.6"
+        implementation "de.tototec:de.tototec.cmdoption:0.7.0"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
+        implementation "org.reflections:reflections:0.9.12"
+        implementation "com.google.guava:guava:30.1.1-jre"
+
+        runtime project(':documentation')
+        runtime project(':drivers')
+
+        runtime "org.scala-lang:scala-reflect:2.12.13"
+
+        testImplementation project(':test')
+        testImplementation project(':util')
+
+        testImplementation "org.mockito:mockito-core:3.7.7"
+        testImplementation "org.scalatest:scalatest_2.12:3.0.8"
+        testImplementation "org.scalacheck:scalacheck_2.12:1.15.2"
+        testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
+        testImplementation "commons-io:commons-io:2.6"
+        testImplementation "commons-lang:commons-lang:2.6"
+        testImplementation "com.google.guava:guava:27.0-jre"
+        testImplementation 'org.slf4j:slf4j-api:1.7.30'
+        testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+        testImplementation "com.github.samtools:htsjdk:2.23.0"
+
+        testRuntime "org.apache.derby:derby:10.15.2.0"
+        testRuntime "org.apache.derby:derbytools:10.15.2.0"
+
+        antlr("org.antlr:antlr4:4.7")
+    }
+
+    // Tests
+
+    // Run scala tests. These are not automatically picked up by gradle,
+    // so we run them like this.
+    task testScala(dependsOn: ['testClasses'], type: JavaExec) {
+        systemProperty 'logback.configurationFile', new File("${project.rootDir}/tests/config/logback-test.xml").absolutePath
+        main = 'org.scalatest.tools.Runner'
+        args = ['-R', 'build/classes/scala/test', '-o']
+
+        classpath = sourceSets.test.runtimeClasspath
+    }
+    //Disabling this in the test task, adding @RunWith(classOf[JUnitRunner]) instead so we can utilize the same report mechanism for all tests
+    //test.dependsOn 'testScala'
+
+    // Jar creation
+
+    jar {
+        manifest.attributes 'Main-Class': "gorsat.process.GorPipe"
+    }
+
+    // Distribution
+
+    distributions {
+        main {
+            baseName "gor-scripts"
+            contents {
+                from(project(":documentation").jar.outputs.files.getFiles()) { into "lib" }
+            }
+        }
+    }
+
+    // Use the override keyword to override the default 'startScripts' task.
+    def scripts = [
+            'gorpipe'   : ['className'     : 'gorsat.process.GorPipe',
+                           'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
+                                              '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
+
+            'gorshell'   : ['className'     : 'org.gorpipe.gorshell.GorShell',
+                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
+                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
+
+            'gor'       : ['className'     : 'org.gorpipe.gor.cli.GorCLI',
+                           'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
+                                              '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
+
+            'jessica'   : ['override'      : 'startScripts',
+                           'className'     : 'org.gorpipe.jessica.Jessica',
+                           'defaultJvmOpts': []],
+
+            'gormanager': ['className'     : 'org.gorpipe.gor.manager.TableManagerCLI',
+                           'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
+                                              '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
+
+            'gortool'   : ['className'     : 'org.gorpipe.gor.tools.GorToolsCLI',
+                           'defaultJvmOpts': ['-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']]
+    ]
+
+    scripts.each() { scriptName, params ->
+        def t = params.containsKey('override') ? tasks.getByName(params.override) : tasks.create(name: scriptName + 'StartScript', type: CreateStartScripts)
+        updateScriptTask("GOR", scriptName, params, t, project)
+    }
+
+
+    mainClassName = "dummy-not-used"
+
+    tasks.distZip.enabled = true
+    tasks.distZip.archiveClassifier = "dist"
+}
+
