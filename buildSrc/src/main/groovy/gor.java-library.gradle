@@ -33,6 +33,11 @@ publishing {
         mavenJavaLibModule(MavenPublication) {
             from components.java
 
+            if (project.hasProperty('publishToMavenCentral')) {
+                artifact javadocJar
+                artifact sourcesJar
+            }
+
             artifactId = getCustomProjectId()
             groupId = getCustomGroupId()
 

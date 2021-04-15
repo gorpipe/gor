@@ -44,15 +44,12 @@ project(':gortools') {
 
         implementation "org.freemarker:freemarker:2.3.19"
         implementation "org.yaml:snakeyaml:1.25"
+        implementation "commons-io:commons-io:2.6"
+        implementation "commons-lang:commons-lang:2.6"
         implementation "org.scala-lang:scala-compiler:2.12.13"
         implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
         implementation "org.scalanlp:breeze_2.12:1.1"
-        implementation "info.picocli:picocli:4.6.1"
-        implementation "de.tototec:de.tototec.cmdoption:0.7.0"
         implementation "colt:colt:1.2.0"
-        implementation 'info.picocli:picocli-shell-jline3:4.6.1'
-        implementation "commons-io:commons-io:2.6"
-        implementation "commons-lang:commons-lang:2.6"
         implementation "com.github.samtools:htsjdk:2.23.0"
         implementation "org.aeonbits.owner:owner:1.0.12"
         implementation 'org.apache.parquet:parquet-common:1.11.1'
@@ -60,15 +57,8 @@ project(':gortools') {
         implementation 'org.apache.parquet:parquet-hadoop:1.11.1'
         implementation 'org.apache.hadoop:hadoop-common:3.3.0'
         implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
-        implementation "org.reflections:reflections:0.9.12"
         implementation 'ch.qos.logback:logback-classic:1.2.3'
-        implementation('net.logstash.logback:logstash-logback-encoder:6.2')
         implementation "io.prometheus:simpleclient:0.10.0"
-
-        if (!project.hasProperty('publishToMavenCentral')) {
-            runtime project(':documentation')
-            runtime project(":drivers")
-        }
 
         runtime "org.scala-lang:scala-reflect:2.12.13"
 
@@ -102,75 +92,6 @@ project(':gortools') {
         args = ['-R', 'build/classes/scala/test', '-o']
 
         classpath = sourceSets.test.runtimeClasspath
-    }
-    //Disabling this in the test task, adding @RunWith(classOf[JUnitRunner]) instead so we can utilize the same report mechanism for all tests
-    //test.dependsOn 'testScala'
-
-    // Jar creation
-
-    jar {
-        manifest.attributes 'Main-Class': "gorsat.process.GorPipe"
-    }
-
-    // Distribution
-
-    distributions {
-        main {
-            baseName "gor-scripts"
-            contents {
-                from(project(":documentation").jar.outputs.files.getFiles()) { into "lib" }
-            }
-        }
-    }
-
-    // Use the override keyword to override the default 'startScripts' task.
-    def scripts = [
-            'gorpipe'   : ['className'     : 'gorsat.process.GorPipe',
-                           'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
-
-            'gorshell'   : ['className'     : 'org.gorpipe.gorshell.GorShell',
-                            'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                               '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
-
-            'gor'       : ['className'     : 'org.gorpipe.gor.cli.GorCLI',
-                           'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dlogback.configurationFile=__APP_HOME__/config/logback-console.xml']],
-
-            'jessica'   : ['override'      : 'startScripts',
-                           'className'     : 'org.gorpipe.jessica.Jessica',
-                           'defaultJvmOpts': []],
-
-            'gormanager': ['className'     : 'org.gorpipe.gor.manager.TableManagerCLI',
-                           'defaultJvmOpts': ['-Djava.security.egd=file:/dev/./urandom',
-                                              '-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']],
-
-            'gortool'   : ['className'     : 'org.gorpipe.gor.tools.GorToolsCLI',
-                           'defaultJvmOpts': ['-Dlogback.configurationFile=__APP_HOME__/config/logback.xml']]
-    ]
-
-    scripts.each() { scriptName, params ->
-        def t = params.containsKey('override') ? tasks.getByName(params.override) : tasks.create(name: scriptName + 'StartScript', type: CreateStartScripts)
-        updateScriptTask("GOR", scriptName, params, t, project)
-    }
-
-
-    mainClassName = "dummy-not-used"
-
-    tasks.distZip.enabled = true
-    tasks.distZip.archiveClassifier = "dist"
-
-    publishing {
-        publications {
-            mavenJavaLibModule(MavenPublication) {
-                if (project.hasProperty('publishToMavenCentral')) {
-                    artifact javadocJar
-                } else {
-                    artifact distZip
-                }
-                artifact sourcesJar
-            }
-        }
     }
 }
 

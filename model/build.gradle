@@ -26,9 +26,6 @@ plugins {
 }
 
 project(':model') {
-
-
-
     dependencies {
         implementation project(':base')
         implementation project(':util')
@@ -38,8 +35,8 @@ project(':model') {
 
         annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
         implementation 'com.google.auto.service:auto-service:1.0-rc6'
+        implementation "commons-lang:commons-lang:2.6"
         implementation "org.aeonbits.owner:owner:1.0.12"
-        implementation "commons-configuration:commons-configuration:1.10"
         implementation "com.github.samtools:htsjdk:2.23.0"
         implementation "com.github.luben:zstd-jni:1.4.4-3"  // TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
         implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"

@@ -32,10 +32,8 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.test.GorDictionarySetup;
-import org.gorpipe.test.SlowTests;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -659,7 +657,6 @@ public class UTestTableManager {
         for (String f : bucketFolders) {
             Assert.assertTrue("Invalid buckets", f.matches("[XY]"));
         }
-
     }
 
     @Test

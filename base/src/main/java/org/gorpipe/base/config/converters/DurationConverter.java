@@ -58,7 +58,7 @@ import java.time.temporal.ChronoUnit;
  * <p>
  * The <code>time_unit</code> string is case sensitive.
  * <p>
- * The plural s is optional for the longer version of the time units (length > 2).
+ * The plural s is optional for the longer version of the time units (length &gt; 2).
  * <p>
  * If no <code>time_unit</code> is specified, <code>milliseconds</code> is assumed.
  * </li>

@@ -828,7 +828,7 @@ public class ByteArray {
      *
      * @param buffer    buffer to parse from
      * @param startPos  start position within buffer
-     * @param bufLength The number of valid bytes in the buffer, i.e. the buffer length must be <= buffer.length
+     * @param bufLength The number of valid bytes in the buffer, i.e. the buffer length must be less than or equal buffer.length
      * @return The int value
      */
     public static int parseChrId(byte[] buffer, int startPos, int bufLength) {
@@ -902,7 +902,7 @@ public class ByteArray {
     /**
      * @param buffer  data buffer
      * @param start   The start to search for begin of line, or -1 if we have not search before.
-     * @param len     All data in the buffer has index < len.
+     * @param len     All data in the buffer has index less than len.
      * @param forward Whether to move forward or backward for next position
      * @return The start pos of a line within the buffer, 0 if start was outside the buffer or size of buffer if new line not found.
      */
@@ -942,7 +942,7 @@ public class ByteArray {
      * Returns the end of line position of the buffer from start.
      *
      * @param buffer    data buffer
-     * @param bufLength The number of valid bytes in the buffer, i.e. the buffer length must be <= buffer.length
+     * @param bufLength The number of valid bytes in the buffer, i.e. the buffer length must be less than or equal buffer.length
      * @param start     The start to search for end of line
      * @return The end position of a line within the buffer
      */
@@ -1011,7 +1011,6 @@ public class ByteArray {
      * and highest is 33 + 128
      *
      * @param ba The input 8-bit byte array
-     * @return A new byte array encoding the input data in a base-128 encoding
      */
     public static void to7Bit(byte[] ba, int baLen, byte[] output) {
         if (ba.length == 0) return;

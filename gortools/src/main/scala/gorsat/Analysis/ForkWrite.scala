@@ -68,7 +68,9 @@ case class ForkWrite(forkCol: Int,
         Files.createDirectories(forkdir)
       }
       fileName = forkdir.resolve(dir.getFileName).toString
-    } else fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+    } else {
+      fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+    }
     var fileOpen = false
     var headerWritten = false
     var rowBuffer = new ArrayBuffer[Row]
@@ -123,6 +125,10 @@ case class ForkWrite(forkCol: Int,
       val noptions = OutputOptions(options.remove, options.columnCompress, true, false, options.nor, options.idx, options.tags, options.prefix, options.prefixFile, options.compressionLevel, options.useFolder, options.skipHeader, cardCol = options.cardCol)
       OutFile.driver(p.resolve(uuid+".gorz").toString, header, skipHeader, noptions)
     } else {
+      val parent = Paths.get(name).getParent
+      if(parent != null && !Files.exists(parent)) {
+        Files.createDirectories(parent)
+      }
       OutFile.driver(name, header, skipHeader, options)
     }
   }

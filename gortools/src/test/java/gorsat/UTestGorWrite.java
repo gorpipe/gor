@@ -24,10 +24,7 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -323,6 +320,29 @@ public class UTestGorWrite {
         String query = String.format("gorrow chr1,1,1 | calc xfile 0 | top 0 | write -t '0' -f xfile -r %s/data_#{fork}.gorz", outputPath);
         TestUtils.runGorPipe(query);
         Assert.assertTrue(Files.exists(tmpdir.resolve("data_0.gorz")));
+    }
+
+    @Test
+    public void testForkWriteWithCreate() {
+        String query = "create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1";
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
+    }
+
+    @Test
+    public void testForkWriteFolderWithCreate() {
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
+        String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1", outputPath);
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
+    }
+
+    @Test
+    public void testForkWriteSubfolderWithCreate() {
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
+        String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/rownum=#{fork}/data.gorz; gor [xxx]/rownum=0/data.gorz | top 1", outputPath);
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
     }
 
     @Test

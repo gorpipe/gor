@@ -139,11 +139,25 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     processedGorCommands
   }
 
+  /**
+    * Resolve parent path of fork template path
+    * @param res
+    * @return
+    */
+  private def resolveForkPathParent(res: String): String = {
+    val i = res.indexOf("#{fork}")
+    if(i != -1) {
+      val k = res.lastIndexOf('/', i)
+      if(k == -1) "." else res.substring(0,k)
+    } else res
+  }
+
   private def resolveCache(lastCommand: String, hasWrite: Boolean): String = {
     var res: String = null
     if (hasWrite) {
       val lastField = lastCommand.split(" ").last.trim
       if(!lastField.startsWith("-")) res = lastField
+      res = resolveForkPathParent(res)
     }
     res
   }

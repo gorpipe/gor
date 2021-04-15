@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.util;
+package org.gorpipe.util;
 
 import org.apache.commons.configuration.*;
 
