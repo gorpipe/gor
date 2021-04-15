@@ -323,6 +323,7 @@ public class UTestGorWrite {
     }
 
     @Test
+    @Ignore("Stop using write as result file indicator")
     public void testForkWriteWithCreate() {
         String query = "create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1";
         String result = TestUtils.runGorPipe(query);
@@ -330,6 +331,7 @@ public class UTestGorWrite {
     }
 
     @Test
+    @Ignore("Stop using write as result file indicator")
     public void testForkWriteFolderWithCreate() {
         final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
         String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1", outputPath);
@@ -338,6 +340,7 @@ public class UTestGorWrite {
     }
 
     @Test
+    @Ignore("Stop using write as result file indicator")
     public void testForkWriteSubfolderWithCreate() {
         final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
         String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/rownum=#{fork}/data.gorz; gor [xxx]/rownum=0/data.gorz | top 1", outputPath);
