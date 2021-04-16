@@ -199,9 +199,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val cacheFile = newExecutionBlock._2.cachePath
 
           val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|').last.trim
-          val hasWrite = lastCommand.toLowerCase.startsWith("write ")
 
-          val cachePath = if(cacheFile==null) resolveCache(lastCommand, hasWrite) else cacheFile
+          val cachePath = cacheFile
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
@@ -230,7 +229,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
                 val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
                 StringUtilities.createMD5(cte.query + fileSignature)
               }
-              val query = if(cacheFile!=null && !hasWrite) cte.query + "| write -d " + cacheFile else cte.query
+              val query = cte.query
               executionBatch.createNewCommand(querySignature, query, cte.batchGroupName, cte.createName, cte.cacheFile)
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }

@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 
+@Ignore("Stop using write in create as result file indicator")
 public class UTestGorDictionaryFolder {
     public void deleteFolder(Path folderpath) {
         try {
