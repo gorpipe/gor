@@ -29,10 +29,7 @@ import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -200,6 +197,18 @@ public class GorServerFileReader extends FileReader {
     @Override
     public Path toPath(String resource) {
         return Paths.get(resource);
+    }
+
+    @Override
+    public OutputStream getOutputStream(String file, boolean append) throws IOException {
+        String resolvedUrl = resolveUrl(file);
+        return new FileOutputStream(resolvedUrl, append);
+    }
+
+    @Override
+    public InputStream getInputStream(String file) throws IOException {
+        String resolvedUrl = resolveUrl(file);
+        return new FileInputStream(resolvedUrl);
     }
 
     @Override

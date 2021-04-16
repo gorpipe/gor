@@ -28,10 +28,13 @@ import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{GorMeta, GorOptions, Row}
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 
-import java.util.UUID
+import java.io.OutputStream
+import java.util.{Optional, UUID}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -52,6 +55,7 @@ case class OutputOptions(remove: Boolean = false,
 
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,
+                     session: GorSession,
                      inHeader: String,
                      options: OutputOptions) extends Analysis {
 
@@ -123,13 +127,9 @@ case class ForkWrite(forkCol: Int,
       Files.createDirectories(p)
       val uuid = UUID.randomUUID().toString
       val noptions = OutputOptions(options.remove, options.columnCompress, true, false, options.nor, options.idx, options.tags, options.prefix, options.prefixFile, options.compressionLevel, options.useFolder, options.skipHeader, cardCol = options.cardCol)
-      OutFile.driver(p.resolve(uuid+".gorz").toString, header, skipHeader, noptions)
+      OutFile.driver(p.resolve(uuid+".gorz").toString, session.getProjectContext.getFileReader, header, skipHeader, noptions)
     } else {
-      val parent = Paths.get(name).getParent
-      if(parent != null && !Files.exists(parent)) {
-        Files.createDirectories(parent)
-      }
-      OutFile.driver(name, header, skipHeader, options)
+      OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
     }
   }
 

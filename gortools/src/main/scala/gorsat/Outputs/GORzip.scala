@@ -25,9 +25,10 @@ package gorsat.Outputs
 import java.util.zip.Deflater
 import gorsat.Commands.Output
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.model.{FileReader, Row}
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.Paths
 
 /**
   * @param fileName Name of the file to be written.
@@ -38,8 +39,9 @@ import java.nio.file.{Files, Paths}
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   * @param idx Whether and index file should be written.
   */
-class GORzip(fileName: String, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, md5File: Boolean = true, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED, cardCol: String) extends Output {
-  val out = new GorZipLexOutputStream(fileName, append, colcompress, md5, md5File, idx, compressionLevel)
+class GORzip(fileName: String, fileReader: FileReader, header: String = null, skipHeader: Boolean = false, append: Boolean = false, colcompress: Boolean = false, md5: Boolean = false, md5File: Boolean = true, idx: GorIndexType = GorIndexType.NONE, compressionLevel: Int = Deflater.BEST_SPEED, cardCol: String) extends Output {
+  val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), colcompress, md5, if(md5File) Paths.get(fileName+".md5") else null, if (idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, idx, compressionLevel)
+
   override def getName: String = fileName
 
   def setup() {
@@ -53,12 +55,12 @@ class GORzip(fileName: String, header: String = null, skipHeader: Boolean = fals
   }
 
   def finish() {
-    out.close
+    out.close()
     meta.setMd5(out.getMd5)
     if(meta.linesWritten()) {
-      val metapath = fileName + ".meta"
-      val m = Paths.get(metapath)
-      Files.writeString(m, meta.toString)
+     val metaout = fileReader.getOutputStream(fileName+".meta")
+     metaout.write(meta.toString.getBytes())
+     metaout.close()
     }
   }
 }

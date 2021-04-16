@@ -32,6 +32,7 @@ import org.gorpipe.gor.driver.utils.RetryHandler.OnRetryOp;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Wraps a stream source so operations resulting in IOExceptions will be retried.
@@ -76,13 +77,23 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public OutputStream getOutputStream() throws IOException {
+        return retry.tryOp(super::getOutputStream, requestRetries);
+    }
+
+    @Override
     public StreamSourceMetadata getSourceMetadata() throws IOException {
-        return retry.tryOp(() -> super.getSourceMetadata(), requestRetries, defaultOnRetryOp);
+        return retry.tryOp(super::getSourceMetadata, requestRetries, defaultOnRetryOp);
+    }
+
+    @Override
+    public boolean supportsWriting() {
+        return super.supportsWriting();
     }
 
     @Override
     public boolean exists() throws IOException {
-        return retry.tryOp(() -> super.exists(), requestRetries, defaultOnRetryOp);
+        return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
     }
 
     /**

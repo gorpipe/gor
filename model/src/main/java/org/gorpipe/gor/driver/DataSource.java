@@ -56,6 +56,13 @@ public interface DataSource extends AutoCloseable {
     DataType getDataType() throws IOException;
 
     /**
+     * Does this source support writing
+     */
+    default boolean supportsWriting() {
+        return false;
+    }
+
+    /**
      * Check for existance of source.
      * Currently, only side effect of always returning true is that
      * automatic fallback to link files wont't work with that source

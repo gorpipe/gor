@@ -52,7 +52,15 @@ public class GorIndexFile implements AutoCloseable{
     private boolean skippedLast = false;
 
     public GorIndexFile(File file, GorIndexType indexType) throws IOException {
-        out = Files.newBufferedWriter(file.toPath());
+        this(Files.newBufferedWriter(file.toPath()),indexType);
+    }
+
+    public GorIndexFile(OutputStream outputStream, GorIndexType indexType) throws IOException {
+        this(new BufferedWriter(new OutputStreamWriter(outputStream)), indexType);
+    }
+
+    public GorIndexFile(BufferedWriter writer, GorIndexType indexType) throws IOException {
+        out = writer;
         this.indexType = indexType;
         String versionString = String.format("## fileformat=%s\n", VERSION);
         out.write(versionString);

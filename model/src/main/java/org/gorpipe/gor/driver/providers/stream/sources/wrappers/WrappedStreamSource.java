@@ -27,6 +27,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by villi on 24/08/15.
@@ -55,6 +56,16 @@ public class WrappedStreamSource extends WrappedDataSource implements StreamSour
     @Override
     public InputStream open(long start, long minLength) throws IOException {
         return getWrapped().open(start, minLength);
+    }
+
+    @Override
+    public OutputStream getOutputStream() throws IOException {
+        return getWrapped().getOutputStream();
+    }
+
+    @Override
+    public boolean supportsWriting() {
+        return getWrapped().supportsWriting();
     }
 
     public StreamSource getWrapped() {

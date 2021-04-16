@@ -179,7 +179,7 @@ object GeneralQueryHandler {
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
+          val out = OutFile(temp_cacheFile, context.getSession.getProjectContext.getFileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
           if(nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
@@ -208,7 +208,7 @@ object GeneralQueryHandler {
       } else {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, theHeader, skipHeader = false, nor = nor, md5 = true)
+          val out = OutFile(temp_cacheFile, context.getSession.getProjectContext.getFileReader, theHeader, skipHeader = false, nor = nor, md5 = true)
           if (nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)

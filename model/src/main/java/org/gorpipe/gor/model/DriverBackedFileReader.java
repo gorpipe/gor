@@ -74,7 +74,17 @@ public class DriverBackedFileReader extends FileReader {
      * @return the resolved url.
      */
     public DataSource resolveUrl(String url) throws IOException {
-        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).build();
+        return resolveUrl(url, false);
+    }
+
+    /**
+     * Resolve the given url, this includes traversing .link files and do fallback to link files if the file does not exits.
+     *
+     * @param url the url to resolve.
+     * @return the resolved url.
+     */
+    public DataSource resolveUrl(String url, boolean writeable) {
+        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
 
         return GorDriverFactory.fromConfig().getDataSource(sourceReference);
     }
@@ -158,6 +168,18 @@ public class DriverBackedFileReader extends FileReader {
         DataSource source = resolveUrl(resource);
         String resolvedUrl = getResolvedUrl(source);
         return readSource(source, resolvedUrl);
+    }
+
+    @Override
+    public InputStream getInputStream(String resource) throws IOException {
+        DataSource source = resolveUrl(resource);
+        return ((StreamSource)source).open();
+    }
+
+    @Override
+    public OutputStream getOutputStream(String resource, boolean append) throws IOException {
+        StreamSource source = (StreamSource) resolveUrl(resource, true);
+        return source.getOutputStream(append);
     }
 
     @Override

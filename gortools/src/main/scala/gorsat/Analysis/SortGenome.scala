@@ -70,7 +70,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     ordFileList = outputFile :: ordFileList
     wroteBuffer = true
     val runner = new GenericGorRunner
-    runner.run(RowArrayIterator(inputArray, length), OutFile(outputFile, header))
+    runner.run(RowArrayIterator(inputArray, length), OutFile(outputFile, session.getProjectContext.getFileReader, header))
   }
 
   override def process(r: Row) {

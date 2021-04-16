@@ -23,10 +23,11 @@
 package org.gorpipe.s3.driver;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.*;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.google.auto.service.AutoService;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
@@ -45,7 +46,7 @@ import java.util.Set;
 
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
-    private final CredentialClientCache<S3Client> clientCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
+    private final CredentialClientCache<AmazonS3Client> clientCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final S3Configuration s3Config;
 
     public S3SourceProvider() {
@@ -67,23 +68,26 @@ public class S3SourceProvider extends StreamSourceProvider {
     public S3Source resolveDataSource(SourceReference sourceReference)
             throws IOException {
         S3Url url = S3Url.parse(sourceReference.getUrl());
-        S3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
+        AmazonS3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
         return new S3Source(client, sourceReference);
     }
 
-    private S3Client getClient(String securityContext, String bucket) throws IOException {
+    private AmazonS3Client getClient(String securityContext, String bucket) throws IOException {
         BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
         return clientCache.getClient(creds, bucket);
     }
 
-    private S3Client createClient(Credentials cred) {
+    private AmazonS3Client createClient(Credentials cred) {
         ClientConfiguration clientconfig = new ClientConfiguration();
         clientconfig.setConnectionTimeout((int) s3Config.connectionTimeout().toMillis());
         clientconfig.setMaxErrorRetry(s3Config.connectionRetries());
         clientconfig.setMaxConnections(s3Config.connectionPoolSize());
         log.debug("Creating S3Client for {}", cred);
         if (cred == null || cred.isNull()) {
-            return new S3Client(new DefaultAWSCredentialsProviderChain(), clientconfig);
+            AmazonS3 amazonS3 = AmazonS3ClientBuilder.standard().enablePathStyleAccess()
+                    .withCredentials(new DefaultAWSCredentialsProviderChain())
+                    .withClientConfiguration(clientconfig).build();
+            return (AmazonS3Client) amazonS3;
         } else {
             AWSCredentials awsCredentials;
 
@@ -101,13 +105,15 @@ public class S3SourceProvider extends StreamSourceProvider {
                 );
             }
 
-            S3Client client = new S3Client(awsCredentials, clientconfig);
+            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().enablePathStyleAccess().withClientConfiguration(clientconfig).withCredentials(new AWSStaticCredentialsProvider(awsCredentials));
 
             String endpoint = cred.get(Credentials.Attr.API_ENDPOINT);
             if (endpoint != null) {
-                client.setEndpoint(endpoint);
+                String signingRegion = cred.getOrDefault(Credentials.Attr.SIGNING_REGION,null);
+                AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(endpoint,signingRegion);
+                builder = builder.withEndpointConfiguration(endpointConfiguration);
             }
-            return client;
+            return (AmazonS3Client) builder.build();
         }
     }
 

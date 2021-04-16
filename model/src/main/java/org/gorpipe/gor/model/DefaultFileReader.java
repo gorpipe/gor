@@ -29,10 +29,7 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,6 +102,16 @@ public class DefaultFileReader extends FileReader {
             throw new GorSystemException("Could not read link file: " + file, ex);
         }
         return new BufferedReader(new java.io.FileReader(file));
+    }
+
+    @Override
+    public OutputStream getOutputStream(String file, boolean append) throws IOException {
+        return new FileOutputStream(file, append);
+    }
+
+    @Override
+    public InputStream getInputStream(String file) throws IOException {
+        return new FileInputStream(file);
     }
 
     @Override
