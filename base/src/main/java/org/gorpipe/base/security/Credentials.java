@@ -91,7 +91,7 @@ public class Credentials {
         /**
          * Signing region
          */
-        SIGNING_REGION,
+        REGION,
         /**
          * Authentication endpoint url/server
          */
