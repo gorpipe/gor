@@ -22,10 +22,12 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Represents all sources that can return byte streams.
@@ -54,6 +56,20 @@ public interface StreamSource extends DataSource {
      * Open stream that reads from the start position and provides at least minLength bytes.
      */
     InputStream open(long start, long minLength) throws IOException;
+
+    /**
+     * Create stream to write to the source
+     */
+    default OutputStream getOutputStream() throws IOException {
+        return getOutputStream(false);
+    }
+
+    /**
+     * Create stream to write to the source
+     */
+    default OutputStream getOutputStream(boolean append) throws IOException {
+        throw new GorResourceException("Writing to this stream is not supported",this.getClass().toString());
+    }
 
     /**
      * Get source meta data (length, timestamp) etc.

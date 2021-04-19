@@ -58,9 +58,14 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
     }
 
     @Override
-    public DataSource resolveUrl(String url) throws IOException {
+    public DataSource resolveUrl(String url) {
+        return resolveUrl(url, false);
+    }
+
+    @Override
+    public DataSource resolveUrl(String url, boolean writable) {
         url = convertFileName2ServerPath(url);
-        return super.resolveUrl(url);
+        return super.resolveUrl(url, writable);
     }
 
     @Override

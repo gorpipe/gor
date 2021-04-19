@@ -89,6 +89,10 @@ public class Credentials {
          */
         API_ENDPOINT,
         /**
+         * Signing region
+         */
+        REGION,
+        /**
          * Authentication endpoint url/server
          */
         AUTH_ENDPOINT;
@@ -255,8 +259,17 @@ public class Credentials {
         return data.get(key);
     }
 
+    public String getOrDefault(String key, String def) {
+        if (isNull()) return def;
+        return data.getOrDefault(key, def);
+    }
+
     public String get(Attr key) {
         return get(key.jsonKey());
+    }
+
+    public String getOrDefault(Attr key, String def) {
+        return getOrDefault(key.jsonKey(), def);
     }
 
     public Set<String> keys() {

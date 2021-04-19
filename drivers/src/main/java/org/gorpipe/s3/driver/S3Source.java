@@ -22,19 +22,21 @@
 
 package org.gorpipe.s3.driver;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
+import java.util.concurrent.*;
 
 /**
  * Represents an object in Amazon S3.
@@ -44,7 +46,7 @@ public class S3Source implements StreamSource {
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
-    private final S3Client client;
+    private final AmazonS3Client client;
     private S3SourceMetadata meta;
 
     /**
@@ -52,11 +54,11 @@ public class S3Source implements StreamSource {
      *
      * @param sourceReference contains S3 url of the form s3://bucket/objectpath
      */
-    public S3Source(S3Client client, SourceReference sourceReference) throws MalformedURLException {
+    public S3Source(AmazonS3Client client, SourceReference sourceReference) throws MalformedURLException {
         this(client, sourceReference, S3Url.parse(sourceReference.getUrl()));
     }
 
-    S3Source(S3Client client, SourceReference sourceReference, S3Url url) {
+    S3Source(AmazonS3Client client, SourceReference sourceReference, S3Url url) {
         this.client = client;
         this.sourceReference = sourceReference;
         this.bucket = url.getBucket();
@@ -76,6 +78,41 @@ public class S3Source implements StreamSource {
     @Override
     public InputStream open(long start, long minLength) throws IOException {
         return open(RequestRange.fromFirstLength(start, minLength));
+    }
+
+    class S3PipedOutputStream extends PipedOutputStream {
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        Future<PutObjectResult> fut;
+
+        private void putObject(PipedInputStream pis) {
+            fut = es.submit(() -> client.putObject(bucket, key, pis, null));
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+                if(fut!=null) fut.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new GorResourceException("Unable to write to s3", bucket+"/"+key, e);
+            } finally {
+                es.shutdown();
+            }
+        }
+    }
+
+    @Override
+    public OutputStream getOutputStream(boolean append) throws IOException {
+        if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
+        S3PipedOutputStream pos = new S3PipedOutputStream();
+        PipedInputStream pis = new PipedInputStream(pos);
+        pos.putObject(pis);
+        return pos;
+    }
+
+    @Override
+    public boolean supportsWriting() {
+        return true;
     }
 
     private InputStream open(RequestRange range) throws IOException {
@@ -132,7 +169,7 @@ public class S3Source implements StreamSource {
         // No resources to free
     }
 
-    public S3Client getClient() {
+    public AmazonS3Client getClient() {
         return client;
     }
 }

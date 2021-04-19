@@ -33,6 +33,7 @@ public class SourceReferenceBuilder {
     private String commonRoot;
     private ChromoLookup lookup;
     private String chrSubset;
+    private boolean writeSource;
 
     public SourceReferenceBuilder(String url) {
         this.url = url;
@@ -45,10 +46,11 @@ public class SourceReferenceBuilder {
         this.commonRoot = parentSourceReference.commonRoot;
         this.lookup = parentSourceReference.lookup;
         this.chrSubset = parentSourceReference.chrSubset;
+        this.writeSource = parentSourceReference.writeSource;
     }
 
     public SourceReference build() {
-        return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset);
+        return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, writeSource);
     }
 
     public SourceReferenceBuilder securityContext(String securityContext) {
@@ -63,6 +65,11 @@ public class SourceReferenceBuilder {
 
     public SourceReferenceBuilder lookup(ChromoLookup lookup) {
         this.lookup = lookup;
+        return this;
+    }
+
+    public SourceReferenceBuilder writeSource(boolean writeSource) {
+        this.writeSource = writeSource;
         return this;
     }
 

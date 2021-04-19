@@ -28,10 +28,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
@@ -86,6 +83,24 @@ public abstract class FileReader {
     public abstract Path toPath(String resource);
 
     /**
+     * Get a writer for the specified file
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public OutputStream getOutputStream(String file) throws IOException {
+        return getOutputStream(file, false);
+    }
+
+    /**
+     * Get a writer for the specified file
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public abstract OutputStream getOutputStream(String file, boolean append) throws IOException;
+
+    /**
      * Get a Reader for the specified text file path
      *
      * @param path The path of the file to read. This name is relative to the FileReader service, i.e. assume it is a root of a file system
@@ -102,6 +117,15 @@ public abstract class FileReader {
      * @throws IOException If file is not found
      */
     public abstract BufferedReader getReader(String file) throws IOException;
+
+    /**
+     * Get a InputStream for the specified text file
+     *
+     * @param file The name of the file to read. This name is relative to the FileReader service, i.e. assume it is a root of a file system
+     * @return A InputStream
+     * @throws IOException If file is not found
+     */
+    public abstract InputStream getInputStream(String file) throws IOException;
 
     /**
      * Get a BufferedReader for the specified text file

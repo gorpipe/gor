@@ -29,8 +29,8 @@ project(':drivers') {
         implementation project(':model')
         implementation project(':base')
 
-        annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
-        implementation 'com.google.auto.service:auto-service:1.0-rc6'
+        annotationProcessor 'com.google.auto.service:auto-service:1.0'
+        implementation 'com.google.auto.service:auto-service:1.0'
         implementation "org.aeonbits.owner:owner:1.0.12"
         implementation "com.github.samtools:htsjdk:2.23.0"
         implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"

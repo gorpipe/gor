@@ -44,6 +44,7 @@ public class SourceReference {
     public final String url;
     public final String securityContext;
     public final String commonRoot; // TODO: This should be removed?
+    public final boolean writeSource;
     @JsonIgnore
     ChromoLookup lookup;
     public final String chrSubset;
@@ -74,9 +75,36 @@ public class SourceReference {
      * @param commonRoot
      * @param lookup
      * @param chrSubset
+     * @param writeSource
+     */
+    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, boolean writeSource) {
+        this(url, securityContext, commonRoot, lookup, chrSubset, null, writeSource);
+    }
+
+    /**
+     *
+     * @param url                       url for the source.
+     * @param securityContext
+     * @param commonRoot
+     * @param lookup
+     * @param chrSubset
      * @param linkSubPath
      */
     public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, String linkSubPath) {
+        this(url,securityContext,commonRoot,lookup,chrSubset,linkSubPath,false);
+    }
+
+    /**
+     *
+     * @param url                       url for the source.
+     * @param securityContext
+     * @param commonRoot
+     * @param lookup
+     * @param chrSubset
+     * @param linkSubPath
+     * @param writeSource
+     */
+    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, String linkSubPath, boolean writeSource) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -88,6 +116,7 @@ public class SourceReference {
         this.lookup = lookup != null ? lookup : new DefaultChromoLookup();
         this.chrSubset = chrSubset;
         this.linkSubPath = linkSubPath;
+        this.writeSource = writeSource;
     }
 
     /**
@@ -138,6 +167,10 @@ public class SourceReference {
 
     public ChromoLookup getLookup() {
         return lookup;
+    }
+
+    public boolean isWriteSource() {
+        return writeSource;
     }
 
     public void setLookup(ChromoLookup lookup) {

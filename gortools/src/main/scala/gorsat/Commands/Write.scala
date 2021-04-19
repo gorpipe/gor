@@ -23,13 +23,16 @@
 package gorsat.Commands
 
 import java.util.zip.Deflater
-
 import gorsat.Analysis.{ForkWrite, OutputOptions}
 import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
+import org.gorpipe.gor.model.DriverBackedFileReader
 import org.gorpipe.gor.session.GorContext
+
+import java.util.Optional
 
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -d -noheader", "-f -i -t -l -card -prefix", 1),
@@ -56,7 +59,7 @@ class Write extends CommandInfo("WRITE",
     useFolder = hasOption(args, "-d")
     columnCompress = hasOption(args, "-c")
     md5 = hasOption(args, "-m")
-    if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0","1","2","3","4","5","6","7","8","9")).toInt
+    if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")).toInt
 
     var indexing = "NONE"
 
@@ -66,11 +69,11 @@ class Write extends CommandInfo("WRITE",
 
     val card = stringValueOfOptionWithDefault(args, "-card", null)
 
-    var prefixFile : Option[String] = None
-    var prefix : Option[String] = None
+    var prefixFile: Option[String] = None
+    var prefix: Option[String] = None
     if (hasOption(args, "-prefix")) {
       val prfx = stringValueOfOption(args, "-prefix")
-      if(prfx.startsWith("'")) prefix = Option(prfx.substring(1,prfx.length-1).replace("\\n","\n").replace("\\t","\t"))
+      if (prfx.startsWith("'")) prefix = Option(prfx.substring(1, prfx.length - 1).replace("\\n", "\n").replace("\\t", "\t"))
       else prefixFile = Option(prfx)
     }
 
@@ -93,7 +96,8 @@ class Write extends CommandInfo("WRITE",
       throw new GorParsingException("Option -noheader (skip header) is not valid with gor/gorz/nor/norz")
     }
 
-    val fixedHeader = forcedInputHeader.split("\t").slice(0,2).mkString("\t")
-    CommandParsingResult(ForkWrite(forkCol, fileName, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card)), fixedHeader)
+    val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
+
+    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card)), fixedHeader)
   }
 }

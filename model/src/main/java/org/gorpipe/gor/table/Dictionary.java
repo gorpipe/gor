@@ -28,14 +28,16 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.DefaultFileReader;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.collection.IntArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,26 +127,30 @@ public class Dictionary {
 
     private final Map<String, DictionaryLine[]> tagsToListCache;
 
-    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
-        return getDictionary(path, uniqueID, commonRoot, true);
+    public synchronized static Dictionary getDictionary(String path, GorSession session, String uniqueID, String commonRoot) {
+        return getDictionary(path, session.getProjectContext().getFileReader(), uniqueID, commonRoot, true);
     }
 
-    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot, boolean useCache) {
+    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
+        return getDictionary(path, new DefaultFileReader(""), uniqueID, commonRoot, true);
+    }
+
+    public synchronized static Dictionary getDictionary(String path, FileReader fileReader, String uniqueID, String commonRoot, boolean useCache) {
         if (useCache) {
             if (uniqueID == null || uniqueID.equals("")) {
                 dictCache.remove(path);
-                return processDictionary(path, uniqueID, commonRoot, true);
+                return processDictionary(path, fileReader, uniqueID, commonRoot, true);
             } else {
                 return dictCache.compute(path, (p, d) -> {
                     if (d == null || !d.fileSignature.equals(uniqueID)) {
-                        return processDictionary(p, uniqueID, commonRoot, true);
+                        return processDictionary(p, fileReader, uniqueID, commonRoot, true);
                     } else {
                         return d;
                     }
                 });
             }
         } else {
-            return processDictionary(path, uniqueID, commonRoot, false);
+            return processDictionary(path, fileReader, uniqueID, commonRoot, false);
         }
     }
 
@@ -303,7 +309,7 @@ public class Dictionary {
      *
      * @return Cache object with all important info about the dictionary.
      */
-    private static Dictionary processDictionary(String path, String uniqueId, String commonRoot, boolean useCache) {
+    private static Dictionary processDictionary(String path, FileReader fileReader, String uniqueId, String commonRoot, boolean useCache) {
         final List<Set<String>> bucketTagsList = new ArrayList<>();
         final List<String> resetBucketNames = new ArrayList<>();
         final IntArray bucketTotalCounts = new IntArray();
@@ -316,23 +322,25 @@ public class Dictionary {
         final Map<String, IntArray> tagsToLines = new LinkedHashMap<>();
         final Set<String> validTags = new HashSet<>();
         final Multimap<String, String> bucketHasDeletedFile = ArrayListMultimap.create(); //This is changed if we find a deleted line with bucket.
-        if (Files.exists(gordPath)) {
-            try (final Stream<String> stream = Files.newBufferedReader(gordPath).lines()) {
+        try {
+            try(InputStream is = fileReader.getInputStream(path);
+                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                final Stream<String> stream = br.lines()) {
                 stream.map(String::trim)
                         .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
                         .map(line -> parseDictionaryLine(line, dictFileParent, path))
                         .filter(Objects::nonNull)
                         .forEach(dictLine -> processLine(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
                         );
-            } catch (IOException ex) {
-                throw new GorResourceException("Error Initializing Query. Can not open file " + path, path, ex);
             }
+            final Map<String, int[]> newTagsToLines = new HashMap<>();
+            tagsToLines.forEach((tag, arr) -> newTagsToLines.put(tag, arr.toArray()));
+            return new Dictionary(path, uniqueId, newTagsToLines, activeDictionaryLines.toArray(new DictionaryLine[0]), bucketToIdx,
+                    bucketTotalCounts.toArray(), bucketActiveCount.toArray(), resetBucketNames.toArray(new String[0]),
+                    bucketTagsList.toArray(new Set[0]), bucketHasDeletedFile, validTags, useCache);
+        } catch (IOException ex) {
+            throw new GorResourceException("Error Initializing Query. Can not open file " + path, path, ex);
         }
-        final Map<String, int[]> newTagsToLines = new HashMap<>();
-        tagsToLines.forEach((tag, arr) -> newTagsToLines.put(tag, arr.toArray()));
-        return new Dictionary(path, uniqueId, newTagsToLines, activeDictionaryLines.toArray(new DictionaryLine[0]), bucketToIdx,
-                bucketTotalCounts.toArray(), bucketActiveCount.toArray(), resetBucketNames.toArray(new String[0]),
-                bucketTagsList.toArray(new Set[0]), bucketHasDeletedFile, validTags, useCache);
     }
 
     private static void processLine(List<Set<String>> bucketTagsList, List<String> resetBucketNames, IntArray bucketTotalCounts, IntArray bucketActiveCount,

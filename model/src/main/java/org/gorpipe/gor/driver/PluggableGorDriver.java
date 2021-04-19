@@ -150,7 +150,7 @@ public class PluggableGorDriver implements GorDriver {
                 return null;
             }
             log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
-            DataSource wrapped = wrap(handleLinks(source));
+            DataSource wrapped = sourceReference.writeSource ? handleLinks(source) : wrap(handleLinks(source));
             log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
             return wrapped;
         } catch (Exception e) {

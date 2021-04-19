@@ -37,6 +37,8 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.monitor.GorMonitor;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.session.GorSessionCache;
+import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
@@ -251,7 +253,7 @@ public class GorOptions {
             }
         }
 
-        return processedFiles.stream().toArray(String[]::new);
+        return processedFiles.toArray(String[]::new);
     }
 
     public static GorOptions createGorOptions(String... args) {
@@ -260,7 +262,12 @@ public class GorOptions {
 
     public static GorOptions createGorOptions(String query) {
         String[] arguments = CommandParseUtilities.quoteSafeSplit(query, ' ');
-        return createGorOptions(null, arguments);
+        GorSession session = new GorSession("-1");
+        SystemContext systemContext = new SystemContext.Builder().build();
+        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(new DefaultFileReader("")).build();
+        GorSessionCache gorSessionCache = new GorSessionCache();
+        session.init(projectContext,systemContext,gorSessionCache);
+        return createGorOptions(session.getGorContext(), arguments);
     }
 
     public static GorOptions createGorOptions(GorContext context, String[] arguments) {
@@ -757,7 +764,7 @@ public class GorOptions {
         }
 
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
-        final Dictionary gord = Dictionary.getDictionary(fileName, getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);
+        final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(), getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);
         this.hasLocalDictonaryFile = true;
         final Dictionary.DictionaryLine[] fileList = gord.getSources(this.columnTags, allowBucketAccess, isSilentTagFilter);
         this.isDictionaryWithBuckets = gord.isDictionaryWithBuckets; //Arrays.stream(fileList).anyMatch(file -> file.sourceInserted);

@@ -22,10 +22,8 @@
 
 package gorsat.Outputs
 
-import java.io._
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Path
 import java.util.zip.Deflater
-
 import gorsat.Analysis.OutputOptions
 import gorsat.Commands.Output
 import gorsat.parquet.GorParquetFileOut
@@ -36,7 +34,9 @@ import htsjdk.tribble.util.LittleEndianOutputStream
 import htsjdk.variant.vcf.VCFCodec
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{FileReader, Row}
+
+import java.io.{BufferedOutputStream, File, FileInputStream, FileNotFoundException, FileOutputStream, OutputStream, Writer}
 
 /**
   * @param name Name of the file to be written.
@@ -45,8 +45,8 @@ import org.gorpipe.gor.model.Row
   * @param append Whether we should write the output to the beginning or end of the file.
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   */
-class OutFile(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
-  val finalFileOutputStream = new java.io.FileOutputStream(name, append)
+class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
+  val finalFileOutputStream = fileReader.getOutputStream(name, append)
   val interceptingFileOutputStream: OutputStream =
     if (md5) {
       new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) new File(name + ".md5") else null)
@@ -89,14 +89,13 @@ class OutFile(name: String, header: String, skipHeader: Boolean = false, append:
     })
 
     if(idx == GorIndexType.TABIX) {
-      val gp = Paths.get(name)
+      val bcis = new BlockCompressedInputStream(fileReader.getInputStream(name))
 
-      val bcis = new BlockCompressedInputStream(Files.newInputStream(gp))
-
-      val gpi = Paths.get(name+".tbi")
+      val gpi = fileReader.getOutputStream(name+".tbi")
       val tbi = new TabixIndexCreator(TabixFormat.VCF)
 
-      val outputStream = new LittleEndianOutputStream(new BlockCompressedOutputStream(gpi.toFile))
+      val dummyPath: Path = null
+      val outputStream = new LittleEndianOutputStream(new BlockCompressedOutputStream(gpi, dummyPath))
       val codec = new VCFCodec
       val lineReader = AsciiLineReader.from(bcis)
       val iterator = new AsciiLineReaderIterator(lineReader)
@@ -120,7 +119,7 @@ object OutFile {
     prefix + "\n" + (if(header.startsWith("#")) header else "#"+header)
   }
 
-  def driver(name: String, inheader: String, skipHeader: Boolean, options: OutputOptions): Output = {
+  def driver(name: String, fileReader: FileReader, inheader: String, skipHeader: Boolean, options: OutputOptions): Output = {
     val nameUpper = name.toUpperCase
     val isVCF = nameUpper.endsWith(".VCF") || nameUpper.endsWith(".VCF.GZ") || nameUpper.endsWith(".VCF.BGZ")
 
@@ -138,7 +137,7 @@ object OutFile {
       append = append || {
         options.prefixFile match {
           case Some(prefixName) =>
-            writePrefix(prefixName, name)
+            writePrefix(fileReader, prefixName, name)
             true
           case None => false
         }
@@ -148,37 +147,37 @@ object OutFile {
 
     try {
       if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
-        new GORzip(name, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
+        new GORzip(name, fileReader, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
-        new NorFileOut(name, header, skipHeader, append, options.md5)
+        new NorFileOut(name, fileReader, header, skipHeader, append, options.md5)
       } else if (nameUpper.endsWith(".PARQUET")) {
         new GorParquetFileOut(name, header, options.nor)
       } else if (options.nor) {
         new CmdFileOut(name, header, skipHeader, append)
       } else {
-        new OutFile(name, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
+        new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
       }
     } catch {
       case e: FileNotFoundException => throw new GorResourceException(s"Can't write to file", name, e)
     }
   }
 
-  def apply(name: String, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
-    driver(name, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, None, prefixFile, compressionLevel))
+  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
+    driver(name, fileReader, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, None, prefixFile, compressionLevel))
 
-  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
+  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
 
-  def apply(name: String, header: String, skipHeader: Boolean, nor: Boolean): Output = driver(name, header, skipHeader, OutputOptions(nor = nor))
+  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor))
 
-  def apply(name: String, header: String, skipHeader: Boolean): Output = driver(name, header, skipHeader, OutputOptions())
+  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions())
 
-  def apply(name: String, header: String): Output = driver(name, header, skipHeader = false, OutputOptions())
+  def apply(name: String, fileReader: FileReader, header: String): Output = driver(name, fileReader, header, skipHeader = false, OutputOptions())
 
-  def apply(name: String): Output = driver(name, null, skipHeader = false, OutputOptions())
+  def apply(name: String, fileReader: FileReader): Output = driver(name, fileReader, null, skipHeader = false, OutputOptions())
 
-  def writePrefix(prefixFileName: String, fileName: String): Unit = {
-    val is = new FileInputStream(prefixFileName)
-    val os = new FileOutputStream(fileName)
+  def writePrefix(fileReader: FileReader, prefixFileName: String, fileName: String): Unit = {
+    val is = fileReader.getInputStream(prefixFileName)
+    val os = fileReader.getOutputStream(fileName)
     val buffer = new Array[Byte](1024) //Reasonable buffer size - there is usually not that much in the file.
     var addNewLine = false
     var read = is.read(buffer)

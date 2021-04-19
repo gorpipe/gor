@@ -33,7 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Represents a data source accessed through file system.
@@ -45,7 +48,7 @@ public class FileSource implements StreamSource {
     private static final Logger log = LoggerFactory.getLogger(FileSource.class);
 
     private final SourceReference sourceReference;
-    private final File file;
+    private final Path file;
     private final boolean isSubset;
     private RandomAccessFile raf;
 
@@ -93,7 +96,7 @@ public class FileSource implements StreamSource {
         }
 
         this.sourceReference = sourceReference;
-        this.file = new File(fileName);
+        this.file = Paths.get(fileName);
         this.isSubset = isSubset;
     }
 
@@ -104,12 +107,12 @@ public class FileSource implements StreamSource {
         return new FileSourceStream();
     }
 
-    private void ensureOpen() throws FileNotFoundException {
+    private void ensureOpen() throws IOException {
         if (raf == null) {
             if (keepStackTraceForOpen) {
                 rafOpenedStackTrace = new Error();
             }
-            raf = new RandomAccessFile(file, "r");
+            raf = new RandomAccessFile(file.toFile(), "r");
         }
     }
 
@@ -121,6 +124,20 @@ public class FileSource implements StreamSource {
     @Override
     public InputStream open() throws IOException {
         return open(0);
+    }
+
+    @Override
+    public OutputStream getOutputStream(boolean append) throws IOException {
+        var parent = file.getParent();
+        if (parent != null && !Files.exists(parent)) {
+            Files.createDirectories(parent);
+        }
+        return append ? Files.newOutputStream(file, StandardOpenOption.APPEND) : Files.newOutputStream(file);
+    }
+
+    @Override
+    public boolean supportsWriting() {
+        return true;
     }
 
     @Override
@@ -140,7 +157,7 @@ public class FileSource implements StreamSource {
 
     @Override
     public boolean exists() {
-        return file.exists();
+        return Files.exists(file);
     }
 
     @Override
@@ -153,7 +170,9 @@ public class FileSource implements StreamSource {
                 uniqueId = br.readLine();
             }
         }*/
-        return new StreamSourceMetadata(this, "file://" + file.getCanonicalPath(), file.lastModified(), file.length(), uniqueId, isSubset);
+        //return new StreamSourceMetadata(this, "file://" + file.toRealPath(), Files.getLastModifiedTime(file).toMillis(), Files.size(file), uniqueId, isSubset);
+        File ffile = file.toFile();
+        return new StreamSourceMetadata(this, "file://" + ffile.getCanonicalPath(), ffile.lastModified(), ffile.length(), uniqueId, isSubset);
     }
 
     @Override
@@ -172,11 +191,11 @@ public class FileSource implements StreamSource {
     @Override
     protected void finalize() throws Throwable {
         if (raf != null) {
-            String msg = "Datasource closed via finalize method: " + file.getAbsolutePath();
+            String msg = "Datasource closed via finalize method: " + file.toAbsolutePath();
             if (rafOpenedStackTrace != null) {
                 StringWriter sw = new StringWriter();
                 rafOpenedStackTrace.printStackTrace(new PrintWriter(sw));
-                log.warn("{}\nOpened at {}", msg, sw.toString());
+                log.warn("{}\nOpened at {}", msg, sw);
             } else {
                 log.warn(msg);
             }
