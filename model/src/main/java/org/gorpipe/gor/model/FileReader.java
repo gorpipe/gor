@@ -199,4 +199,8 @@ public abstract class FileReader {
     }
 
     protected abstract void checkValidServerFileName(final String fileName);
+
+    public boolean allowsAbsolutePaths() {
+        return true;
+    }
 }
