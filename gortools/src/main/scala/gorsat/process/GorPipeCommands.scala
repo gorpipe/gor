@@ -23,7 +23,7 @@
 package gorsat.process
 
 import gorsat.Commands
-import gorsat.Commands.{PlinkRegression, Select, _}
+import gorsat.Commands.{PlinkRegression, RelRemoveCommand, Select, _}
 
 /**
   * Methods to register and access gor commands or pipe steps. Commands need to be registered before use.
@@ -157,6 +157,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.Pivot)
       addInfo(new gorsat.Commands.Pileup)
       addInfo(new Commands.MapCommand.Map)
+      addInfo(new gorsat.Commands.RelRemoveCommand.RelRemove)
       addInfo(new gorsat.Commands.DAGMap)
       addInfo(new gorsat.Commands.MultiMap)
       addInfo(new gorsat.Commands.Inset)
