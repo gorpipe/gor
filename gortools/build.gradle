@@ -60,7 +60,7 @@ project(':gortools') {
         implementation 'ch.qos.logback:logback-classic:1.2.3'
         implementation "io.prometheus:simpleclient:0.10.0"
 
-        runtime "org.scala-lang:scala-reflect:2.12.13"
+        runtimeOnly "org.scala-lang:scala-reflect:2.12.13"
 
         testImplementation project(':test')
         testImplementation project(':util')
@@ -76,8 +76,8 @@ project(':gortools') {
         testImplementation 'ch.qos.logback:logback-classic:1.2.3'
         testImplementation "com.github.samtools:htsjdk:2.23.0"
 
-        testRuntime "org.apache.derby:derby:10.15.2.0"
-        testRuntime "org.apache.derby:derbytools:10.15.2.0"
+        testRuntimeOnly "org.apache.derby:derby:10.15.2.0"
+        testRuntimeOnly "org.apache.derby:derbytools:10.15.2.0"
 
         antlr("org.antlr:antlr4:4.7")
     }
