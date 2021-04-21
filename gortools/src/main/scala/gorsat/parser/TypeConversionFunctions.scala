@@ -86,13 +86,16 @@ object TypeConversionFunctions {
   def isFloat(ex1: sFun): bFun = {
     cvp => {
       val str = ex1(cvp)
-      var b = if (str == "") false else true
-      try {
-        str.toDouble
-      } catch {
-        case _: Exception => b = false
+      str.nonEmpty && {
+        try {
+          if (str.length > 1) {
+            str.toDouble
+            true
+          } else str.charAt(0) >= '0' && str.charAt(0) <= '9'
+        } catch {
+          case _: NumberFormatException => false
+        }
       }
-      b
     }
   }
 
