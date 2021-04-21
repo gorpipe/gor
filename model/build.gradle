@@ -46,9 +46,9 @@ project(':model') {
         implementation 'org.apache.hadoop:hadoop-common:3.3.0'
         implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
         implementation "com.zaxxer:HikariCP:4.0.1"
-        runtime "org.xerial:sqlite-jdbc:3.34.0"
+        runtimeOnly "org.xerial:sqlite-jdbc:3.34.0"
         // Exclude slf4j bindings we dont want.
-        runtime("org.postgresql:postgresql:42.2.7")
+        runtimeOnly ("org.postgresql:postgresql:42.2.7")
 
         testImplementation project(':test')
         testImplementation project(':external')
@@ -64,7 +64,7 @@ project(':model') {
         testImplementation "org.scalacheck:scalacheck_2.12:1.15.2"
         testImplementation("org.postgresql:postgresql:42.2.7")
 
-        testRuntime "org.apache.derby:derby:10.15.2.0"
-        testRuntime "org.apache.derby:derbytools:10.15.2.0"
+        testRuntimeOnly "org.apache.derby:derby:10.15.2.0"
+        testRuntimeOnly "org.apache.derby:derbytools:10.15.2.0"
     }
 }
