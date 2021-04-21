@@ -677,7 +677,7 @@ public class GorOptions {
 
     private void addSourceRef(String file, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
         // A call to this can only take place at the end of a constructor, when all parameters have been set
-        addSourceRef(file, file, false, projectContext, null, null, -1, null, -1, null, allowBucketAccess, alltags);
+        addSourceRef(file, file, session != null && !session.getProjectContext().getFileReader().allowsAbsolutePaths(), projectContext, null, null, -1, null, -1, null, allowBucketAccess, alltags);
     }
 
     private static String toNominalForm(String file) {

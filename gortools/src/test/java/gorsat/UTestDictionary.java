@@ -36,6 +36,8 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class UTestDictionary {
@@ -351,6 +353,16 @@ public class UTestDictionary {
         FileUtils.writeStringToFile(dictFile, dictCont, "UTF-8");
         final String results = TestUtils.runGorPipe("gor " + dictFile.getAbsolutePath() + " -nf -f PN1");
         Assert.assertEquals(2, results.split("\n").length);
+    }
+
+    @Test
+    public void testReadDictionaryWithServerFileReader() throws IOException {
+        Path gordPath = workDir.getRoot().toPath().resolve("dbsnp.gord");
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gorz"),workDir.getRoot().toPath().resolve("dbsnp.gorz"));
+        Files.writeString(gordPath,"dbsnp.gorz\tuu\n");
+        String[] args = {"gor "+gordPath.getFileName().toString(),"-gorroot", workDir.getRoot().getPath()};
+        int count = TestUtils.runGorPipeCount(args, true);
+        Assert.assertEquals(count, 48);
     }
 
     private File createSimpleDictWithBucket() throws IOException {

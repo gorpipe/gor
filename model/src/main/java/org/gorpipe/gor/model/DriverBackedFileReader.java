@@ -73,7 +73,7 @@ public class DriverBackedFileReader extends FileReader {
      * @param url the url to resolve.
      * @return the resolved url.
      */
-    public DataSource resolveUrl(String url) throws IOException {
+    public DataSource resolveUrl(String url) {
         return resolveUrl(url, false);
     }
 

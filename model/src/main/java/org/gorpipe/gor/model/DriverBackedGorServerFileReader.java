@@ -113,4 +113,8 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
             return new DriverBackedGorServerFileReader(resolvedSessionRoot, constants, allowAbsolutePath, securityContext);
         }
     }
+
+    public boolean allowsAbsolutePaths() {
+        return false;
+    }
 }
