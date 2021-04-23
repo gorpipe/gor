@@ -41,7 +41,7 @@ buildscript {
 plugins {
     id 'idea'
     id "org.ajoberstar.grgit" version "3.1.1"
-    id "kr.motd.sphinx" version "2.9.0" apply false 
+    id "kr.motd.sphinx" version "2.10.1" apply false
 
     // Plugins not applied everywhere.
     id "org.sonarqube" version "3.0" apply false

@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.table;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
