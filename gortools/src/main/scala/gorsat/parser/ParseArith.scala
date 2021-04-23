@@ -46,6 +46,7 @@ case class ColumnInfo(name: String, dataType: String) {}
 class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
 
   private val functions = CalcFunctions.registry
+  private val pathfunctions = CalcFunctions.pathutilregistry
 
   private val subFilters = new util.ArrayList[ParseArith]
 
@@ -1194,7 +1195,14 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
                     expressionType = "Double"
                     maxLength = next2.offset
                   }
-                  val sr = parseAll(sexpr, input)
+                  val i = input.indexOf("(")
+                  val parseInput = if(i > 0) {
+                    val fn = input.substring(0, i).toUpperCase
+                    if (pathfunctions.hasFunction(fn)) {
+                      input.substring(0, i + 1) + "'" + input.substring(i + 1, input.length - 1).trim + "')"
+                    } else input
+                  } else input
+                  val sr = parseAll(sexpr, parseInput)
                   sr match {
                     case Success(e, _) =>
                       stringFunction = e

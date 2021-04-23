@@ -49,6 +49,10 @@ class FunctionRegistry {
   // Map of all function names, mapping the base name to a list of types
   private val allFunctions = mutable.Map[String, List[FunctionWrapper]]()
 
+  def hasFunction(fn: String): Boolean = {
+    allFunctions.contains(fn)
+  }
+
   def register[R](name: String, signature: String, f: () => R): Unit = {
     def helper(owner: ParseArith): R = {
       f()
