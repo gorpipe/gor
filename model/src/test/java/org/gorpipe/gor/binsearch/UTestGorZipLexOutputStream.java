@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.binsearch;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;

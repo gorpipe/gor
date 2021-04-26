@@ -24,7 +24,7 @@ package org.gorpipe.gor.manager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;

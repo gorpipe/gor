@@ -24,7 +24,7 @@ package org.gorpipe.gor.table;
 
 import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;

@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.test.SlowTests;
 import org.junit.AfterClass;
 import org.junit.Assert;

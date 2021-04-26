@@ -26,7 +26,7 @@ import gorsat.Analysis.TopN;
 import gorsat.Commands.Analysis;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.ProcessIteratorAdaptor;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import gorsat.process.GorSessionFactory;

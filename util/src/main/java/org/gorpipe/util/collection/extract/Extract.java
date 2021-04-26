@@ -24,7 +24,7 @@ package org.gorpipe.util.collection.extract;
 
 import org.gorpipe.util.collection.IntHashSet;
 import org.gorpipe.util.collection.MultiMap;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -27,7 +27,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.client.FileCache;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.FileNature;

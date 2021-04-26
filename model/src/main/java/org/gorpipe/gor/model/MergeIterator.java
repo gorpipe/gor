@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.model;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.session.GorContext;

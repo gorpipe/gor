@@ -26,17 +26,19 @@ import java.lang.management.ManagementFactory
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import com.sun.management.{OperatingSystemMXBean, UnixOperatingSystemMXBean}
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
 import gorsat.process.GorPipe
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.ColumnValueProvider
+
+import java.nio.file.{Files, Paths}
 
 object DiagnosticsFunctions {
   val osBean: OperatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean.asInstanceOf[OperatingSystemMXBean]
 
-  def register(functions: FunctionRegistry): Unit = {
+  def register(functions: FunctionRegistry, pathfunctions: FunctionRegistry): Unit = {
     functions.registerWithOwner("TIME", getSignatureEmpty2Int(removeOwner(time)), time _)
     functions.register("MINORVERSION", getSignatureEmpty2Int(minorVersion _), minorVersion _)
     functions.register("MAJORVERSION", getSignatureEmpty2Int(majorVersion _), majorVersion _)
@@ -55,6 +57,10 @@ object DiagnosticsFunctions {
     functions.register("AVAILCPU", getSignatureEmpty2Double(availCpu _), availCpu _)
     functions.register("OPENFILES", getSignatureEmpty2Double(openFiles _), openFiles _)
     functions.register("MAXFILES", getSignatureEmpty2Double(maxFiles _), maxFiles _)
+    functions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
+    functions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
+    pathfunctions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
+    pathfunctions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
     functions.registerWithOwner("AVGROWSPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgRowsPerMilliSecond)), getAvgRowsPerMilliSecond _)
     functions.registerWithOwner("AVGBASESPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgBasesPerMilliSecond)), getAvgBasesPerMilliSecond _)
     functions.registerWithOwner("AVGSEEKTIMEMILLIS", getSignatureEmpty2Double(removeOwner(getAvgSeekTimeMilliSecond)), getAvgSeekTimeMilliSecond _)
@@ -75,6 +81,18 @@ object DiagnosticsFunctions {
   def getAvgSeekTimeMilliSecond(owner: ParseArith): dFun = {
     _ => {
       owner.getAvgSeekTimeMilliSecond
+    }
+  }
+
+  def filePath(f: (ColumnValueProvider) => String): sFun = {
+    s => {
+      f(s)
+    }
+  }
+
+  def fileContent(f: (ColumnValueProvider) => String): sFun = {
+    s => {
+      Files.lines(Paths.get(f(s))).skip(1).findFirst().get()
     }
   }
 

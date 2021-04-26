@@ -26,6 +26,6 @@ plugins {
 
 project(':test') {
     dependencies {
-        implementation "commons-io:commons-io:2.6"
+        implementation "commons-io:commons-io:2.8.0"
     }
 }

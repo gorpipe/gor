@@ -30,7 +30,7 @@ import htsjdk.samtools.seekablestream.SeekableBufferedStream;
 import htsjdk.samtools.util.SequenceUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
 import org.gorpipe.gor.model.ChromoLookup;

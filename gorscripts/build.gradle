@@ -44,10 +44,10 @@ project(':gorscripts') {
         implementation 'ch.qos.logback:logback-classic:1.2.3'
         implementation "info.picocli:picocli:4.6.1"
         implementation 'info.picocli:picocli-shell-jline3:4.6.1'
-        implementation "commons-io:commons-io:2.6"
-        implementation "commons-lang:commons-lang:2.6"
+        implementation "commons-io:commons-io:2.8.0"
+        implementation "org.apache.commons:commons-lang3:3.12.0"
         implementation "de.tototec:de.tototec.cmdoption:0.7.0"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.1"
+        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.3"
         implementation "org.reflections:reflections:0.9.12"
         implementation "com.google.guava:guava:30.1.1-jre"
 
@@ -61,19 +61,19 @@ project(':gorscripts') {
 
         testImplementation "org.mockito:mockito-core:3.7.7"
         testImplementation "org.scalatest:scalatest_2.12:3.0.8"
-        testImplementation "org.scalacheck:scalacheck_2.12:1.15.2"
+        testImplementation "org.scalacheck:scalacheck_2.12:1.15.3"
         testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
-        testImplementation "commons-io:commons-io:2.6"
-        testImplementation "commons-lang:commons-lang:2.6"
+        testImplementation "commons-io:commons-io:2.8.0"
+        testImplementation "org.apache.commons:commons-lang3:3.12.0"
         testImplementation "com.google.guava:guava:27.0-jre"
         testImplementation 'org.slf4j:slf4j-api:1.7.30'
         testImplementation 'ch.qos.logback:logback-classic:1.2.3'
-        testImplementation "com.github.samtools:htsjdk:2.23.0"
+        testImplementation "com.github.samtools:htsjdk:2.24.1"
 
         testRuntimeOnly "org.apache.derby:derby:10.15.2.0"
         testRuntimeOnly "org.apache.derby:derbytools:10.15.2.0"
 
-        antlr("org.antlr:antlr4:4.7")
+        antlr("org.antlr:antlr4:4.9.2")
     }
 
     // Tests
