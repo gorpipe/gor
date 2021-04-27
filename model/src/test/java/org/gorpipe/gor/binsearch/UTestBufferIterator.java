@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.binsearch;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.binsearch.BufferIterator;
 import org.gorpipe.gor.binsearch.StringIntKey;
 import org.junit.Assert;

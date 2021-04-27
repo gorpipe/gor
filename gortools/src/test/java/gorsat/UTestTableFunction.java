@@ -29,7 +29,7 @@ import gorsat.Utilities.ReportUtilities;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.gorpipe.gor.session.GorSession;
 import gorsat.process.GorSessionFactory;
 import org.gorpipe.test.utils.FileTestUtils;

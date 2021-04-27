@@ -27,7 +27,7 @@ import gorsat.Commands.Analysis;
 import gorsat.Commands.RowHeader;
 import gorsat.Iterators.RowArrayIterator;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;

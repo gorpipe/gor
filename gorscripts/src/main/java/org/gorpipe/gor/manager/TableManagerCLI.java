@@ -27,7 +27,7 @@ import de.tototec.cmdoption.CmdOption;
 import de.tototec.cmdoption.CmdlineParser;
 import de.tototec.cmdoption.handler.AddToCollectionHandler;
 import de.tototec.cmdoption.handler.CmdOptionHandler;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.GenomicRange;
 import org.gorpipe.gor.table.TableHeader;

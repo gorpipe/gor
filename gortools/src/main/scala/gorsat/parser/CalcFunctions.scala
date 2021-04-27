@@ -37,9 +37,10 @@ object CalcFunctions {
     * in the CALC command and WHERE filters.
     */
   lazy val registry: FunctionRegistry = FunctionRegistry()
-  register(registry)
+  lazy val pathutilregistry: FunctionRegistry = FunctionRegistry()
+  register(registry, pathutilregistry)
 
-  def register(functions: FunctionRegistry): Unit = {
+  def register(functions: FunctionRegistry, pathfunctions: FunctionRegistry): Unit = {
     functions.register("ONCE", getSignatureInt2Int(onceInt), onceInt _)
     functions.register("ONCE", getSignatureDouble2Double(onceDouble), onceDouble _)
     functions.register("SLEEP", getSignatureInt2String(sleep), sleep _)
@@ -53,7 +54,7 @@ object CalcFunctions {
     functions.registerWithOwner("EVAL", getSignatureString2String(removeOwner(evalFunc)), evalFunc _)
 
     AlgebraicFunctions.register(functions)
-    DiagnosticsFunctions.register(functions)
+    DiagnosticsFunctions.register(functions, pathfunctions)
     GenomeFunctions.register(functions)
     ListFunctions.register(functions)
     StatisticalFunctions.register(functions)

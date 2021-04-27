@@ -22,7 +22,7 @@
 
 package gorsat;
 
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.model.DbSource;
 import org.gorpipe.test.utils.FileTestUtils;

@@ -29,8 +29,8 @@ project(':util') {
         implementation project(':base')
 
         implementation "commons-configuration:commons-configuration:1.10"
-        implementation "commons-lang:commons-lang:2.6"
-        implementation "com.zaxxer:HikariCP:4.0.1"
+        implementation "org.apache.commons:commons-lang3:3.12.0"
+        implementation "com.zaxxer:HikariCP:4.0.3"
 
         testImplementation project(':test')
 

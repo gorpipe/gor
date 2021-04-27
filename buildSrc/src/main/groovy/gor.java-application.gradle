@@ -54,6 +54,7 @@ ext {
         project.applicationDistribution.into("bin") {
             from(task)
             fileMode = 0755
+            duplicatesStrategy 'exclude'
         }
     }
 }

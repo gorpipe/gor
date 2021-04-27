@@ -26,7 +26,7 @@ package org.gorpipe.test;
  * Created by gisli on 16/02/16.
  */
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.*;
 import java.nio.file.Files;

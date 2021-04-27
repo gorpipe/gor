@@ -4,7 +4,7 @@ package org.gorpipe.gor.driver.utils;
 import com.sun.management.UnixOperatingSystemMXBean;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.gorpipe.gor.driver.GorDriver;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;

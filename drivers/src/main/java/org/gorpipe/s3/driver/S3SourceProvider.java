@@ -25,6 +25,7 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.*;
 import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -85,9 +86,9 @@ public class S3SourceProvider extends StreamSourceProvider {
         clientconfig.setMaxConnections(s3Config.connectionPoolSize());
         log.debug("Creating S3Client for {}", cred);
         if (cred == null || cred.isNull()) {
-            AmazonS3 amazonS3 = AmazonS3ClientBuilder.standard().enablePathStyleAccess()
-                    .withRegion(Regions.DEFAULT_REGION)
+            AmazonS3 amazonS3 = AmazonS3ClientBuilder.standard()
                     .enableForceGlobalBucketAccess()
+                    .withRegion(Regions.DEFAULT_REGION)
                     .withCredentials(new DefaultAWSCredentialsProviderChain())
                     .withClientConfiguration(clientconfig).build();
             return (AmazonS3Client) amazonS3;
@@ -108,12 +109,16 @@ public class S3SourceProvider extends StreamSourceProvider {
                 );
             }
 
-            String region = cred.getOrDefault(Credentials.Attr.REGION, Regions.DEFAULT_REGION.name());
-            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(region).enableForceGlobalBucketAccess().withClientConfiguration(clientconfig).withCredentials(new AWSStaticCredentialsProvider(awsCredentials));
+            String regionStr = cred.get(Credentials.Attr.REGION);
+            Regions region = regionStr==null ? Regions.DEFAULT_REGION : Regions.fromName(regionStr);
+            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().enableForceGlobalBucketAccess()
+                    .withRegion(region)
+                    .withClientConfiguration(clientconfig)
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials));
 
             String endpoint = cred.get(Credentials.Attr.API_ENDPOINT);
             if (endpoint != null) {
-                AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(endpoint,region);
+                AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(endpoint,region.getName());
                 builder = builder.withEndpointConfiguration(endpointConfiguration);
             }
             return (AmazonS3Client) builder.build();

@@ -133,5 +133,9 @@ release-from-master:  ## Release from master.
 
 # TBD
 
-check-for-library-updates:  ## Check for available library updates
-	./gradlew dependencyUpdates
+#
+# Misc
+#
+
+dependencies-check-for-updates:  ## Check for available library updates
+	./gradlew dependencyUpdates --refresh-dependencies
