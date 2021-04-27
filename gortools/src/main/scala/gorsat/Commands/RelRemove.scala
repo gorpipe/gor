@@ -22,7 +22,7 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.{MapLookup, MultiMapLookup, OrderedMapAnalysis}
+import gorsat.Analysis.{RelRemove}
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities.validHeader
@@ -34,8 +34,8 @@ import scala.collection.mutable.ListBuffer
 
 object RelRemoveCommand {
   class RelRemove extends CommandInfo("RELREMOVE",
-    CommandArguments("-b ", "-c", 1, 1),
-    CommandOptions(gorCommand = true, norCommand = true)) {
+    CommandArguments("-sepcc ", "-rsymb", 0, 1),
+    CommandOptions(gorCommand = false, norCommand = true)) {
     override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
       processArgumentsRelRemove(context, argString, iargs, args,executeNor,  forcedInputHeader)
     }
@@ -49,6 +49,12 @@ object RelRemoveCommand {
     var iteratorCommand = ""
     var rightHeader = ""
     var dsource: DynamicNorSource = null
+
+    val sepcc = if (hasOption(args, "-sepcc")) true else false
+    var removeSymbol = ""
+    if (hasOption(args, "-rsymb")) {
+      removeSymbol = replaceSingleQuotes(stringValueOfOption(args, "-rsymb"))
+    }
 
     try {
       var rightFile = iargs(0).trim
@@ -64,19 +70,16 @@ object RelRemoveCommand {
       rightHeader = inputSource.header
 
       if (rightHeader == null || rightHeader == "") {
-        throw new GorResourceException("Cannot open the map file", mapFileName)
+        throw new GorResourceException("Cannot open the relationship file", mapFileName)
       }
 
-      var combinedHeader = ""
+      var combinedHeader = inputHeader
       var pipeStep: Analysis = null
+      val colNum = inputHeader.split("\t").length-3
 
+      combinedHeader = validHeader(combinedHeader /* +"\tIOOA\telim\trelsize" */)
 
-      combinedHeader = validHeader(combinedHeader)
-
-/*
-        pipeStep = MapLookup(context.getSession, iteratorCommand, dsource, mapFileName, mCols.toArray, negate,
-          caseInsensitive, actualOutCols.toArray, missingVal, returnMissing, inSet, inSetCol, cartesian, skipEmpty)
-      */
+      pipeStep = RelRemove(context.getSession, dsource, sepcc, removeSymbol, colNum)
 
       CommandParsingResult(pipeStep, combinedHeader)
     } catch {
@@ -86,3 +89,4 @@ object RelRemoveCommand {
     }
   }
 }
+
