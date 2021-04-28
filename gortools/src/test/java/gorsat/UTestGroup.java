@@ -98,6 +98,13 @@ public class UTestGroup {
     }
 
     @Test
+    public void testGroupSteps() {
+        String query = "gor <(norrows 1000000 | calc chrom 'chr1' | calc pos #1+1 | select chrom,pos) | select chrom,pos | group 100 -steps 5 -count | where #3-#2 < 100";
+        String res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Wrong result from group with steps","Chrom\tbpStart\tbpStop\tallCount\n",res);
+    }
+
+    @Test
     public void testGroupCDist() {
         String[] lines = TestUtils.runGorPipeLines("gor ../tests/data/gor/genes.gor | group chrom -cdist | top 3");
         int[] numberOfGenes = {4747, 2011, 2982};

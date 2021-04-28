@@ -34,6 +34,6 @@ case class SlidingBinIDgen(var binSize: Int, slideSteps: Int) extends BinIDgen {
 
   def StartAndStop(id: Int): (Int, Int) = {
     val temp = id.toDouble / slideSteps
-    ((temp * binSize).toInt, ((temp + 1) * binSize).toInt)
+    ((temp * binSize+0.5).toInt, (temp * binSize+0.5).toInt+binSize)
   }
 }
