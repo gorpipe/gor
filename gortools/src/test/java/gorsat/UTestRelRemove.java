@@ -36,19 +36,9 @@ public class UTestRelRemove {
                 "| pivot method -v relremove,simple | throwif relremove_allcount > simple_allcount;\n" +
                 "/* Check that samples with the max number of relatives are eliminated and that samples with no relatives are kept */\n" +
                 "create #t9# = nor [#pheno#] | select pn | calc pheno random() | relremove [#r#] -rsymb elim | map -c pn -m 1000 <(nor [#r#] | calc pn pn1+','+pn2 | select pn | split pn | group -gc pn -count | rank allcount -o desc) | throwif rank_allcount > 0 and rank_allcount < 5 and pheno != 'elim' or allcount = 0 and pheno = 'elim' | top 10;\n" +
-                "nor [#t9#]";
+                "nor [#t9#] | top 0";
 
         String result = TestUtils.runGorPipe(query);
-        Assert.assertEquals("Wrong results from relremove",result,"ChromNOR\tPosNOR\tpn\tpheno\tallCount\trank_allCount\n" +
-                "chrN\t0\t0\telim\t7\t17\n" +
-                "chrN\t0\t1\t0.23260062415678506\t7\t17\n" +
-                "chrN\t0\t2\t0.7399467200488763\t8\t16\n" +
-                "chrN\t0\t3\telim\t8\t16\n" +
-                "chrN\t0\t4\telim\t14\t10\n" +
-                "chrN\t0\t5\telim\t12\t12\n" +
-                "chrN\t0\t6\telim\t5\t19\n" +
-                "chrN\t0\t7\telim\t10\t14\n" +
-                "chrN\t0\t8\telim\t9\t15\n" +
-                "chrN\t0\t9\telim\t13\t11\n");
+        Assert.assertEquals("Wrong results from relremove",result,"ChromNOR\tPosNOR\tpn\tpheno\tallCount\trank_allCount\n");
     }
 }
