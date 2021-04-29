@@ -47,7 +47,9 @@ Options
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-e error rate``   | The error rate of the reads.                                                                       |
 +---------------------+----------------------------------------------------------------------------------------------------+
-| ``-fp allele freq`` | A 'flat prior' assumed to have been used for computing the genotypes from the input.               |
+| ``-fpab prior``     | The prior assumed to have been used when prob likelihoods (PL) are used.  Use 0.33 for flat prior. |
++---------------------+----------------------------------------------------------------------------------------------------+
+| ``-fpbb prior``     | The prior for the alternative homozygot.  Use fpab = fpbb = 0.333 for flat prior.                  |
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-maxit mi``       | The maximum number of iterations. Default value is 20.                                             |
 +---------------------+----------------------------------------------------------------------------------------------------+
@@ -80,6 +82,14 @@ Options
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-osep separator`` | The separator to separate the genotypes, in case the triplets should we written out.               |
 +---------------------+----------------------------------------------------------------------------------------------------+
+| ``-combgt``         | Try to combine the het and alt-hom probabilities if no genotype exceeds threshold.  The genotype   |
+|                     | corresponding to the one with larger probability is used, i.e. het or hom-alt.  This is to save    |
+|                     | genotypes that are between het/hom-alt state from being called unknown.                            |
++---------------------+----------------------------------------------------------------------------------------------------+
+
+
+
+
 Examples
 ========
 
@@ -153,6 +163,23 @@ Examples
     gor [#gt2af#] | varjoin -r -xl pn -xr pn [#gt2#] | varjoin -r -xl pn -xr pn [#gt#]
     | calc err_gt2af if(value2!=value2xx,1,0) | calc err_gt2 if(value2x!=value2xx,1,0)
     | group 1 -gc an,af,anx,afx,anxx,afxx,value2xx,value2,value2x -sum -ic err* -count
+
+.. code-block:: gor
+
+    /* An example showing how to inspect in impact of the priors -fpab 0.01 -fpbb 0.001 by looking at the genotypes */
+    /* Note that option -combgt does not impact the prob-triplet chars2prprpr(value) */
+
+    gor [#vars#] | inset -c pn <(nor [#bucket#] | top 8)
+    | replace depth if(pn=1,4,8)
+    | replace callratio if(pn=1,0.25,0.2)
+    | hide callcopies
+    | calc gp '0.4;0.2;0.2'
+    | hide callratio,depth
+    | prgtgen -fpab 0.01 -fpbb 0.001  -gc ref,alt <(nor [#bucket#] | top 8)
+      <(gor [#cov#] | replace depth if(pn=1,6,8) | inset -c pn <(nor [#bucket#] | top 8) )  -e 0.00001
+    | csvsel -gc 3,4,af,an,pab,pbb -vs 2 <(nor [#bucket#] | top 8) <(nor [#bucket#] | top 8| select pn)  -tag pn
+    | calc pr chars2prprpr(value)
+    | calc value2 chars2gt(value,#prthr#)
 
 
 Related commands
