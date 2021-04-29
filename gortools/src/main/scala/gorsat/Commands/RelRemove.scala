@@ -34,7 +34,7 @@ import scala.collection.mutable.ListBuffer
 
 object RelRemoveCommand {
   class RelRemove extends CommandInfo("RELREMOVE",
-    CommandArguments("-sepcc ", "-rsymb", 0, 1),
+    CommandArguments("-sepcc ", "-rsymb -weightcol", 0, 1),
     CommandOptions(gorCommand = false, norCommand = true)) {
     override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
       processArgumentsRelRemove(context, argString, iargs, args,executeNor,  forcedInputHeader)
@@ -55,6 +55,8 @@ object RelRemoveCommand {
     if (hasOption(args, "-rsymb")) {
       removeSymbol = replaceSingleQuotes(stringValueOfOption(args, "-rsymb"))
     }
+
+    val weightCols = columnsOfOptionWithNil(args, "-weightcol", inputHeader, executeNor).distinct
 
     try {
       var rightFile = iargs(0).trim
@@ -79,7 +81,7 @@ object RelRemoveCommand {
 
       combinedHeader = validHeader(combinedHeader /* +"\tIOOA\telim\trelsize" */)
 
-      pipeStep = RelRemove(context.getSession, dsource, sepcc, removeSymbol, colNum)
+      pipeStep = RelRemove(context.getSession, dsource, sepcc, removeSymbol, colNum, weightCols)
 
       CommandParsingResult(pipeStep, combinedHeader)
     } catch {

@@ -41,6 +41,9 @@ Options
 +---------------------+----------------------------------------------------------------------------------------------------+
 | ``-sepcc``          | Treat cases and controls as separate groups when analyzing relationships.                          |
 +---------------------+----------------------------------------------------------------------------------------------------+
+| ``-weightcol col``  | A extra column with interger weights from 0 to 100.  Samples with larger weight are less likely    |
+|                     | to be removed.  Non-integer numbers are treated as zero and number larger than 100 as 100          |
++---------------------+----------------------------------------------------------------------------------------------------+
 
 Examples
 ========
@@ -53,8 +56,15 @@ Eliminating relatives for 100 phenotypes in two steps, first closely related ind
     | relremove <(nor relatives.tsv | where kinship >= 0.2 | select pn1,pn2)
     | relremove <(nor relatives.tsv | where kinship >= 0.05 | select pn1,pn2)
 
+An short example showing how sample 2 and 3 are kept, 2 because of weight and 3 because of ``-sepcc`` option.
 
-Below are examples of self-contained tests that explain the command.
+.. code-block:: gor
+
+    norrows 1 | calc pn '1,2,3' | calc weight '10,20,10' | select pn,weight | calc pheno '2,2,1'| split pn,weight,pheno
+    | relremove <(norrows 1 | calc pn1 '1,3' | calc pn2 '2' | select pn1,pn2 | split pn1) -rsymb elim -sepcc -weightcol weight
+
+
+Below are examples of self-contained tests that may help to explain the command.
 
 .. code-block:: gor
 

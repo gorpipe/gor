@@ -37,7 +37,7 @@ import scala.collection.mutable.ArrayBuffer
 
 
 case class RelRemove(session: GorSession,
-                     rightSource: DynamicNorSource, sepcc : Boolean, removeSymbol : String, colNum : Int) extends Analysis {
+                     rightSource: DynamicNorSource, sepcc : Boolean, removeSymbol : String, colNum : Int, weightCols : List[Int]) extends Analysis {
 
   var iooa_counter = -1
   val orderMap = scala.collection.mutable.Map.empty[String, Int]
@@ -51,6 +51,9 @@ case class RelRemove(session: GorSession,
 
   var allRows = new ArrayBuffer[Row]
   var relationships = new ArrayBuffer[(Int,Int)]
+  var weights = new ArrayBuffer[Int]
+  val useWeight = if (weightCols.size == 1) true else false
+  val weightCol = if (useWeight) weightCols.head else -1
 
   override def setup() {
     allRows = new ArrayBuffer[Row]
@@ -60,6 +63,17 @@ case class RelRemove(session: GorSession,
   override def process(r: Row) {
     val pni = iooa(r.colAsString(2).toString)
     if (pni >= allRows.size) allRows += r else allRows(pni) = r
+    var weight = 0
+    if (useWeight) {
+      try {
+        weight = r.colAsInt(weightCol)
+      } catch {
+        case e : Exception => weight = 0
+      }
+      if (weight > 100) weight = 100
+      if (weight < 0) weight = 0
+    }
+    if (pni >= weights.size) weights += weight else weights(pni) = weight
   }
 
   override def finish(): Unit = {
@@ -67,15 +81,17 @@ case class RelRemove(session: GorSession,
     var repSyms = new Array[String](colNum)
     var repVals = Array.ofDim[Byte](allRows.size,colNum)
     for (col <- 0 until colNum) {
-      val (cc,qt, plink, card, rSym) = setupForColumn(3+col)
-      val rs = if (plink && card.contains("0")) "0" else if (plink && card.contains("-9")) "-9" else if (card.contains("EXCL")) "EXCL" else "NA"
-      repSyms(col) = rs
-      relativeRank()
-      relativeElimination()
-      var i = 0
-      while (i < allRows.size) {
-        repVals(i)(col) = if (realStates(i).elim) 1.toByte else 0.toByte
-        i += 1
+      if (!useWeight || col+3 != weightCol) {
+        val (cc, qt, plink, card, rSym) = setupForColumn(3 + col)
+        val rs = if (plink && card.contains("0")) "0" else if (plink && card.contains("-9")) "-9" else if (card.contains("EXCL")) "EXCL" else "NA"
+        repSyms(col) = rs
+        relativeRank()
+        relativeElimination()
+        var i = 0
+        while (i < allRows.size) {
+          repVals(i)(col) = if (realStates(i).elim) 1.toByte else 0.toByte
+          i += 1
+        }
       }
     }
 
@@ -97,6 +113,7 @@ case class RelRemove(session: GorSession,
     repVals = null
     allRows = null
     relationships = null
+    weights = null
   }
 
   def readRelationships()= {
@@ -117,7 +134,7 @@ case class RelRemove(session: GorSession,
     relationships = relationships.distinct /* we don't want duplicate relationships, e.g. we assume implicit transitivity */
   }
 
-  case class realState(var inUse : Boolean, var caseCtrlScore : Int, var elim : Boolean, var needCheck : Boolean, var rels : List[Int])
+  case class realState(var inUse : Boolean, var aCase : Boolean, var Score : Int, var elim : Boolean, var needCheck : Boolean, var rels : List[Int])
 
   var realStates : Array[realState] = null;
 
@@ -126,7 +143,7 @@ case class RelRemove(session: GorSession,
     var rSymNA = false
     var rSymEXCL = false
     var i = 0;
-    while (i < allRows.size && s.size < 10) {
+    while (i < allRows.size && s.size < 4) {
       s += allRows(i).colAsString(col).toString.toUpperCase
       i += 1
     }
@@ -161,33 +178,34 @@ case class RelRemove(session: GorSession,
   def setupForColumn(col : Int) = {
     val (cc,qt,plink,card,rSym) = analyzeCardinality(col)
     realStates = new Array[realState](allRows.size)
-    val ctrlShiftScore = 10000;
+    val ctrlShiftScore = 10000; /* assumes that relative count cannot exceed 10k */
     var i = 0
     while (i < realStates.size) {
+      val weightScore = (100-weights(i)) * ctrlShiftScore * 10 /* High weight lowers score, i.e. less likely to be removed */
       val pheno = allRows(i).colAsString(col).toString.toUpperCase
       if (cc) { /* CC traits */
         val aCase = if (plink && pheno == "2" || !plink && (pheno == "1" || pheno == "CASE") ) true else false
         val aCtrl = if (!aCase && (plink && pheno == "1" || !plink && (pheno == "0" || pheno == "CTRL") )) true else false
         if (aCase) {
-          realStates(i) = new realState(true, 0, false, false, Nil)
+          realStates(i) = new realState(true, true, weightScore, false, false, Nil)
         } else if (aCtrl) {
-          realStates(i) = new realState(true, ctrlShiftScore, false, false, Nil)
+          realStates(i) = new realState(true, false, ctrlShiftScore + weightScore, false, false, Nil)
         } else {
-          realStates(i) = new realState(false, 0, false, false, null)
+          realStates(i) = new realState(false, false, weightScore, false, false, null)
         }
       } else if (qt) { /* QT trait */
         if (pheno != "EXCL" && pheno != "NA") {
-          realStates(i) = new realState(true, 0, false, false, Nil)
+          realStates(i) = new realState(true, false, weightScore, false, false, Nil)
         } else {
-          realStates(i) = new realState(false, 0, false, false, null)
+          realStates(i) = new realState(false, false, weightScore, false, false, null)
         }
       } else { /* illegal trait */
-        realStates(i) = new realState(false, 0, false, false, null)
+        realStates(i) = new realState(false, false, weightScore, false, false, null)
       }
       i += 1
     }
     relationships.foreach(pair => {
-      if (realStates(pair._1).inUse && realStates(pair._2).inUse && (!sepcc || realStates(pair._1).caseCtrlScore == realStates(pair._2).caseCtrlScore)) {
+      if (realStates(pair._1).inUse && realStates(pair._2).inUse && (!sepcc || realStates(pair._1).aCase == realStates(pair._2).aCase)) {
         realStates(pair._1).rels ::= pair._2
         realStates(pair._2).rels ::= pair._1
       }
@@ -202,9 +220,9 @@ case class RelRemove(session: GorSession,
     while (i < realStates.size) {
       if (realStates(i).inUse) {
         val relCount = realStates(i).rels.size
-        realRankMap.get(relCount + realStates(i).caseCtrlScore) match {
+        realRankMap.get(relCount + realStates(i).Score) match {
           case Some(x) => x += i
-          case None => if (relCount > 0) { realRankMap += (relCount + realStates(i).caseCtrlScore -> scala.collection.mutable.Set(i)) }
+          case None => if (relCount > 0) { realRankMap += (relCount + realStates(i).Score -> scala.collection.mutable.Set(i)) }
         }
       }
       i += 1
