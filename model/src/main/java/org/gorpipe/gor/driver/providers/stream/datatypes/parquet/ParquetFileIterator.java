@@ -89,8 +89,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
         FileSource fileSource = resolveFileSource(parquetFile);
         SourceReference sourceReference = fileSource.getSourceReference();
         java.nio.file.Path path = Paths.get(sourceReference.url);
-        // TODO there shouldn't be a reference to GorStandalone here.
-        if (!path.isAbsolute() && GorStandalone.isStandalone()) {
+        if (!path.isAbsolute() && sourceReference.commonRoot != null) {
             java.nio.file.Path root = Paths.get(sourceReference.commonRoot);
             path = root.resolve(path);
         }
