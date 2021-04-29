@@ -155,7 +155,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     })
 
     val cmd = splitManager.chromosomeSplits.keys.foldLeft("gordict")((x, y) => x + " [" + theKey + "_" + y + "] " +
-      splitManager.chromosomeSplits(y).range)
+      splitManager.chromosomeSplits(y).getRange)
     (cmd, theDependencies, partitionedGorCommands)
   }
 

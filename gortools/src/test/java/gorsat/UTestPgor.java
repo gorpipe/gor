@@ -79,4 +79,11 @@ public class UTestPgor {
         String[] lines = TestUtils.runGorPipeLines(query);
         Assert.assertEquals(15, lines.length);
     }
+
+    @Test
+    public void testPgorRangeReplace() {
+        String result = TestUtils.runGorPipe("create xxx = pgor -split <(gor ../tests/data/gor/genes.gor | top 2) ../tests/data/gor/genes.gor | calc f0 '##WHERE_SPLIT_WINDOW##' | calc f1 '#{CHROM}:#{BPSTART}-#{BPSTOP}' | calc f2 '#{RANGETAG}'; gor [xxx] | top 1");
+        Assert.assertEquals("Wrong result from pgor range replace query","Chrom\tgene_start\tgene_end\tGene_Symbol\tf0\tf1\tf2\n" +
+                "chr1\t14362\t29806\tWASH7P\t11869<= #2i and #2i < 14412\tchr1:11869-14412\tDDX11L1\n",result);
+    }
 }
