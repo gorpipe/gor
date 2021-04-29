@@ -22,4 +22,8 @@
 
 package gorsat.Script
 
-case class SplitEntry(range: String, filter: String)
+case class SplitEntry(chrom: String, start: Int, end: Int, filter: String, tag: String = "") {
+  def getRange: String = {
+    chrom + ":" + start + "-" + end
+  }
+}

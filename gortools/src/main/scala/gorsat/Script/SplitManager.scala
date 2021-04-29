@@ -24,7 +24,7 @@ package gorsat.Script
 
 import gorsat.Commands.CommandParseUtilities
 import gorsat.DynIterator.DynamicRowSource
-import gorsat.Script.SplitManager.{MAXIMUM_NUMBER_OF_SPLITS, WHERE_SPLIT_WINDOW}
+import gorsat.Script.SplitManager.{CHROM_PATTERN, MAXIMUM_NUMBER_OF_SPLITS, RANGETAG_PATTERN, START_PATTERN, STOP_PATTERN, WHERE_SPLIT_WINDOW}
 import gorsat.process.GorPipeCommands
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
@@ -54,8 +54,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
 
       chromosomeSplits.foreach(k => {
         val (n, c, g) = (groupName.replace(replacementPattern, k._1),
-          commandToExecute.replace(replacementPattern, k._2.range).replace(WHERE_SPLIT_WINDOW,
-            k._2.filter), batchGroupName)
+          commandToExecute.replace(replacementPattern, k._2.getRange)
+            .replace(WHERE_SPLIT_WINDOW, k._2.filter)
+            .replace(CHROM_PATTERN, k._2.chrom)
+            .replace(START_PATTERN, k._2.start.toString)
+            .replace(STOP_PATTERN, k._2.end.toString)
+            .replace(RANGETAG_PATTERN, k._2.tag), batchGroupName)
 
         var mc = c
 
@@ -81,6 +85,10 @@ object SplitManager {
   val REGULAR_REPLACEMENT_PATTERN = "##REGULAR_CHR_REPLACE##"
   val SPLIT_REPLACEMENT_PATTERN = "##SPLIT_CHR_REPLACE##"
   val WHERE_SPLIT_WINDOW = "##WHERE_SPLIT_WINDOW##"
+  val CHROM_PATTERN = "#{CHROM}"
+  val START_PATTERN = "#{BPSTART}"
+  val STOP_PATTERN = "#{BPSTOP}"
+  val RANGETAG_PATTERN = "#{RANGETAG}"
   val MAXIMUM_NUMBER_OF_SPLITS: Int = System.getProperty("gor.validation.split.maxcount", "5000").toInt
 
   def createFromCommand(groupName: String, commandToExecute: String, context: GorContext) : SplitManager = {
@@ -114,7 +122,7 @@ object SplitManager {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
     buildSizes.asScala.foreach(c => {
-      chromosomeSplits += (c._1 -> SplitEntry(c._1 + ":" + 0 + "-" + c._2, "0 <= #2i and #2i <= " + c._2))
+      chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, c._2, "0 <= #2i and #2i <= " + c._2))
     })
 
     chromosomeSplits
@@ -126,10 +134,10 @@ object SplitManager {
     buildSizes.asScala.foreach(c => {
       Option(buildSplits.getOrDefault(c._1, null)) match {
         case Some(chromosomeSplit) =>
-          chromosomeSplits += ((c._1 + "a") -> SplitEntry(c._1 + ":" + 0 + "-" + (chromosomeSplit - 1), "0 <= #2i and #2i < " + chromosomeSplit))
-          chromosomeSplits += ((c._1 + "b") -> SplitEntry(c._1 + ":" + chromosomeSplit + "-" + c._2, "" + chromosomeSplit + " <= #2i and #2i <= " + c._2))
+          chromosomeSplits += ((c._1 + "a") -> SplitEntry(c._1, 0, chromosomeSplit - 1, "0 <= #2i and #2i < " + chromosomeSplit))
+          chromosomeSplits += ((c._1 + "b") -> SplitEntry(c._1, chromosomeSplit, c._2, "" + chromosomeSplit + " <= #2i and #2i <= " + c._2))
         case None =>
-          chromosomeSplits += (c._1 -> SplitEntry(c._1 + ":" + 0 + "-" + c._2, "0 <= #2i and #2i <= " + c._2))
+          chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, c._2, "0 <= #2i and #2i <= " + c._2))
       }
     })
 
@@ -157,7 +165,7 @@ object SplitManager {
       }
 
       while (beginBp < c._2) {
-        chromosomeSplits += ((c._1 + "_" + no) -> SplitEntry(c._1 + ":" + 0.max(beginBp - splitOverlap) + "-" + (endBp - 1 + splitOverlap), 0.max(beginBp) + "<= #2i and #2i < " + endBp))
+        chromosomeSplits += ((c._1 + "_" + no) -> SplitEntry(c._1, 0.max(beginBp - splitOverlap), endBp - 1 + splitOverlap, 0.max(beginBp) + "<= #2i and #2i < " + endBp))
         beginBp += splitSize
         endBp += splitSize
         no += 1
@@ -185,7 +193,8 @@ object SplitManager {
         }
         val pos = row.pos + base
         val end = row.colAsInt(2)
-        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr + ":" + pos + "-" + end, 0.max(pos) + "<= #2i and #2i < " + end))
+        val tag = if(row.numCols() > 3) row.colAsString(3).toString else ""
+        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr, pos, end, 0.max(pos) + "<= #2i and #2i < " + end, tag))
         i += 1
       }
     } finally {
