@@ -227,7 +227,7 @@ public class ProjectContext {
         throw new GorResourceException(message, filename);
     }
 
-    public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException, IOException {
+    public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException {
         Path filePath = Paths.get(filename);
         if(!allowAbsolutePath) {
             var realProjectRoot = Paths.get(projectRoot);

@@ -54,7 +54,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
 
     @Override
     protected void checkValidServerFileName(final String fileName) {
-        ProjectContext.validateServerFileName(fileName, allowAbsolutePath);
+        ProjectContext.validateServerFileName(fileName, commonRoot, allowAbsolutePath);
     }
 
     @Override
