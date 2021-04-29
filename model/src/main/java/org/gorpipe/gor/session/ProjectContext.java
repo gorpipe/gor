@@ -210,7 +210,7 @@ public class ProjectContext {
         return getRealProjectRootPath().toString();
     }
 
-    public void validateWriteAllowed(String filename) throws GorResourceException, IOException {
+    public void validateWriteAllowed(String filename) throws GorResourceException {
         validateServerFileName(filename, getProjectRoot(), false);
         isWithinAllowedFolders(filename);
     }
