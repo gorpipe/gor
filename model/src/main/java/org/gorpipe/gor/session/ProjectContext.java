@@ -216,7 +216,7 @@ public class ProjectContext {
     }
 
     private void isWithinAllowedFolders(String filename) {
-        Path filePath = Paths.get(filename);
+        Path filePath = Paths.get(filename).normalize();
         for (String location : writeLocations) {
             if (filePath.startsWith(location)) {
                 return;
