@@ -228,14 +228,14 @@ public class ProjectContext {
     }
 
     public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException {
-        Path filePath = Paths.get(filename);
-        if(!allowAbsolutePath) {
+        if (PathUtils.isLocal(filename) && !allowAbsolutePath) {
+            Path filePath = Paths.get(filename);
             var realProjectRoot = Paths.get(projectRoot);
             if (!filePath.isAbsolute()) {
                 filePath = realProjectRoot.resolve(filePath);
             }
             filePath = PathUtils.relativize(realProjectRoot, filePath);
-            if (!filePath.normalize().equals(filePath)) {
+            if (filePath.isAbsolute() || !filePath.normalize().equals(filePath)) {
                 String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", filename, projectRoot);
                 throw new GorResourceException(message, filename);
             }

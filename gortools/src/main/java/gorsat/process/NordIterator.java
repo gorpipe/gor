@@ -280,7 +280,7 @@ public class NordIterator extends GenomicIteratorBase {
 
                 if (!entryPath.isAbsolute()) {
                     Path path = Paths.get(this.projectRoot).resolve(this.nordFile);
-                    Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(path, this.projectRoot);
+                    Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(path.toString(), this.projectRoot);
                     Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile);
 
                     if (reference.logical != null)

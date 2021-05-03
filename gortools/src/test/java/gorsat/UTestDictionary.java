@@ -28,10 +28,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -51,7 +48,6 @@ public class UTestDictionary {
     private File gorFileBucketA;
     private File gorFileBucketB;
     private File dicionaryFileWihtBuckets;
-
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -363,6 +359,21 @@ public class UTestDictionary {
         String[] args = {"gor "+gordPath.getFileName().toString(),"-gorroot", workDir.getRoot().getPath()};
         int count = TestUtils.runGorPipeCount(args, true);
         Assert.assertEquals(count, 48);
+    }
+
+    @Test
+    public void testReadOutOfScopeDictionaryWithServerFileReader() throws IOException {
+        Path gordPath = workDir.getRoot().toPath().getParent().resolve("dbsnp.gord");
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gorz"),workDir.getRoot().toPath().resolve("dbsnp.gorz"));
+        Files.writeString(gordPath,"dbsnp.gorz\tuu\n");
+        String[] args = {"gor "+ gordPath.toAbsolutePath(),"-gorroot", workDir.getRoot().getPath()};
+        boolean failed = false;
+        try {
+            TestUtils.runGorPipeCount(args, true);
+        } catch(Exception e) {
+            failed = true;
+        }
+        Assert.assertTrue("Out of project scope query should have failed", failed);
     }
 
     private File createSimpleDictWithBucket() throws IOException {
