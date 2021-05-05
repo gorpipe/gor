@@ -76,7 +76,7 @@ The PGOR logic recognizes the special string in the WHERE command and replaces i
 
 .. code-block:: gor
 
-   create #temp# = pgor -split 10000000:2000 file.bam | pileup -span 2000 | where Chrom = '#{CHROM}' and pos < #{bpstop};
+   create #temp# = pgor -split 10000000:2000 file.bam | pileup -span 2000 | where Chrom = '#{CHROM}' and pos >= #{BPSTART}+2000 and pos < #{BPSTOP}-2000;
 
    gor [#temp#] | write mypileup.gorz
 
