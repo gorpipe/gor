@@ -19,7 +19,7 @@ object PrGtGenAnalysis {
   case class LeftSourceAnalysis(context: GorContext, lookupSignature: String,
                                 fileName: String, iteratorCommand: String, iterator: LineIterator,
                                 plCol: Int, glCol: Int, gpCol: Int, crCol: Int, dCol: Int, pnCol: Int, grCols: List[Int],
-                                af: Double = 0.05, error: Double, tripSep: Char = ';') extends Analysis {
+                                fpab: Double = 0.33, fpbb : Double = 0.33, error: Double, tripSep: Char = ';') extends Analysis {
 
     val grColsArray = grCols.toArray
     var lastChr = ""
@@ -91,7 +91,8 @@ object PrGtGenAnalysis {
 
     def getNewGroupHolder: GroupHolder = {
       val gh = GroupHolder(new GTGen(error, ti.numberOfPns))
-      gh.gtGen.setAF(af)
+      /* gh.gtGen.setAF(af) */
+      gh.gtGen.setAFsinglePriors(fpab,fpbb)
       gh
     }
 

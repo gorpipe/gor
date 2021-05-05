@@ -20,6 +20,9 @@ public class GTGen {
     private double pAA = 0.25;
     private double pAB = 0.5;
     private double pBB = 0.25;
+    private double fpaa = 1.0/3.0;
+    private double fpab = 1.0/3.0;
+    private double fpbb = 1.0/3.0;
     private int covCount;
     private final PowerLookupTable ePlt;
     private final PowerLookupTable oneMinusEPlt;
@@ -62,10 +65,16 @@ public class GTGen {
     /**
      * Sets the allele frequency which we are assuming to have been used when computing the given triplets.
      */
-    public void setAF(double af) {
+    public void setAF(double af) { /* This is nolonger used */
         this.pAA = (1 - af) * (1 - af);
         this.pAB = 2 * af * (1 - af);
         this.pBB = af * af;
+    }
+
+    public void setAFsinglePriors(double fpab, double fpbb) {
+        this.fpab = fpab;
+        this.fpbb = fpbb;
+        this.fpaa = 1.0 - fpab - fpbb;
     }
 
     public double getAF() {
@@ -122,9 +131,18 @@ public class GTGen {
         }
         this.hasData[sampleIdx] = true;
         this.covCount++;
+        /* These where incorrectly used as priors
         this.qs[3 * sampleIdx] = pAA / this.pAA;
         this.qs[3 * sampleIdx + 1] = pAB / this.pAB;
         this.qs[3 * sampleIdx + 2] = pBB / this.pBB;
+        */
+
+        /* We do this reverse calculation for gt-priors p(data|gt) only when PL triplet is used and not Callratio/Depth */
+        /* See the reverse logic in fillGenotypes(double[] gts) that calculates posterior gt-likelihoods  */
+
+        this.qs[3 * sampleIdx] = pAA / this.fpaa;
+        this.qs[3 * sampleIdx + 1] = pAB / this.fpab;
+        this.qs[3 * sampleIdx + 2] = pBB / this.fpbb;
     }
 
     public void addData(int sampleIdx, int call, int depth) {

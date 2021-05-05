@@ -32,7 +32,7 @@ import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
 
 class PrGtGen extends CommandInfo("PRGTGEN",
-  CommandArguments("-combgt", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fp -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
+  CommandArguments("-combgt", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fpab -fpbb -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
   CommandOptions(gorCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -59,7 +59,8 @@ class PrGtGen extends CommandInfo("PRGTGEN",
 
     val e = doubleValueOfOptionWithDefault(args, "-e", 0.0)
 
-    val fp = doubleValueOfOptionWithDefault(args, "-fp", 0.05)
+    val fpab = doubleValueOfOptionWithDefault(args, "-fpab", 0.33)
+    val fpbb = doubleValueOfOptionWithDefault(args, "-fpbb", 0.33)
 
     val maxIt = intValueOfOptionWithDefault(args, "-maxit", 20)
     val tol = doubleValueOfOptionWithDefault(args, "-tol", 1e-5)
@@ -157,11 +158,11 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     val combinedHeader = IteratorUtilities.validHeader(outputHeader)
     val pipeStep: Analysis =
       if (iargs.length == 3) {
-        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
+        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fpab, fpbb, e, tripSep = pSep) |
           AFANSourceAnalysis(priorSource, context, lookupSignature, prgcCols, pabc, pbbc, anc) |
           RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep, combineGt = combGt)
       } else {
-        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fp, e, tripSep = pSep) |
+        LeftSourceAnalysis(context, lookupSignature, buckTagFile, buckTagItCommand, buckTagDNS, pl, gl, gp, crc, ld, PNCol, gcCols, fpab, fpbb, e, tripSep = pSep) |
           RightSourceAnalysis(segSource, context, lookupSignature, rdIdx, PNCol2, threshold, maxSegSize, maxIt, tol, sepOut = writeOutTriplets, outSep = oSep, combineGt = combGt)
       }
     CommandParsingResult(pipeStep, combinedHeader)
