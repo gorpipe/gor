@@ -30,6 +30,7 @@ import org.gorpipe.gor.reference.ReferenceBuild;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GorParallelQueryHandler;
 import org.gorpipe.gor.model.QueryEvaluator;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.model.gor.iterators.RefSeq;
 import org.gorpipe.model.gor.iterators.RefSeqFactory;
 import org.gorpipe.model.gor.iterators.RefSeqFromConfigFactory;
@@ -170,6 +171,15 @@ public class ProjectContext {
         return refSeqFactory.create();
     }
 
+    public String getProjectRoot() {
+        return getProjectRootPath().toString();
+    }
+
+    public Path getProjectRootPath() {
+        String projectRoot = this.root.split("[ \t]+")[0];
+        return Paths.get(projectRoot);
+    }
+
     /**
      * The GorRoot is used for the file root AND to store options.  This method parses
      * the project root from the gor root and returns the real path of it (if it exist).
@@ -179,8 +189,7 @@ public class ProjectContext {
      * @return the real path of the project root if it exists, otherwise the project root as specified.
      */
     public Path getRealProjectRootPath() {
-        String projectRoot = this.root.split("[ \t]+")[0];
-        Path rootPath = Paths.get(projectRoot);
+        Path rootPath = getProjectRootPath();
         if (Files.exists(rootPath)) {
             try {
                 rootPath = rootPath.toRealPath();
@@ -202,12 +211,12 @@ public class ProjectContext {
     }
 
     public void validateWriteAllowed(String filename) throws GorResourceException {
-        validateServerFileName(filename, false);
+        validateServerFileName(filename, getProjectRoot(), false);
         isWithinAllowedFolders(filename);
     }
 
     private void isWithinAllowedFolders(String filename) {
-        Path filePath = Paths.get(filename);
+        Path filePath = Paths.get(filename).normalize();
         for (String location : writeLocations) {
             if (filePath.startsWith(location)) {
                 return;
@@ -218,15 +227,18 @@ public class ProjectContext {
         throw new GorResourceException(message, filename);
     }
 
-    public static void validateServerFileName(String filename, boolean allowAbsolutePath) throws GorResourceException {
-        Path filePath = Paths.get(filename);
-        if (!allowAbsolutePath && filePath.isAbsolute()) {
-            String message = String.format("Invalid File Path: Absolute paths for files are not allowed! Path given: %s", filename);
-            throw new GorResourceException(message, filename);
-        }
-        if (!filePath.normalize().equals(filePath)) {
-            String message = String.format("Invalid File Path: File paths are not allowed to reference parent folders!  Path given: %s", filename);
-            throw new GorResourceException(message, filename);
+    public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException {
+        if (PathUtils.isLocal(filename) && !allowAbsolutePath) {
+            Path filePath = Paths.get(filename);
+            var realProjectRoot = Paths.get(projectRoot);
+            if (!filePath.isAbsolute()) {
+                filePath = realProjectRoot.resolve(filePath);
+            }
+            filePath = PathUtils.relativize(realProjectRoot, filePath);
+            if (filePath.isAbsolute() || !filePath.normalize().equals(filePath)) {
+                String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", filename, projectRoot);
+                throw new GorResourceException(message, filename);
+            }
         }
     }
 

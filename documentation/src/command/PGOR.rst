@@ -36,8 +36,9 @@ Options
 |                              |  it is the size of each split in sequence bases.                                |
 |                              |                                                                                 |
 |                              |  The overlap number can be provided optionally to allow genome partitions       |
-|                              |  to overlap. In such cases, the variable ##WHERE_SPLIT_WINDOW## can be used     |
-|                              |  to set filtering on the output.                                                |
+|                              |  to overlap. In such cases, the variables ##WHERE_SPLIT_WINDOW##, #{CHROM},     |
+|                              |  #{BPSTART}, #{BPSTOP} and #{RANGETAG} can be used to set filtering on the      |
+|                              |  output.                                                                        |
 |                              |                                                                                 |
 |                              |  Note, when partitions are represented in bases, no more                        |
 |                              |  than 100 partitions can be per chromosome.                                     |

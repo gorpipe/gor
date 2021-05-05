@@ -25,10 +25,7 @@ package org.gorpipe.gor;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.session.ProjectContext;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -96,6 +93,7 @@ public class UTestProjectContext {
     }
 
     @Test(expected = GorResourceException.class)
+    @Ignore("This test is no longer valid as up traversal is now allowed as long as it doesnt go out of project scope")
     public void isWriteAllowedButHasDots() {
         projectContext.validateWriteAllowed("user_data/folder/../test.gor");
     }
@@ -111,6 +109,7 @@ public class UTestProjectContext {
     }
 
     @Test(expected = GorResourceException.class)
+    @Ignore("Dots not allowed")
     public void isWriteAllowedSymbolicLinkDots() {
         projectContext.validateWriteAllowed("user_data/shared/../test.gor");
     }

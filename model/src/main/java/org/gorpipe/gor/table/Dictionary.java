@@ -315,8 +315,7 @@ public class Dictionary {
         final IntArray bucketTotalCounts = new IntArray();
         final IntArray bucketActiveCount = new IntArray();
         final Map<String, Integer> bucketToIdx = new HashMap<>();
-        final Path gordPath = Paths.get(path);
-        final FileReference dictFileParent = getDictionaryFileParent(gordPath, commonRoot);
+        final FileReference dictFileParent = getDictionaryFileParent(path, commonRoot);
         final FileReference bucketsParent = getBucketsPath(dictFileParent, commonRoot);
         final List<DictionaryLine> activeDictionaryLines = new ArrayList<>();
         final Map<String, IntArray> tagsToLines = new LinkedHashMap<>();
@@ -614,7 +613,9 @@ public class Dictionary {
     private static FileReference resetFilePath(String file, final FileReference dictFileParent) {
         if (file != null) {
             if (file.startsWith("/")) {
-                if (!file.startsWith("//")) { // Ensure unix based path will work in linux
+                if(!PathUtils.isLocal(dictFileParent.logical)) {
+                    throw new GorResourceException("Local paths in remote dictionaries not allowed: "+file, dictFileParent.logical);
+                } else if (!file.startsWith("//")) { // Ensure unix based path will work in linux
                     return new FileReference('/' + file);
                 }
             } else if (dictFileParent != null && dictFileParent.physical != null && dictFileParent.physical.length() > 0) { // assume relative files in gord file are relative to that gord file
@@ -666,12 +667,12 @@ public class Dictionary {
         return sb.toString();
     }
 
-    public static FileReference getDictionaryFileParent(Path logicalPath, String commonRoot) {
+    public static FileReference getDictionaryFileParent(String logicalPath, String commonRoot) {
         // Need to prepare two parent paths, one is logical (use by server for security constraints) and another is physical (used to read the actual file)
-        Path physicalPath = logicalPath;
+        Path physicalPath = Paths.get(logicalPath);
         Path pathFromRoot = Paths.get("");
         if (commonRoot != null) {
-            String p = logicalPath.toString();
+            String p = logicalPath;
             if (p.startsWith(commonRoot)) {
                 final int idx = p.lastIndexOf('/');
                 if (idx > 0) {
@@ -698,34 +699,36 @@ public class Dictionary {
         }
 
         // In case of different physical path from the logical provided by the user, keep track of two file paths
-        final String lpath = findDictPathParent(Files.exists(logicalPath) ? logicalPath.getParent() : null, commonRoot);
-        final String ppath = physicalFile != null ? (physicalFile.exists() ? findDictPathParent(physicalPath.getParent(), commonRoot) : Util.nvlToString(physicalPath.getParent(), "")) : lpath;
-        log.trace("logicalFile = {}, root = {}, lpath = {}, ppath = {}\n", logicalPath.toAbsolutePath(), commonRoot, lpath, ppath);
+        final String lpath = findDictPathParent(logicalPath, commonRoot);
+        final String ppath = physicalFile != null ? (physicalFile.exists() ? findDictPathParent(physicalPath.toString(), commonRoot) : Util.nvlToString(physicalPath.getParent(), "")) : lpath;
+        log.trace("logicalFile = {}, root = {}, lpath = {}, ppath = {}\n", logicalPath, commonRoot, lpath, ppath);
         return new FileReference(lpath, ppath, symlinkIsAbsolute);
     }
 
     /**
-     * @param parentpath absolute path or relative path to the dictionary.
+     * @param path absolute path or relative path to the dictionary.
      * @param commonRoot
      * @return if commonRoot and commonroot is http or tcp then null
      * else if commonRoot and parentpath starts with the commonRoot then relative path from the common root.
      * else  parentpath as absolute path.
      */
-    private static String findDictPathParent(final Path parentpath, String commonRoot) {
-        if (parentpath != null) { // 25.01.2012 gfg+hakon, treat relative files in dictionary files always as relative to said dictionary
-            // TODO:  Check this, if parentpaht is relative it is resolved from the current dir, but not the relative to the dictionary.gh
-            Path dictFileParent = parentpath.toAbsolutePath();
-            if (commonRoot != null) {
-                if (!PathUtils.isLocal(commonRoot)) {
-                    return null; // Do no support relative references of local dictionary files with remote reference in common root
-                } else {
-                    Path commonRootPath = Paths.get(commonRoot).toAbsolutePath().normalize();
-                    dictFileParent = PathUtils.relativize(commonRootPath, dictFileParent);
-                }
+    private static String findDictPathParent(final String path, String commonRoot) {
+        // 25.01.2012 gfg+hakon, treat relative files in dictionary files always as relative to said dictionary
+        // TODO:  Check this, if parentpaht is relative it is resolved from the current dir, but not the relative to the dictionary.gh
+        if(!PathUtils.isLocal(path)) {
+            int i = path.lastIndexOf('/');
+            return path.substring(0,i);
+        } else if (commonRoot != null) {
+            if (!PathUtils.isLocal(commonRoot)) {
+                return null; // Do no support relative references of local dictionary files with remote reference in common root
+            } else {
+                Path commonRootPath = Paths.get(commonRoot).toAbsolutePath().normalize();
+                Path ppath = Paths.get(path);
+                Path dictFileParent = ppath.isAbsolute() ? ppath.getParent() : commonRootPath.resolve(path).getParent();
+                return PathUtils.relativize(commonRootPath, dictFileParent).toString();
             }
-            return dictFileParent.toString();
         }
-        return null;
+        return Util.nvlToString(Paths.get(path).getParent(),"");
     }
 
     private static String orderTags(Collection<String> strings) {
