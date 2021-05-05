@@ -257,6 +257,22 @@ the ones we are calling now.</p>
 | group 1 -<span class="no">gc</span> an,af,anx,afx,anxx,afxx,value2xx,value2,value2x -sum -<span class="no">ic</span> err* -<span class="no">count</span>
 </pre></div>
 </div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example showing how to inspect in impact of the priors -fpab 0.01 -fpbb 0.001 by looking at the genotypes */
+/* Note that option -combgt does not impact the prob-triplet chars2prprpr(value) */
+
+<span class="nd">gor</span> [#vars#] | inset -c pn &lt;(<span class="nd">nor</span> [#bucket#] | top 8)
+| replace depth if(pn=1,4,8)
+| replace callratio if(pn=1,0.25,0.2)
+| hide callcopies
+| calc gp &#39;0.4;0.2;0.2&#39;
+| hide callratio,depth
+| prgtgen -fpab 0.01 -fpbb 0.001  -<span class="no">gc</span> ref,<span class="na">alt</span> &lt;(<span class="nd">nor</span> [#bucket#] | top 8)
+  &lt;(<span class="nd">gor</span> [#cov#] | replace depth if(pn=1,6,8) | inset -c pn &lt;(<span class="nd">nor</span> [#bucket#] | top 8) )  -e 0.00001
+| csvsel -<span class="no">gc</span> 3,4,af,an,pab,pbb -vs 2 &lt;(<span class="nd">nor</span> [#bucket#] | top 8) &lt;(<span class="nd">nor</span> [#bucket#] | top 8| select pn)  -tag pn
+| calc pr chars2prprpr(value)
+| calc value2 chars2gt(value,#prthr#)
+</pre></div>
+</div>
 <section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
