@@ -251,6 +251,11 @@ parallel -parts [#splits#] &lt;(<span class="nd">gor</span> -<span class="no">p<
 </pre></div>
 </div>
 <p>The PGOR logic recognizes the special string in the WHERE command and replaces it with the appropriate filtering condition to avoid overlap of data in the temporary files stored in #temp#.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #temp# = <span class="nd">pgor</span> -split 10000000:2000 file.bam | pileup -span 2000 | where <span class="na">Chrom</span> = &#39;#{CHROM}&#39; and <span class="na">pos</span> &lt; #{bpstop};
+
+<span class="nd">gor</span> [#temp#] | write mypileup.gorz
+</pre></div>
+</div>
 </section>
 </section>
 <section id="partgor-examples">
