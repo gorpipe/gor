@@ -74,6 +74,11 @@ In the above query, the partitions are 10Mb in size, overlapping by 2000 bases t
 
 The PGOR logic recognizes the special string in the WHERE command and replaces it with the appropriate filtering condition to avoid overlap of data in the temporary files stored in #temp#.
 
+.. code-block:: gor
+
+   create #temp# = pgor -split 10000000:2000 file.bam | pileup -span 2000 | where Chrom = '#{CHROM}' and pos < #{bpstop};
+
+   gor [#temp#] | write mypileup.gorz
 
 .. _PARTGORexamples:
 
