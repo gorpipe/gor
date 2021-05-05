@@ -187,6 +187,10 @@ GORshell can also be started up via:
 
     ./gortools/build/install/gor-scripts/bin/gorshell
 
+## Find older packages
+
+Previous to the migration to gitlab package registry GOR artifacts were stored in jfrog artifactory, the contents of our `libs-release-local` repo can be found in `s3://wxnc-build-artifacts` and credentials for it are in secret server [#3610](https://secretserver.wuxinextcode.com/SecretServer/SecretView.aspx?secretid=3610).
+
 ## How to get help?
 
 Documentation for GORpipe can be found at: http://docs.gorpipe.org/. Additionally, help can be found while using GORpipe
