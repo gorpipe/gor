@@ -42,7 +42,7 @@ class Tee extends CommandInfo("TEE",
     val teeIt = PipeInstance.createGorIterator(context)
     val teeStep = teeIt.createPipestep(outputPipeCmd,combinedHeader)
 
-    val teeHeader = if (hasOption(args,"-h")) teeIt.getHeader else ""
+    val teeHeader = if (hasOption(args,"-h")) teeIt.getHeader else null
 
     val pipeStep: Analysis = TeeAnalysis(teeStep | StdOut2(teeHeader))
 
