@@ -36,7 +36,7 @@ public class GorIteratorFactory implements StreamSourceIteratorFactory {
 
     @Override
     public DataType[] getSupportedDataTypes() {
-        return new DataType[]{DataType.GOR, DataType.NOR};
+        return new DataType[]{DataType.GOR, DataType.NOR, DataType.TSV};
     }
 
     @Override
