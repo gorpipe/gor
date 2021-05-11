@@ -39,7 +39,6 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
     if (context.getSession.getSystemContext.getServer) {
       context.getSession.getProjectContext.validateWriteAllowed(fileName)
-      fileName = context.getSession.getProjectContext.getWritePath(fileName)
     }
 
     val fileEnding = FilenameUtils.getExtension(fileName)

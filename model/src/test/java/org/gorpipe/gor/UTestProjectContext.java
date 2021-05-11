@@ -113,22 +113,4 @@ public class UTestProjectContext {
     public void isWriteAllowedSymbolicLinkDots() {
         projectContext.validateWriteAllowed("user_data/shared/../test.gor");
     }
-
-    @Test
-    public void getWritePath() throws IOException {
-        String writePath = projectContext.getWritePath("user_data/test.gor");
-        File writeFile = new File(writePath);
-        String data = "data";
-        FileUtils.writeStringToFile(new File(projectContext.getRealProjectRoot() + "/user_data/test.gor"), data, Charset.defaultCharset());
-        Assert.assertEquals(data, FileUtils.readFileToString(writeFile, Charset.defaultCharset()));
-    }
-
-    @Test
-    public void getWritePathSymbolic() throws IOException {
-        String writePath = projectContext.getWritePath("user_data/shared/test.gor");
-        File writeFile = new File(writePath);
-        String data = "data";
-        FileUtils.writeStringToFile(new File(symbolicTarget.getRoot().toString() + "/test.gor"), data, Charset.defaultCharset());
-        Assert.assertEquals(data, FileUtils.readFileToString(writeFile, Charset.defaultCharset()));
-    }
 }

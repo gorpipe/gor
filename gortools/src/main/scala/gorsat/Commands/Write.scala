@@ -42,7 +42,6 @@ class Write extends CommandInfo("WRITE",
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
     if (context.getSession.getSystemContext.getServer) {
       context.getSession.getProjectContext.validateWriteAllowed(fileName)
-      fileName = context.getSession.getProjectContext.getWritePath(fileName)
     }
 
     var forkCol = -1
