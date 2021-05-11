@@ -149,11 +149,11 @@ object OutFile {
       if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
         new GORzip(name, fileReader, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
-        new NorFileOut(name, fileReader, header, skipHeader, append, options.md5)
+        new NorFileOut(name, fileReader, header, skipHeader, append, options.md5, options.md5File)
       } else if (nameUpper.endsWith(".PARQUET")) {
         new GorParquetFileOut(name, header, options.nor)
       } else if (options.nor) {
-        new CmdFileOut(name, header, skipHeader, append)
+        new CmdFileOut(name, fileReader, header, skipHeader, append)
       } else {
         new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
       }
