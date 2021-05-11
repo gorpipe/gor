@@ -23,7 +23,7 @@
 package gorsat.Outputs
 
 import gorsat.Commands.Output
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{FileReader, Row}
 
 /**
   * @param name Name of the file to be written.
@@ -31,8 +31,8 @@ import org.gorpipe.gor.model.Row
   * @param skipHeader Whether the header should be written or not.
   * @param append Whether we should write the output to the beginning or end of the file.
   */
-class CmdFileOut(name: String, header: String, skipHeader: Boolean = false, append: Boolean = false) extends Output {
-  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(new java.io.FileOutputStream(name, append)), 1024 * 100)
+class CmdFileOut(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false) extends Output {
+  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(fileReader.getOutputStream(name, append)))
 
   def setup {
     if (header != null & !skipHeader) {

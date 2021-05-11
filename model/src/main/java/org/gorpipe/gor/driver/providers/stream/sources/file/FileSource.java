@@ -132,7 +132,7 @@ public class FileSource implements StreamSource {
         if (parent != null && !Files.exists(parent)) {
             Files.createDirectories(parent);
         }
-        return append ? Files.newOutputStream(file, StandardOpenOption.APPEND) : Files.newOutputStream(file);
+        return append ? Files.newOutputStream(file, StandardOpenOption.APPEND, StandardOpenOption.CREATE) : Files.newOutputStream(file);
     }
 
     @Override
