@@ -67,6 +67,14 @@ public class DriverBackedFileReader extends FileReader {
         this.constants = constants;
     }
 
+    public String getCommonRoot() {
+        return commonRoot;
+    }
+
+    public Object[] getConstants() {
+        return constants;
+    }
+
     /**
      * Resolve the given url, this includes traversing .link files and do fallback to link files if the file does not exits.
      *
