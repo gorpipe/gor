@@ -246,10 +246,6 @@ public class ProjectContext {
         return writeLocations.toArray(new String[0]);
     }
 
-    public String getWritePath(String filename) {
-        return getRealProjectRootPath().resolve(filename).toString();
-    }
-
     public String getGorAliasFile() {
         return this.aliasFile;
     }
