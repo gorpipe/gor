@@ -29,6 +29,9 @@ import org.gorpipe.gor.model.{DriverBackedFileReader, DriverBackedGorServerFileR
 import org.gorpipe.gor.session.{GorSession, ProjectContext, SystemContext}
 import org.gorpipe.gor.util.StringUtil
 
+import java.util
+import scala.collection.JavaConverters
+
 /**
   * Factory method tho create session used for tests
   *
@@ -45,6 +48,9 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
 
     val session = new GorSession(requestId)
 
+    val allowedWriteLocations = Array[String]("test")
+    val allowedWriteLocationList = JavaConverters.seqAsJavaList(allowedWriteLocations)
+
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
@@ -57,6 +63,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
       .setFileCache(new LocalFileCacheClient(Paths.get(pipeOptions.cacheDir), useSubFolder, subFolderSize))
       .setQueryHandler(new GeneralQueryHandler(session.getGorContext, false))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
+      .setWriteLocations(allowedWriteLocationList)
       .build()
 
     val systemContextBuilder = new SystemContext.Builder()

@@ -45,6 +45,22 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testTxtWriteServer() throws IOException {
+        Path p = Paths.get("../tests/data/nor/simple.nor");
+        Files.copy(p, tmpdir.resolve("simple1.nor"));
+        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write test/new.txt", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        TestUtils.runGorPipeCount(args, true);
+    }
+
+    @Test
+    public void testTsvWriteServer() throws IOException {
+        Path p = Paths.get("../tests/data/nor/simple.nor");
+        Files.copy(p, tmpdir.resolve("simple2.nor"));
+        String[] args = {"nor simple2.nor | select Chrom | calc p 1 | write test/new.tsv", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        TestUtils.runGorPipeCount(args, true);
+    }
+
+    @Test
     public void testGorWriteWithMd5() throws IOException {
         Path tmpfile = tmpdir.resolve("genes_md5.gorz");
         tmpfile.toFile().deleteOnExit();

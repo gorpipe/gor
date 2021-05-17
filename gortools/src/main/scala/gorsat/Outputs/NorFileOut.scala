@@ -28,17 +28,19 @@ import htsjdk.samtools.util.Md5CalculatingOutputStream
 import org.gorpipe.gor.model.{FileReader, Row}
 import org.gorpipe.gor.session.GorSession
 
+import java.nio.file.Paths
+
 /**
   * @param name Name of the file to be written.
   * @param header Header of the incoming source.
   * @param skipHeader Whether the header should be written or not.
   * @param append Whether we should write the output to the beginning or end of the file.
   */
-class NorFileOut(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5: Boolean = false) extends Output {
+class NorFileOut(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5: Boolean = false, md5File: Boolean = false) extends Output {
   val finalFileOutputStream = fileReader.getOutputStream(name, append)
   val interceptingFileOutputStream: OutputStream =
     if (md5) {
-      new Md5CalculatingOutputStream(finalFileOutputStream, new File(name + ".md5"))
+      new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) Paths.get(name + ".md5") else null)
     } else {
       finalFileOutputStream
     }
