@@ -413,7 +413,8 @@ object GorKing2 {
           }
 
           val grsize = (pns1.length / 100).max(1) // split for max 100 threads
-          val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._2))
+          /* val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._2)) */
+          val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._1))
 
           val jpns1groups = JavaConverters.seqAsJavaList(pns1groups.toSeq)
           if (swapped) jpns1groups.parallelStream().forEach(x => process_group(pns2,x,symmetric_PNlists))
