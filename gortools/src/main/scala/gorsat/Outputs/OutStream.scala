@@ -22,5 +22,25 @@
 
 package gorsat.Outputs
 
-case class NorStdOut(override val header: String = null) extends NorOutStream(header, System.out)  {
+import gorsat.Commands.Output
+import org.gorpipe.gor.model.Row
+
+import java.io.OutputStream
+
+class OutStream(header: String = null, outputStream: OutputStream) extends Output {
+  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(outputStream), 1024 * 100)
+
+  def setup {
+    if (header != null) out.write(header + "\n")
+  }
+
+  def process(r: Row) {
+    out.write(r.toString)
+    out.write('\n')
+  }
+
+  def finish {
+    out.flush
+    out.close
+  }
 }

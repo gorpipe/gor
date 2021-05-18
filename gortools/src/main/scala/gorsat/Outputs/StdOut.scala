@@ -22,23 +22,6 @@
 
 package gorsat.Outputs
 
-import gorsat.Commands.Output
-import org.gorpipe.gor.model.Row
+case class StdOut( val header: String = null) extends OutStream (header, System.out) {
 
-case class StdOut(header: String = null) extends Output {
-  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(System.out), 1024 * 100)
-
-  def setup {
-    if (header != null) out.write(header + "\n")
-  }
-
-  def process(r: Row) {
-    out.write(r.toString)
-    out.write('\n')
-  }
-
-  def finish {
-    out.flush
-    out.close
-  }
 }
