@@ -45,6 +45,8 @@ class CsvCC extends CommandInfo("CSVCC",
       sepVal = ""
     }
 
+    if (valSize == -1 && !hasOption(args, "-s")) valSize = 1
+
     var use_threshold = false
     var p_threshold = 0.95
     var use_prob = false
