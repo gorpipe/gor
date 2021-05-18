@@ -36,28 +36,13 @@ import java.nio.file.Paths
   * @param skipHeader Whether the header should be written or not.
   * @param append Whether we should write the output to the beginning or end of the file.
   */
-class NorFileOut(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5: Boolean = false, md5File: Boolean = false) extends Output {
-  val finalFileOutputStream = fileReader.getOutputStream(name, append)
-  val interceptingFileOutputStream: OutputStream =
-    if (md5) {
-      new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) Paths.get(name + ".md5") else null)
-    } else {
-      finalFileOutputStream
-    }
-
-  val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(interceptingFileOutputStream), 1024 * 100)
-
-  def setup {
-    if (header != null & !skipHeader) out.write("#" + header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
-  }
-
-  def process(r: Row) {
-    out.write(r.otherCols)
-    out.write('\n')
-  }
-
-  def finish {
-    out.flush
-    out.close
-  }
+class NorFileOut(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5: Boolean = false, md5File: Boolean = false)
+  extends NorOutStream(header, {
+      val finalFileOutputStream = fileReader.getOutputStream(name, append)
+      if (md5) {
+        new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) Paths.get(name + ".md5") else null)
+      } else {
+        finalFileOutputStream
+      }},
+    skipHeader) {
 }
