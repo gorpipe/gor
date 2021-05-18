@@ -48,6 +48,10 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
 
     val session = new GorSession(requestId)
 
+    val projectRoot = Paths.get(pipeOptions.gorRoot)
+    var cacheDir = Paths.get(pipeOptions.cacheDir)
+    if(!cacheDir.isAbsolute) cacheDir = projectRoot.resolve(cacheDir)
+
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
@@ -57,7 +61,7 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
       .setConfigFile(pipeOptions.configFile)
       .setRoot(pipeOptions.gorRoot)
       .setFileReader(createFileReader(pipeOptions.gorRoot))
-      .setFileCache(new LocalFileCacheClient(Paths.get(pipeOptions.cacheDir), useSubFolder, subFolderSize))
+      .setFileCache(new LocalFileCacheClient(cacheDir, useSubFolder, subFolderSize))
       .setQueryHandler(createQueryHandler(pipeOptions.queryHandler, session))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
       .build()

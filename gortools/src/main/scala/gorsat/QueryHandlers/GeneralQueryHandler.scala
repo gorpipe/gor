@@ -25,7 +25,7 @@ package gorsat.QueryHandlers
 import gorsat.Analysis.CheckOrder
 
 import java.lang
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
@@ -170,8 +170,16 @@ object GeneralQueryHandler {
     val theSource = new DynamicRowSource(commandToExecute, context)
     val theHeader = theSource.getHeader
 
+    val projectContext = context.getSession.getProjectContext
+    val projectRoot = Paths.get(projectContext.getProjectRoot)
     val temp_cacheFile = if(outfile!=null) AnalysisUtilities.getTempFileName(outfile) else null
-    val oldName = if(temp_cacheFile!=null) Paths.get(temp_cacheFile) else null
+    val oldName = if(temp_cacheFile!=null) {
+      var tmpcache = Paths.get(temp_cacheFile)
+      if(!tmpcache.isAbsolute) {
+        tmpcache = projectRoot.resolve(tmpcache)
+      }
+      tmpcache
+    } else null
     try {
       val nor = theSource.isNor
       var newName: Path = null
@@ -179,11 +187,11 @@ object GeneralQueryHandler {
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, context.getSession.getProjectContext.getFileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
+          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
           if(nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
-        val md5File = Paths.get(temp_cacheFile + ".md5")
+        val md5File = Paths.get(oldName + ".md5")
         if (Files.exists(md5File)) {
           val md5SumLines = Files.readAllLines(md5File)
 
@@ -204,22 +212,30 @@ object GeneralQueryHandler {
 
         if (newName == null) {
           newName = Paths.get(outfile)
+          if(!newName.isAbsolute) {
+            newName = projectRoot.resolve(newName)
+          }
         }
       } else {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, context.getSession.getProjectContext.getFileReader, theHeader, skipHeader = false, nor = nor, md5 = true)
+          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, nor = nor, md5 = true)
           if (nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
-        if(outfile!=null) newName = Paths.get(outfile)
+        if(outfile!=null) {
+          newName = Paths.get(outfile)
+          if(!newName.isAbsolute) {
+            newName = projectRoot.resolve(newName)
+          }
+        }
       }
 
-      if(oldName!=null && Files.exists(oldName)) {
+      if(oldName!=null && Files.exists(oldName) && !oldName.equals(newName)) {
         Files.move(oldName, newName)
-        val oldMetaName = Paths.get(temp_cacheFile + ".meta")
+        val oldMetaName = Paths.get(oldName + ".meta")
         if (Files.exists(oldMetaName)) {
-          Files.move(oldMetaName, oldMetaName.getParent.resolve(newName.getFileName.toString + ".meta"))
+          Files.move(oldMetaName, oldMetaName.getParent.resolve(newName.getFileName.toString + ".meta"), StandardCopyOption.REPLACE_EXISTING)
         }
         newName.toString
       } else ""
@@ -288,7 +304,7 @@ object GeneralQueryHandler {
         opt
         // file, alias, chrom, startpos, chrom, endpos
       }).flatMap(o => o.stream().iterator().asScala)
-      writeList(outfile, dictList)
+      writeList(outpath, dictList)
     }
     outpath.toString
   }
