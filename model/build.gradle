@@ -44,8 +44,9 @@ project(':model') {
         implementation 'org.apache.parquet:parquet-common:1.12.0'
         implementation 'org.apache.parquet:parquet-column:1.12.0'
         implementation 'org.apache.parquet:parquet-hadoop:1.12.0'
-        implementation 'org.apache.hadoop:hadoop-common:3.3.0'
-        implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0'
+        implementation ('org.apache.hadoop:hadoop-common:3.3.0')
+        implementation "com.zaxxer:HikariCP:4.0.3"
+
         constraints {
             implementation('org.eclipse.jetty:jetty-server:9.4.40.v20210413') {
                 because 'https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/pipelines/290960607/security'
@@ -55,8 +56,9 @@ project(':model') {
             implementation('org.eclipse.jetty:jetty-webapp:9.4.40.v20210413')
             implementation('org.eclipse.jetty.websocket:websocket-client:9.4.40.v20210413')
             implementation('io.netty:netty-handler:4.1.46.Final')
+
+            implementation('net.minidev:json-smart:2.4.1')
         }
-        implementation "com.zaxxer:HikariCP:4.0.3"
 
         runtimeOnly "org.xerial:sqlite-jdbc:3.34.0"
         runtimeOnly ("org.postgresql:postgresql:42.2.20")
@@ -66,10 +68,10 @@ project(':model') {
         testImplementation project(":gortools") // Needed so we can call gorpipe in the tests.
         testImplementation project(':gortools').sourceSets.test.output
 
-        testImplementation "commons-codec:commons-codec:1.13"
-        testImplementation "commons-io:commons-io:2.6"
+        testImplementation ('org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0')
         testImplementation "ch.qos.logback:logback-core:1.2.3"
         testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+
         testImplementation "org.mockito:mockito-core:3.7.7"
         testImplementation "org.scalatest:scalatest_2.12:3.0.8"
         testImplementation "org.scalacheck:scalacheck_2.12:1.15.3"

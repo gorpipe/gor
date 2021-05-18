@@ -52,7 +52,6 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
-import org.gorpipe.util.standalone.GorStandalone;
 
 import java.io.IOException;
 import java.nio.file.Files;

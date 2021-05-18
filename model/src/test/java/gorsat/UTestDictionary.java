@@ -5,6 +5,7 @@ import org.junit.rules.TemporaryFolder;
 import org.nanohttpd.protocols.http.TestFileHttpServer;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,7 +23,8 @@ public class UTestDictionary {
 
     @Before
     public void setUp() throws Exception {
-        server = new TestFileHttpServer(46993, workDir.getRoot());
+
+        server = new TestFileHttpServer(getFreePort(), workDir.getRoot());
         port = server.getPort();
 
         Path gordPath = workDir.getRoot().toPath().resolve(dbsnpgord);
@@ -74,5 +76,18 @@ public class UTestDictionary {
         String[] args = {"gor "+gordRemotePath.getFileName().toString(),"-gorroot", workDir.getRoot().getPath()};
         int count = TestUtils.runGorPipeCount(args, true);
         Assert.assertEquals("", 48, count);
+    }
+
+    private int getFreePort() throws IOException {
+        int freePort;
+        try(ServerSocket ss = new ServerSocket(0)) {
+            ss.setReuseAddress(true);
+            freePort = ss.getLocalPort();
+        }
+        if (freePort > 0) {
+            return freePort;
+        } else {
+            throw new IOException("Could not find a free port");
+        }
     }
 }
