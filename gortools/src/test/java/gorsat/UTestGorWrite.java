@@ -45,6 +45,16 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWritePathWithLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+        String linkresult = TestUtils.runGorPipe("gor dbsnp3.gor | top 1", "-gorroot", tmpdir.toString());
+        Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
+    }
+
+    @Test
     public void testTxtWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
         Files.copy(p, tmpdir.resolve("simple1.nor"));
