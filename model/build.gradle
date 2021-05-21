@@ -62,13 +62,13 @@ project(':model') {
 
         runtimeOnly "org.xerial:sqlite-jdbc:3.34.0"
         runtimeOnly ("org.postgresql:postgresql:42.2.20")
+        runtimeOnly ('org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0')
 
         testImplementation project(':test')
         testImplementation project(':external')
         testImplementation project(":gortools") // Needed so we can call gorpipe in the tests.
         testImplementation project(':gortools').sourceSets.test.output
 
-        testImplementation ('org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0')
         testImplementation "ch.qos.logback:logback-core:1.2.3"
         testImplementation 'ch.qos.logback:logback-classic:1.2.3'
 
