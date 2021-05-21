@@ -37,7 +37,7 @@ import java.nio.file.{Files, Paths}
   * <([original query])'.
   */
 
-class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ignoreIllegalArguments = true)) {
+class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin -gordfolder", "", 1, -1, ignoreIllegalArguments = true)) {
 
   def generateCachepath(context: GorContext, fingerprint: String): String = {
     val fileCache = context.getSession.getProjectContext.getFileCache
@@ -106,14 +106,14 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
 
     if (!doHeader) {
       val noWithin = CommandParseUtilities.hasOption(options, "-nowithin")
+      val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
 
       var cachePath: String = null
-      val useGordFolders = java.lang.Boolean.parseBoolean(System.getProperty("org.gorpipe.gor.driver.gord.folders"))
       val theCommand = if(useGordFolders) {
         val (cacheFileExists, theCachePath, theQueryAppend) = getCachePath(create, context, skipCache)
         cachePath = theCachePath
         if (!cacheFileExists) {
-          val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath)
+          val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders)
           theDependencies = theDeps
           partitionedGorCommands = partGorCmds
           tcmd
@@ -121,7 +121,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
           "gor " + cachePath
         }
       } else {
-        val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath)
+        val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders)
         theDependencies = theDeps
         partitionedGorCommands = partGorCmds
         tcmd
@@ -137,7 +137,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
     MacroParsingResult(partitionedGorCommands, null)
   }
 
-  def makeGorDict(context: GorContext, noWithin: Boolean, createKey: String, create: ExecutionBlock, replacePattern: String, queryAppend: String, cachePath: String): (String,List[String],Map[String, ExecutionBlock]) = {
+  def makeGorDict(context: GorContext, noWithin: Boolean, createKey: String, create: ExecutionBlock, replacePattern: String, queryAppend: String, cachePath: String, useGordFolder: Boolean): (String,List[String],Map[String, ExecutionBlock]) = {
     var partitionedGorCommands = Map.empty[String, ExecutionBlock]
     var theDependencies: List[String] = Nil
     val theKey = createKey.slice(1, createKey.length - 1)
@@ -154,7 +154,8 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "", 1, -1, ig
       theDependencies ::= parKey
     })
 
-    val cmd = splitManager.chromosomeSplits.keys.foldLeft("gordict")((x, y) => x + " [" + theKey + "_" + y + "] " +
+    val gordict = if (useGordFolder) "gordictfolder" else "gordict"
+    val cmd = splitManager.chromosomeSplits.keys.foldLeft(gordict)((x, y) => x + " [" + theKey + "_" + y + "] " +
       splitManager.chromosomeSplits(y).getRange)
     (cmd, theDependencies, partitionedGorCommands)
   }

@@ -51,8 +51,7 @@ public class UTestGtTranspose {
             "| calc bucket 'b1'\n" +
             ")\n" +
             "| multimap -cartesian <(norrows 10) | replace pos pos+rownum*10\n" +
-            "| select chromx,pos,ref,alt,bucket,values\n" +
-            "| rename chromx chrom\n" +
+            "| select chrom,pos,ref,alt,bucket,values\n" +
             "| sort genome;\n" +
             "\n" +
             "create #markers_nor# = nor <(gor [#gt#] | select 1-alt | distinct | top 4);\n" +

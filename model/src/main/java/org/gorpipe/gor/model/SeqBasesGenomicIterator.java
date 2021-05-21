@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 /**
@@ -46,15 +47,15 @@ class SeqBasesGenomicIterator extends GenomicIteratorBase {
     int bufFilePos; // The file position of the first element in the buffer
     final int[] columns; // source columns to include
     final int[] columnMap; // map source columns into Line data columns
-    final String path; // The path to the directory containing the sequence bases
+    final Path path; // The path to the directory containing the sequence bases
     static final String[] COLS = {"Chromo", "Pos", "Base"};
     final ChromoLookup lookup;
     final short BUF_SIZE = 1024 * 16;
     final byte[] buf = new byte[BUF_SIZE];
     Row nextRow = null;
 
-    SeqBasesGenomicIterator(String path, ChromoLookup lookup) {
-        this.path = path + '/';
+    SeqBasesGenomicIterator(Path path, ChromoLookup lookup) {
+        this.path = path;
         this.lookup = lookup;
         this.columns = new int[]{0, 1, 2};
         this.columnMap = new int[COLS.length];
@@ -67,7 +68,7 @@ class SeqBasesGenomicIterator extends GenomicIteratorBase {
         try {
             chromo = 1;
             chromoName = lookup.idToName(chromo);
-            seqfile = new RandomAccessFile(this.path + "chr1.txt", "r");
+            seqfile = new RandomAccessFile(this.path.resolve("chr1.txt").toFile(), "r");
             assert seqfile.length() <= Integer.MAX_VALUE;
             seqfileLength = (int) seqfile.length();
         } catch (IOException e) {
@@ -89,12 +90,12 @@ class SeqBasesGenomicIterator extends GenomicIteratorBase {
         chromo = lookup.chrToId(chr);
         assert chromo >= 0;
         chromoName = lookup.idToName(chromo);
-        final String name = path + chr + ".txt";
+        final Path name = path.resolve(chr + ".txt");
         try {
             if (seqfile != null) {
                 seqfile.close();
             }
-            seqfile = new RandomAccessFile(name, "r");
+            seqfile = new RandomAccessFile(name.toFile(), "r");
             filePos = Math.max(0, pos - 1);
             bufFilePos = filePos - (BUF_SIZE + 2); // Ensure we will start by reading
             seqfile.seek(filePos);

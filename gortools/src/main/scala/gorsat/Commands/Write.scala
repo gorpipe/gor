@@ -35,7 +35,7 @@ import org.gorpipe.gor.session.GorContext
 import java.util.Optional
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -d -noheader", "-f -i -t -l -card -prefix", 1),
+  CommandArguments("-r -c -m -d -noheader", "-f -i -t -l -card -prefix -link", 1),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -59,6 +59,7 @@ class Write extends CommandInfo("WRITE",
     columnCompress = hasOption(args, "-c")
     md5 = hasOption(args, "-m")
     if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")).toInt
+    val link = stringValueOfOptionWithDefault(args,"-link","")
 
     var indexing = "NONE"
 
@@ -97,6 +98,6 @@ class Write extends CommandInfo("WRITE",
 
     val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card)), fixedHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link)), fixedHeader)
   }
 }

@@ -28,6 +28,9 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.binsearch.GorSeekableIterator;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -383,16 +386,22 @@ public class SourceRef {
                 }
             }
 
-            File fileObject = new File(file);
-
             // Issue SM-48  Named in memory table iterator
             if (file.startsWith("mem:")) {
                 String name = file.substring(4);
                 return NamedTableGorIterators.getIterator(name);
-            } else if (fileObject.isDirectory()) { // Note this will need to talk to the filesystem so it is relatively costly
-                return new SeqBasesGenomicIterator(file, lookup);
             } else {
-                return new GorSeekableIterator(new RacSeekableFile(new RandomAccessFile(file, "r"), file));
+                Path path = Paths.get(file);
+                if (!Files.exists(path)) {
+                    Path root = Paths.get(commonRoot);
+                    path = root.resolve(path);
+                }
+
+                if (Files.isDirectory(path)) { // Note this will need to talk to the filesystem so it is relatively costly
+                    return new SeqBasesGenomicIterator(path, lookup);
+                } else {
+                    return new GorSeekableIterator(new RacSeekableFile(new RandomAccessFile(path.toFile(), "r"), file));
+                }
             }
         } catch (FileNotFoundException fileNotFoundexception) {
             throw ExceptionUtilities.mapGorResourceException(fileNotFoundexception.getMessage(), file, fileNotFoundexception);

@@ -101,7 +101,7 @@ public class UTestGroup {
     public void testGroupSteps() {
         String query = "gor <(norrows 1000000 | calc chrom 'chr1' | calc pos #1+1 | select chrom,pos) | select chrom,pos | group 100 -steps 5 -count | where #3-#2 < 100";
         String res = TestUtils.runGorPipe(query);
-        Assert.assertEquals("Wrong result from group with steps","Chrom\tbpStart\tbpStop\tallCount\n",res);
+        Assert.assertEquals("Wrong result from group with steps","chrom\tbpStart\tbpStop\tallCount\n",res);
     }
 
     @Test
@@ -440,7 +440,7 @@ public class UTestGroup {
     public void orderedGroupWithNorReturnsProperChrom() {
         final String query = "norrows 100 | calc x random() | sort -c rownum | group -gc rownum -count -ordered | group -count";
         final String result = TestUtils.runGorPipe(query);
-        final String expected = "Chrom\tPosNOR\tallCount\n" +
+        final String expected = "ChromNOR\tPosNOR\tallCount\n" +
                 "chrN\t0\t100\n";
         Assert.assertEquals(expected, result);
     }

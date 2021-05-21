@@ -173,6 +173,9 @@ Commands
    * - :ref:`REGSEL`
      - Grabs values from a source column based on a specified matching expression.
      - GOR/NOR
+   * - :ref:`RELREMOVE`
+     - Removes related samples/individuals (PNs) from a phenotype relation.
+     - NOR
    * - :ref:`RENAME`
      - Renames a column in the output of a GOR or NOR query.
      - GOR/NOR

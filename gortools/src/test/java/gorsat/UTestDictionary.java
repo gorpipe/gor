@@ -376,6 +376,23 @@ public class UTestDictionary {
         Assert.assertTrue("Out of project scope query should have failed", failed);
     }
 
+    @Test
+    public void testMissingGorFromGord() throws IOException {
+        String dbsnpname = "dbsnp.gorz";
+        Path dbsnp = Paths.get("../tests/data/gor/dbsnp_test.gorz");
+        String query = "create xxx = pgor "+dbsnpname+"; gor [xxx] | top 1";
+        Path root = workDir.getRoot().toPath();
+        Files.copy(dbsnp,root.resolve(dbsnpname));
+        Path cache = Paths.get("result_cache");
+        Path cacheroot = root.resolve(cache);
+        Files.createDirectory(cacheroot);
+        String result = TestUtils.runGorPipe(query,"-gorroot",root.toString(),"-cachedir",cache.toString());
+        Path p = Files.walk(cacheroot).filter(gorp -> gorp.toString().endsWith(".gorz")).findFirst().get();
+        Files.delete(root.resolve(cache).resolve(p));
+        String result2 = TestUtils.runGorPipe(query,"-gorroot",root.toString(),"-cachedir",cache.toString());
+        Assert.assertEquals(result, result2);
+    }
+
     private File createSimpleDictWithBucket() throws IOException {
         return createSimpleDictWithBucket("source");
     }

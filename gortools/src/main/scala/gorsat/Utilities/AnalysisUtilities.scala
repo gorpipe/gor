@@ -93,6 +93,8 @@ object AnalysisUtilities {
   }
 
   def writeList(filePath: java.nio.file.Path, m: List[String]) : Unit = {
+    val parent = filePath.getParent
+    if (!Files.exists(parent)) Files.createDirectories(parent)
     val out = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)
     m.foreach(t => out.write(t + "\n"))
     out.close

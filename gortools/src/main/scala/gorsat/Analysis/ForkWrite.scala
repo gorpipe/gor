@@ -31,6 +31,7 @@ import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.table.PathUtils
 import org.gorpipe.model.gor.RowObj
 
 import java.io.OutputStream
@@ -50,7 +51,8 @@ case class OutputOptions(remove: Boolean = false,
                             compressionLevel: Int = Deflater.BEST_SPEED,
                             useFolder: Boolean = false,
                             skipHeader: Boolean = false,
-                            cardCol: String = null
+                            cardCol: String = null,
+                            linkFile: String = ""
                            )
 
 case class ForkWrite(forkCol: Int,
@@ -244,6 +246,16 @@ case class ForkWrite(forkCol: Int,
           }
         }
       })
+    }
+
+    if (options.linkFile.nonEmpty) {
+      val projectContext = session.getProjectContext
+      val linkFile = if (options.linkFile.endsWith(".link")) options.linkFile else options.linkFile+".link"
+      val os = projectContext.getFileReader.getOutputStream(linkFile)
+      val absPath = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName else Paths.get(projectContext.getProjectRoot).resolve(fullFileName).toString
+      os.write(absPath.getBytes())
+      os.write('\n')
+      os.close()
     }
   }
 }

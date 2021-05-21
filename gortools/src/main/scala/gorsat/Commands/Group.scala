@@ -115,12 +115,14 @@ class Group extends CommandInfo("GROUP",
     var columns = ListBuffer[ColumnHeader]()
 
     if (binSize > 1) {
-      columns += ColumnHeader("Chrom", "S")
+      // Note:  Know we are not using NOR here as NOR not allowed binning.
+      //        Hence don't have to worry about NOR column names here.
+      columns += ColumnHeader(hcol(0), "S")
       columns += ColumnHeader("bpStart", "I")
       columns += ColumnHeader("bpStop", "I")
     }
     else {
-      columns += ColumnHeader("Chrom", "S")
+      columns += ColumnHeader(hcol(0), "S")
       columns += ColumnHeader(hcol(1), "I")
     }
 

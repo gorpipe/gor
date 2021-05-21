@@ -33,6 +33,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import static org.junit.Assert.*;
 
@@ -94,15 +95,10 @@ public class UTestSeqBasesGenomicIterator {
     }
 
     private SeqBasesGenomicIterator getSeqBasesGenomicIterator() {
-        try {
-            final String path = workDir.getRoot().getCanonicalPath();
-            final DefaultChromoLookup lookup = new DefaultChromoLookup();
-            final SeqBasesGenomicIterator iterator = new SeqBasesGenomicIterator(path, lookup);
-            iterator.init(null);
-            return iterator;
-        } catch (IOException e) {
-            log.warn("Couldn't create SeqBasesGenomicIterator", e);
-            return null;
-        }
+        final Path path = workDir.getRoot().toPath();
+        final DefaultChromoLookup lookup = new DefaultChromoLookup();
+        final SeqBasesGenomicIterator iterator = new SeqBasesGenomicIterator(path, lookup);
+        iterator.init(null);
+        return iterator;
     }
 }
