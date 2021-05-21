@@ -73,11 +73,11 @@ project(':gortools') {
         }
 
         runtimeOnly "org.scala-lang:scala-reflect:2.12.13"
+        runtimeOnly "org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0"
 
         testImplementation project(':test')
         testImplementation project(':util')
 
-        testImplementation ('org.apache.hadoop:hadoop-mapreduce-client-core:3.3.0')
         testImplementation "org.mockito:mockito-core:3.7.7"
         testImplementation "org.scalatest:scalatest_2.12:3.0.8"
         testImplementation "org.scalacheck:scalacheck_2.12:1.15.3"
