@@ -121,7 +121,7 @@ class King extends CommandInfo("KING",
       dsource2 = inputSource2.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader2 = inputSource2.header
 
-      var rightFile3 = iargs(1).trim
+      var rightFile3 = iargs(2).trim
       if ((rightFile3.toUpperCase.endsWith(".NORZ") || rightFile3.toUpperCase.endsWith(".TSV") || rightFile3.toUpperCase.endsWith(".NOR")) && !(rightFile3.slice(0, 2) == "<(")) rightFile3 = "<(nor " + rightFile3 + " )"
 
       val inputSource3 = SourceProvider(rightFile3, context, executeNor = executeNor, isNor = true)
