@@ -30,7 +30,7 @@ import gorsat.Utilities.AnalysisUtilities._
 import gorsat.Commands.CommandParseUtilities
 import gorsat.Script.ScriptParsers
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
-import org.gorpipe.exceptions.{GorResourceException, GorSystemException}
+import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
 import org.gorpipe.gor.model.FileReader
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -189,6 +189,7 @@ object MacroUtilities {
   private def parCmdReplacer(input: String, matchPatt: String, replCmd: String): String = {
     // If the replCmd has any backslashes (Windows file names, for example) they get
     // lost in the replacements done below with regexes
+    if (replCmd.contains(input)) throw new GorParsingException("Replace string contains the definition itself")
     val replCmdFixup = replCmd.replace("\\", "\\\\")
 
     if (matchPatt.endsWith("($n)")) oneParCmdReplacer(input, matchPatt, replCmdFixup)
