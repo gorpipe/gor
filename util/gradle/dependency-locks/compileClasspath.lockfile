@@ -1,8 +1,0 @@
-# This is a Gradle generated file for dependency locking.
-# Manual edits can break the build and are not advised.
-# This file is expected to be part of source control.
-com.zaxxer:HikariCP:4.0.3
-commons-configuration:commons-configuration:1.10
-commons-lang:commons-lang:2.6
-org.apache.commons:commons-lang3:3.12.0
-org.slf4j:slf4j-api:1.7.30
