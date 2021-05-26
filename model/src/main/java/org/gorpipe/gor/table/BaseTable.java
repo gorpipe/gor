@@ -66,6 +66,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     public static final String HISTORY_DIR_NAME = "history";
     public static final boolean DEFAULT_USE_HISTORY = true;
     private static final boolean DEFAULT_BUCKETIZE = false;  // Value used if bucketized is not set.
+    private static final boolean INFER_BUCKETIZE_FROM_FILE = Boolean.parseBoolean(System.getProperty("GOR_TABLE_INFER_BUCKETIZE_FROM_FILE", "true"));
 
     private final Path path;            // Path to the table (currently absolute instead of real for compatibility with older code).
     private final Path folderPath;      // Path to the table folder.  The table folder is hidden folder that sits next to the
@@ -373,7 +374,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         updateValidateHeader(line);
 
         // Update bucketize - Do that from the content so do it here.
-        if (!isBucketizeSet()) {
+        if (INFER_BUCKETIZE_FROM_FILE && !isBucketizeSet()) {
             bucketize = inferShouldBucketizeFromFile(line.getContentReal());
         }
 
