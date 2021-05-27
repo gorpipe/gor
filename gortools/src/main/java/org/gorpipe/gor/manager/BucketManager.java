@@ -437,7 +437,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         Path tempTablePath;
         String ext = FilenameUtils.getExtension(table.getPath().toString());
         tempTablePath = table.getRootPath().resolve(
-                "." + table.getName() + "."
+                "." + table.getName() + ".temp.bucketizing."
                 + RandomStringUtils.random(8, true, true)
                 + (ext.length() > 0 ? "." + ext : ""));
 
