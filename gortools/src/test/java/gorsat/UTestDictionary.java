@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class UTestDictionary {
     private File gorFile;
@@ -367,6 +368,19 @@ public class UTestDictionary {
         Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gorz"),workDir.getRoot().toPath().resolve("dbsnp.gorz"));
         Files.writeString(gordPath,"dbsnp.gorz\tuu\n");
         String[] args = {"gor "+ gordPath.toAbsolutePath(),"-gorroot", workDir.getRoot().getPath()};
+        boolean failed = false;
+        try {
+            TestUtils.runGorPipeCount(args, true);
+        } catch(Exception e) {
+            failed = true;
+        }
+        Assert.assertTrue("Out of project scope query should have failed", failed);
+    }
+
+    @Test
+    public void testReadOutOfScopeGor() throws IOException {
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gorz"),workDir.getRoot().toPath().getParent().resolve("dbsnp.gorz"), StandardCopyOption.REPLACE_EXISTING);
+        String[] args = {"gor ../dbsnp.gorz","-gorroot", workDir.getRoot().getPath()};
         boolean failed = false;
         try {
             TestUtils.runGorPipeCount(args, true);
