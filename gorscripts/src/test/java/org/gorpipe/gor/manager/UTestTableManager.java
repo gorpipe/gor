@@ -202,8 +202,8 @@ public class UTestTableManager {
 
         DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
 
-        // Bucketize in process.
-        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100"}, ".");
+        // Bucketize in process.   Set the pack level, otherwise we will sometimes pack the buckets and fail the test.
+        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100", "--pack_level", "NO_PACKING"}, ".");
 
         // Wait for the thread to get the bucketize lock (so we are waiting for getting inValid lock).
         testTableManagerUtil.waitForBucketizeToStart(table, p);
@@ -241,6 +241,7 @@ public class UTestTableManager {
 
         // Check that the updates where handled correctly.
         table.reload();
+
         Assert.assertEquals("Total number of lines does not match", 1010, table.selectAll().size());
         Assert.assertEquals("New lines should not be bucketized", 10, table.needsBucketizing().size());
         Assert.assertEquals("Deleted lines should be reinserted", 2, table.selectAll().stream().filter(f -> f.isDeleted()).count());
