@@ -24,9 +24,12 @@ package org.gorpipe.base.exceptions;
 
 import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.exceptions.GorMissingRelationException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.FileNotFoundException;
 
 public class UTestGorExceptions {
 
@@ -37,6 +40,29 @@ public class UTestGorExceptions {
         GorResourceException ex = new GorResourceException("This is an exception", ".../file.txt");
         Assert.assertEquals("org.gorpipe.exceptions.GorResourceException: This is an exception\n" +
                 "URI: .../file.txt\n", ex.toString());
+    }
+
+    @Test
+    public void testGorResourceExceptionFromContext() {
+        GorResourceException ex = ExceptionUtilities.mapGorResourceException("file.txt", "file://file.txt", new FileNotFoundException());
+        Assert.assertTrue(ex instanceof GorResourceException);
+        Assert.assertEquals("org.gorpipe.exceptions.GorResourceException: Resource not found for iterator: file.txt\n" +
+                "URI: file://file.txt\n", ex.toString());
+    }
+
+    @Test
+    public void testGorMissingRelationException() {
+        GorMissingRelationException ex = new GorMissingRelationException("This is an exception", "[somevr]");
+        Assert.assertEquals("org.gorpipe.exceptions.GorMissingRelationException: This is an exception\n" +
+                "URI: [somevr]\n", ex.toString());
+    }
+
+    @Test
+    public void testGorMissingRelationExceptionFromContext() {
+        GorResourceException ex = ExceptionUtilities.mapGorResourceException("[somevr]", "[somevr]", new FileNotFoundException());
+        Assert.assertTrue(ex instanceof GorMissingRelationException);
+        Assert.assertEquals("org.gorpipe.exceptions.GorMissingRelationException: Virtual relation '[somevr]' is missing\n" +
+                "URI: [somevr]\n", ex.toString());
     }
 
     @Test
