@@ -356,7 +356,11 @@ public final class ExceptionUtilities {
     }
 
     public static GorResourceException mapGorResourceException(String resourceName, String uri, Exception e) {
-        return new GorResourceException("Resource not found for iterator: " + resourceName, uri, e);
+        if (uri.trim().startsWith("[") && uri.trim().endsWith("]")) {
+            return new GorMissingRelationException(String.format("Virtual relation '%s' is missing", resourceName), uri, e);
+        } else {
+            return new GorResourceException("Resource not found for iterator: " + resourceName, uri, e);
+        }
     }
 
     /**
