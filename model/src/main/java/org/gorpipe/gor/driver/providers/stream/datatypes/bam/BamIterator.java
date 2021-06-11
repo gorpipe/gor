@@ -590,6 +590,14 @@ public class BamIterator extends GenomicIteratorBase {
                 outputStream.write(this.reverseStringMap[i].apply(record).getBytes());
             }
         }
+
+        @Override
+        public void writeNorRowToStream(OutputStream outputStream) throws IOException {
+            for (int i = 0; i < this.reverseStringMap.length; ++i) {
+                outputStream.write('\t');
+                outputStream.write(this.reverseStringMap[i].apply(record).getBytes());
+            }
+        }
     }
 
     public String getChromName() {

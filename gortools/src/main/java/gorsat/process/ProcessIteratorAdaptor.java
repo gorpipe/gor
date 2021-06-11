@@ -55,7 +55,6 @@ public class ProcessIteratorAdaptor extends GenomicIteratorBase implements Seria
 
     static String norprefix = "chrN\t0\t";
     static String norheaderprefix = "ChromNOR\tPosNOR\t";
-    static int norprefixlength = norprefix.length();
     static int norheaderprefixlength = norheaderprefix.length();
 
     private boolean mustReCheck = true;
@@ -90,8 +89,7 @@ public class ProcessIteratorAdaptor extends GenomicIteratorBase implements Seria
         public void process(Row row) {
             try {
                 if (!wantsNoMore()) {
-                    String rowstr = row.toString();
-                    os.write(rowstr.getBytes());
+                    row.writeRowToStream(os);
                     os.write('\n');
                 } else {
                     pps.wantsNoMore_$eq(true);
@@ -120,9 +118,7 @@ public class ProcessIteratorAdaptor extends GenomicIteratorBase implements Seria
         public void process(Row row) {
             try {
                 if (!wantsNoMore()) {
-                    String rowstr = row.toString();
-                    rowstr = rowstr.substring(ProcessIteratorAdaptor.norprefixlength);
-                    os.write(rowstr.getBytes());
+                    row.writeNorRowToStream(os);
                     os.write('\n');
                 } else {
                     pps.wantsNoMore_$eq(true);

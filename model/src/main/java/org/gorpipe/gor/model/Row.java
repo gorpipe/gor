@@ -362,6 +362,13 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
     public abstract void writeRowToStream(OutputStream outputStream) throws IOException;
 
     /**
+     * Write the contents of the nor row to the given output stream
+     * @param outputStream Destination stream
+     * @throws IOException
+     */
+    public abstract void writeNorRowToStream(OutputStream outputStream) throws IOException;
+
+    /**
      * Returns a tab-separated string with the values from the start column up to and including the stop column
      * @param m First column to include (zero based)
      * @param n Last column to include (zero based)
