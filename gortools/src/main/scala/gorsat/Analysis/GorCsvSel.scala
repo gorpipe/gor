@@ -435,6 +435,7 @@ object GorCsvSel {
             }
             if (!outputRows && !nextProcessor.wantsNoMore) {
               if( i < sa.length ) sa(i) = ladd.length()
+              lastSize = Math.max(lastSize, ladd.length())
               nextProcessor.process(new RowBase(bi.chr, bi.sta+1, ladd, sa, null))
             }
           }

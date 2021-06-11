@@ -123,7 +123,12 @@ public class RowBase extends Row implements Serializable {
 
     @Override
     public void writeRowToStream(OutputStream outputStream) throws IOException {
-        outputStream.write(this.allCols.toString().getBytes());
+        outputStream.write(toString().getBytes());
+    }
+
+    @Override
+    public void writeNorRowToStream(OutputStream outputStream) throws IOException {
+        outputStream.write(otherCols().getBytes());
     }
 
     @Override
