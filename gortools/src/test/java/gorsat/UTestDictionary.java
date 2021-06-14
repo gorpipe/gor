@@ -407,6 +407,25 @@ public class UTestDictionary {
         Assert.assertEquals(result, result2);
     }
 
+    @Test
+    public void testDictCacheSameNameDifferentProjects() throws IOException {
+        var one = workDir.getRoot().toPath().resolve("one");
+        var two = workDir.getRoot().toPath().resolve("two");
+        Files.createDirectory(one);
+        Files.createDirectory(two);
+        var onegene = one.resolve("genes.gord");
+        var twogene = two.resolve("genes.gord");
+        Files.writeString(onegene, "dbsnp.gorz\taa\n");
+        Files.writeString(twogene, "dbsnp.gorz\tbb\n");
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gorz"),one.resolve("dbsnp.gorz"));
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gorz"),two.resolve("dbsnp.gorz"));
+
+        var argsone = new String[] {"gor genes.gord -f aa", "-gorroot", one.toAbsolutePath().toString()};
+        var argstwo = new String[] {"gor genes.gord -f aa", "-gorroot", one.toAbsolutePath().toString()};
+        TestUtils.runGorPipeCount(argsone, true);
+        TestUtils.runGorPipeCount(argstwo, true);
+    }
+
     private File createSimpleDictWithBucket() throws IOException {
         return createSimpleDictWithBucket("source");
     }
