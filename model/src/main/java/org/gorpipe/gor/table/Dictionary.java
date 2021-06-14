@@ -135,15 +135,24 @@ public class Dictionary {
         return getDictionary(path, new DefaultFileReader(""), uniqueID, commonRoot, true);
     }
 
+    private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
+        if(PathUtils.isAbsolutePath(path) || commonRoot == null || commonRoot.length() == 0) {
+            return path;
+        }
+        var rootPath = Paths.get(commonRoot);
+        return rootPath.resolve(path).toString();
+    }
+
     public synchronized static Dictionary getDictionary(String path, FileReader fileReader, String uniqueID, String commonRoot, boolean useCache) {
         if (useCache) {
+            var key = dictCacheKeyFromPathAndRoot(path, commonRoot);
             if (uniqueID == null || uniqueID.equals("")) {
-                dictCache.remove(path);
+                dictCache.remove(key);
                 return processDictionary(path, fileReader, uniqueID, commonRoot, true);
             } else {
-                return dictCache.compute(path, (p, d) -> {
+                return dictCache.compute(key, (p, d) -> {
                     if (d == null || !d.fileSignature.equals(uniqueID)) {
-                        return processDictionary(p, fileReader, uniqueID, commonRoot, true);
+                        return processDictionary(path, fileReader, uniqueID, commonRoot, true);
                     } else {
                         return d;
                     }
