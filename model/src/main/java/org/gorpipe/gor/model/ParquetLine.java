@@ -64,6 +64,21 @@ public class ParquetLine extends Row {
     }
 
     @Override
+    public void writeNorRowToStream(OutputStream outputStream) throws IOException {
+        if(numCols()>=2) {
+            Type tp = group.getType().getFields().get(2);
+            String val = extractGroup(tp, group, 2, 0);
+            outputStream.write(val.getBytes());
+            for (int i = 3; i < numCols(); i++) {
+                outputStream.write('\t');
+                tp = group.getType().getFields().get(i);
+                val = extractGroup(tp, group, i, 0);
+                outputStream.write(val.getBytes());
+            }
+        }
+    }
+
+    @Override
     public String stringValue(int col) {
         return group.getString(col, 0);
     }

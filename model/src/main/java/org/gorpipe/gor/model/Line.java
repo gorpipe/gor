@@ -265,6 +265,19 @@ public class Line extends Row {
     }
 
     @Override
+    public void writeNorRowToStream(OutputStream outputStream) throws IOException {
+        if (cols != null && cols.length > 0) {
+            ByteTextBuilder builder = cols[0];
+            outputStream.write(builder.peekAtBuffer(), 0, builder.length());
+            for (int i = 1; i < cols.length; i++) {
+                builder = cols[1];
+                outputStream.write('\t');
+                outputStream.write(builder.peekAtBuffer(), 0, builder.length());
+            }
+        }
+    }
+
+    @Override
     public void writeRow(Writer writer) throws IOException {
         writer.write(chr);
         writer.write('\t');
