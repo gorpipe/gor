@@ -213,6 +213,26 @@ public class UTestTableFunction {
     }
 
     @Test
+    public void testCreateNorYamlWithPipe() throws IOException {
+        var p = Paths.get("test.yml");
+        java.nio.file.Files.writeString(p, "stuff:\n query: |\n  gor ../tests/data/gor/dbsnp_test.gor | top 1\n");
+        String query = "nor "+p;
+        var res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr1\t10179\tC\tCC\trs367896724\n", res);
+    }
+
+    @Test
+    public void testCreateNorYamlNorWithPipe() throws IOException {
+        var p = Paths.get("test.yml");
+        java.nio.file.Files.writeString(p, "stuff:\n query: |\n  create xxx = nor ../tests/data/gor/dbsnp_test.gor | top 1; nor [xxx]\n");
+        String query = "nor "+p;
+        var res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("ChromNOR\tPosNOR\tChrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chrN\t0\tchr1\t10179\tC\tCC\trs367896724\n", res);
+    }
+
+    @Test
     public void testCreateNorYaml() {
         String query = "nor ../tests/data/reports/test3.yml::TestReport(query2)";
         Assert.assertEquals(48, TestUtils.runGorPipeCount(query));
