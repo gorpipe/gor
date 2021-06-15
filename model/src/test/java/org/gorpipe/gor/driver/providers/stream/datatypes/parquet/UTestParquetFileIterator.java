@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Comparator;
 
 import static org.junit.Assert.assertEquals;
@@ -223,6 +224,22 @@ public class UTestParquetFileIterator {
         Assert.assertEquals("Wrong result from parquet pushdown query", "Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
                 "chr17\t186\tG\tA\trs547289895\n" +
                 "chr17\t460\tG\tA\trs554808397\n", result);
+    }
+
+    @Test
+    public void testParquetBigInt() throws IOException {
+        String parqB64 = "UEFSMRUAFSwVLiwVBBUAFQYVCBwYEAAAAAAAAAACYp9m4MUwAAAYEAAAAAAAAAACYp9m4MUwAAAWAigQAAAAAAAAAAJin2bgxTAAABgQAAAAAAAAAAJin2bgxTAAAAAAABYQAgAAAAMBBTAAAAAAAmKfZuDFMAAAFQIZLEgMc3Bhcmtfc2NoZW1hFQIAFQ4VIBUCGA92YWx1ZV9hc19udW1iZXIlChUkFUwAFgQZHBkcJggcFQ4ZNQAGCBkYD3ZhbHVlX2FzX251bWJlchUCFgQW5gEW6AEmCDwYEAAAAAAAAAACYp9m4MUwAAAYEAAAAAAAAAACYp9m4MUwAAAWAigQAAAAAAAAAAJin2bgxTAAABgQAAAAAAAAAAJin2bgxTAAAAAZHBUAFQAVAgAAABbmARYEABksGBhvcmcuYXBhY2hlLnNwYXJrLnZlcnNpb24YBTMuMS4yABgpb3JnLmFwYWNoZS5zcGFyay5zcWwucGFycXVldC5yb3cubWV0YWRhdGEYbXsidHlwZSI6InN0cnVjdCIsImZpZWxkcyI6W3sibmFtZSI6InZhbHVlX2FzX251bWJlciIsInR5cGUiOiJkZWNpbWFsKDM4LDE4KSIsIm51bGxhYmxlIjp0cnVlLCJtZXRhZGF0YSI6e319XX0AGEpwYXJxdWV0LW1yIHZlcnNpb24gMS4xMC4xIChidWlsZCBhODlkZjhmOTkzMmI2ZWY2NjMzZDA2MDY5ZTUwYzliNzk3MGJlYmQxKRkcHAAAAM8BAABQQVIx";
+        var bb = Base64.getDecoder().decode(parqB64);
+        var p = Paths.get("my.parquet");
+        try {
+            Files.write(p, bb);
+            String res = TestUtils.runGorPipe("nor my.parquet");
+            Assert.assertEquals("ChromNOR\tPosNOR\tvalue_as_number\n" +
+                    "chrN\t0\t\n" +
+                    "chrN\t0\t44.000000000000000000\n", res);
+        } finally {
+            Files.delete(p);
+        }
     }
 
     @Test
