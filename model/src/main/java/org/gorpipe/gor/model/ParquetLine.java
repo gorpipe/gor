@@ -33,6 +33,13 @@ import org.gorpipe.model.gor.RowObj;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.ByteOrder;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.JulianFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -124,11 +131,38 @@ public class ParquetLine extends Row {
         return PrimitiveType.PrimitiveTypeName.BINARY;
     }
 
+    public String extractDecimal(Group thegroup, int colNum, int idx) {
+        var bin = thegroup.getBinary(colNum, idx);
+        if (bin.length()==16) {
+            BigInteger bigInteger = new BigInteger(bin.getBytes());
+            BigDecimal big = new BigDecimal(bigInteger, 18);
+            return big.toString();
+        } else return thegroup.getValueToString(colNum, idx).replace('\n', '_');
+    }
+
+    public String extractTimestamp(Group thegroup, int colNum, int idx) {
+        var int96Bytes = thegroup.getInt96(colNum, idx).toByteBuffer().order(ByteOrder.nativeOrder());
+        int julianDay = int96Bytes.getInt(8);
+        long nanos = int96Bytes.getLong(0);
+
+        LocalDateTime timestamp = LocalDate.MIN
+                .with(JulianFields.JULIAN_DAY, julianDay)
+                .atTime(LocalTime.NOON)
+                .plusNanos(nanos);
+        return timestamp.toString();
+    }
+
     String extractGroup(Type tp, Group thegroup, int colNum, int idx) {
         int size = thegroup.getFieldRepetitionCount(colNum);
         if(idx < size) {
             if (tp.isPrimitive()) {
-                return thegroup.getValueToString(colNum, idx);
+                if(tp.asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)) {
+                    return extractDecimal(thegroup, colNum, idx);
+                } else if(tp.asPrimitiveType().getPrimitiveTypeName().equals(PrimitiveType.PrimitiveTypeName.INT96)) {
+                    return extractTimestamp(thegroup, colNum, idx);
+                } else {
+                    return thegroup.getValueToString(colNum, idx).replace('\n', '_');
+                }
             } else {
                 Group subgroup = thegroup.getGroup(colNum, idx);
                 List<Type> types = subgroup.getType().getFields();
