@@ -24,10 +24,11 @@ package gorsat.InputSources
 
 import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
+import gorsat.DynIterator
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.AnalysisUtilities
-import gorsat.process.NordIterator
+import gorsat.process.{NordIterator, PipeOptions}
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
 
@@ -76,8 +77,17 @@ object Nor
             throw e
         }
       } else if (inputParams.toUpperCase.contains(".YML")) {
-        var nInputParams = context.getSession.getSystemContext.getReportBuilder.parse(inputParams)
-        inputSource = new ServerNorGorSource(nInputParams,  context, true)
+        val qr = context.getSession.getSystemContext.getReportBuilder.parse(iargs(0))
+        val qra = Array(qr)
+        val gorpipe = DynIterator.createGorIterator(context)
+
+        val options = new PipeOptions()
+        options.parseOptions(qra)
+        gorpipe.processArguments(qra, executeNor = true)
+
+        if (gorpipe.getRowSource != null) {
+          inputSource = gorpipe.getRowSource
+        }
       } else if (inputParams.toUpperCase.endsWith("PARQUET")) {
         var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
         extraFilterArgs += (if(hasOption(args, "-s")) " " + stringValueOfOption(args, "-s") else "")
