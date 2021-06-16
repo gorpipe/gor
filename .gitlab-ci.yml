@@ -196,3 +196,7 @@ push-feature-branch-docker-to-dockerhub:
 push-version-to-dockerhub:
   rules:
     - when: never
+
+push_to_ecr:
+  rules:
+    - when: never
