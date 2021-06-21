@@ -24,6 +24,7 @@ package gorsat.Script
 
 import gorsat.Utilities.AnalysisUtilities.getSignature
 import gorsat.Commands.CommandParseUtilities
+import gorsat.Commands.CommandParseUtilities.quoteSafeSplit
 import gorsat.Utilities.MacroUtilities._
 import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
@@ -44,6 +45,7 @@ object ScriptExecutionEngine {
   type ExecutionBlocks = Map[String, ExecutionBlock]
 
   val GOR_FINAL = "gorfinal"
+  val INCLUDE_KEYWORD: String = "include"
 
   def parseScript(commands: Array[String]): Map[String, ExecutionBlock] = {
     var creates = Map.empty[String, ExecutionBlock]
@@ -106,10 +108,29 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     aliases
   }
 
+  def injectIncludes(gorCommands: Array[String], level: Int = 0): Array[String] = {
+    if (level>10) throw new GorResourceException("Too many levels of includes, possible circular dependency", gorCommands.filter(q => q.toLowerCase.startsWith("include")).head)
+    gorCommands.flatMap(q => {
+      val incl = ScriptParsers.includeParser(q.trim)
+      if (!incl.equals("")) {
+        val includeFileContent = new String(context.getSession.getProjectContext.getFileReader.getInputStream(incl).readAllBytes())
+        val includeCreates = quoteSafeSplit(includeFileContent,';')
+        injectIncludes(includeCreates.slice(0, includeCreates.length-1), level+1)
+      } else Array(q)
+    })
+  }
+
   def execute(commands: Array[String], validate: Boolean = true): String = {
     // Apply aliases to query, this replaces the def entries
     aliases = extractAliases(commands)
     var gorCommands = applyAliases(commands, aliases)
+
+    // Include external gor scripts
+    gorCommands = injectIncludes(gorCommands)
+
+    // Apply aliases again to query in case includes need alias update, this replaces the def entries
+    aliases = extractAliases(gorCommands)
+    gorCommands = applyAliases(gorCommands, aliases)
 
     // Preprocess the script, change macros to create + gor statements
     gorCommands = performScriptPreProcessing(gorCommands)

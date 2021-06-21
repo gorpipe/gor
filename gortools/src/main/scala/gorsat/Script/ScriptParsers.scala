@@ -60,6 +60,22 @@ object ScriptParsers {
   }
 
   /**
+    * Regex parser for include statements. Returns include name and payload.
+    *
+    * @param includeStatement  Include statements to be parsed
+    * @return Returns include payload
+    */
+  def includeParser(defStatement: String): String = {
+    val comReg = """[ ]*(?i)\Qinclude\E [ ]*(.*)""".r
+    try {
+      val comReg(comm) = defStatement
+      comm
+    } catch {
+      case _: Exception => ""
+    }
+  }
+
+  /**
     * Regex parser for split options.
     *
     * @param splitOption  Payload from -split option
