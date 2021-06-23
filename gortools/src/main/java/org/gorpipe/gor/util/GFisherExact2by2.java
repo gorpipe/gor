@@ -43,6 +43,7 @@ public class GFisherExact2by2 {
      * @return the p-value
      */
     public static double compute(int A, int B, int C, int D) {
+        validateInput(A, B, C, D);
         int n = A + B + C + D;
 
         double F = GLogGamma.get(A + B) + GLogGamma.get(C + D) + GLogGamma.get(A + C) + GLogGamma.get(B + D) - GLogGamma.get(n);
@@ -67,6 +68,7 @@ public class GFisherExact2by2 {
      * @return the p-value
      */
     public static double computeOneTailed(int A, int B, int C, int D) {
+        validateInput(A, B, C, D);
         int n = A + B + C + D;
 
         double F = GLogGamma.get(A + B) + GLogGamma.get(C + D) + GLogGamma.get(A + C) + GLogGamma.get(B + D) - GLogGamma.get(n);
@@ -96,6 +98,7 @@ public class GFisherExact2by2 {
      * @return the p-value
      */
     public static double computeTwoTailed(int A, int B, int C, int D) {
+        validateInput(A, B, C, D);
         int n = A + B + C + D;
 
         double F = GLogGamma.get(A + B) + GLogGamma.get(C + D) + GLogGamma.get(A + C) + GLogGamma.get(B + D) - GLogGamma.get(n);
@@ -113,6 +116,13 @@ public class GFisherExact2by2 {
             }
         }
         return Ptails;
+    }
+
+    private static void validateInput(int A, int B, int C, int D) {
+        if (A < 0 || B < 0 || C < 0 || D < 0) {
+            throw new ArithmeticException(String.format("FisherExact received negative input value. " +
+                    "Values: %d %d %d %d", A, B, C, D));
+        }
     }
 
 }

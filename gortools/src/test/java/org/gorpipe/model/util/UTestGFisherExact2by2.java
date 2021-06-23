@@ -44,4 +44,14 @@ public class UTestGFisherExact2by2 {
         final double v = GFisherExact2by2.computeTwoTailed(1, 9, 11, 3);
         Assert.assertEquals(0.0027594561852201044, v, 1e-8);
     }
+
+    @Test
+    public void badInput() {
+        try {
+            final double v = GFisherExact2by2.computeTwoTailed(1, 9, -1, 3);
+            Assert.fail("Should throw ArithmeticException");
+        } catch (ArithmeticException ae) {
+            Assert.assertTrue(ae.getMessage().startsWith("FisherExact received negative input value."));
+        }
+    }
 }
