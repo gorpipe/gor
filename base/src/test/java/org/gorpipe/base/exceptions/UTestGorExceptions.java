@@ -22,10 +22,7 @@
 
 package org.gorpipe.base.exceptions;
 
-import org.gorpipe.exceptions.ExceptionUtilities;
-import org.gorpipe.exceptions.GorException;
-import org.gorpipe.exceptions.GorMissingRelationException;
-import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -65,6 +62,14 @@ public class UTestGorExceptions {
                 "URI: [somevr]\n", ex.toString());
     }
 
+
+    @Test
+    public void testGorExceptionToJsonCausedByStackTrace() {
+        GorException ex = new GorDataException("Some exception", new ArithmeticException("Some arith exception"));
+        String json = ExceptionUtilities.gorExceptionToJson(ex);
+        Assert.assertTrue(json.contains("Caused by:"));
+    }
+    
     @Test
     public void testGorExceptionFromJson() {
 
@@ -76,6 +81,27 @@ public class UTestGorExceptions {
             Assert.assertTrue(json.contains(ste.getMethodName()));
             Assert.assertTrue(json.contains(ste.getFileName()));
             Assert.assertTrue(json.contains(Integer.toString(ste.getLineNumber())));
+        }
+    }
+
+    @Test
+    public void testGorExceptionFromJsonWithCause() {
+        try {
+            throwsArithmeticException();
+        } catch (Exception ae) {
+            GorDataException ex = new GorDataException("Some exception", 1, "chrom\tpos\tcalc", "chr1\t1\t0", ae);
+            ex.setRequestID("1234");
+            ex.setContext("abcd");
+            String json = ExceptionUtilities.gorExceptionToJson(ex);
+            GorDataException exNew = (GorDataException) ExceptionUtilities.gorExceptionFromJson(json);
+
+            Assert.assertEquals(ex.getMessage(), exNew.getMessage());
+            Assert.assertEquals(ex.getRequestID(), exNew.getRequestID());
+            Assert.assertEquals(ex.getHeader(), exNew.getHeader());
+            Assert.assertEquals(ex.getRow(), exNew.getRow());
+
+            Assert.assertEquals("org.gorpipe.base.exceptions.UTestGorExceptions.throwsArithmeticException",
+                    exNew.getStackTrace()[0].getMethodName());
         }
     }
 
@@ -128,6 +154,11 @@ public class UTestGorExceptions {
             Assert.assertTrue(json.contains(ste.getMethodName()));
             // Skip checking the file name and line pos (as some do not have it)
         }
+    }
+
+
+    private void throwsArithmeticException() throws ArithmeticException {
+        throw new ArithmeticException("Some arith exception");
     }
 
 }

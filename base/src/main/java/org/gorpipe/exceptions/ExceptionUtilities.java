@@ -364,14 +364,17 @@ public final class ExceptionUtilities {
     }
 
     /**
-     * Attempt to deserialize the stacktrace from obj into array of StackTraceElements[] that is set on the exception
-     * If we do not overwrite the stacktrace this way then
-     * Java will generate a useless stacktrace from the callsite where this exception is thrown from
+     * Attempt to deserialize the stacktrace from obj into array of StackTraceElements[] that is set on the exception.
+     * If we do not overwrite the stacktrace this way then Java will generate a useless stacktrace from the callsite
+     * where this exception is thrown from.
+     * We are not updating cause when recreating GOR exception from json so we prefer the last cause stracktrace.
      */
     private static void setStackTrace(GorException exception, JSONObject obj) {
 
         try {
-            String[] stackTrace = obj.get(STACK_TRACE).toString().split("\n");
+            String stackTraceText = obj.get(STACK_TRACE).toString();
+            String[] exceptions = stackTraceText.split("Caused by:");
+            String[] stackTrace = exceptions[exceptions.length-1].split("\n");
             List<StackTraceElement> stackTraceElements = new ArrayList<>();
             StackTraceElement stackTraceElement;
             for (String st : stackTrace) {
