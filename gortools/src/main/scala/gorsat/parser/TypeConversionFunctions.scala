@@ -181,11 +181,12 @@ object TypeConversionFunctions {
 
   def basePn(ex1: iFun): sFun = {
     cvp => {
+      // 26 = Number of english upper case letters A-Z.
       val temp = BigInt(ex1(cvp) - 1).toString(26)
       val base = new mutable.StringBuilder("AAAAAAA")
       var i = 0
       while (i < temp.length) {
-        base.setCharAt(6 - i, (temp.charAt(i) + 17).toChar)
+        base.setCharAt(6 - i, (65 + Character.digit(temp.charAt(temp.length - i - 1), 26) ).toChar)
         i += 1
       }
       base.toString

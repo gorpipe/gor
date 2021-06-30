@@ -142,7 +142,10 @@ public class UTestTypeAndStringConversion {
     public void testBasePN() {
         TestUtils.assertCalculated("basepn(1)", "AAAAAAA");
         TestUtils.assertCalculated("basepn(2)", "AAAAAAB");
-        TestUtils.assertCalculated("basepn(12345)", "AAAA|Gz");
+        TestUtils.assertCalculated("basepn(24)", "AAAAAAX");
+        TestUtils.assertCalculated("basepn(26)", "AAAAAAZ");
+        TestUtils.assertCalculated("basepn(74)", "AAAAACV");
+        TestUtils.assertCalculated("basepn(12345)", "AAAASGU");
         TestUtils.assertCalculated("basepn(321272408)", "BBBBBBB");
     }
 
