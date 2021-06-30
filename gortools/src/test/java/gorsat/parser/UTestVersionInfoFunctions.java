@@ -36,7 +36,7 @@ public class UTestVersionInfoFunctions {
     public void testMajorVersion() {
         int major = -1;
         if(!GorPipe.version().equals("Unknown")) {
-            major = Integer.parseInt(GorPipe.version().split("\\.")[1]);
+            major = Integer.parseInt(GorPipe.version().split("\\.")[0]);
         }
         TestUtils.assertCalculated("majorversion()", major);
     }
@@ -45,7 +45,7 @@ public class UTestVersionInfoFunctions {
     public void testMinorVersion() {
         int minor = -1;
         if(!GorPipe.version().equals("Unknown")) {
-            minor = Integer.parseInt(GorPipe.version().split("\\.")[2]);
+            minor = Integer.parseInt(GorPipe.version().split("\\.")[1]);
         }
         TestUtils.assertCalculated("minorversion()", minor);
     }
