@@ -35,6 +35,22 @@ class UTestQuoteSafeSplit extends FunSuite{
 
   private val log: Logger = LoggerFactory.getLogger(this.getClass)
 
+  test("Empty") {
+    val data = ""
+    val result = quoteSafeSplit(data, ' ')
+
+    assert(result.length == 1)
+    assert("" == result(0))
+  }
+
+  test("Null") {
+    val data = null
+    val result = quoteSafeSplit(data, ' ')
+
+    assert(null == result)
+  }
+
+
   test("Basic split with no nestation") {
     val data = "gor foo bar -h -a"
     val result = quoteSafeSplit(data, ' ')

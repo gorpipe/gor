@@ -904,6 +904,14 @@ object CommandParseUtilities {
   }
 
   private def quoteCustomSafeSplit(inputString: String, splitCharacter: Char, quotes: Array[SplitQuote], blocks: Array[SplitBlock], specialChars: Set[Char], validateBlocks: Boolean): Array[String] = {
+    if (inputString == null) {
+      return null
+    }
+
+    if (inputString.length == 0) {
+      return Array[String](inputString)
+    }
+
     var backSlashCount = 0
     var words = List[String]()
     var i = 0
