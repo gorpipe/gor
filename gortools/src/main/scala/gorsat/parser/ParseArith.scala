@@ -1018,7 +1018,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
     def apply(in: Input): ParseResult[String]
   } = new Parser[String] {
     def apply(in: Input): ParseResult[String] = {
-      val p = colRef | "#rc" | "#RC" | """$rc""" | """$RC""" | """[[1-9]*a-zA-Z_][\w.]*""".r
+      val p = colRef | "#rc" | "#RC" | """$rc""" | """$RC""" | """[[0-9]*a-zA-Z_][\w.]*""".r
       val result = p(in)
       result match {
         case Failure(msg, next) =>
