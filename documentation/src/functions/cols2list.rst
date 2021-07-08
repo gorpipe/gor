@@ -5,14 +5,12 @@ COLS2LIST
 =========
 
 The **COLS2LIST** function collapses columns into a single column, with a separator between the values.
-The separator defaults to ",", but can be set to anything.
+The separator defaults to ",", but can be set to anything with the optional separator argument.
 
 Usage
 =====
 
-``COLS2LIST(string) : string``
-
-``COLS2LIST(string, string) : string``
+``COLS2LIST(string, [sep]) : string``
 
 Example
 =======

@@ -10,10 +10,12 @@ Each element in the list is referred to as ``x`` in the expression in the second
 
 The expression in the second argument must be in quotation marks and any additional quotation marks that are contained in the expression must be escaped with a backslash. This would be the case if you are appending text to elements in the given list as is shown in the examples below.
 
+Optional list separator argument.
+
 Usage
 =====
 
-``LISTMAP(string,expression) : string``
+``LISTMAP(string,expression[,sep]) : string``
 
 Example
 =======

@@ -334,20 +334,23 @@ Click on "More info" for any of the functions below to get more information abou
    * - ``CONTAINSCOUNT(str,lit-list) : int``
      - Returns a number indicating how many items in the literal list are contained in the string. Also try CONTAINSANY, CSCONTAINSANY, CSCONTAINSCOUNT, LISTHASCOUNT, and CSLISTHASCOUNT.
      - :ref:`containscount`
-   * - ``LISTFIRST(str,sep) : str``
-     - Retrieves the first element (i.e. the head) in a comma-separated list.
+   * - ``LISTFIRST(str[,sep]) : str``
+     - Retrieves the first element (i.e. the head) in a comma-separated list, with an optional separator argument.
      - :ref:`listfirst`
-   * - ``LISTSECOND(str,sep) : str``
-     - Second element in a comma separated list.
+   * - ``LISTSECOND(str[,sep]) : str``
+     - Second element in a comma separated list, with an optional separator argument.
      - :ref:`listsecond`
-   * - ``LISTLAST(str,sep) : str``
-     - Last element in a comma separated list.
+   * - ``LISTNTH(str,int[,sep]) : str``
+     - Nth element in a comma separated list, with an optional separator argument.
+     - :ref:`listnth`
+   * - ``LISTLAST(str[,sep]) : str``
+     - Last element in a comma separated list, with an optional separator argument.
      - :ref:`listlast`
-   * - ``LISTTAIL(str,sep) : str``
-     - The tail (the list minus the first element).
+   * - ``LISTTAIL(str[,sep]) : str``
+     - The tail (the list minus the first element), with an optional separator argument.
      - :ref:`listtail`
-   * - ``LISTREVERSE(str,sep) : str``
-     - The list reversed with optional "sep", e.g. ';'.
+   * - ``LISTREVERSE(str[,sep]) : str``
+     - The list reversed, with an optional separator argument.
      - :ref:`listreverse`
    * - ``LISTSORTASC(str) : str``
      - The list sorted alphabetically in a ascending order.
@@ -373,9 +376,12 @@ Click on "More info" for any of the functions below to get more information abou
    * - ``LISTMIN(str): str``
      - The minimum element (element as string).
      - :ref:`listmin`
-   * - ``LISTSIZE(str,sep) : int``
-     - The size of the list.
+   * - ``LISTSIZE(str[,sep]) : int``
+     - The size of the list, with an optional separator argument.
      - :ref:`listsize`
+   * - ``LISTCOUNT(str[,sep]) : int``
+     - Count frequency of elements in a list, returning the pairs (e1;count1,..,en;countn), with an optional separator argument.
+     - :ref:`listcount`
    * - ``LISTNUMMAX(str) : float``
      - The maximum element (element as number).
      - :ref:`listnummax`
@@ -391,41 +397,35 @@ Click on "More info" for any of the functions below to get more information abou
    * - ``LISTNUMSTD(str) : float``
      - The unbiased standard deviation of the elements (element as numbers).
      - :ref:`listnumstd`
-   * - ``LISTINDEX(str, str, sep) : int``
-     - The one based index to a list of elements where a target is found. The function will search the list defined in parameter 1 for the first instance of parameter 2.
+   * - ``LISTINDEX(str,str[,sep]) : int``
+     - The one based index to a list of elements where a target is found. The function will search the list defined in parameter 1 for the first instance of parameter 2.  Optional separator argument.
      - :ref:`listindex`
-   * - ``LISTMAP(str,str-con) : str``
-     - The list translated using expression provided in second argument. Element denoted with x.
+   * - ``LISTMAP(str,str-con[,sep]) : str``
+     - The list translated using expression provided in second argument. Element denoted with x. Optional separator argument.
      - :ref:`listmap`
-   * - ``LISTFILTER(str,str-con) : str``
-     - The list filtered using expression provided in second argument. Element as x, index as i. Example LISTFILTER(col,'x != 1') or LISTFILTER(col,'i > 2')
+   * - ``LISTFILTER(str,str-con[,sep]) : str``
+     - The list filtered using expression provided in second argument. Element as x, index as i. Optional separator argument. Example LISTFILTER(col,'x != 1') or LISTFILTER(col,'i > 2')
      - :ref:`listfilter`
-   * - ``LISTZIP(str,str) : str``
-     - Two lists zipped together, each pair of elements separated with a semicolon.
+   * - ``LISTZIP(str,str[,sep,delim]) : str``
+     - Two lists zipped together, each pair of elements separated with a semicolon. Optional separator and delimter arguments.
      - :ref:`listzip`
-   * - ``LISTZIPFILTER(str,str,str-con) : str``
-     - Filter the first list by the content of the second list.
+   * - ``LISTZIPFILTER(str,str,str-con[,sep,delim]) : str``
+     - Filter the first list by the content of the second list, with an optional separator argument. Optional separator and delimter arguments.
      - :ref:`listzipfilter`
    * - ``LISTCOMB(str,int,int) : str``
      - Returns a semi-comma-separated list of all combinations of elements in the input list of length within the interval specified by the input integers.
      - :ref:`listcomb`
-   * - ``LISTADD(str,str,str) : str``
-     - Returns a list with the given item added to the end.
+   * - ``LISTADD(str,str[,sep]) : str``
+     - Returns a list with the given item added to the end, with an optional separator argument.
      - :ref:`listadd`
    * - ``FSVMAP(str,int,str-con,str) : str``
      - The list of equally separated values (second argument) translated using expression provided in third argument. Fourth argument is the result separator. Element denoted with x. Example FSVMAP(col,2,'x+1',','). Also see :ref:`LISTMAP<listmap>`.
      - :ref:`fsvmap`
-   * - ``COLS2LIST(str) : str``
-     - Collapse values from multiple columns into a single list, separated by commas
+   * - ``COLS2LIST(str[,sep]) : str``
+     - Collapse values from multiple columns into a single list, with an optional separator argument.
      - :ref:`cols2list`
-   * - ``COLS2LIST(str, str) : str``
-     - Collapse values from multiple columns into a single list, with a custom separator
-     - :ref:`cols2list`
-   * - ``COLS2LISTMAP(str, str) : str``
-     - Collapse values from multiple columns into a single list with an expression applied, separated by commas
-     - :ref:`cols2listmap`
-   * - ``COLS2LISTMAP(str, str, str) : str``
-     - Collapse values from multiple columns into a single list with an expression applied, with a custom separator
+   * - ``COLS2LISTMAP(str,str[,sep]) : str``
+     - Collapse values from multiple columns into a single list with an expression applied, with optional separator argument
      - :ref:`cols2listmap`
 
 Genomic-Specific Functions
