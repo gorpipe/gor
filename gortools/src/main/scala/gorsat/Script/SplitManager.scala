@@ -55,7 +55,7 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
       chromosomeSplits.foreach(k => {
         val (n, c, g) = (groupName.replace(replacementPattern, k._1),
           commandToExecute.replace(replacementPattern, k._2.getRange)
-            .replace(WHERE_SPLIT_WINDOW, k._2.filter)
+            .replace(WHERE_SPLIT_WINDOW, k._2.getFilter)
             .replace(CHROM_PATTERN, k._2.chrom)
             .replace(START_PATTERN, k._2.start.toString)
             .replace(STOP_PATTERN, k._2.end.toString)
@@ -118,32 +118,35 @@ object SplitManager {
     splitManager
   }
 
+  // Whole chromesome splits
   def parseBuildSizeSplit(buildSizes: java.util.Map[String, Integer]): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
     buildSizes.asScala.foreach(c => {
-      chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, c._2, "0 <= #2i and #2i <= " + c._2))
+      chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, getUpperBounds(c._1, c._2, buildSizes)))
     })
 
     chromosomeSplits
   }
 
+  // From build split file (max two splits per chromosome)
   def parseSplitSizeSplit(buildSizes: java.util.Map[String, Integer], buildSplits: java.util.Map[String, Integer]): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
     buildSizes.asScala.foreach(c => {
       Option(buildSplits.getOrDefault(c._1, null)) match {
         case Some(chromosomeSplit) =>
-          chromosomeSplits += ((c._1 + "a") -> SplitEntry(c._1, 0, chromosomeSplit - 1, "0 <= #2i and #2i < " + chromosomeSplit))
-          chromosomeSplits += ((c._1 + "b") -> SplitEntry(c._1, chromosomeSplit, c._2, "" + chromosomeSplit + " <= #2i and #2i <= " + c._2))
+          chromosomeSplits += ((c._1 + "a") -> SplitEntry(c._1, 0, chromosomeSplit - 1))
+          chromosomeSplits += ((c._1 + "b") -> SplitEntry(c._1, chromosomeSplit, getUpperBounds(c._1, c._2, buildSizes)))
         case None =>
-          chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, c._2, "0 <= #2i and #2i <= " + c._2))
+          chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, getUpperBounds(c._1, c._2, buildSizes)))
       }
     })
 
     chromosomeSplits
   }
 
+  // Split option split.
   def parseArbitrarySplit(buildSizes: java.util.Map[String, Integer], iSplitSize: Int, splitOverlap: Int): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
@@ -164,8 +167,8 @@ object SplitManager {
         throw new GorParsingException(s"Error in -split - overlap is too large compared with the split size $splitSize. Usage -split size[:overlap] : ")
       }
 
-      while (beginBp < c._2) {
-        chromosomeSplits += ((c._1 + "_" + no) -> SplitEntry(c._1, 0.max(beginBp - splitOverlap), endBp - 1 + splitOverlap, 0.max(beginBp) + "<= #2i and #2i < " + endBp))
+      while (beginBp <= c._2) {
+        chromosomeSplits += ((c._1 + "_" + no) -> SplitEntry(c._1, 0.max(beginBp - splitOverlap),  getUpperBounds(c._1, endBp - 1 + splitOverlap, buildSizes)))
         beginBp += splitSize
         endBp += splitSize
         no += 1
@@ -194,7 +197,8 @@ object SplitManager {
         val pos = row.pos + base
         val end = row.colAsInt(2)
         val tag = if(row.numCols() > 3) row.colAsString(3).toString else ""
-        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr, pos, end, 0.max(pos) + "<= #2i and #2i < " + end, tag))
+        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr, pos,
+          getUpperBounds(row.chr, end, context.getSession.getProjectContext.getReferenceBuild.getBuildSize), tag))
         i += 1
       }
     } finally {
@@ -217,5 +221,9 @@ object SplitManager {
     })
 
     !commandsOk
+  }
+
+  def getUpperBounds(chrom: String, pos: Int, buildSizes: java.util.Map[String, Integer]): Int = {
+    if (buildSizes.containsKey(chrom) && pos >= buildSizes.get(chrom)) -1 else pos
   }
 }

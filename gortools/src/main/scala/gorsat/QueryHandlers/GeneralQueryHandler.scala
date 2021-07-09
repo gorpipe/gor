@@ -284,9 +284,6 @@ object GeneralQueryHandler {
       var chrI = 0
       val dictList = dictFiles.zip(chromsrange).map(x => {
         val f = x._1
-        val cep = x._2.split(':')
-        val stasto = cep(1).split('-')
-        val (c, sp, ep) = (cep(0), stasto(0), stasto(1))
         chrI += 1
         val rf = getRelativeFileLocationForDictionaryFileReferences(f)
         val prefix = rf + "\t" + chrI + "\t"
@@ -299,6 +296,9 @@ object GeneralQueryHandler {
             .filter(f => f.nonEmpty).map(s => prefix + s)
             .findFirst().asInstanceOf[Optional[String]]
         } else {
+          val cep = x._2.split(':')
+          val stasto = if (cep.length > 1) cep(1).split('-') else Array("-1","-1")
+          val (c, sp, ep) = (cep(0), stasto(0), if (stasto.length > 1 && stasto(1).nonEmpty) stasto(1) else "-1")
           Optional.of[String](prefix + c + "\t" + sp + "\t" + c + "\t" + ep)
         }
         opt

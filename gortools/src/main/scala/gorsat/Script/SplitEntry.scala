@@ -22,8 +22,26 @@
 
 package gorsat.Script
 
-case class SplitEntry(chrom: String, start: Int, end: Int, filter: String, tag: String = "") {
+case class SplitEntry(chrom: String, start: Int, end: Int, tag: String = "") {
   def getRange: String = {
-    chrom + ":" + start + "-" + end
+    if (end > 0) {
+      chrom + ":" + start + "-" + end
+    } else {
+      chrom + (if (start > 0) ":" + start + "-" else "")
+    }
+
+  }
+
+  // TODO: Can this be removed.  Note: when we switch this method there was minor change in the behaviour for
+  //       arbitrary splits with overlap (the overlap was not included in the filter but only in the start/end).
+  //       And for nested splits they were 1 off for the end.
+  def getFilter: String = {
+    if (end > 0) {
+      0.max(start) + " <= #2i and #2i <= " + end
+    } else if (start > 0) {
+      start + " <= #2i"
+    } else {
+      ""
+    }
   }
 }

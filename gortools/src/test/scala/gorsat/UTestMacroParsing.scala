@@ -98,8 +98,8 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
       val command1 = commands.head._2
       val command2 = commands.last._2
-      assert(command1.query == "gor -p ##SPLIT_CHR_REPLACE## <(../tests/data/gor/genes.gor | top 10)")
-      assert(command2.query == "gordict [xxx_chr11] chr11:0-150000000 [xxx_chr5] chr5:0-200000000 [xxx_chr22] chr22:0-100000000 [xxx_chr8] chr8:0-150000000 [xxx_chr19] chr19:0-100000000 [xxx_chrY] chrY:0-100000000 [xxx_chr1] chr1:0-250000000 [xxx_chr15] chr15:0-150000000 [xxx_chr12] chr12:0-150000000 [xxx_chr18] chr18:0-100000000 [xxx_chr20] chr20:0-100000000 [xxx_chr2] chr2:0-250000000 [xxx_chr13] chr13:0-150000000 [xxx_chr7] chr7:0-200000000 [xxx_chr14] chr14:0-150000000 [xxx_chr3] chr3:0-200000000 [xxx_chrM] chrM:0-20000 [xxx_chr17] chr17:0-100000000 [xxx_chrXY] chrXY:0-1 [xxx_chr4] chr4:0-200000000 [xxx_chr6] chr6:0-200000000 [xxx_chr9] chr9:0-150000000 [xxx_chrX] chrX:0-200000000 [xxx_chr10] chr10:0-150000000 [xxx_chr21] chr21:0-100000000 [xxx_chr16] chr16:0-100000000")
+      assertResult("gor -p ##SPLIT_CHR_REPLACE## <(../tests/data/gor/genes.gor | top 10)")(command1.query)
+      assertResult( "gordict [xxx_chr22] chr22 [xxx_chr6a] chr6:0-60124999 [xxx_chr7b] chr7:59330000- [xxx_chrXa] chrX:0-59999999 [xxx_chr4a] chr4:0-50749999 [xxx_chr5b] chr5:47650000- [xxx_chr2b] chr2:93100000- [xxx_chr19] chr19 [xxx_chr2a] chr2:0-93099999 [xxx_chrY] chrY [xxx_chr10b] chr10:40350000- [xxx_chr15] chr15 [xxx_chr1a] chr1:0-123999999 [xxx_chr9a] chr9:0-53699999 [xxx_chr18] chr18 [xxx_chr20] chr20 [xxx_chr5a] chr5:0-47649999 [xxx_chr13] chr13 [xxx_chr6b] chr6:60125000- [xxx_chr12a] chr12:0-34999999 [xxx_chr1b] chr1:124000000- [xxx_chr14] chr14 [xxx_chr9b] chr9:53700000- [xxx_chr8a] chr8:0-45499999 [xxx_chr3a] chr3:0-91349999 [xxx_chrM] chrM [xxx_chr17] chr17 [xxx_chr11a] chr11:0-52749999 [xxx_chrXY] chrXY [xxx_chr12b] chr12:35000000- [xxx_chrXb] chrX:60000000- [xxx_chr11b] chr11:52750000- [xxx_chr8b] chr8:45500000- [xxx_chr3b] chr3:91350000- [xxx_chr10a] chr10:0-40349999 [xxx_chr7a] chr7:0-59329999 [xxx_chr4b] chr4:50750000- [xxx_chr21] chr21 [xxx_chr16] chr16")(command2.query)
     } else {
       fail
     }
@@ -119,8 +119,8 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
       val command1 = commands.head._2
       val command2 = commands.last._2
-      assert(command1.query == "gor -p ##SPLIT_CHR_REPLACE## <(../tests/data/gor/genes.gor | top 10)")
-      assert(command2.query == "gordict [xxx_chr11] chr11:0-150000000 [xxx_chr5] chr5:0-200000000 [xxx_chr22] chr22:0-100000000 [xxx_chr8] chr8:0-150000000 [xxx_chr19] chr19:0-100000000 [xxx_chrY] chrY:0-100000000 [xxx_chr1] chr1:0-250000000 [xxx_chr15] chr15:0-150000000 [xxx_chr12] chr12:0-150000000 [xxx_chr18] chr18:0-100000000 [xxx_chr20] chr20:0-100000000 [xxx_chr2] chr2:0-250000000 [xxx_chr13] chr13:0-150000000 [xxx_chr7] chr7:0-200000000 [xxx_chr14] chr14:0-150000000 [xxx_chr3] chr3:0-200000000 [xxx_chrM] chrM:0-20000 [xxx_chr17] chr17:0-100000000 [xxx_chrXY] chrXY:0-1 [xxx_chr4] chr4:0-200000000 [xxx_chr6] chr6:0-200000000 [xxx_chr9] chr9:0-150000000 [xxx_chrX] chrX:0-200000000 [xxx_chr10] chr10:0-150000000 [xxx_chr21] chr21:0-100000000 [xxx_chr16] chr16:0-100000000")
+      assertResult("gor -p ##SPLIT_CHR_REPLACE## <(../tests/data/gor/genes.gor | top 10)")(command1.query)
+      assertResult("gordict [xxx_chr22] chr22 [xxx_chr6a] chr6:0-60124999 [xxx_chr7b] chr7:59330000- [xxx_chrXa] chrX:0-59999999 [xxx_chr4a] chr4:0-50749999 [xxx_chr5b] chr5:47650000- [xxx_chr2b] chr2:93100000- [xxx_chr19] chr19 [xxx_chr2a] chr2:0-93099999 [xxx_chrY] chrY [xxx_chr10b] chr10:40350000- [xxx_chr15] chr15 [xxx_chr1a] chr1:0-123999999 [xxx_chr9a] chr9:0-53699999 [xxx_chr18] chr18 [xxx_chr20] chr20 [xxx_chr5a] chr5:0-47649999 [xxx_chr13] chr13 [xxx_chr6b] chr6:60125000- [xxx_chr12a] chr12:0-34999999 [xxx_chr1b] chr1:124000000- [xxx_chr14] chr14 [xxx_chr9b] chr9:53700000- [xxx_chr8a] chr8:0-45499999 [xxx_chr3a] chr3:0-91349999 [xxx_chrM] chrM [xxx_chr17] chr17 [xxx_chr11a] chr11:0-52749999 [xxx_chrXY] chrXY [xxx_chr12b] chr12:35000000- [xxx_chrXb] chrX:60000000- [xxx_chr11b] chr11:52750000- [xxx_chr8b] chr8:45500000- [xxx_chr3b] chr3:91350000- [xxx_chr10a] chr10:0-40349999 [xxx_chr7a] chr7:0-59329999 [xxx_chr4b] chr4:50750000- [xxx_chr21] chr21 [xxx_chr16] chr16")(command2.query)
     } else {
       fail
     }
@@ -140,8 +140,8 @@ class UTestMacroParsing extends FunSuite with BeforeAndAfter {
 
       val command1 = commands.head._2
       val command2 = commands.last._2
-      assert(command1.query == "gor -p ##REGULAR_CHR_REPLACE## <(../tests/data/gor/genes.gor | group chromo -gc 1-4 -count | top 10)")
-      assert(command2.query == "gordict [xxx_chr11] chr11:0-150000000 [xxx_chr5] chr5:0-200000000 [xxx_chr22] chr22:0-100000000 [xxx_chr8] chr8:0-150000000 [xxx_chr19] chr19:0-100000000 [xxx_chrY] chrY:0-100000000 [xxx_chr1] chr1:0-250000000 [xxx_chr15] chr15:0-150000000 [xxx_chr12] chr12:0-150000000 [xxx_chr18] chr18:0-100000000 [xxx_chr20] chr20:0-100000000 [xxx_chr2] chr2:0-250000000 [xxx_chr13] chr13:0-150000000 [xxx_chr7] chr7:0-200000000 [xxx_chr14] chr14:0-150000000 [xxx_chr3] chr3:0-200000000 [xxx_chrM] chrM:0-20000 [xxx_chr17] chr17:0-100000000 [xxx_chrXY] chrXY:0-1 [xxx_chr4] chr4:0-200000000 [xxx_chr6] chr6:0-200000000 [xxx_chr9] chr9:0-150000000 [xxx_chrX] chrX:0-200000000 [xxx_chr10] chr10:0-150000000 [xxx_chr21] chr21:0-100000000 [xxx_chr16] chr16:0-100000000")
+      assertResult("gor -p ##REGULAR_CHR_REPLACE## <(../tests/data/gor/genes.gor | group chromo -gc 1-4 -count | top 10)")(command1.query)
+      assertResult("gordict [xxx_chr11] chr11 [xxx_chr5] chr5 [xxx_chr22] chr22 [xxx_chr8] chr8 [xxx_chr19] chr19 [xxx_chrY] chrY [xxx_chr1] chr1 [xxx_chr15] chr15 [xxx_chr12] chr12 [xxx_chr18] chr18 [xxx_chr20] chr20 [xxx_chr2] chr2 [xxx_chr13] chr13 [xxx_chr7] chr7 [xxx_chr14] chr14 [xxx_chr3] chr3 [xxx_chrM] chrM [xxx_chr17] chr17 [xxx_chrXY] chrXY [xxx_chr4] chr4 [xxx_chr6] chr6 [xxx_chr9] chr9 [xxx_chrX] chrX [xxx_chr10] chr10 [xxx_chr21] chr21 [xxx_chr16] chr16")(command2.query)
     } else {
       fail
     }
