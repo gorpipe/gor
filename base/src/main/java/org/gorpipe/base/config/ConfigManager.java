@@ -137,18 +137,24 @@ public class ConfigManager {
      * @param prefix the configuration prefix for which to create the default source list.
      * @return a list of configuration sources to load for the given prefix.
      */
-    private static List<String> getDefaultConfigFileNamesForPrefix(String prefix) {
+    public static List<String> getDefaultConfigFileNamesForPrefix(String prefix) {
         List<String> files = new ArrayList<>();
 
         List<String> parts = Arrays.asList(prefix.split(Pattern.quote("."), -1));
         for (int i = parts.size() - 1; i >= 0; i--) {
             String part = String.join(".", parts.subList(0, i + 1));
-            files.add(System.getProperty(part + ".config.file"));
-            files.add(configRootPath + part + ".props");
-            files.add(configRootPath + part + ".props.defaults"); // TODO: remove defaults, use the DefaultValue annotation instead
+            addFileIfNotNullOrEmpty(System.getProperty(part + ".config.file"), files);
+            addFileIfNotNullOrEmpty(configRootPath + part + ".props", files);
+            addFileIfNotNullOrEmpty(configRootPath + part + ".props.defaults", files); // TODO: remove defaults, use the DefaultValue annotation instead
         }
 
         return files;
+    }
+
+    private static void addFileIfNotNullOrEmpty(String fileName, List<String> files) {
+        if (fileName != null && !fileName.isEmpty() && !fileName.isBlank()) {
+            files.add(fileName);
+        }
     }
 
     /**

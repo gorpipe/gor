@@ -22,6 +22,7 @@
 
 package org.gorpipe.util;
 
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,7 +38,7 @@ public class UTestConfigUtil {
 
     @Before
     public void setup() throws IOException {
-        File scriptFile = new File(ConfigUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        File scriptFile = new File(ConfigManager.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         // Check on defaults location for config file
         String fileName = scriptFile.getParent() + "/../config/";
         gorPropsFile = FileTestUtils.createTempFile(new File(fileName), "gor.props.defaults", "PROP1=A\nPROP2=B,C");
