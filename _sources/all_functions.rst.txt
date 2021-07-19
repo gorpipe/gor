@@ -18,6 +18,7 @@
    functions/containsany
    functions/cosine
    functions/daydiff
+   functions/decode
    functions/div
    functions/float
    functions/floor
