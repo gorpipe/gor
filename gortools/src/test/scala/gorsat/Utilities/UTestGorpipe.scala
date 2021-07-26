@@ -25,13 +25,17 @@ package gorsat.Utilities
 import java.nio.file.Paths
 import gorsat.TestUtils
 import gorsat.process.{GenericSessionFactory, PipeInstance}
-import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.exceptions.{GorDataException, GorParsingException}
 import org.gorpipe.gor.util.Util
 import org.gorpipe.test.SlowTests
 import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
+import org.scalacheck.Prop.True
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+
+import java.io.File
+import scala.util.{Failure, Success, Try}
 
 @RunWith(classOf[JUnitRunner])
 class UTestGorpipe extends FunSuite {
@@ -95,3 +99,41 @@ class UTestSlowGorpipe extends FunSuite {
     }
   }
 }
+
+@RunWith(classOf[JUnitRunner])
+class UTestPipeInstance extends FunSuite {
+
+  test("Wrong order no validation") {
+    val data = "Chrom\tpos\tval\nchr1\t2\tA\nchr1\t1\tB\n"
+    val testFile = TestUtils.createGorFile("WrongOrderTest", data.split("\n"))
+    val query = "gor " + testFile.toString
+
+    val result = Try {
+      val pipe = new PipeInstance(TestUtils.createSession(false).getGorContext, false)
+      TestUtils.runPipeInstanceQueryToString(pipe, query, true)
+    }
+
+    result match {
+      case Failure(e) => fail("Should be able to gor wrong order")
+      case Success(_) => assert(result.get == data)
+    }
+  }
+
+  test("Wrong order with validation") {
+    val data = "Chrom\tpos\tval\nchr1\t2\tA\nchr1\t1\tB\n"
+    val testFile = TestUtils.createGorFile("WrongOrderTest", data.split("\n"))
+    val query = "gor " + testFile.toString
+
+    val result = Try {
+      val pipe = new PipeInstance(TestUtils.createSession(false).getGorContext, true)
+      TestUtils.runPipeInstanceQueryToString(pipe, query, true)
+    }
+
+    result match {
+      case Failure(e) => assert(e.isInstanceOf[GorDataException])
+      case Success(_) => fail("Should not be able to gor wrong order")
+    }
+  }
+
+}
+

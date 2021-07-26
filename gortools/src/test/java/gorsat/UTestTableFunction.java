@@ -143,7 +143,7 @@ public class UTestTableFunction {
         // This test relies on Unix-style commands
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
 
-        String query = "gor ../tests/data/reports/test.yml(top=10,some='thing')";
+        String query = "gor ../tests/data/reports/test.yml(top=10,some='some thing')";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
     }
 

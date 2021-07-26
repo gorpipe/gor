@@ -194,10 +194,10 @@ object DiagnosticsFunctions {
 
   def minorVersion(): iFun = {
     _ => {
-      val spl = GorPipe.version.split("\\.")
+      val spl = GorPipe.version.split(" ")(0).split("-")(0).split("\\.")
       var ret = -1
-      if (spl.length > 2) try {
-        ret = Integer.parseInt(spl(2))
+      if (spl.length > 1) try {
+        ret = Integer.parseInt(spl(1))
       } catch {
         case e: Exception =>
           e.printStackTrace()
@@ -208,10 +208,10 @@ object DiagnosticsFunctions {
 
   def majorVersion(): iFun = {
     _ => {
-      val spl = GorPipe.version.split("\\.")
+      val spl = GorPipe.version.split(" ")(0).split("-")(0).split("\\.")
       var ret = -1
-      if (spl.length > 1) try {
-        ret = Integer.parseInt(spl(1))
+      if (spl.length > 0) try {
+        ret = Integer.parseInt(spl(0))
       } catch {
         case e: Exception =>
           e.printStackTrace()

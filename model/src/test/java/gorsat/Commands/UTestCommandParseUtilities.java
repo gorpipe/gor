@@ -44,7 +44,7 @@ public class UTestCommandParseUtilities {
 
     @Test
     public void quoteSafeSplit() {
-        assertArrayEquals(new String[]{}, CommandParseUtilities.quoteSafeSplit("", ' '));
+        assertArrayEquals(new String[]{""}, CommandParseUtilities.quoteSafeSplit("", ' '));
         assertArrayEquals(new String[]{"bingo"}, CommandParseUtilities.quoteSafeSplit("bingo", ' '));
         assertArrayEquals(new String[]{"bingo", "bongo"}, CommandParseUtilities.quoteSafeSplit("bingo bongo", ' '));
         assertArrayEquals(new String[]{"'bingo bongo'"}, CommandParseUtilities.quoteSafeSplit("'bingo bongo'", ' '));

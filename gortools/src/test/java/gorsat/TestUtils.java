@@ -79,18 +79,7 @@ public class TestUtils {
     private static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server) {
 
         try (PipeInstance pipe = createPipeInstance(server)) {
-            String queryToExecute = processQuery(query, pipe.getSession());
-            pipe.init(queryToExecute, null);
-            StringBuilder result = new StringBuilder();
-            if (includeHeader) {
-                result.append(pipe.getHeader());
-                result.append("\n");
-            }
-            while (pipe.hasNext()) {
-                result.append(pipe.next());
-                result.append("\n");
-            }
-            return result.toString();
+            return runPipeInstanceQueryToString(pipe, query, includeHeader);
         }
     }
 
@@ -113,17 +102,23 @@ public class TestUtils {
         CLISessionFactory factory = new CLISessionFactory(options, null);
 
         try (PipeInstance pipe = new PipeInstance(factory.create().getGorContext())) {
-            String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.init(queryToExecute, false, "");
-            StringBuilder result = new StringBuilder();
+            return runPipeInstanceQueryToString(pipe, options.query(), true);
+        }
+    }
+
+    public static String runPipeInstanceQueryToString(PipeInstance pipe, String query, boolean includeHeader) {
+        String queryToExecute = processQuery(query, pipe.getSession());
+        pipe.init(queryToExecute, null);
+        StringBuilder result = new StringBuilder();
+        if (includeHeader) {
             result.append(pipe.getHeader());
             result.append("\n");
-            while (pipe.hasNext()) {
-                result.append(pipe.next());
-                result.append("\n");
-            }
-            return result.toString();
         }
+        while (pipe.hasNext()) {
+            result.append(pipe.next());
+            result.append("\n");
+        }
+        return result.toString();
     }
 
     public static GenomicIterator runGorPipeIterator(String query) {
@@ -332,7 +327,7 @@ public class TestUtils {
         }
     }
 
-    private static GorSession createSession(boolean server) {
+    public static GorSession createSession(boolean server) {
         String[] args = {};
         return createSession(args, null, server);
     }

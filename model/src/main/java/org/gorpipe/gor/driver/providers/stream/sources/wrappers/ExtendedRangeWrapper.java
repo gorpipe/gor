@@ -150,9 +150,17 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
         public int read(byte[] b, int off, int len) throws IOException {
             // Check if read request is larger than remaining bytes in current 'in' stream
             if (len + getPosition() > bookKeeping.getLength()) {
-                // 1. Read remainder of stream and close
-                int read = super.read(b, off, (int) (bookKeeping.getLength() - getPosition()));
-                if (read < 0) read = 0;
+                // 1. Read remainder of stream and close.  As read is not guaranteed to read but 1 byte we want we do
+                //    repeated reads.   Some streams are unhappy if the whole stream is not read when we close.
+                int remainderLength = (int) (bookKeeping.getLength() - getPosition());
+                int read = 0;
+                while (read < remainderLength) {
+                    int readNext = super.read(b, off + read, remainderLength - read);
+                    if (readNext < 0) {
+                        break;
+                    }
+                    read += readNext;
+                }
                 in.close();
 
                 // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.

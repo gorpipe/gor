@@ -23,6 +23,7 @@
 package org.gorpipe.util;
 
 import org.apache.commons.configuration.*;
+import org.gorpipe.base.config.ConfigManager;
 
 import java.io.File;
 import java.util.Iterator;
@@ -66,26 +67,12 @@ public class ConfigUtil {
                 sysconf.setTrimmingDisabled(true);
                 cc.addConfiguration(sysconf);
 
-                fileName = System.getProperty(prefix + ".config.file");
-                if (fileName != null) {
-                    cc.addConfiguration(new PropertiesConfiguration(fileName));
-                }
-
-                File scriptFile = new File(ConfigUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath());
-
-
-                // Check on defaults location for config file
-                fileName = scriptFile.getParent() + "/../config/" + prefix + ".props";
-
-                if (new File(fileName).exists()) {
-                    cc.addConfiguration(new PropertiesConfiguration(fileName));
-                }
-
-                // Always add the supplied file as defaults, assume this bin lib setup.
-                fileName = scriptFile.getParent() + "/../config/" + prefix + ".props.defaults";
-
-                if (new File(fileName).exists()) {
-                    cc.addConfiguration(new PropertiesConfiguration(fileName));
+                // Use the list of config files from the newer ConfigManager (to make sure this is cmpatible)
+                for (String configFile : ConfigManager.getDefaultConfigFileNamesForPrefix(prefix)) {
+                    fileName = configFile;
+                    if (new File(configFile).exists()) {
+                        cc.addConfiguration(new PropertiesConfiguration(configFile));
+                    }
                 }
 
                 config = cc;

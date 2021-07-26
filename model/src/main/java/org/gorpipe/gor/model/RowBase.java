@@ -51,8 +51,8 @@ public class RowBase extends Row implements Serializable {
     public RowBase(CharSequence input, int numColumns) {
         allCols = input;
         splitArray = createSplitArray(allCols, numColumns);
-        chr = RowObj.colString(0, allCols, splitArray).toString();
-        pos = RowObj.colInt(1, allCols, splitArray);
+        chr = colAsString(0).toString();
+        pos = colAsInt(1);
     }
 
     public RowBase(CharSequence input) {
@@ -262,7 +262,6 @@ public class RowBase extends Row implements Serializable {
         return RowObj.colString(n, allCols, splitArray);
     }
 
-
     @Override
     public int colAsInt(int n) {
         testColumnIndex(n);
@@ -404,6 +403,7 @@ public class RowBase extends Row implements Serializable {
         final int[] newSplitArray = new int[columns.length];
         int newLength = 0;
         for (final int column : columns) {
+            testColumnIndex(column);
             int start = column == 0 ? 0 : splitArray[column - 1];
             int end = splitArray[column];
             newLength += end - start;
@@ -422,7 +422,7 @@ public class RowBase extends Row implements Serializable {
         try {
             int newPos = columns[1] == 1 ? pos : RowObj.colInt(1, sb, newSplitArray);
             return new RowBase(newChr, newPos, sb, newSplitArray, null);
-        } catch (NumberFormatException e) {
+        } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
             throw new GorDataException("Position is invalid", e);
         }
 
@@ -503,8 +503,7 @@ public class RowBase extends Row implements Serializable {
     }
 
     private void testColumnIndex(int n) {
-        int index = n-1;
-        if (index > numCols()) {
+        if (n < 0 ||  n >= numCols()) {
             throw new GorDataException("Column " + n + " does not exist", n, toString());
         }
     }

@@ -96,7 +96,12 @@ object PipeInstance {
 /**
   * This class defines the pipe instance when a gor query is run, including all commands, logic, and methods for processing and parsing options in the query.
   */
-class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
+class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) extends gorsatGorIterator(context) {
+
+  // Define second constructor, needed for Java.
+  def this(context: GorContext) {
+    this(context, false)
+  }
 
   private var theIterator : GenomicIterator = _
   private var usedFiles : List[String] = Nil
@@ -317,6 +322,10 @@ class PipeInstance(context: GorContext) extends gorsatGorIterator(context) {
 
       if (!nowithin && range.chromosome != "" && range.stop >= 0 && pipeSteps.length == firstCommand) {
         thePipeStep = WithIn(range.chromosome, range.start, range.stop) | thePipeStep
+      }
+
+      if (!isNorContext && outputValidateOrder) {
+        thePipeStep = thePipeStep | CheckOrder("Output")
       }
     } catch {
       case e: Throwable =>

@@ -87,7 +87,8 @@ Type and String Conversion
 | ``REGSEL(str,str-const) : str`` | Extract a single substring based on regular expression binding pattern,          |
 |                                 | e.g. with single brackets.                                                       |
 +---------------------------------+----------------------------------------------------------------------------------+
-
+| ``DECODE(str,str) : str``       | Decode (map) the string, given key-value mapping pairs.                          |
++---------------------------------+----------------------------------------------------------------------------------+
 
 Algebraic Functions
 ===================
