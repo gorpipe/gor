@@ -10,10 +10,12 @@ The expression in the second argument must be enclosed in quotation marks, which
 
 All mathematical operators may be used in the expression, but these are only meaningful if the elements are treated as numbers. Elements in a list are treated as strings unless they are specifically cast into integers in the expression (see below).
 
+Optional list separator arugment.
+
 Usage
 =====
 
-``LISTFILTER(string,expression) : string``
+``LISTFILTER(string,expression[,sep]) : string``
 
 Example
 =======

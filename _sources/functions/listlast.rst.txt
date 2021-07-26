@@ -9,7 +9,7 @@ The **LISTLAST** function retrieves the last item from a list of items. The list
 The function accepts two parameters:
 
 * source of the list in string format,
-* the separator (if the list is not comma-separated).
+* optional separator (if the list is not comma-separated).
 
 The function returns the result in string format.
 
@@ -18,7 +18,7 @@ Usage
 
 .. code-block:: gor
 
-	listlast(str,sep) : str
+	listlast(str[,sep]) : str
 
 Examples
 ========

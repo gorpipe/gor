@@ -630,61 +630,69 @@
 <td><p>Returns a number indicating how many items in the literal list are contained in the string. Also try CONTAINSANY, CSCONTAINSANY, CSCONTAINSCOUNT, LISTHASCOUNT, and CSLISTHASCOUNT.</p></td>
 <td><p><a class="reference internal" href="functions/containscount.html#containscount"><span class="std std-ref">CONTAINSCOUNT</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFIRST(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Retrieves the first element (i.e. the head) in a comma-separated list.</p></td>
-<td><p><a class="reference internal" href="functions/listfirst.html#listfirst"><span class="std std-ref">listfirst</span></a></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFIRST(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Retrieves the first element (i.e. the head) in a comma-separated list, with an optional separator argument.</p></td>
+<td><p><a class="reference internal" href="functions/listnth.html#listfirst"><span class="std std-ref">listnth</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSECOND(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Second element in a comma separated list.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSECOND(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Second element in a comma separated list, with an optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/listsecond.html#listsecond"><span class="std std-ref">LISTSECOND</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTLAST(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Last element in a comma separated list.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNTH(str,int[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Nth element in a comma separated list, with an optional separator argument.</p></td>
+<td><p><span class="xref std std-ref">listnth</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTLAST(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Last element in a comma separated list, with an optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/listlast.html#listlast"><span class="std std-ref">LISTLAST</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTTAIL(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>The tail (the list minus the first element).</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTTAIL(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The tail (the list minus the first element), with an optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/listtail.html#listtail"><span class="std std-ref">listtail</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTREVERSE(str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>The list reversed with optional “sep”, e.g. ‘;’.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTREVERSE(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list reversed, with an optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/listreverse.html#listreverse"><span class="std std-ref">LISTREVERSE</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSORTASC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSORTASC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The list sorted alphabetically in a ascending order.</p></td>
 <td><p><a class="reference internal" href="functions/listsortasc.html#listsortasc"><span class="std std-ref">LISTSORTASC</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSORTDESC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSORTDESC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The list sorted alphabetically in a descending order.</p></td>
 <td><p><span class="xref std std-ref">listsortdesc</span></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSORTASC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSORTASC(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The list sorted numerically in a ascending order.</p></td>
 <td><p><span class="xref std std-ref">listnumsortasc</span></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSORTDESC(str):</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMSORTDESC(str):</span> <span class="pre">str</span></code></p></td>
 <td><p>The list sorted numerically in a descending order</p></td>
 <td><p><span class="xref std std-ref">listnumsortdesc</span></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTTRIM(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTTRIM(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>A comma separated list trimmed from white-spaces.</p></td>
 <td><p><span class="xref std std-ref">listtrim</span></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTDIST(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTDIST(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The distinct elements in the list, i.e. corresponding set.</p></td>
 <td><p><span class="xref std std-ref">listdist</span></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMAX(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMAX(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The maximum element (element as string).</p></td>
 <td><p><span class="xref std std-ref">listmax</span></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMIN(str):</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMIN(str):</span> <span class="pre">str</span></code></p></td>
 <td><p>The minimum element (element as string).</p></td>
 <td><p><span class="xref std std-ref">listmin</span></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSIZE(str,sep)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
-<td><p>The size of the list.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSIZE(str[,sep])</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The size of the list, with an optional separator argument.</p></td>
 <td><p><span class="xref std std-ref">listsize</span></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTCOUNT(str[,sep])</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Count frequency of elements in a list, returning the pairs (e1;count1,..,en;countn), with an optional separator argument.</p></td>
+<td><p><span class="xref std std-ref">listcount</span></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNUMMAX(str)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
 <td><p>The maximum element (element as number).</p></td>
@@ -706,52 +714,44 @@
 <td><p>The unbiased standard deviation of the elements (element as numbers).</p></td>
 <td><p><span class="xref std std-ref">listnumstd</span></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTINDEX(str,</span> <span class="pre">str,</span> <span class="pre">sep)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
-<td><p>The one based index to a list of elements where a target is found. The function will search the list defined in parameter 1 for the first instance of parameter 2.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTINDEX(str,str[,sep])</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>The one based index to a list of elements where a target is found. The function will search the list defined in parameter 1 for the first instance of parameter 2.  Optional separator argument.</p></td>
 <td><p><span class="xref std std-ref">listindex</span></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMAP(str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>The list translated using expression provided in second argument. Element denoted with x.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTMAP(str,str-con[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list translated using expression provided in second argument. Element denoted with x. Optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/listmap.html#listmap"><span class="std std-ref">LISTMAP</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>The list filtered using expression provided in second argument. Element as x, index as i. Example LISTFILTER(col,’x != 1’) or LISTFILTER(col,’i &gt; 2’)</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(str,str-con[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The list filtered using expression provided in second argument. Element as x, index as i. Optional separator argument. Example LISTFILTER(col,’x != 1’) or LISTFILTER(col,’i &gt; 2’)</p></td>
 <td><p><a class="reference internal" href="functions/listfilter.html#listfilter"><span class="std std-ref">LISTFILTER</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIP(str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Two lists zipped together, each pair of elements separated with a semicolon.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIP(str,str[,sep,delim])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Two lists zipped together, each pair of elements separated with a semicolon. Optional separator and delimter arguments.</p></td>
 <td><p><a class="reference internal" href="functions/listzip.html#listzip"><span class="std std-ref">LISTZIP</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIPFILTER(str,str,str-con)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Filter the first list by the content of the second list.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTZIPFILTER(str,str,str-con[,sep,delim])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Filter the first list by the content of the second list, with an optional separator argument. Optional separator and delimter arguments.</p></td>
 <td><p><span class="xref std std-ref">listzipfilter</span></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTCOMB(str,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Returns a semi-comma-separated list of all combinations of elements in the input list of length within the interval specified by the input integers.</p></td>
 <td><p><a class="reference internal" href="functions/listcomb.html#listcomb"><span class="std std-ref">LISTCOMB</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTADD(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Returns a list with the given item added to the end.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTADD(str,str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Returns a list with the given item added to the end, with an optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/listadd.html#listadd"><span class="std std-ref">LISTADD</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FSVMAP(str,int,str-con,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The list of equally separated values (second argument) translated using expression provided in third argument. Fourth argument is the result separator. Element denoted with x. Example FSVMAP(col,2,’x+1’,’,’). Also see <a class="reference internal" href="functions/listmap.html#listmap"><span class="std std-ref">LISTMAP</span></a>.</p></td>
 <td><p><span class="xref std std-ref">fsvmap</span></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LIST(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Collapse values from multiple columns into a single list, separated by commas</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LIST(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Collapse values from multiple columns into a single list, with an optional separator argument.</p></td>
 <td><p><a class="reference internal" href="functions/cols2list.html#cols2list"><span class="std std-ref">COLS2LIST</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LIST(str,</span> <span class="pre">str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Collapse values from multiple columns into a single list, with a custom separator</p></td>
-<td><p><a class="reference internal" href="functions/cols2list.html#cols2list"><span class="std std-ref">COLS2LIST</span></a></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(str,</span> <span class="pre">str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Collapse values from multiple columns into a single list with an expression applied, separated by commas</p></td>
-<td><p><a class="reference internal" href="functions/cols2listmap.html#cols2listmap"><span class="std std-ref">COLS2LISTMAP</span></a></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(str,</span> <span class="pre">str,</span> <span class="pre">str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
-<td><p>Collapse values from multiple columns into a single list with an expression applied, with a custom separator</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(str,str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>Collapse values from multiple columns into a single list with an expression applied, with optional separator argument</p></td>
 <td><p><a class="reference internal" href="functions/cols2listmap.html#cols2listmap"><span class="std std-ref">COLS2LISTMAP</span></a></p></td>
 </tr>
 </tbody>

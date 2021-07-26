@@ -161,15 +161,20 @@
             
   <section id="listzip">
 <span id="id1"></span><h1>LISTZIP<a class="headerlink" href="#listzip" title="Permalink to this headline">¶</a></h1>
-<p>The <strong>LISTZIP</strong> function zips two lists together into a single string separated by a semi-colon.</p>
+<p>The <strong>LISTZIP</strong> function zips two comma-separated lists together into a new list where the matching list elements are merged into a single string separated by a semi-colon.</p>
+<p>Optionally the list separator and the output string delimiter can be specified.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">LISTZIP(string,string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">LISTZIP(string,string[,sep,delim])</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
-<p>The following query combines two lists (‘A;B;C’ and ‘X;Y;Z’) into a single list.</p>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> x &#39;A;B;C&#39; | <span class="nb">CALC</span> y &#39;X;Y;Z&#39; | <span class="nb">CALC</span> test listzip(x,y)
+<p>The following query combines two lists, ‘A,B,C’ and ‘X,Y,Z’, into a single list ‘A;X,B;Y,C;Z’</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> x &#39;A,B,C&#39; | <span class="nb">CALC</span> y &#39;X,Y,Z&#39; | <span class="nb">CALC</span> test listzip(x,y)
+</pre></div>
+</div>
+<p>The following query combines two lists, ‘A:B:C’ and ‘X:Y:Z’, into a single list ‘A-X:B-Y:C-Z’</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> x &#39;A:B:C&#39; | <span class="nb">CALC</span> y &#39;X:Y:Z&#39; | <span class="nb">CALC</span> test listzip(x,y,&#39;:&#39;,&#39;-&#39;)
 </pre></div>
 </div>
 <p>For a more practical example, the query below combines two columns of the Phenotypes report in the subject reports folder in a study. Note that in this example we are working in a NOR context, since this information is not genomic-ordered.</p>

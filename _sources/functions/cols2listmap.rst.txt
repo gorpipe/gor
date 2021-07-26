@@ -6,14 +6,12 @@ COLS2LISTMAP
 
 The **COLS2LISTMAP** function collapses columns into a single column, similar to **COLS2LIST**, applying an expression
 to each value as it combines to a list with a separator between the values.
-The separator defaults to ",", but can be set to anything.
+The separator defaults to ",", but can be set to anything, with the optional separator argument.
 
 Usage
 =====
 
-``COLS2LISTMAP(string, string) : string``
-
-``COLS2LISTMAP(string, string, string) : string``
+``COLS2LISTMAP(string, string[, sep]) : string``
 
 Example
 =======

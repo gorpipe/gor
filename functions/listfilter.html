@@ -164,9 +164,10 @@
 <p>The <strong>LISTFILTER</strong> function filters a list using the expression provided in second argument. Elements in the list are represented in the expression as <code class="docutils literal notranslate"><span class="pre">x</span></code>, and the index value is represented as <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p>
 <p>The expression in the second argument must be enclosed in quotation marks, which means that if the elements are compared to strings, the quotations around those quotation marks must be escaped with a backslash (or if single quotations are used for the expression, then double quotation marks can be used for the string.</p>
 <p>All mathematical operators may be used in the expression, but these are only meaningful if the elements are treated as numbers. Elements in a list are treated as strings unless they are specifically cast into integers in the expression (see below).</p>
+<p>Optional list separator arugment.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(string,expression)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">LISTFILTER(string,expression[,sep])</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
