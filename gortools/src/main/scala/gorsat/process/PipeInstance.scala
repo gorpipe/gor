@@ -190,7 +190,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     val options = new PipeOptions
     options.parseOptions(args)
     options.norContext = executeNor
-    init(options.query, options.stdIn, forcedInputHeader)
+    init(options.query, options.stdIn, forcedInputHeader, options.fileSignature, options.virtualFile)
   }
 
   def getSession : GorSession = {
@@ -214,10 +214,18 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
 
   @Deprecated
   def subProcessArguments(inputQuery: String, fileSignature: Boolean, virtualFile: String, scriptAnalyzer: Boolean, useStdin: Boolean, forcedInputHeader: String): GenomicIterator = {
-    init(inputQuery, useStdin, forcedInputHeader)
+    init(inputQuery, useStdin, forcedInputHeader, false, "")
   }
 
-  def init(inputQuery: String, useStdin: Boolean = false, forcedInputHeader: String = ""): GenomicIterator = {
+  def init(inputQuery: String): GenomicIterator = {
+    init(inputQuery, false, "", false, "")
+  }
+
+  def init(inputQuery: String, useStdin: Boolean, forcedInputHeader: String): GenomicIterator = {
+    init(inputQuery, useStdin, forcedInputHeader, false, "")
+  }
+
+  def init(inputQuery: String, useStdin: Boolean, forcedInputHeader: String, fileSignature: Boolean, virtualFile: String): GenomicIterator = {
 
     DynIterator.createGorIterator = (ctx: GorContext) => PipeInstance.createGorIterator(ctx)
 
@@ -227,9 +235,17 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     var argString = CommandParseUtilities.removeComments(inputQuery)
     val gorCommands = CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';') // In case this is a command line script
 
-    if (ScriptParsers.isScript(gorCommands)) {
+    if (fileSignature || virtualFile != null || ScriptParsers.isScript(gorCommands)) {
       val scriptExecutionEngine = ScriptEngineFactory.create(context)
-      argString = scriptExecutionEngine.execute(gorCommands)
+      if (virtualFile != null) {
+        System.out.println(scriptExecutionEngine.executeVirtualFile(virtualFile, gorCommands))
+        System.exit(0)
+      } else if (fileSignature) {
+        System.out.println(scriptExecutionEngine.executeSuggestName(gorCommands))
+        System.exit(0)
+      } else {
+        argString = scriptExecutionEngine.execute(gorCommands)
+      }
     }
 
     pipeSteps = CommandParseUtilities.quoteSafeSplitAndTrim(argString, '|')

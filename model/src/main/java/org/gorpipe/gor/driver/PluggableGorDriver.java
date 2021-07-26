@@ -242,10 +242,7 @@ public class PluggableGorDriver implements GorDriver {
         } else {
             String useLinkFolders = System.getProperty("GOR_DRIVER_LINK_FOLDERS","false");
             if (useLinkFolders.equals("true")) {
-                Path p = Paths.get(url);
-                Path newLinkSubPath = p.getFileName();
-                Path parent = p.getParent();
-                if (parent != null) return recursiveLinkFallBack(source, parent, newLinkSubPath);
+                return resolveLinkFolders(source, url);
             }
         }
         return source;
@@ -255,14 +252,27 @@ public class PluggableGorDriver implements GorDriver {
         return url.startsWith("http") && url.contains(":/") && !url.contains("://") ? url.replace(":/","://") : url;
     }
 
+    private DataSource resolveLinkFolders(DataSource source, String url) throws IOException {
+        Path p = Paths.get(url);
+        Path newLinkSubPath = p.getFileName();
+        Path parent = p.getParent();
+
+        if (parent != null) {
+            return recursiveLinkFallBack(source, parent, newLinkSubPath);
+        } else {
+            return source;
+        }
+    }
+
     private DataSource recursiveLinkFallBack(DataSource source, Path parent, Path linkSubPath) throws IOException {
         Path pparent = parent.getParent();
         if(pparent != null && !pparent.toString().endsWith(":")) {
             Path parentFileName = parent.getFileName();
             Path lparent = pparent.resolve(parentFileName+".link");
-            SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), linkSubPath.toString());
 
+            SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), null);
             DataSource fallbackLinkSource = getDataSource(sourceRef);
+
             if (fallbackLinkSource.getDataType() != LINK) {
                 return fallbackLinkSource;
             } else {

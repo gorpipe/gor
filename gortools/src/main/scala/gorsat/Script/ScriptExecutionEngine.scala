@@ -120,7 +120,15 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     })
   }
 
-  def execute(commands: Array[String], validate: Boolean = true): String = {
+  def executeVirtualFile(virtualFile: String, gorCommands: Array[String]): String = {
+    execute(gorCommands, virtualFile = virtualFile)
+  }
+
+  def executeSuggestName(gorCommands: Array[String]): String = {
+    execute(gorCommands, suggestName = true)
+  }
+
+  def execute(commands: Array[String], validate: Boolean = true, suggestName: Boolean = false, virtualFile: String = ""): String = {
     // Apply aliases to query, this replaces the def entries
     aliases = extractAliases(commands)
     var gorCommands = applyAliases(commands, aliases)
@@ -141,7 +149,12 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     val analyzer = new GorScriptAnalyzer(gorCommands.mkString(";"))
     eventLogger.tasks(analyzer.getTasks)
 
-    val gorCommand = processScript(gorCommands, validate)
+    val gorCommand = processScript(gorCommands, validate, suggestName)
+
+    if (virtualFile != "") {
+      val temp = virtualFileManager.getCreatedFiles.filter(x => x._1 == ("[" + virtualFile + "]")).toList
+      if (temp.isEmpty) return "" else return temp.head._2
+    }
 
     gorCommand
   }
@@ -183,7 +196,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     res
   }
 
-  private def processScript(igorCommands: Array[String], validate: Boolean): String = {
+  private def processScript(igorCommands: Array[String], validate: Boolean, suggestName: Boolean): String = {
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
     // any left there is an error, something was not executed
@@ -202,6 +215,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     var gorCommand = ""
     var level = 0
     var executionBatch: ExecutionBatch = null
+    var allUsedFiles: List[String] = Nil
 
     do {
       level += 1
@@ -269,6 +283,9 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })
+
+          // Collect files if we are suggesting virtual file name
+          if (suggestName) allUsedFiles :::= usedFiles.filter(x => !x.startsWith("["))
         }
 
         // Add dictionary entries back to the execution blocks lists but process other entries
@@ -276,12 +293,15 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       })
 
       // Execute the current batch
-      executeBatch(executionBatch)
+      executeBatch(executionBatch, suggestName)
     } while (executionBatch.hasBlocks)
 
     // We'll need to validate the current execution and throw exception if there are still execution blocks available
     // IN the final execution list
-    if (validate) postValidateExecution()
+    if (validate) postValidateExecution(suggestName)
+
+    if (suggestName) gorCommand = StringUtilities.createMD5(igorCommands.mkString(" ") + allUsedFiles.distinct.sorted.map(x => fileFingerPrint(x, context.getSession)).mkString(" "))
+
 
     gorCommand
   }
@@ -301,7 +321,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def postValidateExecution(): Unit = {
+  private def postValidateExecution(suggestName: Boolean): Unit = {
     val unusedEntries = virtualFileManager.getUnusedVirtualFileEntries
 
     if (unusedEntries.length > 0) {
@@ -310,7 +330,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         .foreach(entry => ScriptExecutionEngine.log.warn(s"No reference to virtual file: ${entry.name}"))
     }
 
-    if (executionBlocks.keys.nonEmpty) {
+    if (executionBlocks.keys.nonEmpty && !suggestName) {
       var message = "Could not create the following queries due to virtual dependencies:\n"
       executionBlocks.keys.foreach(x => message += "\t" + (x + " = ").replace("[] = ", " ") + executionBlocks(x).query.substring(0, Math.min(executionBlocks(x).query.length, 50)) + "\n")
       throw new GorParsingException(message)
@@ -404,12 +424,17 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     fileSignature
   }
 
-  private def executeBatch(executionBatch: ExecutionBatch): Unit = {
+  private def executeBatch(executionBatch: ExecutionBatch, suggestName: Boolean): Unit = {
     val dictionaryExecutions = executionBatch.getCommands.filter(x => CommandParseUtilities.isDictionaryQuery(x.query))
     val regularExecutions = executionBatch.getCommands.filter(x => !CommandParseUtilities.isDictionaryQuery(x.query))
 
-    if (!dictionaryExecutions.isEmpty) runQueryHandler(dictionaryExecutions)
-    if (!regularExecutions.isEmpty) runQueryHandler(regularExecutions)
+    if (!suggestName) {
+      if (!dictionaryExecutions.isEmpty) runQueryHandler(dictionaryExecutions)
+      if (!regularExecutions.isEmpty) runQueryHandler(regularExecutions)
+    } else {
+      dictionaryExecutions.foreach(x => executionBlocks -= x.createName)
+      regularExecutions.foreach(x => executionBlocks -= x.createName)
+    }
   }
 
   private def fileFingerPrint(fileName: String, gorPipeSession: GorSession): String = {
