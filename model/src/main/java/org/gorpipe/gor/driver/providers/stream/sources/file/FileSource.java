@@ -125,6 +125,11 @@ public class FileSource implements StreamSource {
     public InputStream open() throws IOException {
         return open(0);
     }
+    
+    @Override
+    public String getFullPath() {
+        return file.toString();
+    }
 
     @Override
     public OutputStream getOutputStream(boolean append) throws IOException {
