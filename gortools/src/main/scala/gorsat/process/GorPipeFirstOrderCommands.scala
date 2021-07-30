@@ -40,18 +40,18 @@ trait GorPipeFirstOrderCommands {
         //  var message = "\ngorpipe, evaluation version. (c) WuXiNextCODE, 2014\n\n" +
         "gorpipe is a software tool used to execute GOR queries within a command shell locally. \n\n" +
         "Options:\n\n" +
-        " -aliases name.txt    File alias lookup file, e.g. $gene path/genes.gor.\n" +
+        " -aliases <file>      File alias lookup file, e.g. $gene path/genes.gor.\n" +
         "                      By default the program looks for the file gor_aliases.txt in local directory.\n" +
         " -stdin               The program reads stdin, e.g. if the command does not start with gor ...\n" +
         " -nor                 The program reads the source as a non-ordered file, e.g. tsv file and adds (chr,pos) ...\n" +
-        " -config              Path to configuration file, e.g. build info etc..\n" +
-        " -cachedir            Path to a folder for temporary and cache files.\n" +
-        " -logdir              Path to a folder for log files.\n" +
-        " -workers             Number of workers in parallel execution.\n" +
-        " -script              Path to a file with gor script, e.g. create xxx = ....;, def yyy = ...; and a final gor command.\n" +
+        " -config <file>       Path to configuration file, e.g. build info etc..\n" +
+        " -cachedir <path>     Path to a folder for temporary and cache files.\n" +
+        " -logdir <path>       Path to a folder for log files.\n" +
+        " -workers <count>     Number of workers in parallel execution.\n" +
+        " -script <file>       Path to a file with gor script, e.g. create xxx = ....;, def yyy = ...; and a final gor command.\n" +
         " -signature           Output a signature to name the query. Advanced option for developers.\n" +
-        " -virtualfile         Output the filename of a virtualfile in the query. Advanced option for developers.\n" +
-        " -helpfile            Full path to the help file.\n" +
+        " -virtualfile <vr>    Output the filename of a virtualfile in the query. Advanced option for developers.\n" +
+        " -helpfile <file>     Full path to the help file.\n" +
         " -stacktrace          Show stack trace on errors.\n" +
         " -version             Show the build version and git commit SHA hash.\n\n" +
         "Example: \n" +

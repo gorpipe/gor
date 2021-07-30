@@ -50,8 +50,8 @@ public class VcfGzTabixGenomicIterator extends GenomicIteratorBase {
     private final String fileName;
 
     public VcfGzTabixGenomicIterator(ChromoLookup lookup, StreamSource file, StreamSource idxfile) throws IOException {
-        fileName = file.getName();
-        init(lookup, new TabixReader(fileName, idxfile.getName(), new StreamSourceSeekableStream(file)));
+        fileName = file.getFullPath();
+        init(lookup, new TabixReader(fileName, idxfile.getFullPath(), new StreamSourceSeekableStream(file)));
     }
 
     private void init(ChromoLookup lookup, TabixReader reader) throws IOException {

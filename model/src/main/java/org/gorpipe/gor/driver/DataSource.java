@@ -46,6 +46,13 @@ public interface DataSource extends AutoCloseable {
     String getName() throws IOException;
 
     /**
+     * Returns full path for DataSource
+     */
+    default String getFullPath() throws IOException {
+        return getName();
+    }
+
+    /**
      * Get type/protocol of source (File, Http, ...)
      */
     SourceType getSourceType();

@@ -55,6 +55,14 @@ class UTestSplitManager extends FunSuite {
     SplitManager("Car", splits, SplitManager.SPLIT_REPLACEMENT_PATTERN)
   }
 
+  def createSplitManagerFromCommand(query: String): SplitManager = {
+    val options = new PipeOptions()
+    options.parseOptions(Array.empty[String])
+    val factory = new TestSessionFactory(options, null, false)
+    val context = factory.create().getGorContext
+    SplitManager.createFromCommand("group1", query, context)
+  }
+
   test("Initialize SplitManager with the default split") {
     val manager = createDefaultSplitManager()
     assert(manager.chromosomeSplits.size == 26)
@@ -81,9 +89,9 @@ class UTestSplitManager extends FunSuite {
     val commandGroup = manager.expandCommand("gor -p " + SplitManager.REGULAR_REPLACEMENT_PATTERN
       + " [xxx] | top 10", "xxx")
 
-    assert(commandGroup.commandEntries.length == 26)
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:0-250000000 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr16:0-100000000 [xxx] | top 10"))
+    assertResult(26)(commandGroup.commandEntries.length)
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr16 [xxx] | top 10"))
   }
 
   test("Initialize SplitManager with the hg38 split") {
@@ -98,8 +106,8 @@ class UTestSplitManager extends FunSuite {
 
     assert(commandGroup.commandEntries.length == 39)
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:0-123399999 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:123400000-248956422 [xxx] | top 10"))
-    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr16:0-90338345 [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:123400000- [xxx] | top 10"))
+    assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr16 [xxx] | top 10"))
   }
 
   test("Expand with custom split (below 1000) on default build size") {
@@ -107,7 +115,7 @@ class UTestSplitManager extends FunSuite {
     val commandGroup = manager.expandCommand("gor -p " + SplitManager.SPLIT_REPLACEMENT_PATTERN
       + " [xxx] -split 100 | top 10", "xxx")
 
-    assert(commandGroup.commandEntries.length == 134)
+    assertResult(142)(commandGroup.commandEntries.length)
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:0-29999999 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:30000000-59999999 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr22:0-29999999 [xxx] | top 10"))
@@ -118,7 +126,7 @@ class UTestSplitManager extends FunSuite {
     val commandGroup = manager.expandCommand("gor -p " + SplitManager.SPLIT_REPLACEMENT_PATTERN
       + " [xxx] -split 5000000 | top 10", "xxx")
 
-    assert(commandGroup.commandEntries.length == 742)
+    assertResult(766)(commandGroup.commandEntries.length)
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:0-4999999 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:5000000-9999999 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr22:70000000-74999999 [xxx] | top 10"))
@@ -129,10 +137,31 @@ class UTestSplitManager extends FunSuite {
     val commandGroup = manager.expandCommand("gor -p " + SplitManager.SPLIT_REPLACEMENT_PATTERN
       + " [xxx] -split 5000000 | top 10", "xxx")
 
-    assert(commandGroup.commandEntries.length == 742)
+    assertResult(766)(commandGroup.commandEntries.length)
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:0-5999999 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:4000000-10999999 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr22:69000000-75999999 [xxx] | top 10"))
+  }
+
+  test("Create splitmanager from command: pgor") {
+    val query = "pgor " + SplitManager.SPLIT_REPLACEMENT_PATTERN + " #dbsnp# | top 10"
+    val manager = createSplitManagerFromCommand(query)
+    assertResult(SplitManager.SPLIT_REPLACEMENT_PATTERN)(manager.replacementPattern)
+    assertResult(39)(manager.chromosomeSplits.size)
+  }
+
+  test("Create splitmanager from command: pgor split") {
+    val query = "pgor " + SplitManager.SPLIT_REPLACEMENT_PATTERN + " -split 100 #dbsnp# | top 10"
+    val manager = createSplitManagerFromCommand(query)
+    assertResult(SplitManager.SPLIT_REPLACEMENT_PATTERN)(manager.replacementPattern)
+    assertResult(142)(manager.chromosomeSplits.size)
+  }
+  
+  test("Create splitmanager from command: pgor force whole chrom") {
+    val query = "pgor " + SplitManager.REGULAR_REPLACEMENT_PATTERN + " #dbsnp# | rank 1000000 pos"
+    val manager = createSplitManagerFromCommand(query)
+    assertResult(SplitManager.REGULAR_REPLACEMENT_PATTERN)(manager.replacementPattern)
+    assertResult(26)(manager.chromosomeSplits.size)
   }
 
   test("Expand split with custom query") {
@@ -145,7 +174,7 @@ class UTestSplitManager extends FunSuite {
     val commandGroup = manager.expandCommand("gor -p " + SplitManager.SPLIT_REPLACEMENT_PATTERN
       + " [xxx] -split <(pgor ../tests/data/gor/genes.gor | top 1 | select 1-3) | top 10", "xxx")
 
-    assert(commandGroup.commandEntries.length == 25)
+    assertResult(38)(commandGroup.commandEntries.length)
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr1:11869-14412 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr10:60001-60544 [xxx] | top 10"))
     assert(commandGroup.commandEntries.map(x => x.query).contains("gor -p chr11:75780-76143 [xxx] | top 10"))

@@ -9,7 +9,7 @@ The **listtail** function retrieves the contents of a list minus the first item.
 The function accepts two parameters:
 
 * source of the list in string format,
-* the separator (if the list is not comma-separated).
+* optional separator (if the list is not comma-separated).
 
 The function returns the result in string format.
 
@@ -18,7 +18,7 @@ Usage
 
 .. code-block:: gor
 
-	listtail(str,sep) : str
+	listtail(str[,sep]) : str
 
 Examples
 ========

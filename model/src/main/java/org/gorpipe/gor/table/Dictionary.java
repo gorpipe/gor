@@ -501,7 +501,7 @@ public class Dictionary {
 
                             return new DictionaryLine(fileref, bucketFileName, alias, startChr, startPos, stopChr, stopPos, tags, false, false);
                         } else {
-                            throw new GorDataException("Error Initializing Query. Expected 4 columns for genomic range specification!");
+                            throw new GorDataException("Error Initializing Query. Expected 4 columns for genomic range specification!  Got: " + line);
                         }
                     } else {
                         // Add alias as tag on the file, if alias is specified

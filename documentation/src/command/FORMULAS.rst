@@ -184,65 +184,73 @@ Statistical Functions
 List Functions
 ==============
 
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTFIRST(string) : string``           | First element in a comma separated list, e.g. the head.                                                      |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTSECOND(string) : string``          | Second element in a comma separated list.                                                                    |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTLAST(string) : string``            | Last element in a comma separated list.                                                                      |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTTAIL(string) : string``            | The tail (the list minus the first element).                                                                 |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTREVERSE(string) : string``         | The list reversed.                                                                                           |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTSORTASC(string) : string``         | The list sorted alphabetically in a ascending order.                                                         |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTSORTDESC(string) : string``        | The list sorted alphabetically in a descending order                                                         |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMSORTASC(string) : string``      | The list sorted numerically in a ascending order.                                                            |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMSORTDESC(string): string``      | The list sorted numerically in a descending order                                                            |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTTRIM(string) : string``            | A comma separated list trimmed from white-spaces.                                                            |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTDIST(string) : string``            | The distinct elements in the list, i.e. corresponding set.                                                   |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTMAX(string) : string``             | The maximum element (element as string).                                                                     |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTMIN(string) : string``             | The minimum element (element as string).                                                                     |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTSIZE(string) : int``               | The size of the list.                                                                                        |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTCOUNT(string) : int``              | Count frequency of elements in a list, returning the pairs (e1;count1,..,en;countn).                         |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMMAX(string) : float``           | The maximum element (element as number).                                                                     |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMMIN(string) : float``           | The minimum element (element as number).                                                                     |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMSUM(string) : float``           | The sum of the elements (element as numbers).                                                                |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMAVG(string) : float``           | The average of the elements (element as numbers).                                                            |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTNUMSTD(string) : float``           | The unbiased standard deviation of the elements (element as numbers).                                        |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTMAP(string,str-con) : str``        | The list translated using expression provided in second argument.  Element denoted with x.                   |
-|                                          | Example LISTMAP(col,'x+1') or LISTMAP(col,'x+\'text\'')                                                      |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTFILTER(str,str-con) : str``        | The list filtered using expression provided in second argument.  Element as x, index as i.                   |
-|                                          | Example LISTFILTER(col,'x != 1') or LISTFILTER(col,'i > 2')                                                  |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTZIP(string,string) : str``         | Two lists zipped together, each pair of elements separated with a semicolon.                                 |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``LISTZIPFILTER(str,str,str-con) : str`` | Filter the first list by the content of the second list.                                                     |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``COLS2LIST(str) : str``                 | Collapse values from multiple columns into a single list, separated by commas                                |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``COLS2LIST(str, str) : str``            | Collapse values from multiple columns into a single list, with a custom separator                            |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``COLS2LISTMAP(str, str) : str``         | Collapse values from multiple columns into a single list with an expression applied, separated by commas     |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
-| ``COLS2LISTMAP(str, str, str) : str``    | Collapse values from multiple columns into a single list with an expression applied, with a custom separator |
-+------------------------------------------+--------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTFIRST(string[,sep]) : string``                 | First element in a comma separated list, e.g. the head, with an optional separator argument.                 |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTSECOND(string[,sep]) : string``                | Second element in a comma separated list, with an optional separator argument.                               |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNTH(string,int[,sep]) : string``               | Nth element in a comma separated list, with an optional separator argument.                                  |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTLAST(string,[,sep]) : string``                 | Last element in a comma separated list, with an optional separator argument.                                 |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTTAIL(string[,sep]) : string``                  | The tail (the list minus the first element), with an optional separator argument.                            |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTREVERSE(string) : string``                     | The list reversed.                                                                                           |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTSORTASC(string) : string``                     | The list sorted alphabetically in a ascending order.                                                         |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTSORTDESC(string) : string``                    | The list sorted alphabetically in a descending order                                                         |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMSORTASC(string) : string``                  | The list sorted numerically in a ascending order.                                                            |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMSORTDESC(string): string``                  | The list sorted numerically in a descending order                                                            |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTTRIM(string) : string``                        | A comma separated list trimmed from white-spaces.                                                            |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTDIST(string) : string``                        | The distinct elements in the list, i.e. corresponding set.                                                   |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTMAX(string) : string``                         | The maximum element (element as string).                                                                     |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTMIN(string) : string``                         | The minimum element (element as string).                                                                     |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTSIZE(string[,sep]) : int``                     | The size of the list, with an optional separator argument.                                                   |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTCOUNT(string[,sep]) : int``                    | Count frequency of elements in a list, returning the pairs (e1;count1,..,en;countn).                         |
+|                                                      | Optional separator argument.                                                                                 |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMMAX(string) : float``                       | The maximum element (element as number).                                                                     |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMMIN(string) : float``                       | The minimum element (element as number).                                                                     |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMSUM(string) : float``                       | The sum of the elements (element as numbers).                                                                |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMAVG(string) : float``                       | The average of the elements (element as numbers).                                                            |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTNUMSTD(string) : float``                       | The unbiased standard deviation of the elements (element as numbers).                                        |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTMAP(string,str-con[,sep]) : str``              | The list translated using expression provided in second argument.  Element denoted with x.                   |
+|                                                      | Optional separator argument.                                                                                 |
+|                                                      | Example LISTMAP(col,'x+1') or LISTMAP(col,'x+\'text\'')                                                      |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTFILTER(str,str-con[,sep]) : str``              | The list filtered using expression provided in second argument.  Element as x, index as i.                   |
+|                                                      | Optional separator argument.                                                                                 |
+|                                                      | Example LISTFILTER(col,'x != 1') or LISTFILTER(col,'i > 2')                                                  |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTZIP(string,string[,sep,delim]) : str``         | Two lists zipped together, each pair of elements separated with a semicolon.                                 |
+|                                                      | Optional separator and delimiter arguments.                                                                  |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTZIPFILTER(str,str,str-con[,sep,delim]) : str`` | Filter the first list by the content of the second list. Optional separator and delimiter arguments.         |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTCOMP(str,int,int) : str``                      | Returns a semi-comma-separated list of all combinations of elements in the input list of length within       |
+|                                                      | the interval specified by the input integers.                                                                |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``LISTADD(str,str[,sep]) : str``                     | Returns a list with the given item added to the end, with an optional separator argument.                    |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``COLS2LIST(str[,sep]) : str``                       | Collapse values from multiple columns into a single list, with an optional separator argument.               |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
+| ``COLS2LISTMAP(str,str[,sep]) : str``                | Collapse values from multiple columns into a single list with an expression applied, with optional           |
+|                                                      | separator argument.                                                                                          |
++------------------------------------------------------+--------------------------------------------------------------------------------------------------------------+
 
 
 Genomic-Specific Functions

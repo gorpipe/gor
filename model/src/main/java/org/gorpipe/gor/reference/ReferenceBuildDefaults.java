@@ -128,7 +128,22 @@ public class ReferenceBuildDefaults {
         buildSizeMapGeneric.put(CHR_M, 20000);
         buildSizeMapGeneric.put(CHR_XY, 1);
         buildSize_generic = Collections.unmodifiableMap(buildSizeMapGeneric);
-        buildSplit_generic = Collections.unmodifiableMap(new HashMap<>());
+
+        Map<String, Integer> buildSplitMapGeneric = new HashMap<>();
+        buildSplitMapGeneric.put(CHR_1, 124000000);
+        buildSplitMapGeneric.put(CHR_10, 40350000);
+        buildSplitMapGeneric.put(CHR_11, 52750000);
+        buildSplitMapGeneric.put(CHR_12, 35000000);
+        buildSplitMapGeneric.put(CHR_2, 93100000);
+        buildSplitMapGeneric.put(CHR_3, 91350000);
+        buildSplitMapGeneric.put(CHR_4, 50750000);
+        buildSplitMapGeneric.put(CHR_5, 47650000);
+        buildSplitMapGeneric.put(CHR_6, 60125000);
+        buildSplitMapGeneric.put(CHR_7, 59330000);
+        buildSplitMapGeneric.put(CHR_8, 45500000);
+        buildSplitMapGeneric.put(CHR_9, 53700000);
+        buildSplitMapGeneric.put(CHR_X, 60000000);
+        buildSplit_generic = Collections.unmodifiableMap(buildSplitMapGeneric);
 
         // Hg18 build/split
         Map<String, Integer> buildSizeMapHg18 = new HashMap<>();

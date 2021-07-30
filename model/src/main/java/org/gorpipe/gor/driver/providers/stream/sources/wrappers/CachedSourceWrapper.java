@@ -89,6 +89,11 @@ public class CachedSourceWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public String getFullPath() throws IOException {
+        return delegate().getFullPath();
+    }
+
+    @Override
     public String getName() throws IOException {
         return delegate().getName();
     }

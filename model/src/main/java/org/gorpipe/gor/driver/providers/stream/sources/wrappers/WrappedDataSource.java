@@ -46,6 +46,11 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
+    public String getFullPath() throws IOException {
+        return wrapped.getFullPath();
+    }
+
+    @Override
     public SourceType getSourceType() {
         return wrapped.getSourceType();
     }

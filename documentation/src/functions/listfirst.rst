@@ -9,7 +9,7 @@ The **listfirst** function retrieves the first item from a list of items. The li
 The function accepts two parameters:
 
 * source of the list in string format,
-* the separator (if the list is not comma-separated).
+* optional separator (if the list is not comma-separated).
 
 The function returns the result in string format.
 
@@ -18,7 +18,7 @@ Usage
 
 .. code-block:: gor
 
-	listfirst(str,sep) : str
+	listfirst(str[,sep]) : str
 
 Examples
 ========

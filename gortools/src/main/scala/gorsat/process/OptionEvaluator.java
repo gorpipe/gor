@@ -35,7 +35,7 @@ public class OptionEvaluator {
 
     String getValue(String query, int column) {
         PipeInstance pipeInstance = new PipeInstance(context);
-        pipeInstance.init(query, false, "");
+        pipeInstance.init(query);
         GenomicIterator iterator = pipeInstance.getRowSource();
         if (iterator.hasNext()) {
             Row row = iterator.next();

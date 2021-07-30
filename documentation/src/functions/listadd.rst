@@ -6,7 +6,7 @@ LISTADD
 
 The **LISTADD** function adds an item to the end of a list.
 
-The function accepts two parameters:
+The function accepts three parameters:
 
 * source of the list in string format,
 * the item to add.
