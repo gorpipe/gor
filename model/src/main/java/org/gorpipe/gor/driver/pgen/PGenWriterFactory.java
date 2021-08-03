@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.driver.pgen;
 
+import org.gorpipe.gor.model.FileReader;
+
 import java.io.IOException;
 
 public class PGenWriterFactory {
@@ -30,25 +32,30 @@ public class PGenWriterFactory {
 
     public static PGenWriter getPGenWriter(String fileName, int refIdx, int altIdx, int rsIdIdx, int valIdx,
                                            boolean group, boolean imp, float threshold) throws IOException {
+        return getPGenWriter(fileName, refIdx, altIdx, rsIdIdx, valIdx, group, imp, threshold, null);
+    }
+
+    public static PGenWriter getPGenWriter(String fileName, int refIdx, int altIdx, int rsIdIdx, int valIdx,
+                                           boolean group, boolean imp, float threshold, FileReader fileReader) throws IOException {
         final String pVarName = fileName.substring(0, fileName.lastIndexOf('.')) + ".pvar";
         if (group) {
             if (imp) {
                 throw new IllegalArgumentException("GOR does not support grouping of imputed genotypes.");
             } else {
-                final VariableWidthPGenOutputStream os = new VariableWidthPGenOutputStream(fileName);
-                final PVarWriter pVarWriter = new PVarWriter(pVarName);
+                final VariableWidthPGenOutputStream os = new VariableWidthPGenOutputStream(fileName, fileReader);
+                final PVarWriter pVarWriter = new PVarWriter(pVarName, fileReader);
                 final VariantRecordFactory<? extends VariantRecord> vrFact = new HardCallRecordFactory();
                 return new GroupingPGenWriter(os, pVarWriter, vrFact, refIdx, altIdx, rsIdIdx, valIdx);
             }
         } else {
             if (imp) {
-                final FWUnPhasedPGenOutputStream os = new FWUnPhasedPGenOutputStream(fileName);
-                final PVarWriter pVarWriter = new PVarWriter(pVarName);
+                final FWUnPhasedPGenOutputStream os = new FWUnPhasedPGenOutputStream(fileName, fileReader);
+                final PVarWriter pVarWriter = new PVarWriter(pVarName, fileReader);
                 final VariantRecordFactory<BiAllelicHardCallsAndDosages> vrFact = new ImputedRecordFactory(threshold);
                 return new SimplePGenWriter<>(os, pVarWriter, vrFact, refIdx, altIdx, rsIdIdx, valIdx);
             } else {
-                final FWHardCallsPGenOutputStream os = new FWHardCallsPGenOutputStream(fileName);
-                final PVarWriter pVarWriter = new PVarWriter(pVarName);
+                final FWHardCallsPGenOutputStream os = new FWHardCallsPGenOutputStream(fileName, fileReader);
+                final PVarWriter pVarWriter = new PVarWriter(pVarName, fileReader);
                 final VariantRecordFactory<BiAllelicHardCalls> vrFact = new HardCallRecordFactory();
                 return new SimplePGenWriter<>(os, pVarWriter, vrFact, refIdx, altIdx, rsIdIdx, valIdx);
             }
