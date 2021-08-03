@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.pgen;
 
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.util.collection.ByteArray;
 
 import java.io.*;
@@ -29,6 +30,7 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 final class VariableWidthPGenOutputStream extends PGenOutputStream<VariantRecord> {
@@ -47,11 +49,16 @@ final class VariableWidthPGenOutputStream extends PGenOutputStream<VariantRecord
     private int bufferIdx = 0;
     private OutputStream os;
     private int variantsInCurrentFile = 0;
+    private final Optional<FileReader> fileReaderOptional;
 
     VariableWidthPGenOutputStream(String fileName) throws FileNotFoundException {
+        this(fileName, null);
+    }
+
+    VariableWidthPGenOutputStream(String fileName, FileReader fileReader) throws FileNotFoundException {
         super(fileName);
         final String fileNameWithoutEnding = fileName.substring(0, fileName.lastIndexOf('.'));
-        this.tmpFilePrefix = fileNameWithoutEnding + UUID.randomUUID().toString();
+        this.tmpFilePrefix = fileNameWithoutEnding + UUID.randomUUID();
 
         this.tmpFiles = new ArrayList<>();
         this.recordTypes = new ArrayList<>();
@@ -60,6 +67,7 @@ final class VariableWidthPGenOutputStream extends PGenOutputStream<VariantRecord
 
         prepareNextTmpFile();
         this.buffer = new byte[1_048_576];
+        this.fileReaderOptional = Optional.ofNullable(fileReader);
     }
 
     @Override
@@ -95,7 +103,7 @@ final class VariableWidthPGenOutputStream extends PGenOutputStream<VariantRecord
     public void close() throws IOException {
         closeCurrentStream();
         if (this.numberOfVariants != 0) {
-            this.os = new FileOutputStream(this.fileName);
+            this.os = fileReaderOptional.isPresent() ? fileReaderOptional.get().getOutputStream(this.fileName) : new FileOutputStream(this.fileName);
             writeHeader();
             mergeVariantBlocks();
         }

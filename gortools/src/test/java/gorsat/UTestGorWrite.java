@@ -395,6 +395,22 @@ public class UTestGorWrite {
         Assert.assertTrue("Could not seek to every position.", success);
     }
 
+    @Test
+    public void testBinaryWrite() throws IOException {
+        var pathstr = "../tests/data/gor/dbsnp_test.gorz";
+        var path = Paths.get(pathstr);
+        var filename = path.getFileName();
+        var userpath = Paths.get("user");
+        var user = tmpdir.resolve(userpath);
+        Files.createDirectory(user);
+        var pgen = userpath.resolve("test.pgen");
+        var dest = tmpdir.resolve(filename);
+        Files.copy(path, dest);
+        var destrel = tmpdir.relativize(dest);
+        var query = "gor "+destrel+" | rename reference ref | calc alt ref | calc values '0101' | binarywrite "+pgen;
+        TestUtils.runGorPipe(query,"-gorroot",tmpdir.toString());
+    }
+
     static boolean assertIndexFileIsCorrect(final String filePath) throws IOException {
         final String idxFilePath = filePath + ".gori";
 

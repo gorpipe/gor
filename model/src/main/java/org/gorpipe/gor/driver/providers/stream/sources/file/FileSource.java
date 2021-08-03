@@ -107,6 +107,13 @@ public class FileSource implements StreamSource {
         return new FileSourceStream();
     }
 
+    @Override
+    public OutputStream getOutputStream(long start) throws IOException {
+        ensureOpen();
+        raf.seek(start);
+        return new FileSourceOutputStream();
+    }
+
     private void ensureOpen() throws IOException {
         if (raf == null) {
             if (keepStackTraceForOpen) {
@@ -265,6 +272,56 @@ public class FileSource implements StreamSource {
         @Override
         public int read(byte[] b) throws IOException {
             return raf.read(b);
+        }
+
+        @Override
+        public String toString() {
+            return raf.toString();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj == this;
+        }
+
+        @Override
+        public int hashCode() {
+            return raf.hashCode();
+        }
+
+        @Override
+        protected Object clone() throws CloneNotSupportedException {
+            throw new CloneNotSupportedException(this.getClass().getName());
+        }
+    }
+
+    /**
+     * Implementation of an InputStream on top of a RandomAccessFile.
+     * <p>
+     * Closing the stream does not close the underlying RAF so it can be efficiently reused by
+     * subsequent opens.
+     */
+    public class FileSourceOutputStream extends OutputStream {
+        private long mark;
+
+        @Override
+        public void write(int b) throws IOException {
+            raf.write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            raf.write(b, off, len);
+        }
+
+        @Override
+        public void close() {
+            // No op
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            raf.write(b);
         }
 
         @Override

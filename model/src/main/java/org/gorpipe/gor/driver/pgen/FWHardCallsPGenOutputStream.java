@@ -22,10 +22,16 @@
 
 package org.gorpipe.gor.driver.pgen;
 
+import org.gorpipe.gor.model.FileReader;
+
 final class FWHardCallsPGenOutputStream extends FixedWidthPGenOutputStream<BiAllelicHardCalls> {
 
     FWHardCallsPGenOutputStream(String fileName) {
         super(fileName);
+    }
+
+    FWHardCallsPGenOutputStream(String fileName, FileReader fileReader) {
+        super(fileName, fileReader);
     }
 
     @Override

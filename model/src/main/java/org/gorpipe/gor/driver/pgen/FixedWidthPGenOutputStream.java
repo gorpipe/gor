@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.driver.pgen;
 
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.model.RacFile;
 import org.gorpipe.util.collection.ByteArray;
 
 import java.io.FileOutputStream;
@@ -29,22 +31,31 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
+import java.util.Optional;
 
 abstract class FixedWidthPGenOutputStream<T extends VariantRecord> extends PGenOutputStream<T> {
     private final byte[] buffer;
     private OutputStream os;
     private int bufferIdx = 0;
     private boolean firstVariant = true;
+    private Optional<FileReader> fileReaderOptional;
 
     FixedWidthPGenOutputStream(String fileName) {
         super(fileName);
         this.buffer = new byte[1024 * 1024];
+        this.fileReaderOptional = Optional.empty();
+    }
+
+    FixedWidthPGenOutputStream(String fileName, FileReader fileReader) {
+        super(fileName);
+        this.buffer = new byte[1024 * 1024];
+        this.fileReaderOptional = Optional.ofNullable(fileReader);
     }
 
     @Override
     void write(T record) throws IOException {
         if (this.firstVariant) {
-            this.os = new FileOutputStream(this.fileName);
+            this.os = fileReaderOptional.isPresent() ? fileReaderOptional.get().getOutputStream(fileName) : new FileOutputStream(this.fileName);
             writeHeaderBlock();
             this.firstVariant = false;
         }
@@ -66,9 +77,16 @@ abstract class FixedWidthPGenOutputStream<T extends VariantRecord> extends PGenO
             final byte[] bytes = new byte[8];
             ByteArray.writeInt(bytes, 0, ByteOrder.LITTLE_ENDIAN, this.numberOfVariants);
             ByteArray.writeInt(bytes, 4, ByteOrder.LITTLE_ENDIAN, this.numberOfSamples);
-            try (final RandomAccessFile raf = new RandomAccessFile(this.fileName, "rw")) {
-                raf.seek(3);
-                raf.write(bytes);
+            if(fileReaderOptional.isPresent()) {
+                try(RacFile racFile = fileReaderOptional.get().openFile(fileName)) {
+                    racFile.seek(3);
+                    racFile.write(bytes);
+                }
+            } else {
+                try (final RandomAccessFile raf = new RandomAccessFile(this.fileName, "rw")) {
+                    raf.seek(3);
+                    raf.write(bytes);
+                }
             }
         }
     }

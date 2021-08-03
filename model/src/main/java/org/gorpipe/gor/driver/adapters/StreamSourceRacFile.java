@@ -61,6 +61,11 @@ public class StreamSourceRacFile extends RacFile {
     }
 
     @Override
+    public void write(byte[] b) throws IOException {
+        delegate.write(b);
+    }
+
+    @Override
     public void seek(long pos) {
         try {
             delegate.seek(pos);

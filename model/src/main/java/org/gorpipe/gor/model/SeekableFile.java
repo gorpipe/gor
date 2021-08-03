@@ -73,6 +73,13 @@ public abstract class SeekableFile implements AutoCloseable {
     }
 
     /**
+     * Writes bytes to the current position
+     * @param b
+     * @throws IOException
+     */
+    abstract public void write(byte[] b) throws IOException;
+
+    /**
      * Close the file, freeing all system resources associated with this file
      *
      * @throws IOException

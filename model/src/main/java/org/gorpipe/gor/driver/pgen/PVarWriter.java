@@ -22,22 +22,35 @@
 
 package org.gorpipe.gor.driver.pgen;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.gorpipe.gor.model.FileReader;
+
+import java.io.*;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 class PVarWriter implements AutoCloseable {
     private final String fileName;
-    private BufferedWriter writer;
+    private Writer writer;
     private boolean first = true;
     private Map<String,String> chrToNum;
+    private Optional<FileReader> fileReader;
 
     PVarWriter(String fileName) {
         this.fileName = fileName;
+        this.fileReader = Optional.empty();
+        init();
+    }
+
+    PVarWriter(String fileName, FileReader fileReader) {
+        this.fileName = fileName;
+        this.fileReader = Optional.ofNullable(fileReader);
+        init();
+    }
+
+    void init() {
         chrToNum = new HashMap<>();
         IntStream.range(1,23).forEach(i -> chrToNum.put("chr"+i,""+i));
         chrToNum.put("chrX",Integer.toString(chrToNum.size()+1));
@@ -49,7 +62,7 @@ class PVarWriter implements AutoCloseable {
 
     void write(String chr, int pos, CharSequence rsId, CharSequence ref, CharSequence alt) throws IOException {
         if (this.first) {
-            this.writer = new BufferedWriter(new FileWriter(this.fileName));
+            this.writer = new BufferedWriter(fileReader.isPresent() ? new OutputStreamWriter(fileReader.get().getOutputStream(fileName)) : new FileWriter(this.fileName));
             this.writer.write("#CHROM\tID\tPOS\tALT\tREF\n");
             this.first = false;
         }

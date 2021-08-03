@@ -22,21 +22,44 @@
 
 package org.gorpipe.gor.model;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * RacFile allows random access read from a file
  *
  * @version $Id$
  */
-public abstract class RacFile extends InputStream {
+public abstract class RacFile implements Closeable {
     /**
      * Set the current file position
      *
      * @param pos The position to set
      */
     public abstract void seek(long pos);
+
+    /**
+     * Reads from current position
+     * @return
+     * @throws IOException
+     */
+    public abstract int read() throws IOException;
+
+    public int read(byte[] b) throws IOException {
+        return read(b, 0, b.length);
+    }
+
+    /**
+     * Reads from current position
+     */
+    public abstract int read(byte[] b, int start, int length) throws IOException;
+
+    /**
+     * Writes to the current postition
+     */
+    public abstract void write(byte[] b) throws IOException;
 
     /**
      * Length of the random access file
