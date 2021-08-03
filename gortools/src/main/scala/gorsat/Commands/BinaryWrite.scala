@@ -86,7 +86,7 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
     if (valIdx == -1) throw new GorResourceException("There must be one column with name VALUES", fileName)
 
     if (fileEnding == "pgen") {
-      CommandParsingResult(PGenWriteAnalysis(fileName, imputed, threshold.toFloat, group, refIdx, altIdx, rsIdIdx, valIdx), forcedInputHeader)
+      CommandParsingResult(PGenWriteAnalysis(fileName, imputed, threshold.toFloat, group, refIdx, altIdx, rsIdIdx, valIdx, context.getSession.getProjectContext.getFileReader), forcedInputHeader)
     } else if (fileEnding == "bgen") {
       CommandParsingResult(BGenWriteAnalysis(fileName, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valIdx), forcedInputHeader)
     } else {

@@ -57,6 +57,10 @@ public interface StreamSource extends DataSource {
      */
     InputStream open(long start, long minLength) throws IOException;
 
+    default OutputStream getOutputStream(long start) throws IOException {
+        return getOutputStream(false);
+    }
+
     /**
      * Create stream to write to the source
      */

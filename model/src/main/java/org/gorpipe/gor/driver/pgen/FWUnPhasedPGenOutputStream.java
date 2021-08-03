@@ -22,9 +22,15 @@
 
 package org.gorpipe.gor.driver.pgen;
 
+import org.gorpipe.gor.model.FileReader;
+
 final class FWUnPhasedPGenOutputStream extends FixedWidthPGenOutputStream<BiAllelicHardCallsAndDosages> {
     FWUnPhasedPGenOutputStream(String fileName) {
         super(fileName);
+    }
+
+    FWUnPhasedPGenOutputStream(String fileName, FileReader fileReader) {
+        super(fileName, fileReader);
     }
 
     @Override

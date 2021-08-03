@@ -23,12 +23,12 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
-import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.model.{FileReader, Row}
 import org.gorpipe.gor.driver.pgen.PGenWriterFactory
 
-case class PGenWriteAnalysis(fileName: String, imputed: Boolean, threshold: Float, group: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, valueIdx: Int) extends Analysis {
+case class PGenWriteAnalysis(fileName: String, imputed: Boolean, threshold: Float, group: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, valueIdx: Int, fileReader: FileReader = null) extends Analysis {
 
-  val output = PGenWriterFactory.getPGenWriter(fileName, refIdx, altIdx, rsIdIdx, valueIdx, group, imputed, threshold)
+  val output = PGenWriterFactory.getPGenWriter(fileName, refIdx, altIdx, rsIdIdx, valueIdx, group, imputed, threshold, fileReader)
 
   override def process(r: Row): Unit = {
     output.write(r)

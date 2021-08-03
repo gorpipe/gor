@@ -52,7 +52,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
 
   val norRowSource: stream.Stream[String] = if (!readStdin) {
     if (fileNameTUP.endsWith(".GZ")) {
-      new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.openFile(fileName)))).lines()
+      new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.getInputStream(fileName)))).lines()
     } else {
       fileReader.iterateFile(fileName, maxWalkDepth, showModificationDate)
     }

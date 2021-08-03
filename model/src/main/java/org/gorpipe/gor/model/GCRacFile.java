@@ -67,6 +67,11 @@ public class GCRacFile extends RacFile {
         }
     }
 
+    @Override
+    public void write(byte[] b) throws IOException {
+        file.write(b);
+    }
+
     /**
      * Set the current file position
      *
