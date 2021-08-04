@@ -501,12 +501,16 @@ public class GorJavaUtilities {
             Optional<String> cc = Files.lines(p).filter(s -> s.startsWith(GorMeta.CARDCOL_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
             Optional<String> tags = Files.lines(p).filter(s -> s.startsWith(GorMeta.TAGS_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
             Optional<String> range = Files.lines(p).filter(s -> s.startsWith(GorMeta.RANGE_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
+            var useMd5 = omd5.isPresent() && isUUID(p.getFileName().toString());
             if(range.isPresent()) {
                 String s = range.get();
-                var outfile = omd5.orElseGet(() -> {
+                String outfile;
+                if(useMd5) {
+                    outfile = omd5.get();
+                } else {
                     String o = outfolderpath.relativize(p).toString();
-                    return o.substring(0,o.length()-10);
-                });
+                    outfile = o.substring(0,o.length()-10);
+                }
                 outfile = outfile+".gorz";
                 i+=1;
                 String gordline;
@@ -521,7 +525,7 @@ public class GorJavaUtilities {
                 }
                 Files.writeString(dictionarypath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             }
-            if (omd5.isPresent() && isUUID(p.getFileName().toString())) {
+            if (useMd5) {
                 String md5 = omd5.get();
                 Path dm = p.getParent().resolve(md5 + ".gorz.meta");
                 if (!Files.exists(dm)) Files.move(p, dm);

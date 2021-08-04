@@ -404,7 +404,7 @@ public class UTestGorDictionaryFolder {
     public void testGordFolder() throws IOException {
         var workDirPath = workDir.getRoot().toPath();
         var cache = workDirPath.resolve("result_cache");
-        Files.createDirectory(cache);
+        if(!Files.exists(cache)) Files.createDirectory(cache);
 
         var query = "create #variants# = gorrows -p chr1:1-1000 | merge <(gorrows -p chr10:1-1000) | merge <(gorrows -p chr2:1-1000) | merge <(gorrows -p chr21:1-1000) | calc ref 'A' | calc alt 'C';\n" +
                 "create #pns# = norrows 10000 | calc PN 'PN_'+right('000000'+str(#1),5) | select PN | top 1000;\n" +
@@ -431,7 +431,7 @@ public class UTestGorDictionaryFolder {
                 "| write test/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f bucket -card bucket;\n" +
                 "\n*/" +
                 "| write -f bucket -card bucket test.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz;\n" +
-                "norrows 1";
+                "gor [#empty#] | top 1";
         TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString());
         Assert.assertTrue(Files.exists(workDirPath.resolve("test.gord").resolve("thedict.gord")));
     }
