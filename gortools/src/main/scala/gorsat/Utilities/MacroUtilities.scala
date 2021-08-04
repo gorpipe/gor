@@ -443,7 +443,8 @@ object MacroUtilities {
       (false, null, queryAppend)
     } else if(writeDir != null || hasWriteFile) {
       val cacheRes = if(writeDir!=null) writeDir else lastCmd.split(" ").last
-      val cacheFileExists = Files.exists(Paths.get(cacheRes))
+      val cachepath = Paths.get(cacheRes)
+      val cacheFileExists = Files.exists(cachepath) && !Files.isDirectory(cachepath)
       val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
       (cacheFileExists, cacheRes, queryAppend)
     } else {
