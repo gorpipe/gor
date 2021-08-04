@@ -90,10 +90,10 @@ public class GorpIterator extends GenomicIteratorAdapterBase {
     private SourceRef parseLineToSourceRef(String line) {
         final String[] columns = line.split("\t");
         final String sourcePath = this.parentDirectory == null ? columns[0] : this.parentDirectory.resolve(columns[0]).toString();
-        final String startChr = columns[1];
-        final int startPos = Integer.parseInt(columns[2]);
-        final String stopChr = columns[3];
-        final int stopPos = Integer.parseInt(columns[4]);
+        final String startChr = columns[2];
+        final int startPos = Integer.parseInt(columns[3]);
+        final String stopChr = columns[4];
+        final int stopPos = Integer.parseInt(columns[5]);
         return new SourceRef(sourcePath, null, null, null, startChr, startPos, stopChr, stopPos,
                 null, null, false, this.securityContext, this.commonRoot);
     }

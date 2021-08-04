@@ -25,10 +25,8 @@ package gorsat.Macros
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
+import gorsat.Utilities.MacroUtilities.getCachePath
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.PathUtils
-
-import java.nio.file.{Files, Paths}
 
 /***
   * PGOR macro used to preprocess standalone pgor commands into create statement plus gor query. Also performs expansion
@@ -37,59 +35,7 @@ import java.nio.file.{Files, Paths}
   * <([original query])'.
   */
 
-class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin -gordfolder", "", 1, -1, ignoreIllegalArguments = true)) {
-
-  def generateCachepath(context: GorContext, fingerprint: String): String = {
-    val fileCache = context.getSession.getProjectContext.getFileCache
-    val cachefile = fileCache.tempLocation(fingerprint, ".gord")
-    val rootPathStr = context.getSession.getProjectContext.getRoot.split("[ \t]+")(0)
-    val rootPath = Paths.get(rootPathStr).normalize()
-    val cacheFilePath = Paths.get(cachefile)
-    if (cacheFilePath.isAbsolute) {
-      PathUtils.relativize(rootPath,cacheFilePath).toString
-    } else cacheFilePath.toString
-  }
-
-  def fileCacheLookup(context: GorContext, fingerprint: String): (String, Boolean) = {
-    if(fingerprint!=null) {
-      val fileCache = context.getSession.getProjectContext.getFileCache
-      val cachefile = fileCache.lookupFile(fingerprint)
-      if (cachefile == null) (generateCachepath(context, fingerprint), false)
-      else (cachefile, true)
-    } else (null, false)
-  }
-
-  def appendQuery(finalQuery: String, lastCmd: String, hasWrite: Boolean): String = {
-    " <(" + finalQuery + ")" + (if(hasWrite) {
-      " | " + lastCmd
-    } else {
-      ""
-    })
-  }
-
-  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, String, String) = {
-    val innerQuery = create.query.trim.slice(5, create.query.length)
-    val querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
-    val lastCmd = querySplit.last.trim
-    val lastCmdLower = lastCmd.toLowerCase
-    val hasWrite = lastCmdLower.startsWith("write ")
-    val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
-    val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
-    if(skipcache) {
-      val queryAppend = appendQuery(finalQuery, lastCmd, false)
-      (false, null, queryAppend)
-    } else if(hasWriteFile) {
-      val cacheRes = lastCmd.split(" ").last
-      val cacheFileExists = Files.exists(Paths.get(cacheRes))
-      val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
-      (cacheFileExists, cacheRes, queryAppend)
-    } else {
-      val fingerprint = create.signature
-      val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
-      val queryAppend = appendQuery(finalQuery, lastCmd, hasWrite)
-      (cacheFileExists, cachefile, queryAppend)
-    }
-  }
+class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder", 1, -1, ignoreIllegalArguments = true)) {
 
   override protected def processArguments(createKey: String,
                                           create: ExecutionBlock,
@@ -113,7 +59,8 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin -gordfolder", "
         val (cacheFileExists, theCachePath, theQueryAppend) = getCachePath(create, context, skipCache)
         cachePath = theCachePath
         if (!cacheFileExists) {
-          val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders)
+          val noDict = CommandParseUtilities.stringValueOfOption(options, "-gordfolder").equals("nodict")
+          val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict)
           theDependencies = theDeps
           partitionedGorCommands = partGorCmds
           tcmd
@@ -121,7 +68,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin -gordfolder", "
           "gor " + cachePath
         }
       } else {
-        val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders)
+        val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders, false)
         theDependencies = theDeps
         partitionedGorCommands = partGorCmds
         tcmd
@@ -137,7 +84,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin -gordfolder", "
     MacroParsingResult(partitionedGorCommands, null)
   }
 
-  def makeGorDict(context: GorContext, noWithin: Boolean, createKey: String, create: ExecutionBlock, replacePattern: String, queryAppend: String, cachePath: String, useGordFolder: Boolean): (String,List[String],Map[String, ExecutionBlock]) = {
+  def makeGorDict(context: GorContext, noWithin: Boolean, createKey: String, create: ExecutionBlock, replacePattern: String, queryAppend: String, cachePath: String, useGordFolder: Boolean, noDict: Boolean): (String,List[String],Map[String, ExecutionBlock]) = {
     var partitionedGorCommands = Map.empty[String, ExecutionBlock]
     var theDependencies: List[String] = Nil
     val theKey = createKey.slice(1, createKey.length - 1)
@@ -154,7 +101,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin -gordfolder", "
       theDependencies ::= parKey
     })
 
-    val gordict = if (useGordFolder) "gordictfolder" else "gordict"
+    val gordict = (if (useGordFolder) "gordictfolder" else "gordict") + (if(noDict) " -nodict" else "")
     val cmd = splitManager.chromosomeSplits.keys.foldLeft(gordict)((x, y) => x + " [" + theKey + "_" + y + "] " +
       splitManager.chromosomeSplits(y).getRange)
     (cmd, theDependencies, partitionedGorCommands)

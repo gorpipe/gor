@@ -28,11 +28,15 @@ package gorsat.Utilities
 
 import gorsat.Utilities.AnalysisUtilities._
 import gorsat.Commands.CommandParseUtilities
-import gorsat.Script.ScriptParsers
+import gorsat.Script.{ExecutionBlock, ScriptParsers}
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
 import org.gorpipe.gor.model.FileReader
+import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.PathUtils
 import org.slf4j.{Logger, LoggerFactory}
+
+import java.nio.file.{Files, Paths}
 
 object MacroUtilities {
   private val log: Logger = LoggerFactory.getLogger(this.getClass)
@@ -372,4 +376,81 @@ object MacroUtilities {
     extraCommands
   }
 
+  def appendQuery(finalQuery: String, lastCmd: String, hasWrite: Boolean, cachefile: String = null, cacheFileExists: Boolean = false): String = {
+    " <(" + finalQuery + ")" + (if(cachefile!=null && !cacheFileExists) {
+      " | " + (if(hasWrite) lastCmd + (if(cachefile.endsWith(".gord") && !lastCmd.contains(" -d ")) " -d " else " ") + cachefile else "write -d " + cachefile)
+    } else if(hasWrite) {
+      " | " + lastCmd
+    } else {
+      ""
+    })
+  }
+
+  def generateCachepath(context: GorContext, fingerprint: String): String = {
+    val fileCache = context.getSession.getProjectContext.getFileCache
+    val cachefile = fileCache.tempLocation(fingerprint, ".gord")
+    val rootPathStr = context.getSession.getProjectContext.getRoot.split("[ \t]+")(0)
+    val rootPath = Paths.get(rootPathStr).normalize()
+    val cacheFilePath = Paths.get(cachefile)
+    if (cacheFilePath.isAbsolute) {
+      PathUtils.relativize(rootPath,cacheFilePath).toString
+    } else cacheFilePath.toString
+  }
+
+  def fileCacheLookup(context: GorContext, fingerprint: String): (String, Boolean) = {
+    if(fingerprint!=null) {
+      val fileCache = context.getSession.getProjectContext.getFileCache
+      val cachefile = fileCache.lookupFile(fingerprint)
+      if (cachefile == null) (generateCachepath(context, fingerprint), false)
+      else (cachefile, true)
+    } else (null, false)
+  }
+
+  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, String, String) = {
+    val k = create.query.indexOf(" ")
+    val cmdname = create.query.substring(0,k).toLowerCase
+    var innerQuery = create.query.trim.slice(k+1, create.query.length)
+    if(innerQuery.startsWith("-gordfolder")) {
+      var u = innerQuery.indexOf(" ")
+      while (innerQuery.charAt(u)==' ') u+=1
+      u = innerQuery.indexOf(" ",u)
+      innerQuery = innerQuery.substring(u+1)
+    }
+    var querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
+    if(querySplit.length==1&&querySplit.head.endsWith(")")&&cmdname.equals("partgor")) {
+      val nested = CommandParseUtilities.quoteSafeSplit(querySplit.head,' ').last
+      val inested = nested.substring(2,nested.length-1)
+      querySplit = CommandParseUtilities.quoteSafeSplit(inested,'|')
+    }
+    val lastCmd = querySplit.last.trim
+    val lastCmdLower = lastCmd.toLowerCase
+    val hasWrite = lastCmdLower.startsWith("write ")
+    val didx = if(hasWrite) lastCmd.indexOf(" -d ") else 0
+    val lidx = if(hasWrite) lastCmdLower.indexOf(".gord/") else 0
+    val writeDir = if (didx>0) {
+      var k = didx+4
+      while (lastCmd.charAt(k)==' ') k += 1
+      val e = lastCmd.indexOf(' ',k)
+      if (e == -1) lastCmd.substring(k).trim else lastCmd.substring(k,e).trim
+    } else if (lidx>0) {
+      val k = lastCmd.lastIndexOf(' ',lidx)+1
+      lastCmd.substring(k,lidx+5)
+    } else null
+    val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
+    val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
+    if(skipcache) {
+      val queryAppend = appendQuery(finalQuery, lastCmd, false)
+      (false, null, queryAppend)
+    } else if(writeDir != null || hasWriteFile) {
+      val cacheRes = if(writeDir!=null) writeDir else lastCmd.split(" ").last
+      val cacheFileExists = Files.exists(Paths.get(cacheRes))
+      val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
+      (cacheFileExists, cacheRes, queryAppend)
+    } else {
+      val fingerprint = create.signature
+      val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
+      val queryAppend = appendQuery(finalQuery, lastCmd, hasWrite, cachefile, cacheFileExists)
+      (cacheFileExists, cachefile, queryAppend)
+    }
+  }
 }

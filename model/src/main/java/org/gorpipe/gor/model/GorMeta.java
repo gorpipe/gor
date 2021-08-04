@@ -1,11 +1,6 @@
 package org.gorpipe.gor.model;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class GorMeta {
     String minChr = null;
@@ -13,54 +8,17 @@ public class GorMeta {
     String maxChr = null;
     int maxPos = -1;
     String md5 = null;
+    String tags = null;
     long lineCount = 0;
     String cardColName = null;
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
 
-    static String MD5_HEADER = "## MD5";
-    static String CARDCOL_HEADER = "## CARDCOL";
-    static String RANGE_HEADER = "## RANGE";
-    static String LINES_HEADER = "## LINES";
-
-    public static void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
-        List<Path> metapaths = Files.walk(outfolderpath).filter(p -> p.getFileName().toString().endsWith(".meta")).collect(Collectors.toList());
-        int i = 0;
-        for(Path p : metapaths) {
-            Optional<String> omd5 = Files.lines(p).filter(s -> s.startsWith(MD5_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            Optional<String> cc = Files.lines(p).filter(s -> s.startsWith(CARDCOL_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            Optional<String> range = Files.lines(p).filter(s -> s.startsWith(RANGE_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            if(range.isPresent()) {
-                String s = range.get();
-                var outfile = omd5.orElseGet(() -> {
-                    String o = outfolderpath.relativize(p).toString();
-                    return o.substring(0,o.length()-10);
-                });
-                outfile = outfile+".gorz";
-                i+=1;
-                String gordline;
-                if(cc.isPresent()) {
-                    String ccstr = cc.get();
-                    gordline = outfile+"\t"+i+"\t"+s+"\t"+ccstr;
-                } else {
-                    gordline = outfile+"\t"+i+"\t"+s;
-                }
-                Files.writeString(dictionarypath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            }
-            if(omd5.isPresent()) {
-                String md5 = omd5.get();
-                Path dm = p.getParent().resolve(md5+".gorz.meta");
-                if(!Files.exists(dm)) Files.move(p, dm);
-                else Files.delete(p);
-
-                String fn = p.getFileName().toString();
-                Path g = p.getParent().resolve(fn.substring(0,fn.length()-5));
-                Path d = p.getParent().resolve(md5+".gorz");
-                if(!Files.exists(d)) Files.move(g, d);
-                else Files.delete(g);
-            }
-        }
-    }
+    public static final String MD5_HEADER = "## MD5";
+    public static final String CARDCOL_HEADER = "## CARDCOL";
+    public static final String RANGE_HEADER = "## RANGE";
+    public static final String LINES_HEADER = "## LINES";
+    public static final String TAGS_HEADER = "## TAGS";
 
     public boolean linesWritten() {
         return minChr != null;
@@ -72,6 +30,14 @@ public class GorMeta {
 
     public String getMd5() {
         return md5;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getTags() {
+        return tags;
     }
 
     public void initCardCol(String cardCol, String header) {
@@ -101,6 +67,7 @@ public class GorMeta {
         String ret = "";
         if(minChr!=null) ret += RANGE_HEADER + ": " + getRange() + "\n";
         if(md5!=null) ret += MD5_HEADER + ": " + md5 + "\n";
+        if(tags!=null&&tags.length()>0) ret += TAGS_HEADER + ": " + tags + "\n";
         if(lineCount!=0) ret += LINES_HEADER + ": " + lineCount + "\n";
         if(cardColIndex != -1) {
             String cardStr = cardSet.toString();

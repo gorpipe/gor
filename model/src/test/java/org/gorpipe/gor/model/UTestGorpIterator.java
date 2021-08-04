@@ -67,7 +67,7 @@ public class UTestGorpIterator {
         final String absPath = new File(tempDir, path).getAbsolutePath();
         final BufferedWriter bw = new BufferedWriter(new FileWriter(absPath));
         for (final SourceRef sr : srs) {
-            bw.write(sr.file + "\t" + sr.startChr + "\t" + sr.startPos + "\t" + sr.stopChr + "\t" + sr.stopPos + "\n");
+            bw.write(sr.file + "\t1\t" + sr.startChr + "\t" + sr.startPos + "\t" + sr.stopChr + "\t" + sr.stopPos + "\n");
         }
         bw.close();
         return absPath;
@@ -168,5 +168,12 @@ public class UTestGorpIterator {
         while (git.hasNext()) {
             Assert.assertFalse(git.next().isProgress);
         }
+    }
+
+    @Test
+    public void testGorp() {
+        var result = TestUtils.runGorPipe("gor "+gorpPath+" | group chrom -count | top 1");
+        Assert.assertEquals("Chrom\tbpStart\tbpStop\tallCount\n" +
+                "chr1\t0\t250000000\t4747\n", result);
     }
 }

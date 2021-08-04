@@ -76,7 +76,7 @@ object Utilities {
   def getWriteFilename(query: String): String = {
     val command = getWriteCommand(query)
     if (command == null) return null
-    val writeIndex = query.toUpperCase.indexOf(command.name + " ")
+    val writeIndex = query.trim.toUpperCase.indexOf(command.name + " ")
     if (writeIndex < 0) {
       throw new GorParsingException(s"Unable to get the filename for the write command of ", query, "")
     }

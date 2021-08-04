@@ -25,7 +25,7 @@ package gorsat.Macros
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script.{ExecutionBlock, MacroInfo, MacroParsingResult, ScriptParsers}
 import gorsat.Utilities.MacroUtilities
-import gorsat.process.{GorInputSources, GorPipeMacros, SourceProvider}
+import gorsat.process.{GorInputSources, GorJavaUtilities, GorPipeMacros, SourceProvider}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
@@ -37,7 +37,7 @@ import org.gorpipe.gor.session.GorContext
   * <p><p>Example:
   * <p> parallel -parts [somesplitfile] <(gor data.gor | where count > #{mincount})
   */
-class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit", 1, 1)) {
+class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-parts -limit", 1, 1)) {
 
   override protected def processArguments(createKey: String,
                                           create: ExecutionBlock,
@@ -67,6 +67,14 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     var partitionIndex = 1
+    val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
+
+    var cachePath: String = null
+    if(useGordFolders) {
+      val (_, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+      cachePath = theCachePath
+    }
+
     try {
       val columns = getColumnsFromQuery(parallelQuery, header, forNor = true)
 
@@ -84,9 +92,14 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit
           newCommand = newCommand.replace("#{col:" + x._1 + "}", row.colAsString(x._2))
         }
 
+        if (useGordFolders) {
+          val i = newCommand.indexOf(' ')+1
+          val srcmd = newCommand.substring(0,i)
+          if (GorJavaUtilities.isPGorCmd(srcmd)) newCommand = srcmd+"-gordfolder dict "+newCommand.substring(i)
+        }
         if (!extraCommands.isEmpty) newCommand += " " + extraCommands
 
-        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName))
+        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName, cachePath))
         theDependencies ::= parKey
 
         partitionIndex += 1
@@ -100,7 +113,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("", "-parts -limit
     }
 
     val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, isDictionary = true))
+    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
   }

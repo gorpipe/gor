@@ -24,6 +24,7 @@ package gorsat.process;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GorMeta;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.model.DbSource;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
@@ -477,5 +479,60 @@ public class GorJavaUtilities {
 
     public static String[] mergeArrays(String[] array1, String[] array2) {
         return Stream.concat(Arrays.stream(array1), Arrays.stream(array2)).toArray(String[]::new);
+    }
+
+    public static boolean isGorCmd(String cmd) {
+        return cmd.toLowerCase().startsWith("gor ") || cmd.toLowerCase().startsWith("pgor ");
+    }
+
+    public static boolean isPGorCmd(String cmd) {
+        return cmd.toLowerCase().startsWith("pgor ");
+    }
+
+    private static boolean isUUID(String filename) {
+        return filename.indexOf('.')==36 && filename.charAt(8)=='-';
+    }
+
+    public static synchronized void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
+        List<Path> metapaths = Files.walk(outfolderpath).filter(p -> p.getFileName().toString().endsWith(".meta")).collect(Collectors.toList());
+        int i = 0;
+        for(Path p : metapaths) {
+            Optional<String> omd5 = Files.lines(p).filter(s -> s.startsWith(GorMeta.MD5_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
+            Optional<String> cc = Files.lines(p).filter(s -> s.startsWith(GorMeta.CARDCOL_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
+            Optional<String> tags = Files.lines(p).filter(s -> s.startsWith(GorMeta.TAGS_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
+            Optional<String> range = Files.lines(p).filter(s -> s.startsWith(GorMeta.RANGE_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
+            if(range.isPresent()) {
+                String s = range.get();
+                var outfile = omd5.orElseGet(() -> {
+                    String o = outfolderpath.relativize(p).toString();
+                    return o.substring(0,o.length()-10);
+                });
+                outfile = outfile+".gorz";
+                i+=1;
+                String gordline;
+                if(cc.isPresent()) {
+                    String ccstr = cc.get();
+                    gordline = outfile + "\t" + i + "\t" + s + "\t" + ccstr;
+                } else if(tags.isPresent()) {
+                    String tagsstr = tags.get();
+                    gordline = outfile+"\t"+i+"\t"+s+"\t"+tagsstr;
+                } else {
+                    gordline = outfile+"\t"+i+"\t"+s;
+                }
+                Files.writeString(dictionarypath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
+            if (omd5.isPresent() && isUUID(p.getFileName().toString())) {
+                String md5 = omd5.get();
+                Path dm = p.getParent().resolve(md5 + ".gorz.meta");
+                if (!Files.exists(dm)) Files.move(p, dm);
+                else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(p);
+
+                String fn = p.getFileName().toString();
+                Path g = p.getParent().resolve(fn.substring(0, fn.length() - 5));
+                Path d = p.getParent().resolve(md5 + ".gorz");
+                if (!Files.exists(d)) Files.move(g, d);
+                else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(g);
+            }
+        }
     }
 }

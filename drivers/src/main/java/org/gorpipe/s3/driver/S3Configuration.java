@@ -46,4 +46,8 @@ public interface S3Configuration extends Config {
     @DefaultValue("15")
     int connectionRetries();
 
+    @Documentation("S3 endpoint url")
+    @Key("gor.s3.endpoint")
+    @DefaultValue("")
+    String s3Endpoint();
 }
