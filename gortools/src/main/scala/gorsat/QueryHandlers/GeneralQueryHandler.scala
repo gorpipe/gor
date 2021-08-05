@@ -36,7 +36,7 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{DriverBackedGorServerFileReader, GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.slf4j.LoggerFactory
@@ -286,7 +286,11 @@ object GeneralQueryHandler {
         chrI += 1
         val rf = getRelativeFileLocationForDictionaryFileReferences(f)
         val prefix = rf + "\t" + chrI + "\t"
-        val metaPath = Paths.get(f + ".meta")
+        var metaPath = Paths.get(f + ".meta")
+        if(!metaPath.isAbsolute && root != null) {
+          val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
+          metaPath = rootPath.resolve(metaPath)
+        }
         val opt: Optional[String] = if (Files.exists(metaPath)) {
           Files.lines(metaPath)
             .filter(l => l.startsWith("## RANGE:"))
