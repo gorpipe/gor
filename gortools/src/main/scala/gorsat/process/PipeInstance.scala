@@ -237,7 +237,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
 
     if (fileSignature || virtualFile != null || ScriptParsers.isScript(gorCommands)) {
       val scriptExecutionEngine = ScriptEngineFactory.create(context)
-      if (virtualFile != null) {
+      if (virtualFile != null && virtualFile.nonEmpty) {
         System.out.println(scriptExecutionEngine.executeVirtualFile(virtualFile, gorCommands))
         System.exit(0)
       } else if (fileSignature) {
