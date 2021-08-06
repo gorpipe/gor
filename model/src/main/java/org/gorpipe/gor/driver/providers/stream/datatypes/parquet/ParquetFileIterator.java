@@ -286,8 +286,8 @@ public class ParquetFileIterator extends GenomicIteratorBase {
         if (parquetRowReader != null) {
             row = parquetRowReader.next();
             if(partitioningCol!=null&&!partColPresent) {
-                if(partitioningCol.toLowerCase().equals("chrom")) {
-                    row = RowObj.apply(parquetRowReader.getPart()+"\t"+row.toString());
+                if(partitioningCol.equalsIgnoreCase("chrom")) {
+                    row = RowObj.apply(nor ? "chrN\t0\t"+parquetRowReader.getPart()+"\t"+row.otherCols() : row.toString());
                 } else {
                     row = RowObj.apply(row.toString()+"\t"+parquetRowReader.getPart());
                 }

@@ -373,7 +373,7 @@ class UTestCommandParsing extends FunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -r -c -m -f 3 -i FULL -t", header, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -r -c -m -f 3 -i FULL -t 'foo,bar'", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -r -c -m -f 3 -i FULL -t ''", header, testShouldSucceed = true)
-    testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -t 'foo,bar'", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -t 'foo,bar'", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "foo -prefix bla", header, true)
     testsToPerform += TestEntry(commandName, "foo -prefix", header, false)
 

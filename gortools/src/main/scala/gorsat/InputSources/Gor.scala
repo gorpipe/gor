@@ -43,10 +43,10 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
   override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                 args: Array[String]): InputSourceParsingResult = {
 
-    var usedFiles = ListBuffer.empty[String]
+    val usedFiles = ListBuffer.empty[String]
     var inputSource: GenomicIterator = null
     var mergeSteps: Array[String] = null
-    var inputFile = iargs(0)
+    val inputFile = iargs(0)
     var range:Range = null
 
     val noWithin = hasOption(args, "-nowithin")

@@ -146,7 +146,7 @@ object OutFile {
     }
 
     try {
-      if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
+      val out = if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
         new GORzip(name, fileReader, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
         new NorFileOut(name, fileReader, header, skipHeader, append, options.md5, options.md5File)
@@ -157,6 +157,8 @@ object OutFile {
       } else {
         new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
       }
+      if(options.tags!=null&&options.tags.length>0) out.getMeta.setTags(options.tags.mkString(","))
+      out
     } catch {
       case e: FileNotFoundException => throw new GorResourceException(s"Can't write to file", name, e)
     }

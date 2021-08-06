@@ -26,6 +26,7 @@ import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script.{ExecutionBlock, MacroInfo, MacroParsingResult}
 import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.gorsatGorIterator.MapAndListUtilities
+import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
 import org.gorpipe.gor.model.FileReader
 import org.gorpipe.gor.session.{GorContext, GorSession}
@@ -40,7 +41,7 @@ import scala.collection.mutable
   * will result in 5 or less queries where the input dictionary has been split into 'gor [data] -f [tags per part] ...'.
   * Partgor support multiple split options but the main emphasis is to minimize open file handles and maximize cache hit rates.
   */
-class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -fs -nf -dict -parts -partsize -partscale", 1)) {
+class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -p -f -ff -fs -nf -dict -parts -partsize -partscale", 1)) {
 
   override protected def processArguments(createKey: String,
                                           create: ExecutionBlock,
@@ -54,6 +55,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
     val dictionary = getDictionary(options, context.getSession)
     val partitionSplitMethod = getSplitMethod(options, context.getSession)
 
+    val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
     val bucketMap = PartGor.readDictionaryBucketTagsFromFile(dictionary, tags, context.getSession.getProjectContext.getFileReader)
 
     validateTags(tags, bucketMap, context.getSession)
@@ -69,21 +71,32 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
     val extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query)
     var parGorCommands = Map.empty[String, ExecutionBlock]
 
+    var cachePath: String = null
+    if(useGordFolders) {
+      val (_, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+      cachePath = theCachePath
+    }
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     partitions.keys.foreach(partitionKey => {
       val parKey = "[" + theKey + "_" + partitionKey + "]"
-      var newCmd =  PartGor.replaceTags(cmdToModify, partitions(partitionKey).toArray)
-      if (!(newCmd.toUpperCase.startsWith("GOR") || newCmd.toUpperCase.startsWith("PGOR"))) newCmd = "gor " + newCmd
+      val theCmd =  PartGor.replaceTags(cmdToModify, partitions(partitionKey).toArray)
+      var newCmd = if (!GorJavaUtilities.isGorCmd(theCmd)) {
+        "gor " + theCmd
+      } else if(useGordFolders && GorJavaUtilities.isPGorCmd(theCmd)) {
+        val k = theCmd.indexOf(' ')+1
+        theCmd.substring(0,k)+"-gordfolder nodict "+theCmd.substring(k)
+      } else theCmd
 
-      if (!extraCommands.isEmpty) newCmd += extraCommands
+      if (extraCommands.nonEmpty) newCmd += extraCommands
 
-      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.signature, create.dependencies, create.batchGroupName))
+      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.signature, create.dependencies, create.batchGroupName, cachePath))
       theDependencies ::= parKey
     })
 
-    val theCommand = partitions.keys.foldLeft("gordictpart") ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, isDictionary = true))
+    val gordict = if (useGordFolders) "gordictfolderpart" else "gordictpart"
+    val theCommand = partitions.keys.foldLeft(gordict) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
+    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
   }
@@ -93,7 +106,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("", "-s -p -f -ff -f
   }
 
   def validateTags(tags: String, bucketMap: mutable.Map[String, (List[String], Int)], session: GorSession): Unit = {
-    if (!tags.isEmpty) {
+    if (tags.nonEmpty) {
       val tagSet = tags.split(',').toList
       val tagsFound = bucketMap.keys.map(x => bucketMap(x)._1).fold(Nil)((t, x) => {
         x ::: t

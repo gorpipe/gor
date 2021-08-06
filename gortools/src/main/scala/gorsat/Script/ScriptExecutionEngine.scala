@@ -226,7 +226,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         // Replace any virtual file in the current query
         firstLevelBlock.query = virtualFileManager.replaceVirtualFiles(firstLevelBlock.query)
 
-        if(validate&&firstLevelBlock.signature==null&&firstLevelBlock.query!=null&&firstLevelBlock.query.toLowerCase.startsWith("pgor ")) {
+        val isParallelQuery = firstLevelBlock.query.toLowerCase.startsWith("pgor ") || firstLevelBlock.query.toLowerCase.startsWith("partgor ") || firstLevelBlock.query.toLowerCase.startsWith("parallel ")
+        if(validate&&firstLevelBlock.signature==null&&firstLevelBlock.query!=null&&isParallelQuery) {
           val usedFiles = getUsedFiles(firstLevelBlock.query)
           val fileSignature = getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles)
           val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
@@ -273,7 +274,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               executionBlocks -= firstLevelBlock.groupName
             } else {
               // We need to create a new dictionary query to the batch to get the results from expanded queries
-              val querySignature = if(firstLevelBlock.signature!=null&&commandToExecute.startsWith("gordictfolder")) firstLevelBlock.signature
+              val gordictfolder = commandToExecute.startsWith("gordictfolder") || commandToExecute.startsWith("gordictfolderpart")
+              val querySignature = if(firstLevelBlock.signature!=null&&gordictfolder) firstLevelBlock.signature
               else {
                 val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
                 StringUtilities.createMD5(cte.query + fileSignature)

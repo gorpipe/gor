@@ -185,6 +185,10 @@ promote-container:
   rules:
     - when: never
 
+tag-container:
+  rules:
+    - when: never
+
 push-snapshot-to-dockerhub:
   rules:
     - when: never

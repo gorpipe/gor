@@ -28,14 +28,13 @@ import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
-import org.gorpipe.gor.model.{GorMeta, GorOptions, Row}
-import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource
+import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
+import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.PathUtils
 import org.gorpipe.model.gor.RowObj
 
-import java.io.OutputStream
-import java.util.{Optional, UUID}
+import java.util.UUID
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -49,7 +48,7 @@ case class OutputOptions(remove: Boolean = false,
                             prefix: Option[String] = None,
                             prefixFile: Option[String] = None,
                             compressionLevel: Int = Deflater.BEST_SPEED,
-                            useFolder: Boolean = false,
+                            useFolder: Option[String] = Option.empty,
                             skipHeader: Boolean = false,
                             cardCol: String = null,
                             linkFile: String = ""
@@ -62,18 +61,29 @@ case class ForkWrite(forkCol: Int,
                      options: OutputOptions) extends Analysis {
 
   case class FileHolder(forkValue: String) {
-    if (forkCol >= 0 && !options.useFolder && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
+    if (forkCol >= 0 && options.useFolder.isEmpty && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
       throw new GorResourceException("WRITE error: #{fork} of ${fork}missing from filename.", fullFileName)
     }
     var fileName : String = _
-    if(forkCol >= 0 && options.useFolder) {
-      val dir = Paths.get(fullFileName)
-      val cols = inHeader.split("\t")
-      val forkdir = dir.resolve(cols(forkCol)+"="+forkValue)
-      if(!Files.exists(forkdir)) {
-        Files.createDirectories(forkdir)
+    if(options.useFolder.nonEmpty) {
+      val folder = options.useFolder.get
+      val fn = if(fullFileName.isEmpty) {
+        val uuid = UUID.randomUUID().toString
+        val ending = folder.substring(folder.lastIndexOf('.'))
+        uuid + (if(ending.equals(".gord")) ".gorz" else ending)
+      } else fullFileName
+      val dir = if(folder.endsWith("/")) folder else folder + "/"
+
+      if (forkCol >= 0) {
+        val cols = inHeader.split("\t")
+        val fork = cols(forkCol) + "=" + forkValue
+        val forkdir = dir + fork
+        val projectContext = session.getProjectContext
+        ensureDir(projectContext, forkdir)
+        fileName = forkdir + "/" + fn
+      } else {
+        fileName = dir + fn
       }
-      fileName = forkdir.resolve(dir.getFileName).toString
     } else {
       fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
     }
@@ -81,6 +91,25 @@ case class ForkWrite(forkCol: Int,
     var headerWritten = false
     var rowBuffer = new ArrayBuffer[Row]
     var out: Output = _
+  }
+
+  def ensureDir(projectContext: ProjectContext, dir: String): Unit = {
+    projectContext.getFileReader match {
+      case reader: DriverBackedFileReader => {
+        val ds = reader.resolveUrl(dir)
+        if(ds.exists() && ds.isInstanceOf[FileSource]) {
+          var fp = Paths.get(dir)
+          if(!fp.isAbsolute) {
+            fp = projectContext.getProjectRootPath.resolve(fp)
+          }
+          if(Files.exists(fp) && !Files.isDirectory(fp) && Files.size(fp) == 0) {
+            Files.delete(fp)
+          }
+          Files.createDirectories(fp)
+        }
+      }
+      case _ =>
+    }
   }
 
   var useFork: Boolean = forkCol >= 0
@@ -121,18 +150,7 @@ case class ForkWrite(forkCol: Int,
     * @return
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
-    if (options.useFolder && !name.toLowerCase.endsWith(".parquet")) {
-      val p = Paths.get(name)
-      if(Files.exists(p) && !Files.isDirectory(p) && Files.size(p) == 0) {
-        Files.delete(p);
-      }
-      Files.createDirectories(p)
-      val uuid = UUID.randomUUID().toString
-      val noptions = OutputOptions(options.remove, options.columnCompress, true, false, options.nor, options.idx, options.tags, options.prefix, options.prefixFile, options.compressionLevel, options.useFolder, options.skipHeader, cardCol = options.cardCol)
-      OutFile.driver(p.resolve(uuid+".gorz").toString, session.getProjectContext.getFileReader, header, skipHeader, noptions)
-    } else {
-      OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
-    }
+    OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
   }
 
   def openFile(sh: FileHolder) {
@@ -197,16 +215,26 @@ case class ForkWrite(forkCol: Int,
 
   def appendToDictionary(name: String, outputMeta: GorMeta): Unit = {
     val p = Paths.get(name)
-    val parent = p.getParent
+    var parent = p.getParent
+    if (!parent.isAbsolute) {
+      val root = session.getProjectContext.getProjectRootPath
+      parent = root.resolve(parent)
+    }
 
     val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-    Files.writeString(dict, p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+    val tags = outputMeta.getTags
+    val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + (if(tags!=null) {
+       "\t" + tags + "\n"
+    } else {
+      "\n"
+    })
+    Files.writeString(dict, cont, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
   }
 
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
     val name = sh.out.getName
-    if(options.useFolder && name != null && !name.toLowerCase.endsWith(".parquet")) {
+    if(options.useFolder.nonEmpty && name != null && !name.toLowerCase.endsWith(".parquet")) {
       val meta = sh.out.getMeta
       appendToDictionary(name, meta)
     }
@@ -225,14 +253,14 @@ case class ForkWrite(forkCol: Int,
         sh.fileOpen = false
       }
     })
-    if (!options.useFolder && !somethingToWrite && !useFork) {
+    if (options.useFolder.isEmpty && !somethingToWrite && !useFork) {
       val out = createOutFile(fullFileName, false)
       out.setup()
       out.finish()
     }
 
     // Test the tag files and create them if we are not in error
-    if (!isInErrorState) {
+    if (!isInErrorState&&useFork) {
       // Create all missing tag files
       tagSet.foreach(x => {
         if (x.nonEmpty) {

@@ -271,7 +271,7 @@ public class GorOptions {
     }
 
     public static GorOptions createGorOptions(GorContext context, String[] arguments) {
-        Tuple2<String[], String[]> result =  CommandParseUtilities.validateCommandArguments(arguments, new CommandArguments("-fs -nf -Y -P -stdin -n",
+        Tuple2<String[], String[]> result =  CommandParseUtilities.validateCommandArguments(arguments, new CommandArguments("-fs -nf -Y -P -stdin -n -nowithin",
                 "-f -ff -m -M -p -r -sc -ref -idx -Z -H -z -X -s -b -dict -parts -seek", -1, -1, false));
 
         String[] inputArguments = result._1;

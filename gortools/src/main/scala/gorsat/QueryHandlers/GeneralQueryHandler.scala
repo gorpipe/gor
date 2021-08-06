@@ -25,7 +25,7 @@ package gorsat.QueryHandlers
 import gorsat.Analysis.CheckOrder
 
 import java.lang
-import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
@@ -36,10 +36,9 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{GorMeta, GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{DriverBackedGorServerFileReader, GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.PathUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -153,8 +152,8 @@ object GeneralQueryHandler {
   def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean, theTheDict: Boolean): String = {
     context.start(outfile)
     // We are using absolute paths here
-    val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART)) {
-      writeOutGorDictionaryPart(commandToExecute, outfile)
+    val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART) || commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART)) {
+      writeOutGorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getRoot, outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)) {
       writeOutGorDictionary(commandToExecute, context.getSession.getProjectContext.getRoot, outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.NOR_DICTIONARY)) {
@@ -260,7 +259,7 @@ object GeneralQueryHandler {
     } else {
       outfolderpath.resolve(outfolderpath.getFileName)
     }
-    GorMeta.writeDictionaryFromMeta(outfolderpath, outpath)
+    GorJavaUtilities.writeDictionaryFromMeta(outfolderpath, outpath)
   }
 
   private def writeOutGorDictionary(commandToExecute: String, root: String, outfile: String, useTheDict: Boolean): String = {
@@ -270,7 +269,7 @@ object GeneralQueryHandler {
       outpath = rootPath.resolve(outpath)
     }
     if(Files.isDirectory(outpath)) {
-      writeOutGorDictionaryFolder(outpath, useTheDict)
+      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(outpath, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil
@@ -287,19 +286,20 @@ object GeneralQueryHandler {
         chrI += 1
         val rf = getRelativeFileLocationForDictionaryFileReferences(f)
         val prefix = rf + "\t" + chrI + "\t"
-        val metaPath = Paths.get(f + ".meta")
+        var metaPath = Paths.get(f + ".meta")
+        if(!metaPath.isAbsolute && root != null) {
+          val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
+          metaPath = rootPath.resolve(metaPath)
+        }
         val opt: Optional[String] = if (Files.exists(metaPath)) {
           Files.lines(metaPath)
             .filter(l => l.startsWith("## RANGE:"))
-            .map(s => s.substring(8).trim)
+            .map(s => s.substring(9).trim)
             .asInstanceOf[java.util.stream.Stream[String]]
             .filter(f => f.nonEmpty).map(s => prefix + s)
             .findFirst().asInstanceOf[Optional[String]]
         } else {
-          val cep = x._2.split(':')
-          val stasto = if (cep.length > 1) cep(1).split('-') else Array("-1","-1")
-          val (c, sp, ep) = (cep(0), stasto(0), if (stasto.length > 1 && stasto(1).nonEmpty) stasto(1) else "-1")
-          Optional.of[String](prefix + c + "\t" + sp + "\t" + c + "\t" + ep)
+          Optional.empty()
         }
         opt
         // file, alias, chrom, startpos, chrom, endpos
@@ -330,25 +330,33 @@ object GeneralQueryHandler {
     outfile
   }
 
-  private def writeOutGorDictionaryPart(commandToExecute: String, outfile: String): String = {
-    val w = commandToExecute.split(' ')
-    var dictFiles: List[String] = Nil
-    var partitions: List[String] = Nil
-    var i = 1
-    while (i < w.length - 1) {
-      dictFiles ::= getRelativeFileLocationForDictionaryFileReferences(w(i))
-      partitions ::= w(i + 1)
-      i += 2
+  private def writeOutGorDictionaryPart(commandToExecute: String, root: String, outfile: String, useTheDict: Boolean): String = {
+    var outpath = Paths.get(outfile)
+    if(!outpath.isAbsolute && root != null) {
+      val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
+      outpath = rootPath.resolve(outpath)
     }
-    val dictList = dictFiles.zip(partitions).map(x => {
-      val f = x._1
-      val part = x._2
-      // file, alias
-      f + "\t" + part
-    })
-    writeList(outfile, dictList)
-
-    outfile
+    if(Files.isDirectory(outpath)) {
+      writeOutGorDictionaryFolder(outpath, useTheDict)
+    } else {
+      val w = commandToExecute.split(' ')
+      var dictFiles: List[String] = Nil
+      var partitions: List[String] = Nil
+      var i = 1
+      while (i < w.length - 1) {
+        dictFiles ::= getRelativeFileLocationForDictionaryFileReferences(w(i))
+        partitions ::= w(i + 1)
+        i += 2
+      }
+      val dictList = dictFiles.zip(partitions).map(x => {
+        val f = x._1
+        val part = x._2
+        // file, alias
+        f + "\t" + part
+      })
+      writeList(outfile, dictList)
+    }
+    outpath.toString
   }
 
   def getRelativeFileLocationForDictionaryFileReferences(fileName: String): String = {
