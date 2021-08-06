@@ -41,9 +41,7 @@ abstract class FixedWidthPGenOutputStream<T extends VariantRecord> extends PGenO
     private Optional<FileReader> fileReaderOptional;
 
     FixedWidthPGenOutputStream(String fileName) {
-        super(fileName);
-        this.buffer = new byte[1024 * 1024];
-        this.fileReaderOptional = Optional.empty();
+        this(fileName, null);
     }
 
     FixedWidthPGenOutputStream(String fileName, FileReader fileReader) {

@@ -109,8 +109,9 @@ public class StreamSourceSeekableFile extends SeekableFile {
 
     @Override
     public void write(byte[] b) throws IOException {
-        try(var os = source.getOutputStream(position++)) {
+        try(var os = source.getOutputStream(position)) {
             os.write(b);
+            position += b.length;
         }
     }
 
