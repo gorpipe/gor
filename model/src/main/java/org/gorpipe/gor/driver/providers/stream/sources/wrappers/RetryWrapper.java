@@ -82,6 +82,11 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public OutputStream getOutputStream(long position) throws IOException {
+        return retry.tryOp(() -> super.getOutputStream(position), requestRetries);
+    }
+
+    @Override
     public StreamSourceMetadata getSourceMetadata() throws IOException {
         return retry.tryOp(super::getSourceMetadata, requestRetries, defaultOnRetryOp);
     }
