@@ -56,7 +56,7 @@ public class UTestLinkFolder {
     @Test
     public void testLinkFolder() throws IOException {
         Path s = Paths.get("../tests/data/");
-        String testUrl = s.toAbsolutePath().normalize().toString()+"/";
+        String testUrl = s.toAbsolutePath().normalize() +"/";
         Path workDirPath = workDir.getRoot().toPath();
         Path ba = workDirPath.resolve("ba");
         Path pdir = ba.resolve("sa");

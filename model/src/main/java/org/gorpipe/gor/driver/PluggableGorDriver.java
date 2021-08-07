@@ -270,7 +270,7 @@ public class PluggableGorDriver implements GorDriver {
             Path parentFileName = parent.getFileName();
             Path lparent = pparent.resolve(parentFileName+".link");
 
-            SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), null);
+            SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), linkSubPath!=null ? linkSubPath.toString() : null);
             DataSource fallbackLinkSource = getDataSource(sourceRef);
 
             if (fallbackLinkSource.getDataType() != LINK) {
