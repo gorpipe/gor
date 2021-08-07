@@ -482,7 +482,7 @@ public class GorJavaUtilities {
     }
 
     public static boolean isGorCmd(String cmd) {
-        return cmd.toLowerCase().startsWith("gor ") || cmd.toLowerCase().startsWith("pgor ");
+        return cmd.toLowerCase().startsWith("gor ") || cmd.toLowerCase().startsWith("pgor ") || cmd.toLowerCase().startsWith("gorrow ") || cmd.toLowerCase().startsWith("gorrows ") ;
     }
 
     public static boolean isPGorCmd(String cmd) {
