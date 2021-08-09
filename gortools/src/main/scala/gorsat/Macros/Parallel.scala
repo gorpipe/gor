@@ -95,7 +95,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
         if (useGordFolders) {
           val i = newCommand.indexOf(' ')+1
           val srcmd = newCommand.substring(0,i)
-          if (GorJavaUtilities.isPGorCmd(srcmd)) newCommand = srcmd+"-gordfolder dict "+newCommand.substring(i)
+          if (GorJavaUtilities.isPGorCmd(srcmd)) newCommand = srcmd+"-gordfolder nodict "+newCommand.substring(i)
         }
         if (!extraCommands.isEmpty) newCommand += " " + extraCommands
 

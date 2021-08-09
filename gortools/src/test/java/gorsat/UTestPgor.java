@@ -86,4 +86,18 @@ public class UTestPgor {
         Assert.assertEquals("Wrong result from pgor range replace query","Chrom\tgene_start\tgene_end\tGene_Symbol\tf0\tf1\tf2\n" +
                 "chr1\t14362\t29806\tWASH7P\t11869 <= #2i and #2i <= 14412\tchr1:11869-14412\tDDX11L1\n",result);
     }
+
+    @Test
+    public void testPgorOutOfBoundsRangeReplace() {
+        String result = TestUtils.runGorPipe("create xxx = pgor -split <(gor ../tests/data/gor/genes.gor | replace gene_end gene_end+300000000 | top 2) ../tests/data/gor/genes.gor | calc f0 '##WHERE_SPLIT_WINDOW##' | calc f1 '#{CHROM}:#{BPSTART}-#{BPSTOP}'; gor [xxx] | top 1");
+        Assert.assertEquals("Wrong result from pgor range replace query","Chrom\tgene_start\tgene_end\tGene_Symbol\tf0\tf1\n" +
+                "chr1\t14362\t29806\tWASH7P\t11869 <= #2i and #2i <= 300014412\tchr1:11869-300014412\n",result);
+    }
+
+    @Test
+    public void testPgorOutOfBounds() {
+        String result = TestUtils.runGorPipe("create xxx = pgor <(gorrow chr15,34260920,34357291) | where ##WHERE_SPLIT_WINDOW## | calc f0 '##WHERE_SPLIT_WINDOW##' | calc f1 '#{CHROM}:#{BPSTART}-#{BPSTOP}'; gor [xxx]");
+        Assert.assertEquals("Wrong result from pgor range replace query","chrom\tbpStart\tbpStop\tf0\tf1\n" +
+                "chr15\t34260920\t34357291\t0 <= #2i\tchr15:0-1000000000\n",result);
+    }
 }

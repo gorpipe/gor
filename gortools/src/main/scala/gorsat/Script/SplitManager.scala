@@ -58,7 +58,7 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
             .replace(WHERE_SPLIT_WINDOW, k._2.getFilter)
             .replace(CHROM_PATTERN, k._2.chrom)
             .replace(START_PATTERN, k._2.start.toString)
-            .replace(STOP_PATTERN, k._2.end.toString)
+            .replace(STOP_PATTERN, (if(k._2.end == -1) SplitManager.MAX_CHROM_SIZE else k._2.end).toString)
             .replace(RANGETAG_PATTERN, k._2.tag), batchGroupName)
 
         var mc = c
@@ -90,6 +90,7 @@ object SplitManager {
   val STOP_PATTERN = "#{BPSTOP}"
   val RANGETAG_PATTERN = "#{RANGETAG}"
   val MAXIMUM_NUMBER_OF_SPLITS: Int = System.getProperty("gor.validation.split.maxcount", "5000").toInt
+  val MAX_CHROM_SIZE = 1000000000
 
   def createFromCommand(groupName: String, commandToExecute: String, context: GorContext) : SplitManager = {
 
@@ -197,8 +198,7 @@ object SplitManager {
         val pos = row.pos + base
         val end = row.colAsInt(2)
         val tag = if(row.numCols() > 3) row.colAsString(3).toString else ""
-        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr, pos,
-          getUpperBounds(row.chr, end, context.getSession.getProjectContext.getReferenceBuild.getBuildSize), tag))
+        chromosomeSplits += ((row.chr + "_" + i) -> SplitEntry(row.chr, pos, end, tag))
         i += 1
       }
     } finally {

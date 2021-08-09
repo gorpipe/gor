@@ -38,10 +38,8 @@ case class SplitEntry(chrom: String, start: Int, end: Int, tag: String = "") {
   def getFilter: String = {
     if (end > 0) {
       0.max(start) + " <= #2i and #2i <= " + end
-    } else if (start > 0) {
-      start + " <= #2i"
     } else {
-      ""
+      start + " <= #2i"
     }
   }
 }
