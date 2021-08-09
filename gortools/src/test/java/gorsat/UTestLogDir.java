@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import gorsat.Commands.CommandParseUtilities;
 import gorsat.Utilities.StringUtilities;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -48,7 +49,7 @@ public class UTestLogDir {
         String workDirPath = workDir.getRoot().toString();
 
         int expected = 10;
-        String query = "gor 1.mem | select 1,2 | top 10 | log";
+        String query = "gor 1.mem|select 1,2|top 10|log";
         int result = TestUtils.runGorPipeCount(query, "-aliases", "../server/src/main/dist/config/gor_aliases.txt",
                 "-logdir", workDirPath);
 

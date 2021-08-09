@@ -59,6 +59,11 @@ public class WrappedStreamSource extends WrappedDataSource implements StreamSour
     }
 
     @Override
+    public OutputStream getOutputStream(long position) throws IOException {
+        return getWrapped().getOutputStream(position);
+    }
+
+    @Override
     public OutputStream getOutputStream(boolean append) throws IOException {
         return getWrapped().getOutputStream(append);
     }
