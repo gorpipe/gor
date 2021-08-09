@@ -109,7 +109,7 @@ public class FileSource implements StreamSource {
 
     @Override
     public OutputStream getOutputStream(long start) throws IOException {
-        ensureOpen();
+        ensureOpenForWrite();
         raf.seek(start);
         return new FileSourceOutputStream();
     }
@@ -120,6 +120,15 @@ public class FileSource implements StreamSource {
                 rafOpenedStackTrace = new Error();
             }
             raf = new RandomAccessFile(file.toFile(), "r");
+        }
+    }
+
+    private void ensureOpenForWrite() throws IOException {
+        if (raf == null) {
+            if (keepStackTraceForOpen) {
+                rafOpenedStackTrace = new Error();
+            }
+            raf = new RandomAccessFile(file.toFile(), "rw");
         }
     }
 

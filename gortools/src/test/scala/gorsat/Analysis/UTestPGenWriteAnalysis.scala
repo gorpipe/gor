@@ -22,9 +22,7 @@
 
 package gorsat.Analysis
 
-import java.io.{File, FileInputStream, FileWriter}
-import java.nio.file.Files
-
+import java.nio.file.{Files, Path}
 import gorsat.TestUtils
 import org.apache.commons.io.FileUtils
 import org.gorpipe.model.gor.RowObj
@@ -37,30 +35,27 @@ import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
-  var tmpDir: File =_
-  var tmpDirPath: String =_
+  var tmpDir: Path =_
 
   before {
-    tmpDir = Files.createTempDirectory("uTestPGenOut").toFile
-    tmpDirPath = tmpDir.getAbsolutePath
+    tmpDir = Files.createTempDirectory("uTestPGenOut")
   }
 
   after {
-    FileUtils.deleteDirectory(tmpDir)
+    FileUtils.deleteDirectory(tmpDir.toFile)
   }
 
   test("test writing - imputed") {
-    val pgenFile = new File(tmpDir, "pgenFile.pgen")
-    val pgenFilePath = pgenFile.getAbsolutePath
+    val pgenFilePath = tmpDir.resolve("pgenFileImp.pgen")
 
-    val pgenOut = PGenWriteAnalysis(pgenFilePath, imputed = true, 0.99f, group = false, 2, 3, 4, 5)
+    val pgenOut = PGenWriteAnalysis(pgenFilePath.toString, imputed = true, 0.99f, group = false, 2, 3, 4, 5)
     pgenOut.process(RowObj("chr1\t1\tA\tC\tchr1:1:A:C\t~~~~~~~~~~~~~~~~~~~~"))
     pgenOut.finish()
 
     val wantedFileLen = 35 //12 bytes for header, 3 bytes for hardcalls and 20 for dosages.
-    Assert.assertEquals(wantedFileLen, pgenFile.length)
+    Assert.assertEquals(wantedFileLen, Files.size(pgenFilePath))
 
-    val pgenFileReader = new FileInputStream(pgenFile)
+    val pgenFileReader = Files.newInputStream(pgenFilePath)
     val buffer = new Array[Byte](wantedFileLen)
     Assert.assertEquals(wantedFileLen, pgenFileReader.read(buffer))
     Assert.assertEquals(0x6c, buffer(0)) //First magic byte
@@ -78,29 +73,29 @@ class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val pvarFileSource = Source.fromFile(tmpDirPath + "/pgenFile.pvar").getLines()
+    val src = Source.fromFile(tmpDir + "/pgenFileImp.pvar")
+    val pvarFileSource = src.getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
     Assert.assertFalse(pvarFileSource.hasNext)
+    src.close()
   }
 
   test("test writing - imputed - from gorpipe") {
     val cont = "CHROM\tPOS\tREF\tALT\tRSID\tVALUES\nchr1\t1\tA\tC\tchr1:1:A:C\t~~~~~~~~~~~~~~~~~~~~\n"
 
-    val gorFile = new File(tmpDir, "gorFile.gor")
-    val gorFileWriter = new FileWriter(gorFile)
+    val gorFile = tmpDir.resolve("gorFileImpGorp.gor")
+    val gorFileWriter = Files.newBufferedWriter(gorFile)
     gorFileWriter.write(cont)
     gorFileWriter.close()
 
-    val pgenFilePath = tmpDir.toPath.resolve("pgenFile.pgen").toAbsolutePath.toString
-    TestUtils.runGorPipe("gor " + gorFile.getAbsolutePath + " | binarywrite -imp " + pgenFilePath)
-
-    val pgenFile = new File(pgenFilePath)
+    val pgenFilePath = tmpDir.resolve("pgenFileImpGorp.pgen")
+    TestUtils.runGorPipe("gor " + gorFile.toAbsolutePath + " | binarywrite -imp " + pgenFilePath.toAbsolutePath.toString)
 
     val wantedFileLen = 35 //12 bytes for header, 3 bytes for hardcalls and 20 for dosages.
-    Assert.assertEquals(wantedFileLen, pgenFile.length)
+    Assert.assertEquals(wantedFileLen, Files.size(pgenFilePath))
 
-    val pgenFileReader = new FileInputStream(pgenFile)
+    val pgenFileReader = Files.newInputStream(pgenFilePath)
     val buffer = new Array[Byte](wantedFileLen)
     Assert.assertEquals(wantedFileLen, pgenFileReader.read(buffer))
     Assert.assertEquals(0x6c, buffer(0)) //First magic byte
@@ -118,26 +113,26 @@ class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val pvarFileSource = Source.fromFile(tmpDirPath + "/pgenFile.pvar").getLines()
+    val src = Source.fromFile(tmpDir + "/pgenFileImpGorp.pvar");
+    val pvarFileSource = src.getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
     Assert.assertFalse(pvarFileSource.hasNext)
+    src.close()
   }
 
   test("test writing - hardcalls") {
+    val pgenFile = tmpDir.resolve("pgenFileHardCalls.pgen")
 
-    val pgenFile = new File(tmpDir, "pgenFile.pgen")
-    val pgenFilePath = pgenFile.getAbsolutePath
-
-    val pgenOut = PGenWriteAnalysis(pgenFilePath, false, -1f, false, 2, 3, 4, 5)
+    val pgenOut = PGenWriteAnalysis(pgenFile.toString, false, -1f, false, 2, 3, 4, 5)
     pgenOut.setup()
     pgenOut.process(RowObj("chr1\t1\tA\tC\tchr1:1:A:C\t0000000000"))
     pgenOut.finish()
 
     val wantedFileLen = 15 //12 bytes for header, 3 bytes for hardcalls.
-    Assert.assertEquals(wantedFileLen, pgenFile.length)
+    Assert.assertEquals(wantedFileLen, Files.size(pgenFile))
 
-    val pgenFileReader = new FileInputStream(pgenFile)
+    val pgenFileReader = Files.newInputStream(pgenFile)
     val buffer = new Array[Byte](wantedFileLen)
     Assert.assertEquals(wantedFileLen, pgenFileReader.read(buffer))
     Assert.assertEquals(0x6c, buffer(0)) //First magic byte
@@ -155,7 +150,7 @@ class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val pvarFileSource = Source.fromFile(tmpDirPath + "/pgenFile.pvar").getLines()
+    val pvarFileSource = Source.fromFile(tmpDir + "/pgenFileHardCalls.pvar").getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
     Assert.assertFalse(pvarFileSource.hasNext)
@@ -164,19 +159,18 @@ class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
   test("test writing - hardcalls - from  gorpipe") {
     val cont = "CHROM\tPOS\tREF\tALT\tRSID\tVALUES\nchr1\t1\tA\tC\tchr1:1:A:C\t0000000000\n"
 
-    val gorFile = new File(tmpDir, "gorFile.gor")
-    val gorFileWriter = new FileWriter(gorFile)
+    val gorFile = tmpDir.resolve("gorFileHardCallsGorp.gor")
+    val gorFileWriter = Files.newBufferedWriter(gorFile)
     gorFileWriter.write(cont)
     gorFileWriter.close()
 
-    val pgenFilePath = tmpDir.toPath.resolve("pgenFile.pgen").toAbsolutePath.toString
-    TestUtils.runGorPipe("gor " + gorFile.getAbsolutePath + " | binarywrite " + pgenFilePath)
+    val pgenFilePath = tmpDir.resolve("pgenFileHardCallsGorp.pgen")
+    TestUtils.runGorPipe("gor " + gorFile.toAbsolutePath + " | binarywrite " + pgenFilePath)
 
-    val pgenFile = new File(pgenFilePath)
     val wantedFileLen = 15 //12 bytes for header, 3 bytes for hardcalls.
-    Assert.assertEquals(wantedFileLen, pgenFile.length)
+    Assert.assertEquals(wantedFileLen, Files.size(pgenFilePath))
 
-    val pgenFileReader = new FileInputStream(pgenFile)
+    val pgenFileReader = Files.newInputStream(pgenFilePath)
     val buffer = new Array[Byte](wantedFileLen)
     Assert.assertEquals(wantedFileLen, pgenFileReader.read(buffer))
     Assert.assertEquals(0x6c, buffer(0)) //First magic byte
@@ -194,9 +188,11 @@ class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val pvarFileSource = Source.fromFile(tmpDirPath + "/pgenFile.pvar").getLines()
+    val src = Source.fromFile(tmpDir + "/pgenFileHardCallsGorp.pvar")
+    val pvarFileSource = src.getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
     Assert.assertFalse(pvarFileSource.hasNext)
+    src.close
   }
 }

@@ -56,6 +56,7 @@ public class GorJavaUtilities {
 
     private static final Logger log = LoggerFactory.getLogger(GorJavaUtilities.class);
 
+    public static final String GORZ_META = ".gorz.meta";
     public static DecimalFormat fd3 = new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ROOT));
     public static double[] pArray = IntStream.range(0, 128).mapToDouble(qual -> 1.0 - (qual - 33) / 93.0).toArray();
     public static String[] prArray = Arrays.stream(pArray).mapToObj(p -> fd3.format(p)).toArray(String[]::new);
@@ -482,7 +483,7 @@ public class GorJavaUtilities {
     }
 
     public static boolean isGorCmd(String cmd) {
-        return cmd.toLowerCase().startsWith("gor ") || cmd.toLowerCase().startsWith("pgor ");
+        return cmd.toLowerCase().startsWith("gor ") || cmd.toLowerCase().startsWith("pgor ") || cmd.toLowerCase().startsWith("gorrow ") || cmd.toLowerCase().startsWith("gorrows ") ;
     }
 
     public static boolean isPGorCmd(String cmd) {
@@ -509,7 +510,7 @@ public class GorJavaUtilities {
                     outfile = omd5.get();
                 } else {
                     String o = outfolderpath.relativize(p).toString();
-                    outfile = o.substring(0,o.length()-10);
+                    outfile = o.substring(0,o.length()-GORZ_META.length());
                 }
                 outfile = outfile+".gorz";
                 i+=1;
@@ -527,7 +528,7 @@ public class GorJavaUtilities {
             }
             if (useMd5) {
                 String md5 = omd5.get();
-                Path dm = p.getParent().resolve(md5 + ".gorz.meta");
+                Path dm = p.getParent().resolve(md5 + GORZ_META);
                 if (!Files.exists(dm)) Files.move(p, dm);
                 else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(p);
 
