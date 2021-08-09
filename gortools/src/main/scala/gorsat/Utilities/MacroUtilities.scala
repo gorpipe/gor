@@ -417,7 +417,7 @@ object MacroUtilities {
       innerQuery = innerQuery.substring(u+1)
     }
     var querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
-    if(querySplit.length==1&&querySplit.head.endsWith(")")&&cmdname.equals("partgor")) {
+    if(querySplit.length==1&&querySplit.head.endsWith(")")&&(cmdname.equals("partgor")||cmdname.equals("parallel"))) {
       val nested = CommandParseUtilities.quoteSafeSplit(querySplit.head,' ').last
       val inested = nested.substring(2,nested.length-1)
       querySplit = CommandParseUtilities.quoteSafeSplit(inested,'|')
