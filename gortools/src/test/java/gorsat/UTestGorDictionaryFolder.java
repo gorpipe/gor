@@ -384,10 +384,10 @@ public class UTestGorDictionaryFolder {
         var folderpath = workDirPath.resolve("folder4.gord");
         var query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
-        var result = expected;//TestUtils.runGorPipe(query,"-cachedir",cache.toString());
+        var result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
-        /*partsize = 4;
+        partsize = 4;
         folderpath = workDirPath.resolve("folder3.gord");
         query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
@@ -399,7 +399,7 @@ public class UTestGorDictionaryFolder {
         query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
-        Assert.assertEquals("Wrong result from partgor query", expected, result);*/
+        Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3p.gord");
@@ -408,10 +408,10 @@ public class UTestGorDictionaryFolder {
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
-        /*query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags});" +
+        query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags});" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
-        Assert.assertEquals("Wrong result from partgor query", expected, result);*/
+        Assert.assertEquals("Wrong result from partgor query", expected, result);
     }
 
     @Test
