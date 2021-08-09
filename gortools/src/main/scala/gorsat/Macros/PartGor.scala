@@ -202,10 +202,13 @@ object PartGor {
     bucketMap
   }
 
-  private def getMultiTagBucketMap(tags: String, dictContents: Array[String]) = {
+  private def getMultiTagBucketMap(tags: String, idictContents: Array[String]) = {
     /* Multi-tag buckets, require chrom range as well */
     val bucketMap = scala.collection.mutable.HashMap.empty[String, (List[String], Int)]
     val taglist = tags.split(',').map(x => (x, true)).toMap
+    // Handling dict with multiple files having same tag combination, e.g. using additional chromosome partitions
+    val dictContents = idictContents.map( x => "\t1\t1\t1\t1\t" + x.split("\t")(6)).distinct.zipWithIndex.map(l => l._2+l._1)
+
     dictContents.map(x => {
       val tempcols = x.split("\t")
       val bucket = tempcols(0)
