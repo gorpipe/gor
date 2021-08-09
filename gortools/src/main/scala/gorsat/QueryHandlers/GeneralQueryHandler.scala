@@ -337,7 +337,7 @@ object GeneralQueryHandler {
       outpath = rootPath.resolve(outpath)
     }
     if(Files.isDirectory(outpath)) {
-      writeOutGorDictionaryFolder(outpath, useTheDict)
+      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(outpath, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil
