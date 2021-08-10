@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 /**
  * Created by sigmar on 19/12/2016.
@@ -279,8 +280,7 @@ public class UTestCSVSEL {
                 "   | top 20\n" +
                 ")";
 
-        String result = TestUtils.runGorPipe(query);
-        String expct = "Chrom\tPos\tRef\tAlt\tId\tPN\tvalue\n" +
+        var explt = ("Chrom\tPos\tRef\tAlt\tId\tPN\tvalue\n" +
                 "chr1\t1\tG\tT\trs48075\tPN76\t6Q\n" +
                 "chr1\t1\tG\tT\trs48075\tPN96\t4d\n" +
                 "chr1\t1\tG\tT\trs48075\tPN66\t*C\n" +
@@ -340,7 +340,14 @@ public class UTestCSVSEL {
                 "chr1\t2\tA\tT\trs8576\tPN126\tl5\n" +
                 "chr1\t2\tA\tT\trs8576\tPN71\tA0\n" +
                 "chr1\t2\tA\tT\trs8576\tPN1\tht\n" +
-                "chr1\t2\tA\tT\trs8576\tPN41\tI5\n";
+                "chr1\t2\tA\tT\trs8576\tPN41\tI5\n").split("\n");
+        Arrays.sort(explt);
+
+        var resplt = TestUtils.runGorPipe(query).split("\n");
+        Arrays.sort(resplt);
+
+        var result = String.join("\n",resplt);
+        var expct = String.join("\n",explt);
 
         Assert.assertEquals(expct,result);
     }
