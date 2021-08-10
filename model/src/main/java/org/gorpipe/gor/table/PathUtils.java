@@ -55,20 +55,14 @@ public class PathUtils {
         }
 
         // The uri must end with / for the resolve to work correctly.
+        if (!root.toString().endsWith("/")) {
+            root = URI.create(root+"/");
+        }
         return normalize(root.resolve(path));
     }
 
     public static String resolve(URI root, String path) {
-        if (path == null) {
-            return null;
-        }
-
-        if (isAbsolutePath(path)) {
-            return normalize(path);
-        }
-
-        // The uri must end with / for the resolve to work correctly.
-        return normalize(root.resolve(path)).toString();
+        return resolve(root,URI.create(path)).toString();
     }
 
     public static Path resolve(Path root, Path path) {

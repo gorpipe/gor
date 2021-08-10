@@ -29,15 +29,27 @@ import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.PathUtils
+
+import java.net.URI
+import java.nio.file.Paths
 
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -noheader", "-d -f -i -t -l -card -prefix -link", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
+    val useFolder = if (hasOption(args, "-d")) Option.apply(stringValueOfOption(args, "-d")) else Option.empty
     val fileName = replaceSingleQuotes(iargs.mkString(" "))
     if (context.getSession.getSystemContext.getServer) {
-      context.getSession.getProjectContext.validateWriteAllowed(fileName)
+      val filepath = if (useFolder.nonEmpty) {
+        val folder = useFolder.get
+        val uri = URI.create(folder)
+        PathUtils.resolve(uri,fileName)
+      } else {
+        fileName
+      }
+      context.getSession.getProjectContext.validateWriteAllowed(filepath)
     }
 
     var forkCol = -1
@@ -50,7 +62,6 @@ class Write extends CommandInfo("WRITE",
 
     if (hasOption(args, "-f")) forkCol = columnOfOption(args, "-f", forcedInputHeader, executeNor)
     remove = hasOption(args, "-r")
-    val useFolder = if (hasOption(args, "-d")) Option.apply(stringValueOfOption(args, "-d")) else Option.empty
     columnCompress = hasOption(args, "-c")
     md5 = hasOption(args, "-m")
     if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")).toInt
