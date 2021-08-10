@@ -63,6 +63,14 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testTxtFolderWriteServer() throws IOException {
+        Path p = Paths.get("../tests/data/nor/simple.nor");
+        Files.copy(p, tmpdir.resolve("simple1.nor"));
+        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test new.txt", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        TestUtils.runGorPipeCount(args, true);
+    }
+
+    @Test
     public void testTsvWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
         Files.copy(p, tmpdir.resolve("simple2.nor"));
@@ -74,7 +82,7 @@ public class UTestGorWrite {
     public void testGorWriteWithMd5() throws IOException {
         Path tmpfile = tmpdir.resolve("genes_md5.gorz");
         tmpfile.toFile().deleteOnExit();
-        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize().toString();
+        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize();
 
         TestUtils.runGorPipeCount(query);
 
@@ -89,7 +97,7 @@ public class UTestGorWrite {
     public void testGorWriteColumnNumber() {
         Path tmpfile = tmpdir.resolve("genes_md5.gorz");
         tmpfile.toFile().deleteOnExit();
-        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize().toString();
+        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize();
         String headerRes = TestUtils.runGorPipe(query);
         Assert.assertEquals("", "Chrom\tgene_start\n", headerRes);
     }
@@ -98,7 +106,7 @@ public class UTestGorWrite {
     public void testGorzWriteCompressionLevel() throws IOException {
         Path tmpfile = tmpdir.resolve("genes.gorz");
         tmpfile.toFile().deleteOnExit();
-        String query = "gor ../tests/data/gor/genes.gor | write -l 9 " + tmpfile.toAbsolutePath().normalize().toString();
+        String query = "gor ../tests/data/gor/genes.gor | write -l 9 " + tmpfile.toAbsolutePath().normalize();
 
         TestUtils.runGorPipeCount(query);
 
@@ -135,7 +143,7 @@ public class UTestGorWrite {
 
         Assert.assertTrue("Index file for " + tmpFilePath + " is incorrect.", assertIndexFileIsCorrect(tmpFilePath));
 
-        final int count = TestUtils.runGorPipeCount("gor -p chr22 " + tmpfile.toAbsolutePath().normalize().toString());
+        final int count = TestUtils.runGorPipeCount("gor -p chr22 " + tmpfile.toAbsolutePath().normalize());
 
         Assert.assertEquals("Wrong number of lines in seekindexed gorz file", 1127, count);
         TestUtils.assertTwoGorpipeResults("Pgor on indexed gorz file returns different results than on unindexed one", "pgor "+tmpfile.toAbsolutePath().normalize().toString()+"|group chrom -count | signature -timeres 1", "pgor ../tests/data/gor/genes.gorz|group chrom -count");
@@ -155,7 +163,7 @@ public class UTestGorWrite {
         path.toFile().deleteOnExit();
 
 
-        final int count = TestUtils.runGorPipeCount("gor -p chr22 "+tmpfile.toAbsolutePath().normalize().toString());
+        final int count = TestUtils.runGorPipeCount("gor -p chr22 "+ tmpfile.toAbsolutePath().normalize());
         Assert.assertEquals("Wrong number of lines in seekindexed gorz file", 1127, count);
         TestUtils.assertTwoGorpipeResults("Pgor on indexed gorz file returns different results than on unindexed one", "pgor "+tmpfile.toAbsolutePath().normalize().toString()+"|group chrom -count", "pgor ../tests/data/gor/genes.gorz|group chrom -count");
     }
