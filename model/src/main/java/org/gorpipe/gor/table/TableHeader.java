@@ -63,6 +63,9 @@ public class TableHeader {
     public static final String HEADER_UNIQUE_TAGS_KEY = "UNIQUE_TAGS";
     public static final String HEADER_VALIDATE_FILES_KEY = "VALIDATE_FILES";
     public static final String HEADER_BUCKETIZE_KEY = "BUCKETIZE";
+    public static final String[] DEFULT_TABLE_HEADER = new String[] {"filepath","Source"};
+    public static final String[] DEFULT_RANGE_TABLE_HEADER = new String[] {"filepath","alias","startchrom","startpos","endchrom","endpos","tags"};
+
 
     HashMap<String, String> headerProps;
     private String[] contentColumns;                   // Columns of the content (output).
@@ -215,7 +218,7 @@ public class TableHeader {
         this.headerProps.clear();
         setProperty(HEADER_SERIAL_KEY, "0");
         this.contentColumns = new String[0];
-        this.tableColumns = new String[0];
+        this.tableColumns = DEFULT_TABLE_HEADER;
     }
 
     /**

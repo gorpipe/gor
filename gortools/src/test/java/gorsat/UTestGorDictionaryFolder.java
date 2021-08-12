@@ -226,7 +226,9 @@ public class UTestGorDictionaryFolder {
                     "; gor [a] | group chrom -count");
             String thedict = Files.readString(folderpath.resolve("thedict.gord"));
             Assert.assertEquals("Wrong results in dictionary",
-                    "#filepath\tbucket\tstartchrom\tstartpos\tendchrom\tendpos\tsource\n" +
+                    "## SERIAL = 0\n" +
+                            "## COLUMNS = Chrom,gene_start,gene_end,Gene_Symbol,c\n" +
+                            "# filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
                             "dd02aed74a26d4989a91f3619ac8dc20.gorz\t1\tchrM\t576\tchrM\t15955\tJ,M\n",
                     thedict);
         } finally {

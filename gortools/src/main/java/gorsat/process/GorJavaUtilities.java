@@ -29,10 +29,12 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.model.DbSource;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.table.TableHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -494,50 +496,81 @@ public class GorJavaUtilities {
         return filename.indexOf('.')==36 && filename.charAt(8)=='-';
     }
 
-    public static synchronized void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
-        List<Path> metapaths = Files.walk(outfolderpath).filter(p -> p.getFileName().toString().endsWith(".meta")).collect(Collectors.toList());
-        int i = 0;
-        for(Path p : metapaths) {
-            Optional<String> omd5 = Files.lines(p).filter(s -> s.startsWith(GorMeta.MD5_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            Optional<String> cc = Files.lines(p).filter(s -> s.startsWith(GorMeta.CARDCOL_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            Optional<String> tags = Files.lines(p).filter(s -> s.startsWith(GorMeta.TAGS_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            Optional<String> range = Files.lines(p).filter(s -> s.startsWith(GorMeta.RANGE_HEADER)).map(s -> s.substring(s.indexOf(':')+1).trim()).findFirst();
-            var useMd5 = omd5.isPresent() && isUUID(p.getFileName().toString());
-            if(range.isPresent()) {
-                String s = range.get();
-                String outfile;
-                if(useMd5) {
-                    outfile = omd5.get();
-                } else {
-                    String o = outfolderpath.relativize(p).toString();
-                    outfile = o.substring(0,o.length()-GORZ_META.length());
-                }
-                outfile = outfile+".gorz";
-                i+=1;
-                String gordline;
-                if(cc.isPresent()) {
-                    String ccstr = cc.get();
-                    gordline = outfile + "\t" + i + "\t" + s + "\t" + ccstr;
-                } else if(tags.isPresent()) {
-                    String tagsstr = tags.get();
-                    gordline = outfile+"\t"+i+"\t"+s+"\t"+tagsstr;
-                } else {
-                    gordline = outfile+"\t"+i+"\t"+s;
-                }
-                Files.writeString(dictionarypath, gordline+"\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            }
-            if (useMd5) {
-                String md5 = omd5.get();
-                Path dm = p.getParent().resolve(md5 + GORZ_META);
-                if (!Files.exists(dm)) Files.move(p, dm);
-                else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(p);
+    private static void md5Rename(String md5, Path p) throws IOException {
+        Path dm = p.getParent().resolve(md5 + GORZ_META);
+        if (!Files.exists(dm)) Files.move(p, dm);
+        else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(p);
 
-                String fn = p.getFileName().toString();
-                Path g = p.getParent().resolve(fn.substring(0, fn.length() - 5));
-                Path d = p.getParent().resolve(md5 + ".gorz");
-                if (!Files.exists(d)) Files.move(g, d);
-                else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(g);
+        String fn = p.getFileName().toString();
+        Path g = p.getParent().resolve(fn.substring(0, fn.length() - 5));
+        Path d = p.getParent().resolve(md5 + ".gorz");
+        if (!Files.exists(d)) Files.move(g, d);
+        else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(g);
+    }
+
+    private static void writeDummyHeader(Path dictionarypath) throws IOException {
+        var defheader = new String[] {"chrom","pos"};
+        var tableheader = new TableHeader();
+        tableheader.setColumns(defheader);
+        var header = tableheader.formatHeader();
+        Files.writeString(dictionarypath,header);
+    }
+
+    private static void writeHeader(Path dictionarypath, Path p) throws IOException {
+        var fileName = p.getFileName().toString();
+        var gorzFile = p.getParent().resolve(fileName.substring(0,fileName.length()-5));
+        if (Files.exists(gorzFile)) {
+            try(var br = new BufferedReader(new FileReader(gorzFile.toAbsolutePath().toString()))) {
+                var headerspl = br.readLine().split("\t");
+                var tableheader = new TableHeader();
+                tableheader.setColumns(headerspl);
+                tableheader.setTableColumns(TableHeader.DEFULT_RANGE_TABLE_HEADER);
+                var header = tableheader.formatHeader();
+                Files.writeString(dictionarypath, header);
             }
+        }
+    }
+
+    private static String resolveOutfile(Path outfolderpath, Path p) {
+        String o = outfolderpath.relativize(p).toString();
+        return o.substring(0,o.length()-GORZ_META.length());
+    }
+
+    private static Optional<String> findEntry(List<String> linelist, String entry) {
+        return linelist.stream().filter(s -> s.startsWith(entry)).map(s -> s.substring(s.indexOf(':') + 1).trim()).findFirst();
+    }
+
+    public static synchronized void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
+        var headerWritten = false;
+
+        try(Stream<Path> metapathstream = Files.walk(outfolderpath)) {
+            var metapaths = metapathstream.filter(p -> p.getFileName().toString().endsWith(".meta")).collect(Collectors.toList());
+            int i = 0;
+            for (Path p : metapaths) {
+                try(var lines = Files.lines(p)) {
+                    var linelist = lines.collect(Collectors.toList());
+                    var omd5 = findEntry(linelist, GorMeta.MD5_HEADER);
+                    var cc = findEntry(linelist, GorMeta.CARDCOL_HEADER);
+                    var tags = findEntry(linelist,GorMeta.TAGS_HEADER);
+                    var range = findEntry(linelist,GorMeta.RANGE_HEADER);
+                    var useMd5 = omd5.isPresent() && isUUID(p.getFileName().toString());
+                    if (range.isPresent()) {
+                        var s = range.get();
+                        var outfile = (useMd5 ? omd5.get() : resolveOutfile(outfolderpath, p)) + ".gorz";
+                        i += 1;
+                        var gordline = outfile+"\t"+i+"\t"+s;
+                        if(cc.isPresent()) gordline += "\t"+cc.get();
+                        else if(tags.isPresent()) gordline += "\t"+tags.get();
+                        if (!headerWritten) {
+                            writeHeader(dictionarypath, p);
+                            headerWritten = true;
+                        }
+                        Files.writeString(dictionarypath, gordline + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    }
+                    if (useMd5) md5Rename(omd5.get(), p);
+                }
+            }
+            if (!headerWritten) writeDummyHeader(dictionarypath);
         }
     }
 }
