@@ -58,6 +58,7 @@ public class GorJavaUtilities {
 
     private static final Logger log = LoggerFactory.getLogger(GorJavaUtilities.class);
 
+    public static final String GORZ_META = ".gorz.meta";
     public static DecimalFormat fd3 = new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ROOT));
     public static double[] pArray = IntStream.range(0, 128).mapToDouble(qual -> 1.0 - (qual - 33) / 93.0).toArray();
     public static String[] prArray = Arrays.stream(pArray).mapToObj(p -> fd3.format(p)).toArray(String[]::new);
