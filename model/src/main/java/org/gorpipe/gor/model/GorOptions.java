@@ -26,6 +26,7 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -125,6 +126,10 @@ public class GorOptions {
      * The name of the output column with the source field
      */
     public String sourceColName;
+    /**
+     * The header for the current table/dictionary
+     */
+    public String tableHeader;
     /**
      * The common root that was prepended to each source name
      */
@@ -434,8 +439,14 @@ public class GorOptions {
 
         if (genomicIterators.isEmpty()) {
             // No iterator in range, add dummy one (that will not return any rows) as we must return at least one.
-            SourceRef ref = files.get(0);
-            genomicIterators.add(new BoundedIterator(createGenomicIteratorFromRef(ref), "", 0, "", 0));
+            if (files.size()>0) {
+                SourceRef ref = files.get(0);
+                genomicIterators.add(new BoundedIterator(createGenomicIteratorFromRef(ref), "", 0, "", 0));
+            } else if(tableHeader!=null) {
+                genomicIterators.add(new EmptyIterator(tableHeader));
+            } else {
+                throw new GorDataException("Dictionary " + sourceName + " has no active lines.");
+            }
         }
         return genomicIterators;
     }
@@ -783,6 +794,8 @@ public class GorOptions {
             //        determine the source column name.
             DictionaryTable table = new DictionaryTable(Paths.get(fileName));
             sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
+            tableHeader = table.getProperty(TableHeader.HEADER_COLUMNS_KEY);
+            if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
         }
     }
 

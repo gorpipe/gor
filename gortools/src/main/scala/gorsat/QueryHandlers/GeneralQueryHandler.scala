@@ -36,9 +36,10 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{DriverBackedGorServerFileReader, GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.{PathUtils, TableHeader}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -66,7 +67,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
             var cacheRes = newCacheFile
             if(!Files.exists(cachePath) || Files.isDirectory(cachePath)) {
               val startTime = System.currentTimeMillis
-              val resultFileName = runCommand(nested, commandToExecute, if(isGord) newCacheFile else null, useMd5, true)
+              val resultFileName = runCommand(nested, commandToExecute, if(isGord) newCacheFile else null, useMd5, theTheDict = true)
               if (fileCache != null && resultFileName.contains(GorServerFileReader.RESULT_CACHE_DIR)) {
                 val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
                 val overheadTime = findOverheadTime(commandToExecute)
@@ -80,7 +81,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
             if (cacheFile == null) {
               val startTime = System.currentTimeMillis
               cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
-              val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, false)
+              val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, theTheDict = false)
               if (fileCache != null) {
                 val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
                 val overheadTime = findOverheadTime(commandToExecute)
@@ -153,11 +154,11 @@ object GeneralQueryHandler {
     context.start(outfile)
     // We are using absolute paths here
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART) || commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART)) {
-      writeOutGorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getRoot, outfile, theTheDict)
+      writeOutGorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getFileReader, outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)) {
-      writeOutGorDictionary(commandToExecute, context.getSession.getProjectContext.getRoot, outfile, theTheDict)
+      writeOutGorDictionary(commandToExecute, context.getSession.getProjectContext.getFileReader, outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.NOR_DICTIONARY)) {
-      writeOutNorDictionaryPart(commandToExecute, outfile)
+      writeOutNorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getFileReader, outfile)
     } else {
       runCommandInternal(context, commandToExecute, outfile, useMd5)
     }
@@ -186,7 +187,7 @@ object GeneralQueryHandler {
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, true, GorIndexType.NONE)
+          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, md5File = true, GorIndexType.NONE)
           if(nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
@@ -251,23 +252,40 @@ object GeneralQueryHandler {
     }
   }
 
-  private def writeOutGorDictionaryFolder(outfolderpath: Path, useTheDict: Boolean) {
+  private def writeOutGorDictionaryFolder(outfolderpath: Path, useTheDict: Boolean): Unit = {
     val outpath = if(useTheDict) {
-      val dict = outfolderpath.resolve("thedict.gord")
-      Files.writeString(dict,"#filepath\tbucket\tstartchrom\tstartpos\tendchrom\tendpos\tsource\n")
-      dict
+      outfolderpath.resolve("thedict.gord")
     } else {
       outfolderpath.resolve(outfolderpath.getFileName)
     }
     GorJavaUtilities.writeDictionaryFromMeta(outfolderpath, outpath)
   }
 
-  private def writeOutGorDictionary(commandToExecute: String, root: String, outfile: String, useTheDict: Boolean): String = {
-    var outpath = Paths.get(outfile)
-    if(!outpath.isAbsolute && root != null) {
-      val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
-      outpath = rootPath.resolve(outpath)
-    }
+  private def getDictList(dictFiles: List[String], chromsrange: List[String], root: String): List[String] = {
+    var chrI = 0
+    dictFiles.zip(chromsrange).map(x => {
+      val f = x._1
+      chrI += 1
+      val rf = getRelativeFileLocationForDictionaryFileReferences(f)
+      val prefix = rf + "\t" + chrI + "\t"
+      val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
+      val opt: Optional[String] = if (Files.exists(metaPath)) {
+        Files.lines(metaPath)
+          .filter(l => l.startsWith("## RANGE:"))
+          .map(s => s.substring(9).trim)
+          .asInstanceOf[java.util.stream.Stream[String]]
+          .filter(f => f.nonEmpty).map(s => prefix + s)
+          .findFirst().asInstanceOf[Optional[String]]
+      } else {
+        Optional.empty()
+      }
+      opt
+      // file, alias, chrom, startpos, chrom, endpos
+    }).flatMap(o => o.stream().iterator().asScala)
+  }
+
+  private def writeOutGorDictionary(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
+    val (outpath,root) = getOutPath(outfile, fileReader)
     if(Files.isDirectory(outpath)) {
       if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(outpath, useTheDict)
     } else {
@@ -280,36 +298,17 @@ object GeneralQueryHandler {
         chromsrange ::= w(i + 1)
         i += 2
       }
-      var chrI = 0
-      val dictList = dictFiles.zip(chromsrange).map(x => {
-        val f = x._1
-        chrI += 1
-        val rf = getRelativeFileLocationForDictionaryFileReferences(f)
-        val prefix = rf + "\t" + chrI + "\t"
-        var metaPath = Paths.get(f + ".meta")
-        if(!metaPath.isAbsolute && root != null) {
-          val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
-          metaPath = rootPath.resolve(metaPath)
-        }
-        val opt: Optional[String] = if (Files.exists(metaPath)) {
-          Files.lines(metaPath)
-            .filter(l => l.startsWith("## RANGE:"))
-            .map(s => s.substring(9).trim)
-            .asInstanceOf[java.util.stream.Stream[String]]
-            .filter(f => f.nonEmpty).map(s => prefix + s)
-            .findFirst().asInstanceOf[Optional[String]]
-        } else {
-          Optional.empty()
-        }
-        opt
-        // file, alias, chrom, startpos, chrom, endpos
-      }).flatMap(o => o.stream().iterator().asScala)
-      writeList(outpath, dictList)
+      val tableHeader = new TableHeader
+      val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
+      tableHeader.setColumns(header)
+      tableHeader.setTableColumns(TableHeader.DEFULT_RANGE_TABLE_HEADER)
+      val dictList = getDictList(dictFiles, chromsrange, root)
+      writeList(outpath, tableHeader.formatHeader(), dictList)
     }
     outpath.toString
   }
 
-  def writeOutNorDictionaryPart(commandToExecute: String, outfile: String): String = {
+  def writeOutNorDictionaryPart(commandToExecute: String, fileReader: FileReader, outfile: String): String = {
     val w = commandToExecute.split(' ')
     var dictFiles: List[String] = Nil
     var partitions: List[String] = Nil
@@ -325,17 +324,29 @@ object GeneralQueryHandler {
       // file, alias
       f + "\t" + part
     })
-    writeList(outfile, dictList)
+    val tableHeader = new TableHeader
+    val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
+    tableHeader.setColumns(header)
+    writeList(outfile, tableHeader.formatHeader(), dictList)
 
     outfile
   }
 
-  private def writeOutGorDictionaryPart(commandToExecute: String, root: String, outfile: String, useTheDict: Boolean): String = {
-    var outpath = Paths.get(outfile)
-    if(!outpath.isAbsolute && root != null) {
-      val rootPath = Paths.get(root.split("[ \t]+")(0)).normalize()
-      outpath = rootPath.resolve(outpath)
+  private def getOutPath(outfile: String, fileReader: FileReader): (Path,String) = {
+    val outpath = Paths.get(outfile)
+    fileReader match {
+      case driverBackedFileReader: DriverBackedFileReader =>
+        val root = driverBackedFileReader.getCommonRoot
+        if (!outpath.isAbsolute && root != null) {
+          val rootPath = Paths.get(root).normalize()
+          (rootPath.resolve(outpath),root)
+        } else (outpath,"")
+      case _ => (outpath,"")
     }
+  }
+
+  private def writeOutGorDictionaryPart(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
+    val (outpath,_) = getOutPath(outfile, fileReader)
     if(Files.isDirectory(outpath)) {
       if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(outpath, useTheDict)
     } else {
@@ -354,7 +365,10 @@ object GeneralQueryHandler {
         // file, alias
         f + "\t" + part
       })
-      writeList(outfile, dictList)
+      val tableHeader = new TableHeader
+      val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
+      tableHeader.setColumns(header)
+      writeList(outfile, tableHeader.formatHeader(), dictList)
     }
     outpath.toString
   }

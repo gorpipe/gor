@@ -208,7 +208,7 @@ public class Dictionary {
             if (this.activeDictionaryLines.length > 0) {
                 return new DictionaryLine[] {this.activeDictionaryLines[0]};
             } else {
-                throw new GorDataException("Dictionary " + this.path + " has no active lines.");
+                return new DictionaryLine[0];
             }
         } else {
             return toReturn;

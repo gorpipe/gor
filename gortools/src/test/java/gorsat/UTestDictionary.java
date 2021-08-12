@@ -27,6 +27,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
+import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -456,5 +457,26 @@ public class UTestDictionary {
         String resolvedDict = String.format(dict, firstFile.getAbsolutePath(), bucketFile.getAbsolutePath(),
                 secondFile.getAbsolutePath(), bucketFile.getAbsolutePath());
         return FileTestUtils.createTempFile(directory, "dict.gord", resolvedDict);
+    }
+
+    @Test
+    public void testEmptyGorDictionary() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var dictpath = workDirPath.resolve("b.gord");
+        var tableheader = new TableHeader();
+        final var cols = new String[]{"chrom","pos"};
+        final var tablecols = new String[]{"filename"};
+        tableheader.setTableColumns(tablecols);
+        tableheader.setColumns(cols);
+        var header = tableheader.formatHeader();
+        Files.writeString(dictpath,header);
+        var query = "gor b.gord";
+        var result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString());
+        Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\n",result);
+        query = "create #x = pgor b.gord|where 2=3; gor [#x]";
+        var cachepath = workDirPath.resolve("result_cache");
+        Files.createDirectory(cachepath);
+        result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cachepath.toString());
+        Assert.assertEquals("Wrong result from empty pgor query","chrom\tpos\n",result);
     }
 }
