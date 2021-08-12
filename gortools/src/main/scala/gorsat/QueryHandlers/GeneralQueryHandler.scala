@@ -340,7 +340,7 @@ object GeneralQueryHandler {
         if (!outpath.isAbsolute && root != null) {
           val rootPath = Paths.get(root).normalize()
           (rootPath.resolve(outpath),root)
-        } else (outpath,"")
+        } else (outpath,root)
       case _ => (outpath,"")
     }
   }
