@@ -23,10 +23,7 @@
 package org.gorpipe.s3.driver;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectResult;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -85,6 +82,13 @@ public class S3Source implements StreamSource {
         Future<PutObjectResult> fut;
 
         private void putObject(PipedInputStream pis) {
+            var multipartUploadRequest = new InitiateMultipartUploadRequest(bucket, key);
+            var multipartUploadResult = client.initiateMultipartUpload(multipartUploadRequest);
+            var uploadId = multipartUploadResult.getUploadId();
+            var request = new UploadPartRequest();
+            request.withUploadId(uploadId).withBucketName(bucket).withKey(key).withInputStream(in).withPartNumber(1);
+            request.setUploadId(uploadId);
+            request.setPartNumber(1);
             fut = es.submit(() -> client.putObject(bucket, key, pis, null));
         }
 
