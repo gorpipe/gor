@@ -208,7 +208,9 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
 
     private void setNewPGenStream() throws IOException {
         this.pfnIdx = (this.pfnIdx + 1) & 1;
-        this.writer = PGenWriterFactory.getPGenWriter(getCurrentInputFile() + PGEN_ENDING, this.refIdx, this.altIdx, this.rsIdIdx, this.valueIdx, this.hardCalls, !this.hardCalls, this.threshold, this.session.getProjectContext().getFileReader());
+        var fileReader = (DriverBackedFileReader)session.getProjectContext().getFileReader();
+        var pgenFileReader = fileReader instanceof DriverBackedGorServerFileReader ? new DriverBackedFileReader(fileReader.getSecurityContext(), fileReader.getCommonRoot(), fileReader.getConstants()) : fileReader;
+        this.writer = PGenWriterFactory.getPGenWriter(getCurrentInputFile() + PGEN_ENDING, this.refIdx, this.altIdx, this.rsIdIdx, this.valueIdx, this.hardCalls, !this.hardCalls, this.threshold, pgenFileReader);
     }
 
     String getCurrentInputFile() {
