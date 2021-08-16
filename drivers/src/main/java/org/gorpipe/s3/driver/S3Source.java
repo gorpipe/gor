@@ -33,7 +33,11 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
+
+import static java.lang.System.in;
 
 /**
  * Represents an object in Amazon S3.
@@ -77,41 +81,10 @@ public class S3Source implements StreamSource {
         return open(RequestRange.fromFirstLength(start, minLength));
     }
 
-    class S3PipedOutputStream extends PipedOutputStream {
-        ExecutorService es = Executors.newSingleThreadExecutor();
-        Future<PutObjectResult> fut;
-
-        private void putObject(PipedInputStream pis) {
-            var multipartUploadRequest = new InitiateMultipartUploadRequest(bucket, key);
-            var multipartUploadResult = client.initiateMultipartUpload(multipartUploadRequest);
-            var uploadId = multipartUploadResult.getUploadId();
-            var request = new UploadPartRequest();
-            request.withUploadId(uploadId).withBucketName(bucket).withKey(key).withInputStream(in).withPartNumber(1);
-            request.setUploadId(uploadId);
-            request.setPartNumber(1);
-            fut = es.submit(() -> client.putObject(bucket, key, pis, null));
-        }
-
-        @Override
-        public void close() throws IOException {
-            try {
-                super.close();
-                if(fut!=null) fut.get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new GorResourceException("Unable to write to s3", bucket+"/"+key, e);
-            } finally {
-                es.shutdown();
-            }
-        }
-    }
-
     @Override
     public OutputStream getOutputStream(boolean append) throws IOException {
         if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
-        S3PipedOutputStream pos = new S3PipedOutputStream();
-        PipedInputStream pis = new PipedInputStream(pos);
-        pos.putObject(pis);
-        return pos;
+        return new S3MultiPartOutputStream(client, bucket, key);
     }
 
     @Override
