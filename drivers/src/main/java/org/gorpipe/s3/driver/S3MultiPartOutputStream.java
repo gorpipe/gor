@@ -2,6 +2,7 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
+import org.gorpipe.exceptions.GorResourceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,21 +10,27 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 public class S3MultiPartOutputStream extends OutputStream {
-    final static int MAX_CAPACITY = 1<<27;
-    ByteArrayOutputStream baos = new ByteArrayOutputStream(MAX_CAPACITY);
+    final static int MAX_CAPACITY = 1<<26;
+    ByteArrayOutputStream baos1 = new ByteArrayOutputStream(MAX_CAPACITY);
+    ByteArrayOutputStream baos2 = new ByteArrayOutputStream(MAX_CAPACITY);
+    ByteArrayOutputStream baos = baos1;
     String uploadId;
     int k = 1;
     List<PartETag> partETags = new ArrayList<>();
     AmazonS3Client client;
     String bucket;
     String key;
+    ExecutorService executorService;
+    Future<String> fut = null;
 
     public S3MultiPartOutputStream(AmazonS3Client client, String bucket, String key) {
         this.client = client;
         this.bucket = bucket;
         this.key = key;
+        executorService = Executors.newSingleThreadExecutor();
         var multipartUploadRequest = new InitiateMultipartUploadRequest(bucket, key);
         var multipartUploadResult = client.initiateMultipartUpload(multipartUploadRequest);
         uploadId = multipartUploadResult.getUploadId();
@@ -55,24 +62,43 @@ public class S3MultiPartOutputStream extends OutputStream {
         }
     }
 
-    private void writeToS3(boolean isLastPart) {
-        var bb = baos.toByteArray();
-        var bais = new ByteArrayInputStream(bb);
-        var request = new UploadPartRequest();
-        var objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(bb.length);
-        request.withLastPart(isLastPart).withPartSize(bb.length).withUploadId(uploadId).withBucketName(bucket).withKey(key).withInputStream(bais).withPartNumber(k).withObjectMetadata(objectMetadata);
-        var uploadPartResult = client.uploadPart(request);
-        partETags.add(new PartETag(k, uploadPartResult.getETag()));
-        k++;
-        baos.reset();
+    private void writeToS3(boolean isLastPart) throws IOException {
+        var ibaos = baos;
+        baos = baos == baos1 ? baos2 : baos1;
+        if (fut!=null) {
+            try {
+                fut.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new IOException("Unable to upload multipart to s3 bucket", e);
+            }
+        }
+        fut = executorService.submit(() -> {
+            var bb = ibaos.toByteArray();
+            var bais = new ByteArrayInputStream(bb);
+            var request = new UploadPartRequest();
+            var objectMetadata = new ObjectMetadata();
+            objectMetadata.setContentLength(bb.length);
+            request.withLastPart(isLastPart).withPartSize(bb.length).withUploadId(uploadId).withBucketName(bucket).withKey(key).withInputStream(bais).withPartNumber(k).withObjectMetadata(objectMetadata);
+            var uploadPartResult = client.uploadPart(request);
+            partETags.add(new PartETag(k, uploadPartResult.getETag()));
+            k++;
+            ibaos.reset();
+            return "";
+        });
     }
 
     @Override
     public void close() {
-        writeToS3(true);
-        CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest();
-        completeMultipartUploadRequest.withUploadId(uploadId).withBucketName(bucket).withKey(key).withPartETags(partETags);
-        client.completeMultipartUpload(completeMultipartUploadRequest);
+        try {
+            writeToS3(true);
+            fut.get();
+        } catch (InterruptedException | ExecutionException | IOException e) {
+            throw new GorResourceException("Writing to s3 failed", "s3://"+bucket+"/"+key,e);
+        } finally {
+            CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest();
+            completeMultipartUploadRequest.withUploadId(uploadId).withBucketName(bucket).withKey(key).withPartETags(partETags);
+            client.completeMultipartUpload(completeMultipartUploadRequest);
+            executorService.shutdown();
+        }
     }
 }
