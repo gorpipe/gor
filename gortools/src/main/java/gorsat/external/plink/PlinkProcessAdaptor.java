@@ -26,6 +26,8 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.model.Row;
