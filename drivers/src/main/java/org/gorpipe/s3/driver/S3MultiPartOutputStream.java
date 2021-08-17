@@ -8,15 +8,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
 public class S3MultiPartOutputStream extends OutputStream {
     final static int MAX_CAPACITY = 1<<26;
-    ByteArrayOutputStream baos1 = new ByteArrayOutputStream(MAX_CAPACITY);
-    ByteArrayOutputStream baos2 = new ByteArrayOutputStream(MAX_CAPACITY);
-    ByteArrayOutputStream baos = baos1;
+    ByteBuffer baos1 = ByteBuffer.allocate(MAX_CAPACITY);
+    ByteBuffer baos2 = ByteBuffer.allocate(MAX_CAPACITY);
+    ByteBuffer baos = baos1;
     String uploadId;
     int k = 1;
     List<PartETag> partETags = new ArrayList<>();
@@ -38,28 +39,28 @@ public class S3MultiPartOutputStream extends OutputStream {
 
     @Override
     public void write(byte[] bb, int off, int len) throws IOException {
-        int payloadLen = baos.size();
+        int payloadLen = baos.limit();
         if (payloadLen>0 && payloadLen+len>MAX_CAPACITY) {
             writeToS3(false);
         }
-        baos.write(bb, off, len);
+        baos.put(bb, off, len);
     }
 
     @Override
     public void write(byte[] bb) throws IOException {
-        int payloadLen = baos.size();
+        int payloadLen = baos.limit();
         if (payloadLen>0 && payloadLen+bb.length>MAX_CAPACITY) {
             writeToS3(false);
         }
-        baos.write(bb);
+        baos.put(bb);
     }
 
     @Override
     public void write(int b) throws IOException {
-        baos.write(b);
-        if (baos.size()==MAX_CAPACITY) {
+        if (baos.limit()==MAX_CAPACITY) {
             writeToS3(false);
         }
+        baos.put((byte) b);
     }
 
     private void writeToS3(boolean isLastPart) throws IOException {
@@ -67,12 +68,12 @@ public class S3MultiPartOutputStream extends OutputStream {
         baos = baos == baos1 ? baos2 : baos1;
         if (fut!=null) waitForBatch();
         fut = executorService.submit(() -> {
-            var bb = ibaos.toByteArray();
-            var bais = new ByteArrayInputStream(bb);
+            var len = ibaos.limit();
+            var bais = new ByteArrayInputStream(ibaos.array(),0,len);
             var request = new UploadPartRequest();
             var objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentLength(bb.length);
-            request.withLastPart(isLastPart).withPartSize(bb.length).withUploadId(uploadId).withBucketName(bucket).withKey(key).withInputStream(bais).withPartNumber(k).withObjectMetadata(objectMetadata);
+            objectMetadata.setContentLength(len);
+            request.withLastPart(isLastPart).withPartSize(len).withUploadId(uploadId).withBucketName(bucket).withKey(key).withInputStream(bais).withPartNumber(k).withObjectMetadata(objectMetadata);
             var uploadPartResult = client.uploadPart(request);
             partETags.add(new PartETag(k, uploadPartResult.getETag()));
             k++;
