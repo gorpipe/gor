@@ -164,6 +164,21 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
+    public void testParallelPgorDictFolderWriteServerMode() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var cache = workDirPath.resolve("result_cache");
+        Files.createDirectory(cache);
+        var genes = "../tests/data/gor/genes.gor";
+        var genespath = Paths.get(genes);
+        var genesdest = workDirPath.resolve(genespath.getFileName());
+        Files.copy(genespath,genesdest);
+        var query = "create a = parallel -gordfolder -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/thedict.gord | group chrom -count";
+        var args = new String[] {query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString()};
+        var results = TestUtils.runGorPipeCount(args, true);
+        Assert.assertEquals("Wrong results in write folder", 2, results);
+    }
+
+    @Test
     public void testPgorWriteFolder() throws IOException {
         var workDirPath = workDir.getRoot().toPath();
         var folderpath = workDirPath.resolve("folder.gord");
