@@ -93,11 +93,14 @@ public class S3MultiPartOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        writeToS3(true);
-        waitForBatch();
-        CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest();
-        completeMultipartUploadRequest.withUploadId(uploadId).withBucketName(bucket).withKey(key).withPartETags(partETags);
-        client.completeMultipartUpload(completeMultipartUploadRequest);
-        executorService.shutdown();
+        try {
+            writeToS3(true);
+            waitForBatch();
+            CompleteMultipartUploadRequest completeMultipartUploadRequest = new CompleteMultipartUploadRequest();
+            completeMultipartUploadRequest.withUploadId(uploadId).withBucketName(bucket).withKey(key).withPartETags(partETags);
+            client.completeMultipartUpload(completeMultipartUploadRequest);
+        } finally {
+            executorService.shutdown();
+        }
     }
 }
