@@ -462,7 +462,11 @@ public class UTestDictionary {
     @Test
     public void testEmptyGorDictionary() throws IOException {
         var workDirPath = workDir.getRoot().toPath();
-        var dictpath = workDirPath.resolve("b.gord");
+        var path = Paths.get("one/two");
+        var dictpath = workDirPath.resolve(path);
+        Files.createDirectories(dictpath);
+        var dictrelpath = path.resolve("b.gord");
+        dictpath = dictpath.resolve("b.gord");
         var tableheader = new TableHeader();
         final var cols = new String[]{"chrom","pos"};
         final var tablecols = new String[]{"filename"};
@@ -470,13 +474,14 @@ public class UTestDictionary {
         tableheader.setColumns(cols);
         var header = tableheader.formatHeader();
         Files.writeString(dictpath,header);
-        var query = "gor b.gord";
+        var query = "gor "+dictrelpath;
         var result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString());
         Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\n",result);
-        query = "create #x = pgor b.gord|where 2=3; gor [#x]";
+        query = "create #x = pgor "+dictrelpath+"|where 2=3; gor [#x]";
         var cachepath = workDirPath.resolve("result_cache");
         Files.createDirectory(cachepath);
-        result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cachepath.toString());
-        Assert.assertEquals("Wrong result from empty pgor query","chrom\tpos\n",result);
+        var args = new String[] {query,"-gorroot",workDirPath.toString(),"-cachedir",cachepath.toString()};
+        int count = TestUtils.runGorPipeCount(args, true);
+        Assert.assertEquals("Wrong result from empty pgor query",0,count);
     }
 }
