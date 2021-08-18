@@ -172,10 +172,10 @@ public class UTestGorDictionaryFolder {
         var genespath = Paths.get(genes);
         var genesdest = workDirPath.resolve(genespath.getFileName());
         Files.copy(genespath,genesdest);
-        var query = "create a = parallel -gordfolder -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/thedict.gord | group chrom -count";
+        var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write test/mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); norrows 1";
         var args = new String[] {query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString()};
         var results = TestUtils.runGorPipeCount(args, true);
-        Assert.assertEquals("Wrong results in write folder", 2, results);
+        Assert.assertEquals("Wrong results in write folder", 1, results);
     }
 
     @Test
