@@ -2,10 +2,8 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import org.gorpipe.exceptions.GorResourceException;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -25,51 +23,49 @@ public class S3MultiPartOutputStream extends OutputStream {
     String bucket;
     String key;
     ExecutorService executorService;
-    Future<String> fut = null;
+    Future<String> fut;
 
     public S3MultiPartOutputStream(AmazonS3Client client, String bucket, String key) {
         this.client = client;
         this.bucket = bucket;
         this.key = key;
         executorService = Executors.newSingleThreadExecutor();
-        var multipartUploadRequest = new InitiateMultipartUploadRequest(bucket, key);
-        var multipartUploadResult = client.initiateMultipartUpload(multipartUploadRequest);
-        uploadId = multipartUploadResult.getUploadId();
+        fut = executorService.submit(() -> {
+            var multipartUploadRequest = new InitiateMultipartUploadRequest(bucket, key);
+            var multipartUploadResult = client.initiateMultipartUpload(multipartUploadRequest);
+            return multipartUploadResult.getUploadId();
+        });
     }
 
     @Override
     public void write(byte[] bb, int off, int len) throws IOException {
-        int payloadLen = baos.limit();
-        if (payloadLen>0 && payloadLen+len>MAX_CAPACITY) {
-            writeToS3(false);
+        int i = off;
+        while (i < off+len) {
+            if (!baos.hasRemaining()) {
+                writeToS3(false);
+            }
+            int left = Math.min(len,baos.remaining());
+            baos.put(bb, i, left);
+            i += left;
         }
-        baos.put(bb, off, len);
-    }
-
-    @Override
-    public void write(byte[] bb) throws IOException {
-        int payloadLen = baos.limit();
-        if (payloadLen>0 && payloadLen+bb.length>MAX_CAPACITY) {
-            writeToS3(false);
-        }
-        baos.put(bb);
     }
 
     @Override
     public void write(int b) throws IOException {
-        if (baos.limit()==MAX_CAPACITY) {
+        if (!baos.hasRemaining()) {
             writeToS3(false);
         }
         baos.put((byte) b);
     }
 
     private void writeToS3(boolean isLastPart) throws IOException {
-        var ibaos = baos;
+        var arr = baos.array();
+        var len = baos.position();
+        baos.rewind();
         baos = baos == baos1 ? baos2 : baos1;
-        if (fut!=null) waitForBatch();
+        uploadId = waitForBatch();
         fut = executorService.submit(() -> {
-            var len = ibaos.limit();
-            var bais = new ByteArrayInputStream(ibaos.array(),0,len);
+            var bais = new ByteArrayInputStream(arr,0,len);
             var request = new UploadPartRequest();
             var objectMetadata = new ObjectMetadata();
             objectMetadata.setContentLength(len);
@@ -77,14 +73,13 @@ public class S3MultiPartOutputStream extends OutputStream {
             var uploadPartResult = client.uploadPart(request);
             partETags.add(new PartETag(k, uploadPartResult.getETag()));
             k++;
-            ibaos.reset();
-            return "";
+            return uploadId;
         });
     }
 
-    private void waitForBatch() throws IOException {
+    private String waitForBatch() throws IOException {
         try {
-            fut.get();
+            return fut.get();
         } catch (InterruptedException | ExecutionException e) {
             AbortMultipartUploadRequest abortMultipartUploadRequest = new AbortMultipartUploadRequest(bucket, key, uploadId);
             client.abortMultipartUpload(abortMultipartUploadRequest);
