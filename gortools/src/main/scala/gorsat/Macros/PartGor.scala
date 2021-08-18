@@ -55,7 +55,6 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     val dictionary = getDictionary(options, context.getSession)
     val partitionSplitMethod = getSplitMethod(options, context.getSession)
 
-    val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
     val bucketMap = PartGor.readDictionaryBucketTagsFromFile(dictionary, tags, context.getSession.getProjectContext.getFileReader)
 
     validateTags(tags, bucketMap, context.getSession)
@@ -72,10 +71,12 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     var parGorCommands = Map.empty[String, ExecutionBlock]
 
     var cachePath: String = null
-    if(useGordFolders) {
-      val (_, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val (hasDictFolderWrite, _, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
+    if (useGordFolders) {
       cachePath = theCachePath
     }
+
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     partitions.keys.foreach(partitionKey => {

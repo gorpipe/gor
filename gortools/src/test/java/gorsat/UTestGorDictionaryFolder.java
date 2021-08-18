@@ -158,7 +158,7 @@ public class UTestGorDictionaryFolder {
         var genespath = Paths.get(genes);
         var genesdest = workDirPath.resolve(genespath.getFileName());
         Files.copy(genespath,genesdest);
-        var query = "create a = parallel -gordfolder -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/thedict.gord | group chrom -count";
+        var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/thedict.gord | group chrom -count";
         var results = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString());
         Assert.assertEquals("Wrong results in write folder", GENE_GROUP_CHROM, results);
     }
@@ -185,7 +185,7 @@ public class UTestGorDictionaryFolder {
         var cachedir = workDirPath.resolve("result_cache");
         Files.createDirectory(cachedir);
         try {
-            String results = TestUtils.runGorPipe("create a = pgor -gordfolder dict ../tests/data/gor/genes.gor | write -d " + folderpath +
+            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write -d " + folderpath +
                     "; gor [a] | group chrom -count","-cachedir",cachedir.toString());
                     //"; gor [a] | group chrom -count");
             Assert.assertEquals("Wrong results in write folder", GENE_GROUP_CHROM, results);
@@ -198,7 +198,7 @@ public class UTestGorDictionaryFolder {
     public void testPgorWriteGord() {
         Path gordpath = workDir.getRoot().toPath().resolve("my.gord").resolve("my.gord");
         try {
-            var query = "create a = pgor -gordfolder dict ../tests/data/gor/genes.gor | top 1 | write -d " + gordpath.getParent() + " " + gordpath +
+            var query = "create a = pgor ../tests/data/gor/genes.gor | top 1 | write -d " + gordpath.getParent() + " " + gordpath +
                     "; gor ../tests/data/gor/genes.gor | group chrom -count";
             String results = TestUtils.runGorPipe(query);
             //"; gor [a] | group chrom -count");
@@ -237,7 +237,7 @@ public class UTestGorDictionaryFolder {
     public void testPgorWriteFolderWithCardinality() throws IOException {
         Path folderpath = workDir.getRoot().toPath().resolve("folder.gord");
         try {
-            TestUtils.runGorPipe("create a = pgor -gordfolder dict ../tests/data/gor/genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c -d " + folderpath +
+            TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c -d " + folderpath +
                     "; gor [a] | group chrom -count");
             String thedict = Files.readString(folderpath.resolve("thedict.gord"));
             Assert.assertEquals("Wrong results in dictionary",
@@ -399,28 +399,28 @@ public class UTestGorDictionaryFolder {
 
         int partsize = 3;
         var folderpath = workDirPath.resolve("folder4.gord");
-        var query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        var query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         var result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3.gord");
-        query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         partsize = 3;
         folderpath = workDirPath.resolve("folder4p.gord");
-        query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3p.gord");
-        query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
@@ -454,7 +454,7 @@ public class UTestGorDictionaryFolder {
                 "| replace col_name replace(col_name,'_gt','')\n" +
                 "| group -gc bucket -lis -sc col_name -len 100000 | rename lis_col_name tags;\n" +
                 "create #segparts# = gor [#variants#] | group 100 -count | seghist 100;\n" +
-                "create #empty# = pgor -gordfolder dict -split <(gor [#segparts#] | top 2) [#genotypes#] \n" +
+                "create #empty# = pgor -split <(gor [#segparts#] | top 2) [#genotypes#] \n" +
                 "| cols2list #first_gt_col#- values -gc ref,alt  -map \"left(x,3)\" -sep ''\n" +
                 "| bucketsplit values #bucksize# -vs 1\n" +
                 "| select chrom,pos,ref,alt,bucket,values\n" +
