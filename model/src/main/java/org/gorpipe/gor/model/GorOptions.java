@@ -793,7 +793,7 @@ public class GorOptions {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
             var dictpath = Paths.get(fileName);
-            if (!dictpath.isAbsolute()) {
+            if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
                 var rootpath = Paths.get(commonRoot);
                 dictpath = rootpath.resolve(dictpath);
             }
