@@ -52,14 +52,14 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
 
     if (!doHeader) {
       val noWithin = CommandParseUtilities.hasOption(options, "-nowithin")
-      val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
+      val (hasDictFolderWrite, cacheFileExists, theCachePath, theQueryAppend) = getCachePath(create, context, skipCache)
+      val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
 
       var cachePath: String = null
       val theCommand = if(useGordFolders) {
-        val (cacheFileExists, theCachePath, theQueryAppend) = getCachePath(create, context, skipCache)
         cachePath = theCachePath
         if (!cacheFileExists) {
-          val noDict = CommandParseUtilities.stringValueOfOption(options, "-gordfolder").equals("nodict")
+          val noDict = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-gordfolder","dict").equals("nodict")
           val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict)
           theDependencies = theDeps
           partitionedGorCommands = partGorCmds

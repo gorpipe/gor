@@ -284,6 +284,15 @@ object GeneralQueryHandler {
     }).flatMap(o => o.stream().iterator().asScala)
   }
 
+  private def getPartDictList(dictFiles: List[String], partitions: List[String]): List[String] = {
+    dictFiles.zip(partitions).map(x => {
+      val f = getRelativeFileLocationForDictionaryFileReferences(x._1)
+      val part = x._2
+      // file, alias
+      f + "\t" + part
+    })
+  }
+
   private def writeOutGorDictionary(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
     val (outpath,root) = getOutPath(outfile, fileReader)
     if(Files.isDirectory(outpath)) {
@@ -314,19 +323,14 @@ object GeneralQueryHandler {
     var partitions: List[String] = Nil
     var i = 1
     while (i < w.length - 1) {
-      dictFiles ::= getRelativeFileLocationForDictionaryFileReferences(w(i))
+      dictFiles ::= w(i)
       partitions ::= w(i + 1)
       i += 2
     }
-    val dictList = dictFiles.zip(partitions).map(x => {
-      val f = x._1
-      val part = x._2
-      // file, alias
-      f + "\t" + part
-    })
     val tableHeader = new TableHeader
     val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
     tableHeader.setColumns(header)
+    val dictList = getPartDictList(dictFiles, partitions)
     writeList(outfile, tableHeader.formatHeader(), dictList)
 
     outfile
@@ -355,19 +359,14 @@ object GeneralQueryHandler {
       var partitions: List[String] = Nil
       var i = 1
       while (i < w.length - 1) {
-        dictFiles ::= getRelativeFileLocationForDictionaryFileReferences(w(i))
+        dictFiles ::= w(i)
         partitions ::= w(i + 1)
         i += 2
       }
-      val dictList = dictFiles.zip(partitions).map(x => {
-        val f = x._1
-        val part = x._2
-        // file, alias
-        f + "\t" + part
-      })
       val tableHeader = new TableHeader
       val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
       tableHeader.setColumns(header)
+      val dictList = getPartDictList(dictFiles, partitions)
       writeList(outfile, tableHeader.formatHeader(), dictList)
     }
     outpath.toString

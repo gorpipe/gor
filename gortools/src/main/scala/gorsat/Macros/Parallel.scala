@@ -67,13 +67,13 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     var partitionIndex = 1
-    val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
-
     var cachePath: String = null
-    if(useGordFolders) {
-      val (_, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val (hasDictFolderWrite, _, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val useGordFolders: Boolean = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
+    if (useGordFolders) {
       cachePath = theCachePath
     }
+
 
     try {
       val columns = getColumnsFromQuery(parallelQuery, header, forNor = true)

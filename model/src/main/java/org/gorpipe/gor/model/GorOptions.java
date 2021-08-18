@@ -792,7 +792,12 @@ public class GorOptions {
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            DictionaryTable table = new DictionaryTable(Paths.get(fileName));
+            var dictpath = Paths.get(fileName);
+            if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
+                var rootpath = Paths.get(commonRoot);
+                dictpath = rootpath.resolve(dictpath);
+            }
+            DictionaryTable table = new DictionaryTable(dictpath);
             sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
             tableHeader = table.getProperty(TableHeader.HEADER_COLUMNS_KEY);
             if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
