@@ -36,7 +36,7 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler, GorServerFileReader}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.{PathUtils, TableHeader}
@@ -271,10 +271,10 @@ object GeneralQueryHandler {
       val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
       val opt: Optional[String] = if (Files.exists(metaPath)) {
         Files.lines(metaPath)
-          .filter(l => l.startsWith("## RANGE:"))
+          .filter(l => l.startsWith(GorMeta.RANGE_HEADER))
           .map(s => s.substring(9).trim)
           .asInstanceOf[java.util.stream.Stream[String]]
-          .filter(f => f.nonEmpty).map(s => prefix + s)
+          .filter(f => f.nonEmpty).map(s => prefix + s + '\t')
           .findFirst().asInstanceOf[Optional[String]]
       } else {
         Optional.empty()

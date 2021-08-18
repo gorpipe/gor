@@ -558,9 +558,9 @@ public class GorJavaUtilities {
                         var s = range.get();
                         var outfile = (useMd5 ? omd5.get() : resolveOutfile(outfolderpath, p)) + ".gorz";
                         i += 1;
-                        var gordline = outfile+"\t"+i+"\t"+s;
-                        if(cc.isPresent()) gordline += "\t"+cc.get();
-                        else if(tags.isPresent()) gordline += "\t"+tags.get();
+                        var gordline = outfile+"\t"+i+"\t"+s+"\t";
+                        if(cc.isPresent()) gordline += cc.get();
+                        else if(tags.isPresent()) gordline += tags.get();
                         if (!headerWritten) {
                             writeHeader(dictionarypath, p);
                             headerWritten = true;
