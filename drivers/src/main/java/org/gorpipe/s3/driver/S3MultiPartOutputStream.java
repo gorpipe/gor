@@ -39,14 +39,14 @@ public class S3MultiPartOutputStream extends OutputStream {
 
     @Override
     public void write(byte[] bb, int off, int len) throws IOException {
-        int i = off;
-        while (i < off+len) {
+        int left = len;
+        while (left > 0) {
             if (!baos.hasRemaining()) {
                 writeToS3(false);
             }
-            int left = Math.min(len,baos.remaining());
-            baos.put(bb, i, left);
-            i += left;
+            int nextlen = Math.min(left,baos.remaining());
+            baos.put(bb, off+len-left, nextlen);
+            left -= nextlen;
         }
     }
 
