@@ -24,6 +24,7 @@ package gorsat;
 
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.NordIterator;
+import htsjdk.samtools.util.TestUtil;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
@@ -79,6 +80,15 @@ public class UTestNorDictionary {
             Assert.assertEquals("Wrong nor dictionary header", "ChromNOR\tPosNOR\tcol1\tcol2", header);
             Assert.assertEquals("Wrong number of lines read", 2, count);
         }
+    }
+
+    @Test
+    public void testNorDictionaryFolder() {
+        var root = workDir.getRoot().toPath();
+        var gordfolder = root.resolve("folder.gord");
+        var query = "create xxx = pgor ../tests/data/gor/dbsnp_test.gorz | write -d "+ gordfolder +"; nor -asdict [xxx]";
+        var result = TestUtils.runGorPipeCount(query);
+        Assert.assertEquals("Wrong result from nor asdict query on folder", 24, result);
     }
 
     @Test

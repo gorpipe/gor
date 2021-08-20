@@ -765,15 +765,34 @@ public class GorOptions {
         }
     }
 
-    private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        Path gordPath = Paths.get(fileName);
-        if(Files.isDirectory(gordPath)) {
-            Path gorDictPath = gordPath.resolve(gordPath.getFileName());
-            if(!Files.exists(gorDictPath)) {
-                gordPath = gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
-            } else gordPath = gorDictPath;
-            fileName = gordPath.toString();
+    private Path resolveFolderDict(Path gordPath) {
+        Path gorDictPath = gordPath.resolve(gordPath.getFileName());
+        if (!Files.exists(gorDictPath)) {
+            return gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
         }
+        return gorDictPath;
+    }
+
+    private String resolveFolderFilename(String commonRoot, String fileName) {
+        var gordPath = Paths.get(fileName);
+        var absPath = gordPath.isAbsolute();
+        if (commonRoot!=null&&!absPath) {
+            var root = Paths.get(commonRoot);
+            gordPath = root.resolve(gordPath);
+            if (Files.isDirectory(gordPath)) {
+                gordPath = resolveFolderDict(gordPath);
+                return root.relativize(gordPath).toString();
+            }
+        } else if (Files.isDirectory(gordPath)) {
+            gordPath = resolveFolderDict(gordPath);
+            return gordPath.toString();
+        }
+        return fileName;
+    }
+
+    private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
+        // TODO: Remove when driver framework supports isDirectory
+        fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
 
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
         final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(), getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);

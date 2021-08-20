@@ -153,7 +153,7 @@ public class DefaultFileReader extends FileReader {
                 String line = filename + "\t" + (Files.isSymbolicLink(x) ? 0 : Files.size(x)) + "\t" + Files.isDirectory(x) + "\t" + Files.isSymbolicLink(x) + "\t" + filename.substring(li == -1 ? filename.length() : li + 1) + "\t" + rel.toString() + "\t" + rel.toString().chars().filter(y -> y == '/').count();
 
                 if (showModificationDate) {
-                    line += "\t" + Files.getLastModifiedTime(x, LinkOption.NOFOLLOW_LINKS).toString();
+                    line += "\t" + Files.getLastModifiedTime(x, LinkOption.NOFOLLOW_LINKS);
                 }
 
                 return line;
