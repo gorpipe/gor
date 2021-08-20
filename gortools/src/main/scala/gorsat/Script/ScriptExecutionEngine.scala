@@ -116,7 +116,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         val includeFileContent = new String(context.getSession.getProjectContext.getFileReader.getInputStream(incl).readAllBytes())
         val includeCreates = quoteSafeSplit(includeFileContent,';')
         injectIncludes(includeCreates.slice(0, includeCreates.length-1), level+1)
-      } else Array(q)
+      } else Array(q.trim)
     })
   }
 
