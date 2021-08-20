@@ -192,14 +192,24 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public Stream<String> iterateFile(String file, int maxDepth, boolean showModificationDate) throws IOException {
-        DataSource source = resolveUrl(file);
+        var source = resolveUrl(file);
 
         if (source.getSourceType() == FileSourceType.FILE) {
-            File f = new File(getResolvedUrl(source));
-            if (f.isDirectory()) {
-                Path root = commonRoot != null ? Paths.get(commonRoot) : null;
-                Path path = commonRoot != null ? Paths.get(root.toString(), file) : f.toPath();
-                return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+            var path = Paths.get(getResolvedUrl(source));
+            var root = commonRoot != null ? Paths.get(commonRoot) : null;
+            if (root!=null && !path.isAbsolute()) {
+                path = root.resolve(path);
+            }
+            if (Files.isDirectory(path)) {
+                if (!path.getFileName().toString().toLowerCase().endsWith(".gord")) {
+                    return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+                } else if (Files.exists(path.resolve(path.getFileName()))) {
+                    source = resolveUrl(file + "/" + path.getFileName());
+                } else if (Files.exists(path.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
+                    source = resolveUrl(file + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+                } else {
+                    return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+                }
             }
         }
         return readAndClose(source);

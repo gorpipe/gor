@@ -499,13 +499,13 @@ public class GorJavaUtilities {
     private static void md5Rename(String md5, Path p) throws IOException {
         Path dm = p.getParent().resolve(md5 + GORZ_META);
         if (!Files.exists(dm)) Files.move(p, dm);
-        else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(p);
+        else if(Files.exists(p) && !Files.isSameFile(p,dm)) Files.delete(p);
 
         String fn = p.getFileName().toString();
         Path g = p.getParent().resolve(fn.substring(0, fn.length() - 5));
         Path d = p.getParent().resolve(md5 + ".gorz");
         if (!Files.exists(d)) Files.move(g, d);
-        else if(!Files.isSameFile(p,dm)) Files.deleteIfExists(g);
+        else if(Files.exists(g) && !Files.isSameFile(g,d)) Files.delete(g);
     }
 
     private static void writeDummyHeader(Path dictionarypath) throws IOException {
