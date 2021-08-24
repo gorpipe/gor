@@ -83,31 +83,41 @@ public class UTestGPParser {
 
     @Test
     public void test_plToGp() {
-        final double d = 1e-12;
+        double d = 1e-3;
 
         final String pls1 = "0;10;20";
-        final double[] gps1 = {1.0, 0.1, 0.01};
-        Assert.assertArrayEquals(gps1, plToGp(pls1, ';'), d);
+        final double[] gps1 = {0.9, 0.09, 0.009};
+        final double[] res1 = plToGp(pls1, ';');
+        Assert.assertArrayEquals(gps1, res1, d);
+
+        d = 1e-6;
 
         final String pls2 = "0;20;40";
-        final double[] gps2 = {1.0, 0.01, 0.0001};
-        Assert.assertArrayEquals(gps2, plToGp(pls2, ';'), d);
+        final double[] gps2 = {0.99, 0.0099, 0.000099};
+        final double[] res2 = plToGp(pls2, ';');
+        Assert.assertArrayEquals(gps2, res2, d);
+
+        d = 1e-3;
 
         final String pls3 = "0;0;0";
-        final double[] gps3 = {1.0, 1.0, 1.0};
-        Assert.assertArrayEquals(gps3, plToGp(pls3, ';'), d);
+        final double[] gps3 = {0.333, 0.333, 0.333};
+        final double[] res3 = plToGp(pls3, ';');
+        Assert.assertArrayEquals(gps3, res3, d);
 
         final String pls4 = "100;0;0";
-        final double[] gps4 = {0, 1.0, 1.0};
-        Assert.assertArrayEquals(gps4, plToGp(pls4, ';'), d);
+        final double[] gps4 = {0, 0.5, 0.5};
+        final double[] res4 = plToGp(pls4, ';');
+        Assert.assertArrayEquals(gps4, res4, d);
 
         final String pls5 = "0;100;0";
-        final double[] gps5 = {1.0, 0.0, 1.0};
-        Assert.assertArrayEquals(gps5, plToGp(pls5, ';'), d);
+        final double[] gps5 = {0.5, 0.0, 0.5};
+        final double[] res5 = plToGp(pls5, ';');
+        Assert.assertArrayEquals(gps5, res5, d);
 
         final String pls6 = "0;0;100";
-        final double[] gps6 = {1.0, 1.0, 0.0};
-        Assert.assertArrayEquals(gps6, plToGp(pls6, ';'), d);
+        final double[] gps6 = {0.5, 0.5, 0.0};
+        final double[] res6 = plToGp(pls6, ';');
+        Assert.assertArrayEquals(gps6, res6, d);
     }
 
     @Test
