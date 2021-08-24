@@ -84,7 +84,7 @@ public class GorOptions {
     /**
      * True if we cache all the parsed lines of a dictionary once we have read it, and make a hash map from pn's to lines.
      */
-    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "false"));
     /**
      * The gorPipeSession
      */
