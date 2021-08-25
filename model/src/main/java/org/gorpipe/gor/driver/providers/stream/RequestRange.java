@@ -101,7 +101,7 @@ public class RequestRange {
      * @return range object - possibly empty.
      */
     public RequestRange limitTo(long length) {
-        if (getFirst() >= length - 1) {
+        if (getFirst() >= length) {
             return EMPTY;
         } else if (getLast() >= length - 1) {
             return fromFirstLast(getFirst(), length - 1);

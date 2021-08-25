@@ -61,10 +61,14 @@ object PipeOptions {
     result
   }
 
-  private def cleanUpQuery(rawQuery: String) = {
+  def cleanUpQueryAndSplit(rawQuery: String): Array[String] = {
     val fixedQuery = rawQuery.replace("\n", " ")
     val argString = CommandParseUtilities.quoteSafeSplitAndTrim(fixedQuery, ' ').mkString(" ")
-    CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';').mkString(";")
+    CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';')
+  }
+
+  private def cleanUpQuery(rawQuery: String) = {
+    cleanUpQueryAndSplit(rawQuery).mkString(";")
   }
 
   private val allOptionNames: List[String] = List(
