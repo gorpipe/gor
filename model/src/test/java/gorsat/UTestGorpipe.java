@@ -21,6 +21,7 @@ public class UTestGorpipe {
 
     protected File file;
     protected File file2;
+    protected String prevDictCache;
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -33,6 +34,12 @@ public class UTestGorpipe {
         }
         file = FileTestUtils.createDummyGorFile(workDir.getRoot());
         file2 = FileTestUtils.createDummyGorFile(workDir.getRoot());
+        prevDictCache = System.setProperty("gor.dictionary.cache.active","true");
+    }
+
+    @After
+    public void finish() {
+        if (prevDictCache!=null) System.setProperty("gor.dictionary.cache.active",prevDictCache);
     }
 
     @Category(SlowTests.class)
