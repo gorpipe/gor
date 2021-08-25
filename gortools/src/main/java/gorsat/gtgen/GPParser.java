@@ -26,7 +26,9 @@ public class GPParser {
         final double x0 = gls[0] < 100 ? plLookupTable[gls[0]] : 0.0;
         final double x1 = gls[1] < 100 ? plLookupTable[gls[1]] : 0.0;
         final double x2 = gls[2] < 100 ? plLookupTable[gls[2]] : 0.0;
-        return new double[] {x0, x1, x2};
+        final double xsum = x0 + x1 + x2;
+        final double sum_rec = xsum == 0.0 ? 1.0 : 1.0 / xsum;
+        return new double[] {x0* sum_rec, x1* sum_rec, x2* sum_rec };
     }
 
     public static double[] glToGp(CharSequence glTriplet, char sep) {

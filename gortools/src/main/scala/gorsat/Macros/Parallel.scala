@@ -67,13 +67,13 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     var partitionIndex = 1
-    val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder")
-
     var cachePath: String = null
-    if(useGordFolders) {
-      val (_, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val (hasDictFolderWrite, _, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val useGordFolders: Boolean = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
+    if (useGordFolders) {
       cachePath = theCachePath
     }
+
 
     try {
       val columns = getColumnsFromQuery(parallelQuery, header, forNor = true)
@@ -112,7 +112,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
       partsSource.close()
     }
 
-    val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
+    val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify,useGordFolders)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
     parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
@@ -153,9 +153,9 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     newCommands.toArray
   }
 
-  private def getDictionaryType(query: String): String = {
+  private def getDictionaryType(query: String, useGordFolder: Boolean = false): String = {
     val firstCommand = CommandParseUtilities.getFirstCommand(query)
-    if(GorInputSources.isNorCommand(firstCommand)) CommandParseUtilities.NOR_DICTIONARY_PART else CommandParseUtilities.GOR_DICTIONARY_PART
+    if(GorInputSources.isNorCommand(firstCommand)) CommandParseUtilities.NOR_DICTIONARY_PART else if(useGordFolder) CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART else CommandParseUtilities.GOR_DICTIONARY_PART
   }
 
   private def getColumnsFromQuery(parallelQuery: String, header:String, forNor: Boolean): Map[String, Int] = {

@@ -406,7 +406,7 @@ object MacroUtilities {
     } else (null, false)
   }
 
-  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, String, String) = {
+  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, Boolean, String, String) = {
     val k = create.query.indexOf(" ")
     val cmdname = create.query.substring(0,k).toLowerCase
     var innerQuery = create.query.trim.slice(k+1, create.query.length)
@@ -417,7 +417,7 @@ object MacroUtilities {
       innerQuery = innerQuery.substring(u+1)
     }
     var querySplit = CommandParseUtilities.quoteSafeSplit(innerQuery,'|')
-    if(querySplit.length==1&&querySplit.head.endsWith(")")&&cmdname.equals("partgor")) {
+    if(querySplit.length==1&&querySplit.head.endsWith(")")&&(cmdname.equals("partgor")||cmdname.equals("parallel"))) {
       val nested = CommandParseUtilities.quoteSafeSplit(querySplit.head,' ').last
       val inested = nested.substring(2,nested.length-1)
       querySplit = CommandParseUtilities.quoteSafeSplit(inested,'|')
@@ -427,6 +427,7 @@ object MacroUtilities {
     val hasWrite = lastCmdLower.startsWith("write ")
     val didx = if(hasWrite) lastCmd.indexOf(" -d ") else 0
     val lidx = if(hasWrite) lastCmdLower.indexOf(".gord/") else 0
+    val hasGordFolderWrite = didx > 0 || lidx > 0
     val writeDir = if (didx>0) {
       var k = didx+4
       while (lastCmd.charAt(k)==' ') k += 1
@@ -440,18 +441,18 @@ object MacroUtilities {
     val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
     if(skipcache) {
       val queryAppend = appendQuery(finalQuery, lastCmd, false)
-      (false, null, queryAppend)
+      (hasGordFolderWrite, false, null, queryAppend)
     } else if(writeDir != null || hasWriteFile) {
       val cacheRes = if(writeDir!=null) writeDir else lastCmd.split(" ").last
       val cachepath = Paths.get(cacheRes)
       val cacheFileExists = Files.exists(cachepath) && !Files.isDirectory(cachepath)
       val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
-      (cacheFileExists, cacheRes, queryAppend)
+      (hasGordFolderWrite, cacheFileExists, cacheRes, queryAppend)
     } else {
       val fingerprint = create.signature
       val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
       val queryAppend = appendQuery(finalQuery, lastCmd, hasWrite, cachefile, cacheFileExists)
-      (cacheFileExists, cachefile, queryAppend)
+      (hasGordFolderWrite, cacheFileExists, cachefile, queryAppend)
     }
   }
 }

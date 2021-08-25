@@ -315,6 +315,7 @@ public class PluggableGorDriver implements GorDriver {
             throw (GorException)e;
         }
 
-        throw new GorResourceException("Cannot create iterator for datasource.  Cause: " + e.getMessage(), sourcename, e);
+        throw new GorResourceException("Cannot create iterator for datasource: " + sourcename + "  Cause: "
+                + e.getMessage(), sourcename, e);
     }
 }

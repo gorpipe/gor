@@ -88,14 +88,15 @@ object AnalysisUtilities {
     theMap
   }
 
-  def writeList(fileName: String, m: List[String]) : Unit = {
-    writeList(Paths.get(fileName), m)
+  def writeList(fileName: String, header: String, m: List[String]) : Unit = {
+    writeList(Paths.get(fileName), header, m)
   }
 
-  def writeList(filePath: java.nio.file.Path, m: List[String]) : Unit = {
+  def writeList(filePath: java.nio.file.Path, header: String, m: List[String]) : Unit = {
     val parent = filePath.getParent
     if (!Files.exists(parent)) Files.createDirectories(parent)
     val out = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)
+    out.write(header)
     m.foreach(t => out.write(t + "\n"))
     out.close
   }

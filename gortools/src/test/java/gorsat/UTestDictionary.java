@@ -27,6 +27,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
+import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -456,5 +457,31 @@ public class UTestDictionary {
         String resolvedDict = String.format(dict, firstFile.getAbsolutePath(), bucketFile.getAbsolutePath(),
                 secondFile.getAbsolutePath(), bucketFile.getAbsolutePath());
         return FileTestUtils.createTempFile(directory, "dict.gord", resolvedDict);
+    }
+
+    @Test
+    public void testEmptyGorDictionary() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var path = Paths.get("one/two");
+        var dictpath = workDirPath.resolve(path);
+        Files.createDirectories(dictpath);
+        var dictrelpath = path.resolve("b.gord");
+        dictpath = dictpath.resolve("b.gord");
+        var tableheader = new TableHeader();
+        final var cols = new String[]{"chrom","pos"};
+        final var tablecols = new String[]{"filename"};
+        tableheader.setTableColumns(tablecols);
+        tableheader.setColumns(cols);
+        var header = tableheader.formatHeader();
+        Files.writeString(dictpath,header);
+        var query = "gor "+dictrelpath;
+        var result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString());
+        Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\n",result);
+        query = "create #x = pgor "+dictrelpath+"|where 2=3; gor [#x]";
+        var cachepath = workDirPath.resolve("result_cache");
+        Files.createDirectory(cachepath);
+        var args = new String[] {query,"-gorroot",workDirPath.toString(),"-cachedir",cachepath.toString()};
+        int count = TestUtils.runGorPipeCount(args, true);
+        Assert.assertEquals("Wrong result from empty pgor query",0,count);
     }
 }

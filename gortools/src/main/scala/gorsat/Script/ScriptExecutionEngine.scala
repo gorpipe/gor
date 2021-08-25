@@ -31,7 +31,7 @@ import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import gorsat.Utilities.{AnalysisUtilities, MacroUtilities, StringUtilities}
 import gorsat.process.{GorPipeMacros, GorPrePipe, PipeInstance}
 import gorsat.DynIterator
-import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
+import org.gorpipe.exceptions.{GorException, GorParsingException, GorResourceException}
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.GorScriptAnalyzer
 import org.gorpipe.gor.model.GorParallelQueryHandler
@@ -116,7 +116,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
         val includeFileContent = new String(context.getSession.getProjectContext.getFileReader.getInputStream(incl).readAllBytes())
         val includeCreates = quoteSafeSplit(includeFileContent,';')
         injectIncludes(includeCreates.slice(0, includeCreates.length-1), level+1)
-      } else Array(q)
+      } else Array(q.trim)
     })
   }
 
@@ -461,7 +461,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
             try {
               fileReader.getFileSignature(fileName)
             } catch {
-              case e: Exception => throw new GorResourceException("In fileFingerPrint: file " + fileName + " does not exist!", fileName, e)
+              case e: GorException => throw e
+              case e: Exception => throw new GorResourceException("Could not get file signature for:  " + fileName, fileName, e)
             }
           }
           tmp

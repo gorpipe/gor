@@ -26,6 +26,7 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -83,7 +84,7 @@ public class GorOptions {
     /**
      * True if we cache all the parsed lines of a dictionary once we have read it, and make a hash map from pn's to lines.
      */
-    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "false"));
     /**
      * The gorPipeSession
      */
@@ -125,6 +126,10 @@ public class GorOptions {
      * The name of the output column with the source field
      */
     public String sourceColName;
+    /**
+     * The header for the current table/dictionary
+     */
+    public String tableHeader;
     /**
      * The common root that was prepended to each source name
      */
@@ -434,8 +439,14 @@ public class GorOptions {
 
         if (genomicIterators.isEmpty()) {
             // No iterator in range, add dummy one (that will not return any rows) as we must return at least one.
-            SourceRef ref = files.get(0);
-            genomicIterators.add(new BoundedIterator(createGenomicIteratorFromRef(ref), "", 0, "", 0));
+            if (files.size()>0) {
+                SourceRef ref = files.get(0);
+                genomicIterators.add(new BoundedIterator(createGenomicIteratorFromRef(ref), "", 0, "", 0));
+            } else if(tableHeader!=null) {
+                genomicIterators.add(new EmptyIterator(tableHeader));
+            } else {
+                throw new GorDataException("Dictionary " + sourceName + " has no active lines.");
+            }
         }
         return genomicIterators;
     }
@@ -754,15 +765,34 @@ public class GorOptions {
         }
     }
 
-    private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        Path gordPath = Paths.get(fileName);
-        if(Files.isDirectory(gordPath)) {
-            Path gorDictPath = gordPath.resolve(gordPath.getFileName());
-            if(!Files.exists(gorDictPath)) {
-                gordPath = gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
-            } else gordPath = gorDictPath;
-            fileName = gordPath.toString();
+    private Path resolveFolderDict(Path gordPath) {
+        Path gorDictPath = gordPath.resolve(gordPath.getFileName());
+        if (!Files.exists(gorDictPath)) {
+            return gordPath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME);
         }
+        return gorDictPath;
+    }
+
+    private String resolveFolderFilename(String commonRoot, String fileName) {
+        var gordPath = Paths.get(fileName);
+        var absPath = gordPath.isAbsolute();
+        if (commonRoot!=null&&!absPath) {
+            var root = Paths.get(commonRoot);
+            gordPath = root.resolve(gordPath);
+            if (Files.isDirectory(gordPath)) {
+                gordPath = resolveFolderDict(gordPath);
+                return root.relativize(gordPath).toString();
+            }
+        } else if (Files.isDirectory(gordPath)) {
+            gordPath = resolveFolderDict(gordPath);
+            return gordPath.toString();
+        }
+        return fileName;
+    }
+
+    private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
+        // TODO: Remove when driver framework supports isDirectory
+        fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
 
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
         final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(), getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);
@@ -781,8 +811,15 @@ public class GorOptions {
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            DictionaryTable table = new DictionaryTable(Paths.get(fileName));
+            var dictpath = Paths.get(fileName);
+            if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
+                var rootpath = Paths.get(commonRoot);
+                dictpath = rootpath.resolve(dictpath);
+            }
+            DictionaryTable table = new DictionaryTable(dictpath);
             sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
+            tableHeader = table.getProperty(TableHeader.HEADER_COLUMNS_KEY);
+            if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
         }
     }
 
