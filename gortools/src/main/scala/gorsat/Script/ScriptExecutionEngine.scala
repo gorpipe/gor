@@ -24,7 +24,7 @@ package gorsat.Script
 
 import gorsat.Utilities.AnalysisUtilities.getSignature
 import gorsat.Commands.CommandParseUtilities
-import gorsat.Commands.CommandParseUtilities.quoteSafeSplit
+import gorsat.Commands.CommandParseUtilities.{cleanupQuery, cleanupQueryAndSplit, quoteSafeSplit}
 import gorsat.Utilities.MacroUtilities._
 import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
@@ -114,7 +114,8 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
       val incl = ScriptParsers.includeParser(q.trim)
       if (!incl.equals("")) {
         val includeFileContent = new String(context.getSession.getProjectContext.getFileReader.getInputStream(incl).readAllBytes())
-        val includeCreates = quoteSafeSplit(includeFileContent,';')
+        val argString = CommandParseUtilities.removeComments(includeFileContent)
+        val includeCreates = cleanupQueryAndSplit(argString)
         injectIncludes(includeCreates.slice(0, includeCreates.length-1), level+1)
       } else Array(q.trim)
     })
