@@ -1075,6 +1075,16 @@ object CommandParseUtilities {
   }
 
   /**
+    * Cleans up the input query, removing all unwanted whitespaces and performing fixed formatting.
+    *
+    * @param query input query to be cleaned
+    * @return cleaned queries
+    */
+  def cleanupQueryAndSplit(query: String): Array[String] = {
+    cleanupQueryAndSplit(query, " | ")
+  }
+
+  /**
     * Cleans up the input query, removing all unwanted whitespaces and performing pretty formatting.
     *
     * @param query input query to be cleaned
@@ -1085,6 +1095,10 @@ object CommandParseUtilities {
   }
 
   private def cleanupQuery(query: String, stepFormat: String, commandFormat: String): String = {
+    cleanupQueryAndSplit(query, stepFormat).mkString(commandFormat)
+  }
+
+  private def cleanupQueryAndSplit(query: String, stepFormat: String): Array[String] = {
     val fixedQuery = query.replace('\n', ' ').replace('\r', ' ')
     val queries = quoteSafeSplitAndTrim(fixedQuery, ';')
 
@@ -1094,7 +1108,7 @@ object CommandParseUtilities {
       commands +:= quoteSafeSplitAndTrim(x, '|').mkString(stepFormat)
     }
 
-    commands.reverse.mkString(commandFormat)
+    commands.reverse
   }
 
   def getFirstCommand(query: String): String = {
