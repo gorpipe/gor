@@ -308,8 +308,10 @@ object GeneralQueryHandler {
         i += 2
       }
       val tableHeader = new TableHeader
-      val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
-      tableHeader.setColumns(header)
+      if(dictFiles.nonEmpty) {
+        val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
+        tableHeader.setColumns(header)
+      }
       tableHeader.setTableColumns(TableHeader.DEFULT_RANGE_TABLE_HEADER)
       val dictList = getDictList(dictFiles, chromsrange, root)
       writeList(outpath, tableHeader.formatHeader(), dictList)
