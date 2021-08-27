@@ -1,0 +1,20 @@
+[versions]
+
+[libraries]
+
+commons-io = "commons-io:commons-io:_"
+commons-lang3 = "org.apache.commons:commons-lang3:_"
+logback       = "ch.qos.logback:logback-classic:_"
+logback-encoder = "net.logstash.logback:logstash-logback-encoder:_"
+slf4j         = "org.slf4j:slf4j-api:_"
+slf4j-jul      = "org.slf4j:jul-to-slf4j:_"
+slf4j-log4j    = "org.slf4j:log4j-over-slf4j:_"
+slf4j-jcl      = "org.slf4j:jcl-over-slf4j:_"
+jackson-core   = "com.fasterxml.jackson.core:jackson-core:_"
+jackson-databind           = "com.fasterxml.jackson.core:jackson-databind:_"
+jackson-dataformat-yaml     = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:_"
+jackson-module-scala        = "com.fasterxml.jackson.module:jackson-module-scala_2.12:_"
+picocli       = "info.picocli:picocli:_"
+picocli-shell  = "info.picocli:picocli-shell-jline3:_"
+
+[bundles]
