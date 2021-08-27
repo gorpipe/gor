@@ -137,5 +137,5 @@ release-from-master:  ## Release from master.
 # Misc
 #
 
-dependencies-check-for-updates:  ## Check for available library updates
-	./gradlew dependencyUpdates --refresh-dependencies
+dependencies-check-for-updates:  ## Check for available library updates (updates versions.properties)
+	./gradlew refreshVersions
