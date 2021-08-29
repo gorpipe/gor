@@ -82,4 +82,12 @@ public class UTestStringUtil {
         Assert.assertEquals("Kalli", list.get(0));
         Assert.assertEquals("", list.get(1));
     }
+
+    @Test
+    public void testLimitSize() {
+        Assert.assertEquals("abcdefghij", StringUtil.limitSize("abcdefghij", 20, 1));
+        Assert.assertEquals("abcdefghij", StringUtil.limitSize("abcdefghijklmnopqrst", 10, 1));
+        Assert.assertEquals("klmnopqrst", StringUtil.limitSize("abcdefghijklmnopqrst", 10, 0));
+        Assert.assertEquals("abc ... st", StringUtil.limitSize("abcdefghijklmnopqrst", 10, 0.6));
+    }
 }

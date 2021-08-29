@@ -24,10 +24,12 @@ package org.gorpipe.exceptions;
 
 public abstract class GorUserException extends GorException {
 
+    private String query = "";        // The query or part of the query if the query is very large.
     private String commandName = "";
     private String commandStep = "";
-    private String commandSource = "";
     private int commandIndex = -1;
+    private String querySource = "";  // Source of the query (queryServer, queryService, batchGroup etc)
+    private String extraInfo = "";    // All extra info we want to add for the exception (os, hostname, mem, etc).
 
     protected GorUserException(String message, Throwable cause) {
         super(message, cause);
@@ -58,11 +60,27 @@ public abstract class GorUserException extends GorException {
     }
 
     public String getQuerySource() {
-        return commandSource;
+        return querySource;
     }
 
     public void setQuerySource(String querySource) {
-        this.commandSource = querySource;
+        this.querySource = querySource;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+
+    public String getExtraInfo() {
+        return extraInfo;
+    }
+
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
     }
 
     public Boolean isCommandSet() {
@@ -73,6 +91,13 @@ public abstract class GorUserException extends GorException {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(super.toString());
+
+        if (!ExceptionUtilities.isNullOrEmpty(query)) {
+            builder.append("Query: ");
+            builder.append("\n");
+            builder.append(query);
+            builder.append("\n");
+        }
 
         if (!ExceptionUtilities.isNullOrEmpty(commandStep)) {
             builder.append("Command Step: ");
@@ -86,15 +111,21 @@ public abstract class GorUserException extends GorException {
             builder.append("\n");
         }
 
-        if (!ExceptionUtilities.isNullOrEmpty(commandSource)) {
-            builder.append("Command Source: ");
-            builder.append(commandSource);
-            builder.append("\n");
-        }
-
         if (commandIndex >= 0) {
             builder.append("Command Index: ");
             builder.append(commandIndex);
+            builder.append("\n");
+        }
+
+        if (!ExceptionUtilities.isNullOrEmpty(querySource)) {
+            builder.append("Query Source: ");
+            builder.append(querySource);
+            builder.append("\n");
+        }
+
+        if (!ExceptionUtilities.isNullOrEmpty(extraInfo)) {
+            builder.append("Extra info: ");
+            builder.append(extraInfo);
             builder.append("\n");
         }
 
