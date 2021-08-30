@@ -147,7 +147,7 @@ object OutFile {
 
     try {
       val out = if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
-        new GORzip(name, fileReader, header, skipHeader, append, options.columnCompress, options.md5, options.md5File, options.idx, options.compressionLevel, options.cardCol)
+        new GORzip(name, fileReader, header, skipHeader, append, options)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
         new NorFileOut(name, fileReader, header, skipHeader, append, options.md5, options.md5File)
       } else if (nameUpper.endsWith(".PARQUET")) {

@@ -25,18 +25,16 @@ plugins {
 
 project(':base') {
     dependencies {
-        implementation "com.googlecode.json-simple:json-simple:1.1.1"
-        implementation "org.aeonbits.owner:owner:1.0.12"
-        implementation "commons-io:commons-io:2.8.0"
-        implementation "org.apache.commons:commons-lang3:3.12.0"
-        implementation 'org.slf4j:slf4j-api:1.7.30'
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.3"
-        implementation 'ch.qos.logback:logback-classic:1.2.3'
-        implementation('net.logstash.logback:logstash-logback-encoder:6.6')
-        // Must be compile dependency due to Logback Metrics collection.
-        implementation "ch.qos.logback:logback-core:1.2.3"
-        implementation 'org.fusesource.jansi:jansi:2.3.2' // Needs to be included for Windows
-        implementation 'org.slf4j:jcl-over-slf4j:1.7.30'
+        implementation "com.googlecode.json-simple:json-simple:_"
+        implementation "org.aeonbits.owner:owner:_"
+        implementation libs.commons.io
+        implementation libs.commons.lang3
+        implementation libs.slf4j
+        implementation libs.jackson.databind
+        implementation libs.logback
+        implementation('net.logstash.logback:logstash-logback-encoder:_')
+        implementation 'org.fusesource.jansi:jansi:_' // Needs to be included for Windows
+        implementation libs.slf4j.jcl
 
         testImplementation project(':test')
     }

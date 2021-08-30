@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -228,5 +229,31 @@ public class StringUtil {
             return true;
         }
         return o.toString().trim().length() == 0;
+    }
+
+
+    /**
+     * Limit the string size.
+     * @param inputString       the string to trim.
+     * @param limit             max output string size.
+     * @param fromFrontRatio    ratio between characters from front and end of the string.   1 means
+     *                          all chars from front, 0 means all chars from end.  If anything else the output
+     *                          is a mix from front and end with " ... " between the parts.
+     * @return
+     */
+    public static String limitSize(String inputString, int limit, double fromFrontRatio) {
+        if (inputString == null || inputString.length() <= limit) {
+            return inputString;
+        }
+
+        if (fromFrontRatio == 1.0) {
+            return inputString.substring(0, limit);
+        } else if (fromFrontRatio == 0.0) {
+            return inputString.substring(inputString.length() - limit);
+        } else {
+            return inputString.substring(0, Math.round((limit-5) * (float)fromFrontRatio) )
+                    + " ... "
+                    + inputString.substring(inputString.length() - Math.round((limit-5) * (1 - (float)fromFrontRatio)));
+        }
     }
 }
