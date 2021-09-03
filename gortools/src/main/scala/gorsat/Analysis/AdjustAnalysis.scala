@@ -76,7 +76,7 @@ case class AdjustAnalysis(adOpt: AdjustOptions, pCol: Int, grCols: List[Int]) ex
 
   override def finish(): Unit = {
     if (useGroup) flushHolders(groupMap)
-    else flushSingleHolder(theHolder)
+    else if(theHolder.count > 0) flushSingleHolder(theHolder)
   }
 
   var numberOfStatHolders = 0
