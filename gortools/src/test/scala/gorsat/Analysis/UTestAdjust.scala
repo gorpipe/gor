@@ -63,6 +63,15 @@ class UTestAdjust extends FunSuite with BeforeAndAfter {
     Assert.assertEquals(wanted, results)
   }
 
+  test("test empty") {
+    val wanted = "CHROM\tPOS\tP_VAlUES\tGC\tQQ\tBONF\tHOLM\tSS\tSD\tBH\tBY\n"
+    val cont = "CHROM\tPOS\tP_VAlUES\n"
+    val gorFileName = writeToFile("basic.gor", cont)
+    val query = "gor " + gorFileName + " | adjust -pc 3 -gcc -bonf -holm -ss -sd -bh -by -qq"
+    val results = TestUtils.runGorPipe(query)
+    Assert.assertEquals(wanted, results)
+  }
+
   test("test basic 0 p values don't cause an error") {
     val cont = "CHROM\tPOS\tP_VAlUES\nchr1\t1\t0.02\n" +
       "chr1\t2\t0.0\n" +
