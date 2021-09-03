@@ -26,7 +26,6 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 import java.util
 import java.util.Optional
-
 import gorsat.Analysis._
 import gorsat.Commands.CommandParseUtilities.{hasOption, rangeOfOption, stringValueOfOption}
 import gorsat.Commands.{Analysis, _}
@@ -45,6 +44,8 @@ import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.util.StringUtil
 import org.slf4j.LoggerFactory
+
+import java.net.InetAddress
 
 object PipeInstance {
 
@@ -133,22 +134,24 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
   def getIterator: GenomicIterator = theIterator
 
   def createPipestep(iparams : String, forcedInputHeader : String = ""): Analysis = {
-    if (theIterator != null) close()
+    theParams = iparams
+    if (theIterator != null) {
+      close()
+    }
     val args = CommandParseUtilities.quoteSafeSplit(iparams + " -stdin",' ')
     processArguments(args, isNorContext,forcedInputHeader)
-    theParams = iparams
+
     theIterator = null
     thePipeStep
   }
 
   override def scalaInit(iparams : String, forcedInputHeader : String = "") {
+    theParams = iparams
     if (theIterator != null) {
       close()
     }
-
     val args = Array(iparams)
     processArguments(args, isNorContext,forcedInputHeader)
-    theParams = iparams
   }
 
   override def hasNext : Boolean = {
@@ -419,6 +422,8 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
           gue.setCommandIndex(firstCommand)
           gue.setCommandStep(gorString)
           gue.setRequestID(context.getSession.getRequestId)
+          gue.setQuery(StringUtil.limitSize(theParams, 1000, 0.5))
+          gue.setExtraInfo(gue.getExtraInfo() + " Hostname=" + InetAddress.getLocalHost().getHostName())
         }
         throw gue
     }
@@ -450,6 +455,8 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
         gue.setCommandIndex(firstCommand)
         gue.setCommandStep(gorString)
         gue.setRequestID(context.getSession.getRequestId)
+        gue.setQuery(StringUtil.limitSize(theParams, 1000, 0.5))
+        gue.setExtraInfo(gue.getExtraInfo() + " Hostname=" + InetAddress.getLocalHost().getHostName())
         throw gue
     }
     combinedHeader = if (fixHeader) validHeader(inputHeader) else inputHeader
@@ -735,6 +742,8 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
         gue.setCommandIndex(i + 1)
         gue.setCommandStep(command + " " + paramString)
         gue.setRequestID(context.getSession.getRequestId)
+        gue.setQuery(StringUtil.limitSize(theParams, 1000, 0.5))
+        gue.setExtraInfo(gue.getExtraInfo() + " Hostname=" + InetAddress.getLocalHost().getHostName())
 
         throw gue
       case ex: Throwable =>

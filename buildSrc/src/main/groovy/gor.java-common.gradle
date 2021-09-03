@@ -51,11 +51,6 @@ repositories {
     if (project.hasProperty('useMavenLocal')) {
         mavenLocal()
     }
-    jcenter {
-        content {
-            excludeGroupByRegex "com\\.(wuxi)?nextcode.*"
-        }
-    }
     mavenCentral{
         content {
             excludeGroupByRegex "com\\.(wuxi)?nextcode.*"
@@ -128,9 +123,19 @@ ext {
 // Common tests setup.
 // -----------------------------------------------------
 
-// Common repositories
+// Common repositories and contraints
 dependencies {
     testImplementation 'junit:junit:4.13.2'
+
+    constraints {
+        // https://nvd.nist.gov/vuln/detail/CVE-2021-36090 and more
+        implementation('org.apache.commons:commons-compress:1.21')
+
+        implementation('io.netty:netty-handler:4.1.67.Final')
+        implementation('io.netty:netty-transport-native-epoll:4.1.67.Final')
+
+        implementation('net.minidev:json-smart:2.4.1')
+    }
 }
 
 tasks.withType(Test) {
@@ -261,6 +266,7 @@ sonarqube {
         //property "sonar.dependencyCheck.htmlReportPath", "build/reports/dependency-check-report.html"
     }
 }
+
 
 
 

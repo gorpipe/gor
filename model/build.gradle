@@ -31,54 +31,40 @@ project(':model') {
         implementation project(':util')
 
         // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
-        api "org.scala-lang.modules:scala-parser-combinators_2.12:1.1.2"
+        api "org.scala-lang.modules:scala-parser-combinators_2.12:_"
 
-        annotationProcessor 'com.google.auto.service:auto-service:1.0'
+        annotationProcessor 'com.google.auto.service:auto-service:_'
         
-        implementation 'com.google.auto.service:auto-service:1.0'
-        implementation "org.apache.commons:commons-lang3:3.12.0"
-        implementation "org.aeonbits.owner:owner:1.0.12"
-        implementation "com.github.samtools:htsjdk:2.24.1"
-        implementation "com.github.luben:zstd-jni:1.4.4-3"  // 9-5 TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.3"
-        implementation 'org.apache.parquet:parquet-common:1.12.0'
-        implementation 'org.apache.parquet:parquet-column:1.12.0'
-        implementation 'org.apache.parquet:parquet-hadoop:1.12.0'
-        implementation ('org.apache.hadoop:hadoop-common:3.3.1')
-        implementation 'org.apache.commons:commons-compress:1.21'
-        implementation "com.zaxxer:HikariCP:4.0.3"
+        implementation 'com.google.auto.service:auto-service:_'
+        implementation libs.commons.lang3
+        implementation "org.aeonbits.owner:owner:_"
+        implementation "com.github.samtools:htsjdk:_"
+        implementation "com.github.luben:zstd-jni:_"  // 9-5 TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
+        implementation libs.jackson.databind
+        implementation 'org.apache.parquet:parquet-common:_'
+        implementation 'org.apache.parquet:parquet-column:_'
+        implementation 'org.apache.parquet:parquet-hadoop:_'
+        implementation ('org.apache.hadoop:hadoop-common:_')
+        implementation 'org.apache.commons:commons-compress:_'
+        implementation "com.zaxxer:HikariCP:_"
 
-        constraints {
-            implementation('org.eclipse.jetty:jetty-server:9.4.40.v20210413') {
-                because 'https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/pipelines/290960607/security'
-            }
-            implementation('org.eclipse.jetty:jetty-util:9.4.40.v20210413')
-            implementation('org.eclipse.jetty:jetty-servlet:9.4.40.v20210413')
-            implementation('org.eclipse.jetty:jetty-webapp:9.4.40.v20210413')
-            implementation('org.eclipse.jetty.websocket:websocket-client:9.4.40.v20210413')
-            implementation('io.netty:netty-handler:4.1.46.Final')
-
-            implementation('net.minidev:json-smart:2.4.1')
-        }
-
-        runtimeOnly "org.xerial:sqlite-jdbc:3.34.0"
-        runtimeOnly ("org.postgresql:postgresql:42.2.20")
-        runtimeOnly ('org.apache.hadoop:hadoop-mapreduce-client-core:3.3.1')
+        runtimeOnly "org.xerial:sqlite-jdbc:_"
+        runtimeOnly ("org.postgresql:postgresql:_")
+        runtimeOnly ('org.apache.hadoop:hadoop-mapreduce-client-core:_')
 
         testImplementation project(':test')
         testImplementation project(':external')
         testImplementation project(":gortools") // Needed so we can call gorpipe in the tests.
         testImplementation project(':gortools').sourceSets.test.output
 
-        testImplementation "ch.qos.logback:logback-core:1.2.3"
-        testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+        testImplementation libs.logback
 
-        testImplementation "org.mockito:mockito-core:3.7.7"
-        testImplementation "org.scalatest:scalatest_2.12:3.0.8"
-        testImplementation "org.scalacheck:scalacheck_2.12:1.15.3"
-        testImplementation("org.postgresql:postgresql:42.2.20")
+        testImplementation Testing.mockito.core
+        testImplementation "org.scalatest:scalatest_2.12:_"
+        testImplementation "org.scalacheck:scalacheck_2.12:_"
+        testImplementation("org.postgresql:postgresql:_")
 
-        testRuntimeOnly "org.apache.derby:derby:10.15.2.0"
-        testRuntimeOnly "org.apache.derby:derbytools:10.15.2.0"
+        testRuntimeOnly "org.apache.derby:derby:_"
+        testRuntimeOnly "org.apache.derby:derbytools:_"
     }
 }

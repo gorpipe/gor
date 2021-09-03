@@ -50,6 +50,7 @@ case class OutputOptions(remove: Boolean = false,
                             compressionLevel: Int = Deflater.BEST_SPEED,
                             useFolder: Option[String] = Option.empty,
                             skipHeader: Boolean = false,
+                            writeMeta: Boolean = true,
                             cardCol: String = null,
                             linkFile: String = ""
                            )

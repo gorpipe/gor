@@ -28,12 +28,12 @@ project(':util') {
     dependencies {
         implementation project(':base')
 
-        implementation "commons-configuration:commons-configuration:1.10"
-        implementation "org.apache.commons:commons-lang3:3.12.0"
-        implementation "com.zaxxer:HikariCP:4.0.3"
+        implementation "commons-configuration:commons-configuration:_"
+        implementation libs.commons.lang3
+        implementation "com.zaxxer:HikariCP:_"
 
         testImplementation project(':test')
 
-        testImplementation 'org.slf4j:slf4j-api:1.7.30'
+        testImplementation libs.slf4j
     }
 }

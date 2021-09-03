@@ -1,3 +1,10 @@
+plugins {
+    // See https://jmfayard.github.io/refreshVersions
+    id 'de.fayard.refreshVersions' version '0.20.0'
+}
+
+enableFeaturePreview("VERSION_CATALOGS")
+
 rootProject.name = 'gor'
 rootProject.buildFileName = "build.gradle"
 
