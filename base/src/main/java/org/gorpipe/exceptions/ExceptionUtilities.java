@@ -193,10 +193,12 @@ public final class ExceptionUtilities {
     private static final String GOR_MESSAGE = "gorMessage";
     private static final String MESSAGE = "message";
     private static final String REQUEST_ID = "requestId";
+    private static final String QUERY = "query";
     private static final String COMMAND_NAME = "commandName";
     private static final String COMMAND_INDEX = "commandIndex";
     private static final String COMMAND_SOURCE = "commandSource";
     private static final String COMMAND = "command";
+    private static final String EXTRA_INFO = "extraInfo";
     private static final String OPTION = "option";
     private static final String OPTION_VALUE = "optionValue";
     private static final String URI = "uri";
@@ -238,10 +240,12 @@ public final class ExceptionUtilities {
     }
 
     private static void gorUserExceptionToJson(GorUserException exception, JSONObject obj) {
+        addJsonEntry(QUERY, exception.getQuery(), obj);
         addJsonEntry(COMMAND_NAME, exception.getCommandName(), obj);
         addJsonEntry(COMMAND_INDEX, exception.getCommandIndex(), obj);
         addJsonEntry(COMMAND_SOURCE, exception.getQuerySource(), obj);
         addJsonEntry(COMMAND, exception.getCommandStep(), obj);
+        addJsonEntry(EXTRA_INFO, exception.getExtraInfo(), obj);
     }
 
     private static void gorParsingExceptionToJson(GorParsingException exception, JSONObject obj) {
@@ -447,10 +451,12 @@ public final class ExceptionUtilities {
     }
 
     private static void updateGorUserException(JSONObject obj, GorUserException exception) {
+        exception.setQuery(getStringValue(obj, QUERY, ""));
         exception.setCommandName(getStringValue(obj, COMMAND_NAME, ""));
         exception.setCommandIndex(getIntValue(obj, COMMAND_INDEX, -1));
         exception.setCommandStep(getStringValue(obj, COMMAND, ""));
         exception.setQuerySource(getStringValue(obj, COMMAND_SOURCE, ""));
+        exception.setExtraInfo(getStringValue(obj, EXTRA_INFO, ""));
     }
 
     private static String getStringValue(JSONObject obj, String key, String defaultValue) {

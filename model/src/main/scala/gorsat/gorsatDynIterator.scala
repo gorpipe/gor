@@ -185,7 +185,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       }
       i += 1
     }
-    (if( prefix.length > 0 ) prefix+";" else "") + (if( header ) pipeSteps.map( s => { if(s.toLowerCase.contains("sdl")) s else s.replace("|","| top 0 |") }).mkString("| top 0 |")+"| top 0" else pipeSteps.mkString("|"))
+    (if( prefix.nonEmpty ) prefix+";" else "") + (if( header ) pipeSteps.map(s => { if(s.toLowerCase.contains("sdl")) s else CommandParseUtilities.quoteSafeReplace(s,"|","| top 0 |") }).mkString("| top 0 |")+"| top 0" else pipeSteps.mkString("|"))
   }
   def setPositionWithoutChrLimits(seekChr: String, seekPos : Int) {
     if (itDyn != null) { itDyn.close() }

@@ -74,7 +74,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
         new DriverBackedFileReader(fileReader.getSecurityContext, fileReader.getCommonRoot, fileReader.getConstants)
       case _ => session.getProjectContext.getFileReader
     }
-    runner.run(RowArrayIterator(inputArray, length), OutFile(outputFile, sortFileReader, header))
+    runner.run(RowArrayIterator(inputArray, length), OutFile.driver(outputFile, sortFileReader, header, skipHeader = false, OutputOptions(writeMeta = false)))
   }
 
   override def process(r: Row) {

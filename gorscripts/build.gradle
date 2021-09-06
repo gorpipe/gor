@@ -40,40 +40,40 @@ project(':gorscripts') {
         implementation project(':base')
         implementation project(':util')
 
-        implementation "org.aeonbits.owner:owner:1.0.12"
-        implementation 'ch.qos.logback:logback-classic:1.2.3'
-        implementation "info.picocli:picocli:4.6.1"
-        implementation 'info.picocli:picocli-shell-jline3:4.6.1'
-        implementation "commons-io:commons-io:2.8.0"
-        implementation "org.apache.commons:commons-lang3:3.12.0"
-        implementation "de.tototec:de.tototec.cmdoption:0.7.0"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.12.3"
-        implementation "org.reflections:reflections:0.9.12"
-        implementation "com.google.guava:guava:30.1.1-jre"
+        implementation "org.aeonbits.owner:owner:_"
+        implementation libs.logback
+        implementation libs.picocli
+        implementation libs.picocli.shell
+        implementation libs.commons.io
+        implementation libs.commons.lang3
+        implementation "de.tototec:de.tototec.cmdoption:_"
+        implementation libs.jackson.databind
+        implementation "org.reflections:reflections:_"
+        implementation "com.google.guava:guava:_"
 
         runtimeOnly project(':documentation')
         runtimeOnly project(':drivers')
 
-        runtimeOnly "org.scala-lang:scala-reflect:2.12.13"
+        runtimeOnly "org.scala-lang:scala-reflect:_"
 
         testImplementation project(':test')
         testImplementation project(':util')
 
-        testImplementation "org.mockito:mockito-core:3.7.7"
-        testImplementation "org.scalatest:scalatest_2.12:3.0.8"
-        testImplementation "org.scalacheck:scalacheck_2.12:1.15.3"
-        testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
-        testImplementation "commons-io:commons-io:2.8.0"
-        testImplementation "org.apache.commons:commons-lang3:3.12.0"
-        testImplementation "com.google.guava:guava:27.0-jre"
-        testImplementation 'org.slf4j:slf4j-api:1.7.30'
-        testImplementation 'ch.qos.logback:logback-classic:1.2.3'
-        testImplementation "com.github.samtools:htsjdk:2.24.1"
+        testImplementation Testing.mockito.core
+        testImplementation "org.scalatest:scalatest_2.12:_"
+        testImplementation "org.scalacheck:scalacheck_2.12:_"
+        testImplementation 'com.github.stefanbirkner:system-rules:_'
+        testImplementation libs.commons.io
+        testImplementation libs.commons.lang3
+        testImplementation "com.google.guava:guava:_"
+        testImplementation libs.slf4j
+        testImplementation libs.logback
+        testImplementation "com.github.samtools:htsjdk:_"
 
-        testRuntimeOnly "org.apache.derby:derby:10.15.2.0"
-        testRuntimeOnly "org.apache.derby:derbytools:10.15.2.0"
+        testRuntimeOnly "org.apache.derby:derby:_"
+        testRuntimeOnly "org.apache.derby:derbytools:_"
 
-        antlr("org.antlr:antlr4:4.9.2")
+        antlr("org.antlr:antlr4:_")
     }
 
     // Tests
