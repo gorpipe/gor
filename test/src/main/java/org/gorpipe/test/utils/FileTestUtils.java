@@ -139,19 +139,17 @@ public class FileTestUtils {
     }
 
     // Bucket for the small gorfile
-    public static File createGenericSmallGorFileBucket(File directory, String source) throws IOException {
-        return FileTestUtils.createTempFile(directory, "generic_bucket.gor",
-                "#Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
-                        "chr1\t11868\t14412\tDDX11L1\t" + source + "\n" +
-                        "chr1\t14362\t29806\tWASH7P\t" + source + "\n" +
-                        "chr1\t29553\t31109\tMIR1302-11\t" + source + "\n" +
-                        "chr1\t34553\t36081\tFAM138A\t" + source + "\n" +
-                        "chr1\t52472\t54936\tOR4G4P\t" + source + "\n" +
-                        "chr1\t62947\t63887\tOR4G11P\t" + source + "\n" +
-                        "chr1\t69090\t70008\tOR4F5\t" + source + "\n" +
-                        "chr1\t89294\t133566\tRP11-34P13.7\t" + source + "\n" +
-                        "chr1\t89550\t91105\tRP11-34P13.8\t" + source + "\n"
-        );
+    public static File createGenericSmallGorFileBucket(File directory, String data, String[] sources) throws IOException {
+        String content = "#Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n";
+        for (String line : data.split("\n")) {
+            if (line.startsWith("#")) {
+                continue;
+            }
+            for (String source : sources) {
+                content += String.format("%s\t%s\n", line, source);
+            }
+        }
+        return FileTestUtils.createTempFile(directory, "generic_bucket.gor", content);
     }
 
     /**

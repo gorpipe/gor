@@ -29,8 +29,10 @@ import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{NordIterator, PipeOptions}
-import org.gorpipe.gor.model.GenomicIterator
+import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
+
+import java.nio.file.{Files, Path}
 
 object Nor
 {
@@ -130,7 +132,18 @@ object Nor
         if (inputParams.toUpperCase.endsWith("NORZ")) {
           inputSource = new ServerGorSource(inputParams, context, true)
         } else {
-          inputSource = new NorInputSource(inputParams, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
+          var inputFile = inputParams
+          if (inputParams.toUpperCase.endsWith("GORD")) {
+            var dictPath = Path.of(inputParams)
+            val rootPath = context.getSession.getProjectContext.getProjectRootPath
+            if (!dictPath.isAbsolute() && rootPath != null) {
+              dictPath = rootPath.resolve(dictPath);
+            }
+            if (Files.isDirectory(dictPath)) {
+              inputFile = inputParams + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME
+            }
+          }
+          inputSource = new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
         }
       }
 

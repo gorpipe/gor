@@ -63,7 +63,8 @@ public class TableHeader {
     public static final String HEADER_UNIQUE_TAGS_KEY = "UNIQUE_TAGS";
     public static final String HEADER_VALIDATE_FILES_KEY = "VALIDATE_FILES";
     public static final String HEADER_BUCKETIZE_KEY = "BUCKETIZE";
-    public static final String[] DEFULT_TABLE_HEADER = new String[] {"filepath","Source"};
+    public static final String HEADER_LINE_FILTER_KEY = "LINE_FILTER";    // not(-nf)
+    public static final String[] DEFULT_TABLE_HEADER = new String[] {"filepath","alias"};
     public static final String[] DEFULT_RANGE_TABLE_HEADER = new String[] {"filepath","alias","startchrom","startpos","endchrom","endpos","tags"};
 
 
@@ -106,9 +107,9 @@ public class TableHeader {
      */
     public String getProperty(String key) {
         if (HEADER_SOURCE_COLUMN_KEY.equals(key) && !headerProps.containsKey(HEADER_SOURCE_COLUMN_KEY) && isProperTableHeader()) {
-            // Special treatment for source column.  It it si missing from standard probs and the header is good
-            // we retreive it from the standard column heading.
-            return tableColumns[1];
+            // Special treatment for source column.  If it is missing from standard probs and the header is good
+            // we retreive it from the standard column heading if it is different from the default.
+            return tableColumns[1] == DEFULT_TABLE_HEADER[1] ? BaseTable.DEFAULT_SOURCE_COLUMN : tableColumns[1];
         } else {
             return headerProps.get(key);
         }
@@ -238,14 +239,16 @@ public class TableHeader {
 
     public void load(BaseTable table) {
         log.debug("Parsing header for {}", table.getName());
+        load(table.getPath(), table.getFolderPath().resolve("header"));
+    }
 
+    public void load(Path tablePath, Path headerPath) {
         try {
             clear();
 
             // Read both from header file and main file, with main file overriding.
 
-            Path headerPath = table.getFolderPath().resolve("header");
-            if (Files.exists(headerPath)) {
+            if (headerPath != null && Files.exists(headerPath)) {
                 try (Stream<String> stream = Files.lines(headerPath)) {
                     stream.forEach(line -> {
                         line = line.trim();
@@ -256,8 +259,8 @@ public class TableHeader {
                 }
             }
 
-            if (Files.exists(table.getPath())) {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(table.getPath().toString())))) {
+            if (tablePath != null && Files.exists(tablePath)) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(tablePath.toString())))) {
                     String line;
                     while ((line = br.readLine()) != null) {
                         line = line.trim();
@@ -273,7 +276,7 @@ public class TableHeader {
                 }
             }
         } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query. Can not read file " + table.getPath(), table.getPath().toString(), ex);
+            throw new GorResourceException("Error Initializing Query. Can not read file " + tablePath, tablePath.toString(), ex);
         }
     }
 }
