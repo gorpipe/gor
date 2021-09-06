@@ -35,7 +35,7 @@ import java.net.URI
 import java.nio.file.Paths
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -noheader", "-d -f -i -t -l -card -prefix -link", 0),
+  CommandArguments("-r -c -m -noheader", "-d -f -i -t -l -tags -card -prefix -link", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -85,7 +85,14 @@ class Write extends CommandInfo("WRITE",
       else prefixFile = Option(prfx)
     }
 
-    val tagArray = replaceSingleQuotes(stringValueOfOptionWithDefault(args, "-t", "")).split(",", -1).map(x => x.trim).distinct
+    if (hasOption(args, "-t") && !hasOption(args, "-f")) {
+      throw new GorParsingException("Option -t is only valid with the -f option.", "-t")
+    }
+
+    val forkTagArray = replaceSingleQuotes(stringValueOfOptionWithDefault(args, "-t", "")).split(",", -1).map(x => x.trim).distinct
+
+    val dictTagArray = replaceSingleQuotes(stringValueOfOptionWithDefault(args, "-tags", "")).split(",", -1).map(x => x.trim).distinct
+
 
     indexing match {
       case "NONE" => idx = GorIndexType.NONE
@@ -102,6 +109,6 @@ class Write extends CommandInfo("WRITE",
 
     val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, tagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link)), fixedHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, forkTagArray, dictTagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link)), fixedHeader)
   }
 }
