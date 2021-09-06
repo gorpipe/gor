@@ -56,14 +56,16 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     protected String inputFileFirstReport;
     FileReader fileResolver;
     QueryEvaluator queryEval;
+    boolean ignoreAllowedMismatch;
 
     /**
      * Constructs a factory with no registered argument builders
      */
-    public AbstractDialogFactory(FileReader fr, QueryEvaluator queryEval) {
+    public AbstractDialogFactory(FileReader fr, QueryEvaluator queryEval, boolean ignoreAllowedMismatch) {
         this.fileResolver = fr;
         this.queryEval = queryEval;
         argumentBuilders = new HashMap<>();
+        this.ignoreAllowedMismatch = ignoreAllowedMismatch;
     }
 
     /**
@@ -74,6 +76,7 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
      * @return the previously registered builder for that type, or null if there was none
      */
     public ArgumentBuilder registerArgumentBuilder(ArgumentType type, ArgumentBuilder builder) {
+        builder.setIgnoreAllowedMismatch(ignoreAllowedMismatch);
         return argumentBuilders.put(type, builder);
     }
 
