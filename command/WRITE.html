@@ -184,7 +184,7 @@
 <td><p>The “fork column” used to split the output into multiple files.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
-<td><p>Use subdirectories instead of #{fork} in filename for forkwrite</p></td>
+<td><p>Use subdirectories instead of #{fork} in filename for forkwrite.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
 <td><p>Eliminate the fork column from the output.</p></td>
@@ -206,12 +206,21 @@ Must state the type, which can be FULL, CHROM or TABIX</p></td>
 <td><p>List of tags which write ensures a file will be created.
 Only valid with the -f option.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tags</span> <span class="pre">'tags'</span></code></p></td>
+<td><p>List of tags/alias to use in the resulting dictionary when
+writing the files to directories.   Usually used with partgor
+as <code class="docutils literal notranslate"><span class="pre">-tags</span> <span class="pre">#{tags}</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
 <td><p>Takes in a text source containing prefix to be prepended to the
 file written. Also support string in single quotes</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-noheader</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-noheader</span></code></p></td>
 <td><p>Don’t write a header lines.  Not valid with gor/gorz/nor/norz.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-card</span> <span class="pre">'cols'</span></code></p></td>
+<td><p>Calculate cardinality of columns in ‘cols’ and adds to the
+outputs meta data.</p></td>
 </tr>
 </tbody>
 </table>

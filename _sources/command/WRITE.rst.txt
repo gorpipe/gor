@@ -30,7 +30,7 @@ Options
 +-----------------+-----------------------------------------------------------------+
 | ``-f column``   | The "fork column" used to split the output into multiple files. |
 +-----------------+-----------------------------------------------------------------+
-| ``-d``          | Use subdirectories instead of #{fork} in filename for forkwrite |
+| ``-d``          | Use subdirectories instead of #{fork} in filename for forkwrite.|
 +-----------------+-----------------------------------------------------------------+
 | ``-r``          | Eliminate the fork column from the output.                      |
 +-----------------+-----------------------------------------------------------------+
@@ -46,10 +46,17 @@ Options
 | ``-t 'tags'``   | List of tags which write ensures a file will be created.        |
 |                 | Only valid with the -f option.                                  |
 +-----------------+-----------------------------------------------------------------+
+| ``-tags 'tags'``| List of tags/alias to use in the resulting dictionary when      |
+|                 | writing the files to directories.   Usually used with partgor   |
+|                 | as ``-tags #{tags}``.                                           |
++-----------------+-----------------------------------------------------------------+
 | ``-prefix hf``  | Takes in a text source containing prefix to be prepended to the |
 |                 | file written. Also support string in single quotes              |
 +-----------------+-----------------------------------------------------------------+
 | ``-noheader``   | Don't write a header lines.  Not valid with gor/gorz/nor/norz.  |
++-----------------+-----------------------------------------------------------------+
+| ``-card 'cols'``| Calculate cardinality of columns in 'cols' and adds to the      |
+|                 | outputs meta data.                                              |
 +-----------------+-----------------------------------------------------------------+
 
 Examples
