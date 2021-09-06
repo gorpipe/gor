@@ -49,7 +49,11 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
     public static final String OTHER_DIALOG_CATEGORY = "Other";
 
     public PerspectiveDialogFactory(FileReader fileResolver, QueryEvaluator queryEvaluator) {
-        super(fileResolver, queryEvaluator);
+        this(fileResolver, queryEvaluator, false);
+    }
+
+    public PerspectiveDialogFactory(FileReader fileResolver, QueryEvaluator queryEvaluator, boolean ignoreAllowedMismatch) {
+        super(fileResolver, queryEvaluator, ignoreAllowedMismatch);
     }
 
     /**
@@ -58,7 +62,16 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
      * @return perspective dialog factory
      */
     public static PerspectiveDialogFactory create(FileReader fileResolver, QueryEvaluator queryEval) {
-        final PerspectiveDialogFactory factory = new PerspectiveDialogFactory(fileResolver, queryEval);
+        return create(fileResolver, queryEval, false);
+    }
+
+    /**
+     * Create a new perspective dialog factory.
+     *
+     * @return perspective dialog factory
+     */
+    public static PerspectiveDialogFactory create(FileReader fileResolver, QueryEvaluator queryEval, boolean ignoreAllowedMismatch) {
+        final PerspectiveDialogFactory factory = new PerspectiveDialogFactory(fileResolver, queryEval, ignoreAllowedMismatch);
         factory.registerArgumentBuilder(ArgumentType.STRING, new StringArgumentBuilder(fileResolver));
         factory.registerArgumentBuilder(ArgumentType.NUMBER, new NumberArgumentBuilder(fileResolver));
         factory.registerArgumentBuilder(ArgumentType.DATE, new DateArgumentBuilder(fileResolver));
