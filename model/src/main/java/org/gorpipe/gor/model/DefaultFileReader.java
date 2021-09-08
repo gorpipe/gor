@@ -115,7 +115,7 @@ public class DefaultFileReader extends FileReader {
     }
 
     @Override
-    public Stream<String> iterateFile(String fileName, int maxDepth, boolean showModificationDate) throws IOException {
+    public Stream<String> iterateFile(String fileName, int maxDepth, boolean followLinks, boolean showModificationDate) throws IOException {
         final String file = resolveUrl(fileName, "", securityContext);
 
         if (file.startsWith("//db:")) {
@@ -126,7 +126,7 @@ public class DefaultFileReader extends FileReader {
         if (f.isDirectory()) {
             Path path = f.toPath();
             Path root = Paths.get("");
-            return getDirectoryStream(maxDepth, showModificationDate, path, root);
+            return getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
         }
 
         BufferedReader bufferedReader = new BufferedReader(new java.io.FileReader(f));
@@ -140,8 +140,9 @@ public class DefaultFileReader extends FileReader {
         });
     }
 
-    static Stream<String> getDirectoryStream(int maxDepth, boolean showModificationDate, Path path, Path root) throws IOException {
-        Stream<String> stream = Files.walk(path, maxDepth, FileVisitOption.FOLLOW_LINKS).map(x -> {
+    static Stream<String> getDirectoryStream(int maxDepth, boolean followLinks, boolean showModificationDate, Path path, Path root) throws IOException {
+        var pstream = followLinks ? Files.walk(path, maxDepth, FileVisitOption.FOLLOW_LINKS) : Files.walk(path, maxDepth);
+        var stream = pstream.map(x -> {
             try {
                 Path fileNamePath = x.getFileName();
                 if (fileNamePath == null) {

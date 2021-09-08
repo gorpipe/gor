@@ -134,7 +134,7 @@ public abstract class FileReader {
      * @return An Iterator
      * @throws IOException If file is not found
      */
-    public abstract Stream<String> iterateFile(String file, int maxDepth, boolean showModificationDate) throws IOException;
+    public abstract Stream<String> iterateFile(String file, int maxDepth, boolean followLinks, boolean showModificationDate) throws IOException;
 
     /**
      * Read the first line (the header) of the specified file

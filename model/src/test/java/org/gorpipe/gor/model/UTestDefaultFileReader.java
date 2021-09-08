@@ -102,7 +102,7 @@ public class UTestDefaultFileReader {
 
     @Test
     public void iterateFile() throws IOException {
-        try (Stream<String> stream = reader.iterateFile(getFile().getAbsolutePath(), 0, false)) {
+        try (Stream<String> stream = reader.iterateFile(getFile().getAbsolutePath(), 0, false,false)) {
             final List<String> lines = stream.collect(Collectors.toList());
             assertEquals(3, lines.size());
         }
@@ -110,7 +110,7 @@ public class UTestDefaultFileReader {
 
     @Test
     public void iterateFileOnDirectory() throws IOException {
-        try (Stream<String> stream = reader.iterateFile(workDir.getRoot().getAbsolutePath(), 0, false)) {
+        try (Stream<String> stream = reader.iterateFile(workDir.getRoot().getAbsolutePath(), 0, false, false)) {
             final List<String> lines = stream.collect(Collectors.toList());
             assertTrue(lines.size() >= 1);
         }
@@ -118,14 +118,14 @@ public class UTestDefaultFileReader {
 
     @Test
     public void getDirectoryStream() throws IOException {
-        final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, false, workDir.getRoot().toPath(), workDir.getRoot().toPath());
+        final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, false, false, workDir.getRoot().toPath(), workDir.getRoot().toPath());
         final List<String> list = directoryStream.collect(Collectors.toList());
         assertTrue(list.size() >= 1);
     }
 
     @Test
     public void getDirectoryStreamWithModificationDate() throws IOException {
-        final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, true, workDir.getRoot().toPath(), workDir.getRoot().toPath());
+        final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, false, true, workDir.getRoot().toPath(), workDir.getRoot().toPath());
         final List<String> list = directoryStream.collect(Collectors.toList());
         assertTrue(list.size() >= 1);
     }

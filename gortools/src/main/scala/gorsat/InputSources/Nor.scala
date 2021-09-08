@@ -45,7 +45,9 @@ object Nor
     if (hasOption(args, "-r")) {
       maxWalkDepth = CommandParseUtilities.intValueOfOptionWithDefault(args, "-d", Int.MaxValue)
     }
-    val showModificationDate = hasOption(args, "-m")
+    val hideModificationDate = hasOption(args, "-m")
+    val followLinks = hasOption(args, "-l")
+
     val inputParams = iargs(0)
     var inputSource: GenomicIterator = null
 
@@ -143,7 +145,7 @@ object Nor
               inputFile = inputParams + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME
             }
           }
-          inputSource = new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, showModificationDate, ignoreEmptyLines)
+          inputSource = new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
         }
       }
 
@@ -163,7 +165,7 @@ object Nor
     }
   }
 
-  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -l -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
