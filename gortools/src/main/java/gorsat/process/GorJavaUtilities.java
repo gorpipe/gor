@@ -516,7 +516,7 @@ public class GorJavaUtilities {
         Files.writeString(dictionarypath,header);
     }
 
-    private static void writeHeader(Path dictionarypath, Path p) throws IOException {
+    private static void writeHeader(Path dictionarypath, Path p, boolean lineFilter) throws IOException {
         var fileName = p.getFileName().toString();
         var gorzFile = p.getParent().resolve(fileName.substring(0,fileName.length()-5));
         if (Files.exists(gorzFile)) {
@@ -525,6 +525,9 @@ public class GorJavaUtilities {
                 var tableheader = new TableHeader();
                 tableheader.setColumns(headerspl);
                 tableheader.setTableColumns(TableHeader.DEFULT_RANGE_TABLE_HEADER);
+                if (!lineFilter) {
+                    tableheader.setProperty(TableHeader.HEADER_LINE_FILTER_KEY, Boolean.toString(lineFilter));
+                }
                 var header = tableheader.formatHeader();
                 Files.writeString(dictionarypath, header);
             }
@@ -561,8 +564,9 @@ public class GorJavaUtilities {
                         var gordline = outfile+"\t"+i+"\t"+s+"\t";
                         if(cc.isPresent()) gordline += cc.get();
                         else if(tags.isPresent()) gordline += tags.get();
+
                         if (!headerWritten) {
-                            writeHeader(dictionarypath, p);
+                            writeHeader(dictionarypath, p, !tags.isPresent());
                             headerWritten = true;
                         }
                         Files.writeString(dictionarypath, gordline + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);

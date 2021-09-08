@@ -29,6 +29,7 @@ import org.gorpipe.querydialogs.factory.ArgumentBuilder;
 import org.gorpipe.querydialogs.util.ValueFormatter;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,7 @@ public class StringArgumentBuilder extends ArgumentBuilder {
         final ArgumentDescription argDescr = getArgumentDescription(attributes, name);
         final Boolean optional = (Boolean) attributes.get("optional");
         final String defaultValue = safeString(attributes.get("default"));
-        final List<? extends Object> allowed = getAllowedValues(attributes);
+        final List<? extends Object> allowed = ignoreAllowedMismatch() ? new ArrayList<>() : getAllowedValues(attributes);
         final URI valuesPath = getValuesPath(attributes);
         final List<String> operators = (List<String>) attributes.get("operators");
 

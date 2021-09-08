@@ -61,10 +61,9 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
 
     private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_FILES_VALIDATE", "true"));
-    private static final String DEFAULT_SOURCE_COLUMN = "Source";
+    public static final String DEFAULT_SOURCE_COLUMN = "Source";
     private static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
-    public static final boolean DEFAULT_USE_HISTORY = true;
     private static final boolean DEFAULT_BUCKETIZE = false;  // Value used if bucketized is not set.
     private static final boolean INFER_BUCKETIZE_FROM_FILE = Boolean.parseBoolean(System.getProperty("GOR_TABLE_INFER_BUCKETIZE_FROM_FILE", "true"));
 
@@ -81,10 +80,11 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     protected final TableHeader header;                // Header info.
     private String sourceColumn = DEFAULT_SOURCE_COLUMN;     // Name of the files tag column (source column).
-    private boolean useHistory = DEFAULT_USE_HISTORY;
+    private boolean useHistory = true;
     private boolean hasUniqueTags = false;    //True if we don't want to allow double entries of the same tag
     private boolean validateFiles = DEFAULT_VALIDATE_FILES;
     private Boolean bucketize = null;
+    private boolean lineFilter = true;
 
     protected ITableEntries<T> tableEntries;
 
@@ -253,6 +253,14 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     public void setBucketize(boolean bucketize) {
         this.bucketize = bucketize;
+    }
+
+    public Boolean getLineFilter() {
+        return lineFilter;
+    }
+
+    public void setLineFilter(Boolean lineFilter) {
+        this.lineFilter = lineFilter;
     }
 
     public boolean isHasUniqueTags() {
@@ -566,6 +574,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         hasUniqueTags = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY,  Boolean.toString(hasUniqueTags)));
 
         bucketize = getBooleanConfigTableProperty(TableHeader.HEADER_BUCKETIZE_KEY, bucketize);
+        lineFilter = getBooleanConfigTableProperty(TableHeader.HEADER_LINE_FILTER_KEY, lineFilter);
     }
 
     /**
@@ -594,6 +603,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         this.header.setProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(this.useHistory));
         this.header.setProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(this.validateFiles));
         this.header.setProperty(TableHeader.HEADER_UNIQUE_TAGS_KEY, Boolean.toString(this.hasUniqueTags));
+        this.header.setProperty(TableHeader.HEADER_LINE_FILTER_KEY, Boolean.toString(this.lineFilter));
 
         if (bucketize != null) {
             this.header.setProperty(TableHeader.HEADER_BUCKETIZE_KEY, Boolean.toString(this.bucketize));

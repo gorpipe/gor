@@ -149,7 +149,7 @@ public class GorOptions {
     /**
      * Don't use tags for line filtering, only for dictionary filtering.
      */
-    public final boolean isNoLineFilter;
+    public boolean isNoLineFilter;
     /**
      * The resource monitor to report resources usage to, or null if none is attached
      */
@@ -308,6 +308,7 @@ public class GorOptions {
         boolean silentTagFilter = CommandParseUtilities.hasOption(options, "-fs");
         boolean noLineFilter = CommandParseUtilities.hasOption(options, "-nf");
         boolean allowBucketAccess = !CommandParseUtilities.hasOption(options, "-Y");
+        boolean hasTagFiltering = false;
         enforceResourceRelativeToRoot = CommandParseUtilities.hasOption (options, "-P");
         String tmpIdxFile = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-idx", null);
         String tmpRefFile = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-ref", null);
@@ -318,7 +319,7 @@ public class GorOptions {
 
         if (CommandParseUtilities.hasOption(options, "-ff")) {
             tagfile = CommandParseUtilities.stringValueOfOption(options, "-ff");
-            insertSourceOpt = true; // Always assume -s when using -f
+            hasTagFiltering = true;
         }
 
         if (CommandParseUtilities.hasOption(options, "-f")) {
@@ -327,7 +328,7 @@ public class GorOptions {
             final ArrayList<String> tags = StringUtil.split(taglist, 0, ',');
             this.columnTags = new HashSet<>();
             this.columnTags.addAll(tags);
-            insertSourceOpt = true; // Always assume -s when using -f
+            hasTagFiltering = true;
         }
 
         if (CommandParseUtilities.hasOption(options, "-s")) {
@@ -392,10 +393,19 @@ public class GorOptions {
         ProjectContext projectContext = new ProjectContext(securityKey, commonRoot);
 
         final HashSet<String> alltags = new HashSet<>(); // Collect all tags in parsed dictionary files into one set
-        resolveSources(insertSourceOpt, iargs, projectContext, allowBucketAccess, alltags);
+        resolveSources(iargs, projectContext, allowBucketAccess, alltags);
+
+        // dictionary files will always insert sources
+        if (insertSourceOpt || hasLocalDictonaryFile || hasTagFiltering) {
+            // Extract an unique file name part for the file. Used in source ref to get name for the file (used for example in getting sensible column names).
+            // This is only used if alias is not defined.
+            setUniqueSourceNames();
+        }
 
         // Moved this assignment to last, so that dictionary discovery will correctly trigger insert source
-        this.insertSource = hasLocalDictonaryFile && (isDictionaryWithBuckets || insertSourceOpt) || insertSourceOpt;
+        this.insertSource = insertSourceOpt
+                || (!isNoLineFilter
+                    && (hasTagFiltering || (hasLocalDictonaryFile && isDictionaryWithBuckets)));
     }
 
     public GenomicIterator getIterator() {
@@ -540,19 +550,12 @@ public class GorOptions {
      * Note must be called at the end of constructor when all fields have been set, or optionally from createFilter
      * as the second last thing in the constructor, and in that case the filter expression will be wrong
      */
-    private void resolveSources(boolean isInsertSource, String[] fileList, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
+    private void resolveSources(String[] fileList, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
         sourceName = String.join(":", fileList);
 
         // Start by resolve simple filelists
         for (final String file : fileList) {
             createStandardSources(projectContext, allowBucketAccess, alltags, file);
-        }
-
-        // dictionary files will always insert sources
-        if (isInsertSource || hasLocalDictonaryFile) {
-            // Extract an unique file name part for the file. Used in source ref to get name for the file (used for example in getting sensible column names).
-            // This is only used if alias is not defined.
-            insertDictionarySource();
         }
     }
 
@@ -573,7 +576,10 @@ public class GorOptions {
         }
     }
 
-    private void insertDictionarySource() {
+    /*
+      Updates the files (sourceRefs) with a unique file name part (in case we need to add source column.)
+     */
+    private void setUniqueSourceNames() {
         // Keep and index array with the last checked position for /, from the right
         final int[] indices = new int[files.size()];
         for (int i = 0; i < files.size(); i++) {
@@ -808,19 +814,25 @@ public class GorOptions {
                     gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
         }
 
+        var dictpath = Paths.get(fileName);
+        if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
+            var rootpath = Paths.get(commonRoot);
+            dictpath = rootpath.resolve(dictpath);
+        }
+        DictionaryTable table = new DictionaryTable(dictpath);
+
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            var dictpath = Paths.get(fileName);
-            if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
-                var rootpath = Paths.get(commonRoot);
-                dictpath = rootpath.resolve(dictpath);
-            }
-            DictionaryTable table = new DictionaryTable(dictpath);
             sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
+        }
+
+        if (tableHeader == null) {
             tableHeader = table.getProperty(TableHeader.HEADER_COLUMNS_KEY);
             if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
         }
+
+        isNoLineFilter = !table.getLineFilter() || isNoLineFilter;
     }
 
     private void subProcessOfProcessDictionary(Dictionary.DictionaryLine dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags) {

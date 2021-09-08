@@ -42,9 +42,18 @@ public abstract class ArgumentBuilder {
     private static final Logger logger = LoggerFactory.getLogger(ArgumentBuilder.class);
     private static Map<String, String> pathMap = null;
     private final FileReader fileResolver;
+    private boolean ignoreAllowedMismatch = false;
 
     public ArgumentBuilder(FileReader fileResolver) {
         this.fileResolver = fileResolver;
+    }
+
+    public void setIgnoreAllowedMismatch(boolean ignoreAllowedMismatch) {
+        this.ignoreAllowedMismatch = ignoreAllowedMismatch;
+    }
+
+    public boolean ignoreAllowedMismatch() {
+        return ignoreAllowedMismatch;
     }
 
     private static synchronized Map<String, String> getPathMap(FileReader fileResolver) throws IOException {

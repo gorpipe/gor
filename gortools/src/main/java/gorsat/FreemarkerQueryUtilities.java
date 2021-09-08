@@ -23,6 +23,7 @@
 package gorsat;
 
 import freemarker.template.TemplateException;
+import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.querydialogs.Argument;
@@ -35,10 +36,7 @@ import org.gorpipe.querydialogs.factory.PerspectiveDialogFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -61,7 +59,7 @@ public class FreemarkerQueryUtilities {
      * @throws TemplateException    Internal freemarker error
      */
     public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
-        List<PerspectiveDialog> perspectiveDialogs = PerspectiveDialogFactory.create(fileResolver, queryEval).buildDialogs(resource, cacheDir);
+        List<PerspectiveDialog> perspectiveDialogs = PerspectiveDialogFactory.create(fileResolver, queryEval, true).buildDialogs(resource, cacheDir);
         Optional<PerspectiveDialog> optionalPerspective = getOptionalPerspective(reportName, perspectiveDialogs);
 
         if (!optionalPerspective.isPresent()) {
@@ -167,12 +165,20 @@ public class FreemarkerQueryUtilities {
         return result;
     }
 
+    static Set<String> extraAllowed = Set.of("perspective","query");
+
     private static Map<String, ArgumentContent> getArgumentValues
             (Map<String, String> parameterMap, FileReader fileResolver, PerspectiveDialog perspectiveDialog) {
         return parameterMap.entrySet().stream().filter(p -> p.getValue() != null).collect(
                 Collectors.toMap(Map.Entry::getKey, entry ->
                         {
-                            Argument argument = perspectiveDialog.getArgument(entry.getKey());
+                            String entryKey = entry.getKey();
+                            if(!extraAllowed.contains(entryKey) && !perspectiveDialog.hasArgument(entryKey)) {
+                                var set = new HashSet<>(extraAllowed);
+                                set.addAll(perspectiveDialog.getArgumentMap().keySet());
+                                throw new GorParsingException("Parameter '"+entryKey+"' not listed in report builder yaml. Allowed values are "+ set);
+                            }
+                            Argument argument = perspectiveDialog.getArgument(entryKey);
                             String value;
                             if (argument != null && argument.getType() == ArgumentType.PN_LISTS_ENTRIES) {
                                 //we need to load the pns from the file ans replace the original value

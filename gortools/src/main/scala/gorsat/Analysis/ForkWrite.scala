@@ -44,7 +44,8 @@ case class OutputOptions(remove: Boolean = false,
                             md5File: Boolean = false,
                             nor: Boolean = false,
                             idx: GorIndexType = GorIndexType.NONE,
-                            tags: Array[String] = null,
+                            forkTags: Array[String] = null,
+                            dictTags: Array[String] = null,
                             prefix: Option[String] = None,
                             prefixFile: Option[String] = None,
                             compressionLevel: Int = Deflater.BEST_SPEED,
@@ -115,7 +116,8 @@ case class ForkWrite(forkCol: Int,
 
   var useFork: Boolean = forkCol >= 0
   var forkMap = mutable.Map.empty[String, FileHolder]
-  val tagSet: mutable.Set[String] = scala.collection.mutable.Set()++options.tags
+  val forkTagSet: mutable.Set[String] = scala.collection.mutable.Set()++options.forkTags
+  val dictTagSet: mutable.Set[String] = scala.collection.mutable.Set()++options.dictTags
   var singleFileHolder: FileHolder = FileHolder("")
   if (!useFork) forkMap += ("theOnlyFile" -> singleFileHolder)
   var openFiles = 0
@@ -181,7 +183,7 @@ case class ForkWrite(forkCol: Int,
         case Some(x) => sh = x
         case None =>
           sh = FileHolder(forkID)
-          tagSet.remove(forkID)
+          forkTagSet.remove(forkID)
           forkMap += (forkID -> sh)
       }
     } else sh = singleFileHolder
@@ -263,7 +265,7 @@ case class ForkWrite(forkCol: Int,
     // Test the tag files and create them if we are not in error
     if (!isInErrorState&&useFork) {
       // Create all missing tag files
-      tagSet.foreach(x => {
+      forkTagSet.foreach(x => {
         if (x.nonEmpty) {
           try {
             val fileHolder = FileHolder(x)

@@ -157,7 +157,9 @@ object OutFile {
       } else {
         new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
       }
-      if(options.tags!=null&&options.tags.length>0) out.getMeta.setTags(options.tags.mkString(","))
+      if (options.dictTags != null && options.dictTags.length > 0) {
+        out.getMeta.setTags(options.dictTags.mkString(","))
+      }
       out
     } catch {
       case e: FileNotFoundException => throw new GorResourceException(s"Can't write to file", name, e)
@@ -165,7 +167,7 @@ object OutFile {
   }
 
   def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
-    driver(name, fileReader, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, None, prefixFile, compressionLevel))
+    driver(name, fileReader, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, null, None, prefixFile, compressionLevel))
 
   def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
 
