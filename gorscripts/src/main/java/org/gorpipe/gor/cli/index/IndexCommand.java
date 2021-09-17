@@ -58,7 +58,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private ByteArrayOutputStream lastbaos = null;
 
-    private boolean byteArrayEquals(String b1, String b2, int len) {
+    private boolean stringPrefixEquals(String b1, String b2, int len) {
         for( int j = 0; j < len; j++ ) {
             if( b1.charAt(j) != b2.charAt(j) ) return false;
         }
@@ -110,7 +110,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
             while( k < lastbuffer.length() && lastbuffer.charAt(k) != '\t' ) k++;
 
             if( k == lastbuffer.length() ) k = -1;
-            if (k == -1 || k != o || !byteArrayEquals(tbuffer, lastbuffer, k)) {
+            if (k == -1 || k != o || !stringPrefixEquals(tbuffer, lastbuffer, k)) {
                 if (!lastwritten) {
                     fos.write(lastbuffer);
                 }
