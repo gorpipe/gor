@@ -95,11 +95,9 @@ public class IndexCommand extends HelpOptions implements Runnable {
 
     private ByteArrayOutputStream writeBufferToFile(Writer fos) throws IOException {
         if (performFullIndex) {
-            var bufc = baos.toString();
-            fos.write(bufc);
+            fos.write(baos.toString());
         } else if (lastbaos == null) {
-            var bufc = baos.toString();
-            fos.write(bufc);
+            fos.write(baos.toString());
             lastbaos = baos;
             baos = new ByteArrayOutputStream();
         } else {
@@ -161,11 +159,9 @@ public class IndexCommand extends HelpOptions implements Runnable {
                 }
             }
             if (!lastwritten && lastbaos != null) {
-                var bufc = lastbaos.toString();
-                fos.write(bufc);
+                fos.write(lastbaos.toString());
             }
-            var bufc = baos.toString();
-            fos.write(bufc);
+            fos.write(baos.toString());
         } catch (IOException e) {
             throw new GorSystemException("gor file index failed",e);
         }
