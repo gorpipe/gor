@@ -201,6 +201,6 @@ push-version-to-dockerhub:
   rules:
     - when: never
 
-push_to_ecr:
+push-to-ecr:
   rules:
     - when: never
