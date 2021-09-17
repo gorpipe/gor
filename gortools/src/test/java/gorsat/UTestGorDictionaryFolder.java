@@ -1,5 +1,6 @@
 package gorsat;
 
+import org.gorpipe.gor.table.TableHeader;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -399,33 +400,37 @@ public class UTestGorDictionaryFolder {
 
         int partsize = 3;
         var folderpath = workDirPath.resolve("folder4.gord");
-        var query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        var query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -s Source -f #{tags} | write -tags #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         var result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
+        var header = new TableHeader();
+        header.load(folderpath.resolve("thedict.gord"), null);
+        Assert.assertEquals("false", header.getProperty(TableHeader.HEADER_LINE_FILTER_KEY));
+
         partsize = 4;
         folderpath = workDirPath.resolve("folder3.gord");
-        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -s Source -f #{tags} | write -tags #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         partsize = 3;
         folderpath = workDirPath.resolve("folder4p.gord");
-        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -s Source -f #{tags} | write -tags #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3p.gord");
-        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags} -d "+folderpath+");" +
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -s Source -f #{tags} | write -tags #{tags} -d "+folderpath+");" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
-        query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -f #{tags} | write -t #{tags});" +
+        query = "create #s1# = partgor -gordfolder -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -s Source -f #{tags} | write -tags #{tags});" +
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
@@ -465,5 +470,9 @@ public class UTestGorDictionaryFolder {
                 "gor [#empty#] | top 1";
         TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString());
         Assert.assertTrue(Files.exists(workDirPath.resolve("test.gord").resolve("thedict.gord")));
+
+        Assert.assertEquals("Nor-ing the folder with -asdict should be the same as noring the dict",
+                TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord").resolve("thedict.gord")),
+                TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")));
     }
 }

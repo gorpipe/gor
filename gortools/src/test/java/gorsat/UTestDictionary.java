@@ -47,8 +47,7 @@ public class UTestDictionary {
     private File pnFile2;
     private File pnFileWithoutHeader;
     private File rangeDictionaryFile;
-    private File gorFileBucketA;
-    private File gorFileBucketB;
+    private File gorFileBucket;
     private File dicionaryFileWihtBuckets;
 
     @Rule
@@ -70,11 +69,10 @@ public class UTestDictionary {
         rangeDictionaryFile = FileTestUtils.createTempFile(workDir.getRoot(), "range.gord",
                 genesPath + "\tOTHER\tchr10\t1\tchrZ\t1\tbull\n");
 
-        gorFileBucketA = FileTestUtils.createGenericSmallGorFileBucket(workDir.getRoot(), "a");
-        gorFileBucketB = FileTestUtils.createGenericSmallGorFileBucket(workDir.getRoot(), "b");
+        gorFileBucket = FileTestUtils.createGenericSmallGorFileBucket(workDir.getRoot(),  Files.readString(Path.of(gorFile.getPath())), new String[]{"a","b"});
         dicionaryFileWihtBuckets = FileTestUtils.createTempFile(workDir.getRoot(), "buckets.gord",
                 String.format("%s|%s\ta\n%s|%s\tb\n",
-                        gorFile.getCanonicalPath(), gorFileBucketA.getCanonicalPath(), gorFile.getCanonicalPath(), gorFileBucketB.getCanonicalPath()));
+                        gorFile.getCanonicalPath(), gorFileBucket.getCanonicalPath(), gorFile.getCanonicalPath(), gorFileBucket.getCanonicalPath()));
 
     }
 
@@ -171,6 +169,70 @@ public class UTestDictionary {
         String[] args = new String[]{"gor " + dictionaryFile.getCanonicalPath() + " -f a,b,c -fs"};
         int count = TestUtils.runGorPipeCount(args);
         Assert.assertEquals("Gor should return all data lines from dictionary", 18, count);
+    }
+
+    @Test
+    public void testGorDictionaryRead() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s", dictionaryFile.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithFilter() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -f a,b", dictionaryFile.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithNoFilter() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -nf", dictionaryFile.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithNoFilterAndSource() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -nf -s PN", dictionaryFile.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tPN", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryFilterWithNoFilter() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -f a -nf", dictionaryFile.getCanonicalPath()));
+        Assert.assertEquals(10, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithBuckets() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s", dicionaryFileWihtBuckets.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithBucketsWithNoFilter() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -nf", dicionaryFileWihtBuckets.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithBucketsWithNoFilterWithSource() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -nf -s PN", dicionaryFileWihtBuckets.getCanonicalPath()));
+        Assert.assertEquals(19, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tPN", result.split("\n")[0]);
+    }
+
+    @Test
+    public void testGorDictionaryWithBucketsFilterWithNoFilter() throws IOException {
+        String result = TestUtils.runGorPipe(String.format("gor %s -f a -nf", dicionaryFileWihtBuckets.getCanonicalPath()));
+        // Will not use the bucket, so only files from a.
+        Assert.assertEquals(10, result.split("\n").length);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", result.split("\n")[0]);
     }
 
     @Test(expected = GorDataException.class)
@@ -291,7 +353,6 @@ public class UTestDictionary {
         }
     }
 
-
     @Test
     public void testSourceColumnForBoundedDictsSimple() throws IOException {
         File dictFile = createSimpleDictWithBucket();
@@ -350,6 +411,7 @@ public class UTestDictionary {
         FileUtils.writeStringToFile(gorFile, gorCont, "UTF-8");
         FileUtils.writeStringToFile(dictFile, dictCont, "UTF-8");
         final String results = TestUtils.runGorPipe("gor " + dictFile.getAbsolutePath() + " -nf -f PN1");
+        Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tBUCKET\tVALUES", results.split("\n")[0]);
         Assert.assertEquals(2, results.split("\n").length);
     }
 

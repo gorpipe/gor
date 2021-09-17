@@ -553,6 +553,10 @@ public class Dialog extends AbstractListBean {
     public Argument getArgument(String argumentName) {
         return argumentMap.get(argumentName);
     }
+    
+    public boolean hasArgument(String argumentName) {
+        return argumentMap.containsKey(argumentName);
+    }
 
     public void setArgument(String argumentName, Argument arg) {
         argumentMap.put(argumentName, arg);

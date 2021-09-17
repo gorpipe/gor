@@ -134,7 +134,16 @@ public class UTestTableFunction {
         // This test relies on Unix-style commands
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
 
-        String query = "gor ../tests/data/reports/test.yml(top=10,bleh=':')";
+        String query = "gor ../tests/data/reports/test.yml(top=10,some=':')";
+        Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
+    }
+
+    @Test
+    public void testTableFunctionWithDisallowedValue() {
+        // This test relies on Unix-style commands
+        Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
+
+        String query = "gor ../tests/data/reports/test.yml(top=10,some='thing')";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
     }
 
@@ -145,6 +154,17 @@ public class UTestTableFunction {
 
         String query = "gor ../tests/data/reports/test.yml(top=10,some='some thing')";
         Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
+    }
+
+    @Test
+    public void testTableFunctionWithUnknownParam() {
+        String query = "gor ../tests/data/reports/test.yml(dirty='thing')";
+        try {
+            TestUtils.runGorPipeCount(query);
+            Assert.fail("Yaml query should fail with unknown parameter");
+        } catch(Exception e) {
+            Assert.assertEquals("Wrong error with unknown parameter","Parameter 'dirty' not listed in report builder yaml. Allowed values are [some, top, query, perspective]",e.getMessage());
+        }
     }
 
     @Test
@@ -181,7 +201,7 @@ public class UTestTableFunction {
 
     @Test
     public void testTableFunctionPnListFuncStyleWithPipesteps() {
-        String query = "create tf = tablefunction ../tests/data/reports/test2.yml::TestReport(query2, top = 10, CASEs = ['rs544101329','rs28970552']) | calc a 'test' | top 1 | signature -timeres 1; gor [tf]";
+        String query = "create tf = tablefunction ../tests/data/reports/test2.yml::TestReport(query2, top = 10) | calc a 'test' | top 1 | signature -timeres 1; gor [tf]";
         Assert.assertEquals(1, TestUtils.runGorPipeCount(query));
     }
 
@@ -338,7 +358,7 @@ public class UTestTableFunction {
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
 
         int expected = 2;
-        String query = "cmd {../tests/data/reports/test.yml::TestReport(echo,stuff=stuff)} | top " + expected;
+        String query = "cmd {../tests/data/reports/test.yml::TestReport(echo,some=some thing)} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
     }
 
@@ -348,7 +368,7 @@ public class UTestTableFunction {
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
 
         int expected = 2;
-        String query = "cmd {../tests/data/reports/test.yml?TestReport&query=echo&stuff=stuff} | top " + expected;
+        String query = "cmd {../tests/data/reports/test.yml?TestReport&query=echo&some=stuff} | top " + expected;
         Assert.assertEquals(expected, TestUtils.runGorPipeCount(query));
     }
 
