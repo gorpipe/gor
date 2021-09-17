@@ -204,3 +204,4 @@ push-version-to-dockerhub:
 push_to_ecr:
   rules:
     - when: never
+  script: echo
