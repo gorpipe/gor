@@ -58,9 +58,9 @@ public class IndexCommand extends HelpOptions implements Runnable {
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private ByteArrayOutputStream lastbaos = null;
 
-    private boolean byteArrayEquals(byte[] b1, byte[] b2, int len) {
+    private boolean byteArrayEquals(String b1, String b2, int len) {
         for( int j = 0; j < len; j++ ) {
-            if( b1[j] != b2[j] ) return false;
+            if( b1.charAt(j) != b2.charAt(j) ) return false;
         }
         return true;
     }
@@ -69,10 +69,10 @@ public class IndexCommand extends HelpOptions implements Runnable {
         while (i < r && buffer[i] != charToFind) i += 1;
         while (r > 0 && i == r) {
             baos.write(buffer, lastOffset, i - lastOffset);
-            lastOffset = i + 1;
             pos = pos + r;
             r = is.read(buffer);
             i = 0;
+            lastOffset = 0;
             while (i < r && buffer[i] != charToFind) i += 1;
         }
         i += 1;
@@ -93,24 +93,29 @@ public class IndexCommand extends HelpOptions implements Runnable {
         i += 1;
     }
 
-    private ByteArrayOutputStream writeBufferToFile(OutputStream fos) throws IOException {
+    private ByteArrayOutputStream writeBufferToFile(Writer fos) throws IOException {
         if (performFullIndex) {
-            fos.write(baos.toByteArray());
+            var bufc = baos.toString();
+            fos.write(bufc);
         } else if (lastbaos == null) {
-            fos.write(baos.toByteArray());
+            var bufc = baos.toString();
+            fos.write(bufc);
             lastbaos = baos;
             baos = new ByteArrayOutputStream();
         } else {
-            byte[] tbuffer = baos.toByteArray();
+            var tbuffer = baos.toString();
             int o = 0;
-            while( o < tbuffer.length && tbuffer[o] != '\t' ) o++;
-            if( o == tbuffer.length ) o = -1;
-            byte[] lastbuffer = lastbaos.toByteArray();
+            while( o < tbuffer.length() && tbuffer.charAt(o) != '\t' ) o++;
+            if( o == tbuffer.length() ) o = -1;
+            var lastbuffer = lastbaos.toString();
             int k = 0;
-            while( k < lastbuffer.length && lastbuffer[k] != '\t' ) k++;
-            if( k == lastbuffer.length ) k = -1;
+            while( k < lastbuffer.length() && lastbuffer.charAt(k) != '\t' ) k++;
+
+            if( k == lastbuffer.length() ) k = -1;
             if (k == -1 || k != o || !byteArrayEquals(tbuffer, lastbuffer, k)) {
-                if (!lastwritten) fos.write(lastbuffer);
+                if (!lastwritten) {
+                    fos.write(lastbuffer);
+                }
                 fos.write(tbuffer);
                 lastwritten = true;
             } else lastwritten = false;
@@ -129,9 +134,9 @@ public class IndexCommand extends HelpOptions implements Runnable {
         try (
                 StreamSource ds = (StreamSource) GorDriverFactory.fromConfig().resolveDataSource(new SourceReferenceBuilder(gorFile.toString()).build());
                 InputStream is = ds.open();
-                OutputStream fos = Files.newOutputStream(gorindex)
+                Writer fos = Files.newBufferedWriter(gorindex)
         ) {
-            fos.write("## fileformat=GORIv1\n".getBytes());
+            fos.write("## fileformat=GORIv1\n");
             while (i == r) {
                 pos = pos + r;
                 r = is.read(buffer);
@@ -155,8 +160,12 @@ public class IndexCommand extends HelpOptions implements Runnable {
                     baos.write(bytes);
                 }
             }
-            if (!lastwritten && lastbaos != null) fos.write(lastbaos.toByteArray());
-            fos.write(baos.toByteArray());
+            if (!lastwritten && lastbaos != null) {
+                var bufc = lastbaos.toString();
+                fos.write(bufc);
+            }
+            var bufc = baos.toString();
+            fos.write(bufc);
         } catch (IOException e) {
             throw new GorSystemException("gor file index failed",e);
         }
