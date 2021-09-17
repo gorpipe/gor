@@ -134,7 +134,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
                 InputStream is = ds.open();
                 Writer fos = Files.newBufferedWriter(gorindex)
         ) {
-            fos.write("## fileformat=GORIv1\n");
+            fos.write("## fileformat=GORIv2\n");
             while (i == r) {
                 pos = pos + r;
                 r = is.read(buffer);
