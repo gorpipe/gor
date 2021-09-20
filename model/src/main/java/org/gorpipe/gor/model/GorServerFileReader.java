@@ -125,6 +125,52 @@ public class GorServerFileReader extends FileReader {
     }
 
     @Override
+    public boolean exists(String file) {
+        try {
+            return Files.exists(Paths.get(resolveUrl(file)));
+        } catch (IOException x) {
+            // does not exist or unable to determine if file exists
+            return false;
+        }
+    }
+
+    @Override
+    public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectory(Path.of(resolveUrl(dir)), attrs).toString();
+    }
+
+    @Override
+    public boolean isDirectory(String dir) {
+        try {
+            return Files.isDirectory(PathUtils.toPath(resolveUrl(dir)));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public String move(String source, String dest) throws IOException {
+        return Files.move(PathUtils.toPath(resolveUrl(source)), PathUtils.toPath(resolveUrl(dest)),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE).toString();
+    }
+
+    @Override
+    public String copy(String source, String dest) throws IOException {
+        return Files.copy(PathUtils.toPath(resolveUrl(source)), PathUtils.toPath(resolveUrl(dest)),
+                StandardCopyOption.REPLACE_EXISTING).toString();
+    }
+
+    @Override
+    public void delete(String file) throws IOException {
+        Files.delete(PathUtils.toPath(resolveUrl(file)));
+    }
+
+    @Override
+    public Stream<String> list(String dir) throws IOException {
+        return Files.list(PathUtils.toPath(resolveUrl(dir))).map(p -> p.toString());
+    }
+
+    @Override
     public String[] readAll(String file) throws IOException {
         try (Stream<String> s = readFile(file)) {
             return s.toArray(size -> new String[size]);

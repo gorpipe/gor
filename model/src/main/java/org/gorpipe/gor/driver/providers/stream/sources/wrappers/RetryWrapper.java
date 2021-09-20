@@ -33,6 +33,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.attribute.FileAttribute;
+import java.util.stream.Stream;
 
 /**
  * Wraps a stream source so operations resulting in IOExceptions will be retried.
@@ -99,6 +101,30 @@ public class RetryWrapper extends WrappedStreamSource {
     @Override
     public boolean exists() throws IOException {
         return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
+    }
+
+    @Override
+    public void delete() throws IOException {
+         retry.tryOp(super::delete, requestRetries, defaultOnRetryOp);
+    }
+
+    @Override
+    public boolean isDirectory() {
+        try {
+            return retry.tryOp(super::isDirectory, requestRetries, defaultOnRetryOp);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        return retry.tryOp(() -> super.createDirectory(attrs), requestRetries);
+    }
+
+    @Override
+    public Stream<String> list() throws IOException {
+        return retry.tryOp(super::list, requestRetries, defaultOnRetryOp);
     }
 
     /**

@@ -37,5 +37,7 @@ project(':drivers') {
         implementation "com.google.cloud:google-cloud-storage:_"
         implementation "com.amazonaws:aws-java-sdk-s3:_"
         implementation "com.microsoft.azure:azure-storage:_"
+
+        implementation 'com.upplication:s3fs:_'
     }
 }

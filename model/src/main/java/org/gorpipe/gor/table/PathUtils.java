@@ -81,6 +81,10 @@ public class PathUtils {
         return normalize(root.resolve(path));
     }
 
+    public static Path resolve(Path root, String path) {
+        return resolve(root, Path.of(path));
+    }
+
     /**
      * Get relativize to table or absolute path.
      *

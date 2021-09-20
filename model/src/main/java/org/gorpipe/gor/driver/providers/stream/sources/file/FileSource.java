@@ -37,6 +37,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileAttribute;
+import java.util.stream.Stream;
 
 /**
  * Represents a data source accessed through file system.
@@ -179,6 +181,26 @@ public class FileSource implements StreamSource {
     @Override
     public boolean exists() {
         return Files.exists(file);
+    }
+
+    @Override
+    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectory(file, attrs).toString();
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return Files.isDirectory(file);
+    }
+
+    @Override
+    public void delete() throws IOException {
+        Files.delete(file);
+    }
+
+    @Override
+    public Stream<String> list() throws IOException {
+        return Files.list(file).map(p -> p.toString());
     }
 
     @Override

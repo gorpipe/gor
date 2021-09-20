@@ -113,6 +113,47 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
+    public boolean exists(String file) {
+        return resolveUrl(file).exists();
+    }
+
+    @Override
+    public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
+        return resolveUrl(dir).createDirectory(attrs);
+    }
+
+    @Override
+    public boolean isDirectory(String dir) {
+        return resolveUrl(dir).isDirectory();
+    }
+
+    @Override
+    public String move(String source, String dest) throws IOException {
+        copy(source, dest);
+        delete(source);
+        return dest;
+    }
+
+    @Override
+    public String copy(String source, String dest) throws IOException {
+        try (InputStream inputStream = getInputStream(source);
+             OutputStream outputStream = getOutputStream(dest)) {
+            inputStream.transferTo(outputStream);
+        }
+        return dest;
+    }
+
+    @Override
+    public void delete(String file) throws IOException {
+        resolveUrl(file).delete();
+    }
+
+    @Override
+    public Stream<String> list(String dir) throws IOException {
+        return resolveUrl(dir).list();
+    }
+
+    @Override
     public String[] readAll(String file) throws IOException {
         try (Stream<String> s = readFile(file)) {
             return s.toArray(String[]::new);

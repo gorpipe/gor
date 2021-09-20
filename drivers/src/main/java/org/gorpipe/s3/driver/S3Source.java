@@ -24,6 +24,9 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
+import com.google.api.gax.rpc.PermissionDeniedException;
+import com.upplication.s3fs.S3FileSystem;
+
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -33,11 +36,11 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-
-import static java.lang.System.in;
+import java.net.URI;
+import java.nio.file.*;
+import java.nio.file.attribute.FileAttribute;
+import java.util.Properties;
+import java.util.stream.Stream;
 
 /**
  * Represents an object in Amazon S3.
@@ -49,6 +52,8 @@ public class S3Source implements StreamSource {
     private final String key;
     private final AmazonS3Client client;
     private S3SourceMetadata meta;
+
+    private Path path;
 
     /**
      * Create source
@@ -132,8 +137,47 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public boolean exists() throws IOException {
-        return client.doesObjectExist(bucket, key);
+    public boolean exists() {
+        try {
+            return Files.exists(getPath());
+        } catch (Exception pde) {
+            // For backward compatibility.  doesObjectExists needs less permission than Files.exists, but
+            // it does not handle folders properly.
+            return client.doesObjectExist(bucket, key);
+        }
+    }
+
+    @Override
+    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectory(getPath()).toString();
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return Files.isDirectory(getPath());
+    }
+
+    @Override
+    public void delete() throws IOException {
+        Files.delete(getPath());
+    }
+
+    @Override
+    public Stream<String> list() throws IOException {
+        return Files.list(getPath()).map(p -> p.toString());
+    }
+
+    private Path getPath() {
+        if (path == null) {
+            S3FileSystem s3fs;
+            try {
+                s3fs = (S3FileSystem) FileSystems.getFileSystem(URI.create("s3://" + bucket));
+            } catch (ProviderNotFoundException | FileSystemNotFoundException e) {
+                s3fs = new S3ClientFileSystemProvider().createFileSystem(URI.create("s3://" + bucket), new Properties(), client);
+            }
+            path = s3fs.getPath("/" + bucket, key);
+        }
+        return path;
     }
 
     @Override
