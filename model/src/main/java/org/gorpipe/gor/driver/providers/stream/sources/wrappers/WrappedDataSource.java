@@ -68,7 +68,7 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         return wrapped.exists();
     }
 

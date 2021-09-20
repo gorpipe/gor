@@ -70,6 +70,16 @@ public class UTestDefaultFileReader {
     }
 
     @Test
+    public void exists() throws IOException {
+        assertTrue(reader.exists(getFile().getAbsolutePath()));
+    }
+
+    @Test
+    public void exists_not() throws IOException {
+        assertFalse(reader.exists("thisDoesNotExists.txt"));
+    }
+
+    @Test
     public void readAll() throws IOException {
         final String[] lines = reader.readAll(getFile().getAbsolutePath());
         assertEquals(text, String.join("\n", lines));

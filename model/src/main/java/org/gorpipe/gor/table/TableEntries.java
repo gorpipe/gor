@@ -23,26 +23,18 @@
 package org.gorpipe.gor.table;
 
 import com.google.common.collect.ArrayListMultimap;
-import org.apache.commons.io.FilenameUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.gorpipe.gor.table.PathUtils.normalize;
 
 /**
  * Class that handles the loading caching of and working with table entries.
@@ -57,9 +49,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
     private ArrayListMultimap<Integer, T> tagHashToLines;
     private ArrayListMultimap<Integer, T> contentHashToLines;
     private int nextIndexOrderKey = 0;
-    private final Path path;
-    private final URI rootUri;
-    private final String tableName;
+    private final BaseTable<T> table;
 
     /**
      * Construct new dict file from the given path and chromosome cache.
@@ -67,12 +57,9 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
      * It is not simple to create objects of type T.  For now we pass in the class so we can do that.
      * Another option would be using google TypeToken, but we had problem getting that working.
      */
-    public TableEntries(Path path, Class<? extends T> clazzOfT) {
+    public TableEntries(BaseTable<T> table, Class<? extends T> clazzOfT) {
+        this.table = table;
         this.clazzOfT = clazzOfT;
-        Path rootPath = normalize(path.getParent() != null ? path.getParent() : Paths.get("")).toAbsolutePath();
-        this.rootUri = normalize(Paths.get(rootPath + "/").toUri());
-        this.path = rootPath.resolve(path.getFileName());
-        this.tableName = FilenameUtils.removeExtension(path.getFileName().toString());
     }
 
     @Override
@@ -244,19 +231,19 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
         this.rawLines = this.loadLines();
         this.updateContentMap();
 
-        log.trace("Loaded {} entries into table {}", this.rawLines.size(), tableName);
+        log.trace("Loaded {} entries into table {}", this.rawLines.size(), table.getName());
     }
 
     /**
      * Parse the dictionary lines.
      */
     private List<T> loadLines() {
-        log.debug("Loading lines for {}", tableName);
+        log.debug("Loading lines for {}", table.getName());
 
         try {
             List<T> newRawLines = new ArrayList<>();
-            if (Files.exists(path)) {
-                try (BufferedReader br = new BufferedReader(new FileReader(path.toFile()))) {
+            if (table.getFileReader().exists(table.getPath().toString())) {
+                try (BufferedReader br = table.getFileReader().getReader(table.getPath().toString())) {
                     String line;
                     // Remove the header.  For large file it helps not having to check for the header on each line.
                     while ((line = br.readLine()) != null) {
@@ -270,7 +257,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
                         Method parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class);
                         while (line != null) {
                             line = line.trim();
-                            final T entry = (T) parseEntryMethod.invoke(null, line, rootUri);
+                            final T entry = (T) parseEntryMethod.invoke(null, line, table.getRootUri());
                             newRawLines.add(entry);
 
                             line = br.readLine();
@@ -283,7 +270,8 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
             return newRawLines;
 
         } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query, can not read file " + path, path.toString(), ex);
+            throw new GorResourceException("Error Initializing Query, can not read file " + table.getPath(),
+                    table.getPath().toString(), ex);
         }
     }
 
@@ -317,7 +305,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
         for (T l : lines2Search) {
             if (Arrays.equals(linekey, l.getTags())) {
                 if (null != match) {
-                    throw new GorDataException("One or more entries containing the same tag(s) already exist in table " + tableName + ". Unable to use unique tags!");
+                    throw new GorDataException("One or more entries containing the same tag(s) already exist in table " + table.getName() + ". Unable to use unique tags!");
                 }
                 match = l;
             }

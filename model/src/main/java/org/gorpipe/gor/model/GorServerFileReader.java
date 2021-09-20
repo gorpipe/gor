@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
@@ -30,8 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -95,7 +99,7 @@ public class GorServerFileReader extends FileReader {
         }
 
         final String fileName = resolveUrl(dictionary);
-        return new DictionaryTable.Builder<>(Paths.get(fileName)).securityContext(securityContext).build().getSignature(true, resolvedSessionRoot, tags);
+        return new DictionaryTable.Builder<>(fileName).securityContext(securityContext).build().getSignature(true, resolvedSessionRoot, tags);
     }
 
     @Override

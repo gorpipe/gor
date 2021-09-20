@@ -13,7 +13,7 @@ import java.io.InputStream;
  */
 public class DummyStreamSource implements StreamSource {
     @Override
-    public StreamSourceMetadata getSourceMetadata() {
+    public StreamSourceMetadata getSourceMetadata() throws IOException {
         return null;
     }
 

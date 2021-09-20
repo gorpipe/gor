@@ -476,7 +476,7 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy")).build();
+        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toString()).build();
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
@@ -494,7 +494,7 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy")).build();
+        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
@@ -515,7 +515,7 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy")).build();
+        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
@@ -536,7 +536,7 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy")).build();
+        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 

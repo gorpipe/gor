@@ -99,8 +99,36 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public boolean exists() throws IOException {
-        return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
+    public boolean exists() {
+        try {
+            return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void delete() throws IOException {
+         retry.tryOp(super::delete, requestRetries, defaultOnRetryOp);
+    }
+
+    @Override
+    public boolean isDirectory() {
+        try {
+            return retry.tryOp(super::isDirectory, requestRetries, defaultOnRetryOp);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        return retry.tryOp(() -> super.createDirectory(attrs), requestRetries);
+    }
+
+    @Override
+    public Stream<String> list() throws IOException {
+        return retry.tryOp(super::list, requestRetries, defaultOnRetryOp);
     }
 
     @Override

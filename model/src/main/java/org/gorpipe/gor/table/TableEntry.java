@@ -164,19 +164,8 @@ public abstract class TableEntry {
      * @return physical path relative to commonRoot or absolute (real path) if path is not part of the common root.
      */
     public String getPhysical(String commonRoot) {
-        URI retVal;
         URI commonRelativePath = URI.create(commonRoot != null ? getCommonRootRelative(getContentReal(), commonRoot) : getContentReal());
-        if (!isLocal(commonRelativePath) || !commonRelativePath.isAbsolute()) {
-            retVal = commonRelativePath;
-        } else {
-            try {
-                retVal = Paths.get(commonRelativePath).toRealPath().toUri();
-            } catch (Exception e) {
-                // If file does not exists.
-                retVal = commonRelativePath;
-            }
-        }
-        return PathUtils.formatUri(retVal.toString());
+        return PathUtils.formatUri(PathUtils.toRealPath(commonRelativePath));
     }
 
     /**
@@ -204,8 +193,7 @@ public abstract class TableEntry {
     public boolean isAcceptedAbsoluteRef() {
         // TODO:  We are only handling top level links here, old impl handles lower level links.
         String contentReal = getContentReal();
-        return !isLocal(contentReal)
-                || Files.isSymbolicLink(Paths.get(contentReal));
+        return !isLocal(contentReal) || Files.isSymbolicLink(Paths.get(contentReal));
     }
 
     public String[] getTags() {

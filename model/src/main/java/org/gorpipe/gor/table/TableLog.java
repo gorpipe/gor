@@ -23,15 +23,16 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.FileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -52,8 +53,8 @@ public class TableLog {
         REMOVEFROMBUCKET
     }
 
-    private final Path logDir;  // Location of log files.
-    private final Path logFilePath;
+    private final URI logDir;  // Location of log files.
+    private final URI logFilePath;
     private final DateTimeFormatter formatter;
     protected List<String> unCommittedActions = Collections.synchronizedList(new ArrayList<>());
 
@@ -61,9 +62,9 @@ public class TableLog {
      * Constructor
      * @param logDir    folder to store the log file.
      */
-    public TableLog(Path logDir) {
+    public TableLog(URI logDir) {
         this.logDir = logDir;
-        this.logFilePath =  this.logDir.resolve(LOG_FILE);
+        this.logFilePath = this.logDir.resolve(LOG_FILE);
         this.formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     }
 
@@ -83,13 +84,15 @@ public class TableLog {
     /**
      * Save the uncommitted log lines to file, and clear the list of uncommitted log lines.
      */
-    public void commit() {
-        log.debug("Committng {} actions to log file {}", unCommittedActions.size(), logFilePath);
-        if (!Files.exists(this.logDir) || !Files.isDirectory(this.logDir)) {
-            throw new GorSystemException(String.format("Log '%s'folder does not exits", this.logDir.toString()), null);
+    public void commit(FileReader fileReader) {
+        log.debug("Committing {} actions to log file {}", unCommittedActions.size(), logFilePath);
+        if (!fileReader.exists(PathUtils.formatUri(this.logDir)) || !fileReader.isDirectory(PathUtils.formatUri(this.logDir))) {
+            throw new GorSystemException(String.format("Log '%s'folder does not exits", this.logDir), null);
         }
-        try(Writer destination = Files.newBufferedWriter(this.logFilePath,
-                StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.SYNC)) {
+        // TODO:
+        try(Writer destination = new BufferedWriter(
+                new OutputStreamWriter(fileReader.getOutputStream(PathUtils.formatUri((this.logFilePath)), true)))) {
+
             for (String logLine : unCommittedActions) {
                 destination.write(logLine);
             }
