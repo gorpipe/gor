@@ -74,7 +74,27 @@ public interface DataSource extends AutoCloseable {
      * Currently, only side effect of always returning true is that
      * automatic fallback to link files wont't work with that source
      */
-    boolean exists() throws IOException;
+    boolean exists();
+
+    default void delete() throws IOException {
+        throw new GorResourceException("Delete is not implemented", getSourceType().getName());
+    }
+
+    default boolean isDirectory() {
+        throw new GorResourceException("isDirectory is not implemented", getSourceType().getName());
+    }
+
+    /**
+     * Creates a new directory.
+     * Returns: the directory
+     */
+    default String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        throw new GorResourceException("Create directory is not implemented", getSourceType().getName());
+    }
+
+    default Stream<String> list() throws IOException {
+        throw new GorResourceException("List directory is not implemented", getSourceType().getName());
+    }
 
     @Override
     void close() throws IOException;
