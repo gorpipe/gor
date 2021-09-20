@@ -144,7 +144,7 @@ public class GoogleCloudStorageBlobSource implements StreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() {
+    public StreamSourceMetadata getSourceMetadata() throws IOException {
         long length = cb.getSize();
         long lastModified = cb.getCreateTime();
         return new StreamSourceMetadata(this, getName(), lastModified, length, cb.getEtag(), false);

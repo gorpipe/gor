@@ -28,6 +28,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
@@ -36,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -266,13 +267,13 @@ public class BucketManager<T extends BucketableTableEntry> {
                 .collect(Collectors.toList());
     }
 
-    private void checkBucketDirExistance(Path bucketDir) {
+    private void checkBucketDirExistance(URI bucketDir) {
         // Create the default bucket dir (if it is to be used and is missing)
-        if (!Files.exists(bucketDir)) {
-            Path fullPathDefaultBucketDir = resolve(table.getRootPath(), getDefaultBucketDir());
+        if (!table.getFileReader().exists(bucketDir.toString())) {
+            URI fullPathDefaultBucketDir = table.getRootUri().resolve(getDefaultBucketDir().toString());
             if (bucketDir.equals(fullPathDefaultBucketDir)) {
                 try {
-                    Files.createDirectories(fullPathDefaultBucketDir);
+                    table.getFileReader().createDirectory(fullPathDefaultBucketDir.toString());
                 } catch (IOException e) {
                     throw new GorSystemException("Could not create default bucket dir: " + fullPathDefaultBucketDir, e);
                 }
@@ -385,8 +386,10 @@ public class BucketManager<T extends BucketableTableEntry> {
         // Clean up
 
         log.trace("Deleting temp table {}", tempTable.getPath());
-        FileUtils.deleteDirectory(tempTable.getFolderPath().toFile());
-        Files.deleteIfExists(tempTable.getPath());
+        table.getFileReader().deleteDirectory(tempTable.getFolderUri().toString());
+        if (table.getFileReader().exists(tempTable.getPathUri().toString())) {
+            table.getFileReader().delete(tempTable.getPathUri().toString());
+        }
 
         if (bucketsToDelete.size() > 0) {
             try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
@@ -406,7 +409,7 @@ public class BucketManager<T extends BucketableTableEntry> {
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        createBucketFiles(tempTable, newBucketsMapForBucketDir, resolve(table.getRootPath(), bucketDir));
+        createBucketFiles(tempTable, newBucketsMapForBucketDir, table.getRootUri().resolve(bucketDir.toString()));
 
         // Move files and update dictionary.
         for (Path bucket : newBucketsMapForBucketDir.keySet()) {
@@ -434,17 +437,17 @@ public class BucketManager<T extends BucketableTableEntry> {
 
         // Create copy of the dictionary (so we are shielded from external changes to the file).  Must in the same dir
         // as the main file for all the relative paths to work.
-        Path tempTablePath;
+        URI tempTablePath;
         String ext = FilenameUtils.getExtension(table.getPath().toString());
-        tempTablePath = table.getRootPath().resolve(
+        tempTablePath = table.getRootUri().resolve(
                 "." + table.getName() + ".temp.bucketizing."
                 + RandomStringUtils.random(8, true, true)
                 + (ext.length() > 0 ? "." + ext : ""));
 
         log.trace("Creating temp table {}", tempTablePath);
-        Files.copy(table.getPath(), tempTablePath);
+        table.getFileReader().copy(table.getPathUri().toString(), tempTablePath.toString());
 
-        return initTempTable(tempTablePath);
+        return initTempTable(tempTablePath.toString());
     }
 
     /**
@@ -453,7 +456,7 @@ public class BucketManager<T extends BucketableTableEntry> {
      * @param path path to the table.
      * @return the table given by path.
      */
-    private BaseTable initTempTable(Path path) {
+    private BaseTable initTempTable(String path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {
             return new DictionaryTable.Builder<>(path)
                     .useHistory(table.isUseHistory())
@@ -487,13 +490,14 @@ public class BucketManager<T extends BucketableTableEntry> {
     private void deleteBucketFiles(boolean force, Path... buckets) throws IOException {
         for (Path bucket : buckets) {
             Path bucketFile = resolve(table.getRootPath(), bucket);
-            if (Files.exists(bucketFile)) {
-                long lastAccessTime = Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
+            if (table.getFileReader().exists(bucketFile.toString())) {
+                // !GM last access time.
+                long lastAccessTime = 0; // Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}", System.currentTimeMillis(),
                         lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
                 if (force || System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()) {
                     log.debug("Deleting bucket file {}", bucketFile);
-                    Files.delete(bucketFile);
+                    table.getFileReader().delete(bucketFile.toString());
                 }
             }
         }
@@ -520,9 +524,9 @@ public class BucketManager<T extends BucketableTableEntry> {
         allBucketDirs.addAll(table.getBuckets().stream().map(b -> b.getParent()).collect(Collectors.toSet()));
 
         for (Path bucketDir : allBucketDirs) {
-            Path fullPathBucketDir = resolve(table.getRootPath(), bucketDir);
+            URI fullPathBucketDir = table.getRootUri().resolve(bucketDir.toString());
 
-            if (!Files.exists(fullPathBucketDir)) {
+            if (!table.getFileReader().exists(fullPathBucketDir.toString())) {
                 log.debug("Bucket folder {} never been used, nothing to clean.", fullPathBucketDir);
                 continue;
             }
@@ -539,18 +543,21 @@ public class BucketManager<T extends BucketableTableEntry> {
         }
     }
 
-    private List<Path> collectBucketsToClean(Path fullPathBucketDir, boolean force) throws IOException {
+    private List<Path> collectBucketsToClean(URI fullPathBucketDir, boolean force) throws IOException {
         // Collect buckets to be deleted. Note:  We don't need to get table read lock as we have bucket lock so the
         // bucket part of the table will not change in away that will affect us.
         List<Path> bucketsToDelete = new ArrayList<>();
-        try (Stream<Path> pathList = Files.list(fullPathBucketDir)) {
-            for (Path f : pathList.collect(Collectors.toList())) {
-                Path bucketFile = fullPathBucketDir.resolve(f);
-                long lastAccessTime = Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
+        try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir.toString())) {
+            for (String f : pathList.collect(Collectors.toList())) {
+                String fileName = Path.of(f).getFileName().toString();
+                // !GM
+                Path bucketFile = Path.of(PathUtils.relativize(table.getRootUri(), fullPathBucketDir.resolve(f).toString()));
+                // !GM
+                long lastAccessTime = 0; //Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}",
                         System.currentTimeMillis(), lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
-                if (bucketFile.getFileName().toString().startsWith(getBucketFilePrefix(table))
-                        && bucketFile.getFileName().toString().endsWith(".gorz")
+                if (fileName.startsWith(getBucketFilePrefix(table))
+                        && fileName.endsWith(".gorz")
                         && (System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()
                             || force)) {
                     // This bucket file has not been accessed for some time.
@@ -578,16 +585,17 @@ public class BucketManager<T extends BucketableTableEntry> {
         // If get a valid write lock no temp files should be here, so go ahead and clean ALL the temp folders.
 
         for (Path bucketDir : getBucketDirs()) {
-            Path fullPathBucketDir = resolve(table.getRootPath(), bucketDir);
+            URI fullPathBucketDir = table.getRootUri().resolve(bucketDir.toString());
 
-            if (!Files.exists(fullPathBucketDir)) {
+            if (!table.getFileReader().exists(fullPathBucketDir.toString())) {
                 log.debug("Bucket folder {} never been used, nothing to clean.", fullPathBucketDir);
                 continue;
             }
 
-            try (Stream<Path> pathList = Files.list(fullPathBucketDir)) {
-                for (Path candTempDir : pathList.collect(Collectors.toList())) {
-                    BucketCreatorGorPipe.deleteIfTempBucketizingFolder(candTempDir, table);
+            // !GM is candTempDir local or remote
+            try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir.toString())) {
+                for (String candTempDir : pathList.collect(Collectors.toList())) {
+                    BucketCreatorGorPipe.deleteIfTempBucketizingFolder(Path.of(candTempDir), table);
                 }
             } catch (IOException ioe) {
                 log.warn("Got exception when trying to clean up temp folders.  Just logging out the exception", ioe);
@@ -706,7 +714,7 @@ public class BucketManager<T extends BucketableTableEntry> {
      * @param absBucketDir
      * @throws IOException
      */
-    private void createBucketFiles(BaseTable table, Map<Path, List<T>> bucketsToCreate, Path absBucketDir) throws IOException {
+    private void createBucketFiles(BaseTable table, Map<Path, List<T>> bucketsToCreate, URI absBucketDir) throws IOException {
         checkBucketDirExistance(absBucketDir);
         bucketCreator.createBuckets(table, bucketsToCreate, absBucketDir);
     }

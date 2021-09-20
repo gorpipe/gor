@@ -30,12 +30,59 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * FileReader allows reading of gor server managed files.
  */
 public abstract class FileReader {
+
+
+    /**
+     * Tests whether a file exists.
+     */
+    public abstract boolean exists(String path);
+
+    /**
+     * Creates a new directory.
+     * Returns: the directory
+     */
+    public abstract String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException;
+
+    /**
+     * Tests whether a file is a directory.
+     */
+    public abstract boolean isDirectory(String dir);
+
+    public abstract String move(String source, String dest) throws IOException;
+
+    public abstract String copy(String source, String dest) throws IOException;
+
+    public abstract void delete(String file) throws IOException;
+
+    /**
+     * Recursivly delete the given directory.
+     * @param dir
+     */
+    public void deleteDirectory(String dir) throws IOException {
+        for (var f : list(dir).collect(Collectors.toList())) {
+            if (isDirectory(f)) {
+                deleteDirectory(f);
+            } else {
+                delete(f);
+            }
+        }
+        delete(dir);
+    }
+
+    public abstract Stream<String> list(String dir) throws IOException;
+
+    //public abstract void deleteDirectory(String dir) throws IOException;
+
+
+
     /**
      * Read all content of the specified text file
      *

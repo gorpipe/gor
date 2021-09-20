@@ -26,6 +26,7 @@ import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,6 @@ public interface BucketCreator<T extends BucketableTableEntry> {
      *                        be created in this dir (for fast file move).
      */
     void createBuckets(BaseTable<T> table, Map<Path, List<T>> bucketsToCreate,
-                              Path absBucketDir) throws IOException;
+                              URI absBucketDir) throws IOException;
 
 }

@@ -22,15 +22,18 @@
 
 package org.gorpipe.gor.model;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -56,6 +59,53 @@ public class DefaultFileReader extends FileReader {
     protected void checkValidServerFileName(String fileName) {
         // Not used in this context
     }
+
+    @Override
+    public boolean exists(String file) {
+        return Files.exists(PathUtils.toPath(file));
+    }
+
+    @Override
+    public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectory(PathUtils.toPath(dir), attrs).toString();
+    }
+
+    @Override
+    public boolean isDirectory(String dir) {
+        return Files.isDirectory(PathUtils.toPath(dir));
+    }
+
+    @Override
+    public String move(String source, String dest) throws IOException {
+        return Files.move(PathUtils.toPath(source), PathUtils.toPath(dest),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE).toString();
+    }
+
+    @Override
+    public String copy(String source, String dest) throws IOException {
+        return Files.copy(PathUtils.toPath(source), PathUtils.toPath(dest)).toString();
+    }
+
+    @Override
+    public void delete(String file) throws IOException {
+        Files.delete(PathUtils.toPath(file));
+    }
+
+    @Override
+    public void deleteDirectory(String dir) throws IOException {
+        FileUtils.deleteDirectory(new File(dir));
+    }
+
+    @Override
+    public Stream<String> list(String dir) throws IOException {
+        return Files.list(PathUtils.toPath(dir)).map(p -> p.toString());
+    }
+
+
+//    @Override
+//    public void deleteDirectory(String dir) throws IOException {
+//        Files.delete(dir)
+//    }
 
     @Override
     public String[] readAll(String file) {

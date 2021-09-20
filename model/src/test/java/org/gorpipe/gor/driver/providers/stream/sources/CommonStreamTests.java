@@ -298,7 +298,7 @@ public abstract class CommonStreamTests {
 
         try {
             existsAfterClosing = fs.exists();
-        } catch (IOException ioe) {
+        } catch (Exception ioe) {
             // There could be an exception thrown due to retries failing.
             log.info(ioe.getMessage());
         }

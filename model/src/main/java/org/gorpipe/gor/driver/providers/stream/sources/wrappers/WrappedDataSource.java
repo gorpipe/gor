@@ -29,6 +29,8 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 
 import java.io.IOException;
+import java.nio.file.attribute.FileAttribute;
+import java.util.stream.Stream;
 
 /**
  * Created by villi on 29/08/15.
@@ -66,8 +68,38 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         return wrapped.exists();
+    }
+
+    @Override
+    public boolean supportsWriting() {
+        return wrapped.supportsWriting();
+    }
+
+    @Override
+    public void delete() throws IOException {
+        wrapped.delete();
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return wrapped.isDirectory();
+    }
+
+    @Override
+    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        return wrapped.createDirectory(attrs);
+    }
+
+    @Override
+    public Stream<String> list() throws IOException {
+        return wrapped.list();
+    }
+
+    @Override
+    public boolean supportsLinks() {
+        return wrapped.supportsLinks();
     }
 
     public DataSource getWrapped() {

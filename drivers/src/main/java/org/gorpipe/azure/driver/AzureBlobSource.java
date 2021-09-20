@@ -210,7 +210,7 @@ public class AzureBlobSource implements StreamSource {
 
     // TODO: Check for Azure key existence.
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         return true;
     }
 
