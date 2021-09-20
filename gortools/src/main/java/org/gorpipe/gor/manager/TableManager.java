@@ -148,7 +148,7 @@ public class TableManager {
      */
     public BaseTable initTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {
-            return new DictionaryTable.Builder<>(path).useHistory(this.useHistory)
+            return new DictionaryTable.Builder<>(path.toUri()).useHistory(this.useHistory)
                     .securityContext(securityContext).validateFiles(this.validateFiles).build();
         } else {
             throw new RuntimeException("BaseTable of type " + path.toString() + " are not supported!");

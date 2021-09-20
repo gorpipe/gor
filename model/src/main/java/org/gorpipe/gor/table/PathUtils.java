@@ -81,6 +81,10 @@ public class PathUtils {
         return normalize(root.resolve(path));
     }
 
+    public static Path resolve(Path root, String path) {
+        return resolve(root, Path.of(path));
+    }
+
     /**
      * Get relativize to table or absolute path.
      *
@@ -153,11 +157,11 @@ public class PathUtils {
      * @return Path object representing the URI.
      */
     public static Path toPath(URI uri) {
-        if (isLocal(uri)) {
-            return Paths.get(uri.toString().replaceFirst("^file:/*", "/"));
-        } else {
-            return Paths.get(uri);
-        }
+        return Paths.get(formatUri(uri));
+    }
+
+    public static Path toPath(String uri) {
+        return Paths.get(formatUri(uri));
     }
 
     /**
@@ -166,8 +170,24 @@ public class PathUtils {
      * @param uri uri to format, must have valid file: format.
      * @return uri formatted as string.
      */
+    public static String formatUri(URI uri) {
+        return fixFileSchema(uri.toString());
+    }
+
     public static String formatUri(String uri) {
         return fixFileSchema(uri);
+    }
+
+    public static URI toRealPath(URI uri) {
+        if (isLocal(uri)) {
+            try {
+                return Path.of(uri.getPath()).toRealPath().toUri();
+            } catch (IOException e) {
+                // Ignore/
+            }
+        }
+
+        return uri;
     }
 
     public static URI fixFileSchema(URI uri) {

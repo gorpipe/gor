@@ -26,12 +26,13 @@ import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.model.DefaultFileReader;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.util.ByteTextBuilder;
@@ -67,14 +68,13 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     private static final boolean DEFAULT_BUCKETIZE = false;  // Value used if bucketized is not set.
     private static final boolean INFER_BUCKETIZE_FROM_FILE = Boolean.parseBoolean(System.getProperty("GOR_TABLE_INFER_BUCKETIZE_FROM_FILE", "true"));
 
-    private final Path path;            // Path to the table (currently absolute instead of real for compatibility with older code).
-    private final Path folderPath;      // Path to the table folder.  The table folder is hidden folder that sits next to the
+    private final URI path;            // Path to the table (currently absolute instead of real for compatibility with older code).
+    private final URI folderPath;      // Path to the table folder.  The table folder is hidden folder that sits next to the
     // table and contains various files related to it.
-    private final Path rootPath;        // Path to the table root (currently absolute instead of real for compatibility with older code)..
     private final String name;          // Name of the table.
     private String id = null;           // Unique id (based on full path, just so we don't always have to refer to full path).
     private final URI rootUri;          // uri to table root (just to improve performance when working with uri's).
-    private final Path historyDir;      // Backup dir for older versions of this dictionary (absolute) (if requested).
+    private final URI historyDir;      // Backup dir for older versions of this dictionary (absolute) (if requested).
 
     protected String securityContext;
 
@@ -89,9 +89,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     protected ITableEntries<T> tableEntries;
 
     private final TableLog tableLog;
+    private final FileReader fileReader;
 
     protected BaseTable(Builder builder) {
-        this(builder.path);
+        this(builder.path, builder.fileReader);
         if (builder.sourceColumn != null) {
             setSourceColumn(builder.sourceColumn);
         }
@@ -112,28 +113,47 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     /**
      * Main constructor.
      *
-     * @param path              path to the dictionary file.
+     * @param uri              path to the dictionary file.
      */
-    protected BaseTable(Path path) {
+    protected BaseTable(URI uri, FileReader inputFileReader) {
 
-        this.rootPath = normalize(path.getParent() != null ? path.getParent() : Paths.get("")).toAbsolutePath();
-        this.rootUri = normalize(Paths.get(this.rootPath + "/").toUri());
+        this.fileReader = inputFileReader != null ? inputFileReader : new DefaultFileReader(null);
 
-        this.path = this.rootPath.resolve(path.getFileName());
-        this.name = FilenameUtils.removeExtension(path.getFileName().toString());
-        this.folderPath = this.rootPath.resolve("." + this.name);
+        var fileName = FilenameUtils.getName(uri.getPath());
+        this.name = FilenameUtils.removeExtension(fileName);
 
-        this.historyDir = this.folderPath.resolve(HISTORY_DIR_NAME);
-        this.tableLog = new TableLog(this.historyDir);
+        if (this.fileReader.isDirectory(PathUtils.formatUri(uri))) {
+            // Gord folder passed in.
+            this.rootUri = normalize(uri);
+            this.path = rootUri.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            this.folderPath = rootUri;
+        } else if (GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME.equals(fileName)) {
+            // thedict passed in (gord folder content)
+            this.rootUri = normalize(uri.resolve("."));
+            this.path = rootUri.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            this.folderPath = rootUri;
+        } else {
+            // Old school dict.
+            this.rootUri = normalize(uri.resolve("."));
+            this.path = rootUri.resolve(fileName);
+            this.folderPath = rootUri.resolve("." + this.name + "/"); // PathUtils.resolve(rootUri, "." + this.name);
+        }
 
-        this.tableEntries = createTableEntries(this.getPath());
+        this.historyDir = folderPath.resolve(HISTORY_DIR_NAME + "/"); // PathUtils.resolve(folderPath, HISTORY_DIR_NAME);
+        this.tableLog = new TableLog(historyDir);
+
+        this.tableEntries = createTableEntries();
         this.header = new TableHeader();
 
         // Loads the header, and loads/initializes fields read from header.
         reload();
     }
 
-    protected abstract ITableEntries<T> createTableEntries(Path path);
+    protected BaseTable(URI uri) {
+        this(uri, null);
+    }
+
+    protected abstract ITableEntries<T> createTableEntries();
 
     /**
      * @return name of this table.
@@ -156,6 +176,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      * @return real path of this table.
      */
     public Path getPath() {
+        return PathUtils.toPath(this.path);
+    }
+
+    public URI getPathUri() {
         return this.path;
     }
 
@@ -180,7 +204,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     }
 
     public Path getRootPath() {
-        return rootPath;
+        return PathUtils.toPath(rootUri);
     }
 
     public URI getRootUri() {
@@ -193,8 +217,13 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      *
      * @return the table folder path.
      */
-    public Path getFolderPath() {
+    public URI getFolderUri() {
         return folderPath;
+    }
+
+    // For testing and code that just runs on local.
+    public Path getFolderPath() {
+        return PathUtils.toPath(folderPath);
     }
 
     public String getSecurityContext() {
@@ -277,6 +306,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
     public void setUseHistory(boolean useHistory){
         this.useHistory = useHistory;
+    }
+
+    public FileReader getFileReader() {
+        return fileReader;
     }
 
     /**
@@ -362,6 +395,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         // Validate file existence.
         log.trace("Start validating file");
         try {
+            // Should we switch using fileReader here?
             if (isLocal(line.getContentReal())) {
                 if (!Files.exists(Paths.get(fixFileSchema(line.getContentReal())))) {
                     throw new GorDataException(String.format("Local entry %s does not exists!", line.getContentReal()));
@@ -374,7 +408,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
                     throw new GorDataException(String.format("Remote entry %s does not exists!", line.getContentReal()));
                 }
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new GorDataException(String.format("Entry %s can not be verified!", line.getContentReal()), ex);
         }
 
@@ -611,7 +645,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
 
         doSave();
         if (useHistory) {
-            tableLog.commit();
+            tableLog.commit(fileReader);
         }
     }
 
@@ -623,16 +657,16 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     public void initialize() {
         log.trace("Initialize {}", getName());
 
-        if (!Files.exists(this.rootPath)) {
+        if (!fileReader.exists(getRootUri().toString())) {
             throw new GorSystemException("Table " + path + " can not be created as the parent path does not exists!", null);
         }
 
         updateFolderMetadata();
 
-        if (!Files.exists(getFolderPath())) {
+        if (!fileReader.exists(folderPath.toString())) {
             try {
-                log.trace("Creating table directory {}", getFolderPath());
-                Files.createDirectory(getFolderPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+                log.trace("Creating table directory {}", getFolderUri());
+                fileReader.createDirectory(folderPath.toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
             } catch (FileAlreadyExistsException faee) {
                 // Ignore, some one else created it.
                 log.trace("Table directory {} already exists", getFolderPath());
@@ -641,10 +675,10 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             }
         }
 
-        if (this.useHistory && !Files.exists(this.historyDir)) {
+        if (this.useHistory && !fileReader.exists(this.historyDir.toString())) {
             try {
                 log.trace("Creating table history directory {}", this.historyDir);
-                Files.createDirectory(this.historyDir, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+                fileReader.createDirectory(this.historyDir.toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
             } catch (FileAlreadyExistsException faee) {
                 // Ignore, some one else created it.
                 log.trace("Table history directory {} already exists", this.historyDir);
@@ -653,7 +687,7 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
             }
         }
 
-        if (!Files.exists(getPath())) {
+        if (!fileReader.exists(path.toString())) {
             // Create the header.
             this.header.setProperty(TableHeader.HEADER_FILE_FORMAT_KEY, "1.0");
             this.header.setProperty(TableHeader.HEADER_CREATED_KEY, new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
@@ -740,21 +774,23 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         addToBucket(bucket, Arrays.asList(lines));
     }
 
-    protected void updateFromTempFile(Path file, Path tempFile) throws IOException {
-        Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+    protected void updateFromTempFile(URI file, URI tempFile) throws IOException {
+        fileReader.move(tempFile.toString(), file.toString());
     }
 
     @SuppressWarnings("squid:S00108") // Emtpy blocks on purpose (enough to force meta data update)
     protected void updateFolderMetadata() {
-        try {
-            try (Stream<Path> paths = Files.list(getRootPath())) {
-            }
-            if (Files.exists(getFolderPath())) {
-                try (Stream<Path> paths = Files.list(getFolderPath())) {
+        if (isLocal(getRootUri())) {
+            try {
+                try (Stream<Path> paths = Files.list(getRootPath())) {
                 }
+                if (Files.exists(getFolderPath())) {
+                    try (Stream<Path> paths = Files.list(getFolderPath())) {
+                    }
+                }
+            } catch (IOException e) {
+                log.warn("Error when listing dirs (to force refresh of meta data)", e);
             }
-        } catch (IOException e) {
-            log.warn("Error when listing dirs (to force refresh of meta data)", e);
         }
     }
 
@@ -800,20 +836,26 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
     }
 
     protected abstract static class Builder<B extends Builder<B>> {
-        protected Path path;
+        protected URI path;
         protected Boolean useHistory;
         protected String sourceColumn;
         protected String securityContext;
         protected Boolean validateFiles;
         protected Boolean uniqueTags;
+        protected FileReader fileReader;
 
-        public Builder(Path path) {
+        public Builder(URI path) {
             this.path = path;
         }
 
         @SuppressWarnings("unchecked")
         protected final B self() {
             return (B) this;
+        }
+
+        public B fileReader(FileReader val) {
+            this.fileReader = val;
+            return self();
         }
 
         public B sourceColumn(String sourceColumn) {

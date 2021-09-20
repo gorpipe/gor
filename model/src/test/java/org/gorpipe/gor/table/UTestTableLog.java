@@ -23,6 +23,8 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.DefaultFileReader;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,9 +34,8 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,11 +48,13 @@ public class UTestTableLog {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-    private Path workDirPath;
+    private URI workDirPath;
+    private FileReader fileReader;
 
     @Before
     public void setupTest() {
-        workDirPath = workDir.getRoot().toPath();
+        workDirPath = workDir.getRoot().toURI();
+        fileReader = new DefaultFileReader(null);
     }
 
     @Test
@@ -63,42 +66,42 @@ public class UTestTableLog {
     @Test
     public void testTableLogCommit() throws IOException {
         TableLog tableLog = createSimpleTableLog();
-        tableLog.commit();
+        tableLog.commit(fileReader);
 
-        Path tableLogFilePath = workDirPath.resolve(TableLog.LOG_FILE);
-        Assert.assertTrue("Log file was not created", Files.exists(tableLogFilePath));
+        URI tableLogFilePath = workDirPath.resolve(TableLog.LOG_FILE);
+        Assert.assertTrue("Log file was not created", fileReader.exists(PathUtils.formatUri(tableLogFilePath)));
 
-        List<String> tableLogLines = Files.readAllLines(tableLogFilePath);
+        List<String> tableLogLines = Arrays.asList(fileReader.readAll(PathUtils.formatUri(tableLogFilePath)));
         validateSimple(tableLogLines.stream().map(l -> l + "\n").collect(Collectors.toList()));
     }
 
     @Test (expected = GorSystemException.class)
     public void testTableLogMissingLogDir() {
-        TableLog tableLog = new TableLog(Paths.get("/non/existent/path"));
-        tableLog.commit();
+        TableLog tableLog = new TableLog(URI.create("/non/existent/path"));
+        tableLog.commit(fileReader);
     }
 
     @Test (expected = GorSystemException.class)
     public void testTableCanNotSave() throws IOException {
-        File tableLogFilePath = workDirPath.resolve(TableLog.LOG_FILE).toFile();
+        File tableLogFilePath = new File(workDirPath.resolve(TableLog.LOG_FILE));
         tableLogFilePath.createNewFile();
         tableLogFilePath.setWritable(false);
 
         TableLog tableLog = createSimpleTableLog();
-        tableLog.commit();
+        tableLog.commit(fileReader);
     }
 
     private TableLog createSimpleTableLog() {
         TableLog tableLog = new TableLog(workDirPath);
 
         tableLog.logAfter(TableLog.LogAction.INSERT, "ARG1",
-                new DictionaryEntry.Builder("dummy1.gor", workDirPath.toUri()).alias("A1").build());
+                new DictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build());
         tableLog.logAfter(TableLog.LogAction.ADDTOBUCKET, "BUCKET1",
-                new DictionaryEntry.Builder("dummy2.gor", workDirPath.toUri()).alias("A2").bucket("BUCKET1").build());
+                new DictionaryEntry.Builder("dummy2.gor", workDirPath).alias("A2").bucket("BUCKET1").build());
         tableLog.logAfter(TableLog.LogAction.REMOVEFROMBUCKET, "BUCKET2",
-                new DictionaryEntry.Builder("dummy3.gor", workDirPath.toUri()).alias("A3").build());
+                new DictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build());
         tableLog.logAfter(TableLog.LogAction.DELETE, "ARG2",
-                new DictionaryEntry.Builder("dummy4.gor", workDirPath.toUri()).alias("A4").build());
+                new DictionaryEntry.Builder("dummy4.gor", workDirPath).alias("A4").build());
         return tableLog;
     }
 

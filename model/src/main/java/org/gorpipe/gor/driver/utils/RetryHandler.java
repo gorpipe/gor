@@ -95,6 +95,51 @@ public class RetryHandler {
     }
 
     /**
+     * Try an IO operation.  If it fails with any IOException - it will be retried up to a maximum.
+     * Before retrying, it will sleep - doing an exponential back-off - sleeping originally for retryInitialSleepMs up to a maximum of retryMaxSleepMs.
+     *
+     * @param op      IO Operation
+     * @param retries Maximum number of retries
+     * @param onRetry Optional operation to execute before retry - e.g. to close/reopen underlying stream etc.
+     *                It can also be used to determine if operation is really retryable - e.g. based on exception thrown.
+     * @return Object returned by successful IO operation.
+     * @throws IOException - exception thrown on last retry or  execption thrown by any call to onRetry
+     */
+    public void tryOp(VoidIoOp op, int retries, OnRetryOp onRetry) throws IOException {
+        int tries = 0;
+        long sleepMs = retryInitialSleepMs;
+        IOException lastException = null;
+        while (tries <= retries) {
+            try {
+                op.perform();
+                return;
+            } catch (IOException e) {
+                if (e.getMessage().equals("Stale file handle")) {
+                    // Stale file handle errors generally require retries on a higher level as the
+                    // file needs to be reopened.
+                    throw e;
+                }
+                lastException = e;
+                log.debug("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
+                try {
+                    Thread.sleep(sleepMs);
+                    if (onRetry != null) {
+                        onRetry.onRetry(e);
+                    }
+                } catch (InterruptedException e1) {
+                    // If interrupted waiting to retry, throw original exception
+                    throw e;
+                }
+                tries++;
+                if (sleepMs < retryMaxSleepMs) {
+                    sleepMs *= 2;
+                }
+            }
+        }
+        throw new IOException("Giving up after " + tries + " retries", lastException);
+    }
+
+    /**
      * Try and retry an io operation. Same as above but without onRetry callback.
      */
     public <T> T tryOp(IoOp<T> op, int retries) throws IOException {
@@ -119,5 +164,12 @@ public class RetryHandler {
      */
     public interface IoOp<T> {
         T perform() throws IOException;
+    }
+
+    /**
+     * Interface for an arbitrary IO operation
+     */
+    public interface VoidIoOp {
+        void perform() throws IOException;
     }
 }

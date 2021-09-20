@@ -29,9 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -105,8 +106,16 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
 
     private boolean useEmbeddedHeader = false;  // Should the header be embeded in the table file stored in header file the table data dir.
 
-    public DictionaryTable(Path path) {
+    public DictionaryTable(URI path) {
         super(path);
+    }
+
+    public DictionaryTable(Path path) {
+        super(path.toUri());
+    }
+    
+    public DictionaryTable(String path) {
+        super(URI.create(path));
     }
 
     public DictionaryTable(Builder builder) {
@@ -115,8 +124,8 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
     }
 
     @Override
-    protected ITableEntries<DictionaryEntry> createTableEntries(Path path) {
-        return new TableEntries<>(path, DictionaryEntry.class);
+    protected ITableEntries<DictionaryEntry> createTableEntries() {
+        return new TableEntries<>(this, DictionaryEntry.class);
         // Leave this in here for easy try out.
         //return new TableEntries<>(path, DictionaryRawEntry.class);
     }
@@ -154,10 +163,10 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         this.header.setProperty(TableHeader.HEADER_SERIAL_KEY, oldSerial != null ? String.valueOf(Long.parseLong(oldSerial) + 1) : "1");
         this.header.setProperty(TableHeader.HEADER_LINE_COUNT_KEY, String.valueOf(tableEntries.size()));
         try {
-            Path tempFolder = getFolderPath();
-
-            Path tempDict = Files.createTempFile(tempFolder, getName(), ".gord");
-            try (BufferedWriter writer = Files.newBufferedWriter(tempDict)) {
+            URI tempFolder = getFolderUri();
+            URI tempDict = tempFolder.resolve(getName() + ".temp.gord");
+            try (BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(getFileReader().getOutputStream(tempDict.toString())))) {
                 if (useEmbeddedHeader) {
                     writer.write(this.header.formatHeader());
                 }
@@ -169,14 +178,15 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
             }
 
             if (!useEmbeddedHeader) {
-                Path tempHeader = Files.createTempFile(tempFolder, "header", ".tmp");
-                try (BufferedWriter writer = Files.newBufferedWriter(tempHeader)) {
+                URI tempHeader = tempFolder.resolve("header" +".tmp");
+                try (BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(getFileReader().getOutputStream((tempHeader.toString()))))) {
                     writer.write(this.header.formatHeader());
                 }
-                updateFromTempFile(getFolderPath().resolve("header"), tempHeader);
+                updateFromTempFile(getFolderUri().resolve("header"), tempHeader);
             }
 
-            updateFromTempFile(getPath(), tempDict);
+            updateFromTempFile(getPathUri(), tempDict);
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
@@ -196,7 +206,7 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         if (Files.exists(tablePath)) {
             throw new GorSystemException("Table already exists:  " + tablePath, null);
         }
-        DictionaryTable table = new Builder<>(tablePath).useHistory(true)
+        DictionaryTable table = new Builder<>(tablePath.toUri()).useHistory(true)
                 .securityContext("").validateFiles(false).build();
         table.insert(data);
         table.save();
@@ -206,7 +216,7 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
     public abstract static class AbstractBuilder<B extends AbstractBuilder<B>> extends BaseTable.Builder<B> {
         boolean useEmbededHeader = false;
 
-        private AbstractBuilder(Path path) {
+        private AbstractBuilder(URI path) {
             super(path);
         }
 
@@ -221,10 +231,14 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
 
     public static class Builder<B extends Builder<B>> extends AbstractBuilder<B> {
         public Builder(String path) {
-            this(Paths.get(path));
+            this(URI.create(path));
         }
 
         public Builder(Path path) {
+            super(path.toUri());
+        }
+
+        public Builder(URI path) {
             super(path);
         }
 
@@ -234,7 +248,7 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         }
     }
 
-    public static Builder newBuilder(Path path) {
+    public static Builder newBuilder(URI path) {
         return new Builder<>(path);
     }
 

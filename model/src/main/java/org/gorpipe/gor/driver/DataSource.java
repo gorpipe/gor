@@ -22,12 +22,15 @@
 
 package org.gorpipe.gor.driver;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 
 import java.io.IOException;
+import java.nio.file.attribute.FileAttribute;
+import java.util.stream.Stream;
 
 /**
  * Represents a data source
@@ -40,8 +43,6 @@ import java.io.IOException;
 public interface DataSource extends AutoCloseable {
     /**
      * Name of source - should contain enough information to resolve the source - e.g. a url.
-     *
-     * @throws IOException
      */
     String getName() throws IOException;
 
@@ -74,7 +75,27 @@ public interface DataSource extends AutoCloseable {
      * Currently, only side effect of always returning true is that
      * automatic fallback to link files wont't work with that source
      */
-    boolean exists() throws IOException;
+    boolean exists();
+
+    default void delete() throws IOException {
+        throw new GorResourceException("Delete is not implemented", getSourceType().getName());
+    }
+
+    default boolean isDirectory() {
+        throw new GorResourceException("isDirectory is not implemented", getSourceType().getName());
+    }
+
+    /**
+     * Creates a new directory.
+     * Returns: the directory
+     */
+    default String createDirectory(FileAttribute<?>... attrs) throws IOException {
+        throw new GorResourceException("Create directory is not implemented", getSourceType().getName());
+    }
+
+    default Stream<String> list() throws IOException {
+        throw new GorResourceException("List directory is not implemented", getSourceType().getName());
+    }
 
     @Override
     void close() throws IOException;
@@ -87,7 +108,6 @@ public interface DataSource extends AutoCloseable {
      * Get the source meta data.
      *
      * @return the source meta data.
-     * @throws IOException
      */
     SourceMetadata getSourceMetadata() throws IOException;
 

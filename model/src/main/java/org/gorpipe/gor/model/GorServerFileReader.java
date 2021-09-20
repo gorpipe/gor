@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
@@ -30,8 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -95,7 +99,7 @@ public class GorServerFileReader extends FileReader {
         }
 
         final String fileName = resolveUrl(dictionary);
-        return new DictionaryTable.Builder<>(Paths.get(fileName)).securityContext(securityContext).build().getSignature(true, resolvedSessionRoot, tags);
+        return new DictionaryTable.Builder<>(fileName).securityContext(securityContext).build().getSignature(true, resolvedSessionRoot, tags);
     }
 
     @Override
@@ -122,6 +126,52 @@ public class GorServerFileReader extends FileReader {
         // Standard fallback
         String fileName = resolveUrl(file);
         return GorOptions.getFileSignature(fileName, securityContext);
+    }
+
+    @Override
+    public boolean exists(String file) {
+        try {
+            return Files.exists(Paths.get(resolveUrl(file)));
+        } catch (IOException x) {
+            // does not exist or unable to determine if file exists
+            return false;
+        }
+    }
+
+    @Override
+    public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectory(Path.of(resolveUrl(dir)), attrs).toString();
+    }
+
+    @Override
+    public boolean isDirectory(String dir) {
+        try {
+            return Files.isDirectory(PathUtils.toPath(resolveUrl(dir)));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public String move(String source, String dest) throws IOException {
+        return Files.move(PathUtils.toPath(resolveUrl(source)), PathUtils.toPath(resolveUrl(dest)),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE).toString();
+    }
+
+    @Override
+    public String copy(String source, String dest) throws IOException {
+        return Files.copy(PathUtils.toPath(resolveUrl(source)), PathUtils.toPath(resolveUrl(dest)),
+                StandardCopyOption.REPLACE_EXISTING).toString();
+    }
+
+    @Override
+    public void delete(String file) throws IOException {
+        Files.delete(PathUtils.toPath(resolveUrl(file)));
+    }
+
+    @Override
+    public Stream<String> list(String dir) throws IOException {
+        return Files.list(PathUtils.toPath(resolveUrl(dir))).map(p -> p.toString());
     }
 
     @Override
