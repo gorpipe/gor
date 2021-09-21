@@ -174,11 +174,11 @@ public class UTestNor {
     }
 
     @Test
-    public void testNoringFolderWithModificationDate() {
+    public void testNoringFolderWithoutModificationDate() {
         String query = "nor ../tests -m | top 0";
 
         try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {
-            Assert.assertTrue("Header should contain the modification date.", iterator.getHeader().contains("Modified"));
+            Assert.assertFalse("Header should not contain the modification date.", iterator.getHeader().contains("Modified"));
         }
     }
 

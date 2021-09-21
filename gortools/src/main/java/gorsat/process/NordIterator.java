@@ -186,7 +186,7 @@ public class NordIterator extends GenomicIteratorBase {
             nordRoot = nordPath.getParent().toString();
         }
 
-        try (Stream<String> nordStream = this.fileReader.iterateFile(this.nordFile, 0, false)) {
+        try (Stream<String> nordStream = this.fileReader.iterateFile(this.nordFile, 0, false,true)) {
             List<NordIteratorEntry> nordEntries = nordStream
                     .peek(this::processProperty)
                     .filter(x -> !x.startsWith("#"))// Filter out all lines starting with #
@@ -233,7 +233,7 @@ public class NordIterator extends GenomicIteratorBase {
     }
 
     private void getHeaderFromFirstFile() {
-        try (Stream<String> stream = this.fileReader.iterateFile(this.nordFile, 0, false)) {
+        try (Stream<String> stream = this.fileReader.iterateFile(this.nordFile, 0, false, true)) {
             final Optional<String> first = stream.filter(x -> !x.startsWith("#")).findFirst();
             if (first.isPresent()) {
                 String fileName = NordIteratorEntry.parse(first.get()).getFilePath();
@@ -241,7 +241,7 @@ public class NordIterator extends GenomicIteratorBase {
                 if (!entryPath.isAbsolute()) {
                     fileName = Paths.get(this.nordRoot, fileName).toString();
                 }
-                try (NorInputSource inputSource = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false)) {
+                try (NorInputSource inputSource = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, true)) {
                     getHeaderFromIterator(inputSource);
                 }
             }
@@ -289,7 +289,7 @@ public class NordIterator extends GenomicIteratorBase {
                         fileName = Paths.get(this.nordRoot, fileName).toString();
                 }
 
-                activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false);
+                activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, true);
             }
             activeIterator.init(gorSession);
 

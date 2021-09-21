@@ -273,7 +273,7 @@ public class GorServerFileReader extends FileReader {
     }
 
     @Override
-    public Stream<String> iterateFile(String file, int maxDepth, boolean showModificationDate) throws IOException {
+    public Stream<String> iterateFile(String file, int maxDepth, boolean followLinks, boolean showModificationDate) throws IOException {
         String resolvedUrl = resolveUrl(file);
 
         if (resolvedUrl.startsWith("//db:")) {
@@ -284,7 +284,7 @@ public class GorServerFileReader extends FileReader {
         if (f.isDirectory()) {
             Path path = f.toPath();
             Path root = Paths.get(resolvedSessionRoot);
-            return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+            return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
         }
 
         try (BufferedReader bufferedReader = new BufferedReader(new java.io.FileReader(f))) {
