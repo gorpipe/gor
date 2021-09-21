@@ -191,7 +191,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    public Stream<String> iterateFile(String file, int maxDepth, boolean showModificationDate) throws IOException {
+    public Stream<String> iterateFile(String file, int maxDepth, boolean followLinks, boolean showModificationDate) throws IOException {
         var source = resolveUrl(file);
 
         if (source.getSourceType() == FileSourceType.FILE) {
@@ -202,13 +202,13 @@ public class DriverBackedFileReader extends FileReader {
             }
             if (Files.isDirectory(path)) {
                 if (!path.getFileName().toString().toLowerCase().endsWith(".gord")) {
-                    return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+                    return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 } else if (Files.exists(path.resolve(path.getFileName()))) {
                     source = resolveUrl(file + "/" + path.getFileName());
                 } else if (Files.exists(path.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
                     source = resolveUrl(file + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
                 } else {
-                    return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+                    return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 }
             }
         }
@@ -216,7 +216,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    public RacFile openFile(String file) throws IOException {
+    public RacFile openFile(String file) {
         DataSource source = resolveUrl(file);
         return new StreamSourceRacFile((StreamSource) source);
     }

@@ -35,7 +35,7 @@ import org.gorpipe.model.gor.RowObj
 import scala.collection.mutable
 import scala.io.StdIn
 
-class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends GenomicIteratorBase {
+class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends GenomicIteratorBase {
   private var stats: StatsCollector = _
   private var statsSenderId = -1
 
@@ -54,7 +54,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     if (fileNameTUP.endsWith(".GZ")) {
       new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.getInputStream(fileName)))).lines()
     } else {
-      fileReader.iterateFile(fileName, maxWalkDepth, showModificationDate)
+      fileReader.iterateFile(fileName, maxWalkDepth, followLinks, showModificationDate)
     }
   } else throw new GorParsingException("Stdin not supported in NOR context.")
   val norRowIterator: util.Iterator[String] = norRowSource.filter(filter(_)).iterator()

@@ -170,28 +170,27 @@ public class FreemarkerQueryUtilities {
     private static Map<String, ArgumentContent> getArgumentValues
             (Map<String, String> parameterMap, FileReader fileResolver, PerspectiveDialog perspectiveDialog) {
         return parameterMap.entrySet().stream().filter(p -> p.getValue() != null).collect(
-                Collectors.toMap(Map.Entry::getKey, entry ->
-                        {
-                            String entryKey = entry.getKey();
-                            if(!extraAllowed.contains(entryKey) && !perspectiveDialog.hasArgument(entryKey)) {
-                                var set = new HashSet<>(extraAllowed);
-                                set.addAll(perspectiveDialog.getArgumentMap().keySet());
-                                throw new GorParsingException("Parameter '"+entryKey+"' not listed in report builder yaml. Allowed values are "+ set);
-                            }
-                            Argument argument = perspectiveDialog.getArgument(entryKey);
-                            String value;
-                            if (argument != null && argument.getType() == ArgumentType.PN_LISTS_ENTRIES) {
-                                //we need to load the pns from the file ans replace the original value
-                                value = readPnListFromFile(entry.getValue(), fileResolver);
-                            } else {
-                                value = entry.getValue();
-                            }
-                            if (value.startsWith("[")) {
-                                int end = value.indexOf(']');
-                                if (value.substring(0, end).contains(",")) value = value.substring(1, value.length() - 1);
-                            }
-                            return new ArgumentContent(value);
+                Collectors.toMap(Map.Entry::getKey, entry -> {
+                        String entryKey = entry.getKey();
+                        if(!extraAllowed.contains(entryKey) && !perspectiveDialog.hasArgument(entryKey)) {
+                            var set = new HashSet<>(extraAllowed);
+                            set.addAll(perspectiveDialog.getArgumentMap().keySet());
+                            throw new GorParsingException("Parameter '"+entryKey+"' not listed in report builder yaml. Allowed values are "+ set);
                         }
+                        Argument argument = perspectiveDialog.getArgument(entryKey);
+                        String value;
+                        if (argument != null && argument.getType() == ArgumentType.PN_LISTS_ENTRIES) {
+                            //we need to load the pns from the file ans replace the original value
+                            value = readPnListFromFile(entry.getValue(), fileResolver);
+                        } else {
+                            value = entry.getValue();
+                        }
+                        if (value.startsWith("[")) {
+                            int end = value.indexOf(']');
+                            if (value.substring(0, end).contains(",")) value = value.substring(1, value.length() - 1);
+                        }
+                        return new ArgumentContent(value);
+                    }
                 ));
 
     }
