@@ -208,12 +208,12 @@ public class HTTPSource implements StreamSource {
     }
 
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         if (exists == null) {
             try {
                 getSourceMetadata();
-            } catch (FileNotFoundException e) {
-                // Ok
+            } catch (IOException e) {
+                return false;
             }
         }
         return exists;

@@ -14,7 +14,7 @@ variables:
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   SECURITY_SCAN: "false"
-
+  SKIP_ECR: 'yes' # Skip the push to ECR step
   # Vars needed for the Genuity Auto-CI
   RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
@@ -198,9 +198,5 @@ push-feature-branch-docker-to-dockerhub:
     - when: never
 
 push-version-to-dockerhub:
-  rules:
-    - when: never
-
-push_to_ecr:
   rules:
     - when: never

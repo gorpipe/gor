@@ -48,7 +48,7 @@ public class UTestGorIndexFile {
         Assert.assertTrue(path.toFile().exists());
 
         String contents = FileUtils.readFileToString(path.toFile(), "utf8");
-        Assert.assertEquals("## fileformat=GORIv1\n", contents);
+        Assert.assertEquals("## fileformat=GORIv2\n", contents);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class UTestGorIndexFile {
         }
 
         String contents = FileUtils.readFileToString(path.toFile(), "utf8");
-        String expected = "## fileformat=GORIv1\n" +
+        String expected = "## fileformat=GORIv2\n" +
                 "chr1\t1\t100\n";
         Assert.assertEquals(expected, contents);
     }
@@ -75,7 +75,7 @@ public class UTestGorIndexFile {
         }
 
         String contents = FileUtils.readFileToString(path.toFile(), "utf8");
-        String expected = "## fileformat=GORIv1\n" +
+        String expected = "## fileformat=GORIv2\n" +
                 "chr1\t1\t100\n" +
                 "chr1\t2\t200\n" +
                 "chr1\t3\t300\n" +
@@ -94,7 +94,7 @@ public class UTestGorIndexFile {
         }
 
         String contents = FileUtils.readFileToString(path.toFile(), "utf8");
-        String expected = "## fileformat=GORIv1\n" +
+        String expected = "## fileformat=GORIv2\n" +
                 "chr1\t1\t100\n";
         Assert.assertEquals(expected, contents);
     }
@@ -123,7 +123,7 @@ public class UTestGorIndexFile {
             file.generateForGorz("../tests/data/gor/genes.gorz");
         }
 
-        String expected = "## fileformat=GORIv1\n" +
+        String expected = "## fileformat=GORIv2\n" +
                 "chr1\t36921318\t16108\n" +
                 "chr1\t249230779\t74190\n" +
                 "chr10\t71211228\t89394\n" +
@@ -183,7 +183,7 @@ public class UTestGorIndexFile {
             file.generateForGorz("../tests/data/gor/genes.gorz");
         }
 
-        String expected = "## fileformat=GORIv1\n" +
+        String expected = "## fileformat=GORIv2\n" +
                 "chr1\t36921318\t16108\n" +
                 "chr1\t96719624\t31818\n" +
                 "chr1\t156030950\t46614\n" +

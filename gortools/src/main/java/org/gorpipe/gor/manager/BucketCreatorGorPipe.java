@@ -28,20 +28,20 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.gor.table.TableEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.gorpipe.gor.table.PathUtils.resolve;
 
 /**
  * Helper class to create bucket file from bucket description.
@@ -63,10 +63,13 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
     }
 
     @Override
-    public void createBuckets(BaseTable<T> table, Map<Path, List<T>> bucketsToCreate, Path absBucketDir)
+    public void createBuckets(BaseTable<T> table, Map<Path, List<T>> bucketsToCreate, URI absBucketDir)
             throws IOException {
         // Create common temp directories and folders.
-        Path workTempDir = createTempfoldersForCreateBucketFiles(table, bucketsToCreate.keySet(), absBucketDir);
+        // !GM Should we use local or remote temp folder}
+        Path workBaseDir = PathUtils.isLocal(absBucketDir) ? PathUtils.toPath(absBucketDir) :
+                Files.createTempDirectory("bucket_work_folder_" + table.getId());
+        Path workTempDir = createTempfoldersForCreateBucketFiles(table, bucketsToCreate.keySet(), workBaseDir);
 
         // Build the gor query (gorpipe)
         String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, workTempDir, table);
@@ -96,8 +99,8 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
         // Move the bucket files from temp to the bucket folder
         for (Path bucket : bucketsToCreate.keySet()) {
             // Move the bucket files.
-            Path targetBucketPath = resolve(table.getRootPath(), bucket);
-            Files.move(workTempDir.resolve(bucket), targetBucketPath);
+            URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
+            table.getFileReader().move(workTempDir.resolve(bucket).toString(), targetBucketPath.toString());
         }
 
         deleteIfTempBucketizingFolder(workTempDir, table);
@@ -126,6 +129,12 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
         return sb.toString();
     }
 
+    /**
+     *
+     * @param path          path to temp folder, should always be local.
+     * @param table
+     * @throws IOException
+     */
     static void deleteIfTempBucketizingFolder(Path path, BaseTable<? extends BucketableTableEntry> table)
             throws IOException {
         if (path.getFileName().toString().startsWith(getBucketizingFolderPrefix(table))) {

@@ -37,9 +37,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
@@ -110,6 +112,47 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     protected void checkValidServerFileName(String fileName) {
         // This is not used for the standard reader
+    }
+
+    @Override
+    public boolean exists(String file) {
+        return resolveUrl(file).exists();
+    }
+
+    @Override
+    public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
+        return resolveUrl(dir).createDirectory(attrs);
+    }
+
+    @Override
+    public boolean isDirectory(String dir) {
+        return resolveUrl(dir).isDirectory();
+    }
+
+    @Override
+    public String move(String source, String dest) throws IOException {
+        copy(source, dest);
+        delete(source);
+        return dest;
+    }
+
+    @Override
+    public String copy(String source, String dest) throws IOException {
+        try (InputStream inputStream = getInputStream(source);
+             OutputStream outputStream = getOutputStream(dest)) {
+            inputStream.transferTo(outputStream);
+        }
+        return dest;
+    }
+
+    @Override
+    public void delete(String file) throws IOException {
+        resolveUrl(file).delete();
+    }
+
+    @Override
+    public Stream<String> list(String dir) throws IOException {
+        return resolveUrl(dir).list();
     }
 
     @Override
@@ -191,7 +234,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    public Stream<String> iterateFile(String file, int maxDepth, boolean showModificationDate) throws IOException {
+    public Stream<String> iterateFile(String file, int maxDepth, boolean followLinks, boolean showModificationDate) throws IOException {
         var source = resolveUrl(file);
 
         if (source.getSourceType() == FileSourceType.FILE) {
@@ -202,13 +245,13 @@ public class DriverBackedFileReader extends FileReader {
             }
             if (Files.isDirectory(path)) {
                 if (!path.getFileName().toString().toLowerCase().endsWith(".gord")) {
-                    return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+                    return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 } else if (Files.exists(path.resolve(path.getFileName()))) {
                     source = resolveUrl(file + "/" + path.getFileName());
                 } else if (Files.exists(path.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
                     source = resolveUrl(file + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
                 } else {
-                    return DefaultFileReader.getDirectoryStream(maxDepth, showModificationDate, path, root);
+                    return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 }
             }
         }
@@ -216,17 +259,19 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    public RacFile openFile(String file) throws IOException {
+    public RacFile openFile(String file) {
         DataSource source = resolveUrl(file);
         return new StreamSourceRacFile((StreamSource) source);
     }
 
     @Override
     public String getDictionarySignature(String dictionary, String[] tags) throws IOException {
-        final DataSource file = resolveUrl(dictionary);
-        Path dictpath = Paths.get(getResolvedUrl(file));
-        if(Files.isDirectory(dictpath)) dictpath = dictpath.resolve(dictpath.getFileName());
-        return new DictionaryTable.Builder<>(dictpath).securityContext(securityContext).build().getSignature(true, file.getSourceReference().commonRoot, tags);
+        final DataSource source = resolveUrl(dictionary);
+        String dictpath = getResolvedUrl(source);
+        if (Files.isDirectory(Path.of(dictpath))) {
+            dictpath = URI.create(dictpath).resolve(Path.of(dictpath).getFileName().toString()).toString();
+        }
+        return new DictionaryTable.Builder<>(dictpath).securityContext(securityContext).build().getSignature(true, source.getSourceReference().commonRoot, tags);
     }
 
     @Override
