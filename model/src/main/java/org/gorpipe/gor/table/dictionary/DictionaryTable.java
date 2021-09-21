@@ -252,6 +252,10 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         return new Builder<>(path);
     }
 
+    public static Builder newBuilder(Path path) {
+        return new Builder<>(path);
+    }
+
     // -----------------------------------------------------------------------------------
     //  Some relics from the old dictionary used by GorOptions.
     // -----------------------------------------------------------------------------------
