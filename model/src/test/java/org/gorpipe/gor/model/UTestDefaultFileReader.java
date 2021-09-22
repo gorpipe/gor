@@ -127,6 +127,14 @@ public class UTestDefaultFileReader {
     }
 
     @Test
+    public void iterateFileOnDirectoryFollowLinks() throws IOException {
+        try (Stream<String> stream = reader.iterateFile(workDir.getRoot().getAbsolutePath(), 0, true, false)) {
+            final List<String> lines = stream.collect(Collectors.toList());
+            assertTrue(lines.size() >= 1);
+        }
+    }
+
+    @Test
     public void getDirectoryStream() throws IOException {
         final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, false, false, workDir.getRoot().toPath(), workDir.getRoot().toPath());
         final List<String> list = directoryStream.collect(Collectors.toList());

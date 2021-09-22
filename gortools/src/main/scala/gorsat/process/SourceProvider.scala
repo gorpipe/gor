@@ -55,7 +55,7 @@ case class SourceProvider(inputSource: String, context: GorContext, executeNor: 
         new Iterators.ServerNorGorSource(inputSource, context, executeNor)
       } else {
         new Iterators.NorInputSource(inputSource, context.getSession.getProjectContext.getFileReader, false, true, 0,
-          false, false)
+          false, true, false)
       }
     } else {
       new SingleFileSource(inputSource, context.getSession.getProjectContext.getRoot, context)
