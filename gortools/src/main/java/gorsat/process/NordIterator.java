@@ -186,7 +186,7 @@ public class NordIterator extends GenomicIteratorBase {
             nordRoot = nordPath.getParent().toString();
         }
 
-        try (Stream<String> nordStream = this.fileReader.iterateFile(this.nordFile, 0, false,true)) {
+        try (Stream<String> nordStream = this.fileReader.iterateFile(this.nordFile, 0, false, true)) {
             List<NordIteratorEntry> nordEntries = nordStream
                     .peek(this::processProperty)
                     .filter(x -> !x.startsWith("#"))// Filter out all lines starting with #
@@ -241,7 +241,7 @@ public class NordIterator extends GenomicIteratorBase {
                 if (!entryPath.isAbsolute()) {
                     fileName = Paths.get(this.nordRoot, fileName).toString();
                 }
-                try (NorInputSource inputSource = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, true)) {
+                try (NorInputSource inputSource = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, false)) {
                     getHeaderFromIterator(inputSource);
                 }
             }
@@ -289,7 +289,7 @@ public class NordIterator extends GenomicIteratorBase {
                         fileName = Paths.get(this.nordRoot, fileName).toString();
                 }
 
-                activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, true);
+                activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, false);
             }
             activeIterator.init(gorSession);
 
