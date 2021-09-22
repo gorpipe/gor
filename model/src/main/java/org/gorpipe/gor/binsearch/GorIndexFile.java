@@ -37,7 +37,7 @@ import java.nio.file.Files;
 @SuppressWarnings("squid:S3457")
 public class GorIndexFile implements AutoCloseable{
     private static final Logger log = LoggerFactory.getLogger(GorIndexFile.class);
-    private static final String VERSION = "GORIv1";
+    private static final String VERSION = "GORIv2";
 
     private final BufferedWriter out;
     private final GorIndexType indexType;

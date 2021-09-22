@@ -131,30 +131,6 @@ public class RetryWrapper extends WrappedStreamSource {
         return retry.tryOp(super::list, requestRetries, defaultOnRetryOp);
     }
 
-    @Override
-    public void delete() throws IOException {
-         retry.tryOp(super::delete, requestRetries, defaultOnRetryOp);
-    }
-
-    @Override
-    public boolean isDirectory() {
-        try {
-            return retry.tryOp(super::isDirectory, requestRetries, defaultOnRetryOp);
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
-        return retry.tryOp(() -> super.createDirectory(attrs), requestRetries);
-    }
-
-    @Override
-    public Stream<String> list() throws IOException {
-        return retry.tryOp(super::list, requestRetries, defaultOnRetryOp);
-    }
-
     /**
      * A default retry operator. If there is a FileNotFoundException then do not retry.
      */

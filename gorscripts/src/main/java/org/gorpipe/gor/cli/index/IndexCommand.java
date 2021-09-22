@@ -58,7 +58,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private ByteArrayOutputStream lastbaos = null;
 
-    private boolean byteArrayEquals(String b1, String b2, int len) {
+    private boolean stringPrefixEquals(String b1, String b2, int len) {
         for( int j = 0; j < len; j++ ) {
             if( b1.charAt(j) != b2.charAt(j) ) return false;
         }
@@ -95,11 +95,9 @@ public class IndexCommand extends HelpOptions implements Runnable {
 
     private ByteArrayOutputStream writeBufferToFile(Writer fos) throws IOException {
         if (performFullIndex) {
-            var bufc = baos.toString();
-            fos.write(bufc);
+            fos.write(baos.toString());
         } else if (lastbaos == null) {
-            var bufc = baos.toString();
-            fos.write(bufc);
+            fos.write(baos.toString());
             lastbaos = baos;
             baos = new ByteArrayOutputStream();
         } else {
@@ -112,7 +110,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
             while( k < lastbuffer.length() && lastbuffer.charAt(k) != '\t' ) k++;
 
             if( k == lastbuffer.length() ) k = -1;
-            if (k == -1 || k != o || !byteArrayEquals(tbuffer, lastbuffer, k)) {
+            if (k == -1 || k != o || !stringPrefixEquals(tbuffer, lastbuffer, k)) {
                 if (!lastwritten) {
                     fos.write(lastbuffer);
                 }
@@ -136,7 +134,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
                 InputStream is = ds.open();
                 Writer fos = Files.newBufferedWriter(gorindex)
         ) {
-            fos.write("## fileformat=GORIv1\n");
+            fos.write("## fileformat=GORIv2\n");
             while (i == r) {
                 pos = pos + r;
                 r = is.read(buffer);
@@ -161,11 +159,9 @@ public class IndexCommand extends HelpOptions implements Runnable {
                 }
             }
             if (!lastwritten && lastbaos != null) {
-                var bufc = lastbaos.toString();
-                fos.write(bufc);
+                fos.write(lastbaos.toString());
             }
-            var bufc = baos.toString();
-            fos.write(bufc);
+            fos.write(baos.toString());
         } catch (IOException e) {
             throw new GorSystemException("gor file index failed",e);
         }
