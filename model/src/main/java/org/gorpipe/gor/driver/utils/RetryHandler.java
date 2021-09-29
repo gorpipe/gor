@@ -102,7 +102,6 @@ public class RetryHandler {
      * @param retries Maximum number of retries
      * @param onRetry Optional operation to execute before retry - e.g. to close/reopen underlying stream etc.
      *                It can also be used to determine if operation is really retryable - e.g. based on exception thrown.
-     * @return Object returned by successful IO operation.
      * @throws IOException - exception thrown on last retry or  execption thrown by any call to onRetry
      */
     public void tryOp(VoidIoOp op, int retries, OnRetryOp onRetry) throws IOException {
