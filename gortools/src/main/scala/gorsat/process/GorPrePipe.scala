@@ -33,6 +33,7 @@ import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.gor.session.GorSession
 
+import java.util.function.Predicate
 import scala.collection.JavaConverters._
 
 object GorPrePipe {
@@ -42,7 +43,9 @@ object GorPrePipe {
   var availCommands: Array[String] = GorPipeCommands.getGorCommands ++ GorInputSources.getInputSources
   val availNorCommands: Array[String] = GorPipeCommands.getNorCommands ++ GorInputSources.getInputSources
 
-  private val commandsContainingInputSources = Array[String]("GOR","NOR","MAP","MULTIMAP","INSET","MERGE","JOIN","LEFTJOIN","VARJOIN"/*,"CSVSEL","CSVCC","GTGEN"*/)
+  private val supportedGorSQLFileEndings = Array[String](".json",".csv",".tsv",".gor",".gorz",".gor.gz",".gord",".txt",".vcf",".bgen")
+  private val commandsContainingInputSources = Array[String]("GOR","NOR","SPARK","MAP","MULTIMAP","INSET","MERGE","JOIN","LEFTJOIN","VARJOIN"/*,"CSVSEL","CSVCC","GTGEN"*/)
+  val gorpred = (p: String) => supportedGorSQLFileEndings.map(e => p.toLowerCase.endsWith(e)).reduce((a,b) => a || b)
 
   private def getCommandArgument(command: String) : Option[CommandArguments] = {
     val commandResult = GorPipeCommands.commandMap.get(command)
@@ -73,7 +76,8 @@ object GorPrePipe {
       var loopcommand = command
       val argString = CommandParseUtilities.quoteSafeSplitAndTrim(fullcommand, ' ').mkString(" ")
 
-      if (commandsContainingInputSources.contains(command)) loopcommand = "JOIN"
+      val isSql = i==0 && command.equals("SELECT")
+      if (commandsContainingInputSources.contains(command) || isSql) loopcommand = "JOIN"
 
       loopcommand match {
         case "JOIN" =>
@@ -85,7 +89,11 @@ object GorPrePipe {
             val (iargs, _) = CommandParseUtilities.validateCommandArguments(cargs.slice(1, MAX_NUMBER_OF_STEPS), commandArgument.get)
 
             if (iargs.length > 0) {
-              val rightFile = iargs(0).trim
+              val inputArguments = iargs.slice(0, iargs.length).toList
+              val of = if(isSql) {
+                inputArguments.map(s => s.toLowerCase).zipWithIndex.find(p => p._1.equals("from"))
+              } else Option.empty
+              val rightFile = if(of.nonEmpty) inputArguments(of.get._2+1) else iargs(0).trim
 
               if (CommandParseUtilities.isNestedCommand(rightFile)) {
                 // Nested pipe command
@@ -93,7 +101,6 @@ object GorPrePipe {
                 val subFiles = getUsedFiles(iteratorCommand, session)
                 usedFiles :::= subFiles
               } else {
-                val inputArguments = iargs.slice(0, iargs.length).toList
                 if (inputArguments.exists(inputArgument => inputArgument.endsWith(".gord") || inputArgument.endsWith(".nord"))) {
                   var tags: List[String] = List[String]()
                   if (CommandParseUtilities.hasOption(cargs, "-f")) {
@@ -113,7 +120,17 @@ object GorPrePipe {
                   }
                   val otherFiles = inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-") && !(argumentEntry.endsWith(".gord") || argumentEntry.endsWith(".nord")))
                   usedFiles :::= otherFiles ::: dictFiles
-                } else usedFiles :::= inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-"))
+                } else if(isSql) {
+                  if (of.nonEmpty) {
+                    if (gorpred.apply(rightFile)) {
+                      usedFiles ::= rightFile
+                    } else {
+                      usedFiles ::= "sql://" + rightFile
+                    }
+                  }
+                } else {
+                  usedFiles :::= inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-"))
+                }
               }
             }
           }
