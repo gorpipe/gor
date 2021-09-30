@@ -104,7 +104,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
         val gorString = ordFileList.mkString(" ")
         val sessionFactory = new GenericSessionFactory()
         rSource = new MultiFileSource(gorString.split(' ').toList, null, "", sortInfo, sessionFactory.create().getGorContext)
-        rSource.seek("chr", 0)
+        rSource.seek("", 0)
 
         while (rSource.hasNext) super.process(rSource.next())
       } finally {

@@ -31,8 +31,8 @@ case class SortAnalysis(header: String,
                         session: GorSession,
                         range: Int,
                         sortInfo: Array[Row.SortInfo] = null)
-  extends BinAnalysis(SortRowHandler(2 * (1 + range / 1001.min(range))), BinAggregator(SortFactory(header,
-    session, sortInfo, 1000.min(range) + 2), 1000.min(range) + 2, 1000.min(range)))
+  extends BinAnalysis(SortRowHandler(2 * (1 + range / 11.min(range))), BinAggregator(SortFactory(header,
+    session, sortInfo, 10.min(range) + 2), 10.min(range) + 2, 10.min(range)))
 {
   override def isTypeInformationMaintained: Boolean = true
 }
