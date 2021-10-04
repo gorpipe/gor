@@ -22,10 +22,8 @@
 
 package org.gorpipe.gor.binsearch;
 
+import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.binsearch.GorIndexFile;
-import org.gorpipe.gor.binsearch.GorIndexType;
-import org.gorpipe.gor.binsearch.PositionCache;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +31,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class UTestGorIndexFile {
@@ -114,6 +113,17 @@ public class UTestGorIndexFile {
             GorIndexFile.load(inputStream, pc);
         }
         Assert.assertEquals(4, pc.getSize());
+    }
+
+    @Test
+    public void testOldGoriVersion() throws IOException {
+        var genespath = workDir.getRoot().toPath().resolve("genes.gorz");
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 10 | write -i FULL "+genespath);
+        var genesindexpath = workDir.getRoot().toPath().resolve("genes.gorz.gori");
+        var goricont = Files.readString(genesindexpath).replace("GORIv2","GORIv1");
+        Files.writeString(genesindexpath,goricont);
+        var result = TestUtils.runGorPipe("gor -p chr1 "+genespath+" | top 1");
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\nchr1\t11868\t14412\tDDX11L1\n",result);
     }
 
     @Test
