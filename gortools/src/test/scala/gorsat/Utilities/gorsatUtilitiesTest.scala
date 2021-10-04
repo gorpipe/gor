@@ -686,6 +686,8 @@ class UTestMemoryMonitorUtil extends FunSuite {
     assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | BINARYWRITE output.gor"))
     assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | binarywrite output.gor"))
     assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 ") == false)
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 /* write or not to write*/") == false)
+    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | calc c 'write or not to write' ") == false)
   }
 
   test("Get output filename ") {
@@ -717,6 +719,9 @@ class UTestMemoryMonitorUtil extends FunSuite {
       case e: GorParsingException => gotError2 = true
     }
     assert(gotError2)
+
+    assert(Utilities.getWriteFilename("gor #genes# | top 10 | /* write stuff*/ WRITE output.gor").equals("output.gor"))
+    assert(Utilities.getWriteFilename("gor #genes# | top 10 | calc c 'write stuff' | write output.gor").equals("output.gor"))
 
   }
 
