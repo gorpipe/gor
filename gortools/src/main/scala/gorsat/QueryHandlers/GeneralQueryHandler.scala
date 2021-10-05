@@ -277,7 +277,10 @@ object GeneralQueryHandler {
           .filter(f => f.nonEmpty).map(s => prefix + s + '\t')
           .findFirst().asInstanceOf[Optional[String]]
       } else {
-        Optional.empty()
+        val cep = x._2.split(':')
+        val stasto = if (cep.length > 1) cep(1).split('-') else Array("0","-1")
+        val (c, sp, ep) = (cep(0), stasto(0), if (stasto.length > 1 && stasto(1).nonEmpty) stasto(1) else "-1")
+        Optional.of[String](prefix + c + "\t" + sp + "\t" + c + "\t" + ep)
       }
       opt
       // file, alias, chrom, startpos, chrom, endpos
