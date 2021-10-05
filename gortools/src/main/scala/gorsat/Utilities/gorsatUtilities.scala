@@ -53,7 +53,7 @@ object Utilities {
     * @return
     */
   def queryContainsCommand(query: String, commandInfo: CommandInfo): Boolean = {
-    query.toUpperCase.contains(commandInfo.name)
+    CommandParseUtilities.quoteSafeIndexOf(CommandParseUtilities.removeComments(query).toUpperCase, commandInfo.name) >= 0;
   }
 
   /**
@@ -76,11 +76,12 @@ object Utilities {
   def getWriteFilename(query: String): String = {
     val command = getWriteCommand(query)
     if (command == null) return null
-    val writeIndex = query.trim.toUpperCase.indexOf(command.name + " ")
+    val noCommentsQuery = CommandParseUtilities.removeComments(query);
+    val writeIndex = CommandParseUtilities.quoteSafeIndexOf(noCommentsQuery.trim.toUpperCase, command.name + " ")
     if (writeIndex < 0) {
       throw new GorParsingException(s"Unable to get the filename for the write command of ", query, "")
     }
-    val queryRemainder = query.substring(writeIndex + command.name.length + 1)
+    val queryRemainder = noCommentsQuery.substring(writeIndex + command.name.length + 1)
     val commandRemainder = CommandParseUtilities.quoteSafeSplit(queryRemainder, '|')(0)
     val commandArgs = CommandParseUtilities.quoteSafeSplit(commandRemainder, ' ')
     val arguments = command.validateArguments(commandArgs)

@@ -37,7 +37,9 @@ import java.nio.file.Files;
 @SuppressWarnings("squid:S3457")
 public class GorIndexFile implements AutoCloseable{
     private static final Logger log = LoggerFactory.getLogger(GorIndexFile.class);
-    private static final String VERSION = "GORIv2";
+    private static final String VERSION1 = "GORIv1";
+    private static final String VERSION2 = "GORIv2";
+    private static final String VERSION = VERSION2;
 
     private final BufferedWriter out;
     private final GorIndexType indexType;
@@ -127,6 +129,19 @@ public class GorIndexFile implements AutoCloseable{
         }
     }
 
+    public static int loadVersion1(String line, BufferedReader reader, PositionCache pc) throws IOException {
+        int lineCount = 0;
+        while (line != null) {
+            String[] split = line.split("\t");
+            StringIntKey key = new StringIntKey(split[0], Integer.parseInt(split[1]));
+            long pos = Long.parseLong(split[2]);
+            pc.putFilePosition(key, pos);
+            lineCount += 1;
+            line = reader.readLine();
+        }
+        return lineCount;
+    }
+
     private static class Loader {
         private final BufferedReader reader;
         private final PositionCache pc;
@@ -139,23 +154,20 @@ public class GorIndexFile implements AutoCloseable{
         }
 
         void invoke() throws IOException {
-            String line = processHeader();
+            var line = processHeader();
 
-            if (!version.equals(VERSION)) {
-                throw new GorDataException("Invalid version of index file");
+            switch (version) {
+                case VERSION1:
+                    log.debug("GORIv1 index file ignored");
+                    break;
+                case VERSION2:
+                    // Version 1 and 2 have same format
+                    int lineCount = loadVersion1(line, reader, pc);
+                    log.debug("{} lines read from index file", lineCount);
+                    break;
+                default:
+                    throw new GorDataException("Invalid version of index file");
             }
-
-            int lineCount = 0;
-            while (line != null) {
-                String[] split = line.split("\t");
-                StringIntKey key = new StringIntKey(split[0], Integer.parseInt(split[1]));
-                long pos = Long.parseLong(split[2]);
-                pc.putFilePosition(key, pos);
-                lineCount += 1;
-                line = reader.readLine();
-            }
-
-            log.debug("{} lines read from index file", lineCount);
         }
 
         private String processHeader() throws IOException {
