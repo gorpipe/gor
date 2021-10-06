@@ -28,8 +28,7 @@ import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource
-import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
+import org.gorpipe.gor.model.{GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.PathUtils
 import org.gorpipe.model.gor.RowObj
@@ -53,7 +52,8 @@ case class OutputOptions(remove: Boolean = false,
                             skipHeader: Boolean = false,
                             writeMeta: Boolean = true,
                             cardCol: String = null,
-                            linkFile: String = ""
+                            linkFile: String = "",
+                            command: String = null
                            )
 
 case class ForkWrite(forkCol: Int,

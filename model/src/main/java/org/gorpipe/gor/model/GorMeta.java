@@ -13,8 +13,10 @@ public class GorMeta {
     String cardColName = null;
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
+    String query;
 
     public static final String MD5_HEADER = "## MD5";
+    public static final String QUERY_HEADER = "## QUERY";
     public static final String CARDCOL_HEADER = "## CARDCOL";
     public static final String RANGE_HEADER = "## RANGE";
     public static final String LINES_HEADER = "## LINES";
@@ -30,6 +32,14 @@ public class GorMeta {
 
     public String getMd5() {
         return md5;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+
+    public String getQuery() {
+        return query;
     }
 
     public void setTags(String tags) {
@@ -67,6 +77,7 @@ public class GorMeta {
         String ret = "";
         if(minChr!=null) ret += RANGE_HEADER + ": " + getRange() + "\n";
         if(md5!=null) ret += MD5_HEADER + ": " + md5 + "\n";
+        if(query!=null) ret += QUERY_HEADER + ": " + query + "\n";
         if(tags!=null&&tags.length()>0) ret += TAGS_HEADER + ": " + tags + "\n";
         if(lineCount!=0) ret += LINES_HEADER + ": " + lineCount + "\n";
         if(cardColIndex != -1) {
