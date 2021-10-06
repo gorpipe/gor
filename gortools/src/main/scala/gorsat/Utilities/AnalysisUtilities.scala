@@ -28,7 +28,6 @@ package gorsat.Utilities
 
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.stream.Collectors
-
 import gorsat.Commands.CommandParseUtilities
 import gorsat.DynIterator.{DynamicNorSource, DynamicRowSource}
 import gorsat.Macros.PartGor
@@ -41,6 +40,7 @@ import org.gorpipe.gor.model.{FileReader, GorOptions, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.slf4j.LoggerFactory
 
+import java.io.BufferedWriter
 import scala.collection.mutable
 import scala.reflect.io.File
 
@@ -94,11 +94,18 @@ object AnalysisUtilities {
 
   def writeList(filePath: java.nio.file.Path, header: String, m: List[String]) : Unit = {
     val parent = filePath.getParent
-    if (!Files.exists(parent)) Files.createDirectories(parent)
-    val out = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)
-    out.write(header)
-    m.foreach(t => out.write(t + "\n"))
-    out.close
+    try {
+      if (parent != null && !Files.exists(parent)) Files.createDirectories(parent)
+    } finally {
+      var out: BufferedWriter = null
+      try {
+        out = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)
+        out.write(header)
+        m.foreach(t => out.write(t + "\n"))
+      } finally {
+        if (out!=null) out.close
+      }
+    }
   }
 
   case class NestedCommandSourceInterface(rootSource: Either[DynamicNorSource, DynamicRowSource],
