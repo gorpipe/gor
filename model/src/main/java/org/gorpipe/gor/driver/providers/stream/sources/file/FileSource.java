@@ -347,7 +347,11 @@ public class FileSource implements StreamSource {
 
         @Override
         public void close() {
-            // No op
+            try {
+                raf.close();
+            } catch (IOException e) {
+                // Ignore
+            }
         }
 
         @Override
