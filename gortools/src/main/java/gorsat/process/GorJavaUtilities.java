@@ -305,6 +305,15 @@ public class GorJavaUtilities {
         return myCommand;
     }
 
+    public static Optional<String> readRangeFromMeta(Path metaPath, String prefix) throws IOException {
+        return Files.lines(metaPath)
+                .filter(l -> l.startsWith(GorMeta.RANGE_HEADER))
+                .map(s -> s.substring(9).trim())
+                .filter(f -> !f.isEmpty())
+                .map(s -> prefix + s + '\t')
+                .findFirst();
+    }
+
     public static GenomicIterator getDbIteratorSource(String sqlQuery, boolean gortable, final String source, boolean scoping) {
         Supplier<Stream<String>> streamSupplier = () -> DbSource.getDBLinkStream("//db:" + sqlQuery, new Object[]{}, source);
         gorsat.Iterators.IteratorSource its;
