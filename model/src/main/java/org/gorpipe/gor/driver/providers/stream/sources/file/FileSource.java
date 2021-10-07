@@ -110,6 +110,12 @@ public class FileSource implements StreamSource {
     }
 
     @Override
+    public InputStream openClosable() throws IOException {
+        ensureOpen();
+        return new FileSourceStream(true);
+    }
+
+    @Override
     public OutputStream getOutputStream(long start) throws IOException {
         ensureOpenForWrite();
         raf.seek(start);
@@ -200,7 +206,7 @@ public class FileSource implements StreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        return Files.list(file).map(p -> p.toString());
+        return Files.list(file).map(Path::toString);
     }
 
     @Override
@@ -254,6 +260,15 @@ public class FileSource implements StreamSource {
      */
     public class FileSourceStream extends InputStream {
         private long mark;
+        private boolean closable;
+
+        public FileSourceStream() {
+            this(false);
+        }
+
+        public FileSourceStream(boolean closable) {
+            this.closable = closable;
+        }
 
         @Override
         public int read() throws IOException {
@@ -267,7 +282,13 @@ public class FileSource implements StreamSource {
 
         @Override
         public void close() {
-            // No op
+            if (closable) {
+                try {
+                    raf.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         @Override
