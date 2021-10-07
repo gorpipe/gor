@@ -286,7 +286,7 @@ public class FileSource implements StreamSource {
                 try {
                     raf.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // Ignore
                 }
             }
         }

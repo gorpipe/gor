@@ -334,30 +334,15 @@ public class Dictionary {
         final Set<String> validTags = new HashSet<>();
         final Multimap<String, String> bucketHasDeletedFile = ArrayListMultimap.create(); //This is changed if we find a deleted line with bucket.
         try {
-            if (fileReader instanceof DriverBackedFileReader) {
-                DriverBackedFileReader driverBackedFileReader = (DriverBackedFileReader) fileReader;
-                try (DataSource dataSource = driverBackedFileReader.resolveUrl(path);
-                     InputStream is = ((StreamSource)dataSource).open();
-                     BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                     final Stream<String> stream = br.lines()) {
-                    stream.map(String::trim)
-                            .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
-                            .map(line -> parseDictionaryLine(line, dictFileParent, path))
-                            .filter(Objects::nonNull)
-                            .forEach(dictLine -> processLine(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
-                            );
-                }
-            } else {
-                try (InputStream is = fileReader.getInputStream(path);
-                     BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                     final Stream<String> stream = br.lines()) {
-                    stream.map(String::trim)
-                            .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
-                            .map(line -> parseDictionaryLine(line, dictFileParent, path))
-                            .filter(Objects::nonNull)
-                            .forEach(dictLine -> processLine(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
-                            );
-                }
+            try (InputStream is = fileReader.getInputStream(path);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                 final Stream<String> stream = br.lines()) {
+                stream.map(String::trim)
+                        .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
+                        .map(line -> parseDictionaryLine(line, dictFileParent, path))
+                        .filter(Objects::nonNull)
+                        .forEach(dictLine -> processLine(bucketTagsList, resetBucketNames, bucketTotalCounts, bucketActiveCount, bucketToIdx, bucketsParent, activeDictionaryLines, tagsToLines, validTags, bucketHasDeletedFile, dictLine)
+                        );
             }
             final Map<String, int[]> newTagsToLines = new HashMap<>();
             tagsToLines.forEach((tag, arr) -> newTagsToLines.put(tag, arr.toArray()));
