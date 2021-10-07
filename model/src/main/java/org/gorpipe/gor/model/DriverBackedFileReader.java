@@ -224,7 +224,7 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public InputStream getInputStream(String resource) throws IOException {
         DataSource source = resolveUrl(resource);
-        return ((StreamSource)source).open();
+        return ((StreamSource)source).openClosable();
     }
 
     @Override

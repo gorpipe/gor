@@ -30,7 +30,7 @@ import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
 import gorsat.Outputs.OutFile
-import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, runCommand}
+import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, getRelativeFileLocationForDictionaryFileReferences, runCommand}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
@@ -219,7 +219,7 @@ object GeneralQueryHandler {
       } else {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, nor = nor, md5 = true)
+          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, nor = nor, md5 = true, command = commandToExecute)
           if (nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
@@ -261,30 +261,40 @@ object GeneralQueryHandler {
     GorJavaUtilities.writeDictionaryFromMeta(outfolderpath, outpath)
   }
 
+  def dictRangeFromSeekRange(inp: String, prefix: String): String = {
+    val cep = inp.split(':')
+    val stasto = if (cep.length > 1) cep(1).split('-') else Array("0", Integer.MAX_VALUE.toString)
+    val (c, sp, ep) = (cep(0), stasto(0), if (stasto.length > 1 && stasto(1).nonEmpty) stasto(1) else Integer.MAX_VALUE.toString)
+    prefix + c + "\t" + sp + "\t" + c + "\t" + ep
+  }
+
   private def getDictList(dictFiles: List[String], chromsrange: List[String], root: String): List[String] = {
     var chrI = 0
-    dictFiles.zip(chromsrange).map(x => {
-      val f = x._1
-      chrI += 1
-      val rf = getRelativeFileLocationForDictionaryFileReferences(f)
-      val prefix = rf + "\t" + chrI + "\t"
-      val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
-      val opt: Optional[String] = if (Files.exists(metaPath)) {
-        Files.lines(metaPath)
-          .filter(l => l.startsWith(GorMeta.RANGE_HEADER))
-          .map(s => s.substring(9).trim)
-          .asInstanceOf[java.util.stream.Stream[String]]
-          .filter(f => f.nonEmpty).map(s => prefix + s + '\t')
-          .findFirst().asInstanceOf[Optional[String]]
-      } else {
-        val cep = x._2.split(':')
-        val stasto = if (cep.length > 1) cep(1).split('-') else Array("0",Integer.MAX_VALUE.toString)
-        val (c, sp, ep) = (cep(0), stasto(0), if (stasto.length > 1 && stasto(1).nonEmpty) stasto(1) else Integer.MAX_VALUE.toString)
-        Optional.of[String](prefix + c + "\t" + sp + "\t" + c + "\t" + ep)
-      }
-      opt
-      // file, alias, chrom, startpos, chrom, endpos
-    }).flatMap(o => o.stream().iterator().asScala)
+    val useMetaFile = System.getProperty("gor.use.meta.dictionary","false")
+    if(useMetaFile!=null && useMetaFile.toLowerCase.equals("true")) {
+      dictFiles.zip(chromsrange).map(x => {
+        val f = x._1
+        chrI += 1
+        val rf = getRelativeFileLocationForDictionaryFileReferences(f)
+        val prefix = rf + "\t" + chrI + "\t"
+        val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
+        val opt: Optional[String] = if (Files.exists(metaPath)) {
+          GorJavaUtilities.readRangeFromMeta(metaPath, prefix)
+        } else {
+          val ret = dictRangeFromSeekRange(x._2, prefix)
+          Optional.of[String](ret)
+        }
+        opt
+      }).flatMap(o => o.stream().iterator().asScala)
+    } else {
+      dictFiles.zip(chromsrange).map(x => {
+        val f = x._1
+        chrI += 1
+        val rf = getRelativeFileLocationForDictionaryFileReferences(f)
+        val prefix = rf + "\t" + chrI + "\t"
+        dictRangeFromSeekRange(x._2, prefix)
+      })
+    }
   }
 
   private def getPartDictList(dictFiles: List[String], partitions: List[String]): List[String] = {
