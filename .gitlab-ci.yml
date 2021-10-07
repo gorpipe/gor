@@ -4,7 +4,7 @@
 
 include:
   - project: wuxi-nextcode/sdev/gitlab-ci-scripts
-    file: /auto-ci-workflow.yml
+    file: /auto-ci-workflow/legacy.yml
 
 variables:
   DOCKER_DRIVER: overlay2
