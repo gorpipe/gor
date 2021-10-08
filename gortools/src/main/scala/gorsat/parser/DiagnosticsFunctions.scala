@@ -61,7 +61,7 @@ object DiagnosticsFunctions {
     functions.register("MAXFILES", getSignatureEmpty2Double(maxFiles _), maxFiles _)
     functions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     functions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
-    functions.register("FILEINFO", getSignatureString2String(fileInfo _), fileInfo _)
+    functions.registerWithOwner("FILEINFO", getSignatureString2String(removeOwner(fileInfo)), fileInfo _)
     pathfunctions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     pathfunctions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
     functions.registerWithOwner("AVGROWSPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgRowsPerMilliSecond)), getAvgRowsPerMilliSecond _)
@@ -99,9 +99,9 @@ object DiagnosticsFunctions {
     }
   }
 
-  def fileInfo(f: (ColumnValueProvider) => String): sFun = {
+  def fileInfo(owner: ParseArith, f: (ColumnValueProvider) => String): sFun = {
     s => {
-      val driverBackedFileReader = new DriverBackedFileReader(null, null, null)
+      val fileReader = owner.context.getSession.getProjectContext.getFileReader
       val path = f(s)
       var signature = "-"
       var lastmod = 0L
@@ -109,6 +109,7 @@ object DiagnosticsFunctions {
       var len = -1L
       var readable = "false"
       try {
+        val driverBackedFileReader = fileReader.asInstanceOf[DriverBackedFileReader]
         val ds = driverBackedFileReader.resolveUrl(path)
         val meta = ds.getSourceMetadata
         signature = driverBackedFileReader.getFileSignature(path)
@@ -120,6 +121,7 @@ object DiagnosticsFunctions {
         case _: Exception =>
       }
       try {
+        val driverBackedFileReader = fileReader.asInstanceOf[DriverBackedFileReader]
         val ds = driverBackedFileReader.resolveUrl(path)
         val ss = ds.asInstanceOf[StreamSource]
         val is = ss.open()
