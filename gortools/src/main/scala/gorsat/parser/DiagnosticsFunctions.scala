@@ -31,9 +31,11 @@ import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
 import gorsat.process.GorPipe
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
+import org.gorpipe.gor.model.{ColumnValueProvider, DriverBackedFileReader}
 
 import java.nio.file.{Files, Paths}
+import java.time.Instant
 
 object DiagnosticsFunctions {
   val osBean: OperatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean.asInstanceOf[OperatingSystemMXBean]
@@ -59,8 +61,10 @@ object DiagnosticsFunctions {
     functions.register("MAXFILES", getSignatureEmpty2Double(maxFiles _), maxFiles _)
     functions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     functions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
+    functions.register("FILEINFO", getSignatureString2String(fileInfo _), fileInfo _)
     pathfunctions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     pathfunctions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
+    pathfunctions.register("FILEINFO", getSignatureString2String(fileInfo _), fileInfo _)
     functions.registerWithOwner("AVGROWSPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgRowsPerMilliSecond)), getAvgRowsPerMilliSecond _)
     functions.registerWithOwner("AVGBASESPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgBasesPerMilliSecond)), getAvgBasesPerMilliSecond _)
     functions.registerWithOwner("AVGSEEKTIMEMILLIS", getSignatureEmpty2Double(removeOwner(getAvgSeekTimeMilliSecond)), getAvgSeekTimeMilliSecond _)
@@ -93,6 +97,28 @@ object DiagnosticsFunctions {
   def fileContent(f: (ColumnValueProvider) => String): sFun = {
     s => {
       Files.lines(Paths.get(f(s))).skip(1).findFirst().get()
+    }
+  }
+
+  def fileInfo(f: (ColumnValueProvider) => String): sFun = {
+    s => {
+      val driverBackedFileReader = new DriverBackedFileReader(null, null, null)
+      val path = f(s)
+      val signature = driverBackedFileReader.getFileSignature(path)
+      val ds = driverBackedFileReader.resolveUrl(path)
+      val meta = ds.getSourceMetadata
+      var lastmod = 0L
+      var unique = ""
+      var len = -1L
+      try {
+        lastmod = meta.getLastModified
+        unique = meta.getUniqueId
+        val ss = ds.asInstanceOf[StreamSource]
+        len = ss.getSourceMetadata.getLength
+      } catch {
+        case _: Exception =>
+      }
+      path + "," + signature + "," + Instant.ofEpochMilli(lastmod).toString + "," + unique + "," + len
     }
   }
 
