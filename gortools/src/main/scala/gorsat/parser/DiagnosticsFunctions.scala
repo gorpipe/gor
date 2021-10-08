@@ -64,7 +64,6 @@ object DiagnosticsFunctions {
     functions.register("FILEINFO", getSignatureString2String(fileInfo _), fileInfo _)
     pathfunctions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     pathfunctions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
-    pathfunctions.register("FILEINFO", getSignatureString2String(fileInfo _), fileInfo _)
     functions.registerWithOwner("AVGROWSPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgRowsPerMilliSecond)), getAvgRowsPerMilliSecond _)
     functions.registerWithOwner("AVGBASESPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgBasesPerMilliSecond)), getAvgBasesPerMilliSecond _)
     functions.registerWithOwner("AVGSEEKTIMEMILLIS", getSignatureEmpty2Double(removeOwner(getAvgSeekTimeMilliSecond)), getAvgSeekTimeMilliSecond _)
@@ -108,6 +107,7 @@ object DiagnosticsFunctions {
       var lastmod = 0L
       var unique = "-"
       var len = -1L
+      var readable = "false"
       try {
         val ds = driverBackedFileReader.resolveUrl(path)
         val meta = ds.getSourceMetadata
@@ -119,7 +119,17 @@ object DiagnosticsFunctions {
       } catch {
         case _: Exception =>
       }
-      path + "," + signature + "," + Instant.ofEpochMilli(lastmod).toString + "," + unique + "," + len
+      try {
+        val ds = driverBackedFileReader.resolveUrl(path)
+        val ss = ds.asInstanceOf[StreamSource]
+        val is = ss.open()
+        is.read()
+        readable = "true"
+        is.close()
+      } catch {
+        case _: Exception =>
+      }
+      path + "," + signature + "," + Instant.ofEpochMilli(lastmod).toString + "," + unique + "," + len + "," + readable
     }
   }
 
