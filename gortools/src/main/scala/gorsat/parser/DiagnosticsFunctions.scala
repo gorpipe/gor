@@ -104,13 +104,14 @@ object DiagnosticsFunctions {
     s => {
       val driverBackedFileReader = new DriverBackedFileReader(null, null, null)
       val path = f(s)
-      val signature = driverBackedFileReader.getFileSignature(path)
-      val ds = driverBackedFileReader.resolveUrl(path)
-      val meta = ds.getSourceMetadata
+      var signature = "-"
       var lastmod = 0L
-      var unique = ""
+      var unique = "-"
       var len = -1L
       try {
+        val ds = driverBackedFileReader.resolveUrl(path)
+        val meta = ds.getSourceMetadata
+        signature = driverBackedFileReader.getFileSignature(path)
         lastmod = meta.getLastModified
         unique = meta.getUniqueId
         val ss = ds.asInstanceOf[StreamSource]
