@@ -27,16 +27,16 @@ public class UTestCalcFilePath {
     }
 
     @Test
-    public void testFileInfo() {
-        String res = TestUtils.runGorPipe("create xxx = norrows 1; norrows 1 | calc f fileinfo([xxx]) | select f");
+    public void testFileInfoNotExists() {
+        String res = TestUtils.runGorPipe("norrows 1 | calc f fileinfo('notexists.txt') | select f");
         var resplit = res.split(",");
-        Assert.assertEquals("Wrong result from link file", "10", resplit[resplit.length-1].trim());
+        Assert.assertEquals("Wrong result from link file", "false", resplit[resplit.length-1].trim());
     }
 
     @Test
-    public void testFileInfoNotExists() {
-        String res = TestUtils.runGorPipe("norrows 1 | calc f fileinfo(notexists.txt) | select f");
+    public void testFileInfoColumn() {
+        String res = TestUtils.runGorPipe("norrows 1 | calc m '../tests/data/gor/genes.gor' | calc f fileinfo(m) | select f");
         var resplit = res.split(",");
-        Assert.assertEquals("Wrong result from link file", "0", resplit[resplit.length-1].trim());
+        Assert.assertEquals("Wrong result from link file", "true", resplit[resplit.length-1].trim());
     }
 }
