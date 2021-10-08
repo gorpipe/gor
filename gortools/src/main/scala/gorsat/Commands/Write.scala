@@ -109,6 +109,6 @@ class Write extends CommandInfo("WRITE",
 
     val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, forkTagArray, dictTagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link)), fixedHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, forkTagArray, dictTagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link, command = argString)), fixedHeader)
   }
 }
