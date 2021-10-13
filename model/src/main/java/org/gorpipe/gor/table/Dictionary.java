@@ -28,7 +28,10 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.DefaultFileReader;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.util.StringUtil;
@@ -331,9 +334,9 @@ public class Dictionary {
         final Set<String> validTags = new HashSet<>();
         final Multimap<String, String> bucketHasDeletedFile = ArrayListMultimap.create(); //This is changed if we find a deleted line with bucket.
         try {
-            try(InputStream is = fileReader.getInputStream(path);
-                BufferedReader br = new BufferedReader(new InputStreamReader(is));
-                final Stream<String> stream = br.lines()) {
+            try (InputStream is = fileReader.getInputStream(path);
+                 BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                 final Stream<String> stream = br.lines()) {
                 stream.map(String::trim)
                         .filter(line -> !(line.isEmpty() || line.charAt(0) == '#'))
                         .map(line -> parseDictionaryLine(line, dictFileParent, path))

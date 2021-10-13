@@ -45,6 +45,13 @@ public interface StreamSource extends DataSource {
     /**
      * Open stream that reads through whole source.
      */
+    default InputStream openClosable() throws IOException {
+        return open();
+    }
+
+    /**
+     * Open stream that reads through whole source.
+     */
     InputStream open() throws IOException;
 
     /**

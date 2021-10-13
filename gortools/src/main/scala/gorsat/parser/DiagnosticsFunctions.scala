@@ -31,9 +31,11 @@ import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
 import gorsat.process.GorPipe
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.ColumnValueProvider
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
+import org.gorpipe.gor.model.{ColumnValueProvider, DriverBackedFileReader}
 
 import java.nio.file.{Files, Paths}
+import java.time.Instant
 
 object DiagnosticsFunctions {
   val osBean: OperatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean.asInstanceOf[OperatingSystemMXBean]
@@ -59,6 +61,7 @@ object DiagnosticsFunctions {
     functions.register("MAXFILES", getSignatureEmpty2Double(maxFiles _), maxFiles _)
     functions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     functions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
+    functions.registerWithOwner("FILEINFO", getSignatureString2String(removeOwner(fileInfo)), fileInfo _)
     pathfunctions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     pathfunctions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
     functions.registerWithOwner("AVGROWSPERMILLIS", getSignatureEmpty2Double(removeOwner(getAvgRowsPerMilliSecond)), getAvgRowsPerMilliSecond _)
@@ -93,6 +96,42 @@ object DiagnosticsFunctions {
   def fileContent(f: (ColumnValueProvider) => String): sFun = {
     s => {
       Files.lines(Paths.get(f(s))).skip(1).findFirst().get()
+    }
+  }
+
+  def fileInfo(owner: ParseArith, f: (ColumnValueProvider) => String): sFun = {
+    s => {
+      val fileReader = owner.context.getSession.getProjectContext.getFileReader
+      val path = f(s)
+      var signature = "-"
+      var lastmod = 0L
+      var unique = "-"
+      var len = -1L
+      var readable = "false"
+      try {
+        val driverBackedFileReader = fileReader.asInstanceOf[DriverBackedFileReader]
+        val ds = driverBackedFileReader.resolveUrl(path)
+        val meta = ds.getSourceMetadata
+        signature = driverBackedFileReader.getFileSignature(path)
+        lastmod = meta.getLastModified
+        unique = meta.getUniqueId
+        val ss = ds.asInstanceOf[StreamSource]
+        len = ss.getSourceMetadata.getLength
+      } catch {
+        case _: Exception =>
+      }
+      try {
+        val driverBackedFileReader = fileReader.asInstanceOf[DriverBackedFileReader]
+        val ds = driverBackedFileReader.resolveUrl(path)
+        val ss = ds.asInstanceOf[StreamSource]
+        val is = ss.open()
+        is.read()
+        readable = "true"
+        is.close()
+      } catch {
+        case _: Exception =>
+      }
+      path + "," + signature + "," + Instant.ofEpochMilli(lastmod).toString + "," + unique + "," + len + "," + readable
     }
   }
 

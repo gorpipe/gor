@@ -48,6 +48,7 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
 
   def setup() {
     if (options.cardCol != null) meta.initCardCol(options.cardCol, header)
+    if (options.command != null) meta.setQuery(options.command);
     if (header != null & !skipHeader) out.setHeader(header)
   }
 
@@ -57,12 +58,15 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
   }
 
   def finish() {
-    out.close()
-    meta.setMd5(out.getMd5)
-    if(meta.linesWritten() && options.writeMeta) {
-     val metaout = fileReader.getOutputStream(fileName+".meta")
-     metaout.write(meta.toString.getBytes())
-     metaout.close()
+    try {
+      out.close()
+    } finally {
+      meta.setMd5(out.getMd5)
+      if (meta.linesWritten() && options.writeMeta) {
+        val metaout = fileReader.getOutputStream(fileName + ".meta")
+        metaout.write(meta.toString.getBytes())
+        metaout.close()
+      }
     }
   }
 }
