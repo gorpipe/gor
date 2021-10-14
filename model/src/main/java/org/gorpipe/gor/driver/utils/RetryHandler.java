@@ -75,7 +75,7 @@ public class RetryHandler {
                     throw e;
                 }
                 lastException = e;
-                log.debug("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
+                log.warn("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
                 try {
                     Thread.sleep(sleepMs);
                     if (onRetry != null) {

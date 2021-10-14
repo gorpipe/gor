@@ -27,6 +27,7 @@ import freemarker.cache.TemplateLoader;
 import freemarker.core.Environment;
 import freemarker.core.ParseException;
 import freemarker.template.*;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.Constants;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.QueryEvaluator;
@@ -116,9 +117,9 @@ public class Dialog extends AbstractListBean {
     private static final String ERROR_MSG_TEMPLATE_NAME_SUFFIX = "_error_message_";
     private static final String LONG_RUNNING_QUERY_TEMPLATE_NAME_SUFFIX = "_long_running_query_";
     private static final Logger logger = LoggerFactory.getLogger(Dialog.class);
-    private static StringTemplateLoader DIALOG_TEMPLATE_LOADER;
-    private static Configuration TEMPLATE_CONFIG;
-    private static String projectName;
+    private StringTemplateLoader DIALOG_TEMPLATE_LOADER;
+    private Configuration TEMPLATE_CONFIG;
+    private String projectName;
 
     static {
         try {
@@ -196,7 +197,7 @@ public class Dialog extends AbstractListBean {
         loadLongRunningQueryTemplate();
     }
 
-    private static void initializeTemplateConfig(FileReader fileResolver, QueryEvaluator queryEval) {
+    private void initializeTemplateConfig(FileReader fileResolver, QueryEvaluator queryEval) {
         TEMPLATE_CONFIG = new Configuration();
         TEMPLATE_CONFIG.setLocalizedLookup(false);
         DIALOG_TEMPLATE_LOADER = new StringTemplateLoader();
@@ -425,7 +426,7 @@ public class Dialog extends AbstractListBean {
             } catch (ParseException e) {
                 throw new RuntimeException("Invalid query template", e);
             } catch (IOException e) {
-                logger.error("Error on String(Reader/Writer) io", e);
+                throw new GorResourceException("Error on String(Reader/Writer) io", baseQuery, e);
             }
         }
     }
