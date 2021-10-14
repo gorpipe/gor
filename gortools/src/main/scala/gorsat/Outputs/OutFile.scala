@@ -171,6 +171,8 @@ object OutFile {
 
   def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
 
+  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean, command: String): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5, command = command))
+
   def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor))
 
   def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions())

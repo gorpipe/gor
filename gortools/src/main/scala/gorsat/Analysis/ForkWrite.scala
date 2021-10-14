@@ -53,7 +53,8 @@ case class OutputOptions(remove: Boolean = false,
                             skipHeader: Boolean = false,
                             writeMeta: Boolean = true,
                             cardCol: String = null,
-                            linkFile: String = ""
+                            linkFile: String = "",
+                            command: String = null
                            )
 
 case class ForkWrite(forkCol: Int,
