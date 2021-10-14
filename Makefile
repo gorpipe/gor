@@ -117,8 +117,8 @@ release-from-release:  ## Release from the given release branch.  Assumes BRANCH
 	git checkout release/v${BRANCH_VERSION}
 	git pull
 
-	git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
-	git push origin $(CURRENT_TAG_VERSION)
+	# git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
+	# git push origin $(CURRENT_TAG_VERSION)
 
 release-from-master:  ## Release from master.
 	git checkout master
