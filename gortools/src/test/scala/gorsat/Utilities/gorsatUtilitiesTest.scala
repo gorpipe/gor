@@ -23,8 +23,8 @@
 package gorsat.Utilities
 
 import java.nio.file.Files
-
 import gorsat.Analysis.{PhaseReadVariants, SkipAnalysis}
+import gorsat.Commands.CommandParseUtilities
 import gorsat.Iterators.RowListIterator
 import gorsat.Monitors.MemoryMonitor
 import gorsat.Outputs.ToList
@@ -678,51 +678,6 @@ class UTestMemoryMonitorUtil extends FunSuite {
 
     mmu.check()
     assert(mmu.lastGCTime > 0)
-  }
-
-  test("Query contains write") {
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | WRITE output.gor"))
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | write output.gor"))
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | BINARYWRITE output.gor"))
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | binarywrite output.gor"))
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 ") == false)
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 /* write or not to write*/") == false)
-    assert(Utilities.queryContainsWriteCommand("gor #genes# | top 10 | calc c 'write or not to write' ") == false)
-  }
-
-  test("Get output filename ") {
-    assert(Utilities.getWriteFilename("gor #genes# | top 10 | WRITE output.gor").equals("output.gor"))
-    assert(Utilities.getWriteFilename("gor #genes# | top 10 | write output.gor").equals("output.gor"))
-    assert(Utilities.getWriteFilename("gor #genes# | top 10 | BINARYWRITE output.gor").equals("output.gor"))
-    assert(Utilities.getWriteFilename("gor #genes# | top 10 | binarywrite output.gor").equals("output.gor"))
-
-    val tmpfile = Files.createTempDirectory("test_gor_write").resolve("genes_md5.gorz")
-    tmpfile.toFile.deleteOnExit()
-    val fileName = tmpfile.toAbsolutePath.normalize.toString
-    assert(Utilities.getWriteFilename("gor ../tests/data/gor/genes.gorz | write -m " + fileName).equals(fileName))
-    assert(Utilities.getWriteFilename("gor ../tests/data/gor/genes.gorz | BINARYWRITE -m " + fileName).equals(fileName))
-
-    assert(Utilities.getWriteFilename("gor ../tests/data/gor/genes.gorz ") == null)
-
-    var gotError = false
-    try {
-      Utilities.getWriteFilename("gor #genes# | top 10 | binarywrite").equals("")
-    } catch {
-      case e: GorParsingException => gotError = true
-    }
-    assert(gotError)
-
-    var gotError2 = false
-    try {
-      Utilities.getWriteFilename("gor #genes# | top 10 | binarywrite    ").equals("")
-    } catch {
-      case e: GorParsingException => gotError2 = true
-    }
-    assert(gotError2)
-
-    assert(Utilities.getWriteFilename("gor #genes# | top 10 | /* write stuff*/ WRITE output.gor").equals("output.gor"))
-    assert(Utilities.getWriteFilename("gor #genes# | top 10 | calc c 'write stuff' | write output.gor").equals("output.gor"))
-
   }
 
 }
