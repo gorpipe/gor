@@ -52,6 +52,12 @@ public abstract class FileReader {
     public abstract String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException;
 
     /**
+     * Creates a new directory and its full path if needed.
+     * Returns: the directory
+     */
+    public abstract String createDirectories(String dir, FileAttribute<?>... attrs) throws IOException;
+
+    /**
      * Tests whether a file is a directory.
      */
     public abstract boolean isDirectory(String dir);

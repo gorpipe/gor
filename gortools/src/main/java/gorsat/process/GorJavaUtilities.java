@@ -23,12 +23,10 @@
 package gorsat.process;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.GorMeta;
+import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
-import org.gorpipe.gor.model.DbSource;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.TableHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
@@ -552,6 +547,37 @@ public class GorJavaUtilities {
         return linelist.stream().filter(s -> s.startsWith(entry)).map(s -> s.substring(s.indexOf(':') + 1).trim()).findFirst();
     }
 
+    public synchronized static void createSymbolicLink(Path resultPath, Path cachePath) throws IOException {
+        if (!Files.exists(resultPath, LinkOption.NOFOLLOW_LINKS)) {
+            Files.createSymbolicLink(resultPath, cachePath);
+        } else if(Files.isSymbolicLink(resultPath)) {
+            Files.delete(resultPath);
+            Files.createSymbolicLink(resultPath, cachePath);
+        }
+    }
+
+    public static String verifyLinkFileLastModified(ProjectContext projectContext, String cacheFile) {
+        if (cacheFile!=null) {
+            var cachePath = Paths.get(cacheFile);
+            if (!cachePath.isAbsolute()) {
+                cachePath = projectContext.getProjectRootPath().resolve(cachePath);
+            }
+            if (Files.isSymbolicLink(cachePath) || cacheFile.toLowerCase().endsWith(".link")) {
+                try {
+                    long linkLastModified = Files.getLastModifiedTime(cachePath, LinkOption.NOFOLLOW_LINKS).toMillis();
+                    var lastModified = ((DriverBackedFileReader) projectContext.getFileReader()).resolveUrl(cacheFile).getSourceMetadata().getLastModified();
+                    if (lastModified > linkLastModified) {
+                        Files.delete(cachePath);
+                        cacheFile = null;
+                    }
+                } catch (IOException e) {
+                    // Ignore
+                }
+            }
+        }
+        return cacheFile;
+    }
+
     public static synchronized void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
         var headerWritten = false;
 
@@ -575,7 +601,7 @@ public class GorJavaUtilities {
                         else if(tags.isPresent()) gordline += tags.get();
 
                         if (!headerWritten) {
-                            writeHeader(dictionarypath, p, !tags.isPresent());
+                            writeHeader(dictionarypath, p, tags.isEmpty());
                             headerWritten = true;
                         }
                         Files.writeString(dictionarypath, gordline + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);

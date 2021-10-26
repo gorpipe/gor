@@ -93,6 +93,11 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
+    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
+        return wrapped.createDirectories(attrs);
+    }
+
+    @Override
     public Stream<String> list() throws IOException {
         return wrapped.list();
     }

@@ -71,6 +71,11 @@ public class DefaultFileReader extends FileReader {
     }
 
     @Override
+    public String createDirectories(String dir, FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectories(PathUtils.toPath(dir), attrs).toString();
+    }
+
+    @Override
     public boolean isDirectory(String dir) {
         return Files.isDirectory(PathUtils.toPath(dir));
     }

@@ -187,14 +187,10 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     } else res
   }
 
-  private def resolveCache(lastCommand: String, hasWrite: Boolean): String = {
-    var res: String = null
-    if (hasWrite) {
-      val lastField = lastCommand.split(" ").last.trim
-      if(!lastField.startsWith("-")) res = lastField
-      res = resolveForkPathParent(res)
-    }
-    res
+  private def resolveCache(lastCommand: String): String = {
+    val lastField = lastCommand.split(" ").last.trim
+    if(!lastField.startsWith("-")) resolveForkPathParent(lastField)
+    else null
   }
 
   private def processScript(igorCommands: Array[String], validate: Boolean, suggestName: Boolean): String = {
@@ -249,9 +245,10 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val commandToExecute = newExecutionBlock._2.query
           val cacheFile = newExecutionBlock._2.cachePath
 
-          val lastCommand = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|').last.trim
-
-          val cachePath = cacheFile
+          val cmdsplit = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|')
+          val firstCommand = cmdsplit.head.trim
+          val lastCommand = cmdsplit.last.trim
+          val cachePath = if (cacheFile == null && lastCommand.toLowerCase.startsWith("write ")) resolveCache(lastCommand) else cacheFile
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
