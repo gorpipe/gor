@@ -29,13 +29,14 @@ import org.gorpipe.gor.model.DefaultFileReader
 import org.gorpipe.model.gor.RowObj
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
-class UTestPrefixOption extends FunSuite with BeforeAndAfter {
+class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
   var tmpFolder: File = _
   var fileReader = new DefaultFileReader("")
 

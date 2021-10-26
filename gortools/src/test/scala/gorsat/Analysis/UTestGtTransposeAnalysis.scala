@@ -2,7 +2,6 @@ package gorsat.Analysis
 
 import java.io.{BufferedWriter, File, FileWriter}
 import java.nio.file.Files
-
 import gorsat.Commands.Analysis
 import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, PipeInstance}
 import gorsat.{DynIterator, TestUtils}
@@ -10,11 +9,12 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestGtTransposeAnalysis extends FunSuite with BeforeAndAfter {
+class UTestGtTransposeAnalysis extends AnyFunSuite with BeforeAndAfter {
   var dir: File = _
   val context = new GenericSessionFactory().create().getGorContext
 

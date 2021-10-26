@@ -37,7 +37,7 @@ class LinearRegressionAnalysis(lookUpSignature: String, session: GorSession, val
     linRegObjects = Array.tabulate(ri.phenoNames.length)(_ => new LinearRegression(ri.size, ri.betaLength - 1))
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val values = r.colAsString(valCol).toString
     r.removeColumn(valCol)
     val baseColumnsAsString = r.toString
@@ -47,7 +47,7 @@ class LinearRegressionAnalysis(lookUpSignature: String, session: GorSession, val
 
     setGenotypesAndFilter(values, genoType, filter)
 
-    ri.phenoTable.zipWithIndex.par.map({ case (phenos, idx) =>
+    ri.phenoTable.zipWithIndex.map({ case (phenos, idx) =>
       val (x, y, numberOfSamples) = setupRegressionData(genoType, filter, phenos, idx)
 
       val linRegObj = linRegObjects(idx)
@@ -59,7 +59,7 @@ class LinearRegressionAnalysis(lookUpSignature: String, session: GorSession, val
     }).seq.foreach(outRows => outRows.foreach(outRow => nextProcessor.process(outRow)))
   }
 
-  private def writeOut(baseAndPhenoColumns: String, linRegObj: LinearRegression): Traversable[Row] = {
+  private def writeOut(baseAndPhenoColumns: String, linRegObj: LinearRegression): Iterable[Row] = {
     ri.betaNames.zipWithIndex.map({
       case (name, idx) =>
         val lineBuilder = new StringBuilder(baseAndPhenoColumns)

@@ -282,9 +282,10 @@ public class FileSource implements StreamSource {
 
         @Override
         public void close() {
-            if (closable) {
+            if (closable && raf != null) {
                 try {
                     raf.close();
+                    raf = null;
                 } catch (IOException e) {
                     // Ignore
                 }

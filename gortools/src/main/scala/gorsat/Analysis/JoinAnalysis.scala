@@ -349,7 +349,7 @@ object  JoinAnalysis {
 
     var prev_row: Row = _
 
-    override def process(lr: Row) {
+    override def process(lr: Row): Unit = {
       if (prev_row == null) {
         prev_row = lr
       } else {
@@ -358,7 +358,7 @@ object  JoinAnalysis {
       }
     }
 
-    override def finish() {
+    override def finish(): Unit = {
       try {
         if (prev_row != null) {
           nested_process(prev_row, null)

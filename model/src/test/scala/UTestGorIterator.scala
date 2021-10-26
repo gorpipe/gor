@@ -6,12 +6,12 @@ import gorsat.TestUtils
 import org.gorpipe.test.SlowTests
 import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 @Category(Array(classOf[SlowTests]))
-class UTestGorIterator extends FunSuite {
+class UTestGorIterator extends AnyFunSuite {
 
   test("Test equality of old and new iterator") {
     val query1 = "gor ../tests/data/gor/dbsnp_test.gorz | join -snpseg ../tests/data/gor/genes.gorz"

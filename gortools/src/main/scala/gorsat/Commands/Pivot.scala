@@ -63,7 +63,7 @@ class Pivot extends CommandInfo("PIVOT",
       })
     })
 
-    val header = RowHeader(columns)
+    val header = RowHeader(columns.toList)
     val combinedHeader = validHeader(header.toString)
 
     val pipeStep: Analysis = if(assumeOrdered) {

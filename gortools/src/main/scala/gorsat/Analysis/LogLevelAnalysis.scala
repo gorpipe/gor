@@ -45,7 +45,7 @@ case class LogLevelAnalysis(loggerName: String, level: String, label: String, fr
     mainLogger.setLevel(logLevel)
   }
 
-  override def finish: Unit = {
+  override def finish(): Unit = {
     if (oldConsoleLogLevel != null && !fromMain) {
       val mainLogger = LoggerFactory.getLogger(loggerName).asInstanceOf[ch.qos.logback.classic.Logger]
       mainLogger.setLevel(oldConsoleLogLevel)

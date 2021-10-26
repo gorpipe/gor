@@ -56,7 +56,7 @@ class Seq extends CommandInfo("SEQ",
       columns += ColumnHeader("refSeq", "S")
     }
 
-    val header = RowHeader(columns)
+    val header = RowHeader(columns.toList)
     val pipeStep: Analysis = AddFlankingSeqs(context.getSession, flankLength, rCols.toArray, header)
 
     val combinedHeader = validHeader(header.toString)

@@ -57,7 +57,7 @@ case class NClosest(groupCols: Int, n: Int) extends Analysis {
     }
   }
 
-  override def finish {
+  override def finish(): Unit = {
     outputRows(lastRow, rightRows.reverse)
   }
 }

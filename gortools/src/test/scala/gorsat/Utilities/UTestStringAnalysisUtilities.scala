@@ -37,11 +37,11 @@ package gorsat.Utilities
   */
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestStringAnalysisUtilities extends FunSuite {
+class UTestStringAnalysisUtilities extends AnyFunSuite {
 
   test("UTestStringUtilities") {
     val builder = new StringBuilder

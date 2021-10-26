@@ -24,12 +24,12 @@ package gorsat
 
 import Commands.CommandParseUtilities._
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import org.slf4j.{Logger, LoggerFactory}
 
 @RunWith(classOf[JUnitRunner])
-class UTestIllegalArguments extends FunSuite{
+class UTestIllegalArguments extends AnyFunSuite {
 
   private val log: Logger = LoggerFactory.getLogger(this.getClass)
   test("No options") {

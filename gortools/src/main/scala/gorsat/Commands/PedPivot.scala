@@ -30,6 +30,8 @@ import gorsat.Utilities.IteratorUtilities
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.session.GorContext
 
+import scala.language.postfixOps
+
 class PedPivot extends CommandInfo("PEDPIVOT",
   CommandArguments("-v -a", "-gc -e", 2, 2),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true, cancelCommand = true))

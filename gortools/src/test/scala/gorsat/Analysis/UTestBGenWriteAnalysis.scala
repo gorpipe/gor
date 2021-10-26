@@ -25,18 +25,18 @@ package gorsat.Analysis
 import java.io.{File, FileInputStream, FileWriter}
 import java.nio.ByteOrder
 import java.nio.file.Files
-
 import gorsat.TestUtils
 import org.apache.commons.io.FileUtils
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.util.collection.ByteArray
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestBGenWriteAnalysis extends FunSuite with BeforeAndAfter {
+class UTestBGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
   var tmpDir: File =_
   var tmpDirPath: String =_
 

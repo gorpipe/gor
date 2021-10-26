@@ -28,13 +28,14 @@ import org.apache.commons.io.FileUtils
 import org.gorpipe.model.gor.RowObj
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
-class UTestPGenWriteAnalysis extends FunSuite with BeforeAndAfter {
+class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
   var tmpDir: Path =_
 
   before {

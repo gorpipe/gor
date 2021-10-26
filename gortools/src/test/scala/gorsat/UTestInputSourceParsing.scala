@@ -26,7 +26,6 @@ import java.io.{File, PrintWriter}
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
 import java.sql.DriverManager
-
 import Commands.CommandParseUtilities
 import process.{GenericSessionFactory, GorInputSources, GorPipeCommands, PipeInstance}
 import org.apache.commons.io.FileUtils
@@ -35,15 +34,16 @@ import org.gorpipe.gor.model.{DbSource, GenomicIterator}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer
 
 @RunWith(classOf[JUnitRunner])
-class UTestInputSourceParsing extends FunSuite with BeforeAndAfter with MockitoSugar {
+class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with MockitoSugar {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 

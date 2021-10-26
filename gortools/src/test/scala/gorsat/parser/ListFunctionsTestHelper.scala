@@ -25,9 +25,11 @@ package gorsat.parser
 import gorsat.process.GenericSessionFactory
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
-import org.scalatest._
+import org.scalatest.{Inside, Inspectors, OptionValues}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-abstract class UnitSpec extends FlatSpec with Matchers with
+abstract class UnitSpec extends AnyFlatSpec with Matchers with
   OptionValues with Inside with Inspectors
 
 abstract class ListFunctionsTestHelper extends UnitSpec {

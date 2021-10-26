@@ -170,7 +170,7 @@ class Group extends CommandInfo("GROUP",
       }
     }
 
-    val header = RowHeader(columns)
+    val header = RowHeader(columns.toList)
     var combinedHeader = validHeader(header.toString)
 
     if (hasOption(args, "-h")) combinedHeader = null

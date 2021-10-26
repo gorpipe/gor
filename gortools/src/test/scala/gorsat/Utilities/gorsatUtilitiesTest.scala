@@ -39,9 +39,10 @@ import org.gorpipe.test.SlowTests
 import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.mockito.Mockito._
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfter, FunSuite, Ignore}
+import org.scalatest.{BeforeAndAfter, Ignore}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.mockito.MockitoSugar
 
 import scala.collection.mutable.ListBuffer
 
@@ -58,7 +59,7 @@ import scala.collection.mutable.ListBuffer
   *
   */
 @RunWith(classOf[JUnitRunner])
-class UTestPhaseReadVariants extends FunSuite with BeforeAndAfter with MockitoSugar {
+class UTestPhaseReadVariants extends AnyFunSuite with BeforeAndAfter with MockitoSugar {
 
   // Create mock objects
 
@@ -589,7 +590,7 @@ class UTestPhaseReadVariants extends FunSuite with BeforeAndAfter with MockitoSu
   *
   */
 @RunWith(classOf[JUnitRunner])
-class UTestMemoryMonitorUtil extends FunSuite {
+class UTestMemoryMonitorUtil extends AnyFunSuite {
 
   test("NotOutOfMemory") {
     val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
@@ -691,7 +692,7 @@ class UTestMemoryMonitorUtil extends FunSuite {
 @Ignore
 @RunWith(classOf[JUnitRunner])
 @Category(Array(classOf[SlowTests]))
-class UTestSlowMemoryMonitorUtil extends FunSuite {
+class UTestSlowMemoryMonitorUtil extends AnyFunSuite {
   test("OutOfMemory_defaultRatio") {
     var gotError = false
     val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
@@ -715,7 +716,7 @@ class UTestSlowMemoryMonitorUtil extends FunSuite {
   * Test MemoryMonitor.
   */
 @RunWith(classOf[JUnitRunner])
-class UTestMemoryMonitor extends FunSuite {
+class UTestMemoryMonitor extends AnyFunSuite {
 
   test("NotOutOfMemory") {
     val mm = MemoryMonitor("TestMemoryMonitor", minFreeMemMB = 100);

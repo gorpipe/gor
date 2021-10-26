@@ -1,11 +1,11 @@
 package gorsat
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestPnBucketParsing extends FunSuite {
+class UTestPnBucketParsing extends AnyFunSuite {
 
   test("test parse") {
     val tbSource = Range.inclusive(1, 100).map(i => s"PN$i\tBUCKET${(i - 1) / 10 + 1}").toList

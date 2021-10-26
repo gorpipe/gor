@@ -25,12 +25,12 @@ package gorsat
 import Commands.CommandParseUtilities._
 import org.gorpipe.exceptions.GorParsingException
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import org.slf4j.{Logger, LoggerFactory}
 
 @RunWith(classOf[JUnitRunner])
-class UTestCommandParsingAnalysisUtilities extends FunSuite{
+class UTestCommandParsingAnalysisUtilities extends AnyFunSuite {
 
   private val log: Logger = LoggerFactory.getLogger(this.getClass)
 

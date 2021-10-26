@@ -92,7 +92,7 @@ class Rank extends CommandInfo("RANK",
       columns += ColumnHeader("rank1_"+iargs(rankColumnIndex), "I")
     }
 
-    val header = RowHeader(columns)
+    val header = RowHeader(columns.toList)
     var combinedHeader = validHeader(header.toString)
 
     // INFO: Undocumented command, seems to remove the header??

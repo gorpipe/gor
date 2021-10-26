@@ -40,14 +40,14 @@ case class MultiMapLookup(session: GorSession, iteratorCommand: String, iterator
   var colMap: multiHashMap = _
   val colArray: Array[Int] = columns
 
-  override def setup() {
+  override def setup(): Unit = {
     if (iteratorCommand != "") colMap = MapAndListUtilities.getMultiHashMap(iteratorCommand, iterator,
       caseInsensitive, columns.length, outCols, session)
     else colMap = MapAndListUtilities.getMultiHashMap(fileName, caseInsensitive, columns.length, outCols,
       session)
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
 
     if (singleCol) key = r.colAsString(columns.head).toString
     else key = r.selectedColumns(colArray)

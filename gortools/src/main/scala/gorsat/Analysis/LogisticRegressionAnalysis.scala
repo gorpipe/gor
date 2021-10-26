@@ -38,7 +38,7 @@ class LogisticRegressionAnalysis(lookUpSignature: String, session: GorSession, v
     logRegObjects = Array.tabulate(ri.phenoNames.length)(_ => LogisticRegression.getGorLogisticRegressionObject(ri.betaLength - 1, ri.size))
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val values = r.colAsString(valCol).toString
     r.removeColumn(valCol)
     val baseColumnsAsString = r.toString
@@ -48,7 +48,7 @@ class LogisticRegressionAnalysis(lookUpSignature: String, session: GorSession, v
 
     setGenotypesAndFilter(values, genoType, filter)
 
-    ri.phenoTable.zipWithIndex.par.map({ case (phenos, idx) =>
+    ri.phenoTable.zipWithIndex.map({ case (phenos, idx) =>
       val (x, y, numberOfSamples) = setupRegressionData(genoType, filter, phenos, idx)
 
       val logRegObj = logRegObjects(idx)
@@ -59,7 +59,7 @@ class LogisticRegressionAnalysis(lookUpSignature: String, session: GorSession, v
     }).seq.foreach(outRows => outRows.foreach(outRow => nextProcessor.process(outRow)))
   }
 
-  private def writeOut(baseAndPhenoColumns: String, logRegObj: LogisticRegression, converged: Boolean): Traversable[Row] = {
+  private def writeOut(baseAndPhenoColumns: String, logRegObj: LogisticRegression, converged: Boolean): Iterable[Row] = {
     ri.betaNames.zipWithIndex.map({
       case (name, idx) =>
         val lineBuilder = new StringBuilder(baseAndPhenoColumns)

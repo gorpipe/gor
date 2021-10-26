@@ -22,9 +22,9 @@
 
 package gorsat.Script
 
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
-class UTestExecutionGraph extends FlatSpec {
+class UTestExecutionGraph extends AnyFlatSpec {
   "Empty graph" should "have empty root" in {
     val g = ExecutionGraph(Array[String]())
     assert(g.root == null)

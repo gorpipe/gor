@@ -26,11 +26,12 @@ import gorsat.Script.ScriptExecutionEngine
 import gorsat.process.{GenericSessionFactory, GorInputSources, GorPipeCommands}
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestColumnSelection extends FlatSpec with BeforeAndAfterAll {
+class UTestColumnSelection extends AnyFlatSpec with BeforeAndAfterAll {
   // This is needed to initialize things needed by GorPipeSession
   val se = ScriptExecutionEngine
   private val context = new GenericSessionFactory().create().getGorContext
