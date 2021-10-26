@@ -125,6 +125,11 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
+    public String createDirectories(String dir, FileAttribute<?>... attrs) throws IOException {
+        return resolveUrl(dir).createDirectories(attrs);
+    }
+
+    @Override
     public boolean isDirectory(String dir) {
         return resolveUrl(dir).isDirectory();
     }

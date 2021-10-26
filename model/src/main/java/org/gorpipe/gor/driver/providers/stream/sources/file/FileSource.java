@@ -195,6 +195,11 @@ public class FileSource implements StreamSource {
     }
 
     @Override
+    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectories(file, attrs).toString();
+    }
+
+    @Override
     public boolean isDirectory() {
         return Files.isDirectory(file);
     }

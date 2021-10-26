@@ -93,6 +93,14 @@ public interface DataSource extends AutoCloseable {
         throw new GorResourceException("Create directory is not implemented", getSourceType().getName());
     }
 
+    /**
+     * Creates a new directory and its full path if needed.
+     * Returns: the directory
+     */
+    default String createDirectories(FileAttribute<?>... attrs) throws IOException {
+        throw new GorResourceException("Create directories is not implemented", getSourceType().getName());
+    }
+
     default Stream<String> list() throws IOException {
         throw new GorResourceException("List directory is not implemented", getSourceType().getName());
     }

@@ -46,7 +46,8 @@ import java.util.stream.Stream;
 public class GorServerFileReader extends FileReader {
     private static final Logger log = LoggerFactory.getLogger(GorServerFileReader.class);
 
-    public static final String RESULT_CACHE_DIR = "cache/result_cache";
+    public static final String RESULT_CACHE_DIR_NAME = "result_cache";
+    public static final String RESULT_CACHE_DIR = "cache/"+RESULT_CACHE_DIR_NAME;
     private final String resolvedSessionRoot;
     private final boolean allowAbsolutePath;
     private final Object[] constants;
@@ -142,6 +143,12 @@ public class GorServerFileReader extends FileReader {
     public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
         return Files.createDirectory(Path.of(resolveUrl(dir)), attrs).toString();
     }
+
+    @Override
+    public String createDirectories(String dir, FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectories(Path.of(resolveUrl(dir)), attrs).toString();
+    }
+
 
     @Override
     public boolean isDirectory(String dir) {

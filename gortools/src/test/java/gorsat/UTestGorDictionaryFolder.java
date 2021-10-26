@@ -16,6 +16,33 @@ public class UTestGorDictionaryFolder {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
 
+    static String GENE_GROUP_CHROM_TOP1 = "Chrom\tbpStart\tbpStop\tallCount\n" +
+            "chr1\t0\t250000000\t2\n" +
+            "chr10\t0\t150000000\t2\n" +
+            "chr11\t0\t150000000\t2\n" +
+            "chr12\t0\t150000000\t2\n" +
+            "chr13\t0\t150000000\t1\n" +
+            "chr14\t0\t150000000\t1\n" +
+            "chr15\t0\t150000000\t1\n" +
+            "chr16\t0\t100000000\t1\n" +
+            "chr17\t0\t100000000\t1\n" +
+            "chr18\t0\t100000000\t1\n" +
+            "chr19\t0\t100000000\t1\n" +
+            "chr2\t0\t250000000\t2\n" +
+            "chr20\t0\t100000000\t1\n" +
+            "chr21\t0\t100000000\t1\n" +
+            "chr22\t0\t100000000\t1\n" +
+            "chr3\t0\t200000000\t2\n" +
+            "chr4\t0\t200000000\t2\n" +
+            "chr5\t0\t200000000\t2\n" +
+            "chr6\t0\t200000000\t2\n" +
+            "chr7\t0\t200000000\t2\n" +
+            "chr8\t0\t150000000\t2\n" +
+            "chr9\t0\t150000000\t2\n" +
+            "chrM\t0\t20000\t1\n" +
+            "chrX\t0\t200000000\t2\n" +
+            "chrY\t0\t100000000\t1\n";
+
     static String GENE_GROUP_CHROM = "Chrom\tbpStart\tbpStop\tallCount\n" +
             "chr1\t0\t250000000\t4747\n" +
             "chr10\t0\t150000000\t2011\n" +
@@ -438,6 +465,28 @@ public class UTestGorDictionaryFolder {
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
+    }
+
+    @Test
+    public void testExplicitWrite() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var cache = workDirPath.resolve("result_cache");
+        Files.createDirectory(cache);
+        var query = "create a = gor ../tests/data/gor/genes.gor | top 1 | write "+ workDirPath.resolve("test.gor").toAbsolutePath() +"; gor [a] | group chrom -count";
+        var results = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
+        Assert.assertTrue(Files.walk(cache).filter(p -> p.toString().endsWith(".gor")).allMatch(Files::isSymbolicLink));
+        Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\nchr1\t0\t250000000\t1\n", results);
+    }
+
+    @Test
+    public void testExplicitWriteFolder() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var cache = workDirPath.resolve("result_cache");
+        Files.createDirectory(cache);
+        var query = "create a = pgor ../tests/data/gor/genes.gor | top 1 | write -d "+ workDirPath.resolve("test.gord").toAbsolutePath() +"; gor [a] | group chrom -count";
+        var results = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
+        Assert.assertTrue(Files.walk(cache).filter(p -> p.toString().endsWith(".gord")).allMatch(Files::isSymbolicLink));
+        Assert.assertEquals("Wrong results in write folder", GENE_GROUP_CHROM_TOP1, results);
     }
 
     @Test

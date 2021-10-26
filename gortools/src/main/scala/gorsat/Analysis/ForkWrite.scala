@@ -29,6 +29,7 @@ import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.PathUtils
@@ -68,8 +69,10 @@ case class ForkWrite(forkCol: Int,
       throw new GorResourceException("WRITE error: #{fork} of ${fork}missing from filename.", fullFileName)
     }
     var fileName : String = _
+    val projectContext = session.getProjectContext
     if(options.useFolder.nonEmpty) {
       val folder = options.useFolder.get
+      ensureDir(projectContext, folder)
       val fn = if(fullFileName.isEmpty) {
         val uuid = UUID.randomUUID().toString
         val ending = folder.substring(folder.lastIndexOf('.'))
@@ -81,7 +84,6 @@ case class ForkWrite(forkCol: Int,
         val cols = inHeader.split("\t")
         val fork = cols(forkCol) + "=" + forkValue
         val forkdir = dir + fork
-        val projectContext = session.getProjectContext
         ensureDir(projectContext, forkdir)
         fileName = forkdir + "/" + fn
       } else {
@@ -89,6 +91,7 @@ case class ForkWrite(forkCol: Int,
       }
     } else {
       fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+      ensureDir(projectContext, fileName, parent = true)
     }
     var fileOpen = false
     var headerWritten = false
@@ -96,22 +99,13 @@ case class ForkWrite(forkCol: Int,
     var out: Output = _
   }
 
-  def ensureDir(projectContext: ProjectContext, dir: String): Unit = {
-    projectContext.getFileReader match {
-      case reader: DriverBackedFileReader => {
-        val ds = reader.resolveUrl(dir)
-        if(ds.exists() && ds.isInstanceOf[FileSource]) {
-          var fp = Paths.get(dir)
-          if(!fp.isAbsolute) {
-            fp = projectContext.getProjectRootPath.resolve(fp)
-          }
-          if(Files.exists(fp) && !Files.isDirectory(fp) && Files.size(fp) == 0) {
-            Files.delete(fp)
-          }
-          Files.createDirectories(fp)
-        }
-      }
-      case _ =>
+  def ensureDir(projectContext: ProjectContext, dir: String, parent: Boolean = false): Unit = {
+    val fileReader = projectContext.getFileReader
+    if (PathUtils.isLocal(dir)) {
+      if (parent) {
+        val parentPath = Paths.get(dir).getParent
+        if (parentPath!=null) fileReader.createDirectories(parentPath.toString)
+      } else fileReader.createDirectories(dir)
     }
   }
 

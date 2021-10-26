@@ -164,7 +164,7 @@ public class S3Source implements StreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        return Files.list(getPath()).map(p -> p.toString());
+        return Files.list(getPath()).map(Path::toString);
     }
 
     private Path getPath() {
