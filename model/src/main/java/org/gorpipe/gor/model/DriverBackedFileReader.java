@@ -243,7 +243,7 @@ public class DriverBackedFileReader extends FileReader {
         var source = resolveUrl(file);
 
         if (source.getSourceType() == FileSourceType.FILE) {
-            var path = Paths.get(getResolvedUrl(source));
+            var path = Paths.get(file);
             var root = commonRoot != null ? Paths.get(commonRoot) : null;
             if (root!=null && !path.isAbsolute()) {
                 path = root.resolve(path);
