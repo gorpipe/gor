@@ -24,17 +24,16 @@ package gorsat
 
 import java.io.{File, FileWriter}
 import java.nio.file.Files
-
 import Regression.{LinearRegression, LogisticRegression}
 import org.junit.runner.RunWith
 import org.junit.{Assert, ComparisonFailure}
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.reflect.ClassTag
 
 @RunWith(classOf[JUnitRunner])
-class UTestRegression extends FunSuite {
+class UTestRegression extends AnyFunSuite {
   val tmpDir: File = Files.createTempDirectory("uTestRegression").toFile
   tmpDir.deleteOnExit()
 

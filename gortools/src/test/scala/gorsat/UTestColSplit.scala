@@ -24,11 +24,11 @@ package gorsat
 
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestColSplit extends FunSuite {
+class UTestColSplit extends AnyFunSuite {
 
   test("UTestColSplit") {
     TestUtils.assertGorpipeResults("Chrom\tPOS\treference\tallele\trsIDs\thjalti\tblabla_1\tblabla_2\tblabla_3\tblabla_4\tblabla_5\tblabla_6\nchr1\t10179\tC\tCC\trs367896724\t1,2,3,4,5,6,7\t1\t2\t3\t4\t5\t6\n","gor ../tests/data/gor/dbsnp_test.gorz | top 1 | calc hjalti '1,2,3,4,5,6,7' |colsplit hjalti 6 blabla")

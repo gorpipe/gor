@@ -29,11 +29,12 @@ import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, Pi
 import org.gorpipe.exceptions.{GorException, GorParsingException}
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestScriptExecutionEngine extends FunSuite with BeforeAndAfter {
+class UTestScriptExecutionEngine extends AnyFunSuite with BeforeAndAfter {
 
   def createScriptExecutionEngine(): ScriptExecutionEngine = {
     val context = new GenericSessionFactory().create().getGorContext

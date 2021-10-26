@@ -79,6 +79,11 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public InputStream openClosable() throws IOException {
+        return retry.tryOp(() -> wrapStream(super.openClosable(), 0, null), requestRetries);
+    }
+
+    @Override
     public OutputStream getOutputStream(boolean append) throws IOException {
         return retry.tryOp(() -> super.getOutputStream(append), requestRetries);
     }

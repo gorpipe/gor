@@ -53,7 +53,7 @@ case class MapLookup(session: GorSession,
   var colMap: singleHashMap = _
   val colArray: Array[Int] = columns
 
-  override def setup() {
+  override def setup(): Unit = {
     val useSet = inSet || (cartesian && outCols.length == 1)
     if (iteratorCommand != "") colMap = MapAndListUtilities.getSingleHashMap(iteratorCommand, iterator,
       caseInsensitive, columns.length, outCols, useSet, skipEmpty,session)
@@ -61,7 +61,7 @@ case class MapLookup(session: GorSession,
       outCols, useSet, skipEmpty, session)
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (singleCol) key = r.colAsString(columns.head).toString
     else {
       // key = (r.colAsString(columns(0)) /: columns.tail.map(c => r.colAsString(c))) (_ + "#" + _)

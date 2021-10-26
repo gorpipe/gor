@@ -25,11 +25,11 @@ package gorsat.parser
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestFunctionRegistry extends FlatSpec {
+class UTestFunctionRegistry extends AnyFlatSpec {
   "register" should "handle an arity 0 function" in {
     def func(): lFun = {
       _ => 42L

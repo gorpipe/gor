@@ -23,11 +23,11 @@
 package gorsat.parser
 
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestStringDistance extends FlatSpec
+class UTestStringDistance extends AnyFlatSpec
 {
   "levenshtein" should "return 0 for identical strings" in {
     val dist = StringDistance.levenshtein("first", "first");

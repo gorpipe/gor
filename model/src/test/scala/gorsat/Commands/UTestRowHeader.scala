@@ -1,11 +1,11 @@
 package gorsat.Commands
 
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestRowHeader extends FlatSpec {
+class UTestRowHeader extends AnyFlatSpec {
   "RowHeader" should "have empty types after construction from string" in {
     val r = RowHeader("chrom\tpos\tA\tB\tC")
     assert(r.columnTypes(0) == null)

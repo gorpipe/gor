@@ -23,12 +23,11 @@
 package gorsat.Utilities
 
 import java.io.{File, PrintWriter}
-
 import gorsat.gorsatGorIterator.{MapAndListUtilities, MemoryMonitorUtil}
 import gorsat.process.GenericSessionFactory
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import org.slf4j.LoggerFactory
 
 import scala.util.Random
@@ -37,7 +36,7 @@ import scala.util.Random
  * Test GorsatPipeSession.
  */
 @RunWith(classOf[JUnitRunner])
-class UTestGorPipeSession extends FunSuite {
+class UTestGorPipeSession extends AnyFunSuite {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 

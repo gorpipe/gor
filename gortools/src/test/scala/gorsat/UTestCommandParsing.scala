@@ -24,21 +24,21 @@ package gorsat
 
 import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Path}
-
 import Commands.CommandParseUtilities
 import process._
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
 import org.gorpipe.gor.session.GorContext
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer
 
 @RunWith(classOf[JUnitRunner])
-class UTestCommandParsing extends FunSuite with BeforeAndAfter {
+class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 

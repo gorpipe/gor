@@ -30,6 +30,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
 
 
 class Granno extends CommandInfo("GRANNO",
@@ -144,7 +145,7 @@ class Granno extends CommandInfo("GRANNO",
       }
     }
 
-    val header = RowHeader(columns)
+    val header = RowHeader(columns.toList)
     var combinedHeader = header.toString
     if (combinedHeader == inputHeader) {
       throw new GorParsingException("Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, " +

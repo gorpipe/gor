@@ -26,11 +26,11 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import Regression.{LogisticRegression, LogisticRegressionModel, WaldTest}
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestLogisticRegressionScala extends FunSuite {
+class UTestLogisticRegressionScala extends AnyFunSuite {
   val maxIter = 20
   val tol = 1e-5
 

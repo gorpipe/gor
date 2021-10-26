@@ -25,11 +25,11 @@ package gorsat.Analysis
 import gorsat.Commands.RowHeader
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestInferColumnTypes extends FlatSpec {
+class UTestInferColumnTypes extends AnyFlatSpec {
   private val header = "chrom\tpos\tA\tB\tC"
 
   "Constructor" should "construct" in {

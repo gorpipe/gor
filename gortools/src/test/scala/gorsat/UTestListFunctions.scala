@@ -23,14 +23,14 @@
 package gorsat
 
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 /**
   * Created by hjaltii on 28/07/17.
   */
 @RunWith(classOf[JUnitRunner])
-class UTestListFunctions extends FunSuite {
+class UTestListFunctions extends AnyFunSuite {
   test("Test equality of list map function") {
     val query = "gor ../tests/data/gor/dbsnp_test.gorz | rownum | calc a LISTMAP(rownum,'str(x)+\\'text\\'')"
     val newResult = TestUtils.runGorPipe(query)

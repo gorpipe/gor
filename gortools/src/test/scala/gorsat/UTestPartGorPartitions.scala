@@ -24,11 +24,11 @@ package gorsat
 
 import Macros.PartGor
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestPartGorPartitions extends FunSuite {
+class UTestPartGorPartitions extends AnyFunSuite {
 
   test("PGOR split test: parts") {
     val buckets = createBuckets(5, 100)

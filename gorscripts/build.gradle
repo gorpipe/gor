@@ -60,8 +60,8 @@ project(':gorscripts') {
         testImplementation project(':util')
 
         testImplementation Testing.mockito.core
-        testImplementation "org.scalatest:scalatest_2.12:_"
-        testImplementation "org.scalacheck:scalacheck_2.12:_"
+        testImplementation "org.scalatest:scalatest_${scalaVersion}:_"
+        testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
         testImplementation 'com.github.stefanbirkner:system-rules:_'
         testImplementation libs.commons.io
         testImplementation libs.commons.lang3

@@ -434,10 +434,10 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
   }
 
   def predi: Parser[bFun] =
-    spredicomp |||
-    dpredicomp |||
-    lpredicomp |||
     ipredicomp |||
+    lpredicomp |||
+    dpredicomp |||
+    spredicomp |||
     "(" ~> relexpr <~ ")" |
     "NOT".ignoreCase ~ "(" ~> relexpr <~ ")" ^^ (
       x => { line: ColumnValueProvider => {!x(line)} }) |
@@ -1247,7 +1247,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
       parseAll(relexpr, input) match {
         case Success(e, _) =>
           outputType = FunctionTypes.BooleanFun
-          booleanFunction = e.asInstanceOf[ColumnValueProvider => Boolean]
+          booleanFunction = e
         case f: NoSuccess => throw new GorParsingException(f.msg, input)
       }
     }

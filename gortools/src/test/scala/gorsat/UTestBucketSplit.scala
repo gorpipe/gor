@@ -24,11 +24,11 @@ package gorsat
 
 import org.gorpipe.exceptions.GorUserException
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestBucketSplit extends FunSuite {
+class UTestBucketSplit extends AnyFunSuite {
 
 
   val input1 = "gorrow chr1,1,2 | calc values 'Aabc::fghiBjklmnorstC123456789'"

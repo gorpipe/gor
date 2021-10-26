@@ -23,14 +23,13 @@
 package gorsat.process
 
 import java.io.{File, PrintWriter}
-
 import gorsat.DynIterator
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestSourceProvider extends FlatSpec {
+class UTestSourceProvider extends AnyFlatSpec {
 
   // todo this shouldn't be here, but is needed for nested query tests
   DynIterator.createGorIterator = PipeInstance.createGorIterator

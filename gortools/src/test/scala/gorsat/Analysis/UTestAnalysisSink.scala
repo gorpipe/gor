@@ -24,11 +24,11 @@ package gorsat.Analysis
 
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestAnalysisSink extends FlatSpec {
+class UTestAnalysisSink extends AnyFlatSpec {
   "Constructor" should "construct object with empty rows list" in {
     val s = AnalysisSink()
     assert(s.rows.isEmpty)

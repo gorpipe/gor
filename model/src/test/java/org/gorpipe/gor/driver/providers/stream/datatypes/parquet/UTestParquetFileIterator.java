@@ -18,6 +18,7 @@ import org.gorpipe.gor.model.Row;
 import org.junit.Assert;
 import org.junit.Test;
 import scala.collection.mutable.ListBuffer;
+import scala.jdk.CollectionConverters;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -159,7 +160,8 @@ public class UTestParquetFileIterator {
         ParquetFileIterator iterator = new ParquetFileIterator(file);
         iterator.getHeader();
 
-        Select2 select = Select2.apply(scala.collection.JavaConverters.asScalaBuffer(Collections.list(1, 2, 3, 4)));
+        var buf = CollectionConverters.ListHasAsScala(Collections.list((Object)1, 2, 3, 4)).asScala();
+        Select2 select = Select2.apply(buf.toSeq());
         ListBuffer<Row> buff = new ListBuffer();
         ToList toList = ToList.apply(buff);
         select.$bar(toList);
@@ -169,7 +171,7 @@ public class UTestParquetFileIterator {
             select.process(row);
         }
 
-        assertEquals(48, scala.collection.JavaConverters.bufferAsJavaList(buff).size());
+        assertEquals(48, buff.size());
     }
 
     @Test

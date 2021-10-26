@@ -27,6 +27,8 @@ import gorsat.Commands.CommandParseUtilities._
 import gorsat.Utilities.IteratorUtilities.validHeader
 import org.gorpipe.gor.session.GorContext
 
+import scala.language.postfixOps
+
 class UnPivot extends CommandInfo("UNPIVOT",
   CommandArguments("", "", 1, 1),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {

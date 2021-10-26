@@ -24,18 +24,18 @@ package gorsat.Analysis
 
 import java.io.File
 import java.nio.file.Files
-
 import gorsat.TestUtils
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestVarGroup extends FunSuite with BeforeAndAfter {
+class UTestVarGroup extends AnyFunSuite with BeforeAndAfter {
 
   var wd: File =_
 

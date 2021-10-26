@@ -29,11 +29,12 @@ import gorsat.process.{GenericSessionFactory, GorInputSources, GorPipeCommands}
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestGorPrePipe extends FunSuite with BeforeAndAfterAll {
+class UTestGorPrePipe extends AnyFunSuite with BeforeAndAfterAll {
 
   protected var ymlPnsTxtPath = ""
   protected var rsID1 = "rs544101329"
