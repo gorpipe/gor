@@ -132,8 +132,8 @@ dependencies {
         // https://nvd.nist.gov/vuln/detail/CVE-2021-36090 and more
         implementation('org.apache.commons:commons-compress:1.21')
 
-        implementation('io.netty:netty-handler:4.1.67.Final')
-        implementation('io.netty:netty-transport-native-epoll:4.1.67.Final')
+        implementation('io.netty:netty-handler:4.1.69.Final')
+        implementation('io.netty:netty-transport-native-epoll:4.1.69.Final')
 
         implementation('net.minidev:json-smart:2.4.1')
     }
