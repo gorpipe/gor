@@ -2,10 +2,9 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import gorsat.Analysis.Select2;
-import gorsat.Outputs.ToList;
+import gorsat.Commands.Analysis;
+import gorsat.ScalaTestUtils;
 import gorsat.TestUtils;
-import org.aeonbits.owner.util.Collections;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -17,8 +16,8 @@ import org.gorpipe.gor.model.ParquetLine;
 import org.gorpipe.gor.model.Row;
 import org.junit.Assert;
 import org.junit.Test;
+import scala.Tuple2;
 import scala.collection.mutable.ListBuffer;
-import scala.jdk.CollectionConverters;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -160,11 +159,9 @@ public class UTestParquetFileIterator {
         ParquetFileIterator iterator = new ParquetFileIterator(file);
         iterator.getHeader();
 
-        var buf = CollectionConverters.ListHasAsScala(Collections.list((Object)1, 2, 3, 4)).asScala();
-        Select2 select = Select2.apply(buf.toSeq());
-        ListBuffer<Row> buff = new ListBuffer();
-        ToList toList = ToList.apply(buff);
-        select.$bar(toList);
+        Tuple2<Analysis,ListBuffer<Row>> selectList = ScalaTestUtils.selectToList();
+        Analysis select = selectList._1;
+        ListBuffer<Row> buff = selectList._2;
 
         while (iterator.hasNext()) {
             Row row = iterator.next();
