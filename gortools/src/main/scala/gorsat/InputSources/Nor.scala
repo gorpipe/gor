@@ -157,7 +157,7 @@ object Nor
     }
   }
 
-  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -l -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
