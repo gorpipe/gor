@@ -33,6 +33,7 @@ import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -294,7 +295,7 @@ public class PluggableGorDriver implements GorDriver {
                 prefix = "file://";
                 linkText = linkText.substring(prefix.length());
             }
-            linkText = prefix + GorStandalone.getRootPrefixed(linkText);
+            linkText = prefix + (PathUtils.isLocal(linkText) ? GorStandalone.getRootPrefixed(linkText) : linkText);
         }
         return linkSubPath != null ? linkText + linkSubPath : linkText;
     }
