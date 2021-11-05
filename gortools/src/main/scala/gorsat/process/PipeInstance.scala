@@ -32,7 +32,7 @@ import gorsat.Commands.{Analysis, _}
 import gorsat.DynIterator.DynamicRowSource
 import gorsat.Iterators.StdInputSourceIterator
 import gorsat.Monitors.{CancelMonitor, MemoryMonitor, TimeoutMonitor}
-import gorsat.Script.{ScriptEngineFactory, ScriptParsers}
+import gorsat.Script.{ScriptEngineFactory, ScriptExecutionEngine, ScriptParsers}
 import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat._
 import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
@@ -228,6 +228,10 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     init(inputQuery, useStdin, forcedInputHeader, false, "")
   }
 
+  def createScriptEngine(context: GorContext): ScriptExecutionEngine = {
+    ScriptEngineFactory.create(context)
+  }
+
   def init(inputQuery: String, useStdin: Boolean, forcedInputHeader: String, fileSignature: Boolean, virtualFile: String): GenomicIterator = {
 
     DynIterator.createGorIterator = (ctx: GorContext) => PipeInstance.createGorIterator(ctx)
@@ -239,7 +243,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     val gorCommands = CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';') // In case this is a command line script
 
     if (fileSignature || virtualFile != null || ScriptParsers.isScript(gorCommands)) {
-      val scriptExecutionEngine = ScriptEngineFactory.create(context)
+      val scriptExecutionEngine = createScriptEngine(context)
       if (virtualFile != null && virtualFile.nonEmpty) {
         System.out.println(scriptExecutionEngine.executeVirtualFile(virtualFile, gorCommands))
         System.exit(0)
