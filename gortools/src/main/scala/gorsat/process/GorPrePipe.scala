@@ -43,7 +43,7 @@ object GorPrePipe {
   var availCommands: Array[String] = GorPipeCommands.getGorCommands ++ GorInputSources.getInputSources
   val availNorCommands: Array[String] = GorPipeCommands.getNorCommands ++ GorInputSources.getInputSources
 
-  private val supportedGorSQLFileEndings = Array[String](".json",".csv",".tsv",".gor",".gorz",".gor.gz",".gord",".txt",".vcf",".bgen",".parquet")
+  private val supportedGorSQLFileEndings = Array[String](".json",".csv",".tsv",".gor",".gorz",".gor.gz",".gord",".txt",".vcf",".bgen",".parquet",".mt",".xml")
   private val commandsContainingInputSources = Array[String]("GOR","NOR","SPARK","MAP","MULTIMAP","INSET","MERGE","JOIN","LEFTJOIN","VARJOIN"/*,"CSVSEL","CSVCC","GTGEN"*/)
   val gorpred = (p: String) => supportedGorSQLFileEndings.map(e => p.toLowerCase.endsWith(e)).reduce((a,b) => a || b)
 
