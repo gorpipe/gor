@@ -43,6 +43,7 @@ object Cmd {
     val useCommandServer = hasOption(args, "-u")
     val commandType = stringValueOfOptionWithDefaultWithErrorCheck(args, "-s", "gor", Array("gor", "vcf", "bam"))
     val bufferSize = intValueOfOptionWithDefault(args, "-b", -1)
+    val headerLess = hasOption(args, "-h")
 
     val range = if (hasOption(args, "-p")) rangeOfOption(args, "-p") else GenomicRange.empty
     var command = AnalysisUtilities.extractExternalSource(iargs(0))
@@ -65,15 +66,15 @@ object Cmd {
     val filter: String = if (hasOption(args, "-f")) stringValueOfOption(args, "-f") else null
 
     val inputSource = {
-      if (bufferSize != -1) new ProcessRowSource(command, commandType, isNorContext, session, range, filter, bufferSize)
-      else new ProcessRowSource(command, commandType, isNorContext, session, range, filter)
+      if (bufferSize != -1) new ProcessRowSource(command, commandType, isNorContext, session, range, filter, bufferSize, headerLess)
+      else new ProcessRowSource(command, commandType, isNorContext, session, range, filter, headerLess)
     }
 
     InputSourceParsingResult(inputSource, "", isNorContext)
   }
 
 
-  class Cmd() extends InputSourceInfo("CMD", CommandArguments("-n -u", "-p -s -b -f", 1, 1)) {
+  class Cmd() extends InputSourceInfo("CMD", CommandArguments("-n -u -h", "-p -s -b -f", 1, 1)) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -82,7 +83,7 @@ object Cmd {
     }
   }
 
-  class GorCmd() extends InputSourceInfo("GORCMD", CommandArguments("-u", "-p -s -b -f", 1, 1)) {
+  class GorCmd() extends InputSourceInfo("GORCMD", CommandArguments("-u -h", "-p -s -b -f", 1, 1)) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -91,7 +92,7 @@ object Cmd {
     }
   }
 
-  class NorCmd() extends InputSourceInfo("NORCMD", CommandArguments("-u", "-p -s -b -f", 1, 1), isNorCommand = true) {
+  class NorCmd() extends InputSourceInfo("NORCMD", CommandArguments("-u -h", "-p -s -b -f", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {

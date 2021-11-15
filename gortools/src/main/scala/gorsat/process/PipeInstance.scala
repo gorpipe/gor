@@ -566,7 +566,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
           GorJavaUtilities.getDbIteratorSource(finalCommand.trim, !isNorContext, source, scoping)
         } else {
           val projectRoot = context.getSession.getProjectContext.getRealProjectRoot
-          new ProcessRowSource(finalCommand, commandType, isNorContext, context.getSession, range, filter)
+          new ProcessRowSource(finalCommand, commandType, isNorContext, context.getSession, range, filter, false)
         }
         return InputSourceParsingResult(inputSource, "", isNorContext, range)
       }

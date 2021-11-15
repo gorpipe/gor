@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by sigmar on 12/02/16.
@@ -60,12 +61,12 @@ public class ProcessRowSource extends ProcessSource {
     private Path fileroot = null;
     private final String filter;
 
-    public ProcessRowSource(String cmd, String type, boolean nor, GorSession session, GenomicRange.Range range, String filter) {
-        this(CommandParseUtilities.quoteSafeSplit(cmd, ' '), type, nor, session, range, filter, Pipes.rowsToProcessBuffer());
+    public ProcessRowSource(String cmd, String type, boolean nor, GorSession session, GenomicRange.Range range, String filter, boolean headerLess) {
+        this(CommandParseUtilities.quoteSafeSplit(cmd, ' '), type, nor, session, range, filter, Pipes.rowsToProcessBuffer(), headerLess);
     }
 
-    public ProcessRowSource(String cmd, String type, boolean nor, GorSession session, GenomicRange.Range range, String filter, int bs) {
-        this(CommandParseUtilities.quoteSafeSplit(cmd, ' '), type, nor, session, range, filter, bs);
+    public ProcessRowSource(String cmd, String type, boolean nor, GorSession session, GenomicRange.Range range, String filter, int bs, boolean headerLess) {
+        this(CommandParseUtilities.quoteSafeSplit(cmd, ' '), type, nor, session, range, filter, bs, headerLess);
     }
 
     public static String checkNested(String cmd, GorSession session, StringBuilder errorStr) {
@@ -116,7 +117,7 @@ public class ProcessRowSource extends ProcessSource {
         return ncmd;
     }
 
-    private ProcessRowSource(String[] cmds, String type, boolean nor, GorSession session, GenomicRange.Range range, String fltr, int bs) {
+    private ProcessRowSource(String[] cmds, String type, boolean nor, GorSession session, GenomicRange.Range range, String fltr, int bs, boolean headerLess) {
         this.nor = nor;
         this.setBufferSize(bs);
         this.filter = fltr;
@@ -162,7 +163,7 @@ public class ProcessRowSource extends ProcessSource {
             InputStream is = p.getInputStream();
 
             if (type == null || type.equalsIgnoreCase("gor")) {
-                it = gorIterator( is, headercommands, type );
+                it = gorIterator( is, headercommands, type, headerLess );
             } else if (type.equalsIgnoreCase("vcf")) {
                 it = vcfIterator( is );
                 if( range.chromosome() != null ) it.seek(range.chromosome(), range.start(), range.stop());
@@ -171,22 +172,22 @@ public class ProcessRowSource extends ProcessSource {
             }
             if( range.chromosome() != null ) it.seek(range.chromosome(), range.start(), range.stop());
             String header = it.getHeader();
-            String[] headerArray = header.split("\t");
-            setHeader(String.join("\t", header));
+            setHeader(header);
         } catch (IOException e) {
             throw new GorResourceException("unable to get header from process " + commands.get(0), "", e);
         }
     }
 
-    private GenomicIterator gorIterator( InputStream is, List<String> headercommands, String type ) throws IOException {
+    private GenomicIterator gorIterator( InputStream is, List<String> headercommands, String type, boolean headerLess ) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
-        final String header = br.readLine();
-        setHeader(header);
-        if (getHeader() == null) {
-            throw new GorSystemException("Running external process: " + String.join(" ", headercommands) + " with error: " + errorStr, null);
+        String header = null;
+        if (!headerLess) {
+            header = br.readLine();
+            if (header == null) {
+                throw new GorSystemException("Running external process: " + String.join(" ", headercommands) + " with error: " + errorStr, null);
+            }
         }
-        if (nor) setHeader("ChromNOR\tPosNOR\t" + getHeader().replace(" ", "_").replace(":", "") );
-        return new GenomicIteratorBase() {
+        var it = new GenomicIteratorBase() {
             BufferedReader reader = br;
             String next = readLine();
 
@@ -214,11 +215,6 @@ public class ProcessRowSource extends ProcessSource {
             }
 
             @Override
-            public String getHeader() {
-                return header;
-            }
-
-            @Override
             public boolean seek(String seekChr, int seekPos) {
                 InputStream is = setRange(seekChr, seekPos, -1);
                 reader = new BufferedReader(new InputStreamReader(is));
@@ -241,6 +237,15 @@ public class ProcessRowSource extends ProcessSource {
                 }
             }
         };
+        if (headerLess) {
+            var spl = it.next.split("\t");
+            var hdr = IntStream.rangeClosed(1,spl.length).mapToObj(i -> "col"+i).collect(Collectors.joining("\t"));
+            it.setHeader(hdr);
+        } else {
+            if (nor) it.setHeader("ChromNOR\tPosNOR\t" + header.replace(" ", "_").replace(":", ""));
+            else it.setHeader(header);
+        }
+        return it;
     }
 
     private GenomicIterator vcfIterator( InputStream is ) {
