@@ -23,11 +23,10 @@
 package gorsat.process
 
 import java.util.UUID
-
 import gorsat.Commands.CommandParseUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.exceptions.GorParsingException
-import org.gorpipe.gor.model.DefaultFileReader
+import org.gorpipe.gor.session.ProjectContext
 
 object PipeOptions {
   def parseInputArguments(args:Array[String]) : PipeOptions = {
@@ -47,7 +46,7 @@ object PipeOptions {
   }
 
   private def getQueryFromFile(fileName: String) = {
-    val fileReader = new DefaultFileReader("")
+    val fileReader = ProjectContext.DEFAULT_READER
     MapAndListUtilities.readArray(fileName, fileReader).mkString(" ")
   }
 

@@ -25,7 +25,7 @@ package gorsat
 import java.io._
 import java.nio.file.Files
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.DefaultFileReader
+import org.gorpipe.gor.session.ProjectContext
 import org.gorpipe.model.gor.RowObj
 import org.junit.Assert
 import org.junit.runner.RunWith
@@ -38,7 +38,7 @@ import scala.io.Source
 @RunWith(classOf[JUnitRunner])
 class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
   var tmpFolder: File = _
-  var fileReader = new DefaultFileReader("")
+  var fileReader = ProjectContext.DEFAULT_READER
 
   before {
     tmpFolder = Files.createTempDirectory("uTestWrite").toFile

@@ -25,6 +25,7 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.session.ProjectContext;
@@ -61,7 +62,7 @@ public class UTestNor {
 
         projectContext = new ProjectContext.Builder()
                 .setRoot(projectDir.getRoot().getCanonicalPath())
-                .setWriteLocations(locations)
+                .setFileReader(new DriverBackedGorServerFileReader(".", null, false, "", locations))
                 .build();
         createSymbolicLink();
     }

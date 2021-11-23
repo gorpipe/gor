@@ -31,10 +31,10 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
-import org.gorpipe.gor.model.DefaultFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.util.ByteTextBuilder;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
@@ -117,12 +117,13 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      */
     protected BaseTable(URI uri, FileReader inputFileReader) {
 
-        this.fileReader = inputFileReader != null ? inputFileReader : new DefaultFileReader(null);
+        this.fileReader = inputFileReader != null ? inputFileReader : ProjectContext.DEFAULT_READER;
 
         var fileName = FilenameUtils.getName(uri.getPath());
         this.name = FilenameUtils.removeExtension(fileName);
 
-        if (this.fileReader.isDirectory(PathUtils.formatUri(uri))) {
+        // Not all datasources support isDirectory (so just check for the dict file)
+        if (this.fileReader.exists(PathUtils.resolve(uri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
             // Gord folder passed in.
             this.rootUri = normalize(uri);
             this.path = rootUri.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
@@ -727,15 +728,13 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
      */
     private TableHeader parseHeaderFromLine(T line) {
         TableHeader newHeader = new TableHeader();
-        List<String> args = new ArrayList<>();
-        args.add(line.getContentReal());
-        if (securityContext != null) {
-            args.addAll(Arrays.asList(CommandParseUtilities.quoteSafeSplit(securityContext, ' ')));
-        }
-        GorOptions gorOptions = GorOptions.createGorOptions(null, args.toArray(new String[0]));
-        try(GenomicIterator source = gorOptions.getIterator()) {
+
+        try(GenomicIterator source = GorDriverFactory.fromConfig().createIterator(this.getFileReader().resolveUrl(line.getContentReal()))) {
             newHeader.setColumns(source.getHeader().split("\t"));
+        } catch (IOException e) {
+            throw new GorDataException("Could not get header for validation from input file " + line.getContentReal());
         }
+
         return newHeader;
     }
 

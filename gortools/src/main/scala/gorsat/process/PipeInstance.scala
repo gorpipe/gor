@@ -39,9 +39,9 @@ import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import gorsat.process.GorJavaUtilities.CmdParams
 import gorsat.process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator, GenomicIteratorBase, GorFileReaderContext}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator}
 import org.gorpipe.gor.monitor.GorMonitor
-import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}
 import org.gorpipe.gor.util.StringUtil
 import org.slf4j.LoggerFactory
 
@@ -206,7 +206,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     if (!StringUtil.isEmpty(gorRoot)) {
       new DriverBackedFileReader(null, gorRoot, null)
     } else {
-      GorFileReaderContext.DEFAULT_READER
+      ProjectContext.DEFAULT_READER
     }
   }
 

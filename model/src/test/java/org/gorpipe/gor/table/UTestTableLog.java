@@ -23,8 +23,8 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.DefaultFileReader;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,7 +54,7 @@ public class UTestTableLog {
     @Before
     public void setupTest() {
         workDirPath = workDir.getRoot().toURI();
-        fileReader = new DefaultFileReader(null);
+        fileReader = ProjectContext.DEFAULT_READER;
     }
 
     @Test

@@ -22,7 +22,10 @@
 
 package org.gorpipe.gor.model;
 
+import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.ExceptionUtilities;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
@@ -38,9 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.stream.Stream;
@@ -55,7 +56,7 @@ public class DriverBackedFileReader extends FileReader {
     private final Object[] constants;
     protected final String commonRoot;
 
-    DriverBackedFileReader(String securityContext) {
+    public DriverBackedFileReader(String securityContext) {
         this(securityContext, null, new Object[]{});
     }
 
@@ -77,26 +78,22 @@ public class DriverBackedFileReader extends FileReader {
         return constants;
     }
 
-    /**
-     * Resolve the given url, this includes traversing .link files and do fallback to link files if the file does not exits.
-     *
-     * @param url the url to resolve.
-     * @return the resolved url.
-     */
-    public DataSource resolveUrl(String url) {
-        return resolveUrl(url, false);
+    @Override
+    public DataSource resolveUrl(String url, boolean writeable) {
+        url = convertUrl(url);
+        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
+        return resolveUrl(sourceReference);
     }
 
-    /**
-     * Resolve the given url, this includes traversing .link files and do fallback to link files if the file does not exits.
-     *
-     * @param url the url to resolve.
-     * @return the resolved url.
-     */
-    public DataSource resolveUrl(String url, boolean writeable) {
-        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
-
-        return GorDriverFactory.fromConfig().getDataSource(sourceReference);
+    @Override
+    public DataSource resolveUrl(SourceReference sourceReference) {
+        DataSource dataSource =  GorDriverFactory.fromConfig().getDataSource(sourceReference);
+        if (dataSource != null) {
+            validateAccess(dataSource);
+        } else {
+            log.warn("No source found for {}", sourceReference.getUrl());
+        }
+        return dataSource;
     }
 
     private static String getResolvedUrl(DataSource ds) throws IOException {
@@ -110,7 +107,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    protected void checkValidServerFileName(String fileName) {
+    protected void validateAccess(DataSource dataSource) {
         // This is not used for the standard reader
     }
 
@@ -136,16 +133,30 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public String move(String source, String dest) throws IOException {
-        copy(source, dest);
-        delete(source);
-        return dest;
+        return resolveUrl(source).move(resolveUrl(dest));
     }
 
     @Override
     public String copy(String source, String dest) throws IOException {
-        try (InputStream inputStream = getInputStream(source);
-             OutputStream outputStream = getOutputStream(dest)) {
-            inputStream.transferTo(outputStream);
+        return resolveUrl(source).copy(resolveUrl(dest));
+    }
+
+    @Override
+    public String streamMove(String source, String dest) throws IOException {
+        if (!source.equals(dest)) {
+            copy(source, dest);
+            delete(source);
+        }
+        return dest;
+    }
+
+    @Override
+    public String streamCopy(String source, String dest) throws IOException {
+        if (!source.equals(dest)) {
+            try (InputStream inputStream = getInputStream(source);
+                 OutputStream outputStream = getOutputStream(dest)) {
+                inputStream.transferTo(outputStream);
+            }
         }
         return dest;
     }
@@ -250,13 +261,13 @@ public class DriverBackedFileReader extends FileReader {
             }
             if (Files.isDirectory(path)) {
                 if (!path.getFileName().toString().toLowerCase().endsWith(".gord")) {
-                    return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
+                    return getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 } else if (Files.exists(path.resolve(path.getFileName()))) {
                     source = resolveUrl(file + "/" + path.getFileName());
                 } else if (Files.exists(path.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
                     source = resolveUrl(file + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
                 } else {
-                    return DefaultFileReader.getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
+                    return getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 }
             }
         }
@@ -289,12 +300,7 @@ public class DriverBackedFileReader extends FileReader {
         try {
             return new SourceReader(source);
         } catch (IOException e) {
-            String name = "";
-            try {
-                name = source.getName();
-            } catch (IOException ex) {
-                // Do nothing
-            }
+            String name = name = source.getName();
             throw ExceptionUtilities.mapGorResourceException(name, resolvedUrl, e);
         }
     }
@@ -339,6 +345,32 @@ public class DriverBackedFileReader extends FileReader {
                 log.warn("Could not close file!", e);
             }
         });
+    }
+
+    static Stream<String> getDirectoryStream(int maxDepth, boolean followLinks, boolean showModificationDate, Path path, Path root) throws IOException {
+        var pstream = followLinks ? Files.walk(path, maxDepth, FileVisitOption.FOLLOW_LINKS) : Files.walk(path, maxDepth);
+        var stream = pstream.map(x -> {
+            try {
+                Path fileNamePath = x.getFileName();
+                if (fileNamePath == null) {
+                    throw new GorResourceException("Directory is not accessible", path.toString());
+                }
+                String filename = fileNamePath.toString();
+                int li = filename.lastIndexOf('.');
+                Path rel = root != null && !Strings.isNullOrEmpty(root.toString()) && x.isAbsolute() ? root.toAbsolutePath().relativize(x) : x;
+                String line = filename + "\t" + (Files.isSymbolicLink(x) ? 0 : Files.size(x)) + "\t" + Files.isDirectory(x) + "\t" + Files.isSymbolicLink(x) + "\t" + filename.substring(li == -1 ? filename.length() : li + 1) + "\t" + rel + "\t" + rel.toString().chars().filter(y -> y == '/').count();
+
+                if (showModificationDate) {
+                    line += "\t" + Files.getLastModifiedTime(x, LinkOption.NOFOLLOW_LINKS);
+                }
+
+                return line;
+            } catch (IOException e) {
+                throw new GorSystemException("Unable to get file size from " + x, e);
+            }
+        });
+        String header = "#Filename\tFilesize\tIsDir\tIsSymbolic\tFiletype\tFilepath\tFiledepth" + (showModificationDate ? "\tModified" : "");
+        return Stream.concat(Stream.of(header), stream);
     }
 
 }

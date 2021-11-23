@@ -151,7 +151,7 @@ public class PluggableGorDriver implements GorDriver {
                 return null;
             }
             log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
-            DataSource wrapped = sourceReference.writeSource ? handleLinks(source) : wrap(handleLinks(source));
+            DataSource wrapped = sourceReference.writeSource ? source : wrap(handleLinks(source));
             log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
             return wrapped;
         } catch (Exception e) {
@@ -162,6 +162,7 @@ public class PluggableGorDriver implements GorDriver {
 
     @Override
     public DataSource wrap(DataSource source) throws IOException {
+        if (source == null) return null;
         return sourceTypeToSourceProvider.get(source.getSourceType()).wrap(source);
     }
 
@@ -213,7 +214,7 @@ public class PluggableGorDriver implements GorDriver {
                 return getDataSource(getSourceRef(source, readLink(source), null));
             }
         } else {
-            if (!source.exists() && source.supportsLinks()) {
+            if (source.supportsLinks() && !source.exists()) {
                 String url = source.getSourceReference().getUrl();
                 // prevent stackoverflow, some datasources don't support links (dbsource), need to check file ending
                 if (!url.endsWith(".link")) {
@@ -239,6 +240,7 @@ public class PluggableGorDriver implements GorDriver {
         if (fallbackLinkSource.getDataType() != LINK) {
             // The link file existed, was resolved.
             // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
+            fallbackLinkSource.getSourceReference().setCreatedFromLink(true);
             return fallbackLinkSource;
         } else {
             String useLinkFolders = System.getProperty("GOR_DRIVER_LINK_FOLDERS","false");

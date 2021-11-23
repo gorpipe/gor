@@ -36,7 +36,7 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.{PathUtils, TableHeader}

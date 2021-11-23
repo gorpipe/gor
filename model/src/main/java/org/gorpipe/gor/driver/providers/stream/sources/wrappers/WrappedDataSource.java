@@ -43,12 +43,12 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public String getName() throws IOException {
+    public String getName() {
         return wrapped.getName();
     }
 
     @Override
-    public String getFullPath() throws IOException {
+    public String getFullPath() {
         return wrapped.getFullPath();
     }
 
@@ -70,6 +70,16 @@ public class WrappedDataSource implements DataSource {
     @Override
     public boolean exists() {
         return wrapped.exists();
+    }
+
+    @Override
+    public String move(DataSource dest) throws IOException {
+        return wrapped.move(dest);
+    }
+
+    @Override
+    public String copy(DataSource dest) throws IOException {
+        return wrapped.copy(dest);
     }
 
     @Override
@@ -105,6 +115,26 @@ public class WrappedDataSource implements DataSource {
     @Override
     public boolean supportsLinks() {
         return wrapped.supportsLinks();
+    }
+
+    @Override
+    public boolean forceLink() {
+        return wrapped.forceLink();
+    }
+
+    @Override
+    public String getLinkFileContent() {
+        return wrapped.getLinkFileContent();
+    }
+
+    @Override
+    public String getLinkFile() {
+        return wrapped.getLinkFile();
+    }
+
+    @Override
+    public String getAccessValidationPath() {
+        return wrapped.getAccessValidationPath();
     }
 
     public DataSource getWrapped() {

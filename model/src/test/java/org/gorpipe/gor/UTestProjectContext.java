@@ -22,15 +22,13 @@
 
 package org.gorpipe.gor;
 
-import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,23 +41,20 @@ public class UTestProjectContext {
     @Rule
     public TemporaryFolder symbolicTarget = new TemporaryFolder();
 
-    private ProjectContext projectContext;
+    private DriverBackedGorServerFileReader fileReader;
 
     @Before
     public void setUp() throws IOException {
         ArrayList<String> locations = new ArrayList<>();
         locations.add("user_data");
         locations.add("studies");
-        projectContext = new ProjectContext.Builder()
-                .setRoot(projectDir.getRoot().getCanonicalPath())
-                .setWriteLocations(locations)
-                .build();
+        fileReader = new DriverBackedGorServerFileReader(projectDir.getRoot().getCanonicalPath(), null,false , "", locations);
         createSymbolicLink();
     }
 
     private void createSymbolicLink() throws IOException {
         String targetLocation = symbolicTarget.getRoot().getCanonicalPath();
-        String userDataFolder = projectContext.getRealProjectRoot() + "/user_data";
+        String userDataFolder = fileReader.getCommonRoot() + "/user_data";
         File dir = new File(userDataFolder);
         dir.mkdir();
         Path link = Paths.get(userDataFolder + "/shared");
@@ -69,48 +64,48 @@ public class UTestProjectContext {
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedEmpty() {
-        projectContext.validateWriteAllowed("");
+        fileReader.validateWriteAccess("");
     }
 
     @Test
     public void isWriteAllowedValidPath() {
-        projectContext.validateWriteAllowed("user_data/test.gor");
+        fileReader.validateWriteAccess("user_data/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteNotAllowedValidPath() {
-        projectContext.validateWriteAllowed("user_data1/test.gor");
+        fileReader.validateWriteAccess("user_data1/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedAbsolutePath() {
-        projectContext.validateWriteAllowed("/user_data/test.gor");
+        fileReader.validateWriteAccess("/user_data/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedWithDots() {
-        projectContext.validateWriteAllowed("user_data/../test.gor");
+        fileReader.validateWriteAccess("user_data/../test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     @Ignore("This test is no longer valid as up traversal is now allowed as long as it doesnt go out of project scope")
     public void isWriteAllowedButHasDots() {
-        projectContext.validateWriteAllowed("user_data/folder/../test.gor");
+        fileReader.validateWriteAccess("user_data/folder/../test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedWhenPrefixMatches() {
-        projectContext.validateWriteAllowed("user_data2/folder/../test.gor");
+        fileReader.validateWriteAccess("user_data2/folder/../test.gor");
     }
 
     @Test
     public void isWriteAllowedSymbolicLink() {
-        projectContext.validateWriteAllowed("user_data/shared/test.gor");
+        fileReader.validateWriteAccess("user_data/shared/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     @Ignore("Dots not allowed")
     public void isWriteAllowedSymbolicLinkDots() {
-        projectContext.validateWriteAllowed("user_data/shared/../test.gor");
+        fileReader.validateWriteAccess("user_data/shared/../test.gor");
     }
 }

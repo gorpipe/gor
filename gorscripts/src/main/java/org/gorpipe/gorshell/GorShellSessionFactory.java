@@ -38,18 +38,13 @@ import java.util.UUID;
 public class GorShellSessionFactory extends GorSessionFactory {
 
     private String root = "";
-    private final String cacheDir;
+    private final String cacheDir = ProjectContext.DEFAULT_CACHE_DIR;
     private String configFile = "";
     private boolean fileCacheEnabled = true;
     private boolean requestStatsEnabled = false;
 
-    public GorShellSessionFactory() {
-        cacheDir = System.getProperty("java.io.tmpdir");
-    }
-
     public GorShellSessionFactory(String root) {
         this.root = root;
-        cacheDir = System.getProperty("java.io.tmpdir");
     }
 
     public void setConfigFile(String configFile) {

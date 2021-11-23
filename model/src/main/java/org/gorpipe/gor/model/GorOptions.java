@@ -41,6 +41,7 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
+import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
@@ -269,7 +270,7 @@ public class GorOptions {
         String[] arguments = CommandParseUtilities.quoteSafeSplit(query, ' ');
         GorSession session = new GorSession("-1");
         SystemContext systemContext = new SystemContext.Builder().build();
-        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(new DefaultFileReader("")).build();
+        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(org.gorpipe.gor.session.ProjectContext.DEFAULT_READER).build();
         GorSessionCache gorSessionCache = new GorSessionCache();
         session.init(projectContext,systemContext,gorSessionCache);
         return createGorOptions(session.getGorContext(), arguments);
@@ -464,8 +465,7 @@ public class GorOptions {
     private GenomicIterator createGenomicIteratorFromRef(SourceRef ref) {
         GenomicIterator i;
         try {
-            if (session!=null) session.getProjectContext().getFileReader().checkValidServerFileName(ref.file);
-            i = ref.iterate(new DefaultChromoLookup(), chrname);
+            i = ref.iterate(new DefaultChromoLookup(), chrname, session);
         } catch (IOException e) {
             throw new GorResourceException("Couldn't open file", ref.getName(), e);
         }
@@ -814,10 +814,9 @@ public class GorOptions {
                     gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
         }
 
-        var dictpath = Paths.get(fileName);
-        if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
-            var rootpath = Paths.get(commonRoot);
-            dictpath = rootpath.resolve(dictpath);
+        var dictpath = fileName;
+        if (!PathUtils.isAbsolutePath(fileName) && commonRoot != null && commonRoot.length() > 0) {
+            dictpath = PathUtils.resolve(commonRoot, dictpath);
         }
         DictionaryTable table = new DictionaryTable(dictpath);
 

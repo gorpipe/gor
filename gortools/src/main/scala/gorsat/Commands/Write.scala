@@ -28,6 +28,8 @@ import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.gor.driver.DataSource
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.PathUtils
 
@@ -41,17 +43,7 @@ class Write extends CommandInfo("WRITE",
 
     val useFolder = if (hasOption(args, "-d")) Option.apply(stringValueOfOption(args, "-d")) else Option.empty
     val fileName = replaceSingleQuotes(iargs.mkString(" "))
-    if (context.getSession.getSystemContext.getServer) {
-      val filepath = if (useFolder.nonEmpty) {
-        val folder = useFolder.get
-        val uri = URI.create(folder)
-        PathUtils.resolve(uri,fileName)
-      } else {
-        fileName
-      }
-      context.getSession.getProjectContext.validateWriteAllowed(filepath)
-    }
-
+    
     var forkCol = -1
     var remove = false
     var columnCompress: Boolean = false
@@ -69,11 +61,7 @@ class Write extends CommandInfo("WRITE",
 
     if(fileName.isEmpty && useFolder.isEmpty) throw new GorResourceException("No file or folder specified","");
 
-    var indexing = "NONE"
 
-    if (hasOption(args, "-i")) {
-      indexing = stringValueOfOptionWithErrorCheck(args, "-i", Array("NONE", "CHROM", "FULL", "TABIX"))
-    }
 
     val card = stringValueOfOptionWithDefault(args, "-card", null)
 
@@ -93,13 +81,29 @@ class Write extends CommandInfo("WRITE",
 
     val dictTagArray = replaceSingleQuotes(stringValueOfOptionWithDefault(args, "-tags", "")).split(",", -1).map(x => x.trim).distinct
 
+    def handleIndex = {
+      var indexing = "NONE"
 
-    indexing match {
-      case "NONE" => idx = GorIndexType.NONE
-      case "CHROM" => idx = GorIndexType.CHROMINDEX
-      case "FULL" => idx = GorIndexType.FULLINDEX
-      case "TABIX" => idx = GorIndexType.TABIX
+      if (hasOption(args, "-i")) {
+        indexing = stringValueOfOptionWithErrorCheck(args, "-i", Array("NONE", "CHROM", "FULL", "TABIX"))
+      }
+
+      indexing match {
+        case "NONE" => idx = GorIndexType.NONE
+        case "CHROM" => idx = GorIndexType.CHROMINDEX
+        case "FULL" => idx = GorIndexType.FULLINDEX
+        case "TABIX" => idx = GorIndexType.TABIX
+      }
+
+      if (idx == GorIndexType.NONE && context.getSession != null) {
+        val dataSource = context.getSession.getProjectContext.getFileReader.resolveUrl(fileName, true)
+        if (dataSource != null) {
+          idx = dataSource.useIndex()
+        }
+      }
     }
+
+    handleIndex
 
     skipHeader = hasOption(args, "-noheader")
     val fileType = FilenameUtils.getExtension(fileName)

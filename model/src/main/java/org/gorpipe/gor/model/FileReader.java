@@ -22,10 +22,12 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.session.ProjectContext;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -65,6 +67,10 @@ public abstract class FileReader {
     public abstract String move(String source, String dest) throws IOException;
 
     public abstract String copy(String source, String dest) throws IOException;
+
+    public abstract String streamMove(String source, String dest) throws IOException;
+
+    public abstract String streamCopy(String source, String dest) throws IOException;
 
     public abstract void delete(String file) throws IOException;
 
@@ -229,16 +235,15 @@ public abstract class FileReader {
         return null;
     }
 
-    String convertFileName2ServerPath(String file) {
-        if (file.charAt(0) == '\"' || file.charAt(0) == '\'') { // If given a file with quotes, must remove the quotes
-            final char lastChr = file.charAt(file.length() - 1);
-            file = file.substring(1, lastChr == '\"' || lastChr == '\'' ? file.length() - 1 : file.length());
+    String convertUrl(String file) {
+        if (file != null && !file.isEmpty()) {
+            if (file.charAt(0) == '\"' || file.charAt(0) == '\'') { // If given a file with quotes, must remove the quotes
+                final char lastChr = file.charAt(file.length() - 1);
+                file = file.substring(1, lastChr == '\"' || lastChr == '\'' ? file.length() - 1 : file.length());
+            }
+
+            file = file.replace('\\', '/'); // Allow either backslash or slash
         }
-
-        file = file.replace('\\', '/'); // Allow either backslash or slash
-
-        checkValidServerFileName(file);
-
         return file;
     }
 
@@ -251,9 +256,31 @@ public abstract class FileReader {
         return cannonicalName.startsWith("file://") ? cannonicalName.substring(7) : cannonicalName;
     }
 
-    protected abstract void checkValidServerFileName(final String fileName);
+    protected abstract void validateAccess(final DataSource dataSource);
 
     public boolean allowsAbsolutePaths() {
         return true;
+    }
+
+    /**
+     * Resolve the given url, this includes traversing .link files and do fallback to link files if the file does not exits.
+     *
+     * @param url the url to resolve.
+     * @return the resolved url.
+     */
+    public DataSource resolveUrl(String url) {
+        return resolveUrl(url, false);
+    }
+
+    /**
+     * Resolve the given url, this includes traversing .link files and do fallback to link files if the file does not exits.
+     *
+     * @param url the url to resolve.
+     * @return the resolved url.
+     */
+    public abstract DataSource resolveUrl(String url, boolean writeable);
+
+    public DataSource resolveUrl(SourceReference sourceReference) {
+        throw new GorSystemException(String.format("This file reader (%s) does not support creating data sources", this.getClass().getName()), null);
     }
 }

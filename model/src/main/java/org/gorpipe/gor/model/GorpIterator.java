@@ -81,7 +81,9 @@ public class GorpIterator extends GenomicIteratorAdapterBase {
     private GenomicIterator createIteratorFromDictionary(StreamSource ss) {
         try (final Stream<String> lines = new BufferedReader(new InputStreamReader(ss.open())).lines()) {
             final List<SourceRef> srs = lines.map(this::parseLineToSourceRef).filter(l -> l.startChr != null).collect(Collectors.toList());
-            return new RangeMergeIterator(srs);
+            RangeMergeIterator rmi =  new RangeMergeIterator(srs);
+            rmi.setContext(getContext());
+            return rmi;
         } catch (IOException e) {
             throw new GorSystemException(e);
         }

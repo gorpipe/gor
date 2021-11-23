@@ -577,7 +577,8 @@ public class UTestBucketManager {
         Assert.assertEquals("Incorrect number of bucket folders", bucketDirs.size(), createdBucketFolders.size());
         Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet(bucketDirs), new TreeSet(createdBucketFolders));
         for (Path bucket : buckets) {
-            Assert.assertTrue("Bucket does not exists", Files.exists(table.getRootPath().resolve(bucket)));
+            Assert.assertTrue(String.format("Bucket %s does not exists", PathUtils.resolve(table.getRootPath(), bucket)),
+                    Files.exists(PathUtils.resolve(table.getRootPath(), bucket)));
         }
     }
 

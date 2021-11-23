@@ -28,12 +28,9 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.DefaultFileReader;
-import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.collection.IntArray;
@@ -135,7 +132,7 @@ public class Dictionary {
     }
 
     public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
-        return getDictionary(path, new DefaultFileReader(""), uniqueID, commonRoot, true);
+        return getDictionary(path, ProjectContext.DEFAULT_READER, uniqueID, commonRoot, true);
     }
 
     private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {

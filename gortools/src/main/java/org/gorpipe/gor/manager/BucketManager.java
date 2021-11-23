@@ -384,9 +384,10 @@ public class BucketManager<T extends BucketableTableEntry> {
         }
 
         // Clean up
-
         log.trace("Deleting temp table {}", tempTable.getPath());
-        table.getFileReader().deleteDirectory(tempTable.getFolderUri().toString());
+        if (table.getFileReader().exists(tempTable.getFolderUri().toString())) {
+            table.getFileReader().deleteDirectory(tempTable.getFolderUri().toString());
+        }
         if (table.getFileReader().exists(tempTable.getPathUri().toString())) {
             table.getFileReader().delete(tempTable.getPathUri().toString());
         }

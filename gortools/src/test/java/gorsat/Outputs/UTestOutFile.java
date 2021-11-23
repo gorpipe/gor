@@ -24,9 +24,9 @@ package gorsat.Outputs;
 
 import gorsat.Commands.Output;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.model.DefaultFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.RowBase;
+import org.gorpipe.gor.session.ProjectContext;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +35,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -45,7 +46,7 @@ public class UTestOutFile {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    FileReader fileReader = new DefaultFileReader(".");
+    FileReader fileReader = ProjectContext.DEFAULT_READER;
 
     @Test
     public void emptyGorFile() {
@@ -206,19 +207,19 @@ public class UTestOutFile {
 
     @Test
     public void invalidPathTsvThrowsResourceException() {
-        thrown.expect(GorResourceException.class);
+        thrown.expect(FileSystemException.class);
         OutFile.apply("/this/path/is/invalid.tsv", fileReader, "", false, true, true);
     }
 
     @Test
     public void invalidPathGorThrowsResourceException() {
-        thrown.expect(GorResourceException.class);
+        thrown.expect(FileSystemException.class);
         OutFile.apply("/this/path/is/invalid.gor", fileReader, "", false, false, true);
     }
 
     @Test
     public void invalidPathGorzThrowsResourceException() {
-        thrown.expect(GorResourceException.class);
+        thrown.expect(FileSystemException.class);
         OutFile.apply("/this/path/is/invalid.gorz", fileReader, "", false, false, true);
     }
 }

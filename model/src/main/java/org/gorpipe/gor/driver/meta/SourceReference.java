@@ -49,6 +49,7 @@ public class SourceReference {
     ChromoLookup lookup;
     public final String chrSubset;
     private final String linkSubPath;
+    private boolean isCreatedFromLink = false;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?
@@ -56,55 +57,20 @@ public class SourceReference {
     // - common root and security context are not used in all driver types, shouldn't this rather be a hash map?
     // - should the context hash map be stored as a part of this class or should it enter the chain at some other point?
 
-    /**
-     *
-     * @param url                       url for the source.
-     * @param securityContext
-     * @param commonRoot
-     * @param lookup
-     * @param chrSubset
-     */
     public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset) {
         this(url, securityContext, commonRoot, lookup, chrSubset, null);
     }
 
-    /**
-     *
-     * @param url                       url for the source.
-     * @param securityContext
-     * @param commonRoot
-     * @param lookup
-     * @param chrSubset
-     * @param writeSource
-     */
     public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, boolean writeSource) {
         this(url, securityContext, commonRoot, lookup, chrSubset, null, writeSource);
     }
 
-    /**
-     *
-     * @param url                       url for the source.
-     * @param securityContext
-     * @param commonRoot
-     * @param lookup
-     * @param chrSubset
-     * @param linkSubPath
-     */
     public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, String linkSubPath) {
         this(url,securityContext,commonRoot,lookup,chrSubset,linkSubPath,false);
     }
 
-    /**
-     *
-     * @param url                       url for the source.
-     * @param securityContext
-     * @param commonRoot
-     * @param lookup
-     * @param chrSubset
-     * @param linkSubPath
-     * @param writeSource
-     */
-    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset, String linkSubPath, boolean writeSource) {
+    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup,
+                           String chrSubset, String linkSubPath, boolean writeSource) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -140,7 +106,7 @@ public class SourceReference {
      */
     public SourceReference(String url, SourceReference parentSourceReference, String linkSubPath) {
         this(url, parentSourceReference.getSecurityContext(), parentSourceReference.getCommonRoot(),
-                parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), linkSubPath);
+                parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), linkSubPath, false);
     }
 
     @JsonCreator
@@ -183,6 +149,14 @@ public class SourceReference {
 
     public int[] getColumns() {
         return null;
+    }
+
+    public boolean isCreatedFromLink() {
+        return isCreatedFromLink;
+    }
+
+    public void setCreatedFromLink(boolean createdFromLink) {
+        isCreatedFromLink = createdFromLink;
     }
 
     @Override

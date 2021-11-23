@@ -102,6 +102,15 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
             URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
             table.getFileReader().move(workTempDir.resolve(bucket).toString(), targetBucketPath.toString());
         }
+//        // Move the bucket files from temp to the bucket folder
+//        for (Path bucket : bucketsToCreate.keySet()) {
+//            // Move the bucket files.
+//            URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
+//            table.getFileReader().move(workTempDir.resolve(bucket.getFileName()).toString(), targetBucketPath.toString());
+//            if (Files.exists(Path.of(workTempDir.resolve(bucket.getFileName() + ".meta").toString()))) {
+//                table.getFileReader().move(workTempDir.resolve(bucket.getFileName() + ".meta").toString(), targetBucketPath.toString() + ".meta");
+//            }
+//        }
 
         deleteIfTempBucketizingFolder(workTempDir, table);
     }

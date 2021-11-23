@@ -20,26 +20,20 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.model;
+package org.gorpipe.s3.shared;
 
-/**
- * @version $Id$
- */
-public final class GorFileReaderContext {
+import org.gorpipe.base.config.annotations.Documentation;
+import org.gorpipe.s3.driver.S3Configuration;
 
-    public static final FileReader DEFAULT_READER;
-    public static final FileReader SIMPLE_READER = new DefaultFileReader(null);
+public interface S3SharedConfiguration extends S3Configuration {
 
-    static boolean fileReaderFallback() {
-        return System.getProperty("gor.filereader.fallback") != null;
-    }
+    @Documentation("Should S3 shared resources use fallback")
+    @Key("GOR_S3_SHARED_USE_FALLBACK")
+    @DefaultValue("true")
+    boolean useFallback();
 
-    static {
-        if (fileReaderFallback()) {
-            DEFAULT_READER = SIMPLE_READER;
-        } else {
-            DEFAULT_READER = new DriverBackedFileReader(null);
-        }
-    }
-
+    @Documentation("Should S3 shared resources only be accessible using links on server")
+    @Key("GOR_S3_SHARED_ONLY_ACCESS_WITH_LINKS_ON_SERVER")
+    @DefaultValue("true")
+    boolean onlyAccessWithLinksOnServer();
 }

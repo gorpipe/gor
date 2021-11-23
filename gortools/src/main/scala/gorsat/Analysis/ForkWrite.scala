@@ -28,8 +28,7 @@ import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper
+import org.gorpipe.gor.driver.DataSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.PathUtils
@@ -274,14 +273,36 @@ case class ForkWrite(forkCol: Int,
       })
     }
 
-    if (options.linkFile.nonEmpty) {
-      val projectContext = session.getProjectContext
-      val linkFile = if (options.linkFile.endsWith(".link")) options.linkFile else options.linkFile+".link"
-      val os = projectContext.getFileReader.getOutputStream(linkFile)
-      val absPath = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName else Paths.get(projectContext.getProjectRoot).resolve(fullFileName).toString
-      os.write(absPath.getBytes())
-      os.write('\n')
-      os.close()
+    val (linkFile,linkFileContent) = extractLink()
+
+    if (linkFile.nonEmpty) {
+      writeLinkFile(linkFile, linkFileContent)
     }
+  }
+
+  private def extractLink() : (String,String) = {
+    var linkFile = options.linkFile
+    var linkFileContent = ""
+    if (!fullFileName.isEmpty) {
+      if (linkFile.isEmpty) {
+          val dataSource = session.getProjectContext.getFileReader.resolveUrl(fullFileName, true)
+          if (dataSource != null && dataSource.forceLink()) {
+            linkFile = dataSource.getLinkFile()
+            linkFileContent = dataSource.getLinkFileContent()
+          }
+      } else {
+        linkFileContent = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName
+        else Paths.get(session.getProjectContext.getProjectRoot).resolve(fullFileName).toString
+      }
+    }
+    (linkFile,linkFileContent)
+  }
+
+  private def writeLinkFile(linkFile: String, linkFileContent: String) : Unit = {
+    val linkFileToWrite = if (linkFile.endsWith(".link")) linkFile else linkFile+".link"
+    val os = session.getProjectContext.getFileReader.getOutputStream(linkFileToWrite)
+    os.write(linkFileContent.getBytes())
+    os.write('\n')
+    os.close()
   }
 }

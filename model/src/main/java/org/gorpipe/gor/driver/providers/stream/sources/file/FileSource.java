@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
+import com.google.protobuf.DescriptorProtos;
+import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -33,10 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
 
@@ -187,6 +186,17 @@ public class FileSource implements StreamSource {
     @Override
     public boolean exists() {
         return Files.exists(file);
+    }
+
+    @Override
+    public String move(DataSource dest) throws IOException {
+        return Files.move(Path.of(getFullPath()), Path.of(dest.getFullPath()),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE).toString();
+    }
+
+    @Override
+    public String copy(DataSource dest) throws IOException {
+        return Files.copy(Path.of(getFullPath()), Path.of(dest.getFullPath())).toString();
     }
 
     @Override

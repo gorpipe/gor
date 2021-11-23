@@ -30,6 +30,7 @@ import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ public class QueryCommand extends HelpOptions implements Runnable{
     private File aliasFile;
 
     @CommandLine.Option(names={"-d","--cachedir"}, description = "Path to cache directory for the current gor query.")
-    private Path cacheDir = Paths.get(System.getProperty("java.io.tmpdir"));
+    private Path cacheDir = Paths.get(ProjectContext.DEFAULT_CACHE_DIR);
 
     @CommandLine.Option(defaultValue = "", names={"-p","--projectroot"}, description = "Sets the project root for the current gor query.")
     private Path projectRoot;

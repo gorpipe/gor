@@ -74,7 +74,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         return new S3Source(client, sourceReference);
     }
 
-    private AmazonS3Client getClient(String securityContext, String bucket) throws IOException {
+    protected AmazonS3Client getClient(String securityContext, String bucket) throws IOException {
         BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
         return clientCache.getClient(creds, bucket);
     }

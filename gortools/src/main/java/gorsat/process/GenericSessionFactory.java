@@ -43,7 +43,7 @@ public class GenericSessionFactory extends GorSessionFactory {
     private String configFile = "";
 
     public GenericSessionFactory() {
-        cacheDir = System.getProperty("java.io.tmpdir");
+        cacheDir = ProjectContext.DEFAULT_CACHE_DIR;
     }
 
     public GenericSessionFactory(String root, String cacheDir) {

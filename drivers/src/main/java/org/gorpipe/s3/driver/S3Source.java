@@ -24,10 +24,11 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import com.google.api.gax.rpc.PermissionDeniedException;
+import com.google.common.base.Strings;
 import com.upplication.s3fs.S3FileSystem;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
@@ -183,6 +184,11 @@ public class S3Source implements StreamSource {
     @Override
     public SourceType getSourceType() {
         return S3SourceType.S3;
+    }
+
+    @Override
+    public GorIndexType useIndex() {
+        return GorIndexType.CHROMINDEX;
     }
 
     @Override

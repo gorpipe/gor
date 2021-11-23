@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.model;
 
+import gorsat.process.CLISessionFactory;
+import gorsat.process.PipeOptions;
 import org.gorpipe.gor.model.DefaultChromoLookup;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.SourceRef;
@@ -143,7 +145,8 @@ public class UTestStdInGenomicIterator {
     private GenomicIterator getIterator(String contents) throws IOException {
         System.setIn(new ByteArrayInputStream(contents.getBytes()));
 
-        GenomicIterator iterator = SourceRef.STANDARD_IN.iterate(new DefaultChromoLookup(), null);
+        GenomicIterator iterator = SourceRef.STANDARD_IN.iterate(new DefaultChromoLookup(), null,
+                new CLISessionFactory(new PipeOptions(), null).create());
         return iterator;
     }
 }

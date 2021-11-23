@@ -151,7 +151,8 @@ public class RangeMergeIterator extends GenomicIteratorBase {
     }
 
     private GenomicIterator getIterator(int idx) throws IOException {
-        GenomicIterator nextIt = this.sources.get(idx).iterate(new DefaultChromoLookup(), null);
+        GenomicIterator nextIt = this.sources.get(idx).iterate(new DefaultChromoLookup(), null,
+                getContext() != null ? getContext().getSession() : null);
         nextIt.init(null);
         if (this.rf != null) {
             nextIt = nextIt.filter(this.rf);

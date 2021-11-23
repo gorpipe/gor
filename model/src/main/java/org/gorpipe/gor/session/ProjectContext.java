@@ -26,10 +26,11 @@ import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.gorpipe.client.FileCache;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.reference.ReferenceBuild;
-import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.model.GorParallelQueryHandler;
-import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.model.gor.iterators.RefSeq;
 import org.gorpipe.model.gor.iterators.RefSeqFactory;
@@ -50,6 +51,10 @@ import java.util.Map;
  * reference build, file reader, file cache etc. It supports a Builder pattern to initialize the context.
  */
 public class ProjectContext {
+
+    public static final FileReader DEFAULT_READER = new DriverBackedFileReader("", ".", null);
+    public static final String DEFAULT_CACHE_DIR = System.getProperty("java.io.tmpdir");
+
     private String aliasFile;
     private String configFile;
     private String varJoinType = VARIANT_JOIN_TYPE_DEFAULT;
@@ -66,22 +71,22 @@ public class ProjectContext {
 
     private static final String VARIANT_JOIN_TYPE_KEY = "varjointype";
     private static final String VARIANT_JOIN_TYPE_DEFAULT = "undefined";
-    private List<String> writeLocations;
+
+    private ProjectContext() {}
 
     public static class Builder {
 
         private String aliasFile = "gor_aliases.txt";
         private String configFile = "gor_config.txt";
-        private String cacheDir;
+        private String cacheDir = DEFAULT_CACHE_DIR;
         private String logDirectory;
-        private String root;
+        private String root = ".";
         private String projectName;
-        private FileReader fileReader;
+        private FileReader fileReader = DEFAULT_READER;
         private FileCache fileCache;
         private GorParallelQueryHandler queryHandler;
         private QueryEvaluator queryEvaluator;
         private RefSeqFactory refSeqFactory;
-        private List<String> writeLocations = new ArrayList<>();
 
         public Builder setAliasFile(String aliasFile) {
             this.aliasFile = aliasFile;
@@ -138,11 +143,6 @@ public class ProjectContext {
             return this;
         }
 
-        public Builder setWriteLocations(List<String> locations) {
-            this.writeLocations = locations;
-            return this;
-        }
-
         public ProjectContext build() {
             ProjectContext projectContext = new ProjectContext();
             projectContext.root = root;
@@ -156,11 +156,9 @@ public class ProjectContext {
             projectContext.queryEvaluator = queryEvaluator;
             projectContext.queryHandler = queryHandler;
             projectContext.refSeqFactory = refSeqFactory;
-            projectContext.writeLocations = writeLocations;
             return projectContext;
         }
     }
-
 
     public RefSeq createRefSeq() {
         if (refSeqFactory == null) {
@@ -210,41 +208,6 @@ public class ProjectContext {
         return getRealProjectRootPath().toString();
     }
 
-    public void validateWriteAllowed(String filename) throws GorResourceException {
-        validateServerFileName(filename, getProjectRoot(), false);
-        isWithinAllowedFolders(filename);
-    }
-
-    private void isWithinAllowedFolders(String filename) {
-        Path filePath = Paths.get(filename).normalize();
-        for (String location : writeLocations) {
-            if (filePath.startsWith(location)) {
-                return;
-            }
-        }
-        String message = String.format("Invalid File Path: File path not within folders allowed! Path given: %s. " +
-                "Write locations are %s", filename, Arrays.toString(this.getWriteLocations()));
-        throw new GorResourceException(message, filename);
-    }
-
-    public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException {
-        if (PathUtils.isLocal(filename) && !allowAbsolutePath) {
-            Path filePath = Paths.get(filename);
-            var realProjectRoot = Paths.get(projectRoot);
-            if (!filePath.isAbsolute()) {
-                filePath = realProjectRoot.resolve(filePath);
-            }
-            filePath = PathUtils.relativize(realProjectRoot, filePath);
-            if (filePath.isAbsolute() || !filePath.normalize().equals(filePath)) {
-                String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", filename, projectRoot);
-                throw new GorResourceException(message, filename);
-            }
-        }
-    }
-
-    public String[] getWriteLocations() {
-        return writeLocations.toArray(new String[0]);
-    }
 
     public String getGorAliasFile() {
         return this.aliasFile;
