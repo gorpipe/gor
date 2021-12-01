@@ -27,6 +27,7 @@ import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.table.PathUtils;
 import picocli.CommandLine;
 
 import java.io.*;
@@ -44,10 +45,15 @@ public class IndexCommand extends HelpOptions implements Runnable {
             description = "Performs a full index of gor file.")
     private boolean performFullIndex;
 
+    @CommandLine.Option(names={"-p","--indexpath"},
+            defaultValue = "",
+            description = "Path to store the index")
+    private String indexPath;
+
     @CommandLine.Parameters(arity = "1..*",
             paramLabel = "Files",
             description = "Queries to execute. Queries can be direct gor query, files containing gor script or gor report template.")
-    private File[] files;
+    private String[] files;
 
     private long pos = 0;
     private final byte[] buffer = new byte[10000000];
@@ -126,13 +132,21 @@ public class IndexCommand extends HelpOptions implements Runnable {
         return lastbaos;
     }
 
-    private void indexFile(File gorFile) {
-        Path gorindex = Paths.get(gorFile.toString() + ".gori");
+    private void indexFile(String gorFile) {
+        var gorindex = gorFile + ".gori";
+        if (indexPath.length()>0) {
+            if(indexPath.endsWith("/")) {
+                gorindex = indexPath + Paths.get(gorFile).getFileName().toString() + ".gori";
+            } else {
+                gorindex = indexPath + "/" + Paths.get(gorFile).getFileName().toString() + ".gori";
+            }
+        }
 
         try (
-                StreamSource ds = (StreamSource) GorDriverFactory.fromConfig().resolveDataSource(new SourceReferenceBuilder(gorFile.toString()).build());
+                StreamSource ds = (StreamSource) GorDriverFactory.fromConfig().resolveDataSource(new SourceReferenceBuilder(gorFile).build());
                 InputStream is = ds.open();
-                Writer fos = Files.newBufferedWriter(gorindex)
+                StreamSource ids = (StreamSource) GorDriverFactory.fromConfig().resolveDataSource(new SourceReferenceBuilder(gorindex).build());
+                Writer fos = new OutputStreamWriter(ids.getOutputStream());
         ) {
             fos.write("## fileformat=GORIv2\n");
             while (i == r) {
@@ -169,7 +183,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
 
     @Override
     public void run() {
-        for (File file : files) {
+        for (String file : files) {
             indexFile(file);
         }
     }
