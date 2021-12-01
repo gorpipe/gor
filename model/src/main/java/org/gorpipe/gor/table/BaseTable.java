@@ -813,8 +813,9 @@ public abstract class BaseTable<T extends BucketableTableEntry> {
         return configValue != null ? Boolean.valueOf(configValue) : def;
     }
 
-    public static Boolean inferShouldBucketizeFromFile(String fileName) {
-        String type = FilenameUtils.getExtension(fileName);
+    public Boolean inferShouldBucketizeFromFile(String fileName) {
+        DataSource source = getFileReader().resolveUrl(fileName);
+        String type = FilenameUtils.getExtension(source.getFullPath());
 
         if ("gor".equalsIgnoreCase(type) || "gorz".equalsIgnoreCase(type)) {
             return true;

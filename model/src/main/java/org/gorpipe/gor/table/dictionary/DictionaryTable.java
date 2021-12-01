@@ -209,6 +209,7 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         DictionaryTable table = new Builder<>(tablePath.toUri()).useHistory(true)
                 .securityContext("").validateFiles(false).build();
         table.insert(data);
+        table.setBucketize(true);
         table.save();
         return table;
     }

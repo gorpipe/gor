@@ -689,18 +689,32 @@ public class UTestBaseTable {
     }
 
     @Test
-    public void testInferShouldBucketizeFromFile() {
-        Assert.assertTrue(BaseTable.inferShouldBucketizeFromFile("x.gor"));
-        Assert.assertTrue(BaseTable.inferShouldBucketizeFromFile("x.gorz"));
-        Assert.assertTrue(BaseTable.inferShouldBucketizeFromFile("/a/c/b/x.gor"));
+    public void testInferShouldBucketizeFromFile() throws IOException {
+        gordFile = workDirPath.resolve("dict.gord");
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
 
-        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.bam"));
-        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.cram"));
-        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("/a/b/c.bam"));
-        Assert.assertFalse(BaseTable.inferShouldBucketizeFromFile("y.vcf"));
+        Assert.assertTrue(dict.inferShouldBucketizeFromFile("x.gor"));
+        Assert.assertTrue(dict.inferShouldBucketizeFromFile("x.gorz"));
+        Assert.assertTrue(dict.inferShouldBucketizeFromFile("/a/c/b/x.gor"));
 
-        Assert.assertNull(BaseTable.inferShouldBucketizeFromFile("y"));
-        Assert.assertNull(BaseTable.inferShouldBucketizeFromFile(""));
+        Assert.assertFalse(dict.inferShouldBucketizeFromFile("y.bam"));
+        Assert.assertFalse(dict.inferShouldBucketizeFromFile("y.cram"));
+        Assert.assertFalse(dict.inferShouldBucketizeFromFile("/a/b/c.bam"));
+        Assert.assertFalse(dict.inferShouldBucketizeFromFile("y.vcf"));
+
+        Assert.assertNull(dict.inferShouldBucketizeFromFile("y"));
+        Assert.assertNull(dict.inferShouldBucketizeFromFile(""));
+    }
+
+    @Test
+    public void testInferShouldBucketizeFromLinkFile() throws IOException {
+        gordFile = workDirPath.resolve("dict.gord");
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
+
+        Path linkFile1 = Files.write(workDirPath.resolve("a.link"), "/x.gor\n".getBytes());
+        Path linkFile2 = Files.write(workDirPath.resolve("b.link"), "/y.bam\n".getBytes());
+        Assert.assertTrue(dict.inferShouldBucketizeFromFile(linkFile1.toString()));
+        Assert.assertFalse(dict.inferShouldBucketizeFromFile(linkFile2.toString()));
     }
 
     @Test

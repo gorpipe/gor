@@ -537,6 +537,7 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
+        dummyTable.setBucketize(true);
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 

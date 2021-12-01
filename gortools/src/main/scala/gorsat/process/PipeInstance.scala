@@ -35,9 +35,9 @@ import gorsat.Monitors.{CancelMonitor, MemoryMonitor, TimeoutMonitor}
 import gorsat.Script.{ScriptEngineFactory, ScriptExecutionEngine, ScriptParsers}
 import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat._
-import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
-import gorsat.process.GorJavaUtilities.CmdParams
-import gorsat.process.GorPipe.brsConfig
+import gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
+import process.GorJavaUtilities.CmdParams
+import process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator}
 import org.gorpipe.gor.monitor.GorMonitor
