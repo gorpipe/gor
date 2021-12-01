@@ -57,7 +57,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
       throw new GorParsingException("Parallel requires -parts option")
     }
 
-    val taskExecutionLimit = CommandParseUtilities.intValueOfOptionWithDefault(options, "-limit", 1000 )
+    val taskExecutionLimit = CommandParseUtilities.intValueOfOptionWithDefault(options, "-limit", 10000 )
     val parallelQuery = CommandParseUtilities.parseNestedCommand(inputArguments.head)
     val inputSource1 = SourceProvider(CommandParseUtilities.stringValueOfOption(options, "-parts"), context, executeNor = true, isNor = false)
     val partsSource = inputSource1.source

@@ -76,7 +76,7 @@ class UTestPartGorPartitions extends AnyFunSuite {
     val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,500), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partsize",150), buckmap, server = false)
 
-    assert(partitions.size == 3)
+    assert(partitions.size == 4)
 
     partitions.foreach { t =>
       assert (t._2.length < 170)

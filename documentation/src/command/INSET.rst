@@ -27,8 +27,6 @@ Options
 +---------------+-----------------------------------------------------------------------------+
 | ``-b``        | Return 1 (true) or 0 (false) to indicate set membership.                    |
 +---------------+-----------------------------------------------------------------------------+
-| ``-n name``   | Override the default value output column name (inSet).                      |
-+---------------+-----------------------------------------------------------------------------+
 | ``-not``      | Negate the condition, i.e. NOTINSET.                                        |
 +---------------+-----------------------------------------------------------------------------+
 | ``-ordered``  | Assume the data is ordered for the columns on which the lookup is based.    |
