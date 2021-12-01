@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="pgor">
-<span id="id1"></span><h1>PGOR<a class="headerlink" href="#pgor" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="pgor-1">
+<span id="pgor"></span><h1>PGOR<a class="headerlink" href="#pgor-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#pgor"><span class="std std-ref">PGOR</span></a> command is essentially a syntactic sugar for a query with CREATE statement.  The PGOR statement <em>cannot</em> be used within nested-queries.  In the current implementation, the optional attributes must also appear before the file source or nested query.</p>
 <p>When no split attribute is provided, the PGOR command uses the build split configuration file to specify the split partitions.  Typically, such configuration files partition the larger chromosomes into two partitions, separated on the centromeres.  If any of the commands GROUP, GRANNO, RANK, or SORT are present in the query using binsize other than 1 base, only whole chromosomes (contigs) are used, avoiding boundary effect issues arising from partition of query range.</p>
 <section id="usage">
@@ -177,10 +177,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 27%" />
-<col style="width: 73%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-split</span> <span class="pre">value[:overlap]</span></code></p></td>
 <td><p>If the split value is smaller or equal to 1000, it represents the number of

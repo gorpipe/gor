@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,14 +159,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="granno">
-<span id="id1"></span><h1>GRANNO<a class="headerlink" href="#granno" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="granno-1">
+<span id="granno"></span><h1>GRANNO<a class="headerlink" href="#granno-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#granno"><span class="std std-ref">GRANNO</span></a> command is a “single-pass” aggregation and annotation. GRANNO adds annotation columns to the output stream for all the rows that fall into the given binsize in addition to those that would normally be added by the GROUP command.</p>
 <p>When using <strong>GRANNO</strong> in a gor query, the command takes a binsize parameter, which divides the entire range of values into a series of intervals. The command then annotates the values falling into each interval.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Using GRANNO in a nor query omits the <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter.</p>
-</div>
+</aside>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GRANNO</span> binsize [ attributes ]
@@ -179,10 +179,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 84%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-count</span></code></p></td>
 <td><p>Return the count for each bin.</p></td>

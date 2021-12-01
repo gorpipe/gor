@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -193,8 +193,8 @@
 <span id="columnmodifications"></span><h1>Column Modifications<a class="headerlink" href="#column-modifications" title="Permalink to this headline">¶</a></h1>
 <p>In this chapter, we will be going through several of the commands in the GOR query language that allow us to add columns to the GOR stream by calculating data and manipulating the columns’ titles in various ways to organize the data better.</p>
 <p>To show examples of column modifications, we will be taking the example of the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table shown below:</p>
-<table class="colwidths-given docutils align-default" id="id1">
-<caption><span class="caption-text">#dbsnp# (showing different Indel examples)</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-1">
+<caption><span class="caption-text">#dbsnp# (showing different Indel examples)</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 13%" />
 <col style="width: 25%" />
@@ -256,8 +256,8 @@
 <section id="calculated-columns">
 <span id="addingcalccolumns"></span><h2>Calculated Columns<a class="headerlink" href="#calculated-columns" title="Permalink to this headline">¶</a></h2>
 <p>Using the <a class="reference internal" href="command/CALC.html#calc"><span class="std std-ref">CALC</span></a> command in a GOR query, we can add columns to the GOR output. For example, we can add a column that shows the length of the reference string using the same <strong>len</strong> function that we used in the <a class="reference internal" href="command/WHERE.html#where"><span class="std std-ref">WHERE</span></a> from the above query.</p>
-<table class="colwidths-given docutils align-default" id="id2">
-<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-2">
+<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#table-2" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 11%" />
 <col style="width: 22%" />
@@ -335,7 +335,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Care should be taken when replacing columns with calculated content that the name of the column still makes sense.</p>
-</div>
+</aside>
 </section>
 <section id="prefix-and-rename">
 <h2>Prefix and Rename<a class="headerlink" href="#prefix-and-rename" title="Permalink to this headline">¶</a></h2>
@@ -350,8 +350,8 @@
 <h3>More about prefixes<a class="headerlink" href="#more-about-prefixes" title="Permalink to this headline">¶</a></h3>
 <p>It can be useful, particularly when working with <a class="reference internal" href="joiningTables.html#joiningtables"><span class="std std-ref">joins</span></a>, to add prefixes to column names to the columns that come from one of the sources to distinguish between analogous columns from two or more tables. However, the <a class="reference internal" href="command/PREFIX.html#prefix"><span class="std std-ref">PREFIX</span></a> command can be used to prefix any column name.</p>
 <p>Using our <a class="reference internal" href="command/CALC.html#calc"><span class="std std-ref">CALC</span></a> example from above, we could prefix the calculated column with a <em>calc_</em> as shown below:</p>
-<table class="colwidths-given docutils align-default" id="id3">
-<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-3">
+<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#table-3" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 11%" />
 <col style="width: 22%" />
@@ -421,15 +421,15 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It is not necessary to add the underscore to the prefix that you specify in the query. The underscore is added automatically.</p>
-</div>
+</aside>
 </section>
 </section>
 <section id="adding-row-numbers">
 <h2>Adding Row Numbers<a class="headerlink" href="#adding-row-numbers" title="Permalink to this headline">¶</a></h2>
 <p>It is possible to add a column with row numbers to the GOR output by using the <a class="reference internal" href="command/ROWNUM.html#rownum"><span class="std std-ref">ROWNUM</span></a> command. Rows in the output will be given unique, sequential row numbers, based on the number of rows that have been passed through the query.</p>
 <p>The <a class="reference internal" href="command/ROWNUM.html#rownum"><span class="std std-ref">ROWNUM</span></a> command takes no extra parameters and can be added to a GOR query as the following example shows:</p>
-<table class="colwidths-given docutils align-default" id="id4">
-<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-4">
+<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#table-4" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 11%" />
 <col style="width: 22%" />
@@ -498,8 +498,8 @@
 <p>The row numbers are added to the output as a column with the title <code class="docutils literal notranslate"><span class="pre">rownum</span></code>.</p>
 <p>Take care when using row numbers with GOR queries containing <a class="reference internal" href="nestedStreams.html#nestedstreams"><span class="std std-ref">nested queries</span></a> as the nested queries are also given unique row numbers by this command, which may lead to unexpected results.</p>
 <p>If we were to add the <a class="reference internal" href="command/ROWNUM.html#rownum"><span class="std std-ref">ROWNUM</span></a> command before (and after) the <a class="reference internal" href="command/WHERE.html#where"><span class="std std-ref">WHERE</span></a> command above, you can see where the filtered data points occur in relation to the whole variant table, which could be useful for data plots. That example is shown below:</p>
-<table class="colwidths-given docutils align-default" id="id5">
-<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-5">
+<caption><span class="caption-text">#dbsnp# (with a calculated column showing the reference length)</span><a class="headerlink" href="#table-5" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 20%" />

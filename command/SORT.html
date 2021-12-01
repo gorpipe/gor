@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="sort">
-<span id="id1"></span><h1>SORT<a class="headerlink" href="#sort" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="sort-1">
+<span id="sort"></span><h1>SORT<a class="headerlink" href="#sort-1" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SORT</strong> command sorts the rows based on the position in cases where the GOR condition has been violated. The SORT command takes one attribute, the binsize, which specifies (in a number of basepairs) the maximum deviation in the order of the stream. If no binsize is provided, or if the provided binsize is illegal, a binsize of 1 is used.</p>
 <p>Sorting is often performed as a pipestep after a columnsort, since it is during a columnsort that the genomic order most often will be violated.</p>
 <p>The SORT command can be memory intensive. Note that the larger the binsize used, the more memory the sort requires. Using <strong>SORT</strong> in a nor query will give an error if <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter is used.</p>
@@ -176,10 +176,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">cols:order</span></code></p></td>
 <td><p>Additional sorting with r (reverse) and n (number) qualifier.</p></td>

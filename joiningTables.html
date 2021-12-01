@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -199,8 +199,8 @@
 <h2>Join conditions<a class="headerlink" href="#join-conditions" title="Permalink to this headline">¶</a></h2>
 <p>We must first consider whether we are joining based on single positions (for example, if we are working with a file that has only the chromosome and the position defined, as is the case with the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table) or based on segments, where the start and stop position are defined in each row (as is the case in a table such as <code class="docutils literal notranslate"><span class="pre">#genes#</span></code>).</p>
 <p>The table below shows a list of the different types of joins that can be performed along with a description of each.</p>
-<table class="colwidths-given docutils align-default" id="id1">
-<caption><span class="caption-text">Types of joins</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-1">
+<caption><span class="caption-text">Types of joins</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 33%" />
 <col style="width: 67%" />
@@ -252,7 +252,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Segment ranges in GOR are zero-based UCSC style, e.g. (start,stop)=(100,200) denotes a genomic segment including bases 101-200, i.e. of length 100bp.</p>
-</div>
+</aside>
 </section>
 <section id="left-joins">
 <span id="leftjoins"></span><h2>Left joins<a class="headerlink" href="#left-joins" title="Permalink to this headline">¶</a></h2>
@@ -273,8 +273,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">TOP</span> 1000 | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #exons# -<span class="no">f</span> 10 | <span class="nb">SELECT</span> 1-10
 </pre></div>
 </div>
-<table class="colwidths-given docutils align-default" id="id2">
-<caption><span class="caption-text">Joining #dbsnp# and #exons#</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-2">
+<caption><span class="caption-text">Joining #dbsnp# and #exons#</span><a class="headerlink" href="#table-2" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 6%" />
 <col style="width: 12%" />

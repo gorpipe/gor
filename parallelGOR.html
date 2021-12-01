@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -266,7 +266,7 @@ parallel -parts [#splits#] &lt;(<span class="nd">gor</span> -<span class="no">p<
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Using PGOR in a nested query is allowed inside a PARTGOR expression.</p>
-</div>
+</aside>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #temp# = partgor -dict #wgsvars# -parts 10 &lt;(<span class="nd">pgor</span> #wgsvars# -<span class="no">f</span> #{tags} | <span class="nb">GROUP</span> chrom -<span class="no">gc</span> <span class="na">PN</span> -<span class="no">count</span>);
 <span class="nd">gor</span> [#temp#] | <span class="nb">GROUP</span> chrom -<span class="no">avg</span> -<span class="no">ic</span> allcount -<span class="no">count</span> | <span class="nb">RENAME</span> avg_allcount variantsPerPN | <span class="nb">RENAME</span> <span class="na">allCount</span> PNcount
 </pre></div>

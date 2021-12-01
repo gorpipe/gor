@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,15 +159,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="cigarsegs">
-<span id="id1"></span><h1>CIGARSEGS<a class="headerlink" href="#cigarsegs" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="cigarsegs-1">
+<span id="cigarsegs"></span><h1>CIGARSEGS<a class="headerlink" href="#cigarsegs-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#cigarsegs"><span class="std std-ref">CIGARSEGS</span></a> command takes the sequence read from a BAM-like stream and splits them into multiple reads based on the CIGAR string. As such, the input must have a column named CIGAR. The <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option can be used to annotate the reads with other columns from the input.</p>
 <p>CIGAR is a string which describes how an individual read aligns with the larger reference sequence. A CIGAR may consist of one or many components, with each component having an operator and a number of bases that the operator applies to. Operators can be DHIMNPSX or =. These are explained in the following table:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 9%" />
-<col style="width: 91%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Operator</p></td>
 <td><p>Description</p></td>
@@ -210,10 +206,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
 <td><p>Annotate the reads with the specified columns from the reads.</p></td>

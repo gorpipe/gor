@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="bases">
-<span id="id1"></span><h1>BASES<a class="headerlink" href="#bases" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="bases-1">
+<span id="bases"></span><h1>BASES<a class="headerlink" href="#bases-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#bases"><span class="std std-ref">BASES</span></a> command splits the sequence read (specifically the <code class="docutils literal notranslate"><span class="pre">SEQ</span></code> column in BAM) into the individual bases, outputting a row for each of the bases and showing the relative position within the read along with the <a class="reference internal" href="../glossary.html#term-base-quality"><span class="xref std std-term">base-quality</span></a>. The MDI label indicates whether the read comes from a match section in the CIGAR, a deletion, or an insert section.</p>
 <p>Note that the readlength is set by default to 1000 basepairs. Setting the length to a lower value can lead to the genomic order of the gor output being violated.</p>
 <section id="usage">
@@ -172,10 +172,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 87%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span></code></p></td>
 <td><p>To specify grouping columns. Used to select extra columns from the input stream such that they show up in the output.</p></td>

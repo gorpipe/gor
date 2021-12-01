@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="varnorm">
-<span id="id1"></span><h1>VARNORM<a class="headerlink" href="#varnorm" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="varnorm-1">
+<span id="varnorm"></span><h1>VARNORM<a class="headerlink" href="#varnorm-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#varnorm"><span class="std std-ref">VARNORM</span></a> command normalises the variation data in a gor stream to the left or right. The column containing the reference and alternate allele must be specified. If neither <code class="docutils literal notranslate"><span class="pre">-left</span></code> nor <code class="docutils literal notranslate"><span class="pre">-right</span></code> is specified, then left normalisation is default.</p>
 <p>If the <code class="docutils literal notranslate"><span class="pre">-trim</span></code> command is used, then any redundant bases in the representations of insertions or deletions will be deleted (i.e. deletions will be represented by empty cells in Call - or in Reference in the case of insertions).</p>
 <p>By default, normalisation is run automatically as part of a VARJOIN command, however, if variants need to be grouped (e.g. for counting or generating horizontal data)
@@ -175,10 +175,6 @@ the use of pre-normalized data and the -norm option in VARJOIN.  The system can 
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 86%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code></p></td>
 <td><p>The variant is denoted as segment, e.g. (chr,bpstart,bpstop,ref,call).</p></td>

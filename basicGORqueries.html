@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -101,7 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#what-are-streams">What are streams?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#source-commands-and-pipe-steps">Source Commands and Pipe Steps</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#other-data-sources">Other Data Sources</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#selecting-by-position">Selecting By Position</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selecting-by-position-1">Selecting By Position</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-multiple-files">Working with Multiple Files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dictionary-tables">Dictionary Tables</a></li>
 </ul>
@@ -206,7 +206,7 @@
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>You can run a query in the Sequence Miner by using the keyboard shortcut: <code class="docutils literal notranslate"><span class="pre">⌘+Enter</span></code> on a Mac or <code class="docutils literal notranslate"><span class="pre">CTRL+Enter</span></code> on a PC.</p>
-</div>
+</aside>
 </section>
 <section id="source-commands-and-pipe-steps">
 <h2>Source Commands and Pipe Steps<a class="headerlink" href="#source-commands-and-pipe-steps" title="Permalink to this headline">¶</a></h2>
@@ -233,10 +233,10 @@ the <a class="reference internal" href="command/GORCMD.html#gorcmd"><span class=
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Note here that the <a class="reference internal" href="command/VERIFYORDER.html#verifyorder"><span class="std std-ref">VERIFYORDER</span></a> command is not required here, since it is implicit in the <a class="reference internal" href="command/WRITE.html#write"><span class="std std-ref">WRITE</span></a> command.</p>
-</div>
+</aside>
 </section>
-<section id="selecting-by-position">
-<span id="id1"></span><h2>Selecting By Position<a class="headerlink" href="#selecting-by-position" title="Permalink to this headline">¶</a></h2>
+<section id="selecting-by-position-1">
+<span id="selecting-by-position"></span><h2>Selecting By Position<a class="headerlink" href="#selecting-by-position-1" title="Permalink to this headline">¶</a></h2>
 <p>It is possible to seek into a GOR stream based on the position. The GOR command has a position selection option (<code class="docutils literal notranslate"><span class="pre">-p</span></code>) that allows it to select a subset of data from a genomic ordered source. For example, if you want to limit your output to only chr10 in the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> reference data, you would execute the following GOR query:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr10 #dbsnp# | <span class="nb">TOP</span> 100
 </pre></div>
@@ -267,7 +267,7 @@ This will combine the data in the files.  Unlike the <code class="docutils liter
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It comparing columns, the number and names of the columns must be the same, but the names are not case-sensitive.</p>
-</div>
+</aside>
 <p>It is not possible to use the GOR command on two files that do not have the same list of columns, thus it would therefore not be possible to have a GOR command like the command below since these two formats have different  columns:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> fileA.vcf fileB.bam
 </pre></div>
@@ -291,7 +291,7 @@ By using the <a class="reference internal" href="command/RENAME.html#rename"><sp
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Dictionaries can contain references to multiple files or they can be meta-dictionaries (i.e. references to multiple dictionaries).</p>
-</div>
+</aside>
 <p>Running a GOR query on <code class="docutils literal notranslate"><span class="pre">#wgsvars#</span></code> will give us a combined result from all the GOR files referenced within.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wgsvars# | <span class="nb">TOP</span> 1000
 </pre></div>
@@ -305,8 +305,8 @@ By using the <a class="reference internal" href="command/RENAME.html#rename"><sp
 </pre></div>
 </div>
 <p>This would show us the contents of the dictionary itself, rather than the GOR output. An example of this is shown below:</p>
-<table class="colwidths-given docutils align-default" id="id2">
-<caption><span class="caption-text">#wgsVars# Dictionary Table</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<table class="docutils align-default" id="table-1">
+<caption><span class="caption-text">#wgsVars# Dictionary Table</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 50%" />
 <col style="width: 50%" />

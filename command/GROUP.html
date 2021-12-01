@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="group">
-<span id="id1"></span><h1>GROUP<a class="headerlink" href="#group" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="group-1">
+<span id="group"></span><h1>GROUP<a class="headerlink" href="#group-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#group"><span class="std std-ref">GROUP</span></a> command allows you to group the output of your query according to a number of different criteria. The <strong>GROUP</strong> command is very similar to the “group by” function in SQL.</p>
 <p>This command groups a set of rows into a set of summary row by values of columns. It returns one row for each group. We often use the GROUP command with aggregate functions such as <code class="docutils literal notranslate"><span class="pre">-count</span></code>, <code class="docutils literal notranslate"><span class="pre">-cdist</span></code>, <code class="docutils literal notranslate"><span class="pre">-min</span></code>, <code class="docutils literal notranslate"><span class="pre">-med</span></code>, <code class="docutils literal notranslate"><span class="pre">-max</span></code>, <code class="docutils literal notranslate"><span class="pre">-dis</span></code>, <code class="docutils literal notranslate"><span class="pre">-set</span></code>, <code class="docutils literal notranslate"><span class="pre">-lis</span></code>, <code class="docutils literal notranslate"><span class="pre">-avg</span></code>, <code class="docutils literal notranslate"><span class="pre">-std</span></code>, and <code class="docutils literal notranslate"><span class="pre">-sum</span></code>.</p>
 <p>The aggregate functions allow us to perform a calculation of a set of rows while grouping.</p>
@@ -177,10 +177,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-count</span></code></p></td>
 <td><p>Return the count for each bin.</p></td>
@@ -250,10 +246,6 @@ exceeds the maximum length.</p></td>
 attribute defines it as a string type. Any column defined with the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option and is a part of the following aggregation
 options <code class="docutils literal notranslate"><span class="pre">-sc</span></code>, <code class="docutils literal notranslate"><span class="pre">-ic</span></code> or <code class="docutils literal notranslate"><span class="pre">-fc</span></code> will result in an error</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-sc</span></code></p></td>
 <td><p>Works with -max, -min and -med.</p></td>

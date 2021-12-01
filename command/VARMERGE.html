@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="varmerge">
-<span id="id1"></span><h1>VARMERGE<a class="headerlink" href="#varmerge" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="varmerge-1">
+<span id="varmerge"></span><h1>VARMERGE<a class="headerlink" href="#varmerge-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#varmerge"><span class="std std-ref">VARMERGE</span></a> command ensures that overlapping variants, represented as reference sequence and alternative sequence, are denoted in an equivalent manner.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-seg</span></code> option is used to indicate if the variants are denoted with zero-based segments (e.g. Chrom,bpStart,bpStop,Ref,Alt) as opposed to the default one-based position format (e.g. Chrom,Pos,Ref,Alt).</p>
 <p>By default the variants are represented in a right-normalized format such that SNPs have one letter notation and InDels have an identical base in the first letter of refcol and altcol.  The <code class="docutils literal notranslate"><span class="pre">-nonorm</span></code> option does skip the normalization step and represents the variants with the maximum span of the reference sequence (depends on the overlap between reference sequences in the input stream).</p>
@@ -176,10 +176,6 @@ and the use of the -norm option in VARJOIN.</p>
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 85%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code></p></td>
 <td><p>The variant is denoted as segment, e.g. (chr,bpstart,bpstop,ref,call).</p></td>

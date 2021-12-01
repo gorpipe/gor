@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="write">
-<span id="id1"></span><h1>WRITE<a class="headerlink" href="#write" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="write-1">
+<span id="write"></span><h1>WRITE<a class="headerlink" href="#write-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#write"><span class="std std-ref">WRITE</span></a> command can be used to write a stream into one or more files simultaneously.</p>
 <p>By specifying a “fork” column, with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, you must also specify the column that is used to fork the output files.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-d</span></code> option can be used to write the fork files to directories instead of spliting filenames with #{fork}.</p>
@@ -175,10 +175,6 @@
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">column</span></code></p></td>
 <td><p>The “fork column” used to split the output into multiple files.</p></td>

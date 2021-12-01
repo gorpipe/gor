@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="map">
-<span id="id1"></span><h1>MAP<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="map-1">
+<span id="map"></span><h1>MAP<a class="headerlink" href="#map-1" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#map"><span class="std std-ref">MAP</span></a> command is used to join tables in GOR and NOR queries based on a one-to-one relation between columns
 other than chromosome and position. The column specified must exist in both sources, although the match on column name
 is not case-sensitive.</p>
@@ -183,10 +183,6 @@ e.g | map &lt;(nor phenotypes.tsv | where code ~ ‘ICD9.*’ | select subject,c
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 87%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">columns</span></code></p></td>
 <td><p>The columns (comma separated) on which the lookup is based.</p></td>

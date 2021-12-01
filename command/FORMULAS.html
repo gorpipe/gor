@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -159,16 +159,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="formulas">
-<span id="id1"></span><h1>FORMULAS<a class="headerlink" href="#formulas" title="Permalink to this headline">¶</a></h1>
+  <section id="formulas-1">
+<span id="formulas"></span><h1>FORMULAS<a class="headerlink" href="#formulas-1" title="Permalink to this headline">¶</a></h1>
 <p>The following tables contain all formulas that can be used in WHERE and CALC expressions in GOR queries.</p>
 <section id="boolean-functions">
 <h2>Boolean Functions<a class="headerlink" href="#boolean-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IF(cond,any,any)</span> <span class="pre">:</span> <span class="pre">any</span></code></p></td>
 <td><p>Return the second parameter if the condition expression is true,
@@ -203,10 +199,6 @@ Also try CONTAINSANY, CSCONTAINSANY, CSCONTAINSCOUNT, LISTHASCOUNT, and CSLISTHA
 <section id="type-and-string-conversion">
 <h2>Type and String Conversion<a class="headerlink" href="#type-and-string-conversion" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 29%" />
-<col style="width: 71%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">STR(num)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Convert number to string.</p></td>
@@ -294,10 +286,6 @@ e.g. with single brackets.</p></td>
 <section id="algebraic-functions">
 <h2>Algebraic Functions<a class="headerlink" href="#algebraic-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 28%" />
-<col style="width: 72%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FLOOR()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>Floor value, e.g. the largest integer that is smaller or equal.</p></td>
@@ -359,10 +347,6 @@ e.g. with single brackets.</p></td>
 <section id="trigonometric-functions">
 <h2>Trigonometric Functions<a class="headerlink" href="#trigonometric-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 74%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SIN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
 <td><p>Sine based on radians.</p></td>
@@ -388,10 +372,6 @@ e.g. with single brackets.</p></td>
 <section id="statistical-functions">
 <h2>Statistical Functions<a class="headerlink" href="#statistical-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHI(int,int,int,int)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
 <td><p>The chi-squared value in a 2x2 table.</p></td>
@@ -436,10 +416,6 @@ See <a class="reference external" href="http://acs.lbl.gov/software/colt/api/cer
 <section id="list-functions">
 <h2>List Functions<a class="headerlink" href="#list-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 33%" />
-<col style="width: 67%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFIRST(string[,sep])</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
 <td><p>First element in a comma separated list, e.g. the head, with an optional separator argument.</p></td>
@@ -542,10 +518,6 @@ separator argument.</p></td>
 <section id="genomic-specific-functions">
 <h2>Genomic-Specific Functions<a class="headerlink" href="#genomic-specific-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HAPLDIFF(str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>The Hamming-like distance between two haplotype strings.</p></td>
@@ -612,10 +584,6 @@ Returns the number of identical allels based on all pairwise comparisons between
 <section id="date-functions">
 <h2>Date Functions<a class="headerlink" href="#date-functions" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATE()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
 <td><p>The current time in the format ‘yyyy-MM-dd HH:mm:ss’.</p></td>
@@ -648,10 +616,6 @@ and edate(long, string). Example: epoch(‘16/06/2017’,’dd/MM/yyyy’).</p><
 <section id="diagnostic-functions">
 <h3>Diagnostic Functions<a class="headerlink" href="#diagnostic-functions" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TIME()</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>The time in milli seconds since the query started.</p></td>
@@ -716,10 +680,6 @@ and edate(long, string). Example: epoch(‘16/06/2017’,’dd/MM/yyyy’).</p><
 <section id="version-information">
 <h3>Version Information<a class="headerlink" href="#version-information" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GORVERSION()</span> <span class="pre">:</span> <span class="pre">string</span></code></p></td>
 <td><p>Returns the GOR version</p></td>

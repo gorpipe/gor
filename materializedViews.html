@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -212,7 +212,7 @@
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>As with CREATE commands, the DEF command must be terminated with a semi-colon.</p>
-</div>
+</aside>
 <p>The macro shown below which we call “prefixes”, takes the two variables (<code class="docutils literal notranslate"><span class="pre">$1</span></code> and <code class="docutils literal notranslate"><span class="pre">$2</span></code>) and uses them as prefixes for columns #3 and #4. As we can see in the second line, the macro is then given two values for the variables <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, which are then prepended onto the Reference and Call columns of the single row returned from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> prefixes($1,$2) = <span class="nb">PREFIX</span> #3 $1 | <span class="nb">PREFIX</span> #4 $2;
 <span class="nd">gor</span> #dbsnp# | <span class="nb">TOP</span> 1 | prefixes(A,B)
@@ -222,7 +222,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>A list of pre-defined functions can be found on the <a class="reference internal" href="functions.html#predefinedfunctions"><span class="std std-ref">chapter on Functions</span></a>.</p>
-</div>
+</aside>
 </section>
 <section id="reusing-virtual-relations">
 <span id="reusingvirtualrelations"></span><h2>Reusing Virtual Relations<a class="headerlink" href="#reusing-virtual-relations" title="Permalink to this headline">¶</a></h2>

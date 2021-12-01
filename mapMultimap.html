@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -198,7 +198,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>A map file in the reference data typically has a <code class="docutils literal notranslate"><span class="pre">.map</span></code> file extension, although any tab-separated value file can be used.</p>
-</div>
+</aside>
 <p>As you can see in the following example, we use the map command to join the two tables by setting the column (using the <code class="docutils literal notranslate"><span class="pre">-c</span></code> option) that we want to use for the mapping. The column specified must exist in both sources, although the match on column name is not case-sensitive. To get the headers from the mapped table in the output stream, you can use the <code class="docutils literal notranslate"><span class="pre">-h</span></code> option.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> ref/ensgenes/ensgenes.map -c <span class="na">Gene_Symbol</span> -h
 </pre></div>
@@ -238,7 +238,7 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>While it is not necessary to use a specific file type with this, the reference data does use the file extension <code class="docutils literal notranslate"><span class="pre">.mmap</span></code> to indicate a mapfile with a one-to-many relation.</p>
-</div>
+</aside>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MULTIMAP</span> ref/ensgenes/ensgenes_gene2pathway.mmap -h -c <span class="na">Gene_Symbol</span>
 </pre></div>
 </div>
