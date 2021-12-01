@@ -276,15 +276,26 @@ object PartGor {
       var splitSize = suggestedSplitSize
       val usedParts = bucketTagsCount.map(x => x._2._1.size).sum
       var bucketSize = 1
-      bucketTagsCount.filter(x => x._1 != "").foreach(x => if (x._2._2 > bucketSize) bucketSize = x._2._2)
+      bucketTagsCount.filter(x => x._1 != "").foreach(x => if (x._2._1.size > bucketSize) bucketSize = x._2._1.size)
       if (bucketSize == 1) bucketSize = 100
-      if (suggestedSplitSize < 1) splitSize = (usedParts.toFloat / bucketSize + 0.5).toInt.max(1)
+      if (suggestedSplitSize < 1) splitSize = (usedParts.toFloat / bucketSize + 0.9999).toInt.max(1)
       targetGroupSize = 1.max(Math.round((usedParts * 1.0) / splitSize).toInt)
-      if (suggestedSplitSize != -1 && bucketSize != 1 && (targetGroupSize - bucketSize).toFloat / bucketSize < 0.25) {
+      /*
+      System.out.println("bucketSize "+bucketSize)
+      System.out.println("splitSize "+splitSize)
+      System.out.println("targetGroupSize1 "+targetGroupSize)
+      System.out.println("suggestedSplitSize "+suggestedSplitSize)
+      System.out.println("alpha "+((targetGroupSize - bucketSize).toFloat / bucketSize ))
+      */
+
+      if (suggestedSplitSize == -1 && bucketSize != 1 && Math.abs((targetGroupSize - bucketSize).toFloat / bucketSize) < 0.25) {
         targetGroupSize = bucketSize
+        System.out.println("targetGroupSize2 "+targetGroupSize)
       }
+
       if (bucketTagsCount.keys.exists(_ == "")) {
         splitSize += 1 + bucketTagsCount("")._1.size / targetGroupSize
+        System.out.println("splitSize "+splitSize)
       }
 
       splitIntoPartitions(splitSize)
@@ -296,18 +307,24 @@ object PartGor {
       var bucketSize = 1
       bucketTagsCount.filter(x => x._1 != "").foreach(x => if (x._2._2 > bucketSize) bucketSize = x._2._2)
       if (bucketSize == 1) bucketSize = 100
-      var splitSize = (usedParts.toFloat / partSize + 0.5).toInt.max(1)
+      var splitSize = (usedParts.toFloat / partSize + 0.999999).toInt.max(1)
 
+      // System.out.println("usedParts "+usedParts)
+      // System.out.println("splitSize "+splitSize)
 
-      if (bucketTagsCount.keys.exists(_ == "")) {
+      /* if (bucketTagsCount.keys.exists(_ == "")) {
         splitSize += 1 + bucketTagsCount("")._1.size / partSize
-      }
+      } */
 
+      targetGroupSize = partSize.max(1) /* (usedParts.toFloat/splitSize).toInt.max(1) a global variable use in splitIntoPartitions */
       splitIntoPartitions(splitSize)
     }
 
     def splitIntoPartitions(numberOfParts: Int): scala.collection.immutable.Map[String, List[String]] = {
       for (i <- 1 to numberOfParts) splitGroup += (i.toString -> Nil)
+
+      // System.out.println("numberOfParts "+numberOfParts)
+      // System.out.println("targetGroupSize "+targetGroupSize)
 
       for (useUnbuckettized <- List(false, true)) {
         var keepOn = true
@@ -332,7 +349,7 @@ object PartGor {
     def splitToPartScale(partScale: Double): Predef.Map[String, List[String]] = {
       // Find the maximum bucket size
       var bucketSize = 1
-      bucketTagsCount.filter(x => x._1 != "").foreach(x => if (x._2._2 > bucketSize) bucketSize = x._2._2)
+      bucketTagsCount.filter(x => x._1 != "").foreach(x => if (x._2._1.size > bucketSize) bucketSize = x._2._1.size)
       splitToPartSize((partScale * bucketSize).toInt)
     }
 

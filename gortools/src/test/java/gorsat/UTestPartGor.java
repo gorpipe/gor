@@ -248,7 +248,7 @@ public class UTestPartGor {
 
         query = query + " | top 10";
         lines = TestUtils.runGorPipeLinesNoHeader(query);
-        Assert.assertEquals(200, lines.length);
+        Assert.assertEquals(220, lines.length);
     }
 
     @Test
