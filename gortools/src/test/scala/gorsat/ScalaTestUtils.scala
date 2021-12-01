@@ -1,8 +1,8 @@
 package gorsat
 
-import gorsat.Analysis.Select2
-import gorsat.Commands.Analysis
-import gorsat.Outputs.ToList
+import Analysis.Select2
+import Commands.Analysis
+import Outputs.ToList
 import org.gorpipe.gor.model.Row
 
 import scala.collection.mutable.ListBuffer
