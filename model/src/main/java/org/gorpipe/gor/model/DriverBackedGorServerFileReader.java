@@ -107,11 +107,16 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
     }
 
     @Override
-    protected void validateAccess(final DataSource dataSource) {
-        validateServerFileName(dataSource.getAccessValidationPath(), commonRoot, allowAbsolutePath);
+    public void validateAccess(final DataSource dataSource) {
         if (dataSource.getSourceReference().isWriteSource()) {
             validateWriteAccess(dataSource);
+        } else {
+            validateReadAccess(dataSource);
         }
+    }
+
+    private void validateReadAccess(DataSource source) throws GorResourceException {
+        validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
     }
 
     public void validateWriteAccess(String url) throws GorResourceException {
@@ -119,8 +124,13 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
     }
 
     private void validateWriteAccess(DataSource source) throws GorResourceException {
-        validateServerFileName(source.getAccessValidationPath(), commonRoot, false);
+        validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
         isWithinAllowedFolders(source, writeLocations, commonRoot);
+
+        
+        if (source.getAccessValidationPath().toLowerCase().endsWith(".link")) {
+            throw new GorResourceException("Writing link files is not allowed", null);
+        }
     }
 
     public static void isWithinAllowedFolders(DataSource dataSource, List<String> writeLocations, String commonRoot) {

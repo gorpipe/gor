@@ -34,7 +34,7 @@ public class UTestS3Shared {
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3data://project/user_data/a.gor", ((S3SharedSource)source).getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3data://project/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/projects/some_project/user_data/a/a.gor", source.getFullPath());
     }
 
@@ -48,7 +48,7 @@ public class UTestS3Shared {
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3data://shared/user_data/a.gor", ((S3SharedSource)source).getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3data://shared/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/shared/user_data/a/a.gor", source.getFullPath());
     }
 
@@ -62,7 +62,7 @@ public class UTestS3Shared {
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3region://shared/user_data/a.gor", ((S3SharedSource)source).getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3region://shared/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/shared/user_data/a/a.gor", source.getFullPath());
     }
 
@@ -76,7 +76,7 @@ public class UTestS3Shared {
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3global://shared/user_data/a.gor", ((S3SharedSource)source).getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3global://shared/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/shared/user_data/a/a.gor", source.getFullPath());
     }
 

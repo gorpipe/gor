@@ -89,7 +89,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
             SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
 
             AmazonS3Client client = getClient(s3SecurityContext, bucket);
-            source = new S3SharedSource(client, s3SourceReference, sourceReference, relativePath, s3SharedConfig);
+            source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
 
             source.setLinkFile(relativePath + ".link");
             source.setLinkFileContent(sourceReference.getUrl());
@@ -135,10 +135,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
     private SourceReference createS3SourceReference(SourceReference sourceReference, String project, String bucket, String securityContext) {
         String fullUrl = getFullS3Url(bucket, project, sourceReference.getUrl());
-
-        SourceReference updatedSourceReference = new SourceReference(fullUrl, securityContext, sourceReference.commonRoot,
-                sourceReference.getLookup(), sourceReference.chrSubset, sourceReference.getLinkSubPath(),
-                sourceReference.isWriteSource());
+        SourceReference updatedSourceReference = new SourceReference(fullUrl, sourceReference, null, securityContext);
         return updatedSourceReference;
     }
 
