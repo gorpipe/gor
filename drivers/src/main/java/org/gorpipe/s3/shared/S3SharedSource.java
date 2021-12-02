@@ -35,8 +35,6 @@ import java.net.MalformedURLException;
  */
 public class S3SharedSource extends S3Source {
 
-    private final SourceReference originalSourceReference;
-
     private String linkFile;
     private String linkFileContent;
     private String relativePath;
@@ -46,16 +44,11 @@ public class S3SharedSource extends S3Source {
      * Create source
      *
      */
-    public S3SharedSource(AmazonS3Client client, SourceReference sourceReference, SourceReference originalSourceReference,
+    public S3SharedSource(AmazonS3Client client, SourceReference sourceReference,
                           String relativePath, S3SharedConfiguration s3SharedConfig) throws MalformedURLException {
         super(client, sourceReference);
-        this.originalSourceReference = originalSourceReference;
         this.relativePath = relativePath;
         this.s3SharedConfig = s3SharedConfig;
-    }
-
-    public SourceReference getOriginalSourceReference() {
-        return originalSourceReference;
     }
 
     public String getRelativePath() {
@@ -88,7 +81,7 @@ public class S3SharedSource extends S3Source {
     @Override
     public String getAccessValidationPath() {
         if (s3SharedConfig.onlyAccessWithLinksOnServer()
-            && !getOriginalSourceReference().isWriteSource() && !getSourceReference().isCreatedFromLink()) {
+            && !getSourceReference().getOriginalSourceReference().isWriteSource() && !getSourceReference().isCreatedFromLink()) {
             throw new GorResourceException("S3 shared resources can only be accessed using links.", null);
         }
         return getRelativePath();

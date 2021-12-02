@@ -23,15 +23,18 @@
 package org.gorpipe.gor;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class UTestProjectContext {
@@ -39,7 +42,7 @@ public class UTestProjectContext {
     public TemporaryFolder projectDir = new TemporaryFolder();
 
     @Rule
-    public TemporaryFolder symbolicTarget = new TemporaryFolder();
+    public TemporaryFolder sharedDir = new TemporaryFolder();
 
     private DriverBackedGorServerFileReader fileReader;
 
@@ -49,63 +52,165 @@ public class UTestProjectContext {
         locations.add("user_data");
         locations.add("studies");
         fileReader = new DriverBackedGorServerFileReader(projectDir.getRoot().getCanonicalPath(), null,false , "", locations);
-        createSymbolicLink();
+
+        File userDataDir = new File(fileReader.getCommonRoot() + "/user_data");
+        userDataDir.mkdir();
+        File otherDir = new File(fileReader.getCommonRoot() + "/user_data/folder");
+        otherDir.mkdir();
+
+        Path sharedDirPath = sharedDir.getRoot().toPath();
+        Path projectDirPath = projectDir.getRoot().toPath();
+
+        Files.write(sharedDirPath.resolve("shared1.gor"), "#chrom\tpos\tref\nchr1\t1\tA\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(projectDirPath.resolve("user_data/shared2.gor"), "#chrom\tpos\tref\nchr1\t1\tB\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(projectDirPath.resolve("test.gor"), "#chrom\tpos\tref\nchr1\t1\tC\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(projectDirPath.resolve("user_data/test.gor"), "#chrom\tpos\tref\nchr1\t1\tD\n".getBytes(StandardCharsets.UTF_8));
+
+
+        createSymbolicLink("shared1_symboliclink.gor", "shared1.gor");
+        createGorLink("shared1_gorlink.gor.link", "shared1.gor");
+
+        createSymbolicLink("user_data/shared1_symboliclink.gor", "shared1.gor");
+        createGorLink("user_data/shared1_gorlink.gor.link", "shared1.gor");
     }
 
-    private void createSymbolicLink() throws IOException {
-        String targetLocation = symbolicTarget.getRoot().getCanonicalPath();
-        String userDataFolder = fileReader.getCommonRoot() + "/user_data";
-        File dir = new File(userDataFolder);
-        dir.mkdir();
-        Path link = Paths.get(userDataFolder + "/shared");
-        Path target = Paths.get(targetLocation);
-        Files.createSymbolicLink(link, target);
+    private void createSymbolicLink(String link, String target) throws IOException {
+        Path sharedDirPath = sharedDir.getRoot().toPath();
+        Path projectDirPath = projectDir.getRoot().toPath();
+        Files.createSymbolicLink(projectDirPath.resolve(link), sharedDirPath.resolve(target));
+    }
+
+    private void createGorLink(String link, String target) throws IOException {
+        Path targetLocation = sharedDir.getRoot().toPath();
+        Path projectDirPath = projectDir.getRoot().toPath();
+        Files.write(projectDirPath.resolve(link), targetLocation.resolve(target).toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    // Read
+
+    private void validateAccess(String url) {
+        fileReader.validateAccess(PluggableGorDriver.instance().getDataSource(new SourceReference(url)));
+        try {
+            fileReader.getReader(url).readLine();
+        } catch (Exception e) {
+            throw new GorSystemException("Failed", e);
+        }
+    }
+
+    @Test
+    public void isReadAllowedValidPath() {
+        validateAccess("test.gor");
+    }
+
+
+    @Test(expected = GorResourceException.class)
+    public void isReadNotAllowedValidPath() {
+        validateAccess("../test.gor");
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void isReadAllowedAbsolutePath() {
+        validateAccess("/test.gor");
+    }
+
+    @Test
+    public void isReadAllowedWithDots() {
+        validateAccess("user_data/../test.gor");
+    }
+
+    @Test
+    public void isReadAllowedSharedSymbolicLink() {
+        validateAccess("shared1_symboliclink.gor");
+    }
+
+    @Test
+    public void isReadAllowedFromUserDataSharedSymbolicLink() {
+        validateAccess("user_data/shared1_symboliclink.gor");
+    }
+    
+
+    @Test
+    public void isReadAllowedSharedGorLink() {
+        validateAccess("shared1_gorlink.gor");
+    }
+
+    @Test
+    public void isReadAllowedFromUserDataSharedGorLink() {
+        validateAccess("user_data/shared1_gorlink.gor");
+    }
+
+    // Write
+
+    private void validateWriteAccess(String url) {
+        fileReader.validateWriteAccess(url);
+        try {
+            fileReader.getOutputStream(url, false).write("#chrom\tpos\tref\nchr2\t2\tX\n".getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new GorSystemException("Failed", e);
+        }
+
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedEmpty() {
-        fileReader.validateWriteAccess("");
+        validateWriteAccess("");
     }
 
     @Test
     public void isWriteAllowedValidPath() {
-        fileReader.validateWriteAccess("user_data/test.gor");
+        validateWriteAccess("user_data/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteNotAllowedValidPath() {
-        fileReader.validateWriteAccess("user_data1/test.gor");
+        validateWriteAccess("user_data1/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedAbsolutePath() {
-        fileReader.validateWriteAccess("/user_data/test.gor");
+        validateWriteAccess("/user_data/test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedWithDots() {
-        fileReader.validateWriteAccess("user_data/../test.gor");
+        validateWriteAccess("user_data/../test.gor");
     }
 
-    @Test(expected = GorResourceException.class)
-    @Ignore("This test is no longer valid as up traversal is now allowed as long as it doesnt go out of project scope")
+    @Test
     public void isWriteAllowedButHasDots() {
-        fileReader.validateWriteAccess("user_data/folder/../test.gor");
+        validateWriteAccess("user_data/folder/../test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isWriteAllowedWhenPrefixMatches() {
-        fileReader.validateWriteAccess("user_data2/folder/../test.gor");
-    }
-
-    @Test
-    public void isWriteAllowedSymbolicLink() {
-        fileReader.validateWriteAccess("user_data/shared/test.gor");
+        validateWriteAccess("user_data2/folder/../test.gor");
     }
 
     @Test(expected = GorResourceException.class)
-    @Ignore("Dots not allowed")
-    public void isWriteAllowedSymbolicLinkDots() {
-        fileReader.validateWriteAccess("user_data/shared/../test.gor");
+    public void isWriteAllowedSharedSymbolicLink() {
+        validateWriteAccess("shared1_symboliclink.gor");
     }
+
+    @Test
+    public void isWriteAllowedFromUserDataSharedSymbolicLink() {
+        validateWriteAccess("user_data/shared1_symboliclink.gor");
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void isWriteAllowedSharedGorLink() {
+        validateWriteAccess("shared1_gorlink.gor");
+    }
+
+    @Test
+    public void isWriteAllowedFromUserDataSharedGorLink() {
+        validateWriteAccess("user_data/shared1_gorlink.gor");
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void isWriteCreateGorLink() {
+        validateWriteAccess("user_data/custom.gor.link");
+    }
+
+
 }
