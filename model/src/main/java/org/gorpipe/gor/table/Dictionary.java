@@ -383,8 +383,8 @@ public class Dictionary {
         int totalFileReads = fileListToOptimize.length;
         int numberOfBucketsToBeAccessed = 0;
         int numberOfFilesTakenFromBuckets = 0;
-        final int FILE_COUNT_THRESHOLD = Integer.parseInt(System.getProperty("gor.bucket.file.count.threshold", "300"));
-        float threshold = Integer.parseInt(System.getProperty("gor.bucket.initial.usage.threshold", "80")) / 100f;
+        final int FILE_COUNT_THRESHOLD = Integer.parseInt(System.getProperty("gor.bucket.file.count.threshold", "100"));
+        float threshold = Integer.parseInt(System.getProperty("gor.bucket.initial.usage.threshold", "40")) / 100f;
         final int singleFilesBucketCountThresholdRatio = 10;
         final int minNumberOfFilesToAccess = numberOfFilesWithoutBucket + numberOfBuckets; //No matter what, we have to open this many files.
 
