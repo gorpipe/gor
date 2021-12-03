@@ -28,13 +28,8 @@ import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.DataSource
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.PathUtils
 
-import java.net.URI
-import java.nio.file.Paths
 
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -noheader", "-d -f -i -t -l -tags -card -prefix -link", 0),

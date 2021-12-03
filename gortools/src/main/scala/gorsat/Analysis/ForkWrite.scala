@@ -26,9 +26,9 @@ import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.util.zip.Deflater
 import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
+import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.DataSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.PathUtils
@@ -300,9 +300,17 @@ case class ForkWrite(forkCol: Int,
 
   private def writeLinkFile(linkFile: String, linkFileContent: String) : Unit = {
     val linkFileToWrite = if (linkFile.endsWith(".link")) linkFile else linkFile+".link"
-    val os = session.getProjectContext.getFileReader.getOutputStream(linkFileToWrite)
-    os.write(linkFileContent.getBytes())
-    os.write('\n')
-    os.close()
+    // Use non driver file reader as this is exception from the write no links rule, add extra resolve with the
+    // server reader to validate.
+    session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite))
+    val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
+      session.getProjectContext.getProjectRoot, null)
+    val os = fileReader.getOutputStream(linkFileToWrite)
+    try {
+      os.write(linkFileContent.getBytes())
+      os.write('\n')
+    } finally {
+      if (os != null) os.close
+    }
   }
 }
