@@ -127,14 +127,6 @@ public class Dictionary {
 
     private final Map<String, DictionaryLine[]> tagsToListCache;
 
-    public synchronized static Dictionary getDictionary(String path, GorSession session, String uniqueID, String commonRoot) {
-        return getDictionary(path, session.getProjectContext().getFileReader(), uniqueID, commonRoot, true);
-    }
-
-    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
-        return getDictionary(path, ProjectContext.DEFAULT_READER, uniqueID, commonRoot, true);
-    }
-
     private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
         if(PathUtils.isAbsolutePath(path) || commonRoot == null || commonRoot.length() == 0) {
             return path;
