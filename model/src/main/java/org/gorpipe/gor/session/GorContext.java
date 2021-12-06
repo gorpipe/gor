@@ -24,17 +24,18 @@ package org.gorpipe.gor.session;
 
 import org.gorpipe.gor.stats.StatsCollector;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class GorContext {
-    private final GorSession session;
+public class GorContext implements Serializable {
+    transient private final GorSession session;
     private final String name;
     private final String command;
     private final String signature;
 
-    private Optional<String> sortCols = Optional.empty();
+    transient private Optional<String> sortCols = Optional.empty();
     private StatsCollector stats = null;
 
     private long startedAt = System.currentTimeMillis();
@@ -44,6 +45,10 @@ public class GorContext {
     private final List<GorContext> nestedContexts = new ArrayList<>();
 
     private int numIteratorsCreated = 0;
+
+    public GorContext() {
+        this(null, null, "gorfinal", "", "[gorfinal]");
+    }
 
     public GorContext(GorSession session) {
         this(session, null, "gorfinal", "", "[gorfinal]");
