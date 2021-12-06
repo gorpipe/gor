@@ -52,7 +52,8 @@ import java.util.Map;
  */
 public class ProjectContext {
 
-    public static final FileReader DEFAULT_READER = new DriverBackedFileReader("", ".", null);
+
+    public static final FileReader DEFAULT_READER = new DriverBackedFileReader(System.getProperty("gor.security.context", ""), ".", null);
     public static final String DEFAULT_CACHE_DIR = System.getProperty("java.io.tmpdir");
 
     private String aliasFile;

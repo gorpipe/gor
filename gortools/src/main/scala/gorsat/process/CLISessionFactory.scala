@@ -88,11 +88,7 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
   }
 
   private def createFileReader(gorRoot: String): FileReader = {
-    if (!StringUtil.isEmpty(gorRoot)) {
-      new DriverBackedFileReader(securityContext, gorRoot, null)
-    } else {
-      ProjectContext.DEFAULT_READER
-    }
+    new DriverBackedFileReader(securityContext, gorRoot, null)
   }
 
   private def createQueryHandler(queryHandlerName: String, session: GorSession): GorParallelQueryHandler = {
