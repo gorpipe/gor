@@ -55,6 +55,27 @@ public class UTestGorOptions {
         Assert.assertFalse(GorOptions.isPathConstraintWithInRoot("kalli/../../kalli"));
     }
 
+    @Test
+    public void testConcatFolderFile() {
+        Assert.assertEquals("/root/some.gor", GorOptions.concatFolderFile("/root", "some.gor", "some.gor", false));
+        Assert.assertEquals("/root/some.gor", GorOptions.concatFolderFile("/root", "/root/some.gor", "/root/some.gor", false));
+        Assert.assertEquals("/other/some.gor", GorOptions.concatFolderFile("/root", "/other/some.gor", "/other/some.gor", false));
+
+        Assert.assertEquals("/root/some.gor", GorOptions.concatFolderFile("/root", "some.gor", "some.gor", true));
+        try {
+            GorOptions.concatFolderFile("/root", "/root/some.gor", "/root/some.gor", true);
+            Assert.fail("Should fail root check");
+        } catch (Exception e) {
+            // Expected
+        }
+        try {
+            GorOptions.concatFolderFile("/root", "/other/some.gor", "/other/some.gor", true);
+            Assert.fail("Should fail root check");
+        } catch (Exception e) {
+            // Expected
+        }
+    }
+
     /**
      * Test that quoted file names can be used
      */

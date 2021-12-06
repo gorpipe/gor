@@ -861,13 +861,18 @@ public class GorOptions {
     }
 
 
-    private static String concatFolderFile(String folder, String physical, String logical, boolean checkRelativeToRoot) {
+    static String concatFolderFile(String folder, String physical, String logical, boolean checkRelativeToRoot) {
         if (physical.contains("://")) { // The file is not a filesystem reference, so do not apply common file system root
             return physical;
         }
         if (checkRelativeToRoot) { // Need to ensure that the file doesn't refer above the root in the file hierarchy
             checkFileNameIsRelativeToRoot(logical);
         }
+
+        if (Path.of(physical).isAbsolute()) {
+            return physical;
+        }
+
         return folder.endsWith("/") || folder.endsWith("\\") ? folder + physical : folder + '/' + physical;
     }
 }
