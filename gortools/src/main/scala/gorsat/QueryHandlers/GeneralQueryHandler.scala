@@ -308,7 +308,8 @@ object GeneralQueryHandler {
 
   private def getDictList(dictFiles: List[String], chromsrange: List[String], root: String): List[String] = {
     var chrI = 0
-    val useMetaFile = System.getProperty("gor.use.meta.dictionary","false")
+    val useMetaFile = System.getProperty("gor.use.meta.dictionary","true")
+    val useFillIfMetaMissing = System.getProperty("gor.use.meta.missing.fill","false").equalsIgnoreCase("true")
     if(useMetaFile!=null && useMetaFile.toLowerCase.equals("true")) {
       dictFiles.zip(chromsrange).map(x => {
         val f = x._1
@@ -318,10 +319,10 @@ object GeneralQueryHandler {
         val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
         val opt: Optional[String] = if (Files.exists(metaPath)) {
           GorJavaUtilities.readRangeFromMeta(metaPath, prefix)
-        } else {
+        } else if(useFillIfMetaMissing) {
           val ret = dictRangeFromSeekRange(x._2, prefix)
           Optional.of[String](ret)
-        }
+        } else Optional.empty()
         opt
       }).flatMap(o => o.stream().iterator().asScala)
     } else {
