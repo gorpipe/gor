@@ -28,7 +28,7 @@ import java.util.zip.Deflater
 import gorsat.Commands.Output
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.gor.driver.meta.DataType
-import org.gorpipe.gor.model.{FileReader, Row}
+import org.gorpipe.gor.model.{FileReader, GorMeta, Row}
 
 import java.nio.file.Paths
 
@@ -42,18 +42,19 @@ import java.nio.file.Paths
   * @param idx Whether and index file should be written.
   */
 class GORzip(fileName: String, fileReader: FileReader, header: String = null, skipHeader: Boolean = false, append: Boolean = false, options: OutputOptions) extends Output {
+
   val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), options.columnCompress, options.md5, if(options.md5File) Paths.get(fileName+".md5") else null, if (options.idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, options.idx, options.compressionLevel)
 
   override def getName: String = fileName
 
   def setup() {
-    if (options.cardCol != null) meta.initCardCol(options.cardCol, header)
-    if (options.command != null) meta.setQuery(options.command);
+    getMeta.initMetaStats(options.cardCol, header)
+    if (options.command != null) getMeta.setQuery(options.command);
     if (header != null & !skipHeader) out.setHeader(header)
   }
 
   def process(r: Row) {
-    meta.updateRange(r)
+    getMeta.updateMetaStats(r)
     out.write(r)
   }
 
@@ -61,10 +62,10 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
     try {
       out.close()
     } finally {
-      meta.setMd5(out.getMd5)
+      getMeta.setMd5(out.getMd5)
       if (options.writeMeta) {
         val metaout = fileReader.getOutputStream(fileName + ".meta")
-        metaout.write(meta.toString.getBytes())
+        metaout.write(getMeta.formatHeader().getBytes())
         metaout.close()
       }
     }

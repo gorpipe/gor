@@ -37,7 +37,7 @@ import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.SharedFastaReferenceSource;

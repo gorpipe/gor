@@ -41,7 +41,8 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
-import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
@@ -823,7 +824,7 @@ public class GorOptions {
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
+            sourceColName = table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
         }
 
         if (tableHeader == null) {

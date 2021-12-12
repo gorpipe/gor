@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.table.lock;
 
-import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 
 import java.time.Duration;
 
@@ -52,7 +52,7 @@ public class TableTransaction implements AutoCloseable {
      * @return new read lock object with the given state.
      * @throws AcquireLockException if we did not get lock.
      */
-    public static TableTransaction openReadTransaction(Class<? extends TableLock> lockClass, BaseTable table, String name, Duration timeout) {
+    public static TableTransaction openReadTransaction(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, Duration timeout) {
         return TableTransaction.openTransaction(lockClass, table, name, true, timeout);
     }
 
@@ -67,7 +67,7 @@ public class TableTransaction implements AutoCloseable {
      * @return new lock object with the given state.
      * @throws AcquireLockException if we did not get lock.
      */
-    public static TableTransaction openWriteTransaction(Class<? extends TableLock> lockClass, BaseTable table, String name, Duration timeout) {
+    public static TableTransaction openWriteTransaction(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, Duration timeout) {
         return TableTransaction.openTransaction(lockClass, table, name, false, timeout);
     }
 
@@ -85,11 +85,11 @@ public class TableTransaction implements AutoCloseable {
      * @return new lock object with the given state.
      * @throws AcquireLockException if we did not get lock.
      */
-    private static TableTransaction openTransaction(Class<? extends TableLock> lockClass, BaseTable table, String name, boolean shared, Duration timeout) {
+    private static TableTransaction openTransaction(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, boolean shared, Duration timeout) {
         return new TableTransaction(lockClass, table, name, shared, timeout);
     }
 
-    public TableTransaction(Class<? extends TableLock> lockClass, BaseTable table, String name, boolean shared, Duration timeout) {
+    public TableTransaction(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, boolean shared, Duration timeout) {
         if (shared) {
             lock = TableLock.acquireRead(lockClass, table, name, timeout);
         } else {

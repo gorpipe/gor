@@ -29,6 +29,7 @@ import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.util.PathUtils
 
 
 class Write extends CommandInfo("WRITE",

@@ -39,7 +39,9 @@ import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.{PathUtils, TableHeader}
+import org.gorpipe.gor.table.TableHeader
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta
+import org.gorpipe.gor.table.util.PathUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -309,7 +311,6 @@ object GeneralQueryHandler {
   private def getDictList(dictFiles: List[String], chromsrange: List[String], root: String): List[String] = {
     var chrI = 0
     val useMetaFile = System.getProperty("gor.use.meta.dictionary","true")
-    val useFillIfMetaMissing = System.getProperty("gor.use.meta.missing.fill","false").equalsIgnoreCase("true")
     if(useMetaFile!=null && useMetaFile.toLowerCase.equals("true")) {
       dictFiles.zip(chromsrange).map(x => {
         val f = x._1
@@ -318,11 +319,19 @@ object GeneralQueryHandler {
         val prefix = rf + "\t" + chrI + "\t"
         val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
         val opt: Optional[String] = if (Files.exists(metaPath)) {
-          GorJavaUtilities.readRangeFromMeta(metaPath, prefix)
-        } else if(useFillIfMetaMissing) {
+          val meta = GorMeta.createAndLoad(metaPath)
+          if (meta.getLineCount == -1) {
+            val ret = dictRangeFromSeekRange(x._2, prefix)
+            Optional.of[String](ret)
+          } else if(meta.getLineCount > 0) {
+            Optional.of[String](prefix + meta.getRange().formatAsTabDelimited())
+          } else {
+            Optional.empty()
+          }
+        } else {
           val ret = dictRangeFromSeekRange(x._2, prefix)
           Optional.of[String](ret)
-        } else Optional.empty()
+        }
         opt
       }).flatMap(o => o.stream().iterator().asScala)
     } else {
@@ -364,7 +373,7 @@ object GeneralQueryHandler {
         val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
         tableHeader.setColumns(header)
       }
-      tableHeader.setTableColumns(TableHeader.DEFULT_RANGE_TABLE_HEADER)
+      tableHeader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER)
       val dictList = getDictList(dictFiles, chromsrange, root)
       writeList(outpath, tableHeader.formatHeader(), dictList)
     }

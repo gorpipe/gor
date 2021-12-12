@@ -24,14 +24,9 @@ package org.gorpipe.gor.session;
 
 import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.gorpipe.client.FileCache;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.PluggableGorDriver;
-import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.reference.ReferenceBuild;
-import org.gorpipe.gor.table.PathUtils;
 import org.gorpipe.model.gor.iterators.RefSeq;
 import org.gorpipe.model.gor.iterators.RefSeqFactory;
 import org.gorpipe.model.gor.iterators.RefSeqFromConfigFactory;
@@ -41,9 +36,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**

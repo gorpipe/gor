@@ -13,8 +13,7 @@
 package org.gorpipe.gor.table.dictionary;
 
 import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.gor.table.GenomicRange;
-import org.gorpipe.gor.table.TableEntry;
+import org.gorpipe.gor.table.util.GenomicRange;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -36,7 +35,7 @@ public class DictionaryRawEntry extends DictionaryEntry {
     protected GenomicRange range;
 
     private DictionaryRawEntry(String rawLine, URI rootUri) {
-        super(null, rootUri, null, null, null, false, false);
+        super(null, rootUri, null, null, null, null, false, false);
         this.rawLine = rawLine;
         this.rawColumns = new RowParser(rawLine, '\t', 7, 0);
         this.rawFileInfo = new RowParser(rawColumns.getColumn(0), '|', 3, 0);

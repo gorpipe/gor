@@ -23,8 +23,8 @@
 package org.gorpipe.gor.cli;
 
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.SlowTests;
 import org.junit.*;
@@ -119,7 +119,7 @@ public class UTestGorCliManager {
         testTableManagerUtil.executeGorManagerCommand("insert", new String[]{"--alias", "D", dictFile.toString(), testFiles[3]}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);
@@ -170,7 +170,7 @@ public class UTestGorCliManager {
 
         Path dictFile = workDirPath.resolve(name + ".gord");
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
         String result;
 
         // Single file insert.
@@ -229,17 +229,17 @@ public class UTestGorCliManager {
         // Test History option.
         String noHistDict = "noHistDict";
         testTableManagerUtil.executeGorManagerCommand("insert", new String[]{"--alias", "A", workDirPath.resolve(noHistDict + ".gord").toString(), testFiles[0]}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         String noHistDict2 = "noHistDict2";
         testTableManagerUtil.executeGorManagerCommand("insert", new String[]{"--alias", "A", "--nohistory", workDirPath.resolve(noHistDict2 + ".gord").toString(), testFiles[0]}, workDirPath.toString(), true);
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         String histDict2 = "histDict2";
         testTableManagerUtil.executeGorManagerCommand( "insert", new String[]{"--alias", "A", workDirPath.resolve(histDict2 + ".gord").toString(), testFiles[0]}, workDirPath.toString(), true);
         testTableManagerUtil.executeGorManagerCommand( "insert", new String[]{"--alias", "B", workDirPath.resolve(histDict2 + ".gord").toString(), testFiles[1]}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseTable.HISTORY_DIR_NAME)));
-        Assert.assertTrue(Files.list(workDirPath.resolve("." + histDict2).resolve(BaseTable.HISTORY_DIR_NAME)).count() == 2); // 1 header 1 gord file.
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(Files.list(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count() == 2); // 1 header 1 gord file.
 
     }
 
@@ -255,7 +255,7 @@ public class UTestGorCliManager {
         GorCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         //Verify insert of files
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -273,7 +273,7 @@ public class UTestGorCliManager {
         GorCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[0]});
         table.reload();
         //Total count of tags
-        Assert.assertEquals(5, table.filter().get().stream().map(l -> l.getTags()).distinct().count());
+        Assert.assertEquals(5, table.filter().get().stream().map(l -> l.getFilterTags()).distinct().count());
         //Count the tag "B"
         Assert.assertEquals(2, table.selectUninon(table.filter().tags("B")).stream().map(l -> l.formatEntry()).count());
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -301,7 +301,7 @@ public class UTestGorCliManager {
         Path dictFile = workDirPath.resolve(name + ".gord");
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         //Check matching list of tags. If the same set of tags can be found it is replaced by the new line of tags.
         GorCLI.main(new String[]{"manager", "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[0]});
@@ -334,7 +334,7 @@ public class UTestGorCliManager {
         GorCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);

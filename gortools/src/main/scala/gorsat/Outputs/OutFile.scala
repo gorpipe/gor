@@ -82,7 +82,7 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
   def finish {
     out.flush()
     out.close()
-    meta.setMd5(interceptingFileOutputStream match {
+    getMeta.setMd5(interceptingFileOutputStream match {
       case stream: Md5CalculatingOutputStream =>
         stream.md5()
       case _ => null

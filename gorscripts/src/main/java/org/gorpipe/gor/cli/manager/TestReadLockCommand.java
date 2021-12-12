@@ -23,7 +23,7 @@
 package org.gorpipe.gor.cli.manager;
 
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.lock.TableLock;
 import picocli.CommandLine;
 
@@ -51,7 +51,7 @@ public class TestReadLockCommand extends ManagerOptions implements Runnable{
     public void run() {
         Duration lockTimeoutDuration = Duration.ofSeconds(lockTimeout);
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(lockTimeoutDuration).build();
-        BaseTable table = tm.initTable(dictionaryFile.toPath());
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
 
         try (TableLock lock = TableLock.acquireRead(tm.getLockType(), table, lockName, lockTimeoutDuration)) {
             Thread.sleep(period);

@@ -27,12 +27,9 @@ import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.table.PathUtils;
 import picocli.CommandLine;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @CommandLine.Command(name = "index",

@@ -24,9 +24,8 @@ package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.base.Splitter;
 import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.gor.table.BucketableTableEntry;
-import org.gorpipe.gor.table.GenomicRange;
-import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.gor.table.util.GenomicRange;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 
 import java.net.URI;
@@ -35,8 +34,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static org.gorpipe.gor.table.PathUtils.fixFileSchema;
-import static org.gorpipe.gor.table.PathUtils.relativize;
+import static org.gorpipe.gor.table.util.PathUtils.fixFileSchema;
+import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 /**
  * Line from gor dictionar (GORD).
@@ -53,8 +52,8 @@ public class DictionaryEntry extends BucketableTableEntry {
         this.sourceInserted = entry.sourceInserted;
     }
 
-    protected DictionaryEntry(String contentLogical, URI rootUri, String[] tags, GenomicRange range, String bucket, boolean isDeleted, boolean sourceInserted) {
-        super(contentLogical, rootUri, tags, range, bucket, isDeleted);
+    protected DictionaryEntry(String contentLogical, URI rootUri, String alias, String[] tags, GenomicRange range, String bucket, boolean isDeleted, boolean sourceInserted) {
+        super(contentLogical, rootUri, alias, tags, range, bucket, isDeleted);
         this.sourceInserted = sourceInserted;
     }
 
@@ -82,14 +81,14 @@ public class DictionaryEntry extends BucketableTableEntry {
         }
 
         final List<String> fileInfo = pipeSplitter.splitToList(columns.get(0).replace('\\', '/'));
-        Builder<DictionaryEntry.Builder> builder = new Builder<>(fixFileSchema(fileInfo.get(0)), rootUri).contentVerified();
+        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(fixFileSchema(fileInfo.get(0)), rootUri).contentVerified();
 
         final String flags = fileInfo.size() > 2 ? fileInfo.get(1) : null;
         final boolean lineDeleted = flags != null && flags.toLowerCase().contains("d");
         final String bucketFileName = fileInfo.size() > 2 ? fileInfo.get(2) : (fileInfo.size() > 1 ? fileInfo.get(1) : null);
         final String alias = columns.size() > 1 ? columns.get(1) : null;
 
-        builder.bucket(bucketFileName);
+        builder.bucket(bucketFileName).alias(alias);
 
         if (lineDeleted) {
             builder.deleted();
@@ -100,9 +99,7 @@ public class DictionaryEntry extends BucketableTableEntry {
                 GenomicRange range = GenomicRange.parseGenomicRange(String.join("\t", columns.subList(2, 6)));
                 builder.range(range);
 
-                if (columns.size() < 7) {
-                    builder.tags(Collections.singletonList(alias));
-                } else {
+                if (columns.size() == 7) {
                     // support both comma separadted and tab separated tags
                     if (columns.get(6).indexOf(',') >= 0) {
                         builder.tags(StringUtil.split(columns.get(6), ','));
@@ -113,9 +110,6 @@ public class DictionaryEntry extends BucketableTableEntry {
             } else {
                 throw new GorDataException("Error initializing query. Expected 4 columns for genomic range specification!");
             }
-        } else {
-            // Add alias as tag on the file, if alias is
-            builder.alias(alias);
         }
 
         return builder.build();
@@ -137,17 +131,14 @@ public class DictionaryEntry extends BucketableTableEntry {
 
         // Alias column
         sb.append('\t');
-        if (getTags() != null && getTags().length == 1) {
-            sb.append(getAliasTag() != null ? getAliasTag() : "");
-        }
+        sb.append(getAlias() != null ? getAlias() : "");
 
         // Range columns
         sb.append('\t');
-        getRange().format(sb);
+        getRange().formatAsTabDelimited(sb);
 
-        // Tags (skip if only contains the alias)
         sb.append('\t');
-        if (getTags() != null && getTags().length > 1) {
+        if (getTags() != null && getTags().length > 0) {
             sb.append(String.join(",", getTags()));
         }
 
@@ -168,7 +159,7 @@ public class DictionaryEntry extends BucketableTableEntry {
         return Objects.hash(super.hashCode(), sourceInserted);
     }
 
-    public static class Builder<B extends Builder> extends BucketableTableEntry.Builder<Builder<B>> {
+    public static class Builder<B extends BucketableTableEntry.Builder> extends BucketableTableEntry.Builder<Builder<B>> {
         private boolean sourceInserted;
 
         public Builder(Path contentLogical, URI rootUri) {
@@ -184,16 +175,9 @@ public class DictionaryEntry extends BucketableTableEntry {
             return self();
         }
 
-        public Builder<B> alias(String val) {
-            if (val != null && val.length() > 0) {
-                this.tags.add(0, val);
-            }
-            return self();
-        }
-
         @Override
         public DictionaryEntry build() {
-            return new DictionaryEntry(contentVerified ? contentLogical : relativize(rootUri, contentLogical), rootUri, tags != null ? tags.toArray(new String[0]) : null, range,
+            return new DictionaryEntry(contentVerified ? contentLogical : relativize(rootUri, contentLogical), rootUri, alias, tags != null ? tags.toArray(new String[0]) : null, range,
                     contentVerified ? bucketLogical : relativize(rootUri, bucketLogical), isDeleted, sourceInserted);
         }
 

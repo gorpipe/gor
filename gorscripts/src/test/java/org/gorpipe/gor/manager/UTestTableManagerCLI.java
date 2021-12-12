@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.manager;
 
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  */
 @Category(IntegrationTests.class)
 // TODO:  This should really be marked as slow tests, but until we create that category.
-@Ignore("Running all integration tests locally works, running only these tests inside container works, these tests fail when running all integration tests within a container")
+//@Ignore("Running all integration tests locally works, running only these tests inside container works, these tests fail when running all integration tests within a container")
 public class UTestTableManagerCLI {
 
     private static final Logger log = LoggerFactory.getLogger(UTestTableManagerCLI.class);
@@ -128,7 +128,7 @@ public class UTestTableManagerCLI {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFiles[3]}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);
@@ -176,7 +176,7 @@ public class UTestTableManagerCLI {
 
         Path dictFile = workDirPath.resolve(name + ".gord");
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
         String result;
 
         // Single file insert.
@@ -188,6 +188,7 @@ public class UTestTableManagerCLI {
 
         // Multi file insert with just files.
         table.delete(table.selectAll());
+        table.save();
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "multiinsert", new String[]{testFiles[0], testFiles[1], testFiles[2]}, ".", true);
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -198,6 +199,7 @@ public class UTestTableManagerCLI {
 
         // Multi file insert with just aliases options.
         table.delete(table.selectAll());
+        table.save();
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "multiinsert", new String[]{"--aliases", "A,B,C", testFiles[0], testFiles[1], testFiles[2]}, ".", true);
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -208,16 +210,18 @@ public class UTestTableManagerCLI {
 
         // Multi file insert with all options.
         table.delete(table.selectAll());
+        table.save();
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "multiinsert", new String[]{"--tags", "A,B,C", "--ranges", "chr1,,chr3", "--aliases", ",2,3", testFiles[0], testFiles[1], testFiles[2]}, ".", true);
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Incorrect multiinsert",
-                testFiles[0] + "\tA\tchr1\t-1\tchr1\t-1\n" +
-                        testFiles[1] + "\t\t\t\t\t\t2,B\n" +
-                        testFiles[2] + "\t\tchr3\t-1\tchr3\t-1\t3,C\n", result);
+                testFiles[0] + "\t\tchr1\t-1\tchr1\t-1\tA\n" +
+                        testFiles[1] + "\t2\t\t\t\t\tB\n" +
+                        testFiles[2] + "\t3\tchr3\t-1\tchr3\t-1\tC\n", result);
 
         // Multi file insert with incorrect number of files.
         table.delete(table.selectAll());
+        table.save();
         try {
             testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "multiinsert", new String[]{"--aliases", "A", testFiles[0], testFiles[1]}, ".", true);
             Assert.assertTrue("Should get exception if args differ", false);
@@ -235,17 +239,17 @@ public class UTestTableManagerCLI {
         // Test History option.
         String noHistDict = "noHistDict";
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict + ".gord").toString(), new String[]{}, "insert", new String[]{"--alias", "A", testFiles[0]}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         String noHistDict2 = "noHistDict2";
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict2 + ".gord").toString(), new String[]{"--history", "false"}, "insert", new String[]{"--alias", "A", testFiles[0]}, workDirPath.toString(), true);
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         String histDict2 = "histDict2";
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "A", testFiles[0]}, workDirPath.toString(), true);
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "B", testFiles[1]}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseTable.HISTORY_DIR_NAME)));
-        Assert.assertTrue(Files.list(workDirPath.resolve("." + histDict2).resolve(BaseTable.HISTORY_DIR_NAME)).count() == 2); // 1 header 1 gord file.
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(Files.list(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count() == 1); // 1 header action log.
 
     }
 
@@ -261,7 +265,7 @@ public class UTestTableManagerCLI {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         //Verify insert of files
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -276,10 +280,12 @@ public class UTestTableManagerCLI {
 
         //Insert file 1 once again and tag it the same as file 2 using the letter "B"
         //This should be successful since the --tagskey option is not being used. There should now be two files tagged with "B".
+        table.setUniqueTags(false);
+        table.save();
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "B", testFiles[0]});
         table.reload();
         //Total count of tags
-        Assert.assertEquals(5, table.filter().get().stream().map(l -> l.getTags()).distinct().count());
+        Assert.assertEquals(5, table.filter().get().stream().map(l -> l.getFilterTags()).distinct().count());
         //Count the tag "B"
         Assert.assertEquals(2, table.selectUninon(table.filter().tags("B")).stream().map(l -> l.formatEntry()).count());
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -306,27 +312,29 @@ public class UTestTableManagerCLI {
         Path dictFile = workDirPath.resolve(name + ".gord");
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         //Check matching list of tags. If the same set of tags can be found it is replaced by the new line of tags.
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", testFiles[0]});
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", testFiles[1]});
         table.reload();
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
-        Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO,RC,OR,A\n", result);
+        Assert.assertEquals("Insert failed", testFiles[1] + "\tA\t\t\t\t\tGO,RC,OR\n", result);
 
         //Check a single tag against a list of tags to confirm that it is not enough to match a single tag in the list but the whole list must match.
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--tags", "GO", "--tagskey", testFiles[1]});
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
-        Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO,RC,OR,A\n" + testFiles[1] + "\tGO\n", result);
+        Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO\n" + testFiles[1] + "\tA\t\t\t\t\tGO,RC,OR\n", result);
 
         //Confirm the other flags such as range are ignored with the --tagskey flag. The second line "updates" the first line with range being ignored and tags only being used as an identifier.
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "B", "--tags", "GO,RC,OR", "--tagskey", "--range","chr1-chr3", testFiles[2]});
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "B", "--tags", "GO,RC,OR", "--tagskey", testFiles[3]});
-        result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         table.reload();
-        Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO,RC,OR,A\n" + testFiles[1] + "\tGO\n" + testFiles[3] + "\t\t\t\t\t\tGO,RC,OR,B\n", result);
+        result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
+        Assert.assertEquals("Insert failed",
+                testFiles[1] + "\t\t\t\t\t\tGO\n"
+                        + testFiles[3] + "\tB\t\t\t\t\tGO,RC,OR\n", result);
     }
 
     @Test
@@ -339,7 +347,7 @@ public class UTestTableManagerCLI {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);

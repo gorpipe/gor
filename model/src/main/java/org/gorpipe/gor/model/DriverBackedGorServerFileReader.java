@@ -24,12 +24,10 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.Util;
 
 import java.io.File;

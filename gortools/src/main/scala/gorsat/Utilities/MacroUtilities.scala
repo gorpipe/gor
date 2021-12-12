@@ -33,7 +33,7 @@ import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
 import org.gorpipe.gor.model.FileReader
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.PathUtils
+import org.gorpipe.gor.table.util.PathUtils
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Paths}

@@ -24,6 +24,8 @@ package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.table.dictionary.TableEntry;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class TableLog {
     private static final Logger log = LoggerFactory.getLogger(TableLog.class);
 
     public static final String LOG_FILE = "action.log";
-    enum LogAction {
+    public enum LogAction {
         INSERT,
         DELETE,
         ADDTOBUCKET,

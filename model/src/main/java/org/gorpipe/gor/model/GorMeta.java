@@ -1,89 +1,94 @@
 package org.gorpipe.gor.model;
 
+import org.gorpipe.gor.table.util.GenomicRange;
+
+import java.nio.file.Path;
 import java.util.*;
 
-public class GorMeta {
+public class GorMeta extends BaseMeta {
+
+    public static final String HEADER_QUERY_KEY = "QUERY";
+    public static final String HEADER_RANGE_KEY = "RANGE";
+    public static final String HEADER_CARDCOL_KEY = "CARDCOL";
+
+    public static GorMeta createAndLoad(Path metaPath) {
+        GorMeta meta = new GorMeta();
+        meta.loadAndMergeMeta(metaPath);
+        return meta;
+    }
+
+    // TODO:  Should really collect these stats on the stats object and only store reuslts in this object.
+
     String minChr = null;
     int minPos = -1;
     String maxChr = null;
     int maxPos = -1;
-    String md5 = null;
-    String tags = null;
-    long lineCount = 0;
+    long lineCount = -1;
     String cardColName = null;
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
-    String query;
-
-    public static final String MD5_HEADER = "## MD5";
-    public static final String QUERY_HEADER = "## QUERY";
-    public static final String CARDCOL_HEADER = "## CARDCOL";
-    public static final String RANGE_HEADER = "## RANGE";
-    public static final String LINES_HEADER = "## LINES";
-    public static final String TAGS_HEADER = "## TAGS";
-
-    public boolean linesWritten() {
-        return minChr != null;
-    }
-
-    public void setMd5(String md5) {
-        this.md5 = md5;
-    }
-
-    public String getMd5() {
-        return md5;
-    }
 
     public void setQuery(String query) {
-        this.query = query;
+        setProperty(HEADER_QUERY_KEY, query);
     }
 
     public String getQuery() {
-        return query;
+        return getProperty(HEADER_QUERY_KEY);
     }
 
-    public void setTags(String tags) {
-        this.tags = tags;
+    public void initMetaStats(String cardCol, String header) {
+        if (cardCol != null) {
+            List<String> hsplit = Arrays.asList(header.toLowerCase().split("\t"));
+            cardColName = cardCol;
+            cardColIndex = hsplit.indexOf(cardCol.toLowerCase());
+        }
+
+        lineCount = 0;
     }
 
-    public String getTags() {
-        return tags;
-    }
-
-    public void initCardCol(String cardCol, String header) {
-        List<String> hsplit = Arrays.asList(header.toLowerCase().split("\t"));
-        cardColName = cardCol;
-        cardColIndex = hsplit.indexOf(cardCol.toLowerCase());
-    }
-
-    public void updateRange(Row ir) {
+    public void updateMetaStats(Row ir) {
         if(minChr==null) {
             minChr = ir.chr;
             minPos = ir.pos;
         }
         maxChr = ir.chr;
         maxPos = ir.pos;
+
         lineCount++;
 
         if(cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString());
     }
 
-    public String getRange() {
-        return minChr!=null ? minChr + "\t" + minPos + "\t" + maxChr + "\t" + maxPos : "";
+    public GenomicRange getRange() {
+        if (minChr != null) {
+            return new GenomicRange(minChr, minPos, maxChr, maxPos);
+        } else if (containsProperty(HEADER_RANGE_KEY)) {
+            return GenomicRange.parseGenomicRange(getProperty(HEADER_RANGE_KEY));
+        } else {
+            return GenomicRange.EMPTY_RANGE;
+        }
+    }
+
+    public String[] getCordColTags() {
+        if (cardSet.size() > 0) {
+            return cardSet.toArray(new String[0]);
+        } else {
+            return getProperty(GorMeta.HEADER_CARDCOL_KEY, ":").split(":")[1].trim().split(",");
+        }
     }
 
     @Override
-    public String toString() {
-        String ret = "";
-        if(minChr!=null) ret += RANGE_HEADER + ": " + getRange() + "\n";
-        if(md5!=null) ret += MD5_HEADER + ": " + md5 + "\n";
-        if(query!=null) ret += QUERY_HEADER + ": " + query + "\n";
-        if(tags!=null&&tags.length()>0) ret += TAGS_HEADER + ": " + tags + "\n";
-        if(lineCount!=0) ret += LINES_HEADER + ": " + lineCount + "\n";
-        if(cardColIndex != -1) {
+    public String formatHeader() {
+        updateMeta();
+        return super.formatHeader();
+    }
+
+    private void updateMeta() {
+        if (minChr != null) setProperty(HEADER_RANGE_KEY, getRange().formatAsTabDelimited());
+        if (lineCount != -1) setProperty(HEADER_LINE_COUNT_KEY, Long.toString(lineCount));
+        if (cardColIndex != -1) {
             String cardStr = cardSet.toString();
-            ret += CARDCOL_HEADER + "["+cardColName+"]: " + cardStr.substring(1,cardStr.length()-1).replace(" ","");
+            setProperty(HEADER_CARDCOL_KEY, "[" + cardColName + "]: " + cardStr.substring(1,cardStr.length()-1).replace(" ",""));
         }
-        return ret;
     }
 }

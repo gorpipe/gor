@@ -16,6 +16,7 @@ import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.ByteTextBuilder;
@@ -123,7 +124,7 @@ public class UTestBaseTable {
         dfile.toFile().setLastModified(System.currentTimeMillis() + 10000);
         Path dlink = Files.createSymbolicLink(workDirPath.resolve("dlink.gor"), dfile);
         dlink.toFile().setLastModified(System.currentTimeMillis() + 20000);
-        dict.insert(new DictionaryEntry.Builder(dlink, dict.getRootUri()).alias("d").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(dlink, dict.getRootUri()).alias("d").build());
         dict.save();
 
         Assert.assertEquals("LastModfied system link failed", dfile.toFile().lastModified(), dict.getLastModified("d"));
@@ -135,7 +136,7 @@ public class UTestBaseTable {
         Path elink = workDirPath.resolve("e.gor.link");
         Files.write(elink, efile.toString().getBytes());
         elink.toFile().setLastModified(System.currentTimeMillis() + 40000);
-        dict.insert(new DictionaryEntry.Builder(elink, dict.getRootUri()).alias("dl").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(elink, dict.getRootUri()).alias("dl").build());
         dict.save();
 
         Assert.assertEquals("LastModfied link file failed", efile.toFile().lastModified(), dict.getLastModified("dl"));
@@ -149,7 +150,7 @@ public class UTestBaseTable {
         Path flink = workDirPath.resolve("f.gor.link");
         Files.write(flink, ffile.toString().getBytes());
         flink.toFile().setLastModified(System.currentTimeMillis() + 60000);
-        dict.insert(new DictionaryEntry.Builder(Paths.get("f.gor"), dict.getRootUri()).alias("f").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(Paths.get("f.gor"), dict.getRootUri()).alias("f").build());
         dict.save();
 
         Assert.assertEquals("LastModfied missing file (link failover) failed", ffile.toFile().lastModified(), dict.getLastModified("f"));
@@ -555,11 +556,13 @@ public class UTestBaseTable {
     private void prepareDictGordFile() throws IOException {
         prepareTableGordFile();
         Files.delete(workDirPath.resolve(".dict").resolve("header"));
+        Files.delete(workDirPath.resolve("dict.gord.meta"));
     }
 
     private void prepareDictGordFileWithHeader() throws IOException {
         prepareTableGordFile();
         Files.delete(workDirPath.resolve(".dict").resolve("header"));
+        Files.delete(workDirPath.resolve("dict.gord.meta"));
         String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");
         content = "#Content\tExtraSpecial\n" + content;
         FileUtils.writeStringToFile(gordFile.toFile(), content, "utf8");

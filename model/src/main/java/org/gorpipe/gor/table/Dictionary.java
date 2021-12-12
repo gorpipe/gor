@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
@@ -31,6 +32,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.collection.IntArray;
@@ -483,10 +485,10 @@ public class Dictionary {
                     if (length > 2) {
                         if (length >= 6) {
                             // Support specification of the genomic range of each file
-                            final String startChr = parts.get(2);
-                            final int startPos = Integer.parseInt(parts.get(3));
-                            final String stopChr = parts.get(4);
-                            final int stopPos = Integer.parseInt(parts.get(5));
+                            final String startChr = Strings.isNullOrEmpty(parts.get(2)) ? null : parts.get(2);
+                            final int startPos = Strings.isNullOrEmpty(parts.get(3)) ? -1 : Integer.parseInt(parts.get(3));
+                            final String stopChr =  Strings.isNullOrEmpty(parts.get(4)) ? null : parts.get(4);
+                            final int stopPos =  Strings.isNullOrEmpty(parts.get(5)) ? -1 : Integer.parseInt(parts.get(5));
                             // support both comma separated and tab separated tags
                             tags = length < 7 ? tagset(alias)
                                     : tagset(parts.get(6).indexOf(',') >= 0 ? StringUtil.split(parts.get(6), ',') : parts.subList(6, parts.size()));

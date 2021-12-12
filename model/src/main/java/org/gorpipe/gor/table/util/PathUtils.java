@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.util;
 
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;

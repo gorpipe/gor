@@ -1,6 +1,7 @@
 package gorsat;
 
 import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -148,11 +149,10 @@ public class UTestGorDictionaryFolder {
         Path metapath = path.getParent().resolve("gorfile.gorz.meta");
         try(Stream<String> stream = Files.lines(metapath).filter(l -> !l.startsWith("## QUERY:"))) {
             String metainfo = stream.collect(Collectors.joining("\n"));
-            Assert.assertEquals("Wrong results in meta file", "## RANGE: chr21\t9683190\tchr21\t48110675\n" +
-                            "## MD5: 162498408aa03202fa1d2327b2cf9c4f\n" +
-                            "## LINES: 669\n" +
-                            "## CARDCOL[c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z",
-                    metainfo);
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## RANGE = chr21\t9683190\tchr21\t48110675"));
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## MD5 = 162498408aa03202fa1d2327b2cf9c4f"));
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## LINE_COUNT = 669"));
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## CARDCOL = [c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z"));
             try {
                 Files.delete(path);
             } catch (IOException e) {
@@ -275,7 +275,7 @@ public class UTestGorDictionaryFolder {
             Assert.assertEquals("Wrong results in dictionary",
                     "## SERIAL = 0\n" +
                             "## COLUMNS = Chrom,gene_start,gene_end,Gene_Symbol,c\n" +
-                            "# filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
+                            "#filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
                             "dd02aed74a26d4989a91f3619ac8dc20.gorz\t1\tchrM\t576\tchrM\t15955\tJ,M\n",
                     thedict);
         } finally {
@@ -436,9 +436,9 @@ public class UTestGorDictionaryFolder {
         var result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
-        var header = new TableHeader();
-        header.load(folderpath.resolve("thedict.gord"), null);
-        Assert.assertEquals("false", header.getProperty(TableHeader.HEADER_LINE_FILTER_KEY));
+        var header = new DictionaryTableMeta();
+        header.loadAndMergeMeta(folderpath.resolve("thedict.gord"));
+        Assert.assertEquals("false", header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY));
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3.gord");

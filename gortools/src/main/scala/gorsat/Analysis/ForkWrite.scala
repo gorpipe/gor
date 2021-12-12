@@ -31,7 +31,7 @@ import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
-import org.gorpipe.gor.table.PathUtils
+import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.model.gor.RowObj
 
 import java.util.UUID
@@ -220,7 +220,7 @@ case class ForkWrite(forkCol: Int,
 
     val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
     val tags = outputMeta.getTags
-    val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + (if(tags!=null) {
+    val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange.formatAsTabDelimited() + (if(tags!=null) {
        "\t" + tags + "\n"
     } else {
       "\n"
