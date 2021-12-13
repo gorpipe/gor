@@ -50,10 +50,6 @@ public class FileSourceProvider extends StreamSourceProvider {
 
     @Override
     public FileSource resolveDataSource(SourceReference sourceReference) {
-        if (sourceReference.getUrl().indexOf(":") > 1 && !sourceReference.getUrl().toLowerCase().startsWith("file:")) {
-            log.debug("Unhandled protocol reference: {}", sourceReference);
-            return null;
-        }
         return new FileSource(sourceReference);
     }
 }

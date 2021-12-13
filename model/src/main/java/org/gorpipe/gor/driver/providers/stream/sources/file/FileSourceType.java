@@ -28,7 +28,7 @@ public class FileSourceType extends SourceType {
     public static final FileSourceType FILE = new FileSourceType();
 
     private FileSourceType() {
-        super("FILE", false, "", "file:");
+        super("FILE", false, "");
     }
 
     @Override
