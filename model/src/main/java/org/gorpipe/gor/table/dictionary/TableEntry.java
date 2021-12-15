@@ -147,7 +147,7 @@ public abstract class TableEntry {
         return alias;
     }
 
-    protected String[] getTags() {
+    public String[] getTags() {
         return tags;
     }
 
@@ -166,7 +166,7 @@ public abstract class TableEntry {
             } else if (alias != null) {
                 filterTags = new String[]{alias};
             } else {
-                return EMPTY_TAGS_LIST;
+                filterTags = EMPTY_TAGS_LIST;
             }
         }
         return filterTags;
