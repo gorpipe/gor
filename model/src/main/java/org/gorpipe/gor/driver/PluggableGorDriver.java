@@ -211,7 +211,9 @@ public class PluggableGorDriver implements GorDriver {
     private DataSource handleLinks(DataSource source) throws IOException {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
-                return getDataSource(getSourceRef(source, readLink(source), null));
+                DataSource fromLinkSource = getDataSource(getSourceRef(source, readLink(source), null));
+                fromLinkSource.getSourceReference().setCreatedFromLink(true);
+                return fromLinkSource;
             }
         } else {
             if (source.supportsLinks() && !source.exists()) {
@@ -240,7 +242,6 @@ public class PluggableGorDriver implements GorDriver {
         if (fallbackLinkSource.getDataType() != LINK) {
             // The link file existed, was resolved.
             // Can not check for existance fallbackLinkSource as we allow the datasource not to exist at this point.
-            fallbackLinkSource.getSourceReference().setCreatedFromLink(true);
             return fallbackLinkSource;
         } else {
             String useLinkFolders = System.getProperty("GOR_DRIVER_LINK_FOLDERS","false");
