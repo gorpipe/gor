@@ -117,11 +117,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
         validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
     }
 
-    public void validateWriteAccess(String url) throws GorResourceException {
-        validateWriteAccess(PluggableGorDriver.instance().getDataSource(new SourceReference(url)));
-    }
-
-    private void validateWriteAccess(DataSource source) throws GorResourceException {
+    void validateWriteAccess(DataSource source) throws GorResourceException {
         validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
         isWithinAllowedFolders(source, writeLocations, commonRoot);
 
