@@ -227,7 +227,7 @@ public class PathUtils {
     }
 
     public static boolean isLocal(String path) {
-        return !path.contains(":/") || path.startsWith("file");
+        return (!path.contains(":/") && !path.startsWith("//db:")) || path.startsWith("file");
     }
 
     public static long getLastModifiedTime(String fileName, String securityContext, String commonRoot) throws IOException {

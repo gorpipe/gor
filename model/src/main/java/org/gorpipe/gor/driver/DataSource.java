@@ -58,11 +58,15 @@ public interface DataSource extends AutoCloseable {
     }
 
     /**
-     * Returns path to validate acccess path
+     * Returns path used to validate the access.
      * @throws  GorResourceException if the path can not be created (
      * for example if there is no access).
      */
     default String getAccessValidationPath() {
+        if (getSourceReference().isCreatedFromLink()) {
+            // For links we just valuate if the user has access for the link.
+            return getSourceReference().getOriginalSourceReference().getUrl();
+        }
         return getName();
     }
 

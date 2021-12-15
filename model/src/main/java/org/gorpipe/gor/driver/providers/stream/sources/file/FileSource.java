@@ -245,14 +245,6 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public String getAccessValidationPath() {
-        if (getSourceReference().isCreatedFromLink()) {
-            return getSourceReference().getOriginalSourceReference().getUrl();
-        }
-        return StreamSource.super.getAccessValidationPath();
-    }
-
-    @Override
     public void close() throws IOException {
         if (raf != null) {
             raf.close();

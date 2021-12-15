@@ -24,8 +24,6 @@ package org.gorpipe.gor;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.PluggableGorDriver;
-import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -61,26 +59,36 @@ public class UTestProjectContext {
         Path sharedDirPath = sharedDir.getRoot().toPath();
         Path projectDirPath = projectDir.getRoot().toPath();
 
-        Files.write(sharedDirPath.resolve("shared1.gor"), "#chrom\tpos\tref\nchr1\t1\tA\n".getBytes(StandardCharsets.UTF_8));
+        Path sharedFilePath =  sharedDirPath.resolve("shared1.gor");
+
+        Files.write(sharedFilePath, "#chrom\tpos\tref\nchr1\t1\tA\n".getBytes(StandardCharsets.UTF_8));
+
         Files.write(projectDirPath.resolve("user_data/shared2.gor"), "#chrom\tpos\tref\nchr1\t1\tB\n".getBytes(StandardCharsets.UTF_8));
         Files.write(projectDirPath.resolve("test.gor"), "#chrom\tpos\tref\nchr1\t1\tC\n".getBytes(StandardCharsets.UTF_8));
         Files.write(projectDirPath.resolve("user_data/test.gor"), "#chrom\tpos\tref\nchr1\t1\tD\n".getBytes(StandardCharsets.UTF_8));
 
+        createProjectToSharedSymbolicLink("shared1_symboliclink.gor", "shared1.gor");
+        createProjectToSharedGorLink("shared1_gorlink.gor.link", "shared1.gor");
 
-        createSymbolicLink("shared1_symboliclink.gor", "shared1.gor");
-        createGorLink("shared1_gorlink.gor.link", "shared1.gor");
+        createProjectToSharedSymbolicLink("user_data/shared1_symboliclink.gor", "shared1.gor");
+        createProjectToSharedGorLink("user_data/shared1_gorlink.gor.link", "shared1.gor");
 
-        createSymbolicLink("user_data/shared1_symboliclink.gor", "shared1.gor");
-        createGorLink("user_data/shared1_gorlink.gor.link", "shared1.gor");
+        Files.write(projectDirPath.resolve("absolutelink.gor.link"), "/some/absolute/gorfile.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(projectDirPath.resolve("s3link.gor.link"), "s3://bucket/folder/gorfile.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(projectDirPath.resolve("dblink.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}".getBytes(StandardCharsets.UTF_8));
+
+        Files.write(sharedDirPath.resolve("unaccessiable.gor.link"), "/some/absolute/gorfile.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(sharedDirPath.resolve("unaccessiable.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}".getBytes(StandardCharsets.UTF_8));
+
     }
 
-    private void createSymbolicLink(String link, String target) throws IOException {
+    private void createProjectToSharedSymbolicLink(String link, String target) throws IOException {
         Path sharedDirPath = sharedDir.getRoot().toPath();
         Path projectDirPath = projectDir.getRoot().toPath();
         Files.createSymbolicLink(projectDirPath.resolve(link), sharedDirPath.resolve(target));
     }
 
-    private void createGorLink(String link, String target) throws IOException {
+    private void createProjectToSharedGorLink(String link, String target) throws IOException {
         Path targetLocation = sharedDir.getRoot().toPath();
         Path projectDirPath = projectDir.getRoot().toPath();
         Files.write(projectDirPath.resolve(link), targetLocation.resolve(target).toString().getBytes(StandardCharsets.UTF_8));
@@ -89,8 +97,8 @@ public class UTestProjectContext {
 
     // Read
 
-    private void validateAccess(String url) {
-        fileReader.validateAccess(PluggableGorDriver.instance().getDataSource(new SourceReference(url)));
+    private void validateAccessAndRead(String url) {
+        fileReader.resolveUrl(url, false);
         try {
             fileReader.getReader(url).readLine();
         } catch (Exception e) {
@@ -100,50 +108,82 @@ public class UTestProjectContext {
 
     @Test
     public void isReadAllowedValidPath() {
-        validateAccess("test.gor");
+        validateAccessAndRead("test.gor");
     }
 
 
     @Test(expected = GorResourceException.class)
     public void isReadNotAllowedValidPath() {
-        validateAccess("../test.gor");
+        validateAccessAndRead("../test.gor");
     }
 
     @Test(expected = GorResourceException.class)
     public void isReadAllowedAbsolutePath() {
-        validateAccess("/test.gor");
+        validateAccessAndRead("/test.gor");
     }
 
     @Test
     public void isReadAllowedWithDots() {
-        validateAccess("user_data/../test.gor");
+        validateAccessAndRead("user_data/../test.gor");
     }
 
     @Test
     public void isReadAllowedSharedSymbolicLink() {
-        validateAccess("shared1_symboliclink.gor");
+        validateAccessAndRead("shared1_symboliclink.gor");
     }
 
     @Test
     public void isReadAllowedFromUserDataSharedSymbolicLink() {
-        validateAccess("user_data/shared1_symboliclink.gor");
+        validateAccessAndRead("user_data/shared1_symboliclink.gor");
     }
     
 
     @Test
     public void isReadAllowedSharedGorLink() {
-        validateAccess("shared1_gorlink.gor");
+        validateAccessAndRead("shared1_gorlink.gor");
+    }
+
+    @Test
+    public void isReadAllowedSharedGorLinkWithLink() {
+        validateAccessAndRead("shared1_gorlink.gor.link");
     }
 
     @Test
     public void isReadAllowedFromUserDataSharedGorLink() {
-        validateAccess("user_data/shared1_gorlink.gor");
+        validateAccessAndRead("user_data/shared1_gorlink.gor");
+    }
+
+    @Test
+    public void isReadAllowedFromLinkToAbsolute() {
+        fileReader.resolveUrl("absolutelink.gor", false);
+    }
+
+    @Test
+    public void isReadAllowedFromLinkToS3() {
+        fileReader.resolveUrl("s3link.gor", false);
+    }
+
+    @Test
+    public void isReadAllowedFromLinkToDb() {
+        fileReader.resolveUrl("dblink.rep", false);
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void isReadAllowedFromUnaccessibleGorLink() {
+        // Should not be able to access, links with absolute paths (what ever they point to)
+        fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.gor.link").toString(), false);
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void isReadAllowedFromUnaccessibleDbLink() {
+        // Should not be able to access, links with absolute paths (what ever they point to)
+        fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.rep.link").toString(), false);
     }
 
     // Write
 
     private void validateWriteAccess(String url) {
-        fileReader.validateWriteAccess(url);
+        fileReader.resolveUrl(url, true);
         try {
             fileReader.getOutputStream(url, false).write("#chrom\tpos\tref\nchr2\t2\tX\n".getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
