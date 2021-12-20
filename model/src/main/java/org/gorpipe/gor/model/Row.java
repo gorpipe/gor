@@ -146,7 +146,7 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
         return (pos < other.pos && chr.equals(other.chr)) || chr.compareTo(other.chr) < 0;
     }
 
-    static int countColumns(CharSequence input) {
+    public static int countColumns(CharSequence input) {
         int n = 1;
         int length = input.length();
         for(int i = 0; i < length; i++) {

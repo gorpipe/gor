@@ -31,6 +31,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.util.collection.ByteArrayWrapper;
@@ -52,6 +53,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
     private final String filePath;
     private GorHeader header;
+    private int columnCount = -1;
     private final Unzipper unzipper;
     private byte[] buffer;
     private final BufferIterator bufferIterator = new BufferIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
@@ -151,7 +153,8 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
                 throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
         }
-        return RowObj.apply(this.bufferIterator.getNextAsString());
+        String rowString = this.bufferIterator.getNextAsString();
+        return RowObj.apply(rowString, countColumns(rowString));
     }
 
     @Override
@@ -162,6 +165,13 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         } catch (IOException e) {
             log.warn(e.getMessage());
         }
+    }
+
+    private int countColumns(CharSequence rowString) {
+        if (columnCount < 0) {
+            columnCount = Row.countColumns(rowString);
+        }
+        return columnCount;
     }
 
     private void loadBufferIterator() throws IOException, DataFormatException {
