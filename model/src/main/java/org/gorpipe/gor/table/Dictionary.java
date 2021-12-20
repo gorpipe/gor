@@ -23,6 +23,8 @@
 package org.gorpipe.gor.table;
 
 import com.google.common.base.Strings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
@@ -110,7 +112,7 @@ import java.util.stream.Stream;
  */
 public class Dictionary {
     private static final Logger log = LoggerFactory.getLogger(Dictionary.class);
-    final private static Map<String, Dictionary> dictCache = new ConcurrentHashMap<>();   //A map from dictionaries to the cache objects.
+    final private static Cache<String, Dictionary> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
 
 
     public final boolean isDictionaryWithBuckets; // source col from dictionary files can be hiden if no buckets and no -f filters
@@ -141,16 +143,17 @@ public class Dictionary {
         if (useCache) {
             var key = dictCacheKeyFromPathAndRoot(path, commonRoot);
             if (uniqueID == null || uniqueID.equals("")) {
-                dictCache.remove(key);
+                dictCache.invalidate(key);
                 return processDictionary(path, fileReader, uniqueID, commonRoot, true);
             } else {
-                return dictCache.compute(key, (p, d) -> {
-                    if (d == null || !d.fileSignature.equals(uniqueID)) {
-                        return processDictionary(path, fileReader, uniqueID, commonRoot, true);
-                    } else {
-                        return d;
-                    }
-                });
+                Dictionary dictFromCache = dictCache.getIfPresent(key);
+                if (dictFromCache == null || !dictFromCache.fileSignature.equals(uniqueID)) {
+                    Dictionary newDict = processDictionary(path, fileReader, uniqueID, commonRoot, true);
+                    dictCache.put(key, newDict);
+                    return newDict;
+                } else {
+                    return dictFromCache;
+                }
             }
         } else {
             return processDictionary(path, fileReader, uniqueID, commonRoot, false);
