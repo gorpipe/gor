@@ -24,6 +24,7 @@ package org.gorpipe.gor.table.dictionary;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.model.FileReader;
@@ -53,8 +54,6 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     private static final Logger log = LoggerFactory.getLogger(BaseDictionaryTable.class);
 
     public static final String DEFAULT_SOURCE_COLUMN = "Source";
-    private static final boolean DEFAULT_BUCKETIZE = false;  // Value used if bucketized is not set.
-    private static final boolean INFER_BUCKETIZE_FROM_FILE = Boolean.parseBoolean(System.getProperty("GOR_TABLE_INFER_BUCKETIZE_FROM_FILE", "true"));
 
     private String sourceColumn = DEFAULT_SOURCE_COLUMN;     // Name of the files tag column (source column).
 
@@ -62,6 +61,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
 
     private Boolean bucketize = null;
     private boolean lineFilter = true;
+    private String contentType = null;
 
     protected ITableEntries<T> tableEntries;
 
@@ -122,7 +122,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     }
 
     public boolean isBucketize() {
-        return isBucketizeSet() ? bucketize : DEFAULT_BUCKETIZE;
+        return isBucketizeSet() ? bucketize : BooleanUtils.isTrue(inferShouldBucketizeFromContent());
     }
 
     public void setBucketize(boolean bucketize) {
@@ -212,11 +212,6 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
             // Validate the new file.
             if (isValidateFiles()) {
                 validateFile(line.getContentReal());
-            }
-
-            // Update bucketize - Do that from the content so do it here.
-            if (INFER_BUCKETIZE_FROM_FILE && !isBucketizeSet()) {
-                bucketize = inferShouldBucketizeFromFile(line.getContentReal());
             }
 
             this.tableEntries.insert(line, isHasUniqueTags());
@@ -459,10 +454,23 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         addToBucket(bucket, Arrays.asList(lines));
     }
 
-    public Boolean inferShouldBucketizeFromFile(String fileName) {
-        DataSource source = getFileReader().resolveUrl(fileName);
-        String type = FilenameUtils.getExtension(source.getFullPath());
+    private String getFileEndingFromContentFile(String fileName) {
+        if (fileName != null) {
+            DataSource source = getFileReader().resolveUrl(fileName);
+            return FilenameUtils.getExtension(source.getFullPath());
+        }
+        return null;
+    }
 
+    public String getFileEndingFromContent() {
+        List<T> entries = getEntries();
+        if (!entries.isEmpty()) {
+            return getFileEndingFromContentFile(entries.get(0).getContentReal());
+        }
+        return null;
+    }
+
+    public static Boolean inferShouldBucketizeFromType(String type) {
         if ("gor".equalsIgnoreCase(type) || "gorz".equalsIgnoreCase(type)) {
             return true;
         }
@@ -472,6 +480,18 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         }
 
         return null;
+    }
+
+    public Boolean inferShouldBucketizeFromFile(String fileName) {
+        String type = getFileEndingFromContentFile(fileName);
+        return inferShouldBucketizeFromType(type);
+    }
+
+    public Boolean inferShouldBucketizeFromContent() {
+        if (contentType == null) {
+            contentType = getFileEndingFromContent();
+        }
+        return inferShouldBucketizeFromType(contentType);
     }
 
     protected abstract static class Builder<B extends Builder<B>> extends BaseTable.Builder<B> {
