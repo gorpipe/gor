@@ -21,7 +21,7 @@
  */
 
 plugins {
-    id "gor.common"
+    id "gor.java-common"
     id "scala"
 }
 

@@ -64,7 +64,7 @@ project(':model') {
         testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
         testImplementation "org.scalatestplus:junit-4-13_${scalaVersion}:_"
         testImplementation("org.postgresql:postgresql:_")
-        testImplementation "org.scala-lang.modules:scala-collection-compat_${scalaVersion}:2.5.0"
+        testImplementation "org.scala-lang.modules:scala-collection-compat_${scalaVersion}:_"
 
         testRuntimeOnly "org.apache.derby:derby:_"
         testRuntimeOnly "org.apache.derby:derbytools:_"

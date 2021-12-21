@@ -118,13 +118,10 @@ ext {
     }
 }
 
-
-
 // -----------------------------------------------------
-// Common tests setup.
-// -----------------------------------------------------
-
 // Common repositories and contraints
+// -----------------------------------------------------
+
 dependencies {
     testImplementation 'junit:junit:4.13.2'
 
@@ -136,8 +133,20 @@ dependencies {
         implementation('io.netty:netty-transport-native-epoll:4.1.69.Final')
 
         implementation('net.minidev:json-smart:2.4.1')
+
+        implementation("org.apache.logging.log4j:log4j-core") {
+            version {
+                strictly("[2.17, 3[")
+                prefer("2.17.0")
+            }
+            because("CVE-2021-44228: Log4j vulnerable to remote code execution")
+        }
     }
 }
+
+// -----------------------------------------------------
+// Common tests setup.
+// -----------------------------------------------------
 
 tasks.withType(Test) {
     // Read properties from config file.
