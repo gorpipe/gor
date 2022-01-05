@@ -40,7 +40,7 @@ project(':gortools') {
         implementation project(':util')
 
         // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
-        api "org.scala-lang.modules:scala-parser-combinators_2.12:_"
+        api "org.scala-lang.modules:scala-parser-combinators_${scalaVersion}:_"
 
         implementation "org.freemarker:freemarker:_"
         implementation "org.yaml:snakeyaml:_"
@@ -48,7 +48,7 @@ project(':gortools') {
         implementation libs.commons.lang3
         implementation "org.scala-lang:scala-compiler:_"
         implementation libs.jackson.databind
-        implementation "org.scalanlp:breeze_2.12:_"
+        implementation "org.scalanlp:breeze_${scalaVersion}:_"
         implementation "colt:colt:_"
         implementation "com.github.samtools:htsjdk:_"
         implementation "org.aeonbits.owner:owner:_"
@@ -66,8 +66,11 @@ project(':gortools') {
         testImplementation project(':util')
 
         testImplementation Testing.mockito.core
-        testImplementation "org.scalatest:scalatest_2.12:_"
-        testImplementation "org.scalacheck:scalacheck_2.12:_"
+        testImplementation "org.scalatest:scalatest_${scalaVersion}:_"
+        testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
+        testImplementation "org.scalatest:scalatest-funsuite_${scalaVersion}:_"
+        testImplementation "org.scalatestplus:junit-4-13_${scalaVersion}:_"
+        testImplementation "org.scalatestplus:mockito-3-4_${scalaVersion}:_"
         testImplementation 'com.github.stefanbirkner:system-rules:_'
 
 

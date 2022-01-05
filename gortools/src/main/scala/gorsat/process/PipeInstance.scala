@@ -32,16 +32,16 @@ import gorsat.Commands.{Analysis, _}
 import gorsat.DynIterator.DynamicRowSource
 import gorsat.Iterators.StdInputSourceIterator
 import gorsat.Monitors.{CancelMonitor, MemoryMonitor, TimeoutMonitor}
-import gorsat.Script.{ScriptEngineFactory, ScriptParsers}
+import gorsat.Script.{ScriptEngineFactory, ScriptExecutionEngine, ScriptParsers}
 import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat._
-import gorsat.gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
-import gorsat.process.GorJavaUtilities.CmdParams
-import gorsat.process.GorPipe.brsConfig
+import gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
+import process.GorJavaUtilities.CmdParams
+import process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator, GenomicIteratorBase, GorFileReaderContext}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator}
 import org.gorpipe.gor.monitor.GorMonitor
-import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}
 import org.gorpipe.gor.util.StringUtil
 import org.slf4j.LoggerFactory
 
@@ -206,7 +206,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     if (!StringUtil.isEmpty(gorRoot)) {
       new DriverBackedFileReader(null, gorRoot, null)
     } else {
-      GorFileReaderContext.DEFAULT_READER
+      ProjectContext.DEFAULT_READER
     }
   }
 
@@ -228,6 +228,10 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     init(inputQuery, useStdin, forcedInputHeader, false, "")
   }
 
+  def createScriptEngine(context: GorContext): ScriptExecutionEngine = {
+    ScriptEngineFactory.create(context)
+  }
+
   def init(inputQuery: String, useStdin: Boolean, forcedInputHeader: String, fileSignature: Boolean, virtualFile: String): GenomicIterator = {
 
     DynIterator.createGorIterator = (ctx: GorContext) => PipeInstance.createGorIterator(ctx)
@@ -239,7 +243,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     val gorCommands = CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';') // In case this is a command line script
 
     if (fileSignature || virtualFile != null || ScriptParsers.isScript(gorCommands)) {
-      val scriptExecutionEngine = ScriptEngineFactory.create(context)
+      val scriptExecutionEngine = createScriptEngine(context)
       if (virtualFile != null && virtualFile.nonEmpty) {
         System.out.println(scriptExecutionEngine.executeVirtualFile(virtualFile, gorCommands))
         System.exit(0)
@@ -562,7 +566,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
           GorJavaUtilities.getDbIteratorSource(finalCommand.trim, !isNorContext, source, scoping)
         } else {
           val projectRoot = context.getSession.getProjectContext.getRealProjectRoot
-          new ProcessRowSource(finalCommand, commandType, isNorContext, context.getSession, range, filter)
+          new ProcessRowSource(finalCommand, commandType, isNorContext, context.getSession, range, filter, false)
         }
         return InputSourceParsingResult(inputSource, "", isNorContext, range)
       }

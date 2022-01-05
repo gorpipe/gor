@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.model;
 
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.DefaultFileReader;
-import org.gorpipe.gor.model.RacFile;
+import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 public class UTestDefaultFileReader {
-    DefaultFileReader reader;
+    FileReader reader;
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -51,22 +51,15 @@ public class UTestDefaultFileReader {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     private final String text = "This is a test\nof some text\nin a file.";
-
-
+    
     @Before
     public void setUp() {
-        reader = new DefaultFileReader("bingo");
+        reader = ProjectContext.DEFAULT_READER;
     }
 
     @Test
     public void getSecurityContext() {
-        assertEquals("bingo", reader.getSecurityContext());
-    }
-
-    @Test
-    public void checkValidServerFileName() {
-        reader.checkValidServerFileName("bongo");
-        // All we care about is that this didn't throw an exception
+        assertEquals("", reader.getSecurityContext());
     }
 
     @Test
@@ -85,11 +78,6 @@ public class UTestDefaultFileReader {
         assertEquals(text, String.join("\n", lines));
     }
 
-    @Test
-    public void readAll_throwsExceptionWhenInvalidFile() {
-        thrown.expect(GorSystemException.class);
-        reader.readAll("thisDoesNotExists.txt");
-    }
 
     @Test
     public void readHeaderLine() throws IOException {
@@ -97,11 +85,6 @@ public class UTestDefaultFileReader {
         assertEquals("This is a test", header);
     }
 
-    @Test
-    public void readHeaderLine_throwsExceptionWhenInvalidFile() {
-        thrown.expect(GorSystemException.class);
-        reader.readHeaderLine("thisDoesNotExists.txt");
-    }
 
     @Test
     public void getReader() throws IOException {
@@ -136,14 +119,14 @@ public class UTestDefaultFileReader {
 
     @Test
     public void getDirectoryStream() throws IOException {
-        final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, false, false, workDir.getRoot().toPath(), workDir.getRoot().toPath());
+        final Stream<String> directoryStream = DriverBackedFileReader.getDirectoryStream(0, false, false, workDir.getRoot().toPath(), workDir.getRoot().toPath());
         final List<String> list = directoryStream.collect(Collectors.toList());
         assertTrue(list.size() >= 1);
     }
 
     @Test
     public void getDirectoryStreamWithModificationDate() throws IOException {
-        final Stream<String> directoryStream = DefaultFileReader.getDirectoryStream(0, false, true, workDir.getRoot().toPath(), workDir.getRoot().toPath());
+        final Stream<String> directoryStream = DriverBackedFileReader.getDirectoryStream(0, false, true, workDir.getRoot().toPath(), workDir.getRoot().toPath());
         final List<String> list = directoryStream.collect(Collectors.toList());
         assertTrue(list.size() >= 1);
     }
@@ -164,7 +147,7 @@ public class UTestDefaultFileReader {
 
     @Test
     public void getReaderWithPath() throws IOException {
-        final BufferedReader bufferedReader = this.reader.getReader(getFile().toPath());
+        final BufferedReader bufferedReader = this.reader.getReader(getFile().toPath().toString());
         final String firstLine = bufferedReader.readLine();
         assertEquals("This is a test", firstLine);
     }

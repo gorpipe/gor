@@ -42,25 +42,25 @@ import org.gorpipe.gor.util.StringUtil
 class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null) extends GorSessionFactory {
 
   override def create(): GorSession = {
-    val requestId = pipeOptions.requestId
+    val requestId = if (pipeOptions.requestId != null) pipeOptions.requestId else "-1"
     val useSubFolder = System.getProperty("gor.local.filecache.usesubfolders", "true").toBoolean
     val subFolderSize = System.getProperty("gor.local.filecache.subfoldersize", "2").toInt
 
     val session = new GorSession(requestId)
 
-    val projectRoot = Paths.get(pipeOptions.gorRoot)
-    var cacheDir = Paths.get(pipeOptions.cacheDir)
+    val projectRoot = Paths.get(if (pipeOptions.gorRoot != null) pipeOptions.gorRoot else ".")
+    var cacheDir = Paths.get(if (pipeOptions.cacheDir != null) pipeOptions.cacheDir else ProjectContext.DEFAULT_CACHE_DIR)
     if(!cacheDir.isAbsolute) cacheDir = projectRoot.resolve(cacheDir)
 
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
-      .setCacheDir(pipeOptions.cacheDir)
+      .setCacheDir(cacheDir.toString)
       .setConfigFile(pipeOptions.configFile)
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
-      .setRoot(pipeOptions.gorRoot)
-      .setFileReader(createFileReader(pipeOptions.gorRoot))
+      .setRoot(projectRoot.toString)
+      .setFileReader(createFileReader(projectRoot.toString))
       .setFileCache(new LocalFileCacheClient(cacheDir, useSubFolder, subFolderSize))
       .setQueryHandler(createQueryHandler(pipeOptions.queryHandler, session))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
@@ -88,11 +88,7 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
   }
 
   private def createFileReader(gorRoot: String): FileReader = {
-    if (!StringUtil.isEmpty(gorRoot)) {
-      new DriverBackedFileReader(securityContext, gorRoot, null)
-    } else {
-      GorFileReaderContext.DEFAULT_READER
-    }
+    new DriverBackedFileReader(securityContext, gorRoot, null)
   }
 
   private def createQueryHandler(queryHandlerName: String, session: GorSession): GorParallelQueryHandler = {

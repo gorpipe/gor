@@ -28,12 +28,11 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.reference.ReferenceBuildDefaults
 import org.gorpipe.gor.session.GorContext
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestSplitManager extends FunSuite {
+class UTestSplitManager extends AnyFunSuite {
 
   def createDefaultSplitManager(): SplitManager = {
     val splits = SplitManager.parseBuildSizeSplit(ReferenceBuildDefaults.buildSizeGeneric)

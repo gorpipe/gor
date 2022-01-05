@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table;
 
+import org.gorpipe.gor.table.util.GenomicRange;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -81,42 +82,42 @@ public class UTestGenomicRange {
         // Test format
 
         range = new GenomicRange("", -1, "", -1);
-        Assert.assertEquals("Format: Empty", "\t\t\t", range.format());
+        Assert.assertEquals("Format: Empty", "\t\t\t", range.formatAsTabDelimited());
 
         range = new GenomicRange("chr10", 100, "chr11", 200);
-        Assert.assertEquals("Format: Fully specified, different chromosomes", "chr10\t100\tchr11\t200", range.format());
+        Assert.assertEquals("Format: Fully specified, different chromosomes", "chr10\t100\tchr11\t200", range.formatAsTabDelimited());
 
         range = new GenomicRange("chr10", 100, "chr10", 200);
-        Assert.assertEquals("Format: Fully specified, same chromosome", "chr10\t100\tchr10\t200", range.format());
+        Assert.assertEquals("Format: Fully specified, same chromosome", "chr10\t100\tchr10\t200", range.formatAsTabDelimited());
 
         range = new GenomicRange("chr10", 100, "", -1);
-        Assert.assertEquals("Format: From location", "chr10\t100\t\t", range.format());
+        Assert.assertEquals("Format: From location", "chr10\t100\t\t", range.formatAsTabDelimited());
 
         range = new GenomicRange("", -1, "chr11", 200);
-        Assert.assertEquals("Format: To location", "\t\tchr11\t200", range.format());
+        Assert.assertEquals("Format: To location", "\t\tchr11\t200", range.formatAsTabDelimited());
 
         range = new GenomicRange("chr10", 100, "", 200);
-        Assert.assertEquals("Format: Skipping to chr", "chr10\t100\t\t200", range.format());
+        Assert.assertEquals("Format: Skipping to chr", "chr10\t100\t\t200", range.formatAsTabDelimited());
 
         // test extremes
         range = new GenomicRange("chrM",0,"chrY",10000000);
-        Assert.assertEquals("Format: Full range", "chrM\t0\tchrY\t10000000", range.format());
+        Assert.assertEquals("Format: Full range", "chrM\t0\tchrY\t10000000", range.formatAsTabDelimited());
 
         range = new GenomicRange("chrM",0,"",-1);
-        Assert.assertEquals("Format: From beginning no end specified", "chrM\t0\t\t", range.format());
+        Assert.assertEquals("Format: From beginning no end specified", "chrM\t0\t\t", range.formatAsTabDelimited());
 
         range = new GenomicRange("",-1,"chrY",10000000);
-        Assert.assertEquals("Format: To end no beginning specified", "\t\tchrY\t10000000", range.format());
+        Assert.assertEquals("Format: To end no beginning specified", "\t\tchrY\t10000000", range.formatAsTabDelimited());
 
         // out of bounds
         range = new GenomicRange("",0,"",-1);
-        Assert.assertEquals("Format: Invalid beginning no end specified", "\t0\t\t", range.format());
+        Assert.assertEquals("Format: Invalid beginning no end specified", "\t0\t\t", range.formatAsTabDelimited());
 
         range = new GenomicRange("",-1,"",100000000);
-        Assert.assertEquals("Format: Skipping to chr", "\t\t\t100000000", range.format());
+        Assert.assertEquals("Format: Skipping to chr", "\t\t\t100000000", range.formatAsTabDelimited());
 
         range = new GenomicRange("",0,"",10000000);
-        Assert.assertEquals("Format: Skipping to chr", "\t0\t\t10000000", range.format());
+        Assert.assertEquals("Format: Skipping to chr", "\t0\t\t10000000", range.formatAsTabDelimited());
     }
 
     @Test

@@ -20,9 +20,8 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.dictionary;
 
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.util.IntHashMap;
 import org.gorpipe.util.collection.IntArray;
 import org.gorpipe.util.collection.IntHashSet;
@@ -40,7 +39,7 @@ public class TableAccessOptimizer {
 
     private static final Logger log = LoggerFactory.getLogger(TableAccessOptimizer.class);
 
-    private final BaseTable table;
+    private final BaseDictionaryTable table;
     private final ArrayList<DictionaryEntry> lines = new ArrayList<>();
     public boolean hasBuckets = false;
 
@@ -54,7 +53,7 @@ public class TableAccessOptimizer {
     /**
      *
      */
-    public TableAccessOptimizer(BaseTable table) {
+    public TableAccessOptimizer(BaseDictionaryTable table) {
         this.table = table;
     }
 
@@ -66,7 +65,7 @@ public class TableAccessOptimizer {
 
         for (DictionaryEntry dictLine : inputLines) {
             int bucketId = -1;
-            String alias = dictLine.getAliasTag();
+            String alias = dictLine.getAlias();
             if (dictLine.hasBucket()) {
                 if (dictLine.isDeleted()) {
                     addTagForDeletedFile(dictLine.getBucket(), alias);
@@ -245,7 +244,7 @@ public class TableAccessOptimizer {
                         log.trace("Bucket used={} with tags={}", entry.file, entry.tags.toString());
                     }
                     // Fake dictionary line.
-                    this.lines.add(new DictionaryEntry.Builder<>(entry.file, table.getRootUri()).tags(entry.tags).sourceInserted(true).build());
+                    this.lines.add((DictionaryEntry)new DictionaryEntry.Builder<>(entry.file, table.getRootUri()).sourceInserted(true).tags(entry.tags).build());
                     replace.remove(bucket);
                 } else if (bucket == -1 || include.contains(bucket)) { // all files from this bucket are to be included as they were
                     if (log.isTraceEnabled()) {

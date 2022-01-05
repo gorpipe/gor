@@ -23,8 +23,10 @@
 package org.gorpipe.gor.cli.manager;
 
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GenomicRange;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.lock.TableTransaction;
+import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import picocli.CommandLine;
@@ -34,7 +36,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.gorpipe.gor.table.PathUtils.relativize;
+import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 @CommandLine.Command(name = "insert",
         aliases = {"i"},
@@ -55,7 +57,7 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
 
     @CommandLine.Option(names = {"-a", "--alias"},
             description = "Aliases to use.")
-    private String alias;
+    private String alias = "";
 
     @CommandLine.Option(names = {"-r", "-p", "--range"},
             description = "Specify range to use.  Value is specified as <chrom start>[:<poststart>][-[<chrom stop>:][<pos stop>]].")
@@ -74,23 +76,25 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
         TableManager tm = TableManager.newBuilder()
                 .useHistory(!nohistory).minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
 
-        BaseTable table = tm.initTable(dictionaryFile.toPath());
-        if (source != null && !source.equals(table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY))) {
-            table.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, source);
-        }
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
 
-        if (alias != null && !this.tags.contains(alias)) {
-            this.tags.add(alias);
-        }
+        try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
+            if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
+                table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
+            }
 
-        if(tagskey) {
-            table.setUniqueTags(tagskey);
+            if (tagskey) {
+                table.setUniqueTags(tagskey);
+            }
+
+            table.insert(this.files.stream()
+                    .map(f -> relativize(table.getRootPath(), Paths.get(f)))
+                    .map(p -> new DictionaryEntry.Builder<>(p, table.getRootUri())
+                            .range(GenomicRange.parseGenomicRange(this.range))
+                            .alias(alias)
+                            .tags(this.tags)
+                            .build()).toArray(DictionaryEntry[]::new));
+            trans.commit();
         }
-        tm.insert(dictionaryFile.toPath(), bucketPackLevel, workers, this.files.stream()
-                .map(f -> relativize(table.getRootPath(), Paths.get(f)))
-                .map(p -> new DictionaryEntry.Builder<>(p, table.getRootUri())
-                        .range(GenomicRange.parseGenomicRange(this.range))
-                        .tags(this.tags)
-                        .build()).toArray(DictionaryEntry[]::new));
     }
 }

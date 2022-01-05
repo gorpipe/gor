@@ -15,6 +15,7 @@ package org.gorpipe.gor.Dictionary;
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
@@ -125,9 +126,9 @@ public class UTestDictionary {
         for (int i = 0; i < 81; ++i) tagList1.add("PN" + i);
         for (int i = 19; i < 100; ++i) tagList2.add("PN" + i);
 
-        Dictionary dictionary1 = Dictionary.getDictionary(tmpFile.getPath(), ".", "hjalti");
-        Dictionary dictionary2 = Dictionary.getDictionary(tmpFile.getPath(), ".", "hjalti");
-        Dictionary dictionary3 = Dictionary.getDictionary(tmpFile.getPath(), ".", "hjalti");
+        Dictionary dictionary1 = getDictionary(tmpFile.getPath(), ".", "hjalti");
+        Dictionary dictionary2 = getDictionary(tmpFile.getPath(), ".", "hjalti");
+        Dictionary dictionary3 = getDictionary(tmpFile.getPath(), ".", "hjalti");
 
         // Check the same query results in same file count.
         Assert.assertEquals(tagList1.size(), dictionary1.getSources(tagList1, true, false).length);
@@ -153,9 +154,9 @@ public class UTestDictionary {
             fileWriter.write("file2.gor\ttagList2\tchr1\t-1\tchrN\t-1\t" + tagList2.stream().collect(Collectors.joining(",")) + "\n");
         }
 
-        Dictionary dictionary1 = Dictionary.getDictionary(tmpFile.getPath(), "hjalti", ".");
-        Dictionary dictionary2 = Dictionary.getDictionary(tmpFile.getPath(), "hjalti", ".");
-        Dictionary dictionary3 = Dictionary.getDictionary(tmpFile.getPath(), "hjalti", ".");
+        Dictionary dictionary1 = getDictionary(tmpFile.getPath(), "hjalti", ".");
+        Dictionary dictionary2 = getDictionary(tmpFile.getPath(), "hjalti", ".");
+        Dictionary dictionary3 = getDictionary(tmpFile.getPath(), "hjalti", ".");
 
         // Check the same query results in same file count.
         Assert.assertEquals(1, dictionary1.getSources(tagList1, true, false).length);
@@ -173,8 +174,8 @@ public class UTestDictionary {
         tagList.add("tagL");
         tagList.add("tagA");
 
-        Dictionary dict1 = Dictionary.getDictionary(gordFile.getPath(), "hjalti", ".");
-        Dictionary dict2 = Dictionary.getDictionary(gordFile.getPath(), "hjalti", ".");
+        Dictionary dict1 = getDictionary(gordFile.getPath(), "hjalti", ".");
+        Dictionary dict2 = getDictionary(gordFile.getPath(), "hjalti", ".");
 
 
         List<Dictionary.DictionaryLine> res1 = Arrays.asList(dict1.getSources(tagList, true, false));
@@ -246,7 +247,7 @@ public class UTestDictionary {
         dictionaryFileWriter.write("gorfile1.gor\ttag1\n");
         dictionaryFileWriter.close();
 
-        final Dictionary dict1 = Dictionary.getDictionary(dictionaryFile,"id1", this.workDir.getRoot().getAbsolutePath());
+        final Dictionary dict1 = getDictionary(dictionaryFile,"id1", this.workDir.getRoot().getAbsolutePath());
         final Dictionary.DictionaryLine[] lines1 = dict1.getSources(new HashSet<>(Collections.singletonList("tag1")), true, false);
         Assert.assertEquals(1, lines1.length);
 
@@ -254,7 +255,7 @@ public class UTestDictionary {
         newDictionaryFileWriter.write("gorfile1.gor\ttag1\ngorfile2.gor\ttag1\n");
         newDictionaryFileWriter.close();
 
-        final Dictionary dict2 = Dictionary.getDictionary(dictionaryFile,"id2", this.workDir.getRoot().getAbsolutePath());
+        final Dictionary dict2 = getDictionary(dictionaryFile,"id2", this.workDir.getRoot().getAbsolutePath());
         final Dictionary.DictionaryLine[] lines2 = dict2.getSources(new HashSet<>(Collections.singletonList("tag1")), true, false);
 
         Assert.assertEquals(2, lines2.length);
@@ -275,5 +276,9 @@ public class UTestDictionary {
             success = e.getMessage().matches("Dictionary .* has no active lines.");
         }
         Assert.assertTrue(success);
+    }
+
+    public static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
+        return Dictionary.getDictionary(path, ProjectContext.DEFAULT_READER, uniqueID, commonRoot, true);
     }
 }

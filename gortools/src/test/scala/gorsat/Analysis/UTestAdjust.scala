@@ -24,16 +24,16 @@ package gorsat.Analysis
 
 import java.io.{File, FileWriter}
 import java.nio.file.Files
-
 import gorsat.TestUtils
 import org.apache.commons.io.FileUtils
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestAdjust extends FunSuite with BeforeAndAfter {
+class UTestAdjust extends AnyFunSuite with BeforeAndAfter {
 
   var workdir: File =_
 

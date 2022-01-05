@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.dictionary;
 
 import java.util.Iterator;
 import java.util.List;
@@ -60,10 +60,10 @@ public interface ITableEntries<T extends BucketableTableEntry> {
 
     /**
      * Get the entries for the given tags/alias.
-     * @param tags  the tags/alias to filter by.
+     * @param aliasesAndTags   the tags/alias to filter by.
      * @return  the entries for the given tags/alias.
      */
-    List<T> getEntries(String... tags);
+    List<T> getEntries(String... aliasesAndTags);
 
     /**
      * Get iterator to iterate through all the entries.

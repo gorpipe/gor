@@ -28,8 +28,10 @@ import de.tototec.cmdoption.CmdlineParser;
 import de.tototec.cmdoption.handler.AddToCollectionHandler;
 import de.tototec.cmdoption.handler.CmdOptionHandler;
 import org.apache.commons.lang3.ArrayUtils;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GenomicRange;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.lock.TableTransaction;
+import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
@@ -52,7 +54,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.gorpipe.gor.table.PathUtils.relativize;
+import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 /**
  * Command line interface for the table manager.
@@ -151,7 +153,7 @@ public class TableManagerCLI {
         @CmdOption(names = {"--tags", "-t"}, args = {"<list>"}, description = "Specify tags to use.  Values are specified as comma separated list.")
         private List<String> tags = new ArrayList<>();
         @CmdOption(names = {"--alias", "-a"}, args = {"<value>"}, description = "Aliases to use.")
-        private String alias = null;
+        private String alias = "";
         @CmdOption(names = {"--range", "-r", "-p"}, args = {"<value>"}, description = "Specify range to use.  Value is specified as <chrom start>[:<poststart>][-[<chrom stop>:][<pos stop>]].")
         private String range = null;
         @CmdOption(names = {"--source", "-s"}, args = {"<value>"}, description = "Column used for tag filtering.")
@@ -165,24 +167,24 @@ public class TableManagerCLI {
                     .useHistory(genericOpts.history).minBucketSize(minBucketSize).bucketSize(bucketSize)
                     .lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).validateFiles(genericOpts.validateFiles).build();
 
-            BaseTable table = tm.initTable(Paths.get(genericOpts.table));
-            if (source != null && !source.equals(table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY))) {
-                table.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, source);
-            }
+            BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
+            try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
+                if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
+                    table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
+                }
 
-            if (alias != null && !this.tags.contains(alias)) {
-                this.tags.add(alias);
+                if (tagskey) {
+                    table.setUniqueTags(tagskey);
+                }
+                table.insert(this.files.stream()
+                        .map(f -> relativize(table.getRootPath(), Paths.get(f)))
+                        .map(p -> new DictionaryEntry.Builder<>(p, table.getRootUri())
+                                .range(GenomicRange.parseGenomicRange(this.range))
+                                .alias(alias)
+                                .tags(this.tags)
+                                .build()).toArray(DictionaryEntry[]::new));
+                trans.commit();
             }
-
-            if(tagskey) {
-                table.setUniqueTags(tagskey);
-            }
-            tm.insert(Paths.get(genericOpts.table), bucketPackLevel, workers, this.files.stream()
-                    .map(f -> relativize(table.getRootPath(), Paths.get(f)))
-                    .map(p -> new DictionaryEntry.Builder<>(p, table.getRootUri())
-                            .range(GenomicRange.parseGenomicRange(this.range))
-                            .tags(this.tags)
-                            .build()).toArray(DictionaryEntry[]::new));
         }
     }
 
@@ -226,18 +228,21 @@ public class TableManagerCLI {
             TableManager tm = TableManager.newBuilder()
                     .useHistory(genericOpts.history).minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
 
-            BaseTable table = tm.initTable(Paths.get(genericOpts.table));
-            if (source != null && !source.equals(table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY))) {
-                table.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, source);
-            }
+            BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
 
-            tm.insert(Paths.get(genericOpts.table), bucketPackLevel, workers,
-                    IntStream.range(0, files.size())
-                            .mapToObj(i -> new DictionaryEntry.Builder<>(relativize(table.getRootPath(), Paths.get(files.get(i))), table.getRootUri())
-                                    .range(GenomicRange.parseGenomicRange(ranges.get(i)))
-                                    .alias(aliases.get(i))
-                                    .tags(new String[]{tags.get(i)})
-                                    .build()).toArray(DictionaryEntry[]::new));
+            try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
+                if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
+                    table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
+                }
+
+                table.insert(IntStream.range(0, files.size())
+                        .mapToObj(i -> new DictionaryEntry.Builder<>(relativize(table.getRootPath(), Paths.get(files.get(i))), table.getRootUri())
+                                .range(GenomicRange.parseGenomicRange(ranges.get(i)))
+                                .alias(aliases.get(i))
+                                .tags(new String[]{tags.get(i)})
+                                .build()).toArray(DictionaryEntry[]::new));
+                trans.commit();
+            }
         }
     }
 
@@ -251,8 +256,8 @@ public class TableManagerCLI {
         public void run(GenericOptions genericOpts) {
             // We support taking files both as -f option and generic arguments, simply combine those two before running.
             TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            final BaseTable.TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
-            BaseTable table = tm.initTable(Paths.get(genericOpts.table));
+            final BaseDictionaryTable.TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
+            BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
             tm.delete(Paths.get(genericOpts.table), lines);
         }
     }
@@ -306,7 +311,7 @@ public class TableManagerCLI {
 
         public void run(GenericOptions genericOpts) {
             TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            final BaseTable.TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
+            final BaseDictionaryTable.TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
             tm.print(lines);
         }
     }
@@ -327,7 +332,7 @@ public class TableManagerCLI {
 
                 Duration lockTimeout = Duration.ofSeconds(genericOpts.lockTimeout);
                 TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(lockTimeout).build();
-                BaseTable table = tm.initTable(Paths.get(genericOpts.table));
+                BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
 
 
                 switch (subCommand.toLowerCase()) {
@@ -433,14 +438,14 @@ public class TableManagerCLI {
         System.out.println(baos.toString().replace("Usage: gormanager", "Usage: gormanager <table>"));
     }
 
-    private static BaseTable.TableFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
+    private static BaseDictionaryTable.TableFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
         String[] allFiles = (String[]) ArrayUtils.addAll(args.files.toArray(new String[0]), args.files.toArray(new String[0]));
-        String[] allTags = (String[]) ArrayUtils.addAll(args.aliases.toArray(new String[0]), args.tags.toArray(new String[0]));
-        BaseTable table = tm.initTable(Paths.get(genericOpts.table));
+        BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
 
         return table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
-                .tags(allTags.length > 0 ? allTags : null)
+                .aliases(args.aliases.size() > 0 ? args.aliases.toArray(new String[0]) : null)
+                .tags(args.tags.size() > 0 ? args.tags.toArray(new String[0]) : null)
                 .buckets(args.buckets.size() > 0 ? args.buckets.toArray(new String[0]) : null)
                 .chrRange(args.range)
                 .includeDeleted(args.includeDeleted);

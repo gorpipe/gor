@@ -153,6 +153,20 @@ public class UTestGorz {
     }
 
     @Test
+    public void testPathWithColon() throws IOException {
+        Path p = null;
+        try {
+            final var header = "chrom\tpos\n";
+            p = Files.createTempFile("sim:test", ".gor");
+            Files.writeString(p, header);
+            var result = TestUtils.runGorPipe("gor " + p);
+            Assert.assertEquals("Non empty result", header, result);
+        } finally {
+            if (p!=null) Files.deleteIfExists(p);
+        }
+    }
+
+    @Test
     public void testZStdHugeLine() throws IOException {
         final Path tmpDir = Files.createTempDirectory("testGorzWithZStd");
         final boolean useZStd = Boolean.valueOf(System.getProperty("gor.compression.useZStd", "false"));

@@ -24,8 +24,8 @@ package org.gorpipe.gor.cli.manager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import picocli.CommandLine;
 
 import java.time.Duration;
@@ -48,13 +48,13 @@ public class SelectCommand extends FilterOptions implements Runnable{
     @Override
     public void run() {
         String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
-        String[] allTags = (String[]) ArrayUtils.addAll(this.aliases.toArray(new String[0]), this.tags.toArray(new String[0]));
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
-        BaseTable table = tm.initTable(dictionaryFile.toPath());
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
 
         final List<? extends BucketableTableEntry> lines = table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
-                .tags(allTags.length > 0 ? allTags : null)
+                .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
+                .tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)
                 .buckets(this.buckets.size() > 0 ? this.buckets.toArray(new String[0]) : null)
                 .chrRange(range)
                 .includeDeleted(this.includeDeleted)

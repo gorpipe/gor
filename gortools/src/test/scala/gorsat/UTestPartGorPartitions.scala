@@ -24,11 +24,11 @@ package gorsat
 
 import Macros.PartGor
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestPartGorPartitions extends FunSuite {
+class UTestPartGorPartitions extends AnyFunSuite {
 
   test("PGOR split test: parts") {
     val buckets = createBuckets(5, 100)
@@ -76,7 +76,7 @@ class UTestPartGorPartitions extends FunSuite {
     val buckmap = PartGor.readDictionaryBucketTags(createPeonList(1,500), 1, buckets)
     val partitions = PartGor.groupTagsByBuckets(("partsize",150), buckmap, server = false)
 
-    assert(partitions.size == 3)
+    assert(partitions.size == 4)
 
     partitions.foreach { t =>
       assert (t._2.length < 170)

@@ -33,6 +33,7 @@ import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,7 +151,7 @@ public class PluggableGorDriver implements GorDriver {
                 return null;
             }
             log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
-            DataSource wrapped = sourceReference.writeSource ? handleLinks(source) : wrap(handleLinks(source));
+            DataSource wrapped = sourceReference.writeSource ? source : wrap(handleLinks(source));
             log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
             return wrapped;
         } catch (Exception e) {
@@ -161,6 +162,7 @@ public class PluggableGorDriver implements GorDriver {
 
     @Override
     public DataSource wrap(DataSource source) throws IOException {
+        if (source == null) return null;
         return sourceTypeToSourceProvider.get(source.getSourceType()).wrap(source);
     }
 
@@ -209,10 +211,12 @@ public class PluggableGorDriver implements GorDriver {
     private DataSource handleLinks(DataSource source) throws IOException {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
-                return getDataSource(getSourceRef(source, readLink(source), null));
+                DataSource fromLinkSource = getDataSource(getSourceRef(source, readLink(source), null));
+                fromLinkSource.getSourceReference().setCreatedFromLink(true);
+                return fromLinkSource;
             }
         } else {
-            if (!source.exists() && source.supportsLinks()) {
+            if (source.supportsLinks() && !source.exists()) {
                 String url = source.getSourceReference().getUrl();
                 // prevent stackoverflow, some datasources don't support links (dbsource), need to check file ending
                 if (!url.endsWith(".link")) {
@@ -294,7 +298,7 @@ public class PluggableGorDriver implements GorDriver {
                 prefix = "file://";
                 linkText = linkText.substring(prefix.length());
             }
-            linkText = prefix + GorStandalone.getRootPrefixed(linkText);
+            linkText = prefix + (PathUtils.isLocal(linkText) ? GorStandalone.getRootPrefixed(linkText) : linkText);
         }
         return linkSubPath != null ? linkText + linkSubPath : linkText;
     }

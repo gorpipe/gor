@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table;
 
+import org.gorpipe.gor.table.util.PathUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;

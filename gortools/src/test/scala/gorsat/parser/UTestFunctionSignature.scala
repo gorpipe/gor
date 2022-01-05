@@ -27,12 +27,11 @@ package gorsat.parser
 import gorsat.parser.FunctionTypes._
 import org.gorpipe.gor.model.ColumnValueProvider
 import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
     
 @RunWith(classOf[JUnitRunner])
-class UTestFunctionSignature extends FunSuite {
+class UTestFunctionSignature extends AnyFunSuite {
     
   private def iFunDummy: iFun = (cvp: ColumnValueProvider) => 42
   private def lFunDummy: lFun = (cvp: ColumnValueProvider) => 1

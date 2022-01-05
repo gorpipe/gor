@@ -24,8 +24,10 @@ package org.gorpipe.gor.manager;
 
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.apache.commons.lang3.ArrayUtils;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
@@ -88,7 +90,7 @@ public class UTestTableManager {
         Path dictFile = testWorkDir.resolve(name + ".gord");
         
         TableManager man = TableManager.newBuilder().lockTimeout(Duration.ofDays(13)).build();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
     }
@@ -102,9 +104,9 @@ public class UTestTableManager {
 
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
-        man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
+        man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).collect(Collectors.joining());
 
@@ -122,22 +124,22 @@ public class UTestTableManager {
         // Test History option false.
         TableManager manNoHist = TableManager.newBuilder().useHistory(false).build();
         String noHistDict = "noHistDict";
-        BaseTable<BucketableTableEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        BaseDictionaryTable<BucketableTableEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
         table.save();
-        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseTable.HISTORY_DIR_NAME)));
+        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
+        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         // Test History option true.
         TableManager manHist = TableManager.newBuilder().useHistory(true).build();
         String histDict = "histDict";
         table = manHist.initTable(workDirPath.resolve(histDict + ".gord"));
         table.save();
-        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
+        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
         table.reload();
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(BaseTable.HISTORY_DIR_NAME)));
-        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(BaseTable.HISTORY_DIR_NAME)).count()); // 1 action log.
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
+        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count()); // 1 action log.
     }
 
     @Test
@@ -223,7 +225,7 @@ public class UTestTableManager {
                         name, workDirPath, 10, new int[]{1, 2, 3}, 10, "PN", true, sources2);
                 table.insert(dataFiles2);
 
-                Collection<DictionaryEntry> entriesToDelete = table.filter().tags("PN10", "PN11").get();
+                Collection<DictionaryEntry> entriesToDelete = table.filter().aliases("PN10", "PN11").get();
                 table.delete(entriesToDelete);
 
                 // Validate that we are sill bucketizing.
@@ -304,7 +306,7 @@ public class UTestTableManager {
         log.info("Time using table manager (filter by tag): {}", newTime);
 
         startTime = System.currentTimeMillis();
-        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, "uniqueid", ".", true);
         Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN100"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
@@ -327,7 +329,7 @@ public class UTestTableManager {
             DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
 
         startTime = System.currentTimeMillis();
-        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), "uniqueid", "");
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, "uniqueid", ".", true);
         Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN515218"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
 
@@ -537,6 +539,7 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
+        dummyTable.setBucketize(true);
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
@@ -549,7 +552,7 @@ public class UTestTableManager {
                 
     }
 
-    private void testRepeatedInsertDeleteHelper(TableManager man, DictionaryEntry[] entries, String[] pns, BaseTable table, boolean bucketize, BucketManager.BucketPackLevel pack) throws InterruptedException {
+    private void testRepeatedInsertDeleteHelper(TableManager man, DictionaryEntry[] entries, String[] pns, BaseDictionaryTable table, boolean bucketize, BucketManager.BucketPackLevel pack) throws InterruptedException {
         // Turn of the dictionary cache, if the cache is active we need ot wait for 1 second after each insert.
         System.setProperty("gor.dictionary.cache.active", "false");   // The RestoreSystemProperty rule will take care of restore the property.
 
@@ -561,7 +564,7 @@ public class UTestTableManager {
         TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " -f " + pns[0] + " | select 1-6");
 
         table.reload();
-        table.delete(table.filter().tags(pns[0]).get());
+        table.delete(table.filter().aliases(pns[0]).get());
         table.save();
 
         // Add multiple entries, delete some.
@@ -579,7 +582,7 @@ public class UTestTableManager {
 
             if (i > 0 && i % 3 == 0) {
                 // Remove every third pn.
-                table.delete(table.filter().tags(pns[i - 1]).get());
+                table.delete(table.filter().aliases(pns[i - 1]).get());
                 activeEntries.remove(activeEntries.size() - 2);
             }
             table.save();
@@ -618,14 +621,26 @@ public class UTestTableManager {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFile4}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);
+        //testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "delete", new String[]{"--aliases", "B"}, workDirPath.toString(), true);
 
-        testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "delete", new String[]{"--tags", "B"}, workDirPath.toString(), true);
+        //String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
+        List<String> aliases = new ArrayList<>();
+        aliases.add("B");
+        man.delete(dictFile, table.filter()
+                //.files(allFiles.length > 0 ? allFiles : null)
+                .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
+                //.tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)
+                //.buckets(this.buckets.size() > 0 ? this.buckets.toArray(new String[0]) : null)
+                //.chrRange(range)
+                //.includeDeleted(this.includeDeleted));
+        );
+
         table.reload();
-        result = table.selectUninon(table.filter().tags("B")).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
+        result = table.selectUninon(table.filter().aliases("B")).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Delete failed", "", result);
 
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--min_bucket_size", "1"}, ".", true);
@@ -634,12 +649,13 @@ public class UTestTableManager {
 
         List<String> buckets = table.filter().get().stream().map(l -> l.getBucket().toString()).distinct().collect(Collectors.toList());
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "delete_bucket", buckets.toArray(new String[buckets.size()]), ".", true);
+
         table.reload();
         Assert.assertEquals("Delete buckets failed", 2, table.needsBucketizing().size());
 
-        testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "delete", new String[]{"--tags", "A"}, workDirPath.toString(), true);
+        testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "delete", new String[]{"--aliases", "A"}, workDirPath.toString(), true);
         table.reload();
-        result = table.selectUninon(table.filter().tags("A")).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
+        result = table.selectUninon(table.filter().aliases("A")).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Delete failed", "", result);
         Assert.assertEquals("Delete failed", 1, table.selectAll().size());
 
@@ -671,17 +687,17 @@ public class UTestTableManager {
         // Test History option.
         String noHistDict = "noHistDict";
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict + ".gord").toString(), new String[]{}, "insert", new String[]{"--alias", "A", testFile1}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         String noHistDict2 = "noHistDict2";
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict2 + ".gord").toString(), new String[]{"--history", "false"}, "insert", new String[]{"--alias", "A", testFile1}, workDirPath.toString(), true);
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseTable.HISTORY_DIR_NAME)));
+        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
 
         String histDict2 = "histDict2";
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "A", testFile1}, workDirPath.toString(), true);
         testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "B", testFile2}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseTable.HISTORY_DIR_NAME)));
-        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict2).resolve(BaseTable.HISTORY_DIR_NAME)).count()); // 1 action.log.
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
+        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count()); // 1 action.log.
 
     }
 
@@ -707,7 +723,7 @@ public class UTestTableManager {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFile4});
 
         TableManager man = new TableManager();
-        BaseTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);

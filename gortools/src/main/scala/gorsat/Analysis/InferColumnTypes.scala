@@ -112,7 +112,7 @@ case class InferColumnTypes() extends Analysis {
     }
   }
 
-  def analyzeColumnTypes(rowBuff : Array[Row], bCount : Int ) {
+  def analyzeColumnTypes(rowBuff : Array[Row], bCount : Int ): Unit = {
     columnCount = if(bCount > 0) rowBuff(0).numCols() else 0
     if (columnCount == 0) {
       return

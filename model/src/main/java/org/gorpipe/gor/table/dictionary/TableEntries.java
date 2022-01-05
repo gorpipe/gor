@@ -20,12 +20,14 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.collect.ArrayListMultimap;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
@@ -46,10 +48,10 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
     private List<T> rawLines;
     // For indices we use hashed values.  Insert into the dict is much much faster, and it takes a lot less space.  Getting data takes
     // a little bit longer as you could get small list of values you need to loop through.
-    private ArrayListMultimap<Integer, T> tagHashToLines;
+    private ArrayListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
     private ArrayListMultimap<Integer, T> contentHashToLines;
     private int nextIndexOrderKey = 0;
-    private final BaseTable<T> table;
+    private final BaseDictionaryTable<T> table;
 
     /**
      * Construct new dict file from the given path and chromosome cache.
@@ -57,7 +59,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
      * It is not simple to create objects of type T.  For now we pass in the class so we can do that.
      * Another option would be using google TypeToken, but we had problem getting that working.
      */
-    public TableEntries(BaseTable<T> table, Class<? extends T> clazzOfT) {
+    public TableEntries(BaseDictionaryTable<T> table, Class<? extends T> clazzOfT) {
         this.table = table;
         this.clazzOfT = clazzOfT;
     }
@@ -131,14 +133,14 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
     }
 
     @Override
-    public List<T> getEntries(String[] tags) {
+    public List<T> getEntries(String... aliasesAndTags) {
         List<T> lines2Search = getEntries();
         if (tagHashToLines == null) {
             updateTagMap();
         }
-        if (tagHashToLines != null && tags != null) {
+        if (tagHashToLines != null && aliasesAndTags != null) {
             // If we have tags and tag map to lines we use that to get a better list of lines to search..
-            lines2Search = Arrays.stream(tags).flatMap(t -> tagHashToLines.get(t.hashCode()).stream())
+            lines2Search = Arrays.stream(aliasesAndTags).flatMap(t -> tagHashToLines.get(t.hashCode()).stream())
                     .sorted(Comparator.comparing(TableEntry::getIndexOrderKey)).distinct().collect(Collectors.toList());
         }
         return lines2Search;
@@ -162,7 +164,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
         while (it.hasNext()) {
             T entry = it.next();
             if (!entry.isDeleted()) {
-                allTags.addAll(Arrays.asList(entry.getTags())); // Capture all tags found in dictionary files
+                allTags.addAll(Arrays.asList(entry.getFilterTags())); // Capture all tags found in dictionary files
             }
         }
         return allTags;
@@ -197,7 +199,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
 
     private void addEntryToTagMap(T entry) {
         if (tagHashToLines != null) {
-            for (String tag : entry.getTags()) {
+            for (String tag : entry.getFilterTags()) {
                 tagHashToLines.put(tag.hashCode(), entry);
             }
         }
@@ -211,7 +213,7 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
 
     private void removeEntryFromTagMap(T entry) {
         if (tagHashToLines != null) {
-            for (String tag : entry.getTags()) {
+            for (String tag : entry.getFilterTags()) {
                 tagHashToLines.remove(tag.hashCode(), entry);
             }
         }
@@ -258,7 +260,9 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
                         while (line != null) {
                             line = line.trim();
                             final T entry = (T) parseEntryMethod.invoke(null, line, table.getRootUri());
-                            newRawLines.add(entry);
+                            if (entry != null) {
+                                newRawLines.add(entry);
+                            }
 
                             line = br.readLine();
                         }
@@ -295,15 +299,15 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
         List<T> lines2Search = getEntries();
         if (tagHashToLines != null) {
             lines2Search = new ArrayList<>();
-            for (String tag : line.getTags()) {
+            for (String tag : line.getFilterTags()) {
                 lines2Search.addAll(tagHashToLines.get(tag.hashCode()));
             }
         }
 
-        String[] linekey = line.getTags();
+        String[] linekey = line.getFilterTags();
         T match = null;
         for (T l : lines2Search) {
-            if (Arrays.equals(linekey, l.getTags())) {
+            if (Arrays.equals(linekey, l.getFilterTags())) {
                 if (null != match) {
                     throw new GorDataException("One or more entries containing the same tag(s) already exist in table " + table.getName() + ". Unable to use unique tags!");
                 }

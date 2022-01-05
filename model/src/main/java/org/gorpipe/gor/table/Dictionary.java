@@ -22,18 +22,19 @@
 
 package org.gorpipe.gor.table;
 
+import com.google.common.base.Strings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.DefaultFileReader;
-import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.collection.IntArray;
@@ -111,7 +112,7 @@ import java.util.stream.Stream;
  */
 public class Dictionary {
     private static final Logger log = LoggerFactory.getLogger(Dictionary.class);
-    final private static Map<String, Dictionary> dictCache = new ConcurrentHashMap<>();   //A map from dictionaries to the cache objects.
+    final private static Cache<String, Dictionary> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
 
 
     public final boolean isDictionaryWithBuckets; // source col from dictionary files can be hiden if no buckets and no -f filters
@@ -130,14 +131,6 @@ public class Dictionary {
 
     private final Map<String, DictionaryLine[]> tagsToListCache;
 
-    public synchronized static Dictionary getDictionary(String path, GorSession session, String uniqueID, String commonRoot) {
-        return getDictionary(path, session.getProjectContext().getFileReader(), uniqueID, commonRoot, true);
-    }
-
-    public synchronized static Dictionary getDictionary(String path, String uniqueID, String commonRoot) {
-        return getDictionary(path, new DefaultFileReader(""), uniqueID, commonRoot, true);
-    }
-
     private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
         if(PathUtils.isAbsolutePath(path) || commonRoot == null || commonRoot.length() == 0) {
             return path;
@@ -150,16 +143,17 @@ public class Dictionary {
         if (useCache) {
             var key = dictCacheKeyFromPathAndRoot(path, commonRoot);
             if (uniqueID == null || uniqueID.equals("")) {
-                dictCache.remove(key);
+                dictCache.invalidate(key);
                 return processDictionary(path, fileReader, uniqueID, commonRoot, true);
             } else {
-                return dictCache.compute(key, (p, d) -> {
-                    if (d == null || !d.fileSignature.equals(uniqueID)) {
-                        return processDictionary(path, fileReader, uniqueID, commonRoot, true);
-                    } else {
-                        return d;
-                    }
-                });
+                Dictionary dictFromCache = dictCache.getIfPresent(key);
+                if (dictFromCache == null || !dictFromCache.fileSignature.equals(uniqueID)) {
+                    Dictionary newDict = processDictionary(path, fileReader, uniqueID, commonRoot, true);
+                    dictCache.put(key, newDict);
+                    return newDict;
+                } else {
+                    return dictFromCache;
+                }
             }
         } else {
             return processDictionary(path, fileReader, uniqueID, commonRoot, false);
@@ -394,8 +388,8 @@ public class Dictionary {
         int totalFileReads = fileListToOptimize.length;
         int numberOfBucketsToBeAccessed = 0;
         int numberOfFilesTakenFromBuckets = 0;
-        final int FILE_COUNT_THRESHOLD = Integer.parseInt(System.getProperty("gor.bucket.file.count.threshold", "300"));
-        float threshold = Integer.parseInt(System.getProperty("gor.bucket.initial.usage.threshold", "80")) / 100f;
+        final int FILE_COUNT_THRESHOLD = Integer.parseInt(System.getProperty("gor.bucket.file.count.threshold", "100"));
+        float threshold = Integer.parseInt(System.getProperty("gor.bucket.initial.usage.threshold", "40")) / 100f;
         final int singleFilesBucketCountThresholdRatio = 10;
         final int minNumberOfFilesToAccess = numberOfFilesWithoutBucket + numberOfBuckets; //No matter what, we have to open this many files.
 
@@ -494,10 +488,10 @@ public class Dictionary {
                     if (length > 2) {
                         if (length >= 6) {
                             // Support specification of the genomic range of each file
-                            final String startChr = parts.get(2);
-                            final int startPos = Integer.parseInt(parts.get(3));
-                            final String stopChr = parts.get(4);
-                            final int stopPos = Integer.parseInt(parts.get(5));
+                            final String startChr = Strings.isNullOrEmpty(parts.get(2)) ? null : parts.get(2);
+                            final int startPos = Strings.isNullOrEmpty(parts.get(3)) ? -1 : Integer.parseInt(parts.get(3));
+                            final String stopChr =  Strings.isNullOrEmpty(parts.get(4)) ? null : parts.get(4);
+                            final int stopPos =  Strings.isNullOrEmpty(parts.get(5)) ? -1 : Integer.parseInt(parts.get(5));
                             // support both comma separated and tab separated tags
                             tags = length < 7 ? tagset(alias)
                                     : tagset(parts.get(6).indexOf(',') >= 0 ? StringUtil.split(parts.get(6), ',') : parts.subList(6, parts.size()));

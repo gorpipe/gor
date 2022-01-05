@@ -24,14 +24,14 @@ package gorsat
 
 import java.io.{File, FileWriter}
 import java.nio.file.Files
-
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestCsvsel2 extends FunSuite with BeforeAndAfter {
+class UTestCsvsel2 extends AnyFunSuite with BeforeAndAfter {
   var tmpDir: File = _
   var bucketFile: String =_
   var pnFile: String =_

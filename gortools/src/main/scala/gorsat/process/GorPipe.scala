@@ -29,8 +29,9 @@ package gorsat.process
 import gorsat._
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
-import org.gorpipe.gor.model.{DbSource, DefaultFileReader}
+import org.gorpipe.gor.model.DbSource
 import org.gorpipe.gor.servers.GorConfig
+import org.gorpipe.gor.session.ProjectContext
 import org.gorpipe.logging.GorLogbackUtil
 import org.gorpipe.util.ConfigUtil
 import org.slf4j.LoggerFactory
@@ -56,7 +57,7 @@ object GorPipe extends GorPipeFirstOrderCommands {
 
     // Display help
     if (args.length < 1 || args(0).isEmpty || args(0).toUpperCase.startsWith("HELP")) {
-      helpCommand(args, new DefaultFileReader(""))
+      helpCommand(args, ProjectContext.DEFAULT_READER)
       System.exit(0)
     }
 

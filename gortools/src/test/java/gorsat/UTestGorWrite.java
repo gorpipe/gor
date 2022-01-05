@@ -62,11 +62,21 @@ public class UTestGorWrite {
         TestUtils.runGorPipeCount(args, true);
     }
 
+    @Ignore
     @Test
     public void testTxtFolderWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
         Files.copy(p, tmpdir.resolve("simple1.nor"));
         String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test new.txt", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        TestUtils.runGorPipeCount(args, true);
+    }
+
+    @Ignore
+    @Test
+    public void testFolderWriteServer() throws IOException {
+        Path p = Paths.get("../tests/data/nor/simple.nor");
+        Files.copy(p, tmpdir.resolve("simple1.nor"));
+        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test", "-gorroot", tmpdir.toAbsolutePath().toString()};
         TestUtils.runGorPipeCount(args, true);
     }
 

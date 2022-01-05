@@ -90,8 +90,7 @@ public class SourceType {
             if (protocol.length() > 0) {
                 if (file.startsWith(protocol)) return true;
             } else {
-                // -1 means : not found, hence unix file path, 1 means windows absolute file path such as c:
-                if (Math.abs(file.indexOf(':')) == 1) return true;
+                return true;
             }
         }
         return false;

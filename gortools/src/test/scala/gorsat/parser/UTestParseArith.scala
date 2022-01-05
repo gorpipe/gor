@@ -25,8 +25,8 @@ package gorsat.parser
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.ColumnValueProvider
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 case class Column(name: String, tpe: String, value: Any)
 
@@ -76,7 +76,7 @@ case class MockCvp(columns: Array[Column], parser: ParseArith) extends ColumnVal
 }
 
 @RunWith(classOf[JUnitRunner])
-class UTestParseArith extends FlatSpec {
+class UTestParseArith extends AnyFlatSpec {
   "Number parsing" should "recognize an Int" in {
     val p = ParseArith()
     val result = p.compileCalculation("42")

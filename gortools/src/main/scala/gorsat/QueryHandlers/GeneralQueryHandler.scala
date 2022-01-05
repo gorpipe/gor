@@ -25,7 +25,7 @@ package gorsat.QueryHandlers
 import gorsat.Analysis.CheckOrder
 
 import java.lang
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.nio.file.{Files, LinkOption, Path, Paths, StandardCopyOption}
 import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
@@ -36,16 +36,74 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler, GorServerFileReader}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.{PathUtils, TableHeader}
+import org.gorpipe.gor.table.TableHeader
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta
+import org.gorpipe.gor.table.util.PathUtils
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import java.util.Optional
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
+
+  def getResultsPath(nested: GorContext, newCacheFile: String, cacheFileName: String, resultPathParent: Path): (Path, String) = {
+    val ending = cacheFileName.lastIndexOf(".")
+    var extension = cacheFileName.substring(ending)
+    if (PathUtils.isLocal(newCacheFile)) {
+      val cachePath = if (!PathUtils.isAbsolutePath(newCacheFile)) {
+        nested.getSession.getProjectContext.getProjectRootPath.resolve(newCacheFile)
+      } else {
+        Paths.get(newCacheFile)
+      }
+      val resPath = resultPathParent.resolve(cacheFileName)
+      GorJavaUtilities.createSymbolicLink(resPath,cachePath)
+      (resPath,extension)
+    } else {
+      extension += ".link"
+      val resPath = resultPathParent.resolve(cacheFileName+".link")
+      Files.writeString(resPath,newCacheFile)
+      (resPath,extension)
+    }
+  }
+
+  def runAndStoreLinkFileInCache(nested: GorContext, newCacheFile: String, fileCache: FileCache, useMd5: Boolean): String = {
+    val startTime = System.currentTimeMillis
+    val fileReader = nested.getSession.getProjectContext.getFileReader
+    val commandToExecute = nested.getCommand
+    val commandSignature = nested.getSignature
+    val isGord = commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)
+    val noDict = commandToExecute.toLowerCase.contains(" -nodict ")
+    val writeGord = isGord && !noDict
+    var cacheRes = newCacheFile
+    var resultFileName = runCommand(nested, commandToExecute, if (isGord) newCacheFile else null, useMd5, theTheDict = true)
+    val isCacheDir = fileReader.isDirectory(newCacheFile)
+    if(fileCache != null && (!isCacheDir || writeGord)) {
+        resultFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
+        val overheadTime = findOverheadTime(commandToExecute)
+        val resultPathParent = Paths.get(resultFileName).getParent
+        val cacheFileName = Paths.get(newCacheFile).getFileName.toString
+        val resultPath = getResultsPath(nested, newCacheFile, cacheFileName, resultPathParent)
+        cacheRes = fileCache.store(resultPath._1, commandSignature, resultPath._2, overheadTime + System.currentTimeMillis - startTime)
+    }
+    cacheRes
+  }
+
+  def runAndStoreInCache(nested: GorContext, fileCache: FileCache, useMd5: Boolean): String = {
+    val startTime = System.currentTimeMillis
+    val commandToExecute = nested.getCommand
+    val commandSignature = nested.getSignature
+    var cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
+    val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, theTheDict = false)
+    if (fileCache != null) {
+      val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
+      val overheadTime = findOverheadTime(commandToExecute)
+      cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
+    }
+    cacheFile
+  }
 
   def executeBatch(commandSignatures: Array[String], commandsToExecute: Array[String], batchGroupNames: Array[String], cacheFiles: Array[String], gorMonitor: GorMonitor): Array[String] = {
     val fileNames = new Array[String](commandSignatures.length)
@@ -60,36 +118,18 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
         val nested = context.createNestedContext(batchGroupName, commandSignature, commandToExecute)
 
         try {
-          val newCacheFile = cacheFiles(i)
-          fileNames(i) = if(newCacheFile!=null) {
-            val cachePath = Paths.get(newCacheFile)
-            val isGord = commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)
-            var cacheRes = newCacheFile
-            if(!Files.exists(cachePath) || Files.isDirectory(cachePath)) {
-              val startTime = System.currentTimeMillis
-              val resultFileName = runCommand(nested, commandToExecute, if(isGord) newCacheFile else null, useMd5, theTheDict = true)
-              if (fileCache != null && resultFileName.contains(GorServerFileReader.RESULT_CACHE_DIR)) {
-                val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
-                val overheadTime = findOverheadTime(commandToExecute)
-                cacheRes = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
-              }
-            }
-            cacheRes
-          } else {
-            var cacheFile = fileCache.lookupFile(commandSignature)
-            // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
-            if (cacheFile == null) {
-              val startTime = System.currentTimeMillis
-              cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
-              val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, theTheDict = false)
-              if (fileCache != null) {
-                val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
-                val overheadTime = findOverheadTime(commandToExecute)
-                cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
-              }
+          var cacheFile = fileCache.lookupFile(commandSignature)
+          cacheFile = GorJavaUtilities.verifyLinkFileLastModified(context.getSession.getProjectContext,cacheFile)
+          // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
+          fileNames(i) = if (cacheFile == null) {
+            val newCacheFile = cacheFiles(i)
+            if(newCacheFile!=null) {
+              runAndStoreLinkFileInCache(nested, newCacheFile, fileCache, useMd5)
             } else {
-              nested.cached(cacheFile)
+              runAndStoreInCache(nested, fileCache, useMd5)
             }
+          } else {
+            nested.cached(cacheFile)
             cacheFile
           }
         } catch {
@@ -270,7 +310,7 @@ object GeneralQueryHandler {
 
   private def getDictList(dictFiles: List[String], chromsrange: List[String], root: String): List[String] = {
     var chrI = 0
-    val useMetaFile = System.getProperty("gor.use.meta.dictionary","false")
+    val useMetaFile = System.getProperty("gor.use.meta.dictionary","true")
     if(useMetaFile!=null && useMetaFile.toLowerCase.equals("true")) {
       dictFiles.zip(chromsrange).map(x => {
         val f = x._1
@@ -279,7 +319,15 @@ object GeneralQueryHandler {
         val prefix = rf + "\t" + chrI + "\t"
         val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
         val opt: Optional[String] = if (Files.exists(metaPath)) {
-          GorJavaUtilities.readRangeFromMeta(metaPath, prefix)
+          val meta = GorMeta.createAndLoad(metaPath)
+          if (meta.getLineCount == -1) {
+            val ret = dictRangeFromSeekRange(x._2, prefix)
+            Optional.of[String](ret)
+          } else if(meta.getLineCount > 0) {
+            Optional.of[String](prefix + meta.getRange().formatAsTabDelimited())
+          } else {
+            Optional.empty()
+          }
         } else {
           val ret = dictRangeFromSeekRange(x._2, prefix)
           Optional.of[String](ret)
@@ -325,7 +373,7 @@ object GeneralQueryHandler {
         val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
         tableHeader.setColumns(header)
       }
-      tableHeader.setTableColumns(TableHeader.DEFULT_RANGE_TABLE_HEADER)
+      tableHeader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER)
       val dictList = getDictList(dictFiles, chromsrange, root)
       writeList(outpath, tableHeader.formatHeader(), dictList)
     }

@@ -162,12 +162,17 @@ public class RowBase extends Row implements Serializable {
             }
         } else {
             splitArray[i + 2] = splitArray[i + 1] + val.length() + 1;
-            final int newLength = splitArray[i+2];
-            StringBuilder sb = new StringBuilder(newLength);
-            sb.append(allCols, 0, splitArray[i+1]);
+            StringBuilder sb;
+            if (allCols instanceof StringBuilder) {
+                sb = (StringBuilder)allCols;
+            } else {
+                sb = new StringBuilder(splitArray[i+2]);
+                sb.append(allCols, 0, splitArray[i+1]);
+                allCols = sb;
+            }
+
             sb.append('\t');
             sb.append(val);
-            allCols = sb;
         }
     }
 

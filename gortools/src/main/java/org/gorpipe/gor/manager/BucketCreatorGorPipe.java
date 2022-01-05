@@ -26,10 +26,10 @@ import gorsat.process.CLIGorExecutionEngine;
 import gorsat.process.PipeOptions;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.NullOutputStream;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
-import org.gorpipe.gor.table.PathUtils;
-import org.gorpipe.gor.table.TableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.table.dictionary.TableEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +38,7 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,7 +64,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
     }
 
     @Override
-    public void createBuckets(BaseTable<T> table, Map<Path, List<T>> bucketsToCreate, URI absBucketDir)
+    public void createBuckets(BaseDictionaryTable<T> table, Map<Path, List<T>> bucketsToCreate, URI absBucketDir)
             throws IOException {
         // Create common temp directories and folders.
         // !GM Should we use local or remote temp folder}
@@ -102,18 +103,27 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
             URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
             table.getFileReader().move(workTempDir.resolve(bucket).toString(), targetBucketPath.toString());
         }
+//        // Move the bucket files from temp to the bucket folder
+//        for (Path bucket : bucketsToCreate.keySet()) {
+//            // Move the bucket files.
+//            URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
+//            table.getFileReader().move(workTempDir.resolve(bucket.getFileName()).toString(), targetBucketPath.toString());
+//            if (Files.exists(Path.of(workTempDir.resolve(bucket.getFileName() + ".meta").toString()))) {
+//                table.getFileReader().move(workTempDir.resolve(bucket.getFileName() + ".meta").toString(), targetBucketPath.toString() + ".meta");
+//            }
+//        }
 
         deleteIfTempBucketizingFolder(workTempDir, table);
     }
 
-    private String createBucketizeGorCommand(Map<Path, List<T>> bucketsToCreate, Path tempRootDir, BaseTable<T> table) {
+    private String createBucketizeGorCommand(Map<Path, List<T>> bucketsToCreate, Path tempRootDir, BaseDictionaryTable<T> table) {
         // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
         // Tag based, does not work if we are adding more files with same alias, why not?.
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Path, List<T>> b2c : bucketsToCreate.entrySet()) {
             Path bucket = b2c.getKey();
             String tags = b2c.getValue().stream()
-                    .map(TableEntry::getAliasTag)
+                    .flatMap(e -> Arrays.stream(e.getFilterTags()).distinct())
                     .distinct()
                     .collect(Collectors.joining(","));
             if (tags.length() > 0) {
@@ -135,7 +145,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
      * @param table
      * @throws IOException
      */
-    static void deleteIfTempBucketizingFolder(Path path, BaseTable<? extends BucketableTableEntry> table)
+    static void deleteIfTempBucketizingFolder(Path path, BaseDictionaryTable<? extends BucketableTableEntry> table)
             throws IOException {
         if (path.getFileName().toString().startsWith(getBucketizingFolderPrefix(table))) {
             log.debug("Deleting temp folder: {}", path);
@@ -143,7 +153,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
         }
     }
 
-    static String getBucketizingFolderPrefix(BaseTable<? extends BucketableTableEntry> table) {
+    static String getBucketizingFolderPrefix(BaseDictionaryTable<? extends BucketableTableEntry> table) {
         return "bucketizing_" + table.getId();
     }
 
@@ -156,7 +166,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
      * @return the temp folder created.
      * @throws IOException if there is an error creating the temp folder.
      */
-    private Path createTempfoldersForCreateBucketFiles(BaseTable<T> table, Set<Path> buckets, Path workBaseDir)
+    private Path createTempfoldersForCreateBucketFiles(BaseDictionaryTable<T> table, Set<Path> buckets, Path workBaseDir)
             throws IOException {
         // Create temp root.
         Path tempRootDir = Files.createDirectory(workBaseDir.resolve(getBucketizingFolderPrefix(table)));

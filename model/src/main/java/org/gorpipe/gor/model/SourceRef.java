@@ -22,10 +22,12 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.ExceptionUtilities;
+import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.binsearch.GorSeekableIterator;
+import org.gorpipe.gor.session.GorSession;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -365,22 +367,29 @@ public class SourceRef {
      * @return The GenomicIterator from this source
      * @throws IOException
      */
-    public GenomicIterator iterate(ChromoLookup lookup, String chrSubset) throws IOException {
+    public GenomicIterator iterate(ChromoLookup lookup, String chrSubset, GorSession session) throws IOException {
         // All files, except specific endings are assumed to be tab delimited text files in genomic order
         // With first two fields as chromosome and position
         if (isStandardIn()) {
             return new StdInGenomicIterator(lookup);
         }
 
-        return iterateFile(file, indexFile, referenceFile, securityContext, commonRoot, lookup, chrSubset);
+        return iterateFile(file, indexFile, referenceFile, securityContext, commonRoot, lookup, chrSubset, session);
     }
 
-    private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext, String commonRoot, ChromoLookup lookup, String chrSubset) throws IOException {
+    private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext,
+                                               String commonRoot, ChromoLookup lookup, String chrSubset, GorSession session) throws IOException {
         try {
             if (GorDriverFactory.fromConfig().config().enabled()) {
                 SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext, commonRoot, lookup, chrSubset);
-
-                GenomicIterator newIt = GorDriverFactory.fromConfig().createIterator(sourceReference);
+                GenomicIterator newIt;
+                if (session != null) {
+                    // Use the datasource if possible.
+                    DataSource dataSource = session.getProjectContext().getFileReader().resolveUrl(sourceReference);
+                    newIt = GorDriverFactory.fromConfig().createIterator(dataSource);
+                } else {
+                    newIt = GorDriverFactory.fromConfig().createIterator(sourceReference);
+                }
                 if (newIt != null) {
                     return newIt;
                 }

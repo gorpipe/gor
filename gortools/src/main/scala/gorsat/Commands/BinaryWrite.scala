@@ -36,10 +36,7 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
 
     val thresholdOptionString = "-threshold"
 
-    var fileName = replaceSingleQuotes(iargs.mkString(" "))
-    if (context.getSession.getSystemContext.getServer) {
-      context.getSession.getProjectContext.validateWriteAllowed(fileName)
-    }
+    val fileName = replaceSingleQuotes(iargs.mkString(" "))
 
     val fileEnding = FilenameUtils.getExtension(fileName)
 

@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver.providers.stream.sources;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 
 import java.io.IOException;
@@ -86,5 +87,23 @@ public interface StreamSource extends DataSource {
      * Get source meta data (length, timestamp) etc.
      */
     StreamSourceMetadata getSourceMetadata() throws IOException;
+
+    /**
+     * Copy between two stream sources.
+     */
+    default String copy(StreamSource dest) throws IOException {
+        if (getSourceType() != dest.getSourceType()) {
+            throw new GorResourceException(String.format("Can not copy between different source types (%s to %s)",
+                    getFullPath(), dest.getFullPath()), null);
+        }
+        String sourcePath = getFullPath();
+        if (!sourcePath.equals(dest)) {
+            try (InputStream inputStream = open();
+                 OutputStream outputStream = dest.getOutputStream()) {
+                inputStream.transferTo(outputStream);
+            }
+        }
+        return dest.getFullPath();
+    }
 
 }

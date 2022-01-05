@@ -43,22 +43,22 @@ case class ColumnInfo(name: String, dataType: String) {}
   * The ParseArith class is used to compile and evaluate expressions used in CALC and WHERE commands.
   * @param rs An optional row source (not sure if this is really used)
   */
-class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
+class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Serializable {
 
-  private val functions = CalcFunctions.registry
-  private val pathfunctions = CalcFunctions.pathutilregistry
+  @transient private val functions = CalcFunctions.registry
+  @transient private val pathfunctions = CalcFunctions.pathutilregistry
 
   private val subFilters = new util.ArrayList[ParseArith]
 
   var refSeq: RefSeq = _
-  var context: GorContext = _
+  var context: GorContext = new GorContext()
   var executeNor = false
   private var outputType: String = "Boolean, String, Int, Double, Long"
-  var stringFunction: sFun = _
-  var intFunction: iFun = _
-  var doubleFunction: dFun = _
-  var longFunction: lFun = _
-  var booleanFunction: bFun = _
+  @transient var stringFunction: sFun = _
+  @transient var intFunction: iFun = _
+  @transient var doubleFunction: dFun = _
+  @transient var longFunction: lFun = _
+  @transient var booleanFunction: bFun = _
   private var doubleVariableMap = Map.empty[String, Int]
   private var longVariableMap = Map.empty[String, Int]
   var stringVariableMap = Map.empty[String, Int]
@@ -73,7 +73,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
   private var orgColNames: Array[String] = _
   private var orgColTypes: Array[String] = _
 
-  private val calcCompiler = new CalcCompiler(this)
+  @transient private val calcCompiler = new CalcCompiler(this)
   private var calcLambda: TypedCalcLambda = _
   private var compileAntlr = false
   private var runAntlr = false
@@ -434,10 +434,10 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
   }
 
   def predi: Parser[bFun] =
-    spredicomp |||
-    dpredicomp |||
-    lpredicomp |||
     ipredicomp |||
+    lpredicomp |||
+    dpredicomp |||
+    spredicomp |||
     "(" ~> relexpr <~ ")" |
     "NOT".ignoreCase ~ "(" ~> relexpr <~ ")" ^^ (
       x => { line: ColumnValueProvider => {!x(line)} }) |
@@ -1247,7 +1247,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers {
       parseAll(relexpr, input) match {
         case Success(e, _) =>
           outputType = FunctionTypes.BooleanFun
-          booleanFunction = e.asInstanceOf[ColumnValueProvider => Boolean]
+          booleanFunction = e
         case f: NoSuccess => throw new GorParsingException(f.msg, input)
       }
     }

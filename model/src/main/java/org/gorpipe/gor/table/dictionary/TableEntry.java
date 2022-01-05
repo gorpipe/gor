@@ -20,9 +20,11 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.dictionary;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.util.GenomicRange;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +38,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.gorpipe.gor.table.PathUtils.isLocal;
-import static org.gorpipe.gor.table.PathUtils.resolve;
+import static org.gorpipe.gor.table.util.PathUtils.isLocal;
+import static org.gorpipe.gor.table.util.PathUtils.resolve;
 
 /**
  * Class that represent one table entry.
@@ -52,7 +54,9 @@ public abstract class TableEntry {
 
     // Use strings for performance reasons (using Path or URI takes twice as long to parse).
     private final String contentRelative;              // Normalized URI as specified in the table (normalized and absolute or relative to the table).
+    private final String alias;
     private final String[] tags;                       // For performance use string array.
+    private String[] filterTags;                       // Caching this.
     private final GenomicRange range;
 
     private final URI rootUri;                // Root for relative paths (parent folder of the table).  Absolute path.
@@ -63,6 +67,7 @@ public abstract class TableEntry {
     TableEntry(TableEntry entry) {
         this.rootUri = entry.getRootUri();
         this.contentRelative = entry.contentRelative;
+        this.alias = entry.alias;
         this.tags = entry.getTags();
         this.range = entry.getRange();
         this.key = entry.getKey();
@@ -75,14 +80,16 @@ public abstract class TableEntry {
      * @param contentLogical path to the content file, absolute or relative to the table root.  Normalized.
      *                       Use table.normalize(table.relativ)
      * @param rootUri        the parent folder of the table we are adding to.  Absolute path.
+     * @param alias          alias
      * @param tags           tags associated with the entry.
      * @param range          range for the entry.
      */
-     TableEntry(String contentLogical, URI rootUri, String[] tags, GenomicRange range) {
+     TableEntry(String contentLogical, URI rootUri, String alias, String[] tags, GenomicRange range) {
         assert rootUri != null;
 
         this.rootUri = rootUri;
         this.contentRelative = contentLogical;
+        this.alias = alias;
         this.tags = tags != null ? tags : EMPTY_TAGS_LIST;
         this.range = range != null ? range : GenomicRange.EMPTY_RANGE;
     }
@@ -94,7 +101,7 @@ public abstract class TableEntry {
     public String getKey() {
         if (key == null) {
             String newKey = this.getContentRelative();
-            newKey += String.join(",", getTags());
+            newKey += String.join(",", getFilterTags());
 
             if (getRange() != GenomicRange.EMPTY_RANGE) {
                 newKey += getRange().toString();
@@ -136,10 +143,33 @@ public abstract class TableEntry {
         return getContentRelative();
     }
 
-    public final String getAliasTag() {
-        // We only have alias if we have one tag.
-        String[] allTags = getTags();
-        return allTags != null && allTags.length == 1 ? allTags[0] : null;
+    public String getAlias() {
+        return alias;
+    }
+
+    public String[] getTags() {
+        return tags;
+    }
+
+    public GenomicRange getRange() {
+        return range;
+    }
+
+    /**
+     * Correctly combine tags and the alias for filtering (in most cases should be used rather than getTags or getAlias)
+     */
+    public String[] getFilterTags() {
+        if (filterTags == null) {
+            String[] tags = getTags();
+            if (tags != null && tags.length > 0) {
+                filterTags = tags;
+            } else if (alias != null) {
+                filterTags = new String[]{alias};
+            } else {
+                filterTags = EMPTY_TAGS_LIST;
+            }
+        }
+        return filterTags;
     }
 
     // For backward compatibility.
@@ -196,14 +226,6 @@ public abstract class TableEntry {
         return !isLocal(contentReal) || Files.isSymbolicLink(Paths.get(contentReal));
     }
 
-    public String[] getTags() {
-        return tags;
-    }
-
-    public GenomicRange getRange() {
-        return range;
-    }
-
     public int getIndexOrderKey() {
         return indexOrderKey;
     }
@@ -238,9 +260,10 @@ public abstract class TableEntry {
         return Objects.hashCode(this.getKey());
     }
 
-    protected abstract static class Builder<B extends Builder> {
+    public abstract static class Builder<B extends Builder> {
         protected String contentLogical;
         protected URI rootUri;
+        protected String alias;
         protected List<String> tags = new ArrayList<>();
         protected GenomicRange range;
         protected boolean contentVerified = false;
@@ -259,6 +282,11 @@ public abstract class TableEntry {
         @SuppressWarnings("unchecked")
         protected final B self() {
             return (B) this;
+        }
+
+        public B alias(String alias) {
+            this.alias = alias;
+            return self();
         }
 
         public B tags(List<String> tags) {

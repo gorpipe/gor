@@ -50,7 +50,7 @@ public class SourceReferenceBuilder {
     }
 
     public SourceReference build() {
-        return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, writeSource);
+        return new SourceReference(url, securityContext, commonRoot, lookup, chrSubset, null, writeSource);
     }
 
     public SourceReferenceBuilder securityContext(String securityContext) {

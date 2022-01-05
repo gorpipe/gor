@@ -28,11 +28,11 @@ import gorsat.process.GenericSessionFactory
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestThrowIfAnalysis extends FlatSpec {
+class UTestThrowIfAnalysis extends AnyFlatSpec {
   // This is needed to initialize things needed by GorPipeSession
   private val se = ScriptExecutionEngine
   private val context = new GenericSessionFactory().create().getGorContext

@@ -24,19 +24,18 @@ package gorsat.Analysis
 
 import java.io.{BufferedWriter, File, FileWriter}
 import java.nio.file.Files
-
 import gorsat.Commands.PrGtGen
-import gorsat.TestUtils
-import gorsat.process.{GenericSessionFactory, SourceProvider}
+import gorsat.process.GenericSessionFactory
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestPrGtGenAnalysis extends FunSuite with BeforeAndAfter {
+class UTestPrGtGenAnalysis extends AnyFunSuite with BeforeAndAfter {
   var tmpDir: File =_
   var tmpDirPath: String =_
   val context = new GenericSessionFactory().create().getGorContext

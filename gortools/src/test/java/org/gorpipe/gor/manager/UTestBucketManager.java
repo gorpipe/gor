@@ -24,8 +24,8 @@ package org.gorpipe.gor.manager;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.gorpipe.gor.table.PathUtils.resolve;
+import static org.gorpipe.gor.table.util.PathUtils.resolve;
 
 /**
  *
@@ -85,7 +85,7 @@ public class UTestBucketManager {
         Path testWorkDir = workDir.newFolder(name).toPath();
         Path dictFile = testWorkDir.resolve(name + ".gord");
 
-        BaseTable<DictionaryEntry> table = createTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = createTable(dictFile);
         BucketManager man = BucketManager.newBuilder(table).lockTimeout(Duration.ofDays(13)).build();
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
@@ -93,7 +93,7 @@ public class UTestBucketManager {
 
     @Test
     public void testSettingBucketsize() throws Exception {
-        BaseTable<DictionaryEntry> table = createTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        BaseDictionaryTable<DictionaryEntry> table = createTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(20);
@@ -396,7 +396,7 @@ public class UTestBucketManager {
     @Test
     public void testCleaningOfTempFolders() throws Exception {
         String name = "testCleaningOfTempFolders";
-        BaseTable<DictionaryEntry> table = new DictionaryTable.Builder<>(workDirPath.resolve(name + ".gord")).build();
+        BaseDictionaryTable<DictionaryEntry> table = new DictionaryTable.Builder<>(workDirPath.resolve(name + ".gord")).build();
         BucketManager buc = new BucketManager(table);
 
         Path tempFolder = workDirPath.resolve(buc.getDefaultBucketDir().resolve(BucketCreatorGorPipe.getBucketizingFolderPrefix(table) + "xxx"));
@@ -552,12 +552,12 @@ public class UTestBucketManager {
         Assert.assertEquals("Wrong number of buckets created", 0, bucketsCreated);
     }
 
-    private BaseTable<DictionaryEntry> createTable(Path path) {
+    private BaseDictionaryTable<DictionaryEntry> createTable(Path path) {
         return new DictionaryTable.Builder<>(path).useHistory(true)
                 .securityContext("").validateFiles(false).build();
     }
 
-    private void testBucketDirsHelper(BucketManager buc, BaseTable<DictionaryEntry> table, List<Path> bucketDirs, int fileCount) throws IOException {
+    private void testBucketDirsHelper(BucketManager buc, BaseDictionaryTable<DictionaryEntry> table, List<Path> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (Path bucketDir : bucketDirs) {
             Path bucketDirFull = resolve(table.getRootPath(), bucketDir);
@@ -577,7 +577,8 @@ public class UTestBucketManager {
         Assert.assertEquals("Incorrect number of bucket folders", bucketDirs.size(), createdBucketFolders.size());
         Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet(bucketDirs), new TreeSet(createdBucketFolders));
         for (Path bucket : buckets) {
-            Assert.assertTrue("Bucket does not exists", Files.exists(table.getRootPath().resolve(bucket)));
+            Assert.assertTrue(String.format("Bucket %s does not exists", PathUtils.resolve(table.getRootPath(), bucket)),
+                    Files.exists(PathUtils.resolve(table.getRootPath(), bucket)));
         }
     }
 

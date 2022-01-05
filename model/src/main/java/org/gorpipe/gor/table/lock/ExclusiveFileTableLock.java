@@ -23,14 +23,12 @@
 package org.gorpipe.gor.table.lock;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.PathUtils;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.URI;
 import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -71,7 +69,7 @@ public class ExclusiveFileTableLock extends TableLock {
      * @param table table to create lock on.
      * @param name  name of lock.
      */
-    public ExclusiveFileTableLock(BaseTable table, String name) {
+    public ExclusiveFileTableLock(BaseDictionaryTable table, String name) {
         super(table, name);
         this.lockPath = table.getFolderPath().resolve(String.format("%s.%s.excl.lock", table.getName(), name));
     }

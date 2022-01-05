@@ -23,11 +23,11 @@
 package gorsat.parser
 
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestFunctionTypes extends FlatSpec {
+class UTestFunctionTypes extends AnyFlatSpec {
   "getArgumentTypesFromSignature" should "return a list of args" in {
     val types = FunctionTypes.getArgumentTypesFromSignature("Int:Double:String2String")
 

@@ -53,8 +53,8 @@ object LoggingAnalysis {
 
     override def isTypeInformationMaintained: Boolean = true
 
-    override def setup() {
-      if (filepath != null && filepath.length > 0) {
+    override def setup(): Unit = {
+      if (filepath != null && filepath.nonEmpty) {
         try {
           fw = new FileWriter(filepath, true)
         } catch {
@@ -64,7 +64,7 @@ object LoggingAnalysis {
       }
     }
 
-    override def finish() {
+    override def finish(): Unit = {
       if (fw != null) {
         try {
           fw.close()
@@ -75,7 +75,7 @@ object LoggingAnalysis {
       }
     }
 
-    override def process(r: Row) {
+    override def process(r: Row): Unit = {
       var doLog = false
       tm += 1
 

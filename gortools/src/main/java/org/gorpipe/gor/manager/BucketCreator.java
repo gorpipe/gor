@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.manager;
 
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 
 import java.io.IOException;
 import java.net.URI;
@@ -45,7 +45,7 @@ public interface BucketCreator<T extends BucketableTableEntry> {
      * @param absBucketDir    absolute path to the bucket dir, where bucket files should be put.  It temp folders are to be used they should
      *                        be created in this dir (for fast file move).
      */
-    void createBuckets(BaseTable<T> table, Map<Path, List<T>> bucketsToCreate,
-                              URI absBucketDir) throws IOException;
+    void createBuckets(BaseDictionaryTable<T> table, Map<Path, List<T>> bucketsToCreate,
+                       URI absBucketDir) throws IOException;
 
 }

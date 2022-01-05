@@ -26,12 +26,12 @@ import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.util.zip.Deflater
 import gorsat.Commands.{Analysis, Output}
 import gorsat.Outputs.OutFile
+import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
-import org.gorpipe.gor.table.PathUtils
+import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.model.gor.RowObj
 
 import java.util.UUID
@@ -68,8 +68,10 @@ case class ForkWrite(forkCol: Int,
       throw new GorResourceException("WRITE error: #{fork} of ${fork}missing from filename.", fullFileName)
     }
     var fileName : String = _
+    val projectContext = session.getProjectContext
     if(options.useFolder.nonEmpty) {
       val folder = options.useFolder.get
+      ensureDir(projectContext, folder)
       val fn = if(fullFileName.isEmpty) {
         val uuid = UUID.randomUUID().toString
         val ending = folder.substring(folder.lastIndexOf('.'))
@@ -81,7 +83,6 @@ case class ForkWrite(forkCol: Int,
         val cols = inHeader.split("\t")
         val fork = cols(forkCol) + "=" + forkValue
         val forkdir = dir + fork
-        val projectContext = session.getProjectContext
         ensureDir(projectContext, forkdir)
         fileName = forkdir + "/" + fn
       } else {
@@ -89,6 +90,7 @@ case class ForkWrite(forkCol: Int,
       }
     } else {
       fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+      ensureDir(projectContext, fileName, parent = true)
     }
     var fileOpen = false
     var headerWritten = false
@@ -96,22 +98,13 @@ case class ForkWrite(forkCol: Int,
     var out: Output = _
   }
 
-  def ensureDir(projectContext: ProjectContext, dir: String): Unit = {
-    projectContext.getFileReader match {
-      case reader: DriverBackedFileReader => {
-        val ds = reader.resolveUrl(dir)
-        if(ds.exists() && ds.isInstanceOf[FileSource]) {
-          var fp = Paths.get(dir)
-          if(!fp.isAbsolute) {
-            fp = projectContext.getProjectRootPath.resolve(fp)
-          }
-          if(Files.exists(fp) && !Files.isDirectory(fp) && Files.size(fp) == 0) {
-            Files.delete(fp)
-          }
-          Files.createDirectories(fp)
-        }
-      }
-      case _ =>
+  def ensureDir(projectContext: ProjectContext, dir: String, parent: Boolean = false): Unit = {
+    val fileReader = projectContext.getFileReader
+    if (PathUtils.isLocal(dir)) {
+      if (parent) {
+        val parentPath = Paths.get(dir).getParent
+        if (parentPath!=null) fileReader.createDirectories(parentPath.toString)
+      } else fileReader.createDirectories(dir)
     }
   }
 
@@ -227,7 +220,7 @@ case class ForkWrite(forkCol: Int,
 
     val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
     val tags = outputMeta.getTags
-    val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange + (if(tags!=null) {
+    val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange.formatAsTabDelimited() + (if(tags!=null) {
        "\t" + tags + "\n"
     } else {
       "\n"
@@ -280,14 +273,44 @@ case class ForkWrite(forkCol: Int,
       })
     }
 
-    if (options.linkFile.nonEmpty) {
-      val projectContext = session.getProjectContext
-      val linkFile = if (options.linkFile.endsWith(".link")) options.linkFile else options.linkFile+".link"
-      val os = projectContext.getFileReader.getOutputStream(linkFile)
-      val absPath = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName else Paths.get(projectContext.getProjectRoot).resolve(fullFileName).toString
-      os.write(absPath.getBytes())
+    val (linkFile,linkFileContent) = extractLink()
+
+    if (linkFile.nonEmpty) {
+      writeLinkFile(linkFile, linkFileContent)
+    }
+  }
+
+  private def extractLink() : (String,String) = {
+    var linkFile = options.linkFile
+    var linkFileContent = ""
+    if (!fullFileName.isEmpty) {
+      if (linkFile.isEmpty) {
+          val dataSource = session.getProjectContext.getFileReader.resolveUrl(fullFileName, true)
+          if (dataSource != null && dataSource.forceLink()) {
+            linkFile = dataSource.getLinkFile()
+            linkFileContent = dataSource.getLinkFileContent()
+          }
+      } else {
+        linkFileContent = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName
+        else Paths.get(session.getProjectContext.getProjectRoot).resolve(fullFileName).toString
+      }
+    }
+    (linkFile,linkFileContent)
+  }
+
+  private def writeLinkFile(linkFile: String, linkFileContent: String) : Unit = {
+    val linkFileToWrite = if (linkFile.endsWith(".link")) linkFile else linkFile+".link"
+    // Use non driver file reader as this is exception from the write no links rule, add extra resolve with the
+    // server reader to validate.
+    session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite))
+    val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
+      session.getProjectContext.getProjectRoot, null)
+    val os = fileReader.getOutputStream(linkFileToWrite)
+    try {
+      os.write(linkFileContent.getBytes())
       os.write('\n')
-      os.close()
+    } finally {
+      if (os != null) os.close
     }
   }
 }

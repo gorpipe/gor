@@ -25,8 +25,8 @@ package org.gorpipe.gor.cli;
 import org.apache.commons.io.IOUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.junit.Assert;
@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.gorpipe.gor.table.PathUtils.resolve;
+import static org.gorpipe.gor.table.util.PathUtils.resolve;
 
 public class GorCliManagerUtils {
     private static final Logger log = LoggerFactory.getLogger(GorCliManagerUtils.class);
@@ -57,7 +57,7 @@ public class GorCliManagerUtils {
     public GorCliManagerUtils() {
     }
 
-    public void testBucketDirsHelper(TableManager man, BaseTable<DictionaryEntry> table, List<Path> bucketDirs, int fileCount) throws IOException {
+    public void testBucketDirsHelper(TableManager man, BaseDictionaryTable<DictionaryEntry> table, List<Path> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (Path bucketDir : bucketDirs) {
             Path bucketDirFull = resolve(table.getRootPath(), bucketDir);
@@ -171,7 +171,7 @@ public class GorCliManagerUtils {
         }
     }
 
-    void waitForBucketizeToStart(BaseTable<BucketableTableEntry> table, Process p) throws InterruptedException, IOException, ExecutionException {
+    void waitForBucketizeToStart(BaseDictionaryTable<BucketableTableEntry> table, Process p) throws InterruptedException, IOException, ExecutionException {
         long startTime = System.currentTimeMillis();
         while (true) {
             try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {

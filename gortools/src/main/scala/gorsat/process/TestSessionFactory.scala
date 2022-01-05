@@ -25,7 +25,7 @@ package gorsat.process
 import java.nio.file.Paths
 import gorsat.QueryHandlers.GeneralQueryHandler
 import org.gorpipe.gor.clients.LocalFileCacheClient
-import org.gorpipe.gor.model.{DriverBackedFileReader, DriverBackedGorServerFileReader, FileReader, GorFileReaderContext}
+import org.gorpipe.gor.model.{DriverBackedFileReader, DriverBackedGorServerFileReader, FileReader}
 import org.gorpipe.gor.session.{GorSession, ProjectContext, SystemContext}
 import org.gorpipe.gor.util.StringUtil
 
@@ -59,11 +59,10 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
       .setRoot(pipeOptions.gorRoot)
-      .setFileReader(createFileReader(pipeOptions.gorRoot, securityContext, server))
+      .setFileReader(createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList))
       .setFileCache(new LocalFileCacheClient(Paths.get(pipeOptions.cacheDir), useSubFolder, subFolderSize))
       .setQueryHandler(new GeneralQueryHandler(session.getGorContext, false))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
-      .setWriteLocations(allowedWriteLocationList)
       .build()
 
     val systemContextBuilder = new SystemContext.Builder()
@@ -84,16 +83,16 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     session
   }
 
-  def createFileReader(gorRoot: String, securityContext: String = null, server: Boolean = false): FileReader = {
+  def createFileReader(gorRoot: String, securityContext: String = null, server: Boolean = false, writeLocations: util.List[String]): FileReader = {
     val emptyGorRoot = StringUtil.isEmpty(gorRoot)
     if (!emptyGorRoot || !StringUtil.isEmpty(securityContext)) {
       if(server) {
-        new DriverBackedGorServerFileReader(gorRoot, null, false, securityContext)
+        new DriverBackedGorServerFileReader(gorRoot, null, false, securityContext, writeLocations)
       } else {
         new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
       }
     } else {
-      GorFileReaderContext.DEFAULT_READER
+      ProjectContext.DEFAULT_READER
     }
   }
 }

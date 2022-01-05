@@ -30,15 +30,13 @@ import org.gorpipe.gor.util.Util
 import org.gorpipe.test.SlowTests
 import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.True
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
-import java.io.File
 import scala.util.{Failure, Success, Try}
 
 @RunWith(classOf[JUnitRunner])
-class UTestGorpipe extends FunSuite {
+class UTestGorpipe extends AnyFunSuite {
 
   test("GOR nested query") {
     var result = TestUtils.runGorPipeLines("gor ../tests/data/gor/dbsnp_test.gorz | group 100 -fc pos -count | top 10")
@@ -82,7 +80,7 @@ class UTestGorpipe extends FunSuite {
 
 @RunWith(classOf[JUnitRunner])
 @Category(Array(classOf[SlowTests]))
-class UTestSlowGorpipe extends FunSuite {
+class UTestSlowGorpipe extends AnyFunSuite {
 
   test("PGOR split test") {
 
@@ -101,7 +99,7 @@ class UTestSlowGorpipe extends FunSuite {
 }
 
 @RunWith(classOf[JUnitRunner])
-class UTestPipeInstance extends FunSuite {
+class UTestPipeInstance extends AnyFunSuite {
 
   test("Wrong order no validation") {
     val data = "Chrom\tpos\tval\nchr1\t2\tA\nchr1\t1\tB\n"

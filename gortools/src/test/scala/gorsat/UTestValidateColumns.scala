@@ -26,11 +26,12 @@ import Outputs.NullOut
 import process.{GenericSessionFactory, GorPipeCommands}
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FunSuite}
+import org.scalatest.BeforeAndAfter
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestValidateColumns extends FunSuite with BeforeAndAfter{
+class UTestValidateColumns extends AnyFunSuite with BeforeAndAfter {
 
   before {
     GorPipeCommands.register()

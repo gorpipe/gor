@@ -54,6 +54,14 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
     public StreamSourceProvider() {}
 
+    public StreamSourceProvider(GorDriverConfig config, FileCache cache, Set<StreamSourceIteratorFactory> initialFactories) {
+        this.config = config;
+        this.cache = cache;
+        for (StreamSourceIteratorFactory factory : initialFactories) {
+            register(factory);
+        }
+    }
+
     public void setConfig(GorDriverConfig config) {
         this.config = config;
     }
@@ -65,14 +73,6 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
     public void setIteratorFactories(Set<StreamSourceIteratorFactory> factories) {
         for (StreamSourceIteratorFactory factory : factories) {
-            register(factory);
-        }
-    }
-
-    public StreamSourceProvider(GorDriverConfig config, FileCache cache, Set<StreamSourceIteratorFactory> initialFactories) {
-        this.config = config;
-        this.cache = cache;
-        for (StreamSourceIteratorFactory factory : initialFactories) {
             register(factory);
         }
     }

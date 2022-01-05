@@ -31,7 +31,7 @@ project(':model') {
         implementation project(':util')
 
         // scala-parser-combinators must be present at compile time for callers so it's defined as an api dependency
-        api "org.scala-lang.modules:scala-parser-combinators_2.12:_"
+        api "org.scala-lang.modules:scala-parser-combinators_${scalaVersion}:_"
 
         annotationProcessor 'com.google.auto.service:auto-service:_'
         
@@ -60,9 +60,11 @@ project(':model') {
         testImplementation libs.logback
 
         testImplementation Testing.mockito.core
-        testImplementation "org.scalatest:scalatest_2.12:_"
-        testImplementation "org.scalacheck:scalacheck_2.12:_"
+        testImplementation "org.scalatest:scalatest_${scalaVersion}:_"
+        testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
+        testImplementation "org.scalatestplus:junit-4-13_${scalaVersion}:_"
         testImplementation("org.postgresql:postgresql:_")
+        testImplementation "org.scala-lang.modules:scala-collection-compat_${scalaVersion}:_"
 
         testRuntimeOnly "org.apache.derby:derby:_"
         testRuntimeOnly "org.apache.derby:derbytools:_"

@@ -41,6 +41,8 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.StringUtil;
@@ -84,7 +86,7 @@ public class GorOptions {
     /**
      * True if we cache all the parsed lines of a dictionary once we have read it, and make a hash map from pn's to lines.
      */
-    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "false"));
+    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
     /**
      * The gorPipeSession
      */
@@ -269,7 +271,7 @@ public class GorOptions {
         String[] arguments = CommandParseUtilities.quoteSafeSplit(query, ' ');
         GorSession session = new GorSession("-1");
         SystemContext systemContext = new SystemContext.Builder().build();
-        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(new DefaultFileReader("")).build();
+        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(org.gorpipe.gor.session.ProjectContext.DEFAULT_READER).build();
         GorSessionCache gorSessionCache = new GorSessionCache();
         session.init(projectContext,systemContext,gorSessionCache);
         return createGorOptions(session.getGorContext(), arguments);
@@ -464,8 +466,7 @@ public class GorOptions {
     private GenomicIterator createGenomicIteratorFromRef(SourceRef ref) {
         GenomicIterator i;
         try {
-            if (session!=null) session.getProjectContext().getFileReader().checkValidServerFileName(ref.file);
-            i = ref.iterate(new DefaultChromoLookup(), chrname);
+            i = ref.iterate(new DefaultChromoLookup(), chrname, session);
         } catch (IOException e) {
             throw new GorResourceException("Couldn't open file", ref.getName(), e);
         }
@@ -814,17 +815,16 @@ public class GorOptions {
                     gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
         }
 
-        var dictpath = Paths.get(fileName);
-        if (!dictpath.isAbsolute() && commonRoot != null && commonRoot.length() > 0) {
-            var rootpath = Paths.get(commonRoot);
-            dictpath = rootpath.resolve(dictpath);
+        var dictpath = fileName;
+        if (!PathUtils.isAbsolutePath(fileName) && commonRoot != null && commonRoot.length() > 0) {
+            dictpath = PathUtils.resolve(commonRoot, dictpath);
         }
         DictionaryTable table = new DictionaryTable(dictpath);
 
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            sourceColName = table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY);
+            sourceColName = table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
         }
 
         if (tableHeader == null) {
@@ -862,13 +862,18 @@ public class GorOptions {
     }
 
 
-    private static String concatFolderFile(String folder, String physical, String logical, boolean checkRelativeToRoot) {
+    static String concatFolderFile(String folder, String physical, String logical, boolean checkRelativeToRoot) {
         if (physical.contains("://")) { // The file is not a filesystem reference, so do not apply common file system root
             return physical;
         }
         if (checkRelativeToRoot) { // Need to ensure that the file doesn't refer above the root in the file hierarchy
             checkFileNameIsRelativeToRoot(logical);
         }
+
+        if (Path.of(physical).isAbsolute()) {
+            return physical;
+        }
+
         return folder.endsWith("/") || folder.endsWith("\\") ? folder + physical : folder + '/' + physical;
     }
 }

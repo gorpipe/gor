@@ -1,6 +1,7 @@
 package gorsat;
 
 import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -15,6 +16,33 @@ import java.util.stream.Stream;
 public class UTestGorDictionaryFolder {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    static String GENE_GROUP_CHROM_TOP1 = "Chrom\tbpStart\tbpStop\tallCount\n" +
+            "chr1\t0\t250000000\t2\n" +
+            "chr10\t0\t150000000\t2\n" +
+            "chr11\t0\t150000000\t2\n" +
+            "chr12\t0\t150000000\t2\n" +
+            "chr13\t0\t150000000\t1\n" +
+            "chr14\t0\t150000000\t1\n" +
+            "chr15\t0\t150000000\t1\n" +
+            "chr16\t0\t100000000\t1\n" +
+            "chr17\t0\t100000000\t1\n" +
+            "chr18\t0\t100000000\t1\n" +
+            "chr19\t0\t100000000\t1\n" +
+            "chr2\t0\t250000000\t2\n" +
+            "chr20\t0\t100000000\t1\n" +
+            "chr21\t0\t100000000\t1\n" +
+            "chr22\t0\t100000000\t1\n" +
+            "chr3\t0\t200000000\t2\n" +
+            "chr4\t0\t200000000\t2\n" +
+            "chr5\t0\t200000000\t2\n" +
+            "chr6\t0\t200000000\t2\n" +
+            "chr7\t0\t200000000\t2\n" +
+            "chr8\t0\t150000000\t2\n" +
+            "chr9\t0\t150000000\t2\n" +
+            "chrM\t0\t20000\t1\n" +
+            "chrX\t0\t200000000\t2\n" +
+            "chrY\t0\t100000000\t1\n";
 
     static String GENE_GROUP_CHROM = "Chrom\tbpStart\tbpStop\tallCount\n" +
             "chr1\t0\t250000000\t4747\n" +
@@ -121,11 +149,10 @@ public class UTestGorDictionaryFolder {
         Path metapath = path.getParent().resolve("gorfile.gorz.meta");
         try(Stream<String> stream = Files.lines(metapath).filter(l -> !l.startsWith("## QUERY:"))) {
             String metainfo = stream.collect(Collectors.joining("\n"));
-            Assert.assertEquals("Wrong results in meta file", "## RANGE: chr21\t9683190\tchr21\t48110675\n" +
-                            "## MD5: 162498408aa03202fa1d2327b2cf9c4f\n" +
-                            "## LINES: 669\n" +
-                            "## CARDCOL[c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z",
-                    metainfo);
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## RANGE = chr21\t9683190\tchr21\t48110675"));
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## MD5 = 162498408aa03202fa1d2327b2cf9c4f"));
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## LINE_COUNT = 669"));
+            Assert.assertTrue("Wrong results in meta file", metainfo.contains("## CARDCOL = [c]: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,R,S,T,U,V,W,Y,Z"));
             try {
                 Files.delete(path);
             } catch (IOException e) {
@@ -248,7 +275,7 @@ public class UTestGorDictionaryFolder {
             Assert.assertEquals("Wrong results in dictionary",
                     "## SERIAL = 0\n" +
                             "## COLUMNS = Chrom,gene_start,gene_end,Gene_Symbol,c\n" +
-                            "# filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
+                            "#filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
                             "dd02aed74a26d4989a91f3619ac8dc20.gorz\t1\tchrM\t576\tchrM\t15955\tJ,M\n",
                     thedict);
         } finally {
@@ -409,9 +436,9 @@ public class UTestGorDictionaryFolder {
         var result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
-        var header = new TableHeader();
-        header.load(folderpath.resolve("thedict.gord"), null);
-        Assert.assertEquals("false", header.getProperty(TableHeader.HEADER_LINE_FILTER_KEY));
+        var header = new DictionaryTableMeta();
+        header.loadAndMergeMeta(folderpath.resolve("thedict.gord"));
+        Assert.assertEquals("false", header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY));
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3.gord");
@@ -438,6 +465,28 @@ public class UTestGorDictionaryFolder {
                 "gor [#s1#] | sort 1 -c Source";
         result = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
         Assert.assertEquals("Wrong result from partgor query", expected, result);
+    }
+
+    @Test
+    public void testExplicitWrite() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var cache = workDirPath.resolve("result_cache");
+        Files.createDirectory(cache);
+        var query = "create a = gor ../tests/data/gor/genes.gor | top 1 | write "+ workDirPath.resolve("test.gor").toAbsolutePath() +"; gor [a] | group chrom -count";
+        var results = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
+        Assert.assertTrue(Files.walk(cache).filter(p -> p.toString().endsWith(".gor")).allMatch(Files::isSymbolicLink));
+        Assert.assertEquals("Wrong results in write folder", "Chrom\tbpStart\tbpStop\tallCount\nchr1\t0\t250000000\t1\n", results);
+    }
+
+    @Test
+    public void testExplicitWriteFolder() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var cache = workDirPath.resolve("result_cache");
+        Files.createDirectory(cache);
+        var query = "create a = pgor ../tests/data/gor/genes.gor | top 1 | write -d "+ workDirPath.resolve("test.gord").toAbsolutePath() +"; gor [a] | group chrom -count";
+        var results = TestUtils.runGorPipe(query,"-cachedir",cache.toString());
+        Assert.assertTrue(Files.walk(cache).filter(p -> p.toString().endsWith(".gord")).allMatch(Files::isSymbolicLink));
+        Assert.assertEquals("Wrong results in write folder", GENE_GROUP_CHROM_TOP1, results);
     }
 
     @Test

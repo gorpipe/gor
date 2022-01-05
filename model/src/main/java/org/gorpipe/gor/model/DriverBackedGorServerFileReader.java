@@ -22,14 +22,19 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.Util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -40,32 +45,21 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
     private final boolean allowAbsolutePath;
     private static final String RESULT_CACHE_DIR = "cache/result_cache";
 
+    private List<String> writeLocations;
+
     /**
      * Create reader
      *
-     * @param resolvedSessionRoot resolved session root
+     * @param commonRoot resolved session root
      * @param constants           The session constants available for file reader
      * @param allowAbsolutePath   allow absolute path
      */
-    public DriverBackedGorServerFileReader(String resolvedSessionRoot, Object[] constants, boolean allowAbsolutePath, String securityContext) {
-        super(securityContext, resolvedSessionRoot, constants);
+    public DriverBackedGorServerFileReader(String commonRoot, Object[] constants, boolean allowAbsolutePath,
+                                           String securityContext, List<String> writeLocations) {
+        super(securityContext, commonRoot, constants);
         this.allowAbsolutePath = allowAbsolutePath;
-    }
-
-    @Override
-    protected void checkValidServerFileName(final String fileName) {
-        ProjectContext.validateServerFileName(fileName, commonRoot, allowAbsolutePath);
-    }
-
-    @Override
-    public DataSource resolveUrl(String url) {
-        return resolveUrl(url, false);
-    }
-
-    @Override
-    public DataSource resolveUrl(String url, boolean writable) {
-        url = convertFileName2ServerPath(url);
-        return super.resolveUrl(url, writable);
+        this.writeLocations = writeLocations != null ? new ArrayList<>(writeLocations) : new ArrayList<>();
+        this.writeLocations.add("result_cache");
     }
 
     @Override
@@ -106,15 +100,57 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
         return super.getFileSignature(file);
     }
 
-    public static FileReader create(String resolvedSessionRoot, Object[] constants, boolean allowAbsolutePath, String securityContext) {
-        if (GorFileReaderContext.fileReaderFallback()) {
-            return new GorServerFileReader(resolvedSessionRoot, constants, allowAbsolutePath, securityContext);
+    public boolean allowsAbsolutePaths() {
+        return false;
+    }
+
+    @Override
+    public void validateAccess(final DataSource dataSource) {
+        if (dataSource.getSourceReference().isWriteSource()) {
+            validateWriteAccess(dataSource);
         } else {
-            return new DriverBackedGorServerFileReader(resolvedSessionRoot, constants, allowAbsolutePath, securityContext);
+            validateReadAccess(dataSource);
         }
     }
 
-    public boolean allowsAbsolutePaths() {
-        return false;
+    private void validateReadAccess(DataSource source) throws GorResourceException {
+        validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
+    }
+
+    void validateWriteAccess(DataSource source) throws GorResourceException {
+        validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
+        isWithinAllowedFolders(source, writeLocations, commonRoot);
+
+        
+        if (source.getAccessValidationPath().toLowerCase().endsWith(".link")) {
+            throw new GorResourceException("Writing link files is not allowed", null);
+        }
+    }
+
+    public static void isWithinAllowedFolders(DataSource dataSource, List<String> writeLocations, String commonRoot) {
+        for (String location : writeLocations) {
+            if (PathUtils.resolve(Path.of(commonRoot), dataSource.getAccessValidationPath())
+                    .startsWith(PathUtils.resolve(commonRoot, location))) {
+                return;
+            }
+        }
+        String message = String.format("Invalid File Path: File path not within folders allowed! Path given: %s. " +
+                "Write locations are %s", dataSource.getAccessValidationPath(), Arrays.toString(writeLocations.toArray()));
+        throw new GorResourceException(message, dataSource.getAccessValidationPath());
+    }
+
+    public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException {
+        if (PathUtils.isLocal(filename) && !allowAbsolutePath) {
+            Path filePath = Paths.get(filename);
+            var realProjectRoot = Paths.get(projectRoot);
+            if (!filePath.isAbsolute()) {
+                filePath = realProjectRoot.resolve(filePath);
+            }
+            filePath = PathUtils.relativize(realProjectRoot, filePath);
+            if (filePath.isAbsolute() || !filePath.normalize().equals(filePath)) {
+                String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", filename, projectRoot);
+                throw new GorResourceException(message, filename);
+            }
+        }
     }
 }

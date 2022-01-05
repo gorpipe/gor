@@ -98,7 +98,7 @@ case class MergeGenotypes(refCol: Int, alleleCol: Int, seg: Boolean, header: Str
     (newRef, newStartPos, newAlleles)
   }
 
-  def outputModifiedRows(flushPosition: Int) {
+  def outputModifiedRows(flushPosition: Int): Unit = {
     val posRowMap = mutable.Map.empty[Int, ArrayBuffer[Row]]
     var normVarMap = mutable.Map.empty[String, (String, Int, String)]
 
@@ -172,7 +172,7 @@ case class MergeGenotypes(refCol: Int, alleleCol: Int, seg: Boolean, header: Str
     allRows = newAllRows
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val aRefseq = r.colAsString(refCol).toString
     val stopPos = r.pos + aRefseq.length
     if (r.chr == rangeChr && r.pos <= rangeStopPos + mergeSpan) {
@@ -202,7 +202,7 @@ case class MergeGenotypes(refCol: Int, alleleCol: Int, seg: Boolean, header: Str
     }
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     // See if we need to output existing range
     try {
       if (rangeChr != rangeChrStart) {

@@ -20,9 +20,11 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.base.Strings;
+import org.gorpipe.gor.table.util.GenomicRange;
+import org.gorpipe.gor.table.util.PathUtils;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -46,8 +48,8 @@ public abstract class BucketableTableEntry extends TableEntry {
         this.isDeleted = entry.isDeleted;
     }
 
-    protected BucketableTableEntry(String contentLogical, URI rootUri, String[] tags, GenomicRange range, String bucket, boolean isDeleted) {
-        super(contentLogical, rootUri, tags, range);
+    protected BucketableTableEntry(String contentLogical, URI rootUri,String alias, String[] tags, GenomicRange range, String bucket, boolean isDeleted) {
+        super(contentLogical, rootUri, alias, tags, range);
         this.bucketLogical = bucket;
         this.isDeleted = isDeleted;
     }

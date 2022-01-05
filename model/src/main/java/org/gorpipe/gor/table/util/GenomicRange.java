@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.util;
 
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -90,14 +90,14 @@ public class GenomicRange {
                 this.stopPos >= 0 ? this.stopPos : "");
     }
 
-    public String format() {
+    public String formatAsTabDelimited() {
         if (isEmpty) return "\t\t\t";
         StringBuilder sb =  new StringBuilder();
-        format(sb);
+        formatAsTabDelimited(sb);
         return sb.toString();
     }
 
-    public StringBuilder format(StringBuilder sb) {
+    public StringBuilder formatAsTabDelimited(StringBuilder sb) {
         if (isEmpty) {
             sb.append("\t\t\t");
         } else {

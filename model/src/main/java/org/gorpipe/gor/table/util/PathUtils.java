@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.util;
 
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -227,7 +227,7 @@ public class PathUtils {
     }
 
     public static boolean isLocal(String path) {
-        return !path.contains(":/") || path.startsWith("file");
+        return (!path.contains(":/") && !path.startsWith("//db:")) || path.startsWith("file");
     }
 
     public static long getLastModifiedTime(String fileName, String securityContext, String commonRoot) throws IOException {

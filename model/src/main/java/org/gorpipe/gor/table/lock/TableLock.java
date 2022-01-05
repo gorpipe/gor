@@ -23,7 +23,7 @@
 package org.gorpipe.gor.table.lock;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public abstract class TableLock implements AutoCloseable {
      * @param timeout   timeout in milliseconds, 0=trylock with no timeout, -1=Wait for ever.
      * @return new read lock object with the given state.
      */
-    public static TableLock acquireRead(Class<? extends TableLock> lockClass, BaseTable table, String name, Duration timeout) {
+    public static TableLock acquireRead(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, Duration timeout) {
         return TableLock.acquire(lockClass, table, name, true, timeout);
     }
 
@@ -74,7 +74,7 @@ public abstract class TableLock implements AutoCloseable {
      * @param timeout   timeout in milliseconds, 0=trylock with no timeout, -1=Wait for ever.
      * @return new write lock object with the given state.
      */
-    public static TableLock acquireWrite(Class<? extends TableLock> lockClass, BaseTable table, String name, Duration timeout) {
+    public static TableLock acquireWrite(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, Duration timeout) {
         return TableLock.acquire(lockClass, table, name, false, timeout);
     }
 
@@ -88,11 +88,11 @@ public abstract class TableLock implements AutoCloseable {
      * @param timeout   timeout in milliseconds, 0=trylock with no timeout, -1=Wait for ever.
      * @return new lock object with the given state.
      */
-    private static TableLock acquire(Class<? extends TableLock> lockClass, BaseTable table, String name, boolean shared, Duration timeout) {
+    private static TableLock acquire(Class<? extends TableLock> lockClass, BaseDictionaryTable table, String name, boolean shared, Duration timeout) {
         table.initialize();
         TableLock lock;
         try {
-            lock = lockClass.getDeclaredConstructor(new Class[]{BaseTable.class, String.class}).newInstance(table, name);
+            lock = lockClass.getDeclaredConstructor(new Class[]{BaseDictionaryTable.class, String.class}).newInstance(table, name);
         } catch (Exception e) {
             throw new RuntimeException("Could not create a new lock object", e);
         }
@@ -108,7 +108,7 @@ public abstract class TableLock implements AutoCloseable {
      * @param table the table the lock belongs to.
      * @param name  name of the lock.
      */
-    public TableLock(BaseTable table, String name) {
+    public TableLock(BaseDictionaryTable table, String name) {
         this.name = name;
         this.id = String.format("tablelock-%s-%s-%s", table.getFolderPath().toString(), table.getName(), name);
 

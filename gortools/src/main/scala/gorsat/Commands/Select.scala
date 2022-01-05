@@ -28,6 +28,8 @@ import gorsat.Utilities.IteratorUtilities.validHeader
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
+import scala.language.postfixOps
+
 object Select {
 
   def parseArguments(iargs : Array[String], args : Array[String], executeNor : Boolean, forcedInputHeader : String = "") : CommandParsingResult = {

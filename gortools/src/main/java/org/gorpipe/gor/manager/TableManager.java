@@ -24,8 +24,8 @@ package org.gorpipe.gor.manager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
@@ -146,7 +146,7 @@ public class TableManager {
      * @param path path to the table.
      * @return the table given by {@code path}.
      */
-    public BaseTable initTable(Path path) {
+    public BaseDictionaryTable initTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {
             return new DictionaryTable.Builder<>(path.toUri()).useHistory(this.useHistory)
                     .securityContext(securityContext).validateFiles(this.validateFiles).build();
@@ -164,7 +164,7 @@ public class TableManager {
      * @param entries   Files/lines to insert.
      */
     public void insert(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, BucketableTableEntry... entries) {
-        BaseTable table = initTable(tableFile);
+        BaseDictionaryTable table = initTable(tableFile);
         insert(table, packLevel, workers, entries);
     }
 
@@ -176,7 +176,7 @@ public class TableManager {
      * @param workers   number of workers to use for bucketization (if needed).
      * @param entries   Files/lines to insert.
      */
-    public void insert(BaseTable table, BucketManager.BucketPackLevel packLevel, int workers, BucketableTableEntry... entries) {
+    public void insert(BaseDictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers, BucketableTableEntry... entries) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.insert(entries);
             trans.commit();
@@ -190,7 +190,7 @@ public class TableManager {
      * @param packLevel pack level to use (see BucketPackLevel).
      * @param workers   number of workers to use for bucketization (if needed).
      */
-    public void save(BaseTable table, BucketManager.BucketPackLevel packLevel, int workers) {
+    public void save(BaseDictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             trans.commit();
         }
@@ -203,7 +203,8 @@ public class TableManager {
      * @param entries   the entries to delete.
      */
     public void delete(Path tableFile, BucketableTableEntry... entries) {
-        BaseTable table = initTable(tableFile);
+        System.err.println("Deleteing entries: " + entries.length);
+        BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.delete(entries);
             trans.commit();
@@ -216,8 +217,9 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @param entries   the entries to delete.
      */
-    public void delete(Path tableFile, BaseTable.TableFilter entries) {
-        BaseTable table = initTable(tableFile);
+    public void delete(Path tableFile, BaseDictionaryTable.TableFilter entries) {
+        System.err.println("Deleteing entries2: " + entries);
+        BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.delete(entries.get());
             trans.commit();
@@ -240,10 +242,11 @@ public class TableManager {
      * @return entries from the table, matching the given criteria.
      */
     public List<? extends BucketableTableEntry> select(Path tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
-        BaseTable table = initTable(tableFile);
+        BaseDictionaryTable table = initTable(tableFile);
         return table.filter()
                 .files(files)
-                .tags((String[]) ArrayUtils.addAll(aliases, tags))
+                .aliases(aliases)
+                .tags(ArrayUtils.addAll(tags))
                 .buckets(buckets)
                 .chrRange(chrRange)
                 .includeDeleted(includedDeleted).get();
@@ -258,14 +261,14 @@ public class TableManager {
      * @return all entries from table as a collection.
      */
     public Collection<? extends BucketableTableEntry> selectAll(Path tableFile) {
-        BaseTable table = initTable(tableFile);
+        BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             return table.selectAll();
         }
     }
 
-    public void print(BaseTable.TableFilter lines) {
-        BaseTable table = lines.getTable();
+    public void print(BaseDictionaryTable.TableFilter lines) {
+        BaseDictionaryTable table = lines.getTable();
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             for (Object line : lines.get()) {
                 System.out.print(((BucketableTableEntry) line).formatEntry());
@@ -283,7 +286,7 @@ public class TableManager {
      * @param bucketDirs     array of directories to bucketize to, ignored if null.  The dirs are absolute or relative to the table dir.
      */
     public void bucketize(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, int maxBucketCount, List<Path> bucketDirs) {
-        BaseTable table = initTable(tableFile);
+        BaseDictionaryTable table = initTable(tableFile);
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
                 .bucketSize(this.bucketSize)
@@ -299,7 +302,7 @@ public class TableManager {
      *
      * @param buckets   list of buckets to be deleted.
      */
-    public void deleteBuckets(BaseTable table, Path... buckets) {
+    public void deleteBuckets(BaseDictionaryTable table, Path... buckets) {
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
                 .bucketSize(this.bucketSize)
@@ -316,7 +319,7 @@ public class TableManager {
      * @param buckets   list of buckets to be deleted.
      */
     public void deleteBuckets(Path tableFile, Path... buckets) {
-        BaseTable table = initTable(tableFile);
+        BaseDictionaryTable table = initTable(tableFile);
         deleteBuckets(table, buckets);
     }
 

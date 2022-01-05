@@ -33,7 +33,7 @@ case class MultiColumnSplit(totalNumberOfColumns: Int, splitColumns: Array[Int],
   val splitcol = Range(0, totalNumberOfColumns).map(x => if (sc.contains(x)) true else false).toArray
   val splitcolArray = new Array[Array[String]](sc.length)
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (!r.toString.contains(separator)) super.process(r)
     else {
       var i = 0

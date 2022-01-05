@@ -31,7 +31,7 @@ case class MergeSources(rightSource : GenomicIterator, empty : String, addRightL
   val rCols = irCols
   val lCols = ilCols
 
-  def outputRightRow(r : Row) {
+  def outputRightRow(r : Row): Unit = {
     if (same) {
       if (addRightLeft) super.process(r.rowWithAddedColumns("R"))
       else super.process(r)
@@ -49,7 +49,7 @@ case class MergeSources(rightSource : GenomicIterator, empty : String, addRightL
       super.process(RowObj(s))
     }
   }
-  def outputLeftRow(r : Row) {
+  def outputLeftRow(r : Row): Unit = {
     if (same) {
       if (addRightLeft) super.process(r.rowWithAddedColumns("L"))
       else super.process(r)
@@ -68,9 +68,9 @@ case class MergeSources(rightSource : GenomicIterator, empty : String, addRightL
     }
   }
 
-  override def setup { val dummy = rightSource.hasNext }
+  override def setup: Unit = { val dummy = rightSource.hasNext }
 
-  override def process(lr : Row) {
+  override def process(lr : Row): Unit = {
     if (lastRightRow != null && lastRightRow.advancedCompare(lr, sortInfo) < 0) {
       outputRightRow(lastRightRow); lastRightRow = null
     }
@@ -83,14 +83,14 @@ case class MergeSources(rightSource : GenomicIterator, empty : String, addRightL
     }
     outputLeftRow(lr)
   }
-  override def finish {
+  override def finish(): Unit = {
     try {
       if (!isInErrorState) {
         if (lastRightRow != null) outputRightRow(lastRightRow)
         while (!wantsNoMore && rightSource.hasNext) outputRightRow(rightSource.next)
       }
     } finally {
-      rightSource.close
+      rightSource.close()
     }
   }
 }

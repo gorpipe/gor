@@ -40,10 +40,8 @@ import java.util.UUID;
  */
 public class AnalysisTestSessionFactory extends GorSessionFactory {
 
-    private String cacheDir;
-
     AnalysisTestSessionFactory() {
-        cacheDir = System.getProperty("java.io.tmpdir");
+
     }
 
     @Override
@@ -57,10 +55,10 @@ public class AnalysisTestSessionFactory extends GorSessionFactory {
         String configFile = "";
         projectContextBuilder
                 .setRoot(root)
-                .setCacheDir(this.cacheDir)
+                .setCacheDir(ProjectContext.DEFAULT_CACHE_DIR)
                 .setConfigFile(configFile)
                 .setFileReader(new DriverBackedFileReader("", root, null))
-                .setFileCache(new LocalFileCacheClient(Paths.get(this.cacheDir)))
+                .setFileCache(new LocalFileCacheClient(Paths.get(ProjectContext.DEFAULT_CACHE_DIR)))
                 .setQueryHandler(new GeneralQueryHandler(session.getGorContext(), false))
                 .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
                 .setRefSeqFactory(new RefSeqRotatingFactory());

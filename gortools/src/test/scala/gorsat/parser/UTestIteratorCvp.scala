@@ -25,11 +25,11 @@ package gorsat.parser
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
-import org.scalatest.FlatSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class UTestIteratorCvp extends FlatSpec {
+class UTestIteratorCvp extends AnyFlatSpec {
   private def getRow(contents: String): Row = {
     val prefix = "chr1\t1\t"
     val row = RowObj(prefix + contents)

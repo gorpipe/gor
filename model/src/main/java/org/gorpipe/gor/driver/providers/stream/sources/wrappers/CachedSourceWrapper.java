@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
@@ -89,12 +90,20 @@ public class CachedSourceWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public String getFullPath() throws IOException {
-        return delegate().getFullPath();
+    public String getFullPath() {
+        try {
+            return delegate().getFullPath();
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
     }
 
     @Override
-    public String getName() throws IOException {
-        return delegate().getName();
+    public String getName() {
+        try {
+            return delegate().getName();
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
     }
 }

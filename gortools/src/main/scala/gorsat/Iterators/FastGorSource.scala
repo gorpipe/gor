@@ -269,7 +269,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
 
   override def getHeader: String = {
     val header = super.getHeader
-    if (header == null || header.length == 0) {
+    if (header == null || header.isEmpty) {
       openSource()
     }
     super.getHeader

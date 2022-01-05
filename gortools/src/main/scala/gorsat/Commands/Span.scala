@@ -46,7 +46,7 @@ object Span {
     columns += ColumnHeader("segCount", "I")
     for (c <- gcCols) columns += ColumnHeader(hcol(c), c.toString)
 
-    val outgoingHeader = RowHeader(columns)
+    val outgoingHeader = RowHeader(columns.toList)
     val combinedHeader = validHeader(outgoingHeader.toString)
 
     if (gcCols.nonEmpty) {

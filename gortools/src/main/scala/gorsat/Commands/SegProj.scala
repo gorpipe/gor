@@ -80,7 +80,7 @@ class SegProj extends CommandInfo("SEGPROJ",
     }
     columns += ColumnHeader("segCount", "I")
 
-    val header = RowHeader(columns)
+    val header = RowHeader(columns.toList)
     combinedHeader = validHeader(header.toString)
 
     pipeStep = SegProjAnalysis(gcCols, maxseg, fuzzfac, sumColumns, forcedInputHeader, context.getSession, header)

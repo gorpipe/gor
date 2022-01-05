@@ -100,7 +100,7 @@ import java.util.*;
  * NOTE:
  * - HG says, either all the files have alias or none of them.
  */
-public class DictionaryTable extends BaseTable<DictionaryEntry> {
+public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryTable.class);
 
@@ -142,7 +142,7 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         List<DictionaryEntry> lines = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : data.entrySet()) {
             for (String path : entry.getValue()) {
-                lines.add(new DictionaryEntry.Builder<>(path, getRootUri()).alias(entry.getKey()).build());
+                lines.add((DictionaryEntry) new DictionaryEntry.Builder<>(path, getRootUri()).alias(entry.getKey()).build());
             }
         }
         insert(lines);
@@ -157,11 +157,9 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
 
 
     @Override
-    protected void doSave() {
+    protected void saveMainFile() {
         log.debug("Saving {} entries for table {}", tableEntries.size(), getName());
-        String oldSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
-        this.header.setProperty(TableHeader.HEADER_SERIAL_KEY, oldSerial != null ? String.valueOf(Long.parseLong(oldSerial) + 1) : "1");
-        this.header.setProperty(TableHeader.HEADER_LINE_COUNT_KEY, String.valueOf(tableEntries.size()));
+
         try {
             URI tempFolder = getFolderUri();
             URI tempDict = tempFolder.resolve(getName() + ".temp.gord");
@@ -172,7 +170,8 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
                 }
                 Iterator<DictionaryEntry> it = tableEntries.iterator();
                 while (it.hasNext()) {
-                    writer.write(it.next().formatEntryNoNewLine());
+                    String line = it.next().formatEntryNoNewLine();
+                    writer.write(line);
                     writer.newLine();
                 }
             }
@@ -209,11 +208,12 @@ public class DictionaryTable extends BaseTable<DictionaryEntry> {
         DictionaryTable table = new Builder<>(tablePath.toUri()).useHistory(true)
                 .securityContext("").validateFiles(false).build();
         table.insert(data);
+        table.setBucketize(true);
         table.save();
         return table;
     }
 
-    public abstract static class AbstractBuilder<B extends AbstractBuilder<B>> extends BaseTable.Builder<B> {
+    public abstract static class AbstractBuilder<B extends AbstractBuilder<B>> extends BaseDictionaryTable.Builder<B> {
         boolean useEmbededHeader = false;
 
         private AbstractBuilder(URI path) {

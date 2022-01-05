@@ -30,11 +30,11 @@ import java.net.URI;
  * <p>
  * Supported formats:
  * <pre>
- *     s3://<bucket>/<path>/<to>/<file>
- *     s3://<provider>:<bucket>/<path>/<to>/<file>
+ *     {@literal s3://<bucket>/<path>/<to>/<file>}
+ *     {@literal s3://<provider>:<bucket>/<path>/<to>/<file>}
  *
  * In the former case, the lookup key (e.g. to find credentials) is just the bucket name
- * In the latter case, it is <provider>:<bucket>
+ * In the latter case, it is provider:bucket
  *
  * </pre>
  * <p>

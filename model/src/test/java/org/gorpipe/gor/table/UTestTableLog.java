@@ -23,9 +23,10 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.DefaultFileReader;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,7 +55,7 @@ public class UTestTableLog {
     @Before
     public void setupTest() {
         workDirPath = workDir.getRoot().toURI();
-        fileReader = new DefaultFileReader(null);
+        fileReader = ProjectContext.DEFAULT_READER;
     }
 
     @Test
@@ -97,7 +98,7 @@ public class UTestTableLog {
         tableLog.logAfter(TableLog.LogAction.INSERT, "ARG1",
                 new DictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build());
         tableLog.logAfter(TableLog.LogAction.ADDTOBUCKET, "BUCKET1",
-                new DictionaryEntry.Builder("dummy2.gor", workDirPath).alias("A2").bucket("BUCKET1").build());
+                new DictionaryEntry.Builder("dummy2.gor", workDirPath).bucket("BUCKET1").alias("A2").build());
         tableLog.logAfter(TableLog.LogAction.REMOVEFROMBUCKET, "BUCKET2",
                 new DictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build());
         tableLog.logAfter(TableLog.LogAction.DELETE, "ARG2",

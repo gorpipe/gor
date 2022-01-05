@@ -23,8 +23,10 @@
 package org.gorpipe.gor.cli.manager;
 
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GenomicRange;
+import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.lock.TableTransaction;
+import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import picocli.CommandLine;
@@ -36,7 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static org.gorpipe.gor.table.PathUtils.relativize;
+import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 @CommandLine.Command(name = "multiinsert",
         aliases = {"m"},
@@ -94,17 +96,19 @@ public class MultiInsertCommand extends CommandBucketizeOptions implements Runna
         TableManager tm = TableManager.newBuilder()
                 .useHistory(!nohistory).minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
 
-        BaseTable table = tm.initTable(dictionaryFile.toPath());
-        if (source != null && !source.equals(table.getProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY))) {
-            table.setProperty(TableHeader.HEADER_SOURCE_COLUMN_KEY, source);
-        }
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
+        try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
+            if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
+                table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
+            }
 
-        tm.insert(dictionaryFile.toPath(), bucketPackLevel, workers,
-                IntStream.range(0, files.size())
-                        .mapToObj(i -> new DictionaryEntry.Builder<>(relativize(table.getRootPath(), Paths.get(files.get(i))), table.getRootUri())
-                                .range(GenomicRange.parseGenomicRange(ranges.get(i)))
-                                .alias(aliases.get(i))
-                                .tags(new String[]{tags.get(i)})
-                                .build()).toArray(DictionaryEntry[]::new));
+            table.insert(IntStream.range(0, files.size())
+                    .mapToObj(i -> new DictionaryEntry.Builder<>(relativize(table.getRootPath(), Paths.get(files.get(i))), table.getRootUri())
+                            .range(GenomicRange.parseGenomicRange(ranges.get(i)))
+                            .alias(aliases.get(i))
+                            .tags(new String[]{tags.get(i)})
+                            .build()).toArray(DictionaryEntry[]::new));
+            trans.commit();
+        }
     }
 }

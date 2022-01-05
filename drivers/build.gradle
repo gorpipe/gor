@@ -39,5 +39,9 @@ project(':drivers') {
         implementation "com.microsoft.azure:azure-storage:_"
 
         implementation 'com.upplication:s3fs:_'
+
+        testImplementation project(':test')
+        testImplementation 'com.github.stefanbirkner:system-rules:_'
+
     }
 }

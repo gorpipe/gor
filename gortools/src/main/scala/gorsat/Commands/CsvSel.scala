@@ -123,7 +123,12 @@ class CsvSel extends CommandInfo("CSVSEL",
         throw new GorParsingException(s"outputtagfile must have a single column with distinct tag ids.\n\\nCurrent header is: $rightHeader2")
       }
 
-      val toHide = if (hideSome) stringValueOfOption(args, "-hide").split(",").map(_.replace("\'","")).to[mutable.HashSet] else null
+      val toHide: mutable.Set[String] = if (hideSome) {
+        val optSplit: Array[String] = stringValueOfOption(args, "-hide").split(",").map(_.replace("\'",""))
+        val set = mutable.Set[String]()
+        optSplit.foreach(x => set += x)
+        set
+      } else null
       val pipeStep = CsvSelAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, sepVal, outputRows, hideSome, toHide, valSize, toVCF, vcfThreshold, doseOption, uv, parallel, context.getSession)
 
       val hcol = inputHeader.split("\t")
