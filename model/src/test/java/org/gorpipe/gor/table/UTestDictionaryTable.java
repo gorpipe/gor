@@ -130,7 +130,6 @@ public class UTestDictionaryTable {
         dict.save();
 
         Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
-        Assert.assertFalse("Should be no external header", Files.exists(dict.getFolderPath().resolve("header")));
 
         dict = new DictionaryTable.Builder<>(gordFile).embeddedHeader(true).build();
         dict.reload();
@@ -147,7 +146,7 @@ public class UTestDictionaryTable {
         dict.save();
 
         Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
-        Assert.assertTrue("Should be external header", Files.exists(dict.getFolderPath().resolve("header")));
+        Assert.assertTrue("Should be external header", Files.exists(Path.of(dict.getPath().toString() + ".meta")));
 
         dict = new DictionaryTable.Builder<>(gordFile).embeddedHeader(false).build();
         dict.reload();

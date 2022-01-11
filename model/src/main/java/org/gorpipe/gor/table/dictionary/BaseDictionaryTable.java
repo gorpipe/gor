@@ -219,6 +219,12 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         }
     }
 
+    @Override
+    public void insert(String... lines) {
+        List<T> entries = lineStringsToEntries(lines);
+        insert(entries);
+    }
+
     /**
      * @param data map with alias to files, to be add to the dictionary.  The files must be normalized and either absolute or
      *             relative to the dictionary root.
@@ -226,11 +232,26 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     public abstract void insert(Map<String, List<String>> data);
 
 
+    @Override
     public void delete(Collection<T> lines) {
         for (T line : lines) {
             tableEntries.delete(line, true);
             logAfter(TableLog.LogAction.DELETE, "", line);
         }
+    }
+
+    @Override
+    public void delete(String... lines) {
+        List<T> entries = lineStringsToEntries(lines);
+        delete(entries);
+    }
+
+    private List<T> lineStringsToEntries(String[] lines) {
+        List<T> entries = new ArrayList<>();
+        for (String line : lines) {
+            entries.add((T)DictionaryEntry.parseEntry(line, getRootUri(), true));
+        }
+        return entries;
     }
 
     /**

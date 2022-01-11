@@ -237,7 +237,7 @@ abstract public class BaseTable<T> implements Table<T> {
             throw new GorSystemException("Table " + path + " can not be created as the parent path does not exists!", null);
         }
 
-        updateFolderMetadata();
+        updateNFSFolderMetadata();
 
         if (!fileReader.exists(getFolderUri().toString())) {
             try {
@@ -287,7 +287,7 @@ abstract public class BaseTable<T> implements Table<T> {
      */
     public void reload() {
 
-        updateFolderMetadata();
+        updateNFSFolderMetadata();
 
         log.debug("Loading table {}", getName());
         prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
@@ -297,21 +297,35 @@ abstract public class BaseTable<T> implements Table<T> {
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
     }
 
-    /**
-     * Update the dictionary file from this.
-     */
-    public void save() {
+
+    @Override
+    public void commitRequest() {
         initialize();
-
         updateMetaBeforeSave();
+        saveTempMainFile();
+        saveTempMetaFile();
+    }
 
-        saveMainFile();
-
-        saveMetaFile();
+    @Override
+    public void commit() {
+        try {
+            updateFromTempFile(getTempMetaFileName(), getMetaFileName());
+            updateFromTempFile(getTempMainFileName(), getPath().toString());
+        } catch (IOException e) {
+            throw new GorSystemException("Could not commit " + getPath(), e);
+        }
 
         if (isUseHistory()) {
             tableLog.commit(fileReader);
         }
+    }
+
+    /**
+     * Update the dictionary file from this.
+     */
+    public void save() {
+        commitRequest();
+        commit();
     }
 
     protected void updateMetaBeforeSave() {
@@ -322,15 +336,47 @@ abstract public class BaseTable<T> implements Table<T> {
         this.header.setProperty(TableHeader.HEADER_SERIAL_KEY, oldSerial != null ? String.valueOf(Long.parseLong(oldSerial) + 1) : "1");
     }
 
-    protected void saveMetaFile() {
-        try(OutputStream os = fileReader.getOutputStream(getPath().toString() + ".meta"))  {
+    protected void saveTempMetaFile() {
+        try(OutputStream os = fileReader.getOutputStream(getTempMetaFileName()))  {
             os.write(header.formatHeader().getBytes(StandardCharsets.UTF_8));
         } catch (IOException ioe) {
             throw new GorSystemException("Could not save meta file", ioe);
         }
     }
 
-    protected abstract void saveMainFile();
+    protected abstract void saveTempMainFile();
+
+    protected String getMetaFileName() {
+        return getPath().toString() + ".meta";
+    }
+
+    protected String getTempMainFileName() {
+        return getTempFileName(getPath().toString());
+    }
+
+    protected String getTempMetaFileName() {
+        return getTempFileName(getMetaFileName());
+    }
+
+    protected String getTempFileName(String pathString) {
+        pathString = insertTempIntoFileName(pathString);
+        pathString = insertTableFolderIntoFilePath(pathString);
+        return pathString;
+    }
+
+    private String insertTableFolderIntoFilePath(String pathString) {
+        String fileName = Path.of(pathString).getFileName().toString();
+        return getFolderPath().resolve(fileName).toString();
+    }
+
+    private String insertTempIntoFileName(String pathString) {
+        int lastDotIndex = pathString.lastIndexOf('.');
+        if (lastDotIndex < 0) {
+            return pathString + ".temp";
+        } else {
+            return pathString.substring(0, lastDotIndex ) + ".temp" + pathString.substring(lastDotIndex);
+        }
+    }
 
     /**
      * Get a property that could be either defined in config or in the table it self. The table has preference.
@@ -353,7 +399,7 @@ abstract public class BaseTable<T> implements Table<T> {
     }
 
     @SuppressWarnings("squid:S00108") // Emtpy blocks on purpose (enough to force meta data update)
-    protected void updateFolderMetadata() {
+    protected void updateNFSFolderMetadata() {
         if (isLocal(getRootUri())) {
             try {
                 try (Stream<Path> paths = Files.list(getRootPath())) {
@@ -391,7 +437,7 @@ abstract public class BaseTable<T> implements Table<T> {
         try {
             SourceReference sourceRef = new SourceReferenceBuilder(file).securityContext(securityContext).build();
             DataSource ds = GorDriverFactory.fromConfig().getDataSource(sourceRef);
-            if ((ds == null || !ds.exists()) && securityContext != null) {
+            if ((ds == null || !ds.exists()) && (PathUtils.isLocal(file) || securityContext != null)) {
                 throw new GorDataException(String.format("Entry %s does not exists!", file));
             }
         } catch (Exception ex) {
@@ -454,8 +500,10 @@ abstract public class BaseTable<T> implements Table<T> {
         return newHeader;
     }
 
-    protected void updateFromTempFile(URI file, URI tempFile) throws IOException {
-        fileReader.move(tempFile.toString(), file.toString());
+    protected void updateFromTempFile(String tempFile, String file) throws IOException {
+        if (fileReader.exists(tempFile)) {
+            fileReader.move(tempFile, file);
+        }
     }
 
     // Util method.

@@ -555,19 +555,18 @@ public class UTestBaseTable {
 
     private void prepareDictGordFile() throws IOException {
         prepareTableGordFile();
-        Files.delete(workDirPath.resolve(".dict").resolve("header"));
         Files.delete(workDirPath.resolve("dict.gord.meta"));
+        Files.delete(workDirPath.resolve(".dict/header"));
     }
 
     private void prepareDictGordFileWithHeader() throws IOException {
         prepareTableGordFile();
-        Files.delete(workDirPath.resolve(".dict").resolve("header"));
         Files.delete(workDirPath.resolve("dict.gord.meta"));
+        Files.delete(workDirPath.resolve(".dict/header"));
         String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");
         content = "#Content\tExtraSpecial\n" + content;
         FileUtils.writeStringToFile(gordFile.toFile(), content, "utf8");
     }
-
 
     @Test
     public void testEntryPaths() throws Exception {
