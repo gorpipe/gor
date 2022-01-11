@@ -28,14 +28,10 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -47,28 +43,14 @@ import java.util.stream.StreamSupport;
 public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implements Spliterator<Row> {
     private static final Logger log = LoggerFactory.getLogger(BatchedPipeStepIteratorAdaptor.class);
 
-    private final Iterator<? extends Row> sourceIterator;
+    final Iterator<? extends Row> sourceIterator;
     private final Analysis pipeStep;
     private RowBuffer rowBuffer = null;
-    private final Row endRow = RowObj.StoR("chrN\t-1");
-    private final Duration timeTriggerBufferFlush;
-    private final Duration batchOfferTimeout;
-    private final Duration timeout;
-    private final Duration logInterval;
     private ReaderThread readerThread;
     private boolean throwOnExit = true;
 
-    private double avgSeekTimeMilliSecond = 0.0;
-    private double avgBasesPerMilliSecond = 0.0;
-    private double avgRowsPerMilliSecond = 0.0;
-    private double avgBatchSize = 0.0;
-    private int numberOfRowsRead = 0;
-    private long totalTimeNs = 0;
-    private int avgCount = 0;
-    private int bavgCount = 0;
-
-    private boolean nosplit = false;
-    private String currentChrom;
+    boolean nosplit = false;
+    String currentChrom;
     private static final Map<String,String> nextChromMap = new HashMap<>();
 
     private final BatchedReadSourceConfig brsConfig;
@@ -96,17 +78,17 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
 
     @Override
     public double getAvgRowsPerMilliSecond() {
-        return avgRowsPerMilliSecond;
+        return readerThread.getAvgRowsPerMilliSecond();
     }
 
     @Override
     public double getAvgBasesPerMilliSecond() {
-        return avgBasesPerMilliSecond;
+        return readerThread.getAvgBasesPerMilliSecond();
     }
 
     @Override
     public double getAvgBatchSize() {
-        return avgBatchSize;
+        return readerThread.getAvgBatchSize();
     }
 
     @Override
@@ -122,20 +104,6 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
     @Override
     public Row getCurrentBatchRow(int i) {
         return rowBuffer.get(i);
-    }
-
-    public void updateTimeMeasurement(long deltaTimeNs, RowBuffer current) {
-        ++avgCount;
-        numberOfRowsRead += current.size();
-        totalTimeNs += deltaTimeNs;
-        avgBatchSize = ((avgCount - 1) * avgBatchSize + current.size()) / avgCount;
-        avgRowsPerMilliSecond = numberOfRowsRead / (totalTimeNs / 1000000.0);
-        Row firstRow = current.get(0);
-        Row lastRow = current.get(current.size() - 1);
-        if (firstRow.chr.equals(lastRow.chr)) {
-            ++bavgCount;
-            avgBasesPerMilliSecond = ((bavgCount - 1) * avgBasesPerMilliSecond + (lastRow.pos - firstRow.pos) / (deltaTimeNs / 1000000.0)) / bavgCount;
-        }
     }
 
     public Stream<Row> getStream() {
@@ -202,239 +170,6 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
         return ORDERED | SORTED | NONNULL | IMMUTABLE;
     }
 
-    private class TimeoutBufferAdaptor extends BufferAdaptor {
-        long timeTriggerBufferFlushNs;
-
-        public TimeoutBufferAdaptor(ReaderThread readerThread) {
-            super(readerThread);
-            timeTriggerBufferFlushNs = timeTriggerBufferFlush.getNano();
-        }
-
-        @Override
-        public void process(Row r) {
-            try {
-                if (!this.wantsNoMore()) {
-                    current.add(r);
-                    if (current.isFull()) {
-                        long nt = System.nanoTime();
-                        if (nt - t > timeTriggerBufferFlushNs) {
-                            if (readerThread.offer(current)) {
-                                updateTimeMeasurement(nt - t, current);
-                                current = current.nextRowBuffer();
-                                current.reduce(current.size() / 2);
-                                t = System.nanoTime();
-                            } else if (!current.enlarge(current.size() * 2)) {
-                                updateTimeMeasurement(nt - t, current);
-                                readerThread.offerBatch(current);
-                                current = current.nextRowBuffer();
-                                t = System.nanoTime();
-                            }
-                        } else if (!current.enlarge(current.size() * 8)) {
-                            updateTimeMeasurement(nt - t, current);
-                            readerThread.offerBatch(current);
-                            current = current.nextRowBuffer();
-                            t = System.nanoTime();
-                        }
-                    }
-                } else {
-                    readerThread.stopProcessing("Stop processing adaptor wantsNoMore");
-                }
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    private class SpliteratorAdaptor extends Analysis implements Consumer<Row> {
-        Consumer<? super Row> cns;
-
-        SpliteratorAdaptor(Consumer<? super Row> cns) {
-            this.cns = cns;
-        }
-
-        @Override
-        public void process(Row r) {
-            if (nosplit && !currentChrom.equals(r.chr)) reportWantsNoMore();
-            else cns.accept(r);
-        }
-
-        @Override
-        public void accept(Row row) {
-            process(row);
-        }
-
-        @Override
-        public void finish() {
-            super.finish();
-        }
-    }
-
-    private class BufferAdaptor extends Analysis {
-        RowBuffer current;
-        ReaderThread readerThread;
-        long t;
-
-        public BufferAdaptor(ReaderThread readerThread) {
-            setReaderThread(readerThread);
-            current = readerThread.rowBuffer1;
-            t = System.nanoTime();
-        }
-
-        public void setReaderThread(ReaderThread rt) {
-            readerThread = rt;
-        }
-
-        @Override
-        public void process(Row r) {
-            try {
-                if (!this.wantsNoMore()) {
-                    current.add(r);
-                    if (current.isFull()) {
-                        if (readerThread.offer(current)) {
-                            current = current.nextRowBuffer();
-                            current.reduce(current.size() / 2);
-                        } else if (!current.enlarge(current.size() * 8)) {
-                            readerThread.offerBatch(current);
-                            current = current.nextRowBuffer();
-                        }
-                    }
-                } else {
-                    readerThread.stopProcessing("Stop processing adaptor wantsNoMore");
-                }
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        @Override
-        public void finish() {
-            try {
-                if( !isInErrorState() ) {
-                    if (current.isFull()) {
-                        readerThread.offerBatch(current);
-                        current = current.nextRowBuffer();
-                    }
-                    current.add(endRow);
-                    readerThread.offerBatch(current);
-                }
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    /**
-     * Reads from the sourceIterator into a buffer
-     */
-    private class ReaderThread extends Thread {
-        private final SynchronousQueue<RowBuffer> rowQueue = new SynchronousQueue<>();
-        private final RowBuffer rowBuffer1 = new RowBuffer();
-        private final RowBuffer rowBuffer2 = new RowBuffer(rowBuffer1);
-        private Analysis bufferedPipeStep;
-        private BufferAdaptor bufferAdaptor;
-        private boolean stopProcessing = false;
-        private boolean didStart = false;
-
-        private long numberOfPollsBeforeLog;
-        private long numberOfPollsBeforeTimeout;
-
-        public ReaderThread( Analysis pipeStep, BufferAdaptor bufferAdaptor) {
-            this.bufferAdaptor = bufferAdaptor;
-            bufferAdaptor.setReaderThread(this);
-            bufferedPipeStep = pipeStep;
-            bufferedPipeStep.wantsNoMore_$eq(false);
-            init();
-        }
-
-        public ReaderThread() {
-            init();
-            initPipeStep();
-        }
-
-        private void init() {
-            this.setName(Thread.currentThread().getName() + "::ReaderThread");
-            rowBuffer1.setNextRowBuffer(rowBuffer2);
-            numberOfPollsBeforeLog = logInterval.toMillis() / batchOfferTimeout.toMillis();
-            numberOfPollsBeforeTimeout = timeout.toMillis() / batchOfferTimeout.toMillis();
-        }
-
-        private void initPipeStep() {
-            if (timeTriggerBufferFlush.getNano() < 0) {
-                bufferAdaptor = new BufferAdaptor(this);
-            } else {
-                bufferAdaptor = new TimeoutBufferAdaptor(this);
-            }
-            bufferedPipeStep = pipeStep != null ? pipeStep.$bar(bufferAdaptor) : bufferAdaptor;
-            bufferedPipeStep.securedSetup(null);
-        }
-
-        public void stopProcessing( String message ) {
-            log.debug(message);
-            stopProcessing = true;
-            if (bufferedPipeStep != null) bufferedPipeStep.wantsNoMore_$eq(true);
-        }
-
-        public void finish() {
-            try {
-                bufferedPipeStep.securedFinish(getEx());
-            } catch (Throwable e) {
-                setEx(e);
-                stopProcessing("Stop processing error in finish " + e.getMessage());
-            }
-        }
-
-        public void run() {
-            didStart = true;
-            Row r = null;
-            try {
-                while (sourceIterator.hasNext() && !bufferedPipeStep.wantsNoMore()) {
-                    r = sourceIterator.next();
-                    bufferedPipeStep.process(r);
-                }
-            } catch (Throwable e) {
-                setEx(e);
-                stopProcessing("Stop processinng cause error " + e.getMessage() + " last row " + r);
-            } finally {
-                finish();
-                // we don't want to stop processing even though sourceIterator has been read
-                closeSourceIterator();
-            }
-        }
-
-        public boolean offer(RowBuffer rowBuffer) {
-            return rowQueue.offer(rowBuffer);
-        }
-
-        public RowBuffer poll() {
-            return rowQueue.poll();
-        }
-
-        public void offerBatch(RowBuffer current) throws InterruptedException {
-            int count = 0;
-            while (didStart && !stopProcessing && !rowQueue.offer(current, batchOfferTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
-                if (count > numberOfPollsBeforeTimeout) {
-                    throw new GorSystemException("BatchedIteratorAdaptor polling for too long " + timeout.getSeconds(), null);
-                }
-                if (count++ % numberOfPollsBeforeLog == 0)
-                    log.debug("Offering batch for {}, batch size {}, query {}", numberOfPollsBeforeLog * count, current.size(), BatchedPipeStepIteratorAdaptor.this);
-            }
-        }
-
-        public RowBuffer pollBatch() throws InterruptedException {
-            RowBuffer ret = rowQueue.poll(batchOfferTimeout.toMillis(), TimeUnit.MILLISECONDS);
-            int count = 0;
-            while (!stopProcessing && ret == null) {
-                ret = rowQueue.poll(batchOfferTimeout.toMillis(), TimeUnit.MILLISECONDS);
-                if (count > numberOfPollsBeforeTimeout) {
-                    throw new GorSystemException("BatchedIteratorAdaptor polling for too long " + timeout.getSeconds(), null);
-                }
-                if (count++ % numberOfPollsBeforeLog == 0)
-                    log.debug("Polling batch for {} time {}, query {}", numberOfPollsBeforeLog * count, Thread.currentThread().getId(), BatchedPipeStepIteratorAdaptor.this);
-            }
-            return ret;
-        }
-    }
-
     @Override
     public String toString() {
         return pipeStep == null ? sourceIterator.toString()  : sourceIterator + " | " + pipeStep;
@@ -450,19 +185,13 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
         this.brsConfig = brsConfig;
         this.autoclose = autoclose;
         setHeader(theHeader);
-
-        timeTriggerBufferFlush = brsConfig.getBufferFlushTimout();
-        batchOfferTimeout = brsConfig.getBatchOfferTimeout();
-
-        timeout = Duration.ofSeconds(Long.parseLong(System.getProperty("gor.timeout.rowsource", "1800000")));
-        logInterval = brsConfig.getLogInterval();
     }
 
     @Override
     public boolean hasNext() {
         try {
             if (rowBuffer == null) {
-                readerThread = new ReaderThread();
+                readerThread = new ReaderThread(brsConfig, this, pipeStep);
                 readerThread.setUncaughtExceptionHandler((tt, e) -> {
                     // THis is just so that the default handler does not write to std.err
                 });
@@ -502,7 +231,7 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
 
     @Override
     public void forEachRemaining(Consumer<? super Row> action) {
-        SpliteratorAdaptor spliteratorAdaptor = new SpliteratorAdaptor(action);
+        SpliteratorAdaptor spliteratorAdaptor = new SpliteratorAdaptor(this,action);
         Analysis bufferedPipeStep = pipeStep != null ? pipeStep.$bar(spliteratorAdaptor) : spliteratorAdaptor;
         Exception ex = null;
         bufferedPipeStep.securedSetup(null);
@@ -535,7 +264,7 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
                     Row next;
                     while( sourceIterator.hasNext() && ((next = sourceIterator.next()).chr.compareTo(seekChr) < 0 || (next.chr.compareTo(seekChr) == 0 && next.pos < seekPos)) );
                 }
-                readerThread = new ReaderThread( readerThread.bufferedPipeStep, readerThread.bufferAdaptor);
+                readerThread = new ReaderThread( this, readerThread.bufferedPipeStep, readerThread.bufferAdaptor, brsConfig);
                 readerThread.setUncaughtExceptionHandler((tt, e) -> {
                     // THis is just so that the default handler does not write to std.err
                 });
@@ -545,7 +274,7 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
         } catch (InterruptedException e) {
             throw new GorSystemException("rowQueue take interrupted on seek", e);
         }
-        avgSeekTimeMilliSecond = ((seekCount * avgSeekTimeMilliSecond + (System.nanoTime() - t) / 1000000.0) / (seekCount + 1));
+        if (readerThread!=null) readerThread.setAvgSeekTimeMilliSecond(((seekCount * readerThread.getAvgSeekTimeMilliSecond() + (System.nanoTime() - t) / 1000000.0) / (seekCount + 1)));
         seekCount++;
         return true;
     }

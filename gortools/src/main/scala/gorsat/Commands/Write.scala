@@ -29,7 +29,6 @@ import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.util.PathUtils
 
 
 class Write extends CommandInfo("WRITE",
@@ -92,7 +91,8 @@ class Write extends CommandInfo("WRITE",
       }
 
       if (idx == GorIndexType.NONE && context.getSession != null) {
-        val dataSource = context.getSession.getProjectContext.getFileReader.resolveUrl(fileName, true)
+        val forkValue = ""
+        val dataSource = context.getSession.getProjectContext.getFileReader.resolveUrl(fileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue), true)
         if (dataSource != null) {
           idx = dataSource.useIndex()
         }
