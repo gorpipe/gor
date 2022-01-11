@@ -284,10 +284,11 @@ public class DriverBackedFileReader extends FileReader {
     public String getDictionarySignature(String dictionary, String[] tags) throws IOException {
         final DataSource source = resolveUrl(dictionary);
         String dictpath = getResolvedUrl(source);
-        if (Files.isDirectory(Path.of(dictpath))) {
-            dictpath = URI.create(dictpath).resolve(Path.of(dictpath).getFileName().toString()).toString();
+        if (source.isDirectory()) {
+            dictpath = URI.create(dictpath).resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString();
         }
-        return new DictionaryTable.Builder<>(dictpath).securityContext(securityContext).build().getSignature(true, source.getSourceReference().commonRoot, tags);
+        return new DictionaryTable.Builder<>(dictpath).securityContext(securityContext).build()
+                .getSignature(true, source.getSourceReference().commonRoot, tags);
     }
 
     @Override

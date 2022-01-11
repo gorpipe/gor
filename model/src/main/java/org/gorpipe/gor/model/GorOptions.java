@@ -802,7 +802,8 @@ public class GorOptions {
         fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
 
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
-        final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(), getFileSignature(fileName, projectContext.securityKey), commonRoot, this.useDictionaryCache);
+        final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(),
+                session.getProjectContext().getFileReader().getDictionarySignature(fileName, null), commonRoot, this.useDictionaryCache);
         this.hasLocalDictonaryFile = true;
         final Dictionary.DictionaryLine[] fileList = gord.getSources(this.columnTags, allowBucketAccess, isSilentTagFilter);
         this.isDictionaryWithBuckets = gord.isDictionaryWithBuckets; //Arrays.stream(fileList).anyMatch(file -> file.sourceInserted);

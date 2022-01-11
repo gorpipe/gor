@@ -303,9 +303,9 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
             }
         } else {
             fingerPrintString = new ByteTextBuilder(300);
-            fingerPrintString.append(getPath().toString());
+            fingerPrintString.append(getPathUri().toString());
             fingerPrintString.append((byte) '&');
-            fingerPrintString.append(getLastModifiedTime(getPath().toString(), securityContext, commonRoot));
+            fingerPrintString.append(getLastModifiedTime(getPathUri().toString(), securityContext, commonRoot));
         }
 
         return fingerPrintString.md5();

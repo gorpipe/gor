@@ -87,7 +87,7 @@ abstract public class BaseTable<T> implements Table<T> {
         this.name = FilenameUtils.removeExtension(fileName);
 
         // Not all datasources support isDirectory (so just check for the dict file)
-        if (this.fileReader.exists(PathUtils.resolve(uri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
+        if (safeCheckExists(PathUtils.resolve(uri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
             // Gord folder passed in.
             this.rootUri = normalize(uri);
             this.path = rootUri.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
@@ -425,6 +425,14 @@ abstract public class BaseTable<T> implements Table<T> {
                 throw new GorDataException(String.format("Can not update dictionary - The columns do not match (dict: %s vs line: %s)",
                         String.join(",", this.header.getColumns()), String.join(",", lineHeader.getColumns())), -1, lineHeader.toString(), header.toString() );
             }
+        }
+    }
+
+    private boolean safeCheckExists(String path) {
+        try {
+            return fileReader.exists(path);
+        } catch (Exception e) {
+            return false;
         }
     }
 
