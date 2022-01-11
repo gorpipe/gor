@@ -221,7 +221,7 @@ case class ForkWrite(forkCol: Int,
     val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
     val tags = outputMeta.getTags
     val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange.formatAsTabDelimited() + (if(tags!=null) {
-       "\t" + tags + "\n"
+      "\t" + tags + "\n"
     } else {
       "\n"
     })
@@ -267,29 +267,39 @@ case class ForkWrite(forkCol: Int,
             fileHolder.out.finish()
           } catch {
             case _:Exception =>
-              // Ignore at this time
+            // Ignore at this time
           }
         }
       })
     }
 
-    val (linkFile,linkFileContent) = extractLink()
+    if (useFork) {
+      forkMap.values.foreach(sh => {
+        val (linkFile, linkFileContent) = extractLink(sh.fileName)
 
-    if (linkFile.nonEmpty) {
-      writeLinkFile(linkFile, linkFileContent)
+        if (linkFile.nonEmpty) {
+          writeLinkFile(linkFile, linkFileContent)
+        }
+      })
+    } else {
+      val (linkFile, linkFileContent) = extractLink(fullFileName)
+
+      if (linkFile.nonEmpty) {
+        writeLinkFile(linkFile, linkFileContent)
+      }
     }
   }
 
-  private def extractLink() : (String,String) = {
+  private def extractLink(fileName: String) : (String,String) = {
     var linkFile = options.linkFile
     var linkFileContent = ""
-    if (!fullFileName.isEmpty) {
+    if (fileName.nonEmpty) {
       if (linkFile.isEmpty) {
-          val dataSource = session.getProjectContext.getFileReader.resolveUrl(fullFileName, true)
-          if (dataSource != null && dataSource.forceLink()) {
-            linkFile = dataSource.getLinkFile()
-            linkFileContent = dataSource.getLinkFileContent()
-          }
+        val dataSource = session.getProjectContext.getFileReader.resolveUrl(fullFileName, true)
+        if (dataSource != null && dataSource.forceLink()) {
+          linkFile = dataSource.getLinkFile
+          linkFileContent = dataSource.getLinkFileContent
+        }
       } else {
         linkFileContent = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName
         else Paths.get(session.getProjectContext.getProjectRoot).resolve(fullFileName).toString
@@ -310,7 +320,7 @@ case class ForkWrite(forkCol: Int,
       os.write(linkFileContent.getBytes())
       os.write('\n')
     } finally {
-      if (os != null) os.close
+      if (os != null) os.close()
     }
   }
 }
