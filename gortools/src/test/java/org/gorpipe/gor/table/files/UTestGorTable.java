@@ -119,4 +119,35 @@ public class UTestGorTable {
                 "## VALIDATE_FILES = false\n" +
                 "## COLUMNS = chrom,pos,ref\n", Files.readString(metaFile));
     }
+
+    @Test
+    public void testCreateGorTableMultipleInserts() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insert("chr1\t2\tC","chr1\t3\tG");;
+        table.insert("chr1\t4\tT");
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals(content +
+                "chr1\t2\tC\n" +
+                "chr1\t3\tG\n" +
+                "chr1\t4\tT\n", Files.readString(gorFile));
+
+        Path metaFile = Path.of(gorFile + ".meta");
+        Assert.assertTrue(Files.exists(metaFile));
+        String meta = Files.readString(metaFile);
+        Assert.assertEquals("## SERIAL = 1\n" +
+                "## USE_HISTORY = true\n" +
+                "## VALIDATE_FILES = true\n" +
+                "## COLUMNS = chrom,pos,ref\n", meta);
+    }
 }

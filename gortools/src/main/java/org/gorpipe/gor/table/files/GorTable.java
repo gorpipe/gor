@@ -7,10 +7,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.table.TableLog;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,7 +32,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
 
     private static final Logger log = LoggerFactory.getLogger(GorTable.class);
 
-    Path tempOutFilePath;
+    protected Path tempOutFilePath;
 
     public GorTable(Builder builder) {
         super(builder);
@@ -67,6 +67,12 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         insert(tempInputFile.toUri());
     }
 
+    @Override
+    public void insert(String... lines) {
+        List<T> entries = lineStringsToEntries(lines);
+        insert(entries);
+    }
+
     public void insert(URI gorFile) {
         // Validate the new file.
         if (isValidateFiles()) {
@@ -92,17 +98,39 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     }
 
     @Override
-    public void saveMainFile() {
-        // Move main temp file into the main file.
+    public void delete(String... lines) {
+        List<T> entries = lineStringsToEntries(lines);
+        delete(entries);
+    }
+
+    private List<T> lineStringsToEntries(String[] lines) {
+        List<T> entries = new ArrayList<>();
+        for (String line : lines) {
+            entries.add((T) new RowBase(line));
+        }
+        return entries;
+    }
+
+    protected String getInputTempFileEnding() {
+        return ".gor";
+    }
+
+    protected String getGorCommand() {
+        return "gor";
+    }
+
+    @Override
+    public void saveTempMainFile() {
+        // Move our temp file to the standard temp file and clean up.
         // or if these are links update the link file to point to the new temp file.
         // Clean up (remove old files and temp files)  s
 
         try {
-            if (tempOutFilePath != null && Files.exists(tempOutFilePath)) {
-                updateFromTempFile(getPathUri(), tempOutFilePath.toUri());
-                Files.delete(getTransactionFolderPath());
-            } else if (!Files.exists(getPath())) {
-                writeToFile(getPath(), new ArrayList<>());
+            if (tempOutFilePath != null && getFileReader().exists(tempOutFilePath.toString())) {
+                updateFromTempFile(tempOutFilePath.toString(), getTempMainFileName());
+                getFileReader().deleteDirectory(getTransactionFolderPath().toString());
+            } else if (!getFileReader().exists(getPath().toString())) {
+                writeToFile(Path.of(getTempMainFileName()), new ArrayList<>());
             }
         } catch (IOException e) {
             throw new GorSystemException("Could not save table", e);
@@ -114,13 +142,13 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         super.initialize();
     }
 
-    private Path getTransactionFolderPath() {
+    protected Path getTransactionFolderPath() {
         return Path.of(getFolderPath().toString(), "transactions");
     }
 
-    private Path createInputTempFile(Collection<T> lines) throws IOException {
+    protected Path createInputTempFile(Collection<T> lines) throws IOException {
         String randomString = RandomStringUtils.random(8, true, true);
-        Path tempFilePath = getTransactionFolderPath().resolve("insert_temp_" + randomString + ".gor");
+        Path tempFilePath = getTransactionFolderPath().resolve("insert_temp_" + randomString + getInputTempFileEnding());
 
         fileReader.createDirectories(tempFilePath.getParent().toString());
         writeToFile(tempFilePath, lines);
@@ -128,7 +156,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         return tempFilePath;
     }
 
-    private void writeToFile(Path filePath, Collection<T> lines) throws IOException {
+    protected void writeToFile(Path filePath, Collection<T> lines) throws IOException {
         try (OutputStream os = fileReader.getOutputStream(filePath.toString())) {
             os.write('#');
             os.write(Stream.of(getColumns()).collect(Collectors.joining("\t")).getBytes(StandardCharsets.UTF_8));
@@ -147,13 +175,13 @@ public class GorTable<T extends Row> extends BaseTable<T> {
             mainFile = getPath();
         } else {
             mainFile = tempOutFilePath;
-
         }
+
         String randomString = RandomStringUtils.random(8, true, true);
         tempOutFilePath = getTransactionFolderPath().resolve(
                 String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
 
-        String command = String.format("gor %s %s | write %s", mainFile, insertFile.toString(), tempOutFilePath);
+        String command = String.format("%s %s %s | write %s", getGorCommand(), mainFile, insertFile.toString(), tempOutFilePath);
         return command;
     }
 

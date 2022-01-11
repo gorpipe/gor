@@ -190,6 +190,10 @@ public class PathUtils {
         return uri;
     }
 
+    public static Path getParentPath(Path path) {
+        return path.getParent() != null ? path.getParent() : path.toAbsolutePath().getParent();
+    }
+
     public static URI fixFileSchema(URI uri) {
         return URI.create(fixFileSchema(uri.toString()));
     }

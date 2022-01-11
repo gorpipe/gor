@@ -220,6 +220,11 @@ public class HTTPSource implements StreamSource {
     }
 
     @Override
+    public boolean isDirectory() {
+        return false;  // We can not read dicts.
+    }
+
+    @Override
     public void close() {
         // No resources to free
     }

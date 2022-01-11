@@ -1,9 +1,10 @@
 package org.gorpipe.gor.table;
 
+import org.gorpipe.exceptions.GorException;
+
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 public interface Table<T> {
 
@@ -15,6 +16,8 @@ public interface Table<T> {
      * @return real path of this table.
      */
     Path getPath();
+
+    Path getFolderPath();
 
     String[] getColumns();
 
@@ -54,6 +57,13 @@ public interface Table<T> {
      *
      * @param lines the line(s) to insert/update.
      */
+    void insert(String... lines);
+
+    /**
+     * Insert/update dictionary lines.
+     *
+     * @param lines the line(s) to insert/update.
+     */
     default void insert(T... lines) {
         insert(Arrays.asList(lines));
     }
@@ -77,14 +87,37 @@ public interface Table<T> {
      *
      * @param lines lines to remove.
      */
+    void delete(String... lines);
+
+    /**
+     * Delete the given lines from the dictionary.
+     *
+     * @param lines lines to remove.
+     */
     default void delete(T... lines) {
         delete(Arrays.asList(lines));
     }
 
+    void reload();
+
+    /**
+     * Save the table.
+     * Does commitRequest and commit in one go.
+     */
     void save();
 
-    //GenomicIterator getIterator();
+    /**
+     * Commit request.
+     * Would usually carry out the update without committing it.
+     * Throws GorException if commit request fails.
+     */
+    void commitRequest() throws GorException;
 
+    /**
+     * Commit.
+     * Update (save) the table so every one sees the changes.
+     */
+    void commit();
 
     // CHECK
 
@@ -95,10 +128,4 @@ public interface Table<T> {
     String getSecurityContext();
 
     void setColumns(String[] columns);
-
-//    String getSourceColumn();
-//
-//    void setSourceColumn(String sourceColumn);
-
-
 }

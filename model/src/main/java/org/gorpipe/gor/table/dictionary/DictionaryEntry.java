@@ -60,6 +60,7 @@ public class DictionaryEntry extends BucketableTableEntry {
 
     private static final Splitter tabSplitter = Splitter.on('\t');
     private static final Splitter pipeSplitter = Splitter.on('|');
+
     /**
      * Parse entry from dict file.
      * Assumes the entry has been created by us, i.e. paths normalized etc.
@@ -68,20 +69,30 @@ public class DictionaryEntry extends BucketableTableEntry {
      *
      * @param line          the line to parse.
      * @param rootUri       root URI to resolve relative paths.
+     * @param relativesContent should we relatives the content (only needed if reading from a outside source)
      * @return new entry from the entryString
      */
+    public static DictionaryEntry parseEntry(String line, URI rootUri, boolean relativesContent) {
+        List<String> columns = tabSplitter.splitToList(line);
+        return parseEntry(columns, rootUri, relativesContent);
+    }
+
     public static DictionaryEntry parseEntry(String line, URI rootUri) {
         List<String> columns = tabSplitter.splitToList(line);
-        return parseEntry(columns, rootUri);
+        return parseEntry(columns, rootUri, false);
     }
-    
-    public static DictionaryEntry parseEntry(List<String> columns, URI rootUri) {
+
+    public static DictionaryEntry parseEntry(List<String> columns, URI rootUri, boolean relativesContent) {
         if (columns.isEmpty()) {
             return null;
         }
 
         final List<String> fileInfo = pipeSplitter.splitToList(columns.get(0).replace('\\', '/'));
-        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(fixFileSchema(fileInfo.get(0)), rootUri).contentVerified();
+        String content = fixFileSchema(fileInfo.get(0));
+        if (relativesContent) {
+            content = PathUtils.relativize(rootUri, content);
+        }
+        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(content, rootUri).contentVerified();
 
         final String flags = fileInfo.size() > 2 ? fileInfo.get(1) : null;
         final boolean lineDeleted = flags != null && flags.toLowerCase().contains("d");

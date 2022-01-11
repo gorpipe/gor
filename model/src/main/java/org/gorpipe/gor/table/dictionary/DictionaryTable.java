@@ -155,16 +155,19 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         insert(new DictionaryEntry.Builder(content, getRootUri()).build());
     }
 
+    public void delete(String content) {
+        delete(new DictionaryEntry.Builder(content, getRootUri()).build());
+    }
+
 
     @Override
-    protected void saveMainFile() {
+    protected void saveTempMainFile() {
         log.debug("Saving {} entries for table {}", tableEntries.size(), getName());
 
         try {
-            URI tempFolder = getFolderUri();
-            URI tempDict = tempFolder.resolve(getName() + ".temp.gord");
+            String tempDict = getTempMainFileName();
             try (BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(getFileReader().getOutputStream(tempDict.toString())))) {
+                    new OutputStreamWriter(getFileReader().getOutputStream(tempDict)))) {
                 if (useEmbeddedHeader) {
                     writer.write(this.header.formatHeader());
                 }
@@ -177,19 +180,26 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
             }
 
             if (!useEmbeddedHeader) {
-                URI tempHeader = tempFolder.resolve("header" +".tmp");
+                URI tempHeader = URI.create(getTempFileName(getFolderUri().resolve("header").toString()));
                 try (BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(getFileReader().getOutputStream((tempHeader.toString()))))) {
                     writer.write(this.header.formatHeader());
                 }
-                updateFromTempFile(getFolderUri().resolve("header"), tempHeader);
             }
-
-            updateFromTempFile(getPathUri(), tempDict);
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
         log.debug("Done saving {} entries for table {}", tableEntries.size(), getName());
+    }
+
+    @Override
+    public void commit() {
+        super.commit();
+        try {
+            updateFromTempFile(getFolderUri().resolve("header").toString(), getTempFileName(getFolderUri().resolve("header").toString()));
+        } catch (IOException e) {
+            throw new GorSystemException("Could not move header", e);
+        }
     }
 
     /**

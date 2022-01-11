@@ -61,8 +61,25 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
   private val expWCoef = 0.1  //The coefficient to use in the exponential weighting of the measured values.
   private val oneMinusExpWCoef = 1 - expWCoef
   private var maxDistEstimated = false
-  private var maxReads = 10000  //The maximum number of reads (next calls) when running to a destination instead of seeking.
-  private val checksPerMaxRun = 10  //We check whether
+  private var maxReads = 100000  //The maximum number of reads (next calls) when running to a destination instead of seeking.
+  private val checksPerMaxRun = 10  //We check
+
+  private var lastCount = 0
+  private var lastDist = 0
+  private var lastTime = 0L
+
+  var bp_per_time = -1.0
+  var time_to_seek = -1L
+  var seek_time = System.nanoTime()
+  var seek_pos = -1
+  var last_pos = -1
+  var row_tik = 0
+  var rows_per_time_meas = 1
+  var target_time_per_time_meas = 1000000 // 1 ms
+  var last_time = seek_time
+  var the_time = last_time
+  var alpha = 0.1
+  var last_chrom = ""
 
   if (context != null && context.getSession != null) {
     context.getSession.setNorContext(executeNor)
@@ -115,10 +132,29 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     myHasNext
   }
 
+  private def measure_time_and_speed(the_pos: Int) {
+    the_time = System.nanoTime()
+    val dt = (the_time-last_time).toDouble
+    last_time = the_time
+
+    row_tik = 0
+    if (dt < 0.5*target_time_per_time_meas) rows_per_time_meas = rows_per_time_meas* (target_time_per_time_meas/dt).min(2.0).toInt
+    else if (dt > 2*target_time_per_time_meas) rows_per_time_meas = rows_per_time_meas* (target_time_per_time_meas /dt).max(0.5).toInt
+    if (rows_per_time_meas <1 ) rows_per_time_meas = 1
+
+    /* The first estimate of bp_per_time should be high since the clock is set to zero only when the first row shows up */
+    if (bp_per_time < 0) bp_per_time = (the_pos-seek_pos).toDouble/(the_time-seek_time)
+    else bp_per_time = alpha * (the_pos-seek_pos).toDouble/(the_time-seek_time) + (1-alpha)* bp_per_time
+  }
+
   override def next(): Row = {
     incStat("next")
     if (hasNext) {
       mustReCheck = true
+      last_pos = myNext.pos
+      if (seek_pos < 0) seek_pos = myNext.pos
+      row_tik += 1
+      if (row_tik >=  rows_per_time_meas) measure_time_and_speed(last_pos)
       myNext
     } else {
       throw new GorSystemException("hasNext: getRow call on false hasNext!", null)
@@ -133,22 +169,13 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     }
   }
 
-  /**
-    * The new moveToPosition method.
-    * adaptiveMoveToPosition decides whether to run or seek depending on estimates on how long
-    * we can run within @estSeekTime. The estimates are computed using exponential weighting of the
-    * the measured values.
-    */
-  def adaptiveMoveToPosition(seekChr: String, seekPos: Int) {
+  def adaptiveMoveToPosition(chrom: String,pos: Int, maxReads: Int = 1000000) {
     incStat("adaptiveMoveToPosition")
     if (myNext == null || (myNext.chr != null && ((myNext.pos >= seekPos && myNext.chr == seekChr) || myNext.chr > seekChr)))
-      return //We are at the position so nothing more to do.
-    val dist = seekPos - myNext.pos
-    if (soughtTwice && dist < maxDist) {
-      carefulRunner(seekChr, seekPos, dist)
-    } else if (hasNext) {
-      seek(seekChr, seekPos)
-    }
+      return
+    val time_to_stream = (pos - last_pos)/bp_per_time
+    if (last_chrom == chrom && time_to_seek < 1.5 * time_to_stream) fixedMoveToPosition(chrom,pos,1000000)
+    else seek(chrom,pos)
   }
 
   //The old moveToPosition. Its execution plan is not adaptive.
@@ -172,84 +199,30 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     }
   }
 
-  private def carefulRunner(seekChr: String, seekPos: Int, dist: Int) {
-    val startPos = myNext.pos
-    var reachedPos = false
-    var late = false
-    var theNext: Row = null
-    var count = 0
-    var modCounter = 0
-    var didSeek = false
-    val startTime = System.nanoTime
-    var distLeft = dist
-    while (!reachedPos && !didSeek && hasNext) {
-      count += 1
-      modCounter += 1
-      theNext = next()
-      if ((seekPos <= theNext.pos && seekChr == theNext.chr) || theNext.chr > seekChr) reachedPos = true
-      // If we have not reached the position after a plenty of iterations we should check whether we have been spending to much time streaming.
-      else if (modCounter == check) {
-        modCounter = 0
-        val time = System.nanoTime - startTime
-        //If we have spent more time streaming then it takes to seek we should consider to give up on streaming.
-        if (time > estSeekTime) {
-          //Update the estimates
-          val tmpDist = theNext.pos - startPos
-          distLeft -= tmpDist
-          updateEstimates(count, tmpDist, time)
-          count = 0
-          if ((late || distLeft > maxDist) && hasNext) {
-            didSeek = true
-            seek(seekChr,seekPos)
-          }
-          late = true //If we are late again we will seek.
-        }
-      }
-    }
-    if (reachedPos) {
-      val time = System.nanoTime - startTime
-      if(time > estSeekTime) {
-        updateEstimates(count, distLeft, time)
-      }
-      myHasNext = true
-      mustReCheck = false
-      myNext = theNext
-    }
-  }
-
-  private def updateEstimates(count: Int, dist: Int, time: Long): Unit = {
-    val timeRatio = estSeekTime.toDouble / time
-    lazy val coef = Math.pow(oneMinusExpWCoef, 1 / timeRatio)
-    maxReads = if (maxDistEstimated) ((1 - coef) * count + coef * maxReads).toInt else (count * timeRatio).toInt
-    maxDist = if (maxDistEstimated) ((1 - coef) * dist + coef * maxReads).toInt else (dist * timeRatio).toInt
-    maxDistEstimated = true; check = maxReads / checksPerMaxRun
-  }
-
   override def seek(seekChr: String, seekPos: Int): Boolean = {
     posSet = true
     mustReCheck = true
     if (useAdaptiveMTP) {
-      newSetPosition(seekChr, seekPos)
+      setPosition(seekChr, seekPos)
     } else {
       oldSetPosition(seekChr, seekPos)
     }
     true
   }
 
-  def newSetPosition(seekChr: String, seekPos: Int): Unit = {
+  def setPosition(chrom: String,pos: Int) {
     if (gorSource == null) openSource()
-    val startTime = System.nanoTime
-    gorSource.seek(seekChr, seekPos)
+    the_time = System.nanoTime();
+    gorSource.seek(chrom,pos)
+    val dt = System.nanoTime()-the_time
+    row_tik = 0
     myHasNext = hasNext
-    val measuredSeekTime = System.nanoTime - startTime
-    if (soughtOnce) {
-      if (soughtTwice) {
-        estSeekTime = (expWCoef * measuredSeekTime + oneMinusExpWCoef * estSeekTime).toLong
-      } else {
-        soughtTwice = true
-        estSeekTime = measuredSeekTime
-      }
-    } else soughtOnce = true
+    seek_time = System.nanoTime()
+    last_chrom = chrom
+    seek_pos = -1 /* will be set to the right value on first getRow */
+    last_time= seek_time
+    if (time_to_seek < 0) time_to_seek = dt
+    else time_to_seek = (alpha*dt + (1-alpha)*time_to_seek).toLong
   }
 
   def oldSetPosition(seekChr: String, seekPos: Int) {

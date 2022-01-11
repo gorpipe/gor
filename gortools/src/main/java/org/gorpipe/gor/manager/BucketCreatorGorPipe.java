@@ -38,6 +38,7 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
             throws IOException {
         // Create common temp directories and folders.
         // !GM Should we use local or remote temp folder}
-        Path workBaseDir = PathUtils.isLocal(absBucketDir) ? PathUtils.toPath(absBucketDir) :
+        Path workBaseDir = PathUtils.isLocal(absBucketDir) ? Paths.get(PathUtils.formatUri(absBucketDir)) :
                 Files.createTempDirectory("bucket_work_folder_" + table.getId());
         Path workTempDir = createTempfoldersForCreateBucketFiles(table, bucketsToCreate.keySet(), workBaseDir);
 

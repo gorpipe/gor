@@ -144,7 +144,7 @@ public interface DataSource extends AutoCloseable {
 
     /**
      * Check if this datasource supports link files, i.e. if we should check for
-     * existances of <file name>.link if <file name> is not found.
+     * existances of [file name].link if [file name] is not found.
      * @return true if this datasource supports link files.
      */
     default boolean supportsLinks() {
