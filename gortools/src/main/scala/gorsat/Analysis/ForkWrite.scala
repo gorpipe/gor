@@ -295,14 +295,14 @@ case class ForkWrite(forkCol: Int,
     var linkFileContent = ""
     if (fileName.nonEmpty) {
       if (linkFile.isEmpty) {
-        val dataSource = session.getProjectContext.getFileReader.resolveUrl(fullFileName, true)
+        val dataSource = session.getProjectContext.getFileReader.resolveUrl(fileName, true)
         if (dataSource != null && dataSource.forceLink()) {
           linkFile = dataSource.getLinkFile
           linkFileContent = dataSource.getLinkFileContent
         }
       } else {
-        linkFileContent = if (PathUtils.isAbsolutePath(fullFileName)) fullFileName
-        else Paths.get(session.getProjectContext.getProjectRoot).resolve(fullFileName).toString
+        linkFileContent = if (PathUtils.isAbsolutePath(fileName)) fileName
+        else Paths.get(session.getProjectContext.getProjectRoot).resolve(fileName).toString
       }
     }
     (linkFile,linkFileContent)
