@@ -31,8 +31,6 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.model.RowBase;
-import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.util.collection.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -41,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     private int columnCount = -1;
     private final Unzipper unzipper;
     private byte[] buffer;
-    private final BufferIterator bufferIterator = new BufferIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
+    private final StringIterator bufferIterator = new StringIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
     private final ByteArrayWrapper rawDataHolder = new ByteArrayWrapper();
     private boolean firstBlock = true;
     private boolean isClosed = false;
@@ -153,8 +152,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
                 throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
         }
-        String rowString = this.bufferIterator.getNextAsString();
-        return RowObj.apply(rowString, countColumns(rowString));
+        return this.bufferIterator.getNextAsRow();
     }
 
     @Override
@@ -182,7 +180,8 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         final int blockIdx = getBeginningOfBlock(in);
 
         final int unzippedLen = unzipBlock(in, len, blockIdx);
-        this.bufferIterator.update(this.buffer, 0, unzippedLen, true, true);
+        final var str = unzippedLen > 0 ? new String(buffer, 0, unzippedLen, StandardCharsets.UTF_8) : "";
+        this.bufferIterator.update(str, true, true);
     }
 
 

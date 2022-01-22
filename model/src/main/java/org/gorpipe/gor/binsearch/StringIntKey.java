@@ -172,6 +172,23 @@ public class StringIntKey implements IKey {
         }
     }
 
+    /**
+     * Creates a new key with values parsed from the buffer starting from beginOfLine
+     *
+     * @param chrCol
+     * @param bpCol
+     * @param buffer      data buffer containing the key
+     * @param bufLength   The number of valid bytes in the buffer, i.e. the buffer length must be &le; buffer.length
+     * @param beginOfLine start of the row in the buffer
+     * @param comparator  The comparator to use when ordering
+     */
+    public StringIntKey(int chrCol, int bpCol, String buffer, int bufLength, int beginOfLine, Comparator<StringIntKey> comparator) {
+        this(chrCol, bpCol, comparator);
+        if (buffer != null) {
+            setValues(buffer, beginOfLine, bufLength);
+        }
+    }
+
 
     @Override
     public int compareTo(IKey otherkey) {
@@ -239,6 +256,39 @@ public class StringIntKey implements IKey {
         }
     }
 
+    public void setValues(String buffer, int offset, int upTo) {
+        if (offset == upTo) {
+            this.chr = "";
+            this.bpair = -1;
+        } else {
+            final int chrCol = this.chrCol;
+            final int posCol = this.posCol;
+
+            int colIdx = 0;
+            int bufferIdx = offset;
+            int maxColIdx = Math.max(chrCol, posCol);
+            do {
+                if (colIdx == chrCol) {
+                    final int beginIdx = bufferIdx;
+                    while (bufferIdx < upTo && buffer.charAt(bufferIdx++) != '\t');
+                    this.chr = buffer.substring(beginIdx, bufferIdx - 1);
+                } else if (colIdx == posCol) {
+                    int pos = 0;
+                    char b;
+                    while (bufferIdx < upTo && (b = buffer.charAt(bufferIdx++)) != '\t' && b != '\n' && b != '\r') {
+                        if (b > '9' || b < '0') {
+                            throw new GorDataException("Cannot create key from " + buffer.substring(offset, Math.min(100+offset, upTo)));
+                        }
+                        pos = 10 * pos + (b - '0');
+                    }
+                    this.bpair = pos;
+                } else {
+                    while (buffer.charAt(bufferIdx++) != '\t');
+                }
+            } while (colIdx++ < maxColIdx);
+        }
+    }
+
     @Override
     public String toString() {
         return chr + ":" + bpair;
@@ -246,6 +296,11 @@ public class StringIntKey implements IKey {
 
     @Override
     public StringIntKey createKey(byte[] buffer, int bufLength, int beginOfLine) {
+        return new StringIntKey(chrCol, posCol, buffer, bufLength, beginOfLine, comparator);
+    }
+
+    @Override
+    public StringIntKey createKey(String buffer, int bufLength, int beginOfLine) {
         return new StringIntKey(chrCol, posCol, buffer, bufLength, beginOfLine, comparator);
     }
 }

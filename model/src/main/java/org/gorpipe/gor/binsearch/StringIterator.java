@@ -34,9 +34,9 @@ import java.nio.charset.StandardCharsets;
  *
  * @author hjaltii
  */
-class BufferIterator {
+class StringIterator {
 
-    private byte[] buffer;
+    private String buffer;
     private boolean hasNext;
     private int bufferIdx;
     private int lowerBound; //The beginning of the first line in the buffer. (If there is some)
@@ -45,7 +45,7 @@ class BufferIterator {
     private StringIntKey firstKey;
     private StringIntKey lastKey;
 
-    BufferIterator(StringIntKey comparator) {
+    StringIterator(StringIntKey comparator) {
         this.comparator = comparator;
     }
 
@@ -53,18 +53,16 @@ class BufferIterator {
      * A method to reset the buffer on which the iterator is working.
      *
      * @param buffer The buffer under consideration.
-     * @param offset Lower bound on where to start seeking, inclusive.
-     * @param upTo Upper bound on where to start seeking, exclusive.
      * @param firstPosBeginOfLine Indicates that the buffer starts at the beginning of line.
      * @param lastPosEndOfLine Indicates that the (possibly imagined) byte at upTo is a newline or the beginning of a line.
      */
-    void update(byte[] buffer, int offset, int upTo, boolean firstPosBeginOfLine, boolean lastPosEndOfLine) {
-        if (offset >= upTo) {
+    void update(String buffer, boolean firstPosBeginOfLine, boolean lastPosEndOfLine) {
+        if (buffer.length()==0) {
             this.hasNext = false;
             this.buffer = null;
         } else {
-            this.lowerBound = getLowerBound(buffer, offset, upTo, firstPosBeginOfLine);
-            this.upperBound = getUpperBound(buffer, offset, upTo, lastPosEndOfLine);
+            this.lowerBound = getLowerBound(buffer, firstPosBeginOfLine);
+            this.upperBound = getUpperBound(buffer, lastPosEndOfLine);
             if (this.lowerBound < this.upperBound) {
                 this.buffer = buffer;
                 this.hasNext = true;
@@ -89,8 +87,8 @@ class BufferIterator {
 
     Row getNextAsRow() {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
-        final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
-        final Row toReturn = new RowBase(new String(this.buffer, this.bufferIdx, len, StandardCharsets.UTF_8));
+        final int end = this.buffer.charAt(beginOfNextLine - 2) == '\r' ? beginOfNextLine - 2 : beginOfNextLine - 1;
+        final Row toReturn = new RowBase(this.buffer.substring(this.bufferIdx, end));
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
         return toReturn;
@@ -98,8 +96,8 @@ class BufferIterator {
 
     String getNextAsString() {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
-        final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
-        final String toReturn = new String(this.buffer, this.bufferIdx, len, StandardCharsets.UTF_8);
+        final int end = this.buffer.charAt(beginOfNextLine - 2) == '\r' ? beginOfNextLine - 2 : beginOfNextLine - 1;
+        final String toReturn = this.buffer.substring(this.bufferIdx, end);
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
         return toReturn;
@@ -107,9 +105,8 @@ class BufferIterator {
 
     byte[] getNextAsBytes() {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
-        final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
-        final byte[] toReturn = new byte[len];
-        System.arraycopy(this.buffer, this.bufferIdx, toReturn, 0, len);
+        final int end = this.buffer.charAt(beginOfNextLine - 2) == '\r' ? beginOfNextLine - 2 : beginOfNextLine - 1;
+        final byte[] toReturn = this.buffer.substring(this.bufferIdx, end).getBytes(StandardCharsets.UTF_8);
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
         return toReturn;
@@ -117,8 +114,8 @@ class BufferIterator {
 
     void writeNextToStream(OutputStream os) throws IOException {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
-        final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
-        os.write(this.buffer, this.bufferIdx, len);
+        final int len = this.buffer.charAt(beginOfNextLine - 2) == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
+        os.write(this.buffer.getBytes(), this.bufferIdx, len);
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
     }
@@ -182,37 +179,43 @@ class BufferIterator {
         return this.upperBound;
     }
 
-    static int getLowerBound(byte[] buffer, int offset, int upTo, boolean firstPosBeginOfLine) {
+    static int getLowerBound(String buffer, boolean firstPosBeginOfLine) {
         if (firstPosBeginOfLine) {
-            return offset;
+            return 0;
         } else {
-            int idx = offset;
-            while (idx < upTo && buffer[idx++] != '\n');
-            return buffer[idx - 1] == '\n' ? idx : idx + 1;
+            int idx = 0;
+            while (idx < buffer.length() && buffer.charAt(idx++) != '\n');
+            return buffer.charAt(idx - 1) == '\n' ? idx : idx + 1;
         }
     }
 
-    static int getUpperBound(byte[] buffer, int offset, int upTo, boolean lastPosEndOfLine) {
+    static int getUpperBound(String buffer, boolean lastPosEndOfLine) {
         if (lastPosEndOfLine) {
-            return upTo;
+            return buffer.length();
         } else {
-            int idx = upTo;
-            while (buffer[--idx] != '\n' && idx > offset);
-            return buffer[idx] == '\n' ? idx + 1 : idx;
+            int idx = buffer.length();
+            while (buffer.charAt(--idx) != '\n' && idx > 0);
+            return buffer.charAt(idx) == '\n' ? idx + 1 : idx;
         }
     }
 
-    static int getEndOfNextLine(byte[] buffer, int lowerBound, int upperBound) {
-        final int upTo = Math.min(upperBound, buffer.length);
+    static int getEndOfNextLine(String buffer, int lowerBound, int upperBound) {
+        final int upTo = Math.min(upperBound, buffer.length());
         int idx = lowerBound;
-        while (idx < upTo && buffer[idx++] != '\n');
-        return buffer[idx - 1] == '\n' ? idx : idx + 1;
+        while (idx < upTo && buffer.charAt(idx++) != '\n');
+        return buffer.charAt(idx - 1) == '\n' ? idx : idx + 1;
     }
 
     static int getBeginningOfLastLine(byte[] buffer, int lowerBound, int upperBound) {
         int idx = upperBound - 1;
         while (buffer[--idx] != '\n' && idx > lowerBound);
         return buffer[idx] == '\n' ? idx + 1 : idx;
+    }
+
+    static int getBeginningOfLastLine(String buffer, int lowerBound, int upperBound) {
+        int idx = upperBound - 1;
+        while (buffer.charAt(--idx) != '\n' && idx > lowerBound);
+        return buffer.charAt(idx) == '\n' ? idx + 1 : idx;
     }
 
     /**
@@ -228,6 +231,26 @@ class BufferIterator {
             if (buffer[lower] == '\n') ++lower;
             int upper = pos;
             while (upper < newUpTo && buffer[upper++] != '\n');
+            final StringIntKey currentKey = comparator.createKey(buffer, upper, lower);
+            if (currentKey.compareTo(key) < 0) {
+                lowerBound = upper;
+            } else {
+                upperBound = lower;
+            }
+        }
+        return lowerBound;
+    }
+
+    static int findInBuffer(StringIntKey key, String buffer, int offset, int upTo, StringIntKey comparator) {
+        final int newUpTo = Math.min(buffer.length(), upTo);
+        int lowerBound = offset, upperBound = upTo;
+        while (lowerBound != upperBound) {
+            final int pos = (lowerBound + upperBound) / 2;
+            int lower = pos;
+            while (lower > offset && buffer.charAt(--lower) != '\n') ;
+            if (buffer.charAt(lower) == '\n') ++lower;
+            int upper = pos;
+            while (upper < newUpTo && buffer.charAt(upper++) != '\n');
             final StringIntKey currentKey = comparator.createKey(buffer, upper, lower);
             if (currentKey.compareTo(key) < 0) {
                 lowerBound = upper;

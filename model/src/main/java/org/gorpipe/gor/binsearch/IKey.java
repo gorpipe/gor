@@ -38,6 +38,16 @@ public interface IKey extends Comparable<IKey> {
     IKey createKey(byte[] buffer, int bufLength, int beginOfLine);
 
     /**
+     * creates a comparable key from a buffer
+     *
+     * @param buffer      Input buffer
+     * @param bufLength   The number of valid bytes in the buffer, i.e. the buffer length must be &le; buffer.length
+     * @param beginOfLine start of line in buffer
+     * @return a new key parsed from the buffer
+     */
+    IKey createKey(String buffer, int bufLength, int beginOfLine);
+
+    /**
      * @return The key as a byte array
      */
     byte[] getKey();
