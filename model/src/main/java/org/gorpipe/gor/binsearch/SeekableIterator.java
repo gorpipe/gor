@@ -199,7 +199,7 @@ public class SeekableIterator implements AutoCloseable {
             System.arraycopy(this.buffer, bufferUpperBound, this.buffer, 0, this.numberOfBytesInBuffer);
         }
         if (this.file.getFilePointer() != this.bufferEndInFile) {
-            this.file.setPosition(this.bufferEndInFile);
+            this.file.seek(this.bufferEndInFile);
             inputStream = this.file.open();
         }
         while (this.bufferEndInFile < this.fileSize) {
@@ -312,7 +312,7 @@ public class SeekableIterator implements AutoCloseable {
     }
 
     private int readToBufferFromPos(long posToSeekTo) throws IOException {
-        this.file.setPosition(posToSeekTo);
+        this.file.seek(posToSeekTo);
         inputStream = this.file.open();
         return readFully(this.buffer, 0, this.buffer.length);
     }
@@ -342,7 +342,7 @@ public class SeekableIterator implements AutoCloseable {
         int read;
         while ((read = inputStream.read(buffer, bufferIdx, upTo - bufferIdx)) > 0) {
             bufferIdx += read;
-            file.setPosition(file.getFilePointer()+read);
+            file.seek(file.getFilePointer()+read);
         }
         return bufferIdx - offset;
     }
