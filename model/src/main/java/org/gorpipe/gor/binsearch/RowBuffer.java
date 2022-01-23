@@ -140,18 +140,6 @@ public class RowBuffer implements Iterator<Row> {
             byteCount = buffer.length();
             estimatedAvgLineSize = byteCount/count;
             idx = 0;
-            /*StringReader sr = new StringReader(buffer);
-            BufferedReader br = new BufferedReader(sr);
-            try {
-                numLines = 0;
-                String line = br.readLine();
-                while(line != null) {
-                    split[numLines++] = new RowBase(line);
-                    line = br.readLine();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
             if (rowArray.length < count) resize(count);
             IntStream.range(0,count).parallel().forEach(i -> rowArray[i] = new RowBase(tsplit[i]));
         }
