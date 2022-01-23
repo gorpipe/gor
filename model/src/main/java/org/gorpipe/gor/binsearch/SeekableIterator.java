@@ -76,9 +76,9 @@ public class SeekableIterator implements AutoCloseable {
     public SeekableIterator(StreamSourceSeekableFile file, StreamSourceSeekableFile indexFile, StringIntKey comparator, boolean hasHeader) throws IOException {
         this.bufferIterator = new BufferIterator(comparator);
         this.file = file;
-        this.inputStream = file.open();
+        this.fileSize = file.length();
+        if (fileSize>0) this.inputStream = file.open();
         this.indexFile = indexFile;
-        this.fileSize = this.file.length();
         if (hasHeader) {
             this.header = readHeader();
             offset = this.bufferIterator.getBufferIdx();
