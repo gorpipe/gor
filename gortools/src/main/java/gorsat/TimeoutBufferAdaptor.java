@@ -1,5 +1,6 @@
 package gorsat;
 
+import org.gorpipe.gor.binsearch.RowBuffer;
 import org.gorpipe.gor.model.Row;
 
 public class TimeoutBufferAdaptor extends BufferAdaptor {

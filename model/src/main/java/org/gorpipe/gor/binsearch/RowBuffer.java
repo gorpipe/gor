@@ -20,11 +20,14 @@
  *  END_COPYRIGHT
  */
 
-package gorsat;
+package org.gorpipe.gor.binsearch;
 
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.RowBase;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.stream.IntStream;
 
 /**
  * An array of GOR row objects implementing iterator interface
@@ -37,7 +40,7 @@ public class RowBuffer implements Iterator<Row> {
     private static final int DEFAULT_MAX_BYTES_IN_BUFFER = Integer.parseInt(System.getProperty("gor.rowbuffer.max_bytes_buffered", "1073741824"));  // Default 1 GB
     private static final int NUM_LINES_TO_ESTIMATE_LINE_SIZE = Integer.parseInt(System.getProperty("gor.rowbuffer.lines_for_size_estimation", "100"));
 
-    private final Row[] rowArray;
+    private Row[] rowArray;
     private int count;
     private int idx;
     private RowBuffer next;
@@ -47,13 +50,16 @@ public class RowBuffer implements Iterator<Row> {
 
     private int estimatedAvgLineSize;
 
-
     public RowBuffer(int capacity, RowBuffer next) {
         this(capacity, DEFAULT_MAX_BYTES_IN_BUFFER, next);
     }
 
     public RowBuffer(int capacity, int maxBytes, RowBuffer next) {
-        rowArray = new Row[MAX_NUMBER_OF_ROWS];
+        this(capacity, maxBytes, MAX_NUMBER_OF_ROWS, next);
+    }
+
+    public RowBuffer(int capacity, int maxBytes, int maxNumerOfRows, RowBuffer next) {
+        rowArray = new Row[maxNumerOfRows];
         count = 0;
         byteCount = 0;
         idx = 0;
@@ -73,6 +79,10 @@ public class RowBuffer implements Iterator<Row> {
 
     public RowBuffer() {
         this(null);
+    }
+
+    public void resize(int newSize) {
+        rowArray = new Row[newSize];
     }
 
     public Row[] getRowArray() {
@@ -121,6 +131,32 @@ public class RowBuffer implements Iterator<Row> {
         }
     }
 
+    void update(String buffer) {
+        if (buffer.length()==0) {
+            clear();
+        } else {
+            var tsplit = buffer.split("\n");
+            count = tsplit.length;
+            byteCount = buffer.length();
+            estimatedAvgLineSize = byteCount/count;
+            idx = 0;
+            /*StringReader sr = new StringReader(buffer);
+            BufferedReader br = new BufferedReader(sr);
+            try {
+                numLines = 0;
+                String line = br.readLine();
+                while(line != null) {
+                    split[numLines++] = new RowBase(line);
+                    line = br.readLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
+            if (rowArray.length < count) resize(count);
+            IntStream.range(0,count).parallel().forEach(i -> rowArray[i] = new RowBase(tsplit[i]));
+        }
+    }
+
     public Row pop() { return rowArray[--count]; }
 
     public boolean hasNext() {
@@ -129,6 +165,11 @@ public class RowBuffer implements Iterator<Row> {
 
     public Row next() {
         return rowArray[idx++];
+    }
+
+    public void seek(Row key) {
+        idx = Arrays.binarySearch(rowArray, 0, count, key);
+        if (idx<0) idx = -(idx+1);
     }
 
     public synchronized void clear() {

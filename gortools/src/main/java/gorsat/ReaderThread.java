@@ -2,6 +2,7 @@ package gorsat;
 
 import gorsat.Commands.Analysis;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.binsearch.RowBuffer;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;

@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.binsearch;
 
+import org.gorpipe.gor.model.Row;
+
 /**
  * Row contains the row as a byte array and a key of long type
  */
@@ -53,17 +55,12 @@ public class LexRow implements IRow<LexRow> {
     }
 
     /**
-     * @param chrCol
-     * @param bpCol
-     * @param line
-     * @param bufLength
      * @param source
      */
-    public LexRow(int chrCol, int bpCol, String line, int beginOfLine, int bufLength, IRowSource<LexRow> source) {
-        key = new StringIntKey(chrCol, bpCol, line, bufLength, beginOfLine, StringIntKey.cmpLexico);
+    public LexRow(Row row, IRowSource<LexRow> source) {
+        key = new StringIntKey(row.chr, row.pos);
         this.source = source;
-        System.err.println("lasdflkj");
-        this.line = line.getBytes();
+        this.line = row.toString().getBytes();
     }
 
     /**
@@ -73,7 +70,7 @@ public class LexRow implements IRow<LexRow> {
      * @param bpCol  Position of the base pair column
      */
     public LexRow(int chrCol, int bpCol) {
-        this(chrCol, bpCol, (byte[])null,0,  0, null);
+        this(chrCol, bpCol, null,0,  0, null);
     }
 
 
@@ -129,8 +126,8 @@ public class LexRow implements IRow<LexRow> {
     }
 
     @Override
-    public IKey createKey(String buffer, int bufLength, int beginOfLine) {
-        return new LexRow(key.chrCol, key.posCol, buffer, beginOfLine, bufLength, null);
+    public IKey createKey(Row buffer) {
+        return new LexRow(buffer,null);
     }
 
     public <T extends IKey> float deriveCoefficient(T left, T right) {

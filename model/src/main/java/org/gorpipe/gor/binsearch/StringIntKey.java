@@ -24,6 +24,7 @@ package org.gorpipe.gor.binsearch;
 
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.model.ChromoCache;
+import org.gorpipe.gor.model.Row;
 
 import java.util.Comparator;
 
@@ -300,7 +301,7 @@ public class StringIntKey implements IKey {
     }
 
     @Override
-    public StringIntKey createKey(String buffer, int bufLength, int beginOfLine) {
-        return new StringIntKey(chrCol, posCol, buffer, bufLength, beginOfLine, comparator);
+    public StringIntKey createKey(Row row) {
+        return new StringIntKey(row.chr, row.pos, comparator);
     }
 }

@@ -25,6 +25,7 @@ package gorsat;
 import gorsat.Commands.Analysis;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.binsearch.RowBuffer;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;

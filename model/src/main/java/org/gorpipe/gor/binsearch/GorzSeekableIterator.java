@@ -31,6 +31,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.util.collection.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     private int columnCount = -1;
     private final Unzipper unzipper;
     private byte[] buffer;
-    private final StringIterator bufferIterator = new StringIterator(SeekableIterator.DEFAULT_COMPARATOR); //An iterator to iterate a block once unzipped.
+    private final RowBuffer bufferIterator = new RowBuffer(); //An iterator to iterate a block once unzipped.
     private final ByteArrayWrapper rawDataHolder = new ByteArrayWrapper();
     private boolean firstBlock = true;
     private boolean isClosed = false;
@@ -96,9 +97,9 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         if (isClosed) {
             throw new GorSystemException("Iterator is closed", null);
         }
-        final StringIntKey key = new StringIntKey(chr, pos);
+        final Row key = new RowBase(chr+"\t"+pos,2);
         this.bufferIterator.seek(key);
-        if (this.bufferIterator.hasNext() && this.bufferIterator.getFirstKey().compareTo(key) < 0) {
+        if (this.bufferIterator.available() && this.bufferIterator.get(0).compareTo(key) < 0) {
             return true;
         } else {
             try {
@@ -119,8 +120,8 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         }
     }
 
-    private boolean seekFile(StringIntKey key) throws IOException, DataFormatException {
-        this.seekableIterator.seek(key);
+    private boolean seekFile(Row key) throws IOException, DataFormatException {
+        this.seekableIterator.seek(new StringIntKey(key.chr, key.pos));
         if (this.seekableIterator.hasNext()) {
             loadBufferIterator();
             this.bufferIterator.seek(key);
@@ -135,7 +136,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         if (isClosed) {
             throw new GorSystemException("Iterator is closed", null);
         }
-        return this.bufferIterator.hasNext() || this.seekableIterator.hasNext();
+        return this.bufferIterator.available() || this.seekableIterator.hasNext();
     }
 
     @Override
@@ -143,7 +144,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         if (isClosed) {
             throw new GorSystemException("Iterator is closed", null);
         }
-        if (!this.bufferIterator.hasNext()) {
+        if (!this.bufferIterator.available()) {
             try {
                 loadBufferIterator();
             } catch (IOException e) {
@@ -152,7 +153,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
                 throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
             }
         }
-        return this.bufferIterator.getNextAsRow();
+        return this.bufferIterator.next();
     }
 
     @Override
@@ -181,7 +182,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
 
         final int unzippedLen = unzipBlock(in, len, blockIdx);
         final var str = unzippedLen > 0 ? new String(buffer, 0, unzippedLen, StandardCharsets.UTF_8) : "";
-        this.bufferIterator.update(str, true, true);
+        this.bufferIterator.update(str);
     }
 
 
