@@ -48,19 +48,18 @@ public class Unzipper {
         out = ByteBuffer.allocate(32768);
     }
 
-    private int getBeginningOfBlock(ByteBuffer byteBuffer) {
+    private int getBeginningOfBlock(ByteBuffer in) {
         int idx = 0;
-        byte[] in = byteBuffer.array();
-        while (idx < byteBuffer.position() && in[idx++] != '\t');
-        while (idx < byteBuffer.position() && in[idx++] != '\t');
+        while (idx < in.position() && in.get(idx++) != '\t');
+        while (idx < in.position() && in.get(idx++) != '\t');
 
-        if (idx == in.length || idx + 1 == in.length) {
-            String msg = String.format("Could not find zipped block in %s%nBuffer contains %d bytes", ""/*this.filePath*/, in.length);
+        if (idx == in.position() || idx + 1 == in.position()) {
+            String msg = String.format("Could not find zipped block in %s%nBuffer contains %d bytes", /*this.filePath*/"", in.position());
             throw new GorDataException(msg);
         }
 
         if (this.firstBlock) {
-            byte beginOfBlockByte = in[idx];
+            byte beginOfBlockByte = in.get(idx);
             final CompressionType type = (beginOfBlockByte & 0x02) == 0 ? CompressionType.ZLIB : CompressionType.ZSTD;
             setType(type);
             this.firstBlock = false;
