@@ -28,7 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import com.sun.management.{OperatingSystemMXBean, UnixOperatingSystemMXBean}
 import gorsat.parser.FunctionSignature._
-import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
+import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
 import gorsat.process.GorPipe
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
@@ -61,6 +61,7 @@ object DiagnosticsFunctions {
     functions.register("MAXFILES", getSignatureEmpty2Double(maxFiles _), maxFiles _)
     functions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     functions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
+    functions.registerWithOwner("RANDOMACCESSTIMING", getSignatureStringLongIntInt2Long(removeOwner(randomAccessTiming)), randomAccessTiming _)
     functions.registerWithOwner("FILEINFO", getSignatureString2String(removeOwner(fileInfo)), fileInfo _)
     pathfunctions.register("FILEPATH", getSignatureString2String(filePath _), filePath _)
     pathfunctions.register("FILECONTENT", getSignatureString2String(fileContent _), fileContent _)
@@ -96,6 +97,33 @@ object DiagnosticsFunctions {
   def fileContent(f: (ColumnValueProvider) => String): sFun = {
     s => {
       Files.lines(Paths.get(f(s))).skip(1).findFirst().get()
+    }
+  }
+
+  def randomAccessTiming(owner: ParseArith, ex1: sFun, ex2: lFun, ex3: iFun, ex4: iFun): lFun = {
+    s => {
+      val fileReader = owner.context.getSession.getProjectContext.getFileReader
+      val filePath = ex1(s)
+      val offset = ex2(s)
+      val blocksize = ex3(s)
+      val bufferSize = 1000000
+      val byteBuffer = new Array[Byte](bufferSize)
+      val repeats = ex4(s)
+      var k = 0
+      val l = System.currentTimeMillis()
+      while (k < repeats) {
+        val streamSource = fileReader.resolveUrl(filePath).asInstanceOf[StreamSource]
+        val inputStream = streamSource.open(offset)
+        var totalRead = 0
+        var read = inputStream.read(byteBuffer, 0, Math.min(bufferSize,blocksize))
+        while (read > 0 && totalRead < blocksize) {
+          totalRead += read
+          read = inputStream.read(byteBuffer, 0, Math.min(bufferSize,blocksize-totalRead))
+        }
+        inputStream.close()
+        k += 1
+      }
+      System.currentTimeMillis()-l
     }
   }
 

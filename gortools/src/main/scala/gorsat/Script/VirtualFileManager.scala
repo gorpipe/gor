@@ -39,7 +39,7 @@ object VirtualFileManager {
 class VirtualFileManager {
 
   private var virtualFileMap = Map.empty[String, VirtualFileEntry]
-  private val externalVirtualSearchPattern = "\\[.+?:.+?\\]".r
+  private val externalVirtualSearchPattern = "\\[\\s*(grid|gorgrid|file):.+?\\]".r
 
   def add(name: String): VirtualFileEntry = {
 

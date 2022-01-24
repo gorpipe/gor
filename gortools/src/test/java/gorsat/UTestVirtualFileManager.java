@@ -116,8 +116,12 @@ public class UTestVirtualFileManager {
         manager.add("file:foo");
         Assert.assertTrue(manager.get("file:foo").get().isExternal());
 
-        manager.add("fluff:bar");
-        Assert.assertTrue(manager.get("fluff:bar").get().isExternal());
+        manager.add("grid:bar");
+        Assert.assertTrue(manager.get("grid:bar").get().isExternal());
+
+        manager.add("gorgrid:bar");
+        Assert.assertTrue(manager.get("gorgrid:bar").get().isExternal());
+
     }
 
     @Test
