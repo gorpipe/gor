@@ -22,8 +22,6 @@
 
 package org.gorpipe.gor.binsearch;
 
-import com.github.luben.zstd.ZstdInputStream;
-import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -32,20 +30,12 @@ import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
-import org.gorpipe.util.collection.ByteArray;
-import org.gorpipe.util.collection.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.DataFormatException;
-import java.util.zip.InflaterOutputStream;
 
 public class GorzSeekableIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(GorzSeekableIterator.class);
@@ -53,12 +43,8 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
     private final String filePath;
     private GorHeader header;
-    private int columnCount = -1;
     private final Unzipper unzipper;
-    private byte[] buffer;
-    private final RowBuffer bufferIterator = new RowBuffer(); //An iterator to iterate a block once unzipped.
-    private final ByteArrayWrapper rawDataHolder = new ByteArrayWrapper();
-    private boolean firstBlock = true;
+    private final RowBuffer bufferIterator; //An iterator to iterate a block once unzipped.
     private boolean isClosed = false;
 
     public GorzSeekableIterator(StreamSourceSeekableFile file) {
@@ -83,8 +69,10 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
             this.unzipper = new Unzipper();
             headerAsString = new String(headerBytes);
         }
-        this.header = new GorHeader(headerAsString.split("\t"));
-        this.buffer = new byte[32 * 1024];
+        var headerSplit = headerAsString.split("\t");
+        this.header = new GorHeader(headerSplit);
+        this.bufferIterator = new RowBuffer();
+        this.bufferIterator.setColumnCount(headerSplit.length);
     }
 
     @Override
@@ -166,127 +154,11 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         }
     }
 
-    private int countColumns(CharSequence rowString) {
-        if (columnCount < 0) {
-            columnCount = Row.countColumns(rowString);
-        }
-        return columnCount;
-    }
-
     private void loadBufferIterator() throws IOException, DataFormatException {
-        this.rawDataHolder.reset();
-        this.seekableIterator.writeNextToStream(this.rawDataHolder);
-        final byte[] in = this.rawDataHolder.getBuffer();
-        final int len = this.rawDataHolder.size();
-        final int blockIdx = getBeginningOfBlock(in);
+        this.unzipper.rawDataHolder.position(0);
+        this.seekableIterator.writeNextToBuffer(this.unzipper.rawDataHolder);
 
-        final int unzippedLen = unzipBlock(in, len, blockIdx);
-        final var str = unzippedLen > 0 ? new String(buffer, 0, unzippedLen, StandardCharsets.UTF_8) : "";
-        this.bufferIterator.update(str);
-    }
-
-
-    private int getBeginningOfBlock(byte[] in) {
-        int idx = 0;
-        while (idx < in.length && in[idx++] != '\t');
-        while (idx < in.length && in[idx++] != '\t');
-
-        if (idx == in.length || idx + 1 == in.length) {
-            String msg = String.format("Could not find zipped block in %s%nBuffer contains %d bytes", this.filePath, in.length);
-            throw new GorDataException(msg);
-        }
-
-        if (this.firstBlock) {
-            byte beginOfBlockByte = in[idx];
-            final CompressionType type = (beginOfBlockByte & 0x02) == 0 ? CompressionType.ZLIB : CompressionType.ZSTD;
-            this.unzipper.setType(type);
-            this.firstBlock = false;
-        }
-
-        return idx + 1;
-    }
-
-    private int unzipBlock(byte[] in, int len, int blockIdx) throws DataFormatException, IOException {
-        this.unzipper.setInput(in, blockIdx, len - blockIdx);
-        int totalRead = 0;
-        do {
-            int read;
-            while ((read = this.unzipper.decompress(this.buffer, totalRead, this.buffer.length - totalRead)) > 0) {
-                totalRead += read;
-            }
-            if (totalRead == this.buffer.length) {
-                this.buffer = Arrays.copyOf(this.buffer, 2 * this.buffer.length);
-            } else {
-                break;
-            }
-        } while (true);
-        return totalRead;
-    }
-
-    class ColumnCompressedUnzipper extends Unzipper {
-        private final byte[] buffer;
-        private byte[] lookupBytesCompressed7Bit;
-        private final Map<Integer, Map<Integer, byte[]>> mapExtTable;
-        private boolean lookupTableParsed = false;
-
-        ColumnCompressedUnzipper(byte[] lookupBytesCompressed7Bit) {
-            super();
-            this.buffer = new byte[32 * 1024];
-            this.mapExtTable = new HashMap<>();
-            this.lookupBytesCompressed7Bit = lookupBytesCompressed7Bit;
-        }
-
-        private byte[] getLookupTable() {
-            final byte[] lookupBytesCompressed = ByteArray.to8Bit(lookupBytesCompressed7Bit);
-            final byte[] toReturn;
-            try {
-                toReturn = inflate(lookupBytesCompressed);
-            } catch (IOException e) {
-                throw new GorDataException("Could not uncompress the lookup table in " + filePath, e);
-            }
-            return toReturn;
-        }
-
-        private byte[] inflate(byte[] lookupBytesCompressed) throws IOException {
-            if (this.type == CompressionType.ZLIB) {
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                try (final InflaterOutputStream infOS = new InflaterOutputStream(baos)) {
-                    infOS.write(lookupBytesCompressed);
-                }
-                return baos.toByteArray();
-            } else {
-                final ByteArrayInputStream baos = new ByteArrayInputStream(lookupBytesCompressed);
-                final byte[] toReturn;
-                try (final ZstdInputStream zstdInputStream = new ZstdInputStream(baos)) {
-                    byte[] array = new byte[16];
-                    int read;
-                    int totalRead = 0;
-                    while ((read = zstdInputStream.read(array, totalRead, array.length - totalRead)) > 0) {
-                        totalRead += read;
-                        if (totalRead == array.length) {
-                            array = Arrays.copyOf(array, 2 * array.length);
-                        }
-                    }
-                    toReturn = Arrays.copyOfRange(array, 0, totalRead);
-                }
-                return toReturn;
-            }
-        }
-
-        @Override
-        public int decompress(byte[] out, int offset, int len) throws DataFormatException, IOException {
-            if (!this.lookupTableParsed) {
-                final byte[] lookupTable = getLookupTable();
-                BlockPacker.lookupMapFromBytes(this.mapExtTable, lookupTable);
-                this.lookupTableParsed = true;
-                this.lookupBytesCompressed7Bit = null;
-            }
-            if (this.done) {
-                return 0;
-            } else {
-                super.decompress(this.buffer, 0, this.buffer.length);
-                return BlockPacker.decode(this.buffer, 0, out, offset, this.mapExtTable);
-            }
-        }
+        final int unzippedLen = unzipper.unzipBlock();
+        this.bufferIterator.update(unzipper.out.array(), unzippedLen);
     }
 }

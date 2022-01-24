@@ -27,6 +27,7 @@ import org.gorpipe.gor.model.RowBase;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -114,6 +115,14 @@ class BufferIterator {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
         final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
         os.write(this.buffer, this.bufferIdx, len);
+        this.bufferIdx = beginOfNextLine;
+        this.hasNext = this.bufferIdx < this.upperBound;
+    }
+
+    void writeNextToBuffer(ByteBuffer os) {
+        final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
+        final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
+        os.put(this.buffer, this.bufferIdx, len);
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
     }

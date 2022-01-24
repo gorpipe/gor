@@ -23,11 +23,13 @@
 package org.gorpipe.gor.binsearch;
 
 import com.github.luben.zstd.ZstdInputStream;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.util.collection.ByteArray;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -36,6 +38,60 @@ public class Unzipper {
     boolean done = false;
     protected CompressionType type;
     private ZstdInputStream zstdIs;
+    private boolean firstBlock = true;
+
+    public ByteBuffer out;
+    public final ByteBuffer rawDataHolder;
+
+    public Unzipper() {
+        rawDataHolder = ByteBuffer.allocate(32768);
+        out = ByteBuffer.allocate(32768);
+    }
+
+    private int getBeginningOfBlock(ByteBuffer byteBuffer) {
+        int idx = 0;
+        byte[] in = byteBuffer.array();
+        while (idx < byteBuffer.position() && in[idx++] != '\t');
+        while (idx < byteBuffer.position() && in[idx++] != '\t');
+
+        if (idx == in.length || idx + 1 == in.length) {
+            String msg = String.format("Could not find zipped block in %s%nBuffer contains %d bytes", ""/*this.filePath*/, in.length);
+            throw new GorDataException(msg);
+        }
+
+        if (this.firstBlock) {
+            byte beginOfBlockByte = in[idx];
+            final CompressionType type = (beginOfBlockByte & 0x02) == 0 ? CompressionType.ZLIB : CompressionType.ZSTD;
+            setType(type);
+            this.firstBlock = false;
+        }
+
+        return idx + 1;
+    }
+
+    public int unzipBlock() throws DataFormatException, IOException {
+        final int len = rawDataHolder.position();
+        final int blockIdx = getBeginningOfBlock(rawDataHolder);
+
+        final int newLen = ByteArray.to8BitInplace(rawDataHolder.array(), blockIdx, len-blockIdx);
+        int totalRead = 0;
+        setInput(rawDataHolder, blockIdx, newLen);
+        do {
+            int read;
+            while ((read = decompress(totalRead, out.capacity() - totalRead)) > 0) {
+                totalRead += read;
+            }
+            if (totalRead == out.capacity()) {
+                ByteBuffer tmpbuffer = ByteBuffer.allocate(2 * this.out.capacity());
+                tmpbuffer.put(out);
+                out.clear();
+                out = tmpbuffer;
+            } else {
+                break;
+            }
+        } while (true);
+        return totalRead;
+    }
 
     public void setType(CompressionType type) {
         this.type = type;
@@ -44,35 +100,34 @@ public class Unzipper {
         }
     }
 
-    public void setInput(byte[] in, int offset, int len) {
-        final int newLen = ByteArray.to8BitInplace(in, offset, len);
-        setRawInput(in, offset, newLen);
-    }
-
-    public void setRawInput(byte[] in, int offset, int len) {
+    public void setInput(ByteBuffer in, int offset, int len) {
         this.done = false;
         if (this.type == CompressionType.ZLIB) {
             this.inflater.reset();
-            this.inflater.setInput(in, offset, len);
+            this.inflater.setInput(in.array(), offset, len);
         } else {
             try {
-                this.zstdIs = new ZstdInputStream(new ByteArrayInputStream(in, offset, len));
+                this.zstdIs = new ZstdInputStream(new ByteArrayInputStream(in.array(), offset, len));
             } catch (IOException e) {
                 throw new GorSystemException(e);
             }
         }
     }
 
-    public int decompress(byte[] out, int offset, int len) throws DataFormatException, IOException {
+    public int decompress(int offset) throws DataFormatException, IOException {
+        return decompress(offset, out.capacity());
+    }
+
+    public int decompress(int offset, int len) throws DataFormatException, IOException {
         final int toReturn;
         if (this.done) {
             toReturn = 0;
         } else {
             if (this.type == CompressionType.ZLIB) {
-                toReturn = this.inflater.inflate(out, offset, len);
+                toReturn = this.inflater.inflate(out.array(), offset, len);
                 this.done = this.inflater.finished();
             } else {
-                toReturn = this.zstdIs.read(out, offset, len);
+                toReturn = this.zstdIs.read(out.array(), offset, len);
                 this.done = this.zstdIs.available() == 0;
                 if (this.done) {
                     this.zstdIs.close();

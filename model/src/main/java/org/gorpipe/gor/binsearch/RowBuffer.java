@@ -25,6 +25,7 @@ package org.gorpipe.gor.binsearch;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.IntStream;
@@ -47,6 +48,7 @@ public class RowBuffer implements Iterator<Row> {
     private int capacity;
     private final int maxBytes;              // Maximum bytes used for buffering.
     private int byteCount;             // Used bytes (or currently an estimate of the used bytes).
+    private int columnCount = -1;
 
     private int estimatedAvgLineSize;
 
@@ -131,18 +133,51 @@ public class RowBuffer implements Iterator<Row> {
         }
     }
 
+    public void setColumnCount(int columnCount) {
+        this.columnCount = columnCount;
+    }
+
+    void update(byte[] buffer, int length) {
+        final var str = length > 0 ? new String(buffer, 0, length, StandardCharsets.UTF_8) : "";
+        update(str);
+    }
+
+    void parUpdate(String buffer) {
+        var tsplit = buffer.split("\n");
+        count = tsplit.length;
+        if (rowArray.length < count) resize(count);
+        IntStream.range(0,count).parallel().forEach(i -> rowArray[i] = new RowBase(tsplit[i], columnCount));
+    }
+
+    void seqUpdate(String buffer) {
+        count = 0;
+        var l = 0;
+        var k = buffer.indexOf('\n');
+        while (k != -1) {
+            if (count>=rowArray.length) {
+                rowArray = Arrays.copyOf(rowArray,rowArray.length+2);
+            }
+            rowArray[count++] = new RowBase(buffer.substring(l,k), columnCount);
+            l = k+1;
+            k = buffer.indexOf('\n', l);
+        }
+        if (l < buffer.length()) {
+            if (count>=rowArray.length) {
+                rowArray = Arrays.copyOf(rowArray,rowArray.length+2);
+            }
+            rowArray[count++] = new RowBase(buffer.substring(l), columnCount);
+        }
+    }
+
     void update(String buffer) {
-        if (buffer.length()==0) {
+        byteCount = buffer.length();
+        idx = 0;
+        if (byteCount==0) {
             clear();
         } else {
-            var tsplit = buffer.split("\n");
-            count = tsplit.length;
-            byteCount = buffer.length();
-            estimatedAvgLineSize = byteCount/count;
-            idx = 0;
-            if (rowArray.length < count) resize(count);
-            IntStream.range(0,count).parallel().forEach(i -> rowArray[i] = new RowBase(tsplit[i]));
+            seqUpdate(buffer);
         }
+        estimatedAvgLineSize = byteCount/count;
     }
 
     public Row pop() { return rowArray[--count]; }

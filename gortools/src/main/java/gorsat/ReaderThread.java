@@ -102,6 +102,7 @@ public class ReaderThread extends Thread {
         log.debug(message);
         stopProcessing = true;
         if (bufferedPipeStep != null) bufferedPipeStep.wantsNoMore_$eq(true);
+        if (bufferAdaptor != null) bufferAdaptor.reportWantsNoMore();
     }
 
     public void finish() {

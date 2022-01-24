@@ -27,6 +27,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -160,6 +161,13 @@ public class SeekableIterator implements AutoCloseable {
             slideBuffer();
         }
         this.bufferIterator.writeNextToStream(os);
+    }
+
+    public void writeNextToBuffer(ByteBuffer os) throws IOException {
+        if (!this.bufferIterator.hasNext()) {
+            slideBuffer();
+        }
+        this.bufferIterator.writeNextToBuffer(os);
     }
 
     /**
@@ -342,7 +350,7 @@ public class SeekableIterator implements AutoCloseable {
         int read;
         while ((read = inputStream.read(buffer, bufferIdx, upTo - bufferIdx)) > 0) {
             bufferIdx += read;
-            file.seek(file.getFilePointer()+read);
+            file.setPosition(file.getFilePointer()+read);
         }
         return bufferIdx - offset;
     }
