@@ -35,6 +35,7 @@ import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * MergeIterator merges lines from multiple genomic iterators. All the iterators must have the same
@@ -106,10 +107,10 @@ public class MergeIterator extends GenomicIteratorBase {
         if (insertSource) {
             String name = getSourceColumnName(sourceColName);
             if (i.isSourceAlreadyInserted()) {
-                header = (String[]) ArrayUtils.clone(header);
+                header = ArrayUtils.clone(header);
                 header[header.length - 1] = name;
             } else {
-                header = (String[]) ArrayUtils.add(header, name);
+                header = ArrayUtils.add(header, name);
             }
         }
         return header;
@@ -125,11 +126,11 @@ public class MergeIterator extends GenomicIteratorBase {
 
         clearQueue();
         isPrimed = true;
-        for (int itIdx = 0; itIdx < this.sources.size(); ++itIdx) {
+        IntStream.range(0, this.sources.size()).parallel().forEach(itIdx -> {
             final GenomicIterator it = this.sources.get(itIdx);
             it.seek(chr, pos);
-            addNextToQueue(itIdx);
-        }
+            addNextToSynchronizedQueue(itIdx);
+        });
 
         return this.hasNext();
     }
@@ -257,6 +258,23 @@ public class MergeIterator extends GenomicIteratorBase {
                 insertOptionalSourceColumn(r, it.getSourceName());
             }
             queue.add(new RowFromIterator(r, itIdx));
+        }
+    }
+
+    private void addNextToSynchronizedQueue(int itIdx) {
+        final GenomicIterator it = this.sources.get(itIdx);
+        if (it.hasNext()) {
+            Row r = it.next();
+            if (r == null) {
+                String msg = String.format("Iterator next returned null after hasNext returned true (%s, %s)", it.getClass().getName(), it.getSourceName());
+                throw new GorSystemException(msg, null);
+            }
+            if (insertSource && !it.isSourceAlreadyInserted()) {
+                insertOptionalSourceColumn(r, it.getSourceName());
+            }
+            synchronized(this) {
+                queue.add(new RowFromIterator(r, itIdx));
+            }
         }
     }
 

@@ -83,18 +83,15 @@ def addStartSelector(cmd : String, seekChr : String, seekPos : Int, endPos : Int
 class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader : Boolean = true) extends TimedRowSource {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  protected var theSource : GenomicIterator = _
   protected var itDyn : gorsatGorIterator = _
   protected var seekedChr = ""
   protected var seekedPos = 0
-  protected var posSet : Boolean = false
 
   var avgSeekTimeMillis : Double = 0.0
   var usedFiles : List[String] = Nil
   val drsGorPipeSession: GorSession = context.getSession
   val maxCommandSize = 100000
   var nor = false
-  var seekCount = 0
 
   override def getAvgSeekTimeMilliSecond: Double = avgSeekTimeMillis
 
@@ -125,30 +122,22 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     false
   }
 
-  override def hasNext : Boolean = {
-    incStat("hasNext")
-    if (!mustReCheck) return myHasNext
-    if (itDyn == null) {
-      itDyn = createGorIterator(context)
-      itDyn.fixHeader = fixHeader
-      itDyn.scalaInit(iteratorCommand)
-      usedFiles = itDyn.getUsedFiles
-      theSource = itDyn.getRowSource
-    }
-    mustReCheck = false
-    myHasNext = theSource.hasNext
-    if (myHasNext) myNext = theSource.next() else myNext = null
-    myHasNext
+  override def openSource(seekChr: String, seekPos: Int, endPos: Int): Unit = {
+    close()
+    itDyn = createGorIterator(context)
+    itDyn.fixHeader = fixHeader
+    val cmd = if (seekChr != null) modifiedCommand(iteratorCommand,seekChr,seekPos,endPos,seekOnly = false) else iteratorCommand
+    itDyn.scalaInit(cmd)
+    usedFiles = itDyn.getUsedFiles
+    theSource = itDyn.getRowSource
   }
 
-  override def next() : Row = {
-    incStat("next")
-    if (hasNext) {
-      mustReCheck = true
-      myNext
-    } else {
-      throw new GorSystemException("hasNext: getRow call on false hasNext!", null)
-    }
+  def setRange(seekChr: String, seekPos : Int, endPos : Int) {
+    incStat("setRange")
+    openSource(seekChr, seekPos, endPos)
+    seekedChr = seekChr
+    seekedPos = seekPos
+    mustReCheck = true
   }
 
   override def isBuffered: Boolean = true
@@ -187,8 +176,9 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     }
     (if( prefix.nonEmpty ) prefix+";" else "") + (if( header ) pipeSteps.map(s => { if(s.toLowerCase.contains("sdl")) s else CommandParseUtilities.quoteSafeReplace(s,"|","| top 0 |") }).mkString("| top 0 |")+"| top 0" else pipeSteps.mkString("|"))
   }
+
   def setPositionWithoutChrLimits(seekChr: String, seekPos : Int) {
-    if (itDyn != null) { itDyn.close() }
+    close()
     itDyn = createGorIterator(context)
     itDyn.fixHeader = fixHeader
     itDyn.scalaInit(modifiedCommand(iteratorCommand,seekChr,seekPos,-1,seekOnly = true))
@@ -197,36 +187,6 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     seekedChr = seekChr
     seekedPos = seekPos
     mustReCheck = true
-  }
-
-  def setRange(seekChr: String, seekPos : Int, endPos : Int) {
-    incStat("setRange")
-    if (itDyn != null) { itDyn.close() }
-    itDyn = createGorIterator(context)
-    itDyn.fixHeader = fixHeader
-    itDyn.scalaInit(modifiedCommand(iteratorCommand,seekChr,seekPos,endPos,seekOnly = false))
-    usedFiles = itDyn.getUsedFiles
-
-    theSource = itDyn.getRowSource
-    seekedChr = seekChr
-    seekedPos = seekPos
-    mustReCheck = true
-  }
-
-  override def seek(seekChr: String, seekPos : Int): Boolean = {
-    incStat("seek")
-    val t = System.nanoTime()
-    setRange(seekChr,seekPos,-1)
-    avgSeekTimeMillis = (seekCount*avgSeekTimeMillis+System.nanoTime()-t)/(seekCount+1)/1000000
-    seekCount += 1
-    true
-  }
-
-  override def moveToPosition(seekChr : String, seekPos : Int, maxReads: Int = 10000) {
-    incStat("moveToPosition")
-    seekedChr = seekChr
-    seekedPos = seekPos
-    super.moveToPosition(seekChr,seekPos,maxReads)
   }
 
   def close() {
