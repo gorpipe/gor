@@ -29,7 +29,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.model.gor.RowObj;
+import org.gorpipe.gor.model.RowBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +41,7 @@ public class GorSeekableIterator extends GenomicIteratorBase {
     private final SeekableIterator iterator;
     private final String filePath;
     private GorHeader header;
+    private int numColumns;
 
     public GorSeekableIterator(StreamSourceSeekableFile file) {
         try {
@@ -84,7 +85,7 @@ public class GorSeekableIterator extends GenomicIteratorBase {
     @Override
     public Row next() {
         try {
-            return RowObj.apply(this.iterator.getNextAsString());
+            return new RowBase(this.iterator.getNextAsString(),numColumns);
         } catch (IOException e) {
             throw wrapIOException(e);
         } catch (NumberFormatException e) {
@@ -107,6 +108,7 @@ public class GorSeekableIterator extends GenomicIteratorBase {
 
         String headerString = headerAsString.substring(i);
         this.header = new GorHeader(headerString.split("\t"));
+        this.numColumns = header.getColumns().length;
         setHeader(headerString);
     }
 }

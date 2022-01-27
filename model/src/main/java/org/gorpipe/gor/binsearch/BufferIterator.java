@@ -88,10 +88,6 @@ class BufferIterator {
         return this.hasNext;
     }
 
-    Row getNextAsRow() {
-        return new RowBase(getNextAsString());
-    }
-
     String getNextAsString() {
         final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
         final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
