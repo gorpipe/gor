@@ -63,6 +63,11 @@ public class GorSeekableIterator extends GenomicIteratorBase {
     }
 
     @Override
+    public void setInsertSource(boolean insertSource) {
+        numColumns = insertSource ? header.getColumns().length + 1 : header.getColumns().length;;
+    }
+
+    @Override
     public String getHeader() {
         return String.join("\t",this.header.getColumns());
     }
