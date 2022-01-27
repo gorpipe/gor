@@ -54,6 +54,8 @@ public interface GenomicIterator extends Iterator<Row>, RowSourceStats, AutoClos
 
     void setSourceAlreadyInserted(boolean sourceAlreadyInserted);
 
+    default void setRequestedRange(String chr, int pos, String stopChr, int stop) {}
+
     /**
      * Get the header describing the data
      *

@@ -251,20 +251,30 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
 
     int seekCount = 0;
 
-    @Override
     public boolean seek(String seekChr, int seekPos) {
+        return seek(seekChr, seekPos, -1);
+    }
+
+    @Override
+    public boolean seek(String seekChr, int seekPos, int endPos) {
         long t = System.nanoTime();
         try {
             if (readerThread != null) {
-                readerThread.stopProcessing( "Stop processing seeking to " + seekChr + " " + seekPos );
+                readerThread.stopProcessing( "Stop processing seeking to " + seekChr + " " + seekPos + " " + endPos );
                 readerThread.poll();
                 readerThread.join();
                 if (sourceIterator instanceof GenomicIterator) {
-                    ((GenomicIterator) sourceIterator).seek(seekChr, seekPos);
+                    ((GenomicIterator) sourceIterator).seek(seekChr, seekPos, endPos);
                 } else {
                     Row next;
                     while( sourceIterator.hasNext() && ((next = sourceIterator.next()).chr.compareTo(seekChr) < 0 || (next.chr.compareTo(seekChr) == 0 && next.pos < seekPos)) );
                 }
+
+                readerThread.bufferedPipeStep.wantsNoMore_$eq(true);
+                readerThread.bufferedPipeStep.alreadyFinished_$eq(false);
+                readerThread.bufferedPipeStep.reset();
+                readerThread.bufferAdaptor.reset();
+
                 readerThread = new ReaderThread( this, readerThread.bufferedPipeStep, readerThread.bufferAdaptor, brsConfig);
                 readerThread.setUncaughtExceptionHandler((tt, e) -> {
                     // THis is just so that the default handler does not write to std.err

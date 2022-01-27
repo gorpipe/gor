@@ -118,6 +118,25 @@ object  JoinAnalysis {
     var gr: GroupHolder = _
     if (!useGroup) groupMap += ("#GR0#" -> singleGroupHolder)
 
+    override def reset(): Unit = {
+      super.reset()
+      singleGroupHolder = GroupHolder()
+      groupMap = new scala.collection.mutable.HashMap[String, GroupHolder]
+
+      lastRightChr = GorConstants.FIRST_POSSIBLE_CHROMOSOME_VALUE
+      lastRightPos = 0
+      maxLeftStop = -1
+      lastLeftChr = GorConstants.FIRST_POSSIBLE_CHROMOSOME_VALUE
+      lastSeekChr = GorConstants.FIRST_POSSIBLE_CHROMOSOME_VALUE
+
+      leftStart = 0
+      leftStop = 0
+      next_leftStart = 0
+      groupClean = 0
+      ovlaps = 0
+      prev_row = null
+    }
+
     def output_row(lSeg: SEGinfo, rSeg: SEGinfo) {
 
       if (!negjoin && !ic) {

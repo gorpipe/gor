@@ -74,7 +74,7 @@ import java.util.stream.Stream;
  * CREATED         - Creation date of the file
  * BUILD           - Reference data build version.
  * COLUMNS         - Column definition for the gor files in the dictionary.
- * SOURCE_COLUMNS    - Name of the source column.
+ * SOURCE_COLUMN    - Name of the source column.
  * <p>
  * Format of the header line is:
  * <p>

@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
-import com.google.protobuf.DescriptorProtos;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;

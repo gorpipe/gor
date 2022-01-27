@@ -25,7 +25,6 @@ package org.gorpipe.gor.binsearch;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -45,7 +44,6 @@ public class SeekableIterator implements AutoCloseable {
     private byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
     private final StreamSourceSeekableFile file;
     private final StreamSourceSeekableFile indexFile;
-    private InputStream inputStream;
     private PositionCache filePositionCache;
     private final byte[] header;
     private int numberOfBytesInBuffer = 0;
@@ -78,7 +76,6 @@ public class SeekableIterator implements AutoCloseable {
         this.bufferIterator = new BufferIterator(comparator);
         this.file = file;
         this.fileSize = file.length();
-        if (fileSize>0) this.inputStream = file.open();
         this.indexFile = indexFile;
         if (hasHeader) {
             this.header = readHeader();
@@ -208,7 +205,6 @@ public class SeekableIterator implements AutoCloseable {
         }
         if (this.file.getFilePointer() != this.bufferEndInFile) {
             this.file.seek(this.bufferEndInFile);
-            inputStream = this.file.open();
         }
         while (this.bufferEndInFile < this.fileSize) {
             extendBufferToRight();
@@ -321,7 +317,6 @@ public class SeekableIterator implements AutoCloseable {
 
     private int readToBufferFromPos(long posToSeekTo) throws IOException {
         this.file.seek(posToSeekTo);
-        inputStream = this.file.open();
         return readFully(this.buffer, 0, this.buffer.length);
     }
 
@@ -347,8 +342,9 @@ public class SeekableIterator implements AutoCloseable {
     private int readFully(byte[] buffer, int offset, int len) throws IOException {
         final int upTo = offset + len;
         int bufferIdx = offset;
-        int read;
-        while ((read = inputStream.read(buffer, bufferIdx, upTo - bufferIdx)) > 0) {
+        while (bufferIdx < upTo) {
+            int read = this.file.read(buffer, bufferIdx, upTo - bufferIdx);
+            if (read<0) break;
             bufferIdx += read;
             file.setPosition(file.getFilePointer()+read);
         }
