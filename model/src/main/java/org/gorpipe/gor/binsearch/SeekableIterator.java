@@ -334,8 +334,9 @@ public class SeekableIterator implements AutoCloseable {
     private int readFully(byte[] buffer, int offset, int len) throws IOException {
         final int upTo = offset + len;
         int bufferIdx = offset;
-        int read;
-        while ((read = this.file.read(buffer, bufferIdx, upTo - bufferIdx)) > 0) {
+        while (bufferIdx < upTo) {
+            int read = this.file.read(buffer, bufferIdx, upTo - bufferIdx);
+            if (read<0) break;
             bufferIdx += read;
         }
         return bufferIdx - offset;

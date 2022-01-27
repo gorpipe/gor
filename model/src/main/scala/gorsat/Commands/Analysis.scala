@@ -106,6 +106,16 @@ abstract class Analysis() extends Processor with Cloneable {
     wantsNoMore = true
   }
 
+  def reset() {
+    if (pipeFrom != null && wantsNoMore) pipeFrom.reset()
+    if (pipeTo != null && wantsNoMore) {
+      wantsNoMore = false
+      pipeTo.reset()
+    }
+    wantsNoMore = false
+    alreadyFinished = false
+  }
+
   def |(to: Analysis): Analysis = {
     if (pipeTo != null) {
       pipeTo | to

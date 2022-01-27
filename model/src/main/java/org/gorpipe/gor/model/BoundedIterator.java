@@ -49,6 +49,7 @@ public class BoundedIterator extends GenomicIteratorAdapterBase {
     public BoundedIterator(GenomicIterator it, String chr, int start, String stopChr, int stop) {
         super(it);
 
+        it.setRequestedRange(chr, start, stopChr, stop);
         startChromosome = chr;
         startPosition = start;
         stopChromosome = stopChr;
