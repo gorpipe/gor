@@ -100,11 +100,9 @@ public class S3Source implements StreamSource {
 
     private InputStream open(RequestRange range) throws IOException {
         GetObjectRequest req = new GetObjectRequest(bucket, key);
-        if (range != null) {
-            range = range.limitTo(getSourceMetadata().getLength());
-            if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
-            req.setRange(range.getFirst(), range.getLast());
-        }
+        range = range.limitTo(getSourceMetadata().getLength());
+        if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+        req.setRange(range.getFirst(), range.getLast());
         return openRequest(req);
     }
 

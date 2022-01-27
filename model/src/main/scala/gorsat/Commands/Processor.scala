@@ -31,6 +31,8 @@ abstract class Processor {
 
   def reportWantsNoMore()
 
+  def reset()
+
   def from(from: Processor)
 
   def setup()

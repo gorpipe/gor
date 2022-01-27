@@ -23,12 +23,12 @@ public class BufferAdaptor extends Analysis {
 
     public BufferAdaptor(ReaderThread readerThread) {
         setReaderThread(readerThread);
-        current = readerThread.rowBuffer1;
         t = System.nanoTime();
     }
 
     public void setReaderThread(ReaderThread rt) {
         readerThread = rt;
+        current = readerThread.rowBuffer1;
     }
 
     @Override

@@ -34,6 +34,10 @@ abstract class Output extends Processor {
     if (pipeFrom!=null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true
   }
+  def reset() {
+    if (pipeFrom!=null && wantsNoMore) pipeFrom.reset()
+    wantsNoMore = false
+  }
   def from (from : Processor) {
     pipeFrom = from
   }
