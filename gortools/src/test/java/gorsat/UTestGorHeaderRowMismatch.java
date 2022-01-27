@@ -23,7 +23,9 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.test.utils.FileTestUtils;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -40,6 +42,7 @@ public class UTestGorHeaderRowMismatch {
     public ExpectedException expected = ExpectedException.none();
 
     @Test
+    @Ignore("Skip test for extra columns for performance")
     public void extraColumnInFirstRow() throws IOException {
         String contents = "Chrom\tPos\tdata\nchr1\t1\tbingo\tbongo";
         File tempFile = FileTestUtils.createTempFile(workDir.getRoot(), "extraColumnInFirst.gor", contents);
@@ -50,6 +53,7 @@ public class UTestGorHeaderRowMismatch {
     }
 
     @Test
+    @Ignore("Skip test for extra columns for performance")
     public void extraColumnInSecondRow() throws IOException {
         String contents = "Chrom\tPos\tdata\nchr1\t1\t3\nchr1\t2\t4\t5";
         File tempFile = FileTestUtils.createTempFile(workDir.getRoot(), "extraColumnInSecondRow.gor", contents);
@@ -65,7 +69,7 @@ public class UTestGorHeaderRowMismatch {
         File tempFile = FileTestUtils.createTempFile(workDir.getRoot(), "missingColumnFromFirstRow.gor", contents);
         String query = String.format("gor %s | where data1='bingo'", tempFile);
 
-        expected.expect(GorDataException.class);
+        expected.expect(GorSystemException.class);
         TestUtils.runGorPipe(query);
     }
 
@@ -75,7 +79,7 @@ public class UTestGorHeaderRowMismatch {
         File tempFile = FileTestUtils.createTempFile(workDir.getRoot(), "missingColumnFromFirstRow.gor", contents);
         String query = String.format("gor %s | where data1='bingo'", tempFile);
 
-        expected.expect(GorDataException.class);
+        expected.expect(GorSystemException.class);
         TestUtils.runGorPipe(query);
     }
 }
