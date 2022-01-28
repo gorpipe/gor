@@ -36,6 +36,8 @@ import org.gorpipe.model.gor.{Pipes, RowObj}
 import org.gorpipe.util.Pair
 import org.slf4j.LoggerFactory
 
+import java.util.Objects
+
 object DynIterator {
 import gorsatGorIterator._
 
@@ -92,6 +94,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   val drsGorPipeSession: GorSession = context.getSession
   val maxCommandSize = 100000
   var nor = false
+  val NO_QUERY_RECONSTRUCTION = java.lang.Boolean.parseBoolean(Objects.requireNonNullElse(System.getenv("GOR_NO_QUERY_RECONSTRUCTION"),"false"))
 
   override def getAvgSeekTimeMilliSecond: Double = avgSeekTimeMillis
 
@@ -123,13 +126,17 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   }
 
   override def openSource(seekChr: String, seekPos: Int, endPos: Int): Unit = {
-    close()
-    itDyn = createGorIterator(context)
-    itDyn.fixHeader = fixHeader
-    val cmd = if (seekChr != null) modifiedCommand(iteratorCommand,seekChr,seekPos,endPos,seekOnly = false) else iteratorCommand
-    itDyn.scalaInit(cmd)
-    usedFiles = itDyn.getUsedFiles
-    theSource = itDyn.getRowSource
+    if (NO_QUERY_RECONSTRUCTION && seekChr!=null && theSource!=null) {
+      theSource.seek(seekChr, seekPos, endPos)
+    } else {
+      close()
+      itDyn = createGorIterator(context)
+      itDyn.fixHeader = fixHeader
+      val cmd = if (seekChr != null) modifiedCommand(iteratorCommand, seekChr, seekPos, endPos, seekOnly = false) else iteratorCommand
+      itDyn.scalaInit(cmd)
+      usedFiles = itDyn.getUsedFiles
+      theSource = itDyn.getRowSource
+    }
   }
 
   def setRange(seekChr: String, seekPos : Int, endPos : Int) {
