@@ -43,9 +43,11 @@ public class Unzipper {
     public ByteBuffer out;
     public final ByteBuffer rawDataHolder;
 
+    private static final int BUFFER_START_SIZE = 32768;
+
     public Unzipper() {
-        rawDataHolder = ByteBuffer.allocate(32768);
-        out = ByteBuffer.allocate(32768);
+        rawDataHolder = ByteBuffer.allocate(BUFFER_START_SIZE);
+        out = ByteBuffer.allocate(BUFFER_START_SIZE);
     }
 
     private int getBeginningOfBlock(ByteBuffer in) {
