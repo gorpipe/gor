@@ -39,6 +39,8 @@ import java.util.zip.DataFormatException;
 
 public class GorzSeekableIterator extends GenomicIteratorBase {
     private static final Logger log = LoggerFactory.getLogger(GorzSeekableIterator.class);
+    private static final String ITERATOR_CLOSED_MESSAGE = "Iterator is closed";
+    private static final String GORZ_CORRUPTED_MESSAGE = "Corrupt gorz file: ";
 
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
     private final String filePath;
@@ -83,7 +85,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     @Override
     public boolean seek(String chr, int pos) {
         if (isClosed) {
-            throw new GorSystemException("Iterator is closed", null);
+            throw new GorSystemException(ITERATOR_CLOSED_MESSAGE, null);
         }
         final Row key = new RowBase(chr+"\t"+pos,2);
         this.bufferIterator.seek(key);
@@ -95,7 +97,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
             } catch (IOException e) {
                 throw wrapIOException(e);
             } catch (DataFormatException e) {
-                throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
+                throw new GorResourceException(GORZ_CORRUPTED_MESSAGE + e.getMessage(), this.filePath, e);
             }
         }
     }
@@ -122,7 +124,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     @Override
     public boolean hasNext() {
         if (isClosed) {
-            throw new GorSystemException("Iterator is closed", null);
+            throw new GorSystemException(ITERATOR_CLOSED_MESSAGE, null);
         }
         return this.bufferIterator.available() || this.seekableIterator.hasNext();
     }
@@ -130,7 +132,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
     @Override
     public Row next() {
         if (isClosed) {
-            throw new GorSystemException("Iterator is closed", null);
+            throw new GorSystemException(ITERATOR_CLOSED_MESSAGE, null);
         }
         if (!this.bufferIterator.available()) {
             try {
@@ -138,7 +140,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
             } catch (IOException e) {
                 throw wrapIOException(e);
             } catch (DataFormatException e) {
-                throw new GorResourceException("Corrupt gorz file: " + e.getMessage(), this.filePath, e);
+                throw new GorResourceException(GORZ_CORRUPTED_MESSAGE + e.getMessage(), this.filePath, e);
             }
         }
         return this.bufferIterator.next();
