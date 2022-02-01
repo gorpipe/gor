@@ -38,19 +38,19 @@ public class Unzipper {
     boolean done = false;
     protected CompressionType type;
     private ZstdInputStream zstdIs;
-    private boolean firstBlock = true;
+    boolean firstBlock = true;
 
-    public ByteBuffer out;
-    public final ByteBuffer rawDataHolder;
+    public ByteBuffer outBuffer;
+    public ByteBuffer rawDataHolder;
 
     private static final int BUFFER_START_SIZE = 32768;
 
     public Unzipper() {
         rawDataHolder = ByteBuffer.allocate(BUFFER_START_SIZE);
-        out = ByteBuffer.allocate(BUFFER_START_SIZE);
+        outBuffer = ByteBuffer.allocate(BUFFER_START_SIZE);
     }
 
-    private int getBeginningOfBlock(ByteBuffer in) {
+    int getBeginningOfBlock(ByteBuffer in) {
         int idx = 0;
         while (idx < in.position() && in.get(idx++) != '\t');
         while (idx < in.position() && in.get(idx++) != '\t');
@@ -79,14 +79,16 @@ public class Unzipper {
         setInput(rawDataHolder, blockIdx, newLen);
         do {
             int read;
-            while ((read = decompress(totalRead, out.capacity() - totalRead)) > 0) {
+            while ((read = decompress(totalRead, outBuffer.capacity() - totalRead)) > 0) {
                 totalRead += read;
             }
-            if (totalRead == out.capacity()) {
-                ByteBuffer tmpbuffer = ByteBuffer.allocate(2 * this.out.capacity());
-                tmpbuffer.put(out);
-                out.clear();
-                out = tmpbuffer;
+            if (totalRead == outBuffer.capacity()) {
+                ByteBuffer tmpbuffer = ByteBuffer.allocate(2 * outBuffer.capacity());
+                outBuffer.limit(outBuffer.capacity());
+                outBuffer.position(0);
+                tmpbuffer.put(outBuffer);
+                outBuffer.clear();
+                outBuffer = tmpbuffer;
             } else {
                 break;
             }
@@ -116,7 +118,7 @@ public class Unzipper {
     }
 
     public int decompress(int offset) throws DataFormatException, IOException {
-        return decompress(offset, out.capacity());
+        return decompress(offset, outBuffer.capacity());
     }
 
     public int decompress(int offset, int len) throws DataFormatException, IOException {
@@ -125,10 +127,10 @@ public class Unzipper {
             toReturn = 0;
         } else {
             if (this.type == CompressionType.ZLIB) {
-                toReturn = this.inflater.inflate(out.array(), offset, len);
+                toReturn = this.inflater.inflate(outBuffer.array(), offset, len);
                 this.done = this.inflater.finished();
             } else {
-                toReturn = this.zstdIs.read(out.array(), offset, len);
+                toReturn = this.zstdIs.read(outBuffer.array(), offset, len);
                 this.done = this.zstdIs.available() == 0;
                 if (this.done) {
                     this.zstdIs.close();

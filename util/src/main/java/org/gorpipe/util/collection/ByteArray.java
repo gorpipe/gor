@@ -1141,6 +1141,31 @@ public class ByteArray {
      * @param ba The input base-128 encoding
      * @return The original 8-bit data
      */
+    public static int to8Bit(byte[] ba, byte[] out) {
+        final int len = ba.length;
+        final int outlen = (len * 7) / 8;
+        int bit = 0, readPos = 0, writePos = 0;
+        while (readPos < len - 1) {
+            final byte b1 = (byte) (ba[readPos] - 33);
+            final byte b2 = (byte) (ba[++readPos] - 33);
+            out[writePos++] =
+                    (byte) (((b1 & 0xff) >>> bit)
+                            | ((b2 & 0xff) << (7 - bit)));
+            if (++bit == 7) {
+                bit = 0;
+                ++readPos;
+            }
+        }
+        return outlen;
+    }
+
+    /**
+     * Restores a base-128 (7-bits per byte) encoding to the original base-256
+     * (8-bits per byte) encoding. Assumes lowest value is 33 and highest is 33 + 128
+     *
+     * @param ba The input base-128 encoding
+     * @return The original 8-bit data
+     */
 
     public static byte[] to8BitParallel(byte[] ba, int off, int length) {
         final byte[] out = new byte[(length * 7) / 8];

@@ -160,11 +160,11 @@ public class SeekableIterator implements AutoCloseable {
         this.bufferIterator.writeNextToStream(os);
     }
 
-    public void writeNextToBuffer(ByteBuffer os) throws IOException {
+    public ByteBuffer writeNextToBuffer(ByteBuffer os) throws IOException {
         if (!this.bufferIterator.hasNext()) {
             slideBuffer();
         }
-        this.bufferIterator.writeNextToBuffer(os);
+        return this.bufferIterator.writeNextToBuffer(os);
     }
 
     /**
@@ -346,7 +346,6 @@ public class SeekableIterator implements AutoCloseable {
             int read = this.file.read(buffer, bufferIdx, upTo - bufferIdx);
             if (read<0) break;
             bufferIdx += read;
-            file.setPosition(file.getFilePointer()+read);
         }
         return bufferIdx - offset;
     }

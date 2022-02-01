@@ -15,14 +15,12 @@ import java.util.zip.DataFormatException;
 import java.util.zip.InflaterOutputStream;
 
 public class ColumnCompressedUnzipper extends Unzipper {
-    private ByteBuffer buffer;
     private byte[] lookupBytesCompressed7Bit;
     private final Map<Integer, Map<Integer, byte[]>> mapExtTable;
     private boolean lookupTableParsed = false;
 
     ColumnCompressedUnzipper(byte[] lookupBytesCompressed7Bit) {
         super();
-        this.buffer = ByteBuffer.allocate(32768);
         this.mapExtTable = new HashMap<>();
         this.lookupBytesCompressed7Bit = lookupBytesCompressed7Bit;
     }
@@ -75,14 +73,14 @@ public class ColumnCompressedUnzipper extends Unzipper {
         if (this.done) {
             return 0;
         } else {
-            if(buffer.capacity() < out.capacity()) {
-                buffer = ByteBuffer.allocate(out.capacity());
+            if(rawDataHolder.capacity() < outBuffer.capacity()) {
+                rawDataHolder = ByteBuffer.allocate(outBuffer.capacity());
             }
-            super.decompress(0, out.limit());
-            int ret = BlockPacker.decode(out.array(), 0, buffer.array(), offset, this.mapExtTable);
-            ByteBuffer oout = this.out;
-            this.out = buffer;
-            this.buffer = oout;
+            super.decompress(0, outBuffer.limit());
+            int ret = BlockPacker.decode(outBuffer.array(), 0, rawDataHolder.array(), offset, this.mapExtTable);
+            ByteBuffer oout = this.outBuffer;
+            this.outBuffer = rawDataHolder;
+            this.rawDataHolder = oout;
             return ret;
         }
     }

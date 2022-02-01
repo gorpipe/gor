@@ -261,8 +261,8 @@ public class GorZipLexOutputStream extends OutputStream {
                 if (oldPos != 0) {
                     final int leftInBuffer = this.byteOutput.size() - oldPos;
                     writeBuffer(oldPos);
-                    System.arraycopy(this.byteOutput.getBuffer(), oldPos, this.byteOutput.getBuffer(),0, leftInBuffer);
-                    this.byteOutput.setPos(leftInBuffer);
+                    System.arraycopy(this.byteOutput.array(), oldPos, this.byteOutput.array(),0, leftInBuffer);
+                    this.byteOutput.position(leftInBuffer);
                 } else {
                     writeBuffer();
                 }
@@ -300,7 +300,7 @@ public class GorZipLexOutputStream extends OutputStream {
     }
 
     private void writeBuffer(int bufferLen) throws IOException {
-        final byte[] buffer = this.byteOutput.getBuffer();
+        final byte[] buffer = this.byteOutput.array();
         if (bufferLen < 1) {
             return;
         }
@@ -477,7 +477,7 @@ public class GorZipLexOutputStream extends OutputStream {
             zipStream.write(bufferInfo.block, 0, bufferInfo.blockLen);
             zipStream.flush();
             zipStream.close();
-            bufferInfo.zipBuffer = zipBuffer.getBuffer();
+            bufferInfo.zipBuffer = zipBuffer.array();
         } catch (IOException e) {
             throw new GorSystemException(e);
         }

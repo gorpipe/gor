@@ -43,7 +43,6 @@ public class StreamSourceSeekableFile extends SeekableFile {
     private static final Logger log = LoggerFactory.getLogger(StreamSourceSeekableFile.class);
 
     final StreamSource source;
-    private InputStream inputStream;
 
     long position = 0;
     private StreamSourceMetadata meta;
@@ -55,12 +54,6 @@ public class StreamSourceSeekableFile extends SeekableFile {
     @Override
     public long getFilePointer() throws IOException {
         return position;
-    }
-
-    public InputStream open() throws IOException {
-        if (inputStream!=null) inputStream.close();
-        inputStream = position > 0 ? getDataSource().open(position) : getDataSource().open();
-        return inputStream;
     }
 
     public void setPosition(long pos) {
@@ -128,11 +121,7 @@ public class StreamSourceSeekableFile extends SeekableFile {
 
     @Override
     public void close() throws IOException {
-        try {
-            if (inputStream!=null) inputStream.close();
-        } finally {
-            source.close();
-        }
+        source.close();
     }
 
     public StreamSourceMetadata getMeta() throws IOException {

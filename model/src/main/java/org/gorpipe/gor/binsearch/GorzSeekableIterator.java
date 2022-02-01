@@ -158,9 +158,9 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
 
     private void loadBufferIterator() throws IOException, DataFormatException {
         this.unzipper.rawDataHolder.position(0);
-        this.seekableIterator.writeNextToBuffer(this.unzipper.rawDataHolder);
+        this.unzipper.rawDataHolder = this.seekableIterator.writeNextToBuffer(this.unzipper.rawDataHolder);
 
         final int unzippedLen = unzipper.unzipBlock();
-        this.bufferIterator.update(unzipper.out.array(), unzippedLen);
+        this.bufferIterator.update(unzipper.outBuffer.array(), unzippedLen);
     }
 }
