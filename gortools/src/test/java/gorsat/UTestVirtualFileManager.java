@@ -121,7 +121,19 @@ public class UTestVirtualFileManager {
 
         manager.add("gorgrid:bar");
         Assert.assertTrue(manager.get("gorgrid:bar").get().isExternal());
+    }
 
+    @Test
+    public void urlLikeExternalVirtualReferenceMapping() {
+        VirtualFileManager manager = new VirtualFileManager();
+        manager.add("file://foo");
+        Assert.assertFalse(manager.get("file://foo").get().isExternal());
+
+        manager.add("grid:/bar");
+        Assert.assertTrue(manager.get("grid:/bar").get().isExternal());
+
+        manager.add("gorgrid:s3://bar");
+        Assert.assertTrue(manager.get("gorgrid:s3://bar").get().isExternal());
     }
 
     @Test

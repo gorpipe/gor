@@ -106,6 +106,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         return getHighestPriorityCredential(credsList, service);
     }
 
+    // Note:  We are assuming that credentials owner has been taking into account when assembling the credslist.
     private Credentials getHighestPriorityCredential(List<Credentials> credsList, String service) {
         if (credsList.size() == 0) {
             log.error(String.format("No credentials found for %s", service));
