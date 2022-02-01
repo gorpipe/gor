@@ -39,7 +39,9 @@ object VirtualFileManager {
 class VirtualFileManager {
 
   private var virtualFileMap = Map.empty[String, VirtualFileEntry]
-  private val externalVirtualSearchPattern = "\\[\\s*(grid|gorgrid|file):.+?\\]".r
+  // Note: "(?!//)" is a hack and should not really be there, but we need it as we have the case where 1) the VR name
+  //       includes an alias 2) that alias maps to a url.
+  private val externalVirtualSearchPattern = "\\[.+?:(?!//).+?\\]".r
 
   def add(name: String): VirtualFileEntry = {
 

@@ -13,6 +13,9 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 
+/**
+ * Note, there are S3Shared integration tests in gor-services (ITestS3Shared).
+ */
 public class UTestS3Shared {
 
     @Rule
