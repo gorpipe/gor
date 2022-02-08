@@ -22,13 +22,11 @@
 
 package gorsat;
 
-import com.google.common.io.Files;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateModelException;
 import gorsat.Utilities.ReportUtilities;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.PipeInstance;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.gorpipe.gor.session.GorSession;
 import gorsat.process.GorSessionFactory;
@@ -39,6 +37,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -48,6 +47,7 @@ import java.nio.file.Paths;
 public class UTestTableFunction {
 
     private File rsIDsFile;
+    private Path rootPath;
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -58,6 +58,7 @@ public class UTestTableFunction {
                 "rs544101329\n" +
                         "rs28970552"
         );
+        rootPath = workDir.getRoot().toPath().toAbsolutePath();
     }
 
     @Before
@@ -87,13 +88,12 @@ public class UTestTableFunction {
     @Test
     public void testTablefunctionWithWrite() {
         try {
-            File tmpfile = File.createTempFile("test", ".gor");
-            tmpfile.deleteOnExit();
+            var tmpfile = Files.createTempFile(rootPath, "test", ".gor");
 
-            String query = "gor ../tests/data/reports/test2.yml() | write " + tmpfile.toString();
+            String query = "gor ../tests/data/reports/test2.yml() | write " + tmpfile;
             Assert.assertEquals(0, TestUtils.runGorPipeCount(query));
 
-            query = "gor " + tmpfile.toString();
+            query = "gor " + tmpfile;
             Assert.assertEquals(10, TestUtils.runGorPipeCount(query));
         } catch (IOException ex) {
             Assert.fail();
@@ -479,15 +479,15 @@ public class UTestTableFunction {
 
     @Test
     public void testRefSeqAccessThroughYaml() throws IOException {
-        File f = File.createTempFile("refseq", ".yml");
-        f.deleteOnExit();
-        FileUtils.writeStringToFile(f, "TestReport:\n" +
+        var f = Files.createTempFile(rootPath, "refseq", ".yml");
+        Files.writeString(f, "TestReport:\n" +
                 "    query:\n" +
-                "        gor -p chr1 ../tests/data/gor/dbsnp_test.gor | calc x refbases(chrom,pos,pos+2)", (Charset) null);
+                "        gor -p chr1 ../tests/data/gor/dbsnp_test.gor | calc x refbases(chrom,pos,pos+2)");
 
         // Create the dummy reference to go with this test and notify the gorpipe session where the reference is.
-        File d = Files.createTempDir();
-        d.deleteOnExit();
+        //File d = Files.createTempDir();
+        //d.deleteOnExit();
+        var d = Files.createTempDirectory(rootPath,"ref");
 
         StringBuilder builder = new StringBuilder();
 
@@ -495,13 +495,13 @@ public class UTestTableFunction {
             builder.append("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
         }
 
-        FileUtils.writeStringToFile(new File(d, "chr1.txt"), builder.toString(), Charset.defaultCharset());
-        File configFile = new File(d, "config.txt");
-        FileUtils.writeStringToFile(configFile, "buildPath\t" + d.getAbsolutePath(), Charset.defaultCharset());
+        Files.writeString(d.resolve("chr1.txt"), builder.toString(), Charset.defaultCharset());
+        var configFile = d.resolve("config.txt");
+        Files.writeString(configFile, "buildPath\t" + d, Charset.defaultCharset());
 
-        String query = "gor " + f.getAbsolutePath();
+        String query = "gor " + f;
         GenericSessionFactory factory = new GenericSessionFactory();
-        factory.setConfigFile(configFile.getAbsolutePath());
+        factory.setConfigFile(configFile.toString());
 
         PipeInstance pi = PipeInstance.createGorIterator(factory.create().getGorContext());
         pi.init(query, false, "");
@@ -518,8 +518,8 @@ public class UTestTableFunction {
 
     @Test
     public void testReportWithGorCallbackResultingInString() throws IOException {
-        File path = createTestYml("    <#assign x = gor(\"norrows 1 -offset 100\")>\n    gor ../tests/data/gor/genes.gor | top ${x}\n");
-        int count = TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        var path = createTestYml("    <#assign x = gor(\"norrows 1 -offset 100\")>\n    gor ../tests/data/gor/genes.gor | top ${x}\n");
+        int count = TestUtils.runGorPipeCount("gor " + path);
 
         Assert.assertEquals(100, count);
     }
@@ -534,8 +534,8 @@ public class UTestTableFunction {
                 "    gor ../tests/data/gor/genes.gor | top ${x}\n" +
                 "    </#if>\n";
 
-        File path = createTestYml(query);
-        int count = TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        var path = createTestYml(query);
+        int count = TestUtils.runGorPipeCount("gor " + path);
 
         Assert.assertEquals(100, count);
 
@@ -551,16 +551,16 @@ public class UTestTableFunction {
                 "    gor ../tests/data/gor/genes.gor | top ${x}\n" +
                 "    </#if>\n";
 
-        File path = createTestYml(query);
-        TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        var path = createTestYml(query);
+        TestUtils.runGorPipeCount("gor " + path);
 
         Assert.fail("We are comparing number to string in freemarker which should fail.");
     }
 
     @Test
     public void testReportWithGorCallbackResultingInSequence() throws IOException {
-        File path = createTestYml("    <#assign x = gor(\"norrows 55 -offset 1000\", \"list\")>\n    gor ../tests/data/gor/genes.gor | top ${x?size}\n");
-        int count = TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        var path = createTestYml("    <#assign x = gor(\"norrows 55 -offset 1000\", \"list\")>\n    gor ../tests/data/gor/genes.gor | top ${x?size}\n");
+        int count = TestUtils.runGorPipeCount("gor " + path);
 
         Assert.assertEquals(55, count);
     }
@@ -573,31 +573,30 @@ public class UTestTableFunction {
                 "    </#list>\n" +
                 "    gor [foo_55]\n";
 
-        File path = createTestYml(query);
-        int count = TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        var path = createTestYml(query);
+        int count = TestUtils.runGorPipeCount("gor " + path);
 
         Assert.assertEquals(55, count);
     }
 
     @Test(expected = TemplateModelException.class)
     public void testReportWithGorCallbackNoInput() throws IOException {
-        File path = createTestYml("    <#assign x = gor()>\n    gor ../tests/data/gor/genes.gor | top ${x}\n");
-        TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        Path path = createTestYml("    <#assign x = gor()>\n    gor ../tests/data/gor/genes.gor | top ${x}\n");
+        TestUtils.runGorPipeCount("gor " + path);
 
         Assert.fail("Gor freemarker method requires at least a query as input.");
     }
 
     @Test(expected = TemplateModelException.class)
     public void testReportWithGorCallbackUnknownDataFormatError() throws IOException {
-        File path = createTestYml("    <#assign x = gor(\"norrows 1 -offset 100\", \"foo\")>\n    gor ../tests/data/gor/genes.gor | top ${x}\n");
-        TestUtils.runGorPipeCount("gor " + path.getAbsolutePath());
+        Path path = createTestYml("    <#assign x = gor(\"norrows 1 -offset 100\", \"foo\")>\n    gor ../tests/data/gor/genes.gor | top ${x}\n");
+        TestUtils.runGorPipeCount("gor " + path);
 
         Assert.fail("There is not data type called foo in gor freemarker method");
     }
 
-    private File createTestYml(String query) throws IOException {
-        File tmpFile = File.createTempFile("ymltest", ".yml");
-        tmpFile.deleteOnExit();
+    private Path createTestYml(String query) throws IOException {
+        var tmpFile = Files.createTempFile(rootPath,"ymltest", ".yml");
 
         StringBuilder builder = new StringBuilder();
 
@@ -605,8 +604,7 @@ public class UTestTableFunction {
         builder.append("  query:\n");
         builder.append(query);
 
-        FileUtils.writeStringToFile(tmpFile, builder.toString(), Charset.defaultCharset());
-
+        Files.writeString(tmpFile, builder.toString(), Charset.defaultCharset());
         return tmpFile;
     }
 }
