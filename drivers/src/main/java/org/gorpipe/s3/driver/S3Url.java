@@ -22,6 +22,9 @@
 
 package org.gorpipe.s3.driver;
 
+import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.table.util.PathUtils;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 
@@ -49,6 +52,15 @@ public class S3Url {
     public static S3Url parse(String url) throws MalformedURLException {
         URI uri = URI.create(url);
         return parse(uri);
+    }
+
+    public static S3Url parse(SourceReference sourceRef) throws MalformedURLException {
+        if (PathUtils.isAbsolutePath(sourceRef.getUrl())) {
+            return parse(sourceRef.getUrl());
+        } else {
+            var uri = URI.create(sourceRef.commonRoot).resolve(sourceRef.getUrl());
+            return parse(uri);
+        }
     }
 
     public static S3Url parse(URI uri) throws MalformedURLException {

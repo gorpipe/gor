@@ -42,8 +42,10 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Set;
 
 @AutoService(SourceProvider.class)
@@ -69,7 +71,7 @@ public class S3SourceProvider extends StreamSourceProvider {
     @Override
     public S3Source resolveDataSource(SourceReference sourceReference)
             throws IOException {
-        S3Url url = S3Url.parse(sourceReference.getUrl());
+        S3Url url = S3Url.parse(sourceReference);
         AmazonS3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
         return new S3Source(client, sourceReference);
     }

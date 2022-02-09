@@ -62,7 +62,7 @@ public class S3Source implements StreamSource {
      * @param sourceReference contains S3 url of the form s3://bucket/objectpath
      */
     public S3Source(AmazonS3Client client, SourceReference sourceReference) throws MalformedURLException {
-        this(client, sourceReference, S3Url.parse(sourceReference.getUrl()));
+        this(client, sourceReference, S3Url.parse(sourceReference));
     }
 
     S3Source(AmazonS3Client client, SourceReference sourceReference, S3Url url) {
