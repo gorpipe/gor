@@ -29,15 +29,13 @@ import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.URI;
 import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -180,7 +178,7 @@ public class GorJavaUtilities {
     public static String clearHints(String query) {
         int i = query.indexOf("/*+");
         if(i != -1) {
-            return query.substring(0,i) + query.substring(query.indexOf("*/",i+3)+2,query.length());
+            return query.substring(0,i) + query.substring(query.indexOf("*/",i+3)+2);
         }
         return query;
     }
@@ -507,19 +505,18 @@ public class GorJavaUtilities {
         else if(Files.exists(g) && !Files.isSameFile(g,d)) Files.delete(g);
     }
 
-    private static void writeDummyHeader(Path dictionarypath) throws IOException {
+    private static void writeDummyHeader(Writer dictionarypathwriter) throws IOException {
         var defheader = new String[] {"chrom","pos"};
         var tableheader = new DictionaryTableMeta();
         tableheader.setColumns(defheader);
         var header = tableheader.formatHeader();
-        Files.writeString(dictionarypath,header);
+        dictionarypathwriter.write(header);
     }
 
-    private static void writeHeader(Path dictionarypath, Path p, boolean lineFilter) throws IOException {
-        var fileName = p.getFileName().toString();
-        var gorzFile = p.getParent().resolve(fileName.substring(0,fileName.length()-5));
-        if (Files.exists(gorzFile)) {
-            try(var br = new BufferedReader(new FileReader(gorzFile.toAbsolutePath().toString()))) {
+    private static void writeHeader(DriverBackedFileReader fileReader, Writer dictionarypath, String p, boolean lineFilter) throws IOException {
+        var gorzFile = p.substring(0,p.length()-5);
+        if (fileReader.exists(gorzFile)) {
+            try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(p)))) {
                 var headerspl = br.readLine().split("\t");
                 var tableheader = new DictionaryTableMeta();
                 tableheader.setColumns(headerspl);
@@ -528,7 +525,7 @@ public class GorJavaUtilities {
                     tableheader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, Boolean.toString(lineFilter));
                 }
                 var header = tableheader.formatHeader();
-                Files.writeString(dictionarypath, header);
+                dictionarypath.write(header);
             }
         }
     }
@@ -544,15 +541,17 @@ public class GorJavaUtilities {
 
     public static String verifyLinkFileLastModified(ProjectContext projectContext, String cacheFile) {
         if (cacheFile!=null) {
+            var fileReader = projectContext.getFileReader();
             var cachePath = Paths.get(cacheFile);
             if (!cachePath.isAbsolute()) {
                 cachePath = projectContext.getProjectRootPath().resolve(cachePath);
             }
             if (Files.isSymbolicLink(cachePath) || cacheFile.toLowerCase().endsWith(".link")) {
                 try {
-                    long linkLastModified = Files.getLastModifiedTime(cachePath, LinkOption.NOFOLLOW_LINKS).toMillis();
-                    var lastModified = ((DriverBackedFileReader) projectContext.getFileReader()).resolveUrl(cacheFile).getSourceMetadata().getLastModified();
-                    if (lastModified > linkLastModified) {
+                    var ds = fileReader.resolveUrl(cacheFile);
+                    var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
+                    var lastModified = ds.getSourceMetadata().getLastModified();
+                    if (linkLastModified != null && lastModified > linkLastModified) {
                         Files.delete(cachePath);
                         cacheFile = null;
                     }
@@ -564,20 +563,18 @@ public class GorJavaUtilities {
         return cacheFile;
     }
 
-    public static synchronized void writeDictionaryFromMeta(Path outfolderpath, Path dictionarypath) throws IOException {
+    public static synchronized void writeDictionaryFromMeta(DriverBackedFileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
         var headerWritten = false;
 
-        try(Stream<Path> metapathstream = Files.walk(outfolderpath)) {
-            var metapaths = metapathstream.filter(p -> p.getFileName().toString().endsWith(".meta")).collect(Collectors.toList());
+        try(Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
+            var metapaths = metapathstream.filter(p -> p.endsWith(".meta")).collect(Collectors.toList());
             int i = 0;
-            for (Path p : metapaths) {
-                GorMeta meta = GorMeta.createAndLoad(p);
-                var md5 = meta.getMd5();
-                var useMd5 = !Strings.isNullOrEmpty(md5) && isUUID(p.getFileName().toString());
+            for (String p : metapaths) {
+                GorMeta meta = GorMeta.createAndLoad(fileReader, p);
 
                 if (!meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0 ) {
-                    var outfile = useMd5 ? md5 + ".gorz" : FilenameUtils.removeExtension(p.toString());
-                    DictionaryEntry.Builder builder = new DictionaryEntry.Builder(outfile, outfolderpath.toUri());
+                    var outfile = FilenameUtils.removeExtension(p);
+                    DictionaryEntry.Builder builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
                     builder.alias(Integer.toString(++i));
                     builder.range(meta.getRange());
 
@@ -589,15 +586,13 @@ public class GorJavaUtilities {
                     }
 
                     if (!headerWritten) {
-                        writeHeader(dictionarypath, p, tags.isEmpty());
+                        writeHeader(fileReader, dictionarypathwriter, p, tags.isEmpty());
                         headerWritten = true;
                     }
-                    Files.writeString(dictionarypath, builder.build().formatEntry(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    dictionarypathwriter.write(builder.build().formatEntry());
                 }
-
-                if (useMd5) md5Rename(md5, p);
             }
-            if (!headerWritten) writeDummyHeader(dictionarypath);
+            if (!headerWritten) writeDummyHeader(dictionarypathwriter);
         }
     }
 }

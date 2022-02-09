@@ -2,7 +2,6 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.gor.table.util.GenomicRange;
 
-import java.nio.file.Path;
 import java.util.*;
 
 public class GorMeta extends BaseMeta {
@@ -11,9 +10,9 @@ public class GorMeta extends BaseMeta {
     public static final String HEADER_RANGE_KEY = "RANGE";
     public static final String HEADER_CARDCOL_KEY = "CARDCOL";
 
-    public static GorMeta createAndLoad(Path metaPath) {
+    public static GorMeta createAndLoad(FileReader fileReader, String metaPath) {
         GorMeta meta = new GorMeta();
-        meta.loadAndMergeMeta(metaPath);
+        meta.loadAndMergeMeta(fileReader, metaPath);
         return meta;
     }
 

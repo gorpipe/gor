@@ -217,28 +217,26 @@ public class BaseMeta {
         return sb.toString();
     }
 
-    public void loadAndMergeMeta(Path metaPath) {
-        if (metaPath == null || !Files.exists(metaPath)) {
+    public void loadAndMergeMeta(FileReader fileReader, String metaPath) {
+        if (metaPath == null || !fileReader.exists(metaPath)) {
             return;
         }
 
-        try {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(metaPath.toString())))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    line = line.trim();
-                    if (line.length() > 0) {
-                        if (isHeaderLine(line)) {
-                            parseLine(line);
-                        } else {
-                            // Done reading the header.
-                            break;
-                        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.length() > 0) {
+                    if (isHeaderLine(line)) {
+                        parseLine(line);
+                    } else {
+                        // Done reading the header.
+                        break;
                     }
                 }
             }
         } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath.toString(), ex);
+            throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath, ex);
         }
     }
 }
