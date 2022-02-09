@@ -1,4 +1,5 @@
 # Git ignore for the gor repository.
+
 # Gradle
 
 .gradle/
@@ -12,10 +13,12 @@
 
 # Ide settings and files
 
-gor.ipr
-gor.iws
+**/*.ipr
+**/*.iws
 **/*.iml
 **/.idea/
+
+**/.vscode/
 
 **/.project
 **/.classpath
@@ -24,15 +27,8 @@ gor.iws
 **/bin/
 .metadata
 
-projectFilesBackup/
-
 atlassian-ide-plugin.xml
 .pydevproject
-
-#gradle/
-#gradlew
-#gradlew.bat
-
 
 # python
 
@@ -43,9 +39,20 @@ nosetests.xml
 ve-python*/
 
 # vim
+
 *~
 *.swp
 *.swo
+
+# Generated files
+**/src/*-generated/
+report.html
+
+# Local config files
+
+**/.env
+tests/config/logback-local-*.xml
+**/secrets.env
 
 # Other
 
@@ -55,11 +62,4 @@ ve-python*/
 gortemp
 .recommenders/
 
-# Generated files
-**/src/*-generated/
-report.html
 
-# Local config files
-tests/config/logback-local-*.xml
-
-.vscode/

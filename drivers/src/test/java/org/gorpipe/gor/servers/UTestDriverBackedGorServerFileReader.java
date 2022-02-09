@@ -1,0 +1,398 @@
+/*
+ * Copyright (c) 2013 deCODE Genetics Inc.
+ * All Rights Reserved.
+ *
+ * This software is the confidential and proprietary information of
+ * deCODE Genetics Inc. ("Confidential Information"). You shall not
+ * disclose such Confidential Information and shall use it only in
+ * accordance with the terms of the license agreement you entered into
+ * with deCODE.
+ */
+
+package org.gorpipe.gor.servers;
+
+import com.nextcode.gor.driver.utils.DatabaseHelper;
+import org.gorpipe.exceptions.GorResourceException;
+
+import org.gorpipe.gor.driver.utils.TestUtils;
+import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
+import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.util.collection.extract.Extract;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * UTestDriverBackedGorServerFileReader is testing the DriverBackedGorServerFileReader
+ *
+ * @version $Id$
+ */
+public class UTestDriverBackedGorServerFileReader {
+
+    private static final Logger log = LoggerFactory.getLogger(UTestDriverBackedGorServerFileReader.class);
+
+    private static String[] paths;
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
+    private Path workDirPath;
+
+    @Before
+    public void setUp() throws Exception {
+        workDirPath = workDir.getRoot().toPath();
+    }
+
+    @BeforeClass
+    public static void setup() throws IOException, ClassNotFoundException, SQLException {
+        paths = DatabaseHelper.createTestDataBase_Derby();
+        System.setProperty("gor.db.credentials", paths[2]);
+        DbSource.initInConsoleApp();
+    }
+
+    /**
+     * Test file signature methods
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testFileSignature() throws Exception {
+        File f1 = File.createTempFile("test", ".txt");
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", null, true, null, null);
+        final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
+        Assert.assertEquals(f1SignatureA, reader.getFileSignature(f1.getAbsolutePath()));
+
+        Files.write(f1.toPath(), "somedata".getBytes());
+        f1.setLastModified(System.currentTimeMillis() + 10000);
+        final String f1SignatureB = reader.getFileSignature(f1.getAbsolutePath());
+        Assert.assertFalse(f1SignatureA.equals(f1SignatureB));
+
+        DbSource.install(new DbSource("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+        for (int i = 0; i < 10; i++) {
+            final long start = System.currentTimeMillis();
+            String fileSignature = reader.getFileSignature("db://rda:rda.v_variant_annotations");
+            log.info("FileSignature: " + fileSignature + " in " + Extract.durationStringSince(start));
+        }
+    }
+
+    /**
+     * Test working with links files
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testLinkFiles() throws Exception {
+
+        final Object[] constants = {};
+
+
+        // Setup temporary file structure to test withh
+        final Path root = Files.createTempDirectory("symlinktest");
+        final Path d1 = Files.createDirectory(Paths.get(root.toString(), "d1"));
+        final String fileName = "testfile.gor";
+        final Path file = Paths.get(d1.toString(), fileName);
+        final String link1name = "testfile1.gor.link";
+        final Path link1 = Paths.get(d1.toString(), link1name);
+        final String link2name = "testfile2.gor.link";
+        final Path link2 = Paths.get(root.toString(), link2name);
+        final String link3name = "testfile3.gor.link";
+        final Path link3 = Paths.get(d1.toString(), link3name);
+        final String link4name = "testfile.gor.link";
+        final Path link4 = Paths.get(d1.toString(), link4name);
+        final String link5name = "testfile5.gor.link";
+        final Path link5 = Paths.get(d1.toString(), link5name);
+
+
+        // Ensure link files can be read
+        Files.write(file, "chr1\t10".getBytes());
+        Files.write(link1, ("file://" + file + "\n").getBytes());
+        Files.write(link2, ("file://" + link1).getBytes());
+        Files.write(link3, fileName.getBytes());
+        Files.write(link4, fileName.getBytes());
+        Files.write(link5, (file + "\n").getBytes());
+
+        //
+        // Test with allow absolute links.
+        //
+
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader(d1.toString() + "/", constants, true, null, null);
+
+        final String[] fileContent = reader.readAll(file.toString());
+
+        // Test standard link file (absolute path).
+        final String[] linke1Content = reader.readAll(link1.toString());
+        Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke1Content));
+
+        // Test link to link
+        final String[] linke2Content = reader.readAll(link2.toString());
+        Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke2Content));
+
+        // Test standard link file (relative path).
+        try {
+            final String[] linke3Content = reader.readAll(link3.toString());
+            Assert.fail("Relative links should not be allowed");
+        } catch (GorResourceException ex) {
+            //ok
+        }
+        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
+        //Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content));
+
+        // Read form link file.
+        try (Stream<String> r = reader.readFile(link2.toString().replace(".link", ""))) {
+            r.limit(1).collect(Collectors.toList()).get(0);
+        }
+
+        // Test fallback links, i.e. check files that do not exists, but link file exists, will be found.
+        Assert.assertEquals(
+                reader.getFileSignature(link1.toString()),
+                reader.getFileSignature(link1.toString().replace(".link", "")));
+
+        //
+        // Test with not allow absolute links.
+        //
+
+        reader = new DriverBackedGorServerFileReader(d1 + "/", constants, false, null, null);
+
+        // Test standard link file (absolute path in link).
+        final String[] linke1Content2 = reader.readAll(link1name);
+        Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke1Content2));
+
+        // Test fail for absolute paths to links.
+        try {
+            reader.readAll(link1.toString());
+        } catch (GorResourceException e) {
+            Assert.fail("Should be able to read absolute files within project scope");
+        }
+
+        // Test standard link file (relative path).
+        try {
+            final String[] linke3Content2 = reader.readAll(link3name);
+            Assert.fail("Relative links should not be allowed");
+        } catch (GorResourceException ex) {
+            //ok
+        }
+        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
+        // Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content2));
+
+        // Test fallback link file if absolute paths not allowed.
+        Assert.assertEquals(
+                reader.getFileSignature(link5name),
+                reader.getFileSignature(link5name.replace(".link", "")));
+
+        // Test recursive fallback (uses link4).
+        reader.readAll(link1name.replace(".link", ""));
+    }
+
+    /**
+     * Test working with symbolic links
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testSymbolicLinks() throws Exception {
+        final Object[] constants = {};
+        final DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+
+        // Setup temporary file structure to test with
+        final Path root = Files.createTempDirectory("symlinktest");
+        final Path d1 = Files.createDirectory(Paths.get(root.toString(), "d1"));
+        final Path d2 = Files.createDirectory(Paths.get(root.toString(), "d2"));
+        final Path file = Paths.get(d1.toString(), "testfile");
+        final Path d1l1 = Paths.get(d1.toString(), "d1l1");
+        final Path d2l2 = Paths.get(d2.toString(), "d2l2");
+        final Path l = Paths.get(root.toString(), "l");
+
+        Files.write(file, "chr1\t10".getBytes());
+        Thread.sleep(1000);
+        Files.createSymbolicLink(d1l1, file);
+        Thread.sleep(1000);
+        Files.createSymbolicLink(d2l2, d1l1);
+        Thread.sleep(1000);
+        Files.createSymbolicLink(l, d2l2);
+        Thread.sleep(1000);
+
+        final FileTime changedFileTime = FileTime.from((System.currentTimeMillis() / 1000) * 1000, TimeUnit.MILLISECONDS); // use ms precision
+
+        log.info("{}", root);
+        log.info("Begin f={}, d1l1={}, d2l2={}, l={}", Files.getLastModifiedTime(file),
+                Files.getLastModifiedTime(d1l1, LinkOption.NOFOLLOW_LINKS),
+                Files.getLastModifiedTime(d2l2, LinkOption.NOFOLLOW_LINKS),
+                Files.getLastModifiedTime(l, LinkOption.NOFOLLOW_LINKS));
+
+        // Ensure signatures are correctly reported
+        final String md5File = reader.getFileSignature(file.toString());
+        final String md5D1L1 = reader.getFileSignature(d1l1.toString());
+        final String md5D2L2 = reader.getFileSignature(d2l2.toString());
+        final String md5L = reader.getFileSignature(l.toString());
+        Set<String> md5 = new HashSet<>();
+        Collections.addAll(md5, md5File, md5D1L1, md5D2L2, md5L);
+        Assert.assertEquals(1, md5.size());
+
+        // Ensure file changes are correctly reported in signatures
+        Files.setLastModifiedTime(file, changedFileTime);
+
+        final String md5FileChanged = reader.getFileSignature(file.toString());
+        Assert.assertFalse(md5.contains(md5FileChanged));
+        Assert.assertEquals(md5FileChanged, reader.getFileSignature(d1l1.toString()));
+        Assert.assertEquals(md5FileChanged, reader.getFileSignature(d2l2.toString()));
+        Assert.assertEquals(md5FileChanged, reader.getFileSignature(l.toString()));
+
+        log.info("End f={}, d1l1={}, d2l2={}, l={}", Files.getLastModifiedTime(file),
+                Files.getLastModifiedTime(d1l1, LinkOption.NOFOLLOW_LINKS),
+                Files.getLastModifiedTime(d2l2, LinkOption.NOFOLLOW_LINKS),
+                Files.getLastModifiedTime(l, LinkOption.NOFOLLOW_LINKS));
+    }
+
+
+    /**
+     * Test readAll method
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testReadMethods() throws Exception {
+        // Simple test of reading a file
+        final File f1 = File.createTempFile("test", ".txt");
+        Files.write(f1.toPath(), "somedata".getBytes());
+
+
+        Object[] constants = {};
+
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+
+        // Test read standard file
+
+        // Test readAll.
+        String[] lines = reader.readAll(f1.getAbsolutePath());
+        Assert.assertEquals(1, lines.length);
+        Assert.assertEquals("somedata", lines[0]);
+        Assert.assertTrue("File was not properly closed", TestUtils.isFileClosed(f1));
+
+        // Test readFile
+        try (Stream<String> r = reader.readFile(f1.getAbsolutePath())) {
+            r.allMatch(s -> {
+                if (s != null) {
+                    assert "somedata".equals(s);
+                    return true;
+                }
+                return false;
+            });
+        }
+        Assert.assertTrue("File was not properly closed", TestUtils.isFileClosed(f1));
+
+        // Test readHeader
+        String header = reader.readHeaderLine(f1.getAbsolutePath());
+        Assert.assertEquals("somedata", header);
+        Assert.assertTrue("File was not properly closed", TestUtils.isFileClosed(f1));
+    }
+
+    /**
+     * Test testReadingDbData method
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testReadingDbData() throws Exception {
+        String dbUrl = "jdbc:derby:" + paths[1];
+        String header;
+        String[] lines;
+
+        Object[] constants = {};
+
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+
+        // Test reading gor.db.credentials
+
+        try {
+            DbSource.initializeDbSources("nonexisting/path/to/nowhere");
+            Assert.fail("Should get exception for non existent gor.db.credentials");
+        } catch (Exception e) {
+            // Success
+        }
+
+        DbSource.install(new DbSource("rda", dbUrl, "rda", "beta3"));
+
+        // Test reading db link file.
+
+        final Path dblinkfile = Files.createTempFile("test.db", ".rep.link");
+        final String sqltest = "select pos from rda.v_variant_annotations s";
+        Files.write(dblinkfile, ("//db:" + sqltest).getBytes());
+
+        // Test the results
+        String linkfile = dblinkfile.toString();
+        String[] flines = reader.readAll(dblinkfile.toString());
+        header = reader.readHeaderLine(dblinkfile.toString());
+        Assert.assertEquals(flines[0].toLowerCase(), header);
+        Assert.assertEquals("Too many open connections", 0, TestUtils.getActivePoolConnections(dbUrl, "rda"));
+
+        // Test readFile vs readall
+        int[] i = {0};
+        try (Stream<String> r = reader.readFile(linkfile)) {
+            r.allMatch(s -> {
+                if (s != null) {
+                    Assert.assertEquals("Lines at " + i[0] + " must match", flines[i[0]++], s);
+                    return true;
+                }
+                return false;
+            });
+        }
+        Assert.assertEquals("Read all lines", i[0], flines.length);
+        Assert.assertEquals("Too many open connections", 0, TestUtils.getActivePoolConnections(dbUrl, "rda"));
+
+        // Test file signature
+        final String signature = reader.getFileSignature(linkfile);
+        Assert.assertNotNull(signature);
+
+        // Test fallback for //db:
+        final String fallbackfile = linkfile;
+        String[] fallbacklines = reader.readAll(fallbackfile);
+        Assert.assertTrue("Fallback must match link", Arrays.equals(flines, fallbacklines));
+
+    }
+
+    @Test
+    public void testCopy() throws IOException {
+        Path f1 = workDirPath.resolve("test.txt");
+        Files.write(f1, "somedata".getBytes());
+
+        Object[] constants = {};
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+
+        Path c1 = workDirPath.resolve("copy.txt");
+        reader.copy(f1.toString(), c1.toString());
+
+        Assert.assertTrue(Files.exists(f1));
+        Assert.assertTrue(Files.exists(c1));
+        Assert.assertEquals("somedata", new String(Files.readAllBytes(c1)));
+    }
+
+    @Test
+    public void testMove() throws IOException {
+        Path f1 = workDirPath.resolve("test.txt");
+        Files.write(f1, "somedata".getBytes());
+
+        Object[] constants = {};
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+
+        Path c1 = workDirPath.resolve("copy.txt");
+        reader.move(f1.toString(), c1.toString());
+
+        Assert.assertFalse(Files.exists(f1));
+        Assert.assertTrue(Files.exists(c1));
+        Assert.assertEquals("somedata", new String(Files.readAllBytes(c1)));
+    }
+
+}

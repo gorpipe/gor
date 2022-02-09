@@ -73,7 +73,6 @@ project(':gortools') {
         testImplementation "org.scalatestplus:mockito-3-4_${scalaVersion}:_"
         testImplementation 'com.github.stefanbirkner:system-rules:_'
 
-
         testRuntimeOnly "org.apache.derby:derby:_"
         testRuntimeOnly "org.apache.derby:derbytools:_"
 

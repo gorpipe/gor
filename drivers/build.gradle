@@ -30,6 +30,7 @@ project(':drivers') {
         implementation project(':base')
 
         annotationProcessor 'com.google.auto.service:auto-service:_'
+
         implementation 'com.google.auto.service:auto-service:_'
         implementation "org.aeonbits.owner:owner:_"
         implementation "com.github.samtools:htsjdk:_"
@@ -37,11 +38,16 @@ project(':drivers') {
         implementation "com.google.cloud:google-cloud-storage:_"
         implementation "com.amazonaws:aws-java-sdk-s3:_"
         implementation "com.microsoft.azure:azure-storage:_"
-
         implementation 'com.upplication:s3fs:_'
 
         testImplementation project(':test')
-        testImplementation 'com.github.stefanbirkner:system-rules:_'
+        testImplementation project(':util')
 
+        testImplementation 'com.github.stefanbirkner:system-rules:_'
+        testImplementation "com.amazonaws:aws-java-sdk-sts:1.11.+"
+        testImplementation "com.amazonaws:aws-java-sdk-s3:1.11.+"
+
+        testRuntimeOnly 'org.apache.derby:derby:_'
+        testRuntimeOnly 'org.apache.derby:derbytools:_'
     }
 }

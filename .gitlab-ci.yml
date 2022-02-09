@@ -94,6 +94,8 @@ build:
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+  before_script:
+    - ln -s ${INTEGRATION_TESTS_SECRETS_ENV} tests/config/secrets.env
   artifacts:
     reports:
       junit:
@@ -126,7 +128,7 @@ code_quality:
   tags:
     - gitlab-build-01
   variables:
-    CODECLIMATE_DEBUG: "1"
+    #CODECLIMATE_DEBUG: "1"
     ENGINE_MEMORY_LIMIT_BYTES: "3221223823"
   artifacts:
     reports:
