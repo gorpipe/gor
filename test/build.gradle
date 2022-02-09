@@ -22,10 +22,25 @@
 
 plugins {
     id 'gor.java-library'
+    id 'gor.scala-common'
 }
 
 project(':test') {
     dependencies {
+        implementation project(':base')
+        implementation project(':model')
+        implementation project(':drivers')
+        api project(':gortools')
+
+        implementation libs.logback
+        implementation libs.slf4j
+        implementation Testing.junit4
+
+        implementation libs.commons.lang3
+        implementation "commons-lang:commons-lang:_"
+        implementation "com.zaxxer:HikariCP:_"
         implementation libs.commons.io
+        implementation "commons-codec:commons-codec:_"
+        implementation "com.google.guava:guava:_"
     }
 }

@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.providers.db;
 
+import com.nextcode.gor.driver.utils.DatabaseHelper;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;

@@ -54,8 +54,6 @@ project(':model') {
 
         testImplementation project(':test')
         testImplementation project(':external')
-        testImplementation project(":gortools") // Needed so we can call gorpipe in the tests.
-        testImplementation project(':gortools').sourceSets.test.output
 
         testImplementation libs.logback
 
