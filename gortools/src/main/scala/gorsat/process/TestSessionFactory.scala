@@ -48,7 +48,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
 
     val session = new GorSession(requestId)
 
-    val allowedWriteLocations = Array[String]("test")
+    val allowedWriteLocations = Array[String]("test", "user_data")
     val allowedWriteLocationList = JavaConverters.seqAsJavaList(allowedWriteLocations)
 
     val projectContextBuilder = new ProjectContext.Builder()

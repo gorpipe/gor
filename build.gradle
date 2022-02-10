@@ -79,4 +79,3 @@ gradleLint {
     //criticalRules = ['unused-dependency']
     alwaysRun = false
 }
-

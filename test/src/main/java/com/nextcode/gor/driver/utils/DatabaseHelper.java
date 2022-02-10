@@ -1,4 +1,4 @@
-package org.gorpipe.gor.driver.providers.db;
+package com.nextcode.gor.driver.utils;
 
 import org.apache.commons.io.FileUtils;
 
@@ -57,3 +57,4 @@ public class DatabaseHelper {
         return new String[] {tmpDirectory.getAbsolutePath(), databasePath.toString(), credentialsPath.toString()};
     }
 }
+

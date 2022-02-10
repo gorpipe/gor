@@ -1,3 +1,4 @@
+package gorsat;
 /*
  *  BEGIN_COPYRIGHT
  *
@@ -20,23 +21,29 @@
  *  END_COPYRIGHT
  */
 
-package gorsat;
-
 import com.sun.management.UnixOperatingSystemMXBean;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Utilities.AnalysisUtilities;
 import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
+import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.JMX;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -50,36 +57,43 @@ import java.util.stream.Collectors;
 public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
 
+    private static final String LINE_SPLIT_PATTERN = "(?<=\n)";
+
     /**
      * Run goripe
-     * @param query   gorpipe query to run.
+     *
+     * @param query gorpipe query to run.
      */
     public static String runGorPipe(String query) {
         return runGorPipe(query, false);
     }
 
     public static String runGorPipe(String query, boolean server) {
-        return runGorPipeWithOptions(query, true, server);
+        return runGorPipeWithOptions(query, true, server, null);
     }
 
-    private static final String LINE_SPLIT_PATTERN = "(?<=\n)";
-
-    public static String runGorPipeNoHeader(String query) {
-        return runGorPipeWithOptions(query, false, false);
+    public static String runGorPipe(String query, boolean server, String securityContext) {
+        return runGorPipeWithOptions(query, true, server, securityContext);
     }
 
-    public static String[] runGorPipeLines(String query) {
-        return runGorPipe(query).split(LINE_SPLIT_PATTERN);
-    }
+    public static String runGorPipe(String... args) {
 
-    public static String[] runGorPipeLinesNoHeader(String query) {
-        return runGorPipeNoHeader(query).split(LINE_SPLIT_PATTERN);
-    }
+        PipeOptions options = new PipeOptions();
+        options.parseOptions(args);
 
-    private static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server) {
+        CLISessionFactory factory = new CLISessionFactory(options, null);
 
-        try (PipeInstance pipe = createPipeInstance(server)) {
-            return runPipeInstanceQueryToString(pipe, query, includeHeader);
+        try (PipeInstance pipe = new PipeInstance(new GorContext(factory.create()))) {
+            String queryToExecute = processQuery(options.query(), pipe.getSession());
+            pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
+            StringBuilder result = new StringBuilder();
+            result.append(pipe.getHeader());
+            result.append("\n");
+            while (pipe.hasNext()) {
+                result.append(pipe.next());
+                result.append("\n");
+            }
+            return result.toString();
         }
     }
 
@@ -90,20 +104,149 @@ public class TestUtils {
                 AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, "gor_aliases.txt"));
     }
 
-    private static PipeInstance createPipeInstance(boolean server) {
-        return PipeInstance.createGorIterator(createSession(server).getGorContext());
+
+    public static String getTestFile(String name) {
+        String canonicalPath = getCanonicalPath(name);
+        if (canonicalPath == null) {
+            canonicalPath = getCanonicalPath("dummy.gor");
+        }
+        return canonicalPath;
     }
 
-    public static String runGorPipe(String... args) {
+    private static String getCanonicalPath(String name) {
+        Path testDataPath = Paths.get("../tests/data/" + name);
+        String canonicalPath = null;
+        try {
+            canonicalPath = testDataPath.toFile().getCanonicalPath();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return canonicalPath;
+    }
 
+    // Helper method to check if file has an open file handle.
+    public static boolean isFileClosed(File file) throws IOException {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            // TODO: Windows does not have lsof so this will not be working on windows.
+            return true;
+        }
+
+        Process plsof = null;
+        BufferedReader reader = null;
+        try {
+            plsof = new ProcessBuilder(new String[]{"lsof", "|", "grep", file.getAbsolutePath()}).start();
+            reader = new BufferedReader(new InputStreamReader(plsof.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains(file.getAbsolutePath())) {
+                    return false;
+                }
+            }
+        } finally {
+            if (reader != null) reader.close();
+            if (plsof != null) plsof.destroy();
+        }
+        return true;
+    }
+
+    public static int getActivePoolConnections(String dbUrl, String user) throws MalformedObjectNameException {
+        MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        ObjectName poolName = new ObjectName("com.zaxxer.hikari:type=Pool (" + dbUrl.replace(":", "-") + "-" + user + ")");
+        HikariPoolMXBean poolProxy = JMX.newMXBeanProxy(mBeanServer, poolName, HikariPoolMXBean.class);
+        return poolProxy.getActiveConnections();
+    }
+
+    public static int runGorPipeCount(String query) {
+        return runGorPipeCount(query, false);
+    }
+
+    public static int runGorPipeCount(String query, boolean server) {
+        String[] args = {query};
+        return runGorPipeCount(args, server);
+    }
+
+    public static int runGorPipeCount(String[] args, boolean server) {
+        return runGorPipeCount(args, () -> createSession(args, null, server, null));
+    }
+
+    public static int runGorPipeCount(String[] args, Supplier<GorSession> sessionSupplier) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        CLISessionFactory factory = new CLISessionFactory(options, null);
-
-        try (PipeInstance pipe = new PipeInstance(factory.create().getGorContext())) {
-            return runPipeInstanceQueryToString(pipe, options.query(), true);
+        try (PipeInstance pipe = new PipeInstance(new GorContext(sessionSupplier.get()))) {
+            String queryToExecute = processQuery(options.query(), pipe.getSession());
+            pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
+            int count = 0;
+            while (pipe.hasNext()) {
+                pipe.next();
+                count++;
+            }
+            return count;
         }
+    }
+
+    private static GorSession createSession(String[] args, String whiteListFile, boolean server, String securityContext) {
+        PipeOptions options = new PipeOptions();
+        options.parseOptions(args);
+
+        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, securityContext);
+        return factory.create();
+    }
+
+    private static GorSession createSession(boolean server, String securityContext) {
+        String[] args = {};
+        return createSession(args, null, server, securityContext);
+    }
+
+    public static String[] runGorPipeLines(String query) {
+        return runGorPipe(query).split(LINE_SPLIT_PATTERN);
+    }
+
+    public static String[] runGorPipeLinesNoHeader(String query) {
+        return runGorPipeNoHeader(query).split(LINE_SPLIT_PATTERN);
+    }
+
+    public static String runGorPipeNoHeader(String query) {
+        return runGorPipeWithOptions(query, false, false, null);
+    }
+
+    public static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server, String securityContext) {
+
+        try (PipeInstance pipe = createPipeInstance(server, securityContext)) {
+            String queryToExecute = processQuery(query, pipe.getSession());
+            pipe.init(queryToExecute, null);
+            StringBuilder result = new StringBuilder();
+            if (includeHeader) {
+                result.append(pipe.getHeader());
+                result.append("\n");
+            }
+            while (pipe.hasNext()) {
+                result.append(pipe.next());
+                result.append("\n");
+            }
+            return result.toString();
+        }
+    }
+
+    private static PipeInstance createPipeInstance(boolean server, String securityContext) {
+        return PipeInstance.createGorIterator(new GorContext(createSession(server, securityContext)));
+    }
+
+    public static GenomicIterator runGorPipeIterator(String query) {
+        PipeInstance pipe = createPipeInstance(false, null);
+        pipe.init(query, null);
+        return pipe.getIterator();
+    }
+
+    private static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server) {
+
+        try (PipeInstance pipe = createPipeInstance(server)) {
+            return runPipeInstanceQueryToString(pipe, query, includeHeader);
+        }
+    }
+
+    private static PipeInstance createPipeInstance(boolean server) {
+        return PipeInstance.createGorIterator(createSession(server).getGorContext());
     }
 
     public static String runPipeInstanceQueryToString(PipeInstance pipe, String query, boolean includeHeader) {
@@ -121,13 +264,6 @@ public class TestUtils {
         return result.toString();
     }
 
-    public static GenomicIterator runGorPipeIterator(String query) {
-        PipeInstance pipe = createPipeInstance(false);
-        pipe.init(query, null);
-        return pipe.getRowSource();
-    }
-
-
     public static void runGorPipeIteratorOnMain(String query) {
         String[] args = {query};
         runGorPipeIteratorOnMain(args);
@@ -141,46 +277,17 @@ public class TestUtils {
         engine.execute();
     }
 
-    public static int runGorPipeCount(String query) {
-        return runGorPipeCount(query, false);
-    }
-
     public static int runGorPipeCount(String query, String projectRoot) {
         String[] args = {query, "-gorroot", projectRoot};
         return runGorPipeCount(args, false);
-    }
-
-    public static int runGorPipeCount(String query, boolean server) {
-        String[] args = {query};
-        return runGorPipeCount(args, server);
     }
 
     public static int runGorPipeCount(String... args) {
         return runGorPipeCount(args, false);
     }
 
-    public static int runGorPipeCount(String[] args, boolean server) {
-        return runGorPipeCount(args, () -> createSession(args, null, server));
-    }
-
     public static int runGorPipeCountCLI(String[] args) {
         return runGorPipeCount(args, ()->createCLISession(args));
-    }
-
-    public static int runGorPipeCount(String[] args, Supplier<GorSession> sessionSupplier) {
-        PipeOptions options = new PipeOptions();
-        options.parseOptions(args);
-
-        try (PipeInstance pipe = new PipeInstance(sessionSupplier.get().getGorContext())) {
-            String queryToExecute = processQuery(options.query(), pipe.getSession());
-            pipe.init(queryToExecute, false, "");
-            int count = 0;
-            while (pipe.hasNext()) {
-                pipe.next();
-                count++;
-            }
-            return count;
-        }
     }
 
     public static int runGorPipeCountWithWhitelist(String query, Path whitelistFile) {
@@ -332,7 +439,7 @@ public class TestUtils {
         return createSession(args, null, server);
     }
 
-    private static GorSession createSession(String[] args, String whiteListFile, boolean server) {
+    public static GorSession createSession(String[] args, String whiteListFile, boolean server) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
