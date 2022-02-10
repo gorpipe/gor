@@ -43,7 +43,7 @@ object MapAndListUtilities {
     if (filename == null) return false
 
     reader match {
-      case dbfr: DriverBackedFileReader => dbfr.resolveUrl(filename).exists()
+      case dbfr: DriverBackedFileReader => dbfr.exists(filename)
       case _ => Files.exists( reader.toPath(filename) )
     }
   }

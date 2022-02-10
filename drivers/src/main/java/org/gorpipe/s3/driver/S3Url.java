@@ -58,7 +58,7 @@ public class S3Url {
         if (PathUtils.isAbsolutePath(sourceRef.getUrl())) {
             return parse(sourceRef.getUrl());
         } else {
-            var uri = URI.create(sourceRef.commonRoot).resolve(sourceRef.getUrl());
+            var uri = PathUtils.resolve(sourceRef.commonRoot,sourceRef.getUrl());
             return parse(uri);
         }
     }
