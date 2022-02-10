@@ -516,7 +516,7 @@ public class GorJavaUtilities {
     private static void writeHeader(DriverBackedFileReader fileReader, Writer dictionarypath, String p, boolean lineFilter) throws IOException {
         var gorzFile = p.substring(0,p.length()-5);
         if (fileReader.exists(gorzFile)) {
-            try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(p)))) {
+            try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(gorzFile)))) {
                 var headerspl = br.readLine().split("\t");
                 var tableheader = new DictionaryTableMeta();
                 tableheader.setColumns(headerspl);
