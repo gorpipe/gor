@@ -6,10 +6,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -217,24 +214,40 @@ public class BaseMeta {
         return sb.toString();
     }
 
+    private void parseMetaReader(BufferedReader br) throws IOException {
+        String line;
+        while ((line = br.readLine()) != null) {
+            line = line.trim();
+            if (line.length() > 0) {
+                if (isHeaderLine(line)) {
+                    parseLine(line);
+                } else {
+                    // Done reading the header.
+                    break;
+                }
+            }
+        }
+    }
+
+    public void loadAndMergeMeta(Path metaPath) {
+        if (metaPath == null || !Files.exists(metaPath)) {
+            return;
+        }
+
+        try(var br = Files.newBufferedReader(metaPath)) {
+            parseMetaReader(br);
+        } catch (IOException ex) {
+            throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath.toString(), ex);
+        }
+    }
+
     public void loadAndMergeMeta(FileReader fileReader, String metaPath) {
         if (metaPath == null || !fileReader.exists(metaPath)) {
             return;
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.length() > 0) {
-                    if (isHeaderLine(line)) {
-                        parseLine(line);
-                    } else {
-                        // Done reading the header.
-                        break;
-                    }
-                }
-            }
+        try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
+            parseMetaReader(br);
         } catch (IOException ex) {
             throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath, ex);
         }
