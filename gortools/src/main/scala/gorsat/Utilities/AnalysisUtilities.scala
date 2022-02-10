@@ -90,7 +90,8 @@ object AnalysisUtilities {
   }
 
   def writeList(fileReader: DriverBackedFileReader, fileName: String, header: String, m: List[String]) : Unit = {
-    val parent = fileName.substring(0,fileName.lastIndexOf('/'))
+    val idx = fileName.lastIndexOf('/')
+    val parent = if (idx > 0) fileName.substring(0,idx) else null
     try {
       if (parent != null && !fileReader.exists(parent)) fileReader.createDirectories(parent)
     } finally {
