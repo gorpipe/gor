@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -271,13 +272,12 @@ public class UTestGorDictionaryFolder {
         try {
             TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c -d " + folderpath +
                     "; gor [a] | group chrom -count");
-            String thedict = Files.readString(folderpath.resolve("thedict.gord"));
+            String thedict = Files.readString(folderpath.resolve("thedict.gord")).trim();
+            var dictsplit = thedict.split("\n");
+            var last = dictsplit[dictsplit.length-1];
             Assert.assertEquals("Wrong results in dictionary",
-                    "## SERIAL = 0\n" +
-                            "## COLUMNS = Chrom,gene_start,gene_end,Gene_Symbol,c\n" +
-                            "#filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
-                            "dd02aed74a26d4989a91f3619ac8dc20.gorz\t1\tchrM\t576\tchrM\t15955\tJ,M\n",
-                    thedict);
+                    "1\tchrM\t576\tchrM\t15955\tJ,M",
+                    last.substring(last.indexOf('\t')+1));
         } finally {
             deleteFolder(folderpath);
         }
