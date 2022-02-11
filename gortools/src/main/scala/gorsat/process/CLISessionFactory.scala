@@ -49,7 +49,7 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
 
     var projectRootStr = ".";
     var cacheDirStr = "."
-    if (PathUtils.isLocal(pipeOptions.gorRoot)) {
+    if (pipeOptions.gorRoot==null||PathUtils.isLocal(pipeOptions.gorRoot)) {
       val projectRoot = Paths.get(if (pipeOptions.gorRoot != null) pipeOptions.gorRoot else ".")
       var cacheDir = Paths.get(if (pipeOptions.cacheDir != null) pipeOptions.cacheDir else ProjectContext.DEFAULT_CACHE_DIR)
       if (!cacheDir.isAbsolute) cacheDir = projectRoot.resolve(cacheDir)
