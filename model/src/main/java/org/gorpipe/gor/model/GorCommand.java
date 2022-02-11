@@ -89,7 +89,7 @@ public class GorCommand {
         boolean inQuotas = false;
         for (int i = 0; i < cmd.length() - 1; i++) {
             char ch1 = cmd.charAt(i);
-            inQuotas = nestedCount == 0 && (inQuotas != (ch1 == '"' || ch1 == "'".charAt(0)));
+            inQuotas = inQuotas != (ch1 == '"' || ch1 == "'".charAt(0));
             if (!inQuotas) {
                 char ch2 = cmd.charAt(i + 1);
                 if (ch1 == '/' && ch2 == '*') {
