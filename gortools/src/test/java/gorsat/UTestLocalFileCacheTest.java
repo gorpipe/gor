@@ -45,7 +45,7 @@ public class UTestLocalFileCacheTest {
     public TemporaryFolder workDir = new TemporaryFolder();
 
     @Before
-    void startup() {
+    public void startup() {
         fileReader = new DriverBackedFileReader("");
     }
 
