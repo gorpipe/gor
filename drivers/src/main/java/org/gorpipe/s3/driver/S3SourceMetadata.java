@@ -35,6 +35,11 @@ public class S3SourceMetadata extends StreamSourceMetadata {
 
     private final ObjectMetadata omd;
 
+    public S3SourceMetadata(S3Source source, ObjectMetadata md, Long linkLastModified, String subset) {
+        super(source, source.getName(), md.getLastModified().getTime(), linkLastModified, md.getInstanceLength(), null, false);
+        this.omd = md;
+    }
+
     public S3SourceMetadata(S3Source source, ObjectMetadata md, String subset) {
         super(source, source.getName(), md.getLastModified().getTime(), md.getInstanceLength(), null, false);
         this.omd = md;

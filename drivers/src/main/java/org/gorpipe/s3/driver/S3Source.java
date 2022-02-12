@@ -122,7 +122,7 @@ public class S3Source implements StreamSource {
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
             ObjectMetadata md = client.getObjectMetadata(bucket, key);
-            meta = new S3SourceMetadata(this, md, sourceReference.getChrSubset());
+            meta = new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
         }
         return meta;
     }

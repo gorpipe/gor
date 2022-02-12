@@ -50,6 +50,7 @@ public class SourceReference {
     public final String chrSubset;
     private final String linkSubPath;
     private boolean isCreatedFromLink = false;
+    private Long linkLastModified = null;
     private SourceReference originalSourceReference;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
@@ -158,6 +159,14 @@ public class SourceReference {
 
     public void setCreatedFromLink(boolean createdFromLink) {
         isCreatedFromLink = createdFromLink;
+    }
+
+    public Long getLinkLastModified() {
+        return linkLastModified;
+    }
+
+    public void setLinkLastModified(Long linkLastModified) {
+        this.linkLastModified = linkLastModified;
     }
 
     public SourceReference getOriginalSourceReference() {
