@@ -56,10 +56,14 @@ public class StreamSourceSeekableFile extends SeekableFile {
         return position;
     }
 
+    public void setPosition(long pos) {
+        this.position = pos;
+    }
+
     @Override
     public void seek(long pos) throws IOException {
         log.trace("Seek: {}", pos);
-        this.position = pos;
+        setPosition(pos);
     }
 
     @Override

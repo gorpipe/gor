@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.binsearch;
 
+import org.gorpipe.gor.model.Row;
+
 /**
  * Key Generator Interface
  */
@@ -36,6 +38,14 @@ public interface IKey extends Comparable<IKey> {
      * @return a new key parsed from the buffer
      */
     IKey createKey(byte[] buffer, int bufLength, int beginOfLine);
+
+    /**
+     * creates a comparable key from a buffer
+     *
+     * @param row      Input buffer
+     * @return a new key parsed from the buffer
+     */
+    IKey createKey(Row row);
 
     /**
      * @return The key as a byte array

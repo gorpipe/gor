@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.binsearch;
 
+import org.gorpipe.gor.model.Row;
+
 /**
  * Row contains the row as a byte array and a key of long type
  */
@@ -50,6 +52,15 @@ public class LexRow implements IRow<LexRow> {
         key = new StringIntKey(chrCol, bpCol, line, bufLength, beginOfLine, StringIntKey.cmpLexico);
         this.source = source;
         this.line = line;
+    }
+
+    /**
+     * @param source
+     */
+    public LexRow(Row row, IRowSource<LexRow> source) {
+        key = new StringIntKey(row.chr, row.pos);
+        this.source = source;
+        this.line = row.toString().getBytes();
     }
 
     /**
@@ -112,6 +123,11 @@ public class LexRow implements IRow<LexRow> {
     @Override
     public LexRow createKey(byte[] buffer, int bufLength, int beginOfLine) {
         return new LexRow(key.chrCol, key.posCol, buffer, beginOfLine, bufLength, null);
+    }
+
+    @Override
+    public IKey createKey(Row buffer) {
+        return new LexRow(buffer,null);
     }
 
     public <T extends IKey> float deriveCoefficient(T left, T right) {

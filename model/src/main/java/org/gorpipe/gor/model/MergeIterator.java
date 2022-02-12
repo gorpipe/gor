@@ -74,6 +74,7 @@ public class MergeIterator extends GenomicIteratorBase {
 
     public MergeIterator(List<GenomicIterator> sources, boolean insertSource, String sourceColName, GorMonitor gm) {
         this.sources = sources;
+        this.sources.forEach(gi -> gi.setInsertSource(insertSource));
         this.insertSource = insertSource;
         gorMonitor = gm;
 

@@ -22,8 +22,12 @@
 
 package org.gorpipe.gor.binsearch;
 
+import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.model.RowBase;
+
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -109,6 +113,24 @@ class BufferIterator {
         os.write(this.buffer, this.bufferIdx, len);
         this.bufferIdx = beginOfNextLine;
         this.hasNext = this.bufferIdx < this.upperBound;
+    }
+
+    ByteBuffer writeNextToBuffer(ByteBuffer os) {
+        final int beginOfNextLine = getEndOfNextLine(this.buffer, this.bufferIdx, this.upperBound);
+        final int len = this.buffer[beginOfNextLine - 2] == '\r' ? beginOfNextLine - this.bufferIdx - 2 : beginOfNextLine - this.bufferIdx - 1;
+        if (os.capacity()-os.position() < len) {
+            var size = Math.max(2*os.capacity(),os.position()+len);
+            var nos = ByteBuffer.allocate(size);
+            os.limit(os.position());
+            os.position(0);
+            nos.put(os);
+            os.clear();
+            os = nos;
+        }
+        os.put(this.buffer, this.bufferIdx, len);
+        this.bufferIdx = beginOfNextLine;
+        this.hasNext = this.bufferIdx < this.upperBound;
+        return os;
     }
 
     StringIntKey getNextKey() {

@@ -145,7 +145,7 @@ public class TestFileGenerator {
         bos.write(lastPos.getBytes());
         bos.write('\t');
         bos.write(0);
-        deflater.setInput(baw.getBuffer(), 0, baw.size());
+        deflater.setInput(baw.array(), 0, baw.size());
         deflater.finish();
         byte[] compressed = new byte[32 * 1024];
         int len = 0;

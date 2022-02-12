@@ -39,11 +39,15 @@ public class ByteArrayWrapper extends ByteArrayOutputStream {
         this.count = 0;
     }
 
-    public byte[] getBuffer() {
+    public byte[] array() {
         return this.buf;
     }
 
-    public void setPos(int n) {
+    public void position(int n) {
         this.count = n;
+    }
+
+    public int position() {
+        return count;
     }
 }

@@ -1,6 +1,7 @@
 package gorsat;
 
 import gorsat.Commands.Analysis;
+import org.gorpipe.gor.binsearch.RowBuffer;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
 

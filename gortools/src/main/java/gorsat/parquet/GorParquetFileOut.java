@@ -1,7 +1,7 @@
 package gorsat.parquet;
 
 import gorsat.Commands.Output;
-import gorsat.RowBuffer;
+import org.gorpipe.gor.binsearch.RowBuffer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.ParquetFileWriter;

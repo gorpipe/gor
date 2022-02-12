@@ -36,6 +36,8 @@ public interface GenomicIterator extends Iterator<Row>, RowSourceStats, AutoClos
      */
     void init(GorSession session);
 
+    default void setInsertSource(boolean insertSource) {}
+
     void setContext(GorContext context);
 
     /**
