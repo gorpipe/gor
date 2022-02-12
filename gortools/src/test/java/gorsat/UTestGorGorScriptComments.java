@@ -82,6 +82,11 @@ public class UTestGorGorScriptComments {
         Assert.assertEquals("Wrong number of lines read from gor.script execution", count, 10);
     }
 
+    @Test
+    public void testCommentInQuotes() {
+        TestUtils.runGorPipeCount("norrows 1 /* 'hello/*' */");
+    }
+
 
     @Test
     public void testAdjoiningCommentBlocks() {
