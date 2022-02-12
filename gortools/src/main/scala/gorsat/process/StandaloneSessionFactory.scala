@@ -24,13 +24,13 @@ package gorsat.process
 
 import java.nio.file.Paths
 import java.util.UUID
-
 import gorsat.QueryHandlers.GeneralQueryHandler
 import gorsat.Utilities.AnalysisUtilities
 import org.gorpipe.gor._
 import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor.model.DriverBackedFileReader
 import org.gorpipe.gor.session.{GorSession, ProjectContext, SystemContext}
+import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.util.standalone.GorStandalone
 
 /**
@@ -48,6 +48,7 @@ class StandaloneSessionFactory(aliasFile:String, configFile:String, projectName:
     val requestId = UUID.randomUUID().toString
     val session = new GorSession(requestId)
 
+    val fileReader = new DriverBackedFileReader(null, GorStandalone.getStandaloneRoot, null);
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
         .setCacheDir(CACHE_DIR_NAME)
@@ -55,8 +56,8 @@ class StandaloneSessionFactory(aliasFile:String, configFile:String, projectName:
         .setProjectName(projectName)
         .setAliasFile(aliasFile)
         .setRoot(GorStandalone.getStandaloneRoot)
-        .setFileReader(new DriverBackedFileReader(null, GorStandalone.getStandaloneRoot, null))
-        .setFileCache(new LocalFileCacheClient(Paths.get(GorStandalone.getStandaloneRoot, CACHE_DIR_NAME),
+        .setFileReader(fileReader)
+        .setFileCache(new LocalFileCacheClient(fileReader, PathUtils.resolve(GorStandalone.getStandaloneRoot, CACHE_DIR_NAME),
           GorStandalone.getResultCacheUseSubfolders,
           GorStandalone.getResultCacheSubfolderSize))
         .setQueryHandler(new GeneralQueryHandler(session.getGorContext, false))

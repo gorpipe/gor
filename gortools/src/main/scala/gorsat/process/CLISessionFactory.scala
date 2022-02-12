@@ -23,14 +23,13 @@
 package gorsat.process
 
 import java.nio.file.Paths
-
 import gorsat.QueryHandlers.GeneralQueryHandler
 import gorsat.Utilities.AnalysisUtilities
 import org.gorpipe.gor._
 import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor.model._
 import org.gorpipe.gor.session.{EventLogger, GorSession, ProjectContext, SystemContext}
-import org.gorpipe.gor.util.StringUtil
+import org.gorpipe.gor.table.util.PathUtils
 
 /**
   * Factory class to create session which relates to running gor in a command line. The session is created based on
@@ -48,20 +47,30 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
 
     val session = new GorSession(requestId)
 
-    val projectRoot = Paths.get(if (pipeOptions.gorRoot != null) pipeOptions.gorRoot else ".")
-    var cacheDir = Paths.get(if (pipeOptions.cacheDir != null) pipeOptions.cacheDir else ProjectContext.DEFAULT_CACHE_DIR)
-    if(!cacheDir.isAbsolute) cacheDir = projectRoot.resolve(cacheDir)
+    var projectRootStr = ".";
+    var cacheDirStr = "."
+    if (pipeOptions.gorRoot==null||PathUtils.isLocal(pipeOptions.gorRoot)) {
+      val projectRoot = Paths.get(if (pipeOptions.gorRoot != null) pipeOptions.gorRoot else ".")
+      var cacheDir = Paths.get(if (pipeOptions.cacheDir != null) pipeOptions.cacheDir else ProjectContext.DEFAULT_CACHE_DIR)
+      if (!cacheDir.isAbsolute) cacheDir = projectRoot.resolve(cacheDir)
+      projectRootStr = projectRoot.toString
+      cacheDirStr = cacheDir.toString
+    } else {
+      projectRootStr = pipeOptions.gorRoot
+      cacheDirStr = pipeOptions.cacheDir
+    }
 
+    val fileReader = createFileReader(projectRootStr)
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
-      .setCacheDir(cacheDir.toString)
+      .setCacheDir(cacheDirStr)
       .setConfigFile(pipeOptions.configFile)
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
-      .setRoot(projectRoot.toString)
-      .setFileReader(createFileReader(projectRoot.toString))
-      .setFileCache(new LocalFileCacheClient(cacheDir, useSubFolder, subFolderSize))
+      .setRoot(projectRootStr)
+      .setFileReader(fileReader)
+      .setFileCache(new LocalFileCacheClient(fileReader, cacheDirStr, useSubFolder, subFolderSize))
       .setQueryHandler(createQueryHandler(pipeOptions.queryHandler, session))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
       .build()
@@ -87,7 +96,7 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
     session
   }
 
-  private def createFileReader(gorRoot: String): FileReader = {
+  private def createFileReader(gorRoot: String): DriverBackedFileReader = {
     new DriverBackedFileReader(securityContext, gorRoot, null)
   }
 

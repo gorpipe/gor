@@ -22,14 +22,14 @@
 
 package org.gorpipe.gor.clients;
 
-import java.nio.file.Path;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 
 /**
  * Stub implememntation of FileCache, that doesn't do any caching - for running with caching disabled.
  */
 public class NoCacheFileCacheClient extends LocalFileCacheClient {
-    public NoCacheFileCacheClient(Path rootPath) {
-        super(rootPath);
+    public NoCacheFileCacheClient(DriverBackedFileReader fileReader, String rootPath) {
+        super(fileReader, rootPath);
     }
 
     @Override

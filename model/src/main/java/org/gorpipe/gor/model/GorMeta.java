@@ -2,6 +2,7 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.gor.table.util.GenomicRange;
 
+import java.nio.file.Path;
 import java.util.*;
 
 public class GorMeta extends BaseMeta {
@@ -13,6 +14,12 @@ public class GorMeta extends BaseMeta {
     public static GorMeta createAndLoad(FileReader fileReader, String metaPath) {
         GorMeta meta = new GorMeta();
         meta.loadAndMergeMeta(fileReader, metaPath);
+        return meta;
+    }
+
+    public static GorMeta createAndLoad(Path metaPath) {
+        GorMeta meta = new GorMeta();
+        meta.loadAndMergeMeta(metaPath);
         return meta;
     }
 

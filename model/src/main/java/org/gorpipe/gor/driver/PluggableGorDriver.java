@@ -168,9 +168,17 @@ public class PluggableGorDriver implements GorDriver {
 
     @Override
     public DataSource resolveDataSource(SourceReference sourceReference) throws IOException {
-        SourceProvider provider = providerFromFileName(sourceReference.getUrl());
-        if (provider != null) {
-            return provider.resolveDataSource(sourceReference);
+        if (sourceReference.commonRoot==null||PathUtils.isLocal(sourceReference.commonRoot)) {
+            SourceProvider provider = providerFromFileName(sourceReference.getUrl());
+            if (provider != null) {
+                return provider.resolveDataSource(sourceReference);
+            }
+        } else {
+            var fn = PathUtils.resolve(sourceReference.commonRoot,sourceReference.getUrl());
+            SourceProvider provider = providerFromFileName(fn);
+            if (provider != null) {
+                return provider.resolveDataSource(sourceReference);
+            }
         }
         return null;
     }
