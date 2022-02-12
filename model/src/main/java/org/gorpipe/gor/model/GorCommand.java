@@ -86,28 +86,32 @@ public class GorCommand {
         int startOfComment = -1;
         int nestedCount = 0;
         int charsRemoved = 0;
+        boolean inQuotas = false;
         for (int i = 0; i < cmd.length() - 1; i++) {
             char ch1 = cmd.charAt(i);
-            char ch2 = cmd.charAt(i + 1);
-            if (ch1 == '/' && ch2 == '*') {
-                if (startOfComment >= 0) {
-                    nestedCount++;
-                } else {
-                    if(cmd.length() <= i+2 || cmd.charAt(i + 2) != '+') startOfComment = i;
-                }
-            } else if (ch1 == '*' && ch2 == '/') {
-                if (nestedCount > 0) {
-                    nestedCount--;
-                } else if (startOfComment >= 0) {
-                    commentsFound = true;
-                    int end = i + 2;
-                    int delFrom = startOfComment - charsRemoved;
-                    int delTo = end - charsRemoved;
-                    rc.delete(delFrom, delTo);
-                    CmdPos cp = new CmdPos(delFrom, delTo - delFrom);
-                    positions.add(cp);
-                    charsRemoved = charsRemoved + end - startOfComment;
-                    startOfComment = -1;
+            inQuotas = inQuotas != (ch1 == '"' || ch1 == "'".charAt(0));
+            if (!inQuotas) {
+                char ch2 = cmd.charAt(i + 1);
+                if (ch1 == '/' && ch2 == '*') {
+                    if (startOfComment >= 0) {
+                        nestedCount++;
+                    } else {
+                        if (cmd.length() <= i + 2 || cmd.charAt(i + 2) != '+') startOfComment = i;
+                    }
+                } else if (ch1 == '*' && ch2 == '/') {
+                    if (nestedCount > 0) {
+                        nestedCount--;
+                    } else if (startOfComment >= 0) {
+                        commentsFound = true;
+                        int end = i + 2;
+                        int delFrom = startOfComment - charsRemoved;
+                        int delTo = end - charsRemoved;
+                        rc.delete(delFrom, delTo);
+                        CmdPos cp = new CmdPos(delFrom, delTo - delFrom);
+                        positions.add(cp);
+                        charsRemoved = charsRemoved + end - startOfComment;
+                        startOfComment = -1;
+                    }
                 }
             }
         }
