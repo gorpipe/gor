@@ -174,7 +174,7 @@ public class PluggableGorDriver implements GorDriver {
                 return provider.resolveDataSource(sourceReference);
             }
         } else {
-            var fn = PathUtils.isAbsolutePath(sourceReference.getUrl()) ? sourceReference.getUrl() : PathUtils.resolve(sourceReference.commonRoot,sourceReference.getUrl());
+            var fn = PathUtils.resolve(sourceReference.commonRoot,sourceReference.getUrl());
             SourceProvider provider = providerFromFileName(fn);
             if (provider != null) {
                 return provider.resolveDataSource(sourceReference);

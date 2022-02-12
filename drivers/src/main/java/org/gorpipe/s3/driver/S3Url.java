@@ -55,12 +55,8 @@ public class S3Url {
     }
 
     public static S3Url parse(SourceReference sourceRef) throws MalformedURLException {
-        if (PathUtils.isAbsolutePath(sourceRef.getUrl())) {
-            return parse(sourceRef.getUrl());
-        } else {
-            var uri = PathUtils.resolve(sourceRef.commonRoot,sourceRef.getUrl());
-            return parse(uri);
-        }
+        var uri = PathUtils.resolve(sourceRef.commonRoot,sourceRef.getUrl());
+        return parse(uri);
     }
 
     public static S3Url parse(URI uri) throws MalformedURLException {

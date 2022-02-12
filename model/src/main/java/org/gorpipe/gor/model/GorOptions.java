@@ -816,10 +816,7 @@ public class GorOptions {
                     gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
         }
 
-        var dictpath = fileName;
-        if (!PathUtils.isAbsolutePath(fileName) && commonRoot != null && commonRoot.length() > 0) {
-            dictpath = PathUtils.resolve(commonRoot, dictpath);
-        }
+        var dictpath = PathUtils.resolve(commonRoot, fileName);
         DictionaryTable table = new DictionaryTable(dictpath);
 
         if (sourceColName == null) {

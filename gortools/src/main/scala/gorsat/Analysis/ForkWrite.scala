@@ -301,8 +301,7 @@ case class ForkWrite(forkCol: Int,
           linkFileContent = dataSource.getLinkFileContent
         }
       } else {
-        linkFileContent = if (PathUtils.isAbsolutePath(fileName)) fileName
-        else Paths.get(session.getProjectContext.getProjectRoot).resolve(fileName).toString
+        linkFileContent = PathUtils.resolve(session.getProjectContext.getProjectRoot, fileName)
       }
     }
     (linkFile,linkFileContent)
