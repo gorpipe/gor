@@ -36,8 +36,16 @@ class Write extends CommandInfo("WRITE",
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
-    val useFolder = if (hasOption(args, "-d")) Option.apply(stringValueOfOption(args, "-d")) else Option.empty
-    val fileName = replaceSingleQuotes(iargs.mkString(" "))
+    var fileName = replaceSingleQuotes(iargs.mkString(" "))
+    val useFolder = if (hasOption(args, "-d")) {
+      Option.apply(stringValueOfOption(args, "-d"))
+    } else if(fileName.toLowerCase.endsWith(".gord")) {
+      val fn = fileName
+      fileName = ""
+      Option.apply(fn)
+    } else {
+      Option.empty
+    }
     
     var forkCol = -1
     var remove = false
@@ -90,7 +98,7 @@ class Write extends CommandInfo("WRITE",
         case "TABIX" => idx = GorIndexType.TABIX
       }
 
-      if (idx == GorIndexType.NONE && context.getSession != null) {
+      if (idx == GorIndexType.NONE && context.getSession != null && fileName.nonEmpty) {
         val forkValue = ""
         val dataSource = context.getSession.getProjectContext.getFileReader.resolveUrl(fileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue), true)
         if (dataSource != null) {
