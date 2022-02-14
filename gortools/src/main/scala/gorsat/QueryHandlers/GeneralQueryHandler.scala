@@ -211,33 +211,36 @@ object GeneralQueryHandler {
     val theHeader = theSource.getHeader
 
     val projectContext = context.getSession.getProjectContext
-    val projectRoot = Paths.get(projectContext.getProjectRoot)
+    val fileReader = projectContext.getFileReader.asInstanceOf[DriverBackedFileReader]
+    val projectRoot = projectContext.getProjectRoot
     val temp_cacheFile = if(outfile!=null) AnalysisUtilities.getTempFileName(outfile) else null
     val oldName = if(temp_cacheFile!=null) {
-      var tmpcache = Paths.get(temp_cacheFile)
-      if(!tmpcache.isAbsolute) {
-        tmpcache = projectRoot.resolve(tmpcache)
+      var tmpcache = temp_cacheFile
+      if(!PathUtils.isAbsolutePath(tmpcache)) {
+        tmpcache = PathUtils.resolve(projectRoot,tmpcache)
       }
       tmpcache
     } else null
     try {
       val nor = theSource.isNor
-      var newName: Path = null
+      var newName: String = null
       // TODO: Get a gor config instance somehow into gorpipeSession or gorContext?
       if (useMd5) {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, md5File = true, GorIndexType.NONE)
+          val out = OutFile(temp_cacheFile, fileReader, theHeader, skipHeader = false, columnCompress = false, nor = nor, useMd5, md5File = true, GorIndexType.NONE)
           if(nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
-        val md5File = Paths.get(oldName + ".md5")
-        if (Files.exists(md5File)) {
-          val md5SumLines = Files.readAllLines(md5File)
+        val md5File = oldName + ".md5"
+        if (fileReader.exists(md5File)) {
+          val md5SumLines = fileReader.readAll(md5File)
 
-          if (md5SumLines.size() > 0 && md5SumLines.get(0).nonEmpty) {
+          if (md5SumLines.nonEmpty && md5SumLines(0).nonEmpty) {
             val extension = outfile.slice(outfile.lastIndexOfSlice("."), outfile.length)
-            newName = md5File.getParent.resolve(md5SumLines.get(0) + extension)
+            val idx = md5File.lastIndexOf("/")
+            val md5FileParent = md5File.substring(0,idx)
+            newName = PathUtils.resolve(md5FileParent,md5SumLines(0) + extension)
             try {
               //Files.delete(md5File)
             } catch {
@@ -251,38 +254,43 @@ object GeneralQueryHandler {
         }
 
         if (newName == null) {
-          newName = Paths.get(outfile)
-          if(!newName.isAbsolute) {
-            newName = projectRoot.resolve(newName)
+          newName = outfile
+          if(!PathUtils.isAbsolutePath(newName)) {
+            newName = PathUtils.resolve(projectRoot,newName)
           }
         }
       } else {
         val runner = context.getSession.getSystemContext.getRunnerFactory.create()
         val ps: Processor = if(outfile!=null) {
-          val out = OutFile(temp_cacheFile, projectContext.getFileReader, theHeader, skipHeader = false, nor = nor, md5 = true, command = commandToExecute)
+          val out = OutFile(temp_cacheFile, fileReader, theHeader, skipHeader = false, nor = nor, md5 = true, command = commandToExecute)
           if (nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
         if(outfile!=null) {
-          newName = Paths.get(outfile)
-          if(!newName.isAbsolute) {
-            newName = projectRoot.resolve(newName)
+          newName = outfile
+          if(!PathUtils.isAbsolutePath(newName)) {
+            newName = PathUtils.resolve(projectRoot,newName)
           }
         }
       }
 
-      if(oldName!=null && Files.exists(oldName) && !oldName.equals(newName)) {
-        Files.move(oldName, newName)
-        val oldMetaName = Paths.get(oldName + ".meta")
-        if (Files.exists(oldMetaName)) {
-          Files.move(oldMetaName, oldMetaName.getParent.resolve(newName.getFileName.toString + ".meta"), StandardCopyOption.REPLACE_EXISTING)
+      if(oldName!=null && fileReader.exists(oldName) && !oldName.equals(newName)) {
+        fileReader.move(oldName, newName)
+        val oldMetaName = oldName + ".meta"
+        if (fileReader.exists(oldMetaName)) {
+          val pidx = oldMetaName.lastIndexOf("/")
+          val parent = oldMetaName.substring(0,pidx)
+          val idx = newName.lastIndexOf("/")
+          val name = newName.substring(idx)
+
+          fileReader.move(oldMetaName, parent + name+".meta")
         }
-        newName.toString
+        newName
       } else ""
     } catch {
       case e: Exception =>
         try {
-          Files.delete(oldName)
+          fileReader.delete(oldName)
         } catch {
           case _: Exception => /* do nothing */
         }
