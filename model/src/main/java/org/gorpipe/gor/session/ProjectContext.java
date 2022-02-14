@@ -163,12 +163,11 @@ public class ProjectContext {
     }
 
     public String getProjectRoot() {
-        return getProjectRootPath().toString();
+        return root.split("[ \t]+")[0];
     }
 
     public Path getProjectRootPath() {
-        String projectRoot = this.root.split("[ \t]+")[0];
-        return Paths.get(projectRoot);
+        return Paths.get(getProjectRoot());
     }
 
     /**
