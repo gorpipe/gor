@@ -32,7 +32,6 @@ import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.model.gor.iterators.RefSeqRotatingFactory;
 
-import java.nio.file.Paths;
 import java.util.UUID;
 
 /**
@@ -50,15 +49,16 @@ public class AnalysisTestSessionFactory extends GorSessionFactory {
 
         GorSession session = new GorSession(requestId);
 
-        ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
         String root = "";
         String configFile = "";
+        var fileReader = new DriverBackedFileReader("", root, null);
+        ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
         projectContextBuilder
                 .setRoot(root)
                 .setCacheDir(ProjectContext.DEFAULT_CACHE_DIR)
                 .setConfigFile(configFile)
-                .setFileReader(new DriverBackedFileReader("", root, null))
-                .setFileCache(new LocalFileCacheClient(Paths.get(ProjectContext.DEFAULT_CACHE_DIR)))
+                .setFileReader(fileReader)
+                .setFileCache(new LocalFileCacheClient(fileReader, ProjectContext.DEFAULT_CACHE_DIR))
                 .setQueryHandler(new GeneralQueryHandler(session.getGorContext(), false))
                 .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
                 .setRefSeqFactory(new RefSeqRotatingFactory());

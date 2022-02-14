@@ -61,13 +61,14 @@ public class GenericSessionFactory extends GorSessionFactory {
 
         GorSession session = new GorSession(requestId);
 
+        var fileReader = new DriverBackedFileReader("", this.root, null);
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
         projectContextBuilder
                 .setRoot(this.root)
                 .setCacheDir(this.cacheDir)
                 .setConfigFile(this.configFile)
-                .setFileReader(new DriverBackedFileReader("", this.root, null))
-                .setFileCache(new LocalFileCacheClient(Paths.get(this.cacheDir)))
+                .setFileReader(fileReader)
+                .setFileCache(new LocalFileCacheClient(fileReader, this.cacheDir))
                 .setQueryHandler(new GeneralQueryHandler(session.getGorContext(), false))
                 .setQueryEvaluator(new SessionBasedQueryEvaluator(session));
 

@@ -132,11 +132,7 @@ public class Dictionary {
     private final Map<String, DictionaryLine[]> tagsToListCache;
 
     private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
-        if(PathUtils.isAbsolutePath(path) || commonRoot == null || commonRoot.length() == 0) {
-            return path;
-        }
-        var rootPath = Paths.get(commonRoot);
-        return rootPath.resolve(path).toString();
+        return PathUtils.resolve(commonRoot, path);
     }
 
     public synchronized static Dictionary getDictionary(String path, FileReader fileReader, String uniqueID, String commonRoot, boolean useCache) {

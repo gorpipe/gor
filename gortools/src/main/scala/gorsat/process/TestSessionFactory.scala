@@ -51,6 +51,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     val allowedWriteLocations = Array[String]("test", "user_data")
     val allowedWriteLocationList = JavaConverters.seqAsJavaList(allowedWriteLocations)
 
+    val fileReader = createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList);
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
@@ -59,8 +60,8 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
       .setRoot(pipeOptions.gorRoot)
-      .setFileReader(createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList))
-      .setFileCache(new LocalFileCacheClient(Paths.get(pipeOptions.cacheDir), useSubFolder, subFolderSize))
+      .setFileReader(fileReader)
+      .setFileCache(new LocalFileCacheClient(fileReader, pipeOptions.cacheDir, useSubFolder, subFolderSize))
       .setQueryHandler(new GeneralQueryHandler(session.getGorContext, false))
       .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
       .build()
@@ -83,7 +84,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     session
   }
 
-  def createFileReader(gorRoot: String, securityContext: String = null, server: Boolean = false, writeLocations: util.List[String]): FileReader = {
+  def createFileReader(gorRoot: String, securityContext: String = null, server: Boolean = false, writeLocations: util.List[String]): DriverBackedFileReader = {
     val emptyGorRoot = StringUtil.isEmpty(gorRoot)
     if (!emptyGorRoot || !StringUtil.isEmpty(securityContext)) {
       if(server) {
@@ -92,7 +93,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
         new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
       }
     } else {
-      ProjectContext.DEFAULT_READER
+      new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
     }
   }
 }

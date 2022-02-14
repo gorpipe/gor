@@ -67,18 +67,19 @@ public class GorShellSessionFactory extends GorSessionFactory {
 
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
 
+        var fileReader = new DriverBackedFileReader("", this.root, null);
         FileCache fileCache;
         if(fileCacheEnabled) {
-            fileCache = new LocalFileCacheClient(Paths.get(this.cacheDir));
+            fileCache = new LocalFileCacheClient(fileReader, this.cacheDir);
         } else {
-            fileCache = new NoCacheFileCacheClient(Paths.get(this.cacheDir));
+            fileCache = new NoCacheFileCacheClient(fileReader, this.cacheDir);
         }
 
         projectContextBuilder
                 .setRoot(this.root)
                 .setCacheDir(this.cacheDir)
                 .setConfigFile(this.configFile)
-                .setFileReader(new DriverBackedFileReader("", this.root, null))
+                .setFileReader(fileReader)
                 .setFileCache(fileCache)
                 .setQueryHandler(new GeneralQueryHandler(session.getGorContext(), false))
                 .setQueryEvaluator(new SessionBasedQueryEvaluator(session));
