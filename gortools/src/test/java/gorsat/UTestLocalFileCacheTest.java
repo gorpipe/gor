@@ -24,7 +24,9 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.clients.LocalFileCacheClient;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -37,14 +39,19 @@ import java.util.Arrays;
 import java.util.List;
 
 public class UTestLocalFileCacheTest {
+    DriverBackedFileReader fileReader;
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
 
+    @Before
+    public void startup() {
+        fileReader = new DriverBackedFileReader("");
+    }
 
     @Test
     public void testEmptyLookupShouldBeNull() {
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath());
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
         String file = client.lookupFile("test123");
         Assert.assertNull(file);
     }
@@ -53,7 +60,7 @@ public class UTestLocalFileCacheTest {
     public void testTempFileLocation() {
         String fingerPrint = "test123";
         String extension = ".gor";
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath());
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
         String filePath = client.tempLocation(fingerPrint, extension);
         Assert.assertTrue(filePath.contains(fingerPrint));
     }
@@ -62,7 +69,7 @@ public class UTestLocalFileCacheTest {
     public void testStoreAndLookup() throws IOException {
         String fingerPrint = "test123";
         String extension = ".gor";
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath());
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
         String filePath = client.tempLocation(fingerPrint, extension);
 
         FileUtils.writeStringToFile(new File(filePath), "This is test", Charset.defaultCharset());
@@ -77,7 +84,7 @@ public class UTestLocalFileCacheTest {
     public void testStoreAndLookupNotInCache() throws IOException {
         String fingerPrint = "test123";
         String extension = ".gor";
-        LocalFileCacheClient client1 = new LocalFileCacheClient(workDir.getRoot().toPath());
+        LocalFileCacheClient client1 = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
 
         String filePath = client1.tempLocation(fingerPrint, extension);
         Assert.assertTrue(filePath.contains(fingerPrint));
@@ -86,14 +93,14 @@ public class UTestLocalFileCacheTest {
         String storedFile = client1.store(Paths.get(filePath), fingerPrint, extension, 0);
         Assert.assertTrue(storedFile.contains(fingerPrint));
 
-        LocalFileCacheClient client2 = new LocalFileCacheClient(workDir.getRoot().toPath());
+        LocalFileCacheClient client2 = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
         String lookedupFile = client2.lookupFile(fingerPrint);
         Assert.assertTrue(lookedupFile.contains(fingerPrint));
     }
 
     @Test
     public void testStoreInSubfoldersSameFingerPrint() throws IOException {
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath(), true, 3);
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString(), true, 3);
         client.store(workDir.newFile("fingerprint1.gor").toPath(),"fingerprint1", ".gor", 0);
         client.store(workDir.newFile("fingerprint2.gor").toPath(),"fingerprint2", ".gor", 0);
         client.store(workDir.newFile("fingerprint3.gor").toPath(),"fingerprint3", ".gor", 0);
@@ -118,7 +125,7 @@ public class UTestLocalFileCacheTest {
 
     @Test
     public void testStoreInSubfoldersDifferentFingerPrint() throws IOException {
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath(), true, 5);
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString(), true, 5);
         client.store(workDir.newFile("test1.gor").toPath(),"fin01gerprint1", ".gor", 0);
         client.store(workDir.newFile("test2.gor").toPath(),"fin02gerprint2", ".gor", 0);
         client.store(workDir.newFile("test3.gor").toPath(),"fin03gerprint3", ".gor", 0);
@@ -145,7 +152,7 @@ public class UTestLocalFileCacheTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testStoreInSubfoldersWithTooShortFingerprint() throws IOException {
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath(), true, 5);
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString(), true, 5);
         client.store(workDir.newFile("test1.gor").toPath(),"fin01gerprint1", ".gor", 0);
         client.store(workDir.newFile("test2.gor").toPath(),"fi01", ".gor", 0);
     }
@@ -154,7 +161,7 @@ public class UTestLocalFileCacheTest {
     public void testStoreSiblingAndLookup() throws IOException {
         String fingerPrint = "test123";
         String extension = ".gor";
-        LocalFileCacheClient client = new LocalFileCacheClient(workDir.getRoot().toPath());
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
         String file = client.lookupFile(fingerPrint);
         Assert.assertNull(file);
 

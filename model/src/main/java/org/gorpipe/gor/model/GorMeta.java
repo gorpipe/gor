@@ -11,6 +11,12 @@ public class GorMeta extends BaseMeta {
     public static final String HEADER_RANGE_KEY = "RANGE";
     public static final String HEADER_CARDCOL_KEY = "CARDCOL";
 
+    public static GorMeta createAndLoad(FileReader fileReader, String metaPath) {
+        GorMeta meta = new GorMeta();
+        meta.loadAndMergeMeta(fileReader, metaPath);
+        return meta;
+    }
+
     public static GorMeta createAndLoad(Path metaPath) {
         GorMeta meta = new GorMeta();
         meta.loadAndMergeMeta(metaPath);
