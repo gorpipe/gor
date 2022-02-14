@@ -190,6 +190,16 @@ public class PathUtils {
         return uri;
     }
 
+    public static String getParent(String path) {
+        var idx = path.lastIndexOf("/");
+        return path.substring(0,idx);
+    }
+
+    public static String getFileName(String path) {
+        var idx = path.lastIndexOf("/");
+        return path.substring(idx+1);
+    }
+
     public static Path getParentPath(Path path) {
         return path.getParent() != null ? path.getParent() : path.toAbsolutePath().getParent();
     }
