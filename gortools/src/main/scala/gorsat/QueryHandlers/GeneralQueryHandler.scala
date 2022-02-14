@@ -238,8 +238,7 @@ object GeneralQueryHandler {
 
           if (md5SumLines.nonEmpty && md5SumLines(0).nonEmpty) {
             val extension = outfile.slice(outfile.lastIndexOfSlice("."), outfile.length)
-            val idx = md5File.lastIndexOf("/")
-            val md5FileParent = md5File.substring(0,idx)
+            val md5FileParent = PathUtils.getParent(md5File)
             newName = PathUtils.resolve(md5FileParent,md5SumLines(0) + extension)
             try {
               //Files.delete(md5File)
@@ -278,12 +277,10 @@ object GeneralQueryHandler {
         fileReader.move(oldName, newName)
         val oldMetaName = oldName + ".meta"
         if (fileReader.exists(oldMetaName)) {
-          val pidx = oldMetaName.lastIndexOf("/")
-          val parent = oldMetaName.substring(0,pidx)
-          val idx = newName.lastIndexOf("/")
-          val name = newName.substring(idx)
+          val parent = PathUtils.getParent(oldMetaName)
+          val name = PathUtils.getFileName(newName)
 
-          fileReader.move(oldMetaName, parent + name+".meta")
+          fileReader.move(oldMetaName, parent + "/" + name+".meta")
         }
         newName
       } else ""
