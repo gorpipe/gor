@@ -36,8 +36,9 @@ import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
-import org.gorpipe.gor.model.{FileReader, GorOptions, Row}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorOptions, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.table.util.PathUtils
 import org.slf4j.LoggerFactory
 
 import java.io.BufferedWriter
@@ -175,17 +176,19 @@ object AnalysisUtilities {
   }
 
   def theCacheDirectory(session: GorSession): String = {
-    val gorRoot = session.getProjectContext.getRealProjectRootPath
-    var cacheDir = Paths.get(if (session.getProjectContext.getCacheDir == null) "gortemp" else session.getProjectContext.getCacheDir)
-    cacheDir = if (cacheDir.isAbsolute) cacheDir else gorRoot.resolve(cacheDir)
-    if (!Files.exists(cacheDir)) {
+    val projectContext = session.getProjectContext
+    val fileReader = projectContext.getFileReader.asInstanceOf[DriverBackedFileReader]
+    val gorRoot = projectContext.getProjectRoot
+    var cacheDir = if (session.getProjectContext.getCacheDir == null) "gortemp" else session.getProjectContext.getCacheDir
+    cacheDir = PathUtils.resolve(gorRoot,cacheDir)
+    if (!fileReader.exists(cacheDir)) {
       if (session.getProjectContext.getCacheDir == null) {
-        cacheDir = Paths.get(System.getProperty("java.io.tmpdir"))
+        cacheDir = System.getProperty("java.io.tmpdir")
       } else {
         throw new GorSystemException("Cache directory given by -cacheDir ('" + cacheDir + "') does not exist", null)
       }
     }
-    cacheDir.toString
+    cacheDir
   }
 
   def getTempFileName(outfile: String): String = {

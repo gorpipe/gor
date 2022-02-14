@@ -24,12 +24,11 @@ package org.gorpipe.gor.reference;
 
 import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -119,13 +118,13 @@ public class ReferenceBuild {
     private static String loadPath(String key, GorSession session, Map<String, String> configProperties, String message) {
 
         if (configProperties.containsKey(key)) {
-            Path configPath = Paths.get(configProperties.get(key));
+            var configPathString = configProperties.get(key);
 
-            if (!session.getSystemContext().getServer() && !configPath.isAbsolute()) {
-                configPath = Paths.get(session.getProjectContext().getRealProjectRoot(), configPath.toString());
+            if (!session.getSystemContext().getServer() && !PathUtils.isAbsolutePath(configPathString)) {
+                configPathString = PathUtils.resolve(session.getProjectContext().getProjectRoot(), configPathString);
             }
 
-            return configPath.toString();
+            return configPathString;
         } else {
             log.warn(message);
             return "";
