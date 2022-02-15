@@ -219,7 +219,9 @@ public class PluggableGorDriver implements GorDriver {
     private DataSource handleLinks(DataSource source) throws IOException {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
-                DataSource fromLinkSource = getDataSource(getSourceRef(source, readLink(source), null));
+                var sourceRef = getSourceRef(source, readLink(source), null);
+                sourceRef.setLinkLastModified(source.getSourceMetadata().getLastModified());
+                DataSource fromLinkSource = getDataSource(sourceRef);
                 fromLinkSource.getSourceReference().setCreatedFromLink(true);
                 return fromLinkSource;
             }
