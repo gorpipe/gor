@@ -132,6 +132,11 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public String createDirectoryIfNotExists(FileAttribute<?>... attrs) throws IOException {
+        return retry.tryOp(() -> super.createDirectoryIfNotExists(attrs), requestRetries);
+    }
+
+    @Override
     public String createDirectories(FileAttribute<?>... attrs) throws IOException {
         return retry.tryOp(() -> super.createDirectories(attrs), requestRetries);
     }

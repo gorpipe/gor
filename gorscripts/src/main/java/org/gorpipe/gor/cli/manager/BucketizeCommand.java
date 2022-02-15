@@ -26,6 +26,7 @@ import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import picocli.CommandLine;
 
+import java.net.URI;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -54,6 +55,6 @@ public class BucketizeCommand extends CommandBucketizeOptions implements Runnabl
         TableManager tm = TableManager.newBuilder().minBucketSize(this.minBucketSize).bucketSize(this.bucketSize)
                 .useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout))
                 .build();
-        tm.bucketize(dictionaryFile.toPath(), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().map(b -> Paths.get(b)).collect(Collectors.toList()));
+        tm.bucketize(dictionaryFile.toPath(), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().collect(Collectors.toList()));
     }
 }

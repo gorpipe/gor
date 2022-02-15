@@ -146,10 +146,6 @@ public class PluggableGorDriver implements GorDriver {
         log.debug("Get data source for source reference {}", sourceReference);
         try {
             DataSource source = resolveDataSource(sourceReference);
-            if (source == null) {
-                log.debug("No source found for {}", sourceReference);
-                return null;
-            }
             log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
             DataSource wrapped = sourceReference.writeSource ? source : wrap(handleLinks(source));
             log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
@@ -168,19 +164,12 @@ public class PluggableGorDriver implements GorDriver {
 
     @Override
     public DataSource resolveDataSource(SourceReference sourceReference) throws IOException {
-        if (sourceReference.commonRoot==null||PathUtils.isLocal(sourceReference.commonRoot)) {
-            SourceProvider provider = providerFromFileName(sourceReference.getUrl());
-            if (provider != null) {
-                return provider.resolveDataSource(sourceReference);
-            }
-        } else {
-            var fileName = PathUtils.resolve(sourceReference.commonRoot,sourceReference.getUrl());
-            SourceProvider provider = providerFromFileName(fileName);
-            if (provider != null) {
-                return provider.resolveDataSource(sourceReference);
-            }
-        }
-        return null;
+        var providerFileName = sourceReference.commonRoot != null && !PathUtils.isLocal(sourceReference.commonRoot)
+                ? PathUtils.resolve(sourceReference.commonRoot,sourceReference.getUrl())
+                : sourceReference.getUrl();
+        SourceProvider provider = providerFromFileName(providerFileName);
+
+        return provider.resolveDataSource(sourceReference);
     }
 
     /**
@@ -201,10 +190,10 @@ public class PluggableGorDriver implements GorDriver {
 
     private SourceProvider providerFromFileName(String file) {
         SourceType type = typeFromFilename(file);
-        if (type != null) {
-            return sourceTypeToSourceProvider.get(type);
+        if (type == null) {
+            throw new GorResourceException(String.format("No driver found for file %s", file), file);
         }
-        return null;
+        return sourceTypeToSourceProvider.get(type);
     }
 
     @Override

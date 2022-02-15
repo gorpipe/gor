@@ -34,6 +34,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
@@ -98,7 +99,7 @@ public class DriverBackedFileReader extends FileReader {
 
     private static String getResolvedUrl(DataSource ds) throws IOException {
         String cannonicalName = ds.getSourceMetadata().getCanonicalName();
-        return cannonicalName.startsWith("file://") ? cannonicalName.substring(7) : cannonicalName;
+        return PathUtils.fixFileSchema(cannonicalName);
     }
 
     @Override
@@ -119,6 +120,11 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
         return resolveUrl(dir).createDirectory(attrs);
+    }
+
+    @Override
+    public String createDirectoryIfNotExists(String dir, FileAttribute<?>... attrs) throws IOException {
+        return resolveUrl(dir).createDirectoryIfNotExists(attrs);
     }
 
     @Override
@@ -287,7 +293,7 @@ public class DriverBackedFileReader extends FileReader {
         if (source.isDirectory()) {
             dictpath = URI.create(dictpath).resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString();
         }
-        return new DictionaryTable.Builder<>(dictpath).securityContext(securityContext).build()
+        return new DictionaryTable.Builder<>(dictpath).fileReader(this).build()
                 .getSignature(true, source.getSourceReference().commonRoot, tags);
     }
 

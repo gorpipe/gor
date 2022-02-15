@@ -699,14 +699,6 @@ public class GorOptions {
         addSourceRef(file, file, session != null && !session.getProjectContext().getFileReader().allowsAbsolutePaths(), projectContext, null, null, -1, null, -1, null, allowBucketAccess, alltags);
     }
 
-    private static String toNominalForm(String file) {
-        file = file.replace('\\', '/');
-        if (file.length() > 1 && file.charAt(0) == '/' && file.charAt(1) != '/') {
-            return '/' + file;
-        }
-        return file;
-    }
-
     private void addSourceRef(String physicalFile, String logicalFile, boolean isAcceptedAbsoluteRef, ProjectContext projectContext, String alias,
                               String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, boolean allowBucketAccess, Set<String> alltags) {
         final String lowerfile = physicalFile.toLowerCase();
@@ -741,15 +733,8 @@ public class GorOptions {
         // Test if input is empty
         if (StringUtil.isEmpty(physicalFile)) return physicalFile;
 
-        final String lowerfile = physicalFile.toLowerCase();
-        final boolean isFilePrefix = lowerfile.startsWith("file://");
-
-        if (isFilePrefix) {
-            physicalFile = physicalFile.substring(7);
-        }
-        physicalFile = toNominalForm(physicalFile);
-
-        return !isAcceptedAbsoluteRef && commonRoot != null && (enforceResourceRelativeToRoot || (!isFilePrefix && !physicalFile.startsWith("//"))) ?
+        physicalFile = PathUtils.fixFileSchema(PathUtils.convertSlashes(physicalFile));
+        return !isAcceptedAbsoluteRef && commonRoot != null && (enforceResourceRelativeToRoot || !PathUtils.isAbsolutePath(physicalFile)) ?
                 concatFolderFile(commonRoot, physicalFile, logicalFile, enforceResourceRelativeToRoot) : physicalFile;
     }
 

@@ -44,6 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -286,7 +287,7 @@ public class TableManagerCLI {
             TableManager tm = TableManager.newBuilder().minBucketSize(this.minBucketSize).bucketSize(this.bucketSize)
                     .useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout))
                     .build();
-            tm.bucketize(Paths.get(genericOpts.table), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().map(b -> Paths.get(b)).collect(Collectors.toList()));
+            tm.bucketize(Paths.get(genericOpts.table), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().collect(Collectors.toList()));
         }
     }
 
@@ -298,7 +299,7 @@ public class TableManagerCLI {
 
         public void run(GenericOptions genericOpts) {
             TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            tm.deleteBuckets(Paths.get(genericOpts.table), argsBuckets.stream().map(b -> Paths.get(b)).toArray(Path[]::new));
+            tm.deleteBuckets(Paths.get(genericOpts.table), argsBuckets.stream().toArray(String[]::new));
         }
     }
 

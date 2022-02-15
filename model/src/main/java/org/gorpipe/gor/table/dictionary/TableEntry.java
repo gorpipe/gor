@@ -69,6 +69,7 @@ public abstract class TableEntry {
         this.contentRelative = entry.contentRelative;
         this.alias = entry.alias;
         this.tags = entry.getTags();
+        this.filterTags = entry.getFilterTags();
         this.range = entry.getRange();
         this.key = entry.getKey();
         this.indexOrderKey = entry.indexOrderKey;
@@ -136,7 +137,7 @@ public abstract class TableEntry {
     }
 
     public String getContentReal() {
-        return resolve(getRootUri(), getContentRelative());
+        return resolve(getRootUri(), getContentRelative()).toString();
     }
 
     public String getContent() {
@@ -160,7 +161,6 @@ public abstract class TableEntry {
      */
     public String[] getFilterTags() {
         if (filterTags == null) {
-            String[] tags = getTags();
             if (tags != null && tags.length > 0) {
                 filterTags = tags;
             } else if (alias != null) {
@@ -210,7 +210,7 @@ public abstract class TableEntry {
             return resolvedPath;
         }
 
-        URI commonRootReal = URI.create(resolve(getRootUri(), commonRoot));
+        URI commonRootReal = resolve(getRootUri(), commonRoot);
 
         if (resolvedPath.startsWith(commonRootReal.toString())) {
             return commonRootReal.relativize(URI.create(resolvedPath)).toString();

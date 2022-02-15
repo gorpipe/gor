@@ -45,6 +45,6 @@ public class DeleteBucketCommand extends ManagerOptions implements Runnable{
     @Override
     public void run() {
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
-        tm.deleteBuckets(dictionaryFile.toPath(), argsBuckets.stream().map(b -> Paths.get(b)).toArray(Path[]::new));
+        tm.deleteBuckets(dictionaryFile.toPath(), argsBuckets.stream().toArray(String[]::new));
     }
 }

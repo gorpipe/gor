@@ -33,6 +33,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
 
@@ -126,6 +127,23 @@ public interface DataSource extends AutoCloseable {
     default String createDirectory(FileAttribute<?>... attrs) throws IOException {
         throw new GorResourceException("Create directory is not implemented", getSourceType().getName());
     }
+
+    default public String createDirectoryIfNotExists(FileAttribute<?>... attrs) throws IOException {
+        try {
+            createDirectory(attrs);
+        } catch (FileAlreadyExistsException faee) {
+            // Ignore, already created.
+        } catch (IOException e) {
+            if (e.getCause() != null && e.getCause() instanceof FileAlreadyExistsException) {
+                // Ignore, already created.
+            } else {
+                throw new GorSystemException("Could not create  directory: " + getFullPath(), e);
+            }
+
+        }
+        return getFullPath();
+    }
+
 
     /**
      * Creates a new directory and its full path if needed.

@@ -22,23 +22,9 @@
 
 package org.gorpipe.gor.table;
 
-import org.apache.commons.lang3.StringUtils;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.BaseMeta;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 /**
  * Helper class the represents table header.

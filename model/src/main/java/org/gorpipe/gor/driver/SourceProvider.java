@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
@@ -45,7 +46,8 @@ public interface SourceProvider {
      * and will not follow links.
      *
      * @param context the context the data source will be created in.
-     * @return Data source or null if data source is not handled
+     * @return Data source
+     * @throws GorResourceException if the resource is not handled.
      */
     DataSource resolveDataSource(SourceReference context) throws IOException;
 

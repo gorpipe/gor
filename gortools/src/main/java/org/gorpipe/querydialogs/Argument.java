@@ -21,6 +21,8 @@
  */
 package org.gorpipe.querydialogs;
 
+import org.gorpipe.gor.table.util.PathUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
@@ -314,11 +316,9 @@ public abstract class Argument extends AbstractListBean {
                 reader = fileResolver.apply(valuesPathString);
                 String line = reader.readLine();
                 if (valuesPathString.endsWith(".link")) {
-                    if (line.startsWith("file://")) {
-                        reader.close();
-                        reader = fileResolver.apply(line.substring(7));
-                        line = reader.readLine();
-                    }
+                    reader.close();
+                    reader = fileResolver.apply(PathUtils.fixFileSchema(line));
+                    line = reader.readLine();
                 }
 
                 values = new ArrayList<>();

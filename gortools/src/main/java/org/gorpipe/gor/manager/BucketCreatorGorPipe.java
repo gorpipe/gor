@@ -29,7 +29,6 @@ import org.apache.commons.io.output.NullOutputStream;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.table.dictionary.TableEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,6 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -65,19 +63,13 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
     }
 
     @Override
-    public void createBuckets(BaseDictionaryTable<T> table, Map<Path, List<T>> bucketsToCreate, URI absBucketDir)
+    public void createBuckets(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate, URI absBucketDir)
             throws IOException {
-        // Create common temp directories and folders.
-        // !GM Should we use local or remote temp folder}
-        Path workBaseDir = PathUtils.isLocal(absBucketDir) ? Paths.get(PathUtils.formatUri(absBucketDir)) :
-                Files.createTempDirectory("bucket_work_folder_" + table.getId());
-        Path workTempDir = createTempfoldersForCreateBucketFiles(table, bucketsToCreate.keySet(), workBaseDir);
 
         // Build the gor query (gorpipe)
-        String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, workTempDir, table);
+        String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, table.getRootUri(), table);
         String[] args = new String[]{
                 gorPipeCommand,
-                "-cachedir", workTempDir.resolve("cache").toString(),
                 "-workers", String.valueOf(workers)};
         log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", args);
 
@@ -97,32 +89,14 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
 
             System.setOut(oldOut);
         }
-
-        // Move the bucket files from temp to the bucket folder
-        for (Path bucket : bucketsToCreate.keySet()) {
-            // Move the bucket files.
-            URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
-            table.getFileReader().move(workTempDir.resolve(bucket).toString(), targetBucketPath.toString());
-        }
-//        // Move the bucket files from temp to the bucket folder
-//        for (Path bucket : bucketsToCreate.keySet()) {
-//            // Move the bucket files.
-//            URI targetBucketPath = table.getRootUri().resolve(bucket.toString());
-//            table.getFileReader().move(workTempDir.resolve(bucket.getFileName()).toString(), targetBucketPath.toString());
-//            if (Files.exists(Path.of(workTempDir.resolve(bucket.getFileName() + ".meta").toString()))) {
-//                table.getFileReader().move(workTempDir.resolve(bucket.getFileName() + ".meta").toString(), targetBucketPath.toString() + ".meta");
-//            }
-//        }
-
-        deleteIfTempBucketizingFolder(workTempDir, table);
     }
 
-    private String createBucketizeGorCommand(Map<Path, List<T>> bucketsToCreate, Path tempRootDir, BaseDictionaryTable<T> table) {
+    private String createBucketizeGorCommand(Map<String, List<T>> bucketsToCreate, URI rootUri, BaseDictionaryTable<T> table) {
         // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
         // Tag based, does not work if we are adding more files with same alias, why not?.
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Path, List<T>> b2c : bucketsToCreate.entrySet()) {
-            Path bucket = b2c.getKey();
+        for (Map.Entry<String, List<T>> b2c : bucketsToCreate.entrySet()) {
+            String bucket = b2c.getKey();
             String tags = b2c.getValue().stream()
                     .flatMap(e -> Arrays.stream(e.getFilterTags()).distinct())
                     .distinct()
@@ -131,7 +105,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
                 sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | write -c %s;%n",
                         bucket, table.getPath(), table.getSourceColumn(), tags,
                         table.getSecurityContext() != null ? table.getSecurityContext() : "",
-                        tempRootDir.resolve(bucket.toString())));
+                        rootUri.resolve(bucket)));
             }
         }
 
@@ -139,56 +113,4 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
         sb.append("gor 1.mem| top 1\n");
         return sb.toString();
     }
-
-    /**
-     *
-     * @param path          path to temp folder, should always be local.
-     * @param table
-     * @throws IOException
-     */
-    static void deleteIfTempBucketizingFolder(Path path, BaseDictionaryTable<? extends BucketableTableEntry> table)
-            throws IOException {
-        if (path.getFileName().toString().startsWith(getBucketizingFolderPrefix(table))) {
-            log.debug("Deleting temp folder: {}", path);
-            FileUtils.deleteDirectory(path.toFile());
-        }
-    }
-
-    static String getBucketizingFolderPrefix(BaseDictionaryTable<? extends BucketableTableEntry> table) {
-        return "bucketizing_" + table.getId();
-    }
-
-    /**
-     * Create and validate folders, both temp and final.
-     *
-     * @param table     table we are working with.
-     * @param buckets   buckets we are creating.
-     * @param workBaseDir path to the work base dir.
-     * @return the temp folder created.
-     * @throws IOException if there is an error creating the temp folder.
-     */
-    private Path createTempfoldersForCreateBucketFiles(BaseDictionaryTable<T> table, Set<Path> buckets, Path workBaseDir)
-            throws IOException {
-        // Create temp root.
-        Path tempRootDir = Files.createDirectory(workBaseDir.resolve(getBucketizingFolderPrefix(table)));
-
-        log.trace("Created temp folder {}", tempRootDir);
-        tempRootDir.toFile().deleteOnExit();
-
-        // Validate bucket dirs and create temp folders for the created buckets.  After the bucketization
-        // we will copy the buckets from temp dirs to the final dir.
-        for (Path bucketDir : buckets.stream().map(Path::getParent).distinct().collect(Collectors.toList())) {
-            // Create temp folders.
-            Path bucketsRelativePath = bucketDir.isAbsolute() ? workBaseDir.relativize(bucketDir) : bucketDir;
-            if (bucketsRelativePath.toString().length() > 0) {
-                Files.createDirectories(tempRootDir.resolve(bucketsRelativePath));
-            }
-        }
-
-        // Cache dir
-        Files.createDirectory(tempRootDir.resolve("cache"));
-
-        return tempRootDir;
-    }
-
 }

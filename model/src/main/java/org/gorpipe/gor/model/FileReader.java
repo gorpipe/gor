@@ -24,13 +24,12 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
-import org.gorpipe.gor.session.ProjectContext;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Collectors;
@@ -41,6 +40,7 @@ import java.util.stream.Stream;
  */
 public abstract class FileReader {
 
+    private static final Logger log = LoggerFactory.getLogger(FileReader.class);
 
     /**
      * Tests whether a file exists.
@@ -52,6 +52,25 @@ public abstract class FileReader {
      * Returns: the directory
      */
     public abstract String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException;
+
+    public abstract String createDirectoryIfNotExists(String dir, FileAttribute<?>... attrs) throws IOException;
+//        try {
+//            log.trace("Creating directory {}", dir);
+//            createDirectory(dir, attrs);
+//        } catch (FileAlreadyExistsException faee) {
+//            // Ignore, already created.
+//            log.trace("Directory {} already exists", dir);
+//        } catch (IOException e) {
+//            if (e.getCause() != null && e.getCause() instanceof FileAlreadyExistsException) {
+//                // Ignore, already created.
+//                log.trace("Directory {} already exists", dir);
+//            } else {
+//                throw new GorSystemException("Could not create  directory: " + dir, e);
+//            }
+//
+//        }
+//        return dir;
+//    }
 
     /**
      * Creates a new directory and its full path if needed.
@@ -245,15 +264,6 @@ public abstract class FileReader {
             file = file.replace('\\', '/'); // Allow either backslash or slash
         }
         return file;
-    }
-
-    String resolveUrl(String url, String resolvedSessionRoot, String securityContext) throws IOException {
-        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(resolvedSessionRoot).securityContext(securityContext).build();
-
-        DataSource ds = GorDriverFactory.fromConfig().getDataSource(sourceReference);
-
-        String cannonicalName = ds.getSourceMetadata().getCanonicalName();
-        return cannonicalName.startsWith("file://") ? cannonicalName.substring(7) : cannonicalName;
     }
 
     protected abstract void validateAccess(final DataSource dataSource);

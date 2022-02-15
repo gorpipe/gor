@@ -203,9 +203,10 @@ public class UTestTableManager {
         man.setBucketSize(100);
 
         DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        Process p;
 
         // Bucketize in process.   Set the pack level, otherwise we will sometimes pack the buckets and fail the test.
-        Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100", "--pack_level", "NO_PACKING"}, ".");
+        p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100", "--pack_level", "NO_PACKING"}, ".");
 
         // Wait for the thread to get the bucketize lock (so we are waiting for getting inValid lock).
         testTableManagerUtil.waitForBucketizeToStart(table, p);
@@ -214,7 +215,7 @@ public class UTestTableManager {
         // here to make sure we can do our changes before the bucketzing in the thread finishes.
         try {
             try (TableTransaction trans = TableTransaction.openWriteTransaction(TableManager.DEFAULT_LOCK_TYPE, table, table.getName(), Duration.ofSeconds(10))) {
-                if (!trans.getLock().isValid()) {
+                if (!trans.getLock().isValid() || !p.isAlive()) {
                     log.info(testTableManagerUtil.waitForProcessPlus(p));
                     Assert.assertTrue("Test not setup correctly, bucketizing finished to early.", false);
                 }
@@ -228,7 +229,7 @@ public class UTestTableManager {
                 Collection<DictionaryEntry> entriesToDelete = table.filter().aliases("PN10", "PN11").get();
                 table.delete(entriesToDelete);
 
-                // Validate that we are sill bucketizing.
+                // Validate that we are sill bucketizing (We should NOT get the lock here).
                 try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {
                     if (bucketizeLock.isValid()) {
                         log.info(testTableManagerUtil.waitForProcessPlus(p));
@@ -248,7 +249,6 @@ public class UTestTableManager {
         Assert.assertEquals("New lines should not be bucketized", 10, table.needsBucketizing().size());
         Assert.assertEquals("Deleted lines should be reinserted", 2, table.selectAll().stream().filter(f -> f.isDeleted()).count());
     }
-
 
     @Test
     public void testMultiprocessBucketize() throws Exception {

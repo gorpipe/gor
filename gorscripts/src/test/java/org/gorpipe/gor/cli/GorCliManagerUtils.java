@@ -29,6 +29,7 @@ import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class GorCliManagerUtils {
 
     public GorCliManagerUtils() {
     }
-
+    
     public void testBucketDirsHelper(TableManager man, BaseDictionaryTable<DictionaryEntry> table, List<Path> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (Path bucketDir : bucketDirs) {
@@ -66,19 +67,19 @@ public class GorCliManagerUtils {
                 bucketDirFull.toFile().deleteOnExit();
             }
         }
-        List<Path> buckets = table.filter().get().stream().map(l -> l.getBucketPath()).filter(p -> p != null).distinct().collect(Collectors.toList());
-        man.deleteBuckets(table.getPath(), buckets.toArray(new Path[buckets.size()]));
+        List<String> buckets = table.filter().get().stream().map(l -> l.getBucket()).filter(p -> p != null).distinct().collect(Collectors.toList());
+        man.deleteBuckets(table.getPath(), buckets.toArray(new String[buckets.size()]));
         BucketManager buc = new BucketManager(table);
 
         buc.setBucketDirs(bucketDirs);
         int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
         Assert.assertEquals("Wrong number of buckets", fileCount / man.getBucketSize(), bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
-        buckets = table.filter().get().stream().map(l -> l.getBucketPath()).distinct().collect(Collectors.toList());
-        List<Path> createdBucketFolders = buckets.stream().map(p -> p.getParent()).distinct().collect(Collectors.toList());
+        buckets = table.filter().get().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
+        List<String> createdBucketFolders = buckets.stream().map(p -> PathUtils.parent(p)).distinct().collect(Collectors.toList());
         Assert.assertEquals("Incorrect number of bucket folders", bucketDirs.size(), createdBucketFolders.size());
         Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet(bucketDirs), new TreeSet(createdBucketFolders));
-        for (Path bucket : buckets) {
+        for (String bucket : buckets) {
             Assert.assertTrue("Bucket does not exists", Files.exists(table.getRootPath().resolve(bucket)));
         }
     }

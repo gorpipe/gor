@@ -29,6 +29,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,18 +78,9 @@ public class FileSource implements StreamSource {
      */
     public FileSource(SourceReference sourceReference, boolean isSubset) {
         String fileName = sourceReference.getUrl();
-        if (fileName.startsWith("file://")) {
-            fileName = fileName.substring(7);
-
-            // Windows full path hack
-            if (fileName.length() > 3 && fileName.charAt(2) == ':' && Util.isWindowsOS() ) {
-                fileName = fileName.substring(1);
-            }
-
+        fileName = PathUtils.fixFileSchema(fileName);
+        if (!fileName.equals(sourceReference.getUrl())) {
             sourceReference = new SourceReference(fileName, sourceReference);
-        }
-        if (fileName.startsWith("file:")) {
-            throw new IllegalArgumentException("Expected file url " + fileName + " to start with file://");
         }
 
         if (sourceReference.getCommonRoot() != null && !Paths.get(fileName).isAbsolute()) {
@@ -233,7 +225,6 @@ public class FileSource implements StreamSource {
                 uniqueId = br.readLine();
             }
         }*/
-        //return new StreamSourceMetadata(this, "file://" + file.toRealPath(), Files.getLastModifiedTime(file).toMillis(), Files.size(file), uniqueId, isSubset);
         File ffile = file.toFile();
         return new StreamSourceMetadata(this, "file://" + ffile.getCanonicalPath(), ffile.lastModified(), ffile.length(), uniqueId, isSubset);
     }

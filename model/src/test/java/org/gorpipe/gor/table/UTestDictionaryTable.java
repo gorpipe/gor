@@ -395,7 +395,7 @@ public class UTestDictionaryTable {
         Assert.assertEquals("Deleted file should not be reinstated", "filepath15.gor\nfilepath15.gor|D|bucket2\n", selectRes);
 
         // Add to new bucket and then delete again.
-        dict.addToBucket(Paths.get("bucket3"), dict.filter().files("filepath15.gor").get());
+        dict.addToBucket("bucket3", dict.filter().files("filepath15.gor").get());
         dict.delete(dict.filter().files("filepath15.gor").get());
 
         dict.insert("filepath15.gor");
@@ -618,7 +618,7 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable(gordFile.toPath());
 
-        dict.addToBucket(Paths.get("newbucket"), dict.filter().files("filepath3.gor").get());
+        dict.addToBucket("newbucket", dict.filter().files("filepath3.gor").get());
         String selectRes = selectStringFilter(dict, dict.filter().buckets("newbucket"));
         Assert.assertEquals("Add to bucket incorrect",
                 "filepath3.gor|newbucket\ttagB\n", selectRes);
@@ -630,7 +630,7 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable(gordFile.toPath());
 
-        dict.addToBucket(Paths.get("newbucket"), dict.filter().tags("tagA", "tagB").get());
+        dict.addToBucket("newbucket", dict.filter().tags("tagA", "tagB").get());
         String selectRes = selectStringFilter(dict, dict.filter().buckets("newbucket"));
         Assert.assertEquals("Add to bucket incorrect",
                 "filepath17.gor|newbucket\ttagB\n" +
@@ -646,7 +646,7 @@ public class UTestDictionaryTable {
         DictionaryTable dict = new DictionaryTable(gordFile.toPath());
 
         try {
-            dict.addToBucket(Paths.get("newbucket"), dict.filter().tags("tagG").get());
+            dict.addToBucket("newbucket", dict.filter().tags("tagG").get());
             Assert.fail("Should not be able to set bucket on line already with a bucket");
         } catch (Exception e) {
             // Expected
