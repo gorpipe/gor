@@ -23,11 +23,11 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
     protected final S3SharedConfiguration s3SharedConfig;
 
-    public S3SharedSourceProvider() {
+    protected S3SharedSourceProvider() {
         s3SharedConfig = ConfigManager.createPrefixConfig("gor.s3", S3SharedConfiguration.class);
     }
 
-    public S3SharedSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,
+    protected S3SharedSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,
                                   Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, s3Config, cache, initialFactories);
         this.s3SharedConfig = s3Config;
@@ -39,7 +39,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
 
     protected String getBucketPostfix(String project) {
-        return String.format("shared");
+        return "shared";
     }
 
     protected String getRelativePath(String url) {
@@ -153,19 +153,28 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
                 getSharedUrlPrefix(),
                 fallbackSourceReference != null ? fallbackSourceReference.getUrl() : "None"));
 
-        S3SharedSource fallbackSource = null;
         if (fallbackSourceReference != null) {
             try {
-                fallbackSource = (S3SharedSource) PluggableGorDriver.instance().resolveDataSource(fallbackSourceReference);
+                return (S3SharedSource) PluggableGorDriver.instance().resolveDataSource(fallbackSourceReference);
             } catch (GorResourceException e) {
-                // Ignore fallback failures, we will throw more applicable exception below.
+                throw new GorResourceException(
+                        String.format("%s\n%s", e.getMessage(), createErrorMessageForFailure(sourceReference, source)),
+                        sourceReference.url);
             }
         }
 
-        if (fallbackSource != null) {
-            return fallbackSource;
+        throw new GorResourceException(
+                String.format("Resource could not be resolved and has no working fallback.\n%s",
+                        createErrorMessageForFailure(sourceReference, source)),
+                sourceReference.url);
+    }
+
+    private String createErrorMessageForFailure(SourceReference sourceReference, S3SharedSource source) {
+        if (source == null) {
+            return String.format("- Found no creds/bucket for '%s' for project %s", sourceReference.url,
+                    sourceReference.commonRoot != null ? Path.of(sourceReference.getCommonRoot()).getFileName() : "Unknown");
         } else {
-            throw new GorResourceException(String.format("Resource %s does not exists and has no working fallback", sourceReference.url), null);
+            return String.format("- File '%s' does not exists", sourceReference.url);
         }
     }
 

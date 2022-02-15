@@ -24,6 +24,7 @@ package org.gorpipe.gor.manager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
@@ -33,6 +34,7 @@ import org.gorpipe.gor.table.lock.TableTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
@@ -72,7 +74,7 @@ public class TableManager {
 
     // TODO:  This is passed on to the tables, so ALL the tables must share the same security context so the tm can
     // not be used for different projects.
-    private String securityContext;
+    private FileReader fileReader;
     private Class<? extends TableLock> lockType = DEFAULT_LOCK_TYPE;
     private Duration lockTimeout = DEFAULT_LOCK_TIMEOUT;
 
@@ -100,7 +102,7 @@ public class TableManager {
         }
         this.useHistory = builder.useHistory;
         this.validateFiles = builder.validateFiles;
-        this.securityContext = builder.securityContext != null ? builder.securityContext : System.getProperty("gor.security.context");
+        this.fileReader = builder.fileReader;
     }
 
     public static Builder newBuilder() {
@@ -124,12 +126,12 @@ public class TableManager {
         this.bucketSize = bucketSize;
     }
 
-    public String getSecurityContext() {
-        return securityContext;
+    public FileReader getfileReader() {
+        return fileReader;
     }
 
-    public void setSecurityContext(String securityContext) {
-        this.securityContext = securityContext;
+    public void setfileReader(FileReader fileReader) {
+        this.fileReader = fileReader;
     }
 
     public Class<? extends TableLock> getLockType() {
@@ -149,7 +151,7 @@ public class TableManager {
     public BaseDictionaryTable initTable(Path path) {
         if (path.toString().toLowerCase().endsWith(".gord")) {
             return new DictionaryTable.Builder<>(path.toUri()).useHistory(this.useHistory)
-                    .securityContext(securityContext).validateFiles(this.validateFiles).build();
+                    .fileReader(fileReader).validateFiles(this.validateFiles).build();
         } else {
             throw new RuntimeException("BaseTable of type " + path.toString() + " are not supported!");
         }
@@ -285,7 +287,7 @@ public class TableManager {
      * @param maxBucketCount Maximum number of buckets to generate on this call.
      * @param bucketDirs     array of directories to bucketize to, ignored if null.  The dirs are absolute or relative to the table dir.
      */
-    public void bucketize(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, int maxBucketCount, List<Path> bucketDirs) {
+    public void bucketize(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, int maxBucketCount, List<String> bucketDirs) {
         BaseDictionaryTable table = initTable(tableFile);
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
@@ -300,16 +302,18 @@ public class TableManager {
     /**
      * Delete the given buckets.
      *
+     * @param table     table to update.
+     * @param force     force clean up (ignore grace periods).
      * @param buckets   list of buckets to be deleted.
      */
-    public void deleteBuckets(BaseDictionaryTable table, Path... buckets) {
+    public void deleteBuckets(BaseDictionaryTable table, boolean force, String... buckets) {
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
                 .bucketSize(this.bucketSize)
                 .minBucketSize(this.minBucketSize)
                 .lockType(this.lockType)
                 .build()
-                .deleteBuckets(buckets);
+                .deleteBuckets(force, buckets);
     }
 
     /**
@@ -318,9 +322,9 @@ public class TableManager {
      * @param tableFile the path to the table file.
      * @param buckets   list of buckets to be deleted.
      */
-    public void deleteBuckets(Path tableFile, Path... buckets) {
+    public void deleteBuckets(Path tableFile, String... buckets) {
         BaseDictionaryTable table = initTable(tableFile);
-        deleteBuckets(table, buckets);
+        deleteBuckets(table, false, buckets);
     }
 
     private Class<? extends TableLock> inferLockType(Class<? extends TableLock> newLockType) {
@@ -355,7 +359,7 @@ public class TableManager {
         private int bucketSize = -1;
         private boolean useHistory = true;
         private boolean validateFiles = true;
-        private String securityContext;
+        private FileReader fileReader;
 
         private Builder() {
         }
@@ -390,8 +394,8 @@ public class TableManager {
             return this;
         }
 
-        public Builder securityContext(String val) {
-            securityContext = val;
+        public Builder fileReader(FileReader val) {
+            fileReader = val;
             return this;
         }
 

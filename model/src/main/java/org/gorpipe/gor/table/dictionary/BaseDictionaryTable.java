@@ -30,6 +30,7 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.*;
 import org.gorpipe.gor.table.util.GenomicRange;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.ByteTextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,8 +199,8 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
      *
      * @return List of Path elements representing all the buckets in the table.
      */
-    public List<Path> getBuckets() {
-        return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(BucketableTableEntry::getBucket).distinct().map(Paths::get).collect(Collectors.toList());
+    public List<String> getBuckets() {
+        return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(BucketableTableEntry::getBucket).distinct().collect(Collectors.toList());
     }
 
     @Override
@@ -329,13 +330,13 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
             for (T line : matchingLines) {
                 fingerPrintString.append(line.getContentReal());
                 fingerPrintString.append((byte) '&');
-                fingerPrintString.append(getLastModifiedTime(line.getContentReal(), securityContext, commonRoot));
+                fingerPrintString.append(getLastModifiedTime(line.getContentReal(), getSecurityContext(), commonRoot));
             }
         } else {
             fingerPrintString = new ByteTextBuilder(300);
             fingerPrintString.append(getPathUri().toString());
             fingerPrintString.append((byte) '&');
-            fingerPrintString.append(getLastModifiedTime(getPathUri().toString(), securityContext, commonRoot));
+            fingerPrintString.append(getLastModifiedTime(getPathUri().toString(), getSecurityContext(), commonRoot));
         }
 
         return fingerPrintString.md5();
@@ -362,10 +363,10 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
             // Empty tags here means no tags so replace with null.
             List<T> matchingLines = filter().tags(tags).get();
             for (T line : matchingLines) {
-                lastModified = Math.max(lastModified, getLastModifiedTime(line.getContentReal(), securityContext, commonRoot));
+                lastModified = Math.max(lastModified, getLastModifiedTime(line.getContentReal(), getSecurityContext(), commonRoot));
             }
         } else {
-            lastModified = Math.max(lastModified, getLastModifiedTime(getPath().toString(), securityContext, commonRoot));
+            lastModified = Math.max(lastModified, getLastModifiedTime(getPath().toString(), getSecurityContext(), commonRoot));
         }
 
         return lastModified;
@@ -457,8 +458,8 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
      * @param bucket bucket to add to.
      * @param lines  files to select.
      */
-    public void addToBucket(Path bucket, List<T> lines) {
-        String bucketLogical = relativize(getRootPath(), bucket).toString();
+    public void addToBucket(String bucket, List<T> lines) {
+        String bucketLogical = relativize(getRootUri(), bucket);
         for (T line : lines) {
             T lineToUpdate = tableEntries.findLine(line);
             if (lineToUpdate != null) {
@@ -480,7 +481,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     }
 
     @SafeVarargs
-    public final void addToBucket(Path bucket, T... lines) {
+    public final void addToBucket(String bucket, T... lines) {
         addToBucket(bucket, Arrays.asList(lines));
     }
 
@@ -563,7 +564,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
          * @return return new filter on files.
          */
         public TableFilter files(String... val) {
-            this.files = val != null ? Arrays.stream(val).map(f -> resolve(getRootUri(), f)).toArray(String[]::new) : null;
+            this.files = val != null ? Arrays.stream(val).map(f -> formatUri(resolve(getRootUri(), f))).toArray(String[]::new) : null;
             return this;
         }
 
@@ -573,7 +574,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
          * @return return new filter on files.
          */
         public TableFilter files(URI... val) {
-            this.files = val != null ? Arrays.stream(val).map(f -> resolve(getRootUri(), f.toString())).toArray(String[]::new) : null;
+            this.files = val != null ? Arrays.stream(val).map(f -> formatUri(resolve(getRootUri(), f))).toArray(String[]::new) : null;
             return this;
         }
 
@@ -595,12 +596,12 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         }
 
         public TableFilter buckets(String... val) {
-            this.buckets = val != null ? Arrays.stream(val).map(b -> resolve(getRootUri(), b)).toArray(String[]::new) : null;
+            this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(resolve(getRootUri(), b))).toArray(String[]::new) : null;
             return this;
         }
 
         public TableFilter buckets(Path... val) {
-            this.buckets = val != null ? Arrays.stream(val).map(b -> resolve(getRootUri(), b.toString())).toArray(String[]::new) : null;
+            this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(resolve(getRootUri(), b.toString()))).toArray(String[]::new) : null;
             return this;
         }
 

@@ -154,6 +154,11 @@ public class S3Source implements StreamSource {
     }
 
     @Override
+    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
+        return Files.createDirectories(getPath()).toString();
+    }
+
+    @Override
     public boolean isDirectory() {
         return Files.isDirectory(getPath());
     }

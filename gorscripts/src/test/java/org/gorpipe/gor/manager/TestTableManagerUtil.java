@@ -161,5 +161,6 @@ public class TestTableManagerUtil {
             }
             Thread.sleep(100);
         }
+        Thread.sleep(1000);  // Making sure we have read the table after we get the lock.
     }
 }

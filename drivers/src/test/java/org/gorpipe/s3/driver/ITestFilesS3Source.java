@@ -15,6 +15,8 @@ import org.junit.contrib.java.lang.system.SystemErrRule;
 import java.io.IOException;
 import java.util.Properties;
 
+import static org.gorpipe.s3.driver.ITestBvlMinOnS3.awsSecurityContext;
+
 public class ITestFilesS3Source extends CommonFilesTests {
 
     private static String S3_KEY;
@@ -29,7 +31,14 @@ public class ITestFilesS3Source extends CommonFilesTests {
             = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
 
     @Rule
+    public final ProvideSystemProperty gorSecurityContext
+            = new ProvideSystemProperty("gor.security.context", securityContext());
+
+    @Rule
     public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
+
+    public ITestFilesS3Source() throws IOException {
+    }
 
 
     @BeforeClass
@@ -38,14 +47,11 @@ public class ITestFilesS3Source extends CommonFilesTests {
         S3_KEY = props.getProperty("S3_KEY");
         S3_SECRET = props.getProperty("S3_SECRET");
 
-        Credentials.Builder cb = new Credentials.Builder()
-                .service("s3")
-                .lookupKey("nextcode-unittest")
-                .set(Credentials.Attr.KEY, S3_KEY)
-                .set(Credentials.Attr.SECRET, S3_SECRET)
-                .set(Credentials.Attr.REGION, "us-west-2");
-        BundledCredentials.Builder bb = new BundledCredentials.Builder().addCredentials(cb.build());
-        System.setProperty("gor.security.context", bb.build().addToSecurityContext(null));
+    }
+
+    @Override
+    protected String securityContext() throws IOException {
+        return awsSecurityContext(S3_KEY, S3_SECRET);
     }
 
 

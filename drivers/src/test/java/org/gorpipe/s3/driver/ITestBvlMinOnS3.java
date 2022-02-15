@@ -15,10 +15,9 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.test.IntegrationTests;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
@@ -27,10 +26,16 @@ import java.util.Properties;
 @Category(IntegrationTests.class)
 public class ITestBvlMinOnS3 extends BvlTestSuite {
 
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
     private static String S3_KEY;
     private static String S3_SECRET;
     private static String S3_GOOGLE_KEY;
     private static String S3_GOOGLE_SECRET;
+
+    public ITestBvlMinOnS3() throws IOException {
+    }
 
     @BeforeClass
     static public void setUpClass() {
@@ -41,14 +46,12 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         S3_GOOGLE_SECRET = props.getProperty("S3_GOOGLE_SECRET");
     }
 
-    @Override
-    public void setup() throws Exception {
+    @Before
+    public void setupTest() {
         // Ensure no fallback keys
         System.setProperty("aws.accessKeyId", "");
         System.setProperty("aws.secretKey", "");
-        super.setup();
     }
-
 
     @Override
     protected String getSourcePath(String name) {
@@ -60,7 +63,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         return awsSecurityContext(S3_KEY, S3_SECRET);
     }
 
-    static String awsSecurityContext(String key, String secret) throws IOException {
+    public static String awsSecurityContext(String key, String secret) throws IOException {
         // Credentials for gor_unittest user in nextcode AWS account
         Credentials cred = new Credentials.Builder().service("s3").lookupKey("nextcode-unittest").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();
         Credentials bogus = new Credentials.Builder().service("s3").lookupKey("bla").set(Credentials.Attr.KEY, "DummyKey").set(Credentials.Attr.SECRET, "DummySecret").build();
@@ -82,7 +85,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     }
 
     @Test
-    @Ignore // TODO: re-enable this as per https://nextcode.atlassian.net/browse/GOR-2169 - stefan 2019-01-24
+    @Ignore("TODO: re-enable this as per https://nextcode.atlassian.net/browse/GOR-2169 - stefan 2019-01-24")
     public void testWithProviderCredentialsAndEndpoint() throws IOException {
         // TODO: When we have reliable s3 compatible storage account outside AWS (e.g. Google cloud) , we should test against that.
         Credentials cred = new Credentials.Builder().service("s3").lookupKey("google:01_nextcode_gor_integration_test").set(Credentials.Attr.KEY, S3_GOOGLE_KEY).set(Credentials.Attr.SECRET, S3_GOOGLE_SECRET).set(Credentials.Attr.API_ENDPOINT, "https://storage.googleapis.com").build();
@@ -98,7 +101,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
 
     }
 
-    @Ignore // This test takes a long time (90s) and is only checking a bad end point (what to we expect to happen?).
+    @Ignore("This test takes a long time (90s) and is only checking a bad end point (what to we expect to happen?)")
     @Test
     public void testWithProviderCredentialsAndBadEndpoint() throws IOException {
         Credentials cred = new Credentials.Builder().service("s3").lookupKey("aws:nextcode-unittest").set(Credentials.Attr.KEY, S3_KEY).set(Credentials.Attr.SECRET, S3_SECRET).set(Credentials.Attr.API_ENDPOINT, "https://bad.endpoint.local").build();
@@ -118,7 +121,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     }
 
     @Test
-    @Ignore // Ignored as part of GOP-1458
+    @Ignore("Ignored as part of GOP-1458")
     public void testWithKeysInProperties() throws IOException {
         System.setProperty("aws.accessKeyId", S3_KEY);
         System.setProperty("aws.secretKey", S3_SECRET);
@@ -128,8 +131,6 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         S3Source s3 = (S3Source) TestUtils.gorDriver.resolveDataSource(ref);
         Assert.assertEquals(10000, s3.getClient().getClientConfiguration().getMaxConnections());
         Assert.assertTrue(s3.exists());
-        System.setProperty("aws.accessKeyId", "");
-        System.setProperty("aws.secretKey", "");
     }
 
     @Test
@@ -138,9 +139,9 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         String source = getSourcePath("derived/raw_bam_to_gor/" + name + ".bam.gor");
 
         SourceReference ref = new SourceReferenceBuilder(source).build();
+
         try {
             DataSource ds = TestUtils.gorDriver.getDataSource(ref);
-            ds.exists();
             Assert.fail("Should not be able to query s3 without security context");
         } catch (GorException io) {
             // Expected
@@ -159,9 +160,6 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
 
     @Test
     public void testWithTemporaryCredentials() throws IOException {
-        System.setProperty("aws.accessKeyId", "");
-        System.setProperty("aws.secretKey", "");
-
         // Issue temporary credentials, that will be used to access files later on.
         BasicAWSCredentials stsCapableCredentials = new BasicAWSCredentials(S3_KEY, S3_SECRET);
         AWSSecurityTokenServiceClient stsClient = new AWSSecurityTokenServiceClient(stsCapableCredentials);

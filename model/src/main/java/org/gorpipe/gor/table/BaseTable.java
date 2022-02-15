@@ -4,10 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
-import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
@@ -23,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -48,7 +44,6 @@ public abstract class BaseTable<T> implements Table<T> {
     private final URI rootUri;          // uri to table root (just to improve performance when working with uri's).
     private final String name;          // Name of the table.
     private String id = null;           // Unique id (based on full path, just so we don't always have to refer to full path).
-    protected String securityContext;
     protected String prevSerial;        //
 
     protected BaseMeta header; // Header info.
@@ -58,7 +53,7 @@ public abstract class BaseTable<T> implements Table<T> {
     private boolean validateFiles = DEFAULT_VALIDATE_FILES;
 
     protected final TableLog tableLog;
-    protected final FileReader fileReader;
+    protected FileReader fileReader;
 
     protected BaseTable(Builder builder) {
         this(builder.path, builder.fileReader);
@@ -68,10 +63,6 @@ public abstract class BaseTable<T> implements Table<T> {
         }
         if (builder.useHistory != null) {
             setUseHistory(builder.useHistory);
-        }
-
-        if(builder.securityContext != null) {
-            setSecurityContext(builder.securityContext);
         }
     }
 
@@ -87,24 +78,24 @@ public abstract class BaseTable<T> implements Table<T> {
         this.name = FilenameUtils.removeExtension(fileName);
 
         // Not all datasources support isDirectory (so just check for the dict file)
-        if (safeCheckExists(PathUtils.resolve(uri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
+        if (safeCheckExists(PathUtils.resolve(uri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString())) {
             // Gord folder passed in.
-            this.rootUri = normalize(uri);
-            this.path = rootUri.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            this.rootUri = PathUtils.toURIFolder(uri.toString());
+            this.path =  PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
             this.folderPath = rootUri;
         } else if (GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME.equals(fileName)) {
             // thedict passed in (gord folder content)
-            this.rootUri = normalize(uri.resolve("."));
-            this.path = rootUri.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            this.rootUri = normalize(PathUtils.parent(uri));
+            this.path = PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
             this.folderPath = rootUri;
         } else {
             // Old school dict.
-            this.rootUri = normalize(uri.resolve("."));
-            this.path = rootUri.resolve(fileName);
-            this.folderPath = rootUri.resolve("." + this.name + "/"); // PathUtils.resolve(rootUri, "." + this.name);
+            this.rootUri = normalize(PathUtils.parent(uri));
+            this.path = PathUtils.resolve(rootUri, fileName);
+            this.folderPath = PathUtils.toURIFolder(PathUtils.resolve(rootUri, "." + this.name).toString()); // PathUtils.resolve(rootUri, "." + this.name);
         }
 
-        this.historyDir = folderPath.resolve(HISTORY_DIR_NAME + "/"); // PathUtils.resolve(folderPath, HISTORY_DIR_NAME);
+        this.historyDir = PathUtils.toURIFolder(PathUtils.resolve(folderPath, HISTORY_DIR_NAME).toString()); // PathUtils.resolve(folderPath, HISTORY_DIR_NAME);
         this.tableLog = new TableLog(historyDir);
     }
 
@@ -167,12 +158,9 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     public String getSecurityContext() {
-        return securityContext;
+        return fileReader != null ? fileReader.getSecurityContext() : "";
     }
 
-    public void setSecurityContext(String securityContext) {
-        this.securityContext = securityContext;
-    }
 
     /**
      * Get table property {@code key}
@@ -224,6 +212,10 @@ public abstract class BaseTable<T> implements Table<T> {
         return fileReader;
     }
 
+    public void setFileReader(FileReader fileReader) {
+        this.fileReader = fileReader;
+    }
+
     @Override
     public void initialize() {
         log.trace("Initialize {}", getName());
@@ -234,39 +226,14 @@ public abstract class BaseTable<T> implements Table<T> {
 
         updateNFSFolderMetadata();
 
-        if (!fileReader.exists(getFolderUri().toString())) {
-            try {
-                log.trace("Creating table directory {}", getFolderUri());
-                fileReader.createDirectory(getFolderUri().toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
-            } catch (FileAlreadyExistsException faee) {
-                // Ignore, some one else created it.
-                log.trace("Table directory {} already exists", getFolderPath());
-            } catch (IOException e) {
-                if (e.getCause() != null && e.getCause() instanceof FileAlreadyExistsException) {
-                    // Ignore, some one else created it.
-                    log.trace("Table directory {} already exists", getFolderPath());
-                } else {
-                    throw new GorSystemException("Could not create table directory: " + getFolderPath(), e);
-                }
-            }
-        }
+        try {
+            fileReader.createDirectoryIfNotExists(getFolderUri().toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
 
-        if (this.isUseHistory() && !fileReader.exists(this.historyDir.toString())) {
-            try {
-                log.trace("Creating table history directory {}", this.historyDir);
-                fileReader.createDirectory(this.historyDir.toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
-            } catch (FileAlreadyExistsException faee) {
-                // Ignore, some one else created it.
-                log.trace("Table history directory {} already exists", this.historyDir);
-            } catch (IOException e) {
-                if (e.getCause() != null && e.getCause() instanceof FileAlreadyExistsException) {
-                    // Ignore, some one else created it.
-                    log.trace("Table history directory {} already exists", getFolderPath());
-                } else {
-                    throw new GorSystemException("Could not create table history directory: " + this.historyDir, e);
-                }
-
+            if (this.isUseHistory()) {
+                fileReader.createDirectoryIfNotExists(this.historyDir.toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
             }
+        } catch (IOException ioe) {
+            throw new GorSystemException("Could not create directory", ioe);
         }
 
         if (!fileReader.exists(path.toString())) {
@@ -430,9 +397,7 @@ public abstract class BaseTable<T> implements Table<T> {
         // Validate file existence.
         log.trace("Start validating file");
         try {
-            SourceReference sourceRef = new SourceReferenceBuilder(file).securityContext(securityContext).build();
-            DataSource ds = GorDriverFactory.fromConfig().getDataSource(sourceRef);
-            if ((ds == null || !ds.exists()) && (PathUtils.isLocal(file) || securityContext != null)) {
+            if (!fileReader.exists(file) && PathUtils.isLocal(file)) {
                 throw new GorDataException(String.format("Entry %s does not exists!", file));
             }
         } catch (Exception ex) {
@@ -513,11 +478,10 @@ public abstract class BaseTable<T> implements Table<T> {
     protected abstract static class Builder<B extends Builder<B>> {
         protected URI path;
         protected Boolean useHistory;
-        protected String securityContext;
         protected Boolean validateFiles;
         protected FileReader fileReader;
 
-        public Builder(URI path) {
+        protected Builder(URI path) {
             this.path = path;
         }
 
@@ -533,11 +497,6 @@ public abstract class BaseTable<T> implements Table<T> {
 
         public B useHistory(boolean useHistory) {
             this.useHistory = useHistory;
-            return self();
-        }
-
-        public B securityContext(String val) {
-            this.securityContext = val;
             return self();
         }
 

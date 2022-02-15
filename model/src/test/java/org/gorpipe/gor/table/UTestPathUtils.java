@@ -65,7 +65,7 @@ public class UTestPathUtils {
 
     @Test
     public void testRelativizeURI() {
-        Assert.assertEquals(null, PathUtils.relativize(URI.create("a/b/c"), null));
+        Assert.assertEquals(null, PathUtils.relativize(URI.create("a/b/c"), (URI)null));
         
         Assert.assertEquals("d", PathUtils.relativize(URI.create("a/b/c"), "a/b/c/d"));
         Assert.assertEquals("d", PathUtils.relativize(URI.create("/a/b/c"), "/a/b/c/d"));

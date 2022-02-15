@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
 public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
 
-    private static final String LINE_SPLIT_PATTERN = "(?<=\n)";
+    public static final String LINE_SPLIT_PATTERN = "(?<=\n)";
 
     /**
      * Run goripe

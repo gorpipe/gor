@@ -87,7 +87,7 @@ public abstract class BucketableTableEntry extends TableEntry {
      * @return the buckets real path.
      */
     public String getBucketReal() {
-        return getBucket() != null ? PathUtils.resolve(getRootUri(), getBucket()) : null;
+        return getBucket() != null ? PathUtils.resolve(getRootUri(), getBucket()).toString() : null;
     }
 
     /**

@@ -45,7 +45,7 @@ public interface BucketCreator<T extends BucketableTableEntry> {
      * @param absBucketDir    absolute path to the bucket dir, where bucket files should be put.  It temp folders are to be used they should
      *                        be created in this dir (for fast file move).
      */
-    void createBuckets(BaseDictionaryTable<T> table, Map<Path, List<T>> bucketsToCreate,
+    void createBuckets(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate,
                        URI absBucketDir) throws IOException;
 
 }

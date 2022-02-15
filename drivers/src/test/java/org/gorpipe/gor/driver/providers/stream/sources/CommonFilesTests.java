@@ -26,7 +26,7 @@ public abstract class CommonFilesTests {
 
     protected abstract DataSource createSource(String name) throws IOException;
 
-    protected String securityContext() {
+    protected String securityContext() throws IOException {
         return null;
     }
 

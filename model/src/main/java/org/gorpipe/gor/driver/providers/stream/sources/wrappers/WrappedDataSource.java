@@ -103,6 +103,11 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
+    public String createDirectoryIfNotExists(FileAttribute<?>... attrs) throws IOException {
+        return wrapped.createDirectoryIfNotExists(attrs);
+    }
+
+    @Override
     public String createDirectories(FileAttribute<?>... attrs) throws IOException {
         return wrapped.createDirectories(attrs);
     }

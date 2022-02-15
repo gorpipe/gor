@@ -215,8 +215,7 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         if (Files.exists(tablePath)) {
             throw new GorSystemException("Table already exists:  " + tablePath, null);
         }
-        DictionaryTable table = new Builder<>(tablePath.toUri()).useHistory(true)
-                .securityContext("").validateFiles(false).build();
+        DictionaryTable table = new Builder<>(tablePath.toUri()).useHistory(true).validateFiles(false).build();
         table.insert(data);
         table.setBucketize(true);
         table.save();
