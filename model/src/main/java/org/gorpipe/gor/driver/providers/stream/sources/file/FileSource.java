@@ -226,7 +226,7 @@ public class FileSource implements StreamSource {
             }
         }*/
         File ffile = file.toFile();
-        return new StreamSourceMetadata(this, "file://" + ffile.getCanonicalPath(), ffile.lastModified(), ffile.length(), uniqueId, isSubset);
+        return new StreamSourceMetadata(this, "file://" + ffile.getCanonicalPath(), ffile.lastModified(), Files.exists(file) ? Files.getLastModifiedTime(file, LinkOption.NOFOLLOW_LINKS).toMillis() : null, ffile.length(), uniqueId, isSubset);
     }
 
     @Override

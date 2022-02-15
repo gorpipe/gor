@@ -39,6 +39,7 @@ import java.util.TimeZone;
 public class SourceMetadata {
     private final String canonicalName;
     private final Long lastModified;
+    private final Long linkLastModified;
     private final String uniqueId;
     private final boolean isSubset;
     private final DataSource source;
@@ -46,13 +47,15 @@ public class SourceMetadata {
     /**
      * @param canonicalName Canonical name of this source
      * @param lastModified  Last modified - see getLastModified()
+     * @param linkLastModified  Link Last modified
      * @param uniqueId      See uniqueId. If this is null, it will be generated from canonicalName and lastModified
      * @param isSubset      true if this source only has access to a subset of the original source, else false.
      */
-    public SourceMetadata(DataSource source, String canonicalName, Long lastModified, String uniqueId, boolean isSubset) {
+    public SourceMetadata(DataSource source, String canonicalName, Long lastModified, Long linkLastModified, String uniqueId, boolean isSubset) {
         this.source = source;
         this.canonicalName = canonicalName;
         this.lastModified = lastModified;
+        this.linkLastModified = linkLastModified;
         if (uniqueId == null && canonicalName != null && lastModified != null) {
             this.uniqueId = Util.md5(canonicalName + ":" + lastModified);
         } else {
@@ -62,11 +65,25 @@ public class SourceMetadata {
     }
 
     /**
+     * @param canonicalName Canonical name of this source
+     * @param lastModified  Last modified - see getLastModified()
+     * @param uniqueId      See uniqueId. If this is null, it will be generated from canonicalName and lastModified
+     * @param isSubset      true if this source only has access to a subset of the original source, else false.
+     */
+    public SourceMetadata(DataSource source, String canonicalName, Long lastModified, String uniqueId, boolean isSubset) {
+        this(source, canonicalName, lastModified, lastModified, uniqueId, isSubset);
+    }
+
+    /**
      * Get last modified timestamp (number of milliseconds since January 1, 1970, 00:00:00 GMT)
      * This can be null if timestamp cannot be determined.
      */
     public Long getLastModified() {
         return lastModified;
+    }
+
+    public Long getLinkLastModified() {
+        return linkLastModified;
     }
 
     /**

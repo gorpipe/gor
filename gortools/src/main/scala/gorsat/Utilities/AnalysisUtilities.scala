@@ -26,7 +26,8 @@
 
 package gorsat.Utilities
 
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
+import java.io.Writer
+import java.nio.file.{Files, Path, Paths}
 import java.util.stream.Collectors
 import gorsat.Commands.CommandParseUtilities
 import gorsat.DynIterator.{DynamicNorSource, DynamicRowSource}
@@ -41,7 +42,7 @@ import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.table.util.PathUtils
 import org.slf4j.LoggerFactory
 
-import java.io.BufferedWriter
+import java.io.OutputStreamWriter
 import scala.collection.mutable
 import scala.reflect.io.File
 
@@ -89,18 +90,15 @@ object AnalysisUtilities {
     theMap
   }
 
-  def writeList(fileName: String, header: String, m: List[String]) : Unit = {
-    writeList(Paths.get(fileName), header, m)
-  }
-
-  def writeList(filePath: java.nio.file.Path, header: String, m: List[String]) : Unit = {
-    val parent = filePath.getParent
+  def writeList(fileReader: DriverBackedFileReader, fileName: String, header: String, m: List[String]) : Unit = {
+    val idx = fileName.lastIndexOf('/')
+    val parent = if (idx > 0) fileName.substring(0,idx) else null
     try {
-      if (parent != null && !Files.exists(parent)) Files.createDirectories(parent)
+      if (parent != null && !fileReader.exists(parent)) fileReader.createDirectories(parent)
     } finally {
-      var out: BufferedWriter = null
+      var out: Writer = null
       try {
-        out = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)
+        out = new OutputStreamWriter(fileReader.getOutputStream(fileName))
         out.write(header)
         m.foreach(t => out.write(t + "\n"))
       } finally {

@@ -194,11 +194,11 @@ object GeneralQueryHandler {
     context.start(outfile)
     // We are using absolute paths here
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART) || commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART)) {
-      writeOutGorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getFileReader, outfile, theTheDict)
+      writeOutGorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getFileReader.asInstanceOf[DriverBackedFileReader], outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)) {
-      writeOutGorDictionary(commandToExecute, context.getSession.getProjectContext.getFileReader, outfile, theTheDict)
+      writeOutGorDictionary(commandToExecute, context.getSession.getProjectContext.getFileReader.asInstanceOf[DriverBackedFileReader], outfile, theTheDict)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.NOR_DICTIONARY)) {
-      writeOutNorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getFileReader, outfile)
+      writeOutNorDictionaryPart(commandToExecute, context.getSession.getProjectContext.getFileReader.asInstanceOf[DriverBackedFileReader], outfile)
     } else {
       runCommandInternal(context, commandToExecute, outfile, useMd5)
     }
@@ -297,13 +297,21 @@ object GeneralQueryHandler {
     }
   }
 
-  private def writeOutGorDictionaryFolder(outfolderpath: Path, useTheDict: Boolean): Unit = {
+  private def writeOutGorDictionaryFolder(fileReader: DriverBackedFileReader, outfolderpath: String, useTheDict: Boolean): Unit = {
     val outpath = if(useTheDict) {
-      outfolderpath.resolve("thedict.gord")
+      if (outfolderpath.endsWith("/")) outfolderpath+"thedict.gord" else outfolderpath+"/thedict.gord"
     } else {
-      outfolderpath.resolve(outfolderpath.getFileName)
+      var idx = outfolderpath.lastIndexOf("/")
+      if (idx == -1) {
+        outfolderpath+"/"+outfolderpath
+      } else if (idx == outfolderpath.length) {
+        idx = outfolderpath.lastIndexOf("/", idx-1)
+        outfolderpath+"/"+outfolderpath.substring(idx+1,outfolderpath.length-1)
+      } else {
+        outfolderpath+"/"+outfolderpath.substring(idx+1)
+      }
     }
-    GorJavaUtilities.writeDictionaryFromMeta(outfolderpath, outpath)
+    GorJavaUtilities.writeDictionaryFromMeta(fileReader, outfolderpath, outpath)
   }
 
   def dictRangeFromSeekRange(inp: String, prefix: String): String = {
@@ -313,7 +321,7 @@ object GeneralQueryHandler {
     prefix + c + "\t" + sp + "\t" + c + "\t" + ep
   }
 
-  private def getDictList(dictFiles: List[String], chromsrange: List[String], root: String): List[String] = {
+  private def getDictList(dictFiles: List[String], chromsrange: List[String], fileReader: FileReader): List[String] = {
     var chrI = 0
     val useMetaFile = System.getProperty("gor.use.meta.dictionary","true")
     if(useMetaFile!=null && useMetaFile.toLowerCase.equals("true")) {
@@ -322,9 +330,9 @@ object GeneralQueryHandler {
         chrI += 1
         val rf = getRelativeFileLocationForDictionaryFileReferences(f)
         val prefix = rf + "\t" + chrI + "\t"
-        val metaPath = Paths.get(PathUtils.resolve(root, f+".meta"))
-        val opt: Optional[String] = if (Files.exists(metaPath)) {
-          val meta = GorMeta.createAndLoad(metaPath)
+        val metaPath = f+".meta"
+        val opt: Optional[String] = if (fileReader.exists(metaPath)) {
+          val meta = GorMeta.createAndLoad(fileReader, metaPath)
           if (meta.getLineCount == -1) {
             val ret = dictRangeFromSeekRange(x._2, prefix)
             Optional.of[String](ret)
@@ -359,10 +367,9 @@ object GeneralQueryHandler {
     })
   }
 
-  private def writeOutGorDictionary(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
-    val (outpath,root) = getOutPath(outfile, fileReader)
-    if(Files.isDirectory(outpath)) {
-      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(outpath, useTheDict)
+  private def writeOutGorDictionary(commandToExecute: String, fileReader: DriverBackedFileReader, outfile: String, useTheDict: Boolean): String = {
+    if(fileReader.exists(outfile)) {
+      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(fileReader, outfile, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil
@@ -379,13 +386,13 @@ object GeneralQueryHandler {
         tableHeader.setColumns(header)
       }
       tableHeader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER)
-      val dictList = getDictList(dictFiles, chromsrange, root)
-      writeList(outpath, tableHeader.formatHeader(), dictList)
+      val dictList = getDictList(dictFiles, chromsrange, fileReader)
+      writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)
     }
-    outpath.toString
+    outfile
   }
 
-  def writeOutNorDictionaryPart(commandToExecute: String, fileReader: FileReader, outfile: String): String = {
+  def writeOutNorDictionaryPart(commandToExecute: String, fileReader: DriverBackedFileReader, outfile: String): String = {
     val w = commandToExecute.split(' ')
     var dictFiles: List[String] = Nil
     var partitions: List[String] = Nil
@@ -399,28 +406,14 @@ object GeneralQueryHandler {
     val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
     tableHeader.setColumns(header)
     val dictList = getPartDictList(dictFiles, partitions)
-    writeList(outfile, tableHeader.formatHeader(), dictList)
+    writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)
 
     outfile
   }
 
-  private def getOutPath(outfile: String, fileReader: FileReader): (Path,String) = {
-    val outpath = Paths.get(outfile)
-    fileReader match {
-      case driverBackedFileReader: DriverBackedFileReader =>
-        val root = driverBackedFileReader.getCommonRoot
-        if (!outpath.isAbsolute && root != null) {
-          val rootPath = Paths.get(root).normalize()
-          (rootPath.resolve(outpath),root)
-        } else (outpath,root)
-      case _ => (outpath,"")
-    }
-  }
-
-  private def writeOutGorDictionaryPart(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
-    val (outpath,_) = getOutPath(outfile, fileReader)
-    if(Files.isDirectory(outpath)) {
-      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(outpath, useTheDict)
+  private def writeOutGorDictionaryPart(commandToExecute: String, fileReader: DriverBackedFileReader, outfile: String, useTheDict: Boolean): String = {
+    if(fileReader.isDirectory(outfile)) {
+      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(fileReader, outfile, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil
@@ -435,9 +428,9 @@ object GeneralQueryHandler {
       val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
       tableHeader.setColumns(header)
       val dictList = getPartDictList(dictFiles, partitions)
-      writeList(outfile, tableHeader.formatHeader(), dictList)
+      writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)
     }
-    outpath.toString
+    outfile
   }
 
   def getRelativeFileLocationForDictionaryFileReferences(fileName: String): String = {

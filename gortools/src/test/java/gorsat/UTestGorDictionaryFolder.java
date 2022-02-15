@@ -1,6 +1,5 @@
 package gorsat;
 
-import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -17,6 +16,7 @@ public class UTestGorDictionaryFolder {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
 
+    static final String THEDICTGORD = "thedict.gord";
     static String GENE_GROUP_CHROM_TOP1 = "Chrom\tbpStart\tbpStop\tallCount\n" +
             "chr1\t0\t250000000\t2\n" +
             "chr10\t0\t150000000\t2\n" +
@@ -190,7 +190,7 @@ public class UTestGorDictionaryFolder {
         var genespath = Paths.get(genes);
         var genesdest = workDirPath.resolve(genespath.getFileName());
         Files.copy(genespath,genesdest);
-        var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/thedict.gord | group chrom -count";
+        var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/"+THEDICTGORD+" | group chrom -count";
         var results = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString());
         Assert.assertEquals("Wrong results in write folder", GENE_GROUP_CHROM, results);
     }
@@ -271,13 +271,12 @@ public class UTestGorDictionaryFolder {
         try {
             TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c -d " + folderpath +
                     "; gor [a] | group chrom -count");
-            String thedict = Files.readString(folderpath.resolve("thedict.gord"));
+            String thedict = Files.readString(folderpath.resolve(THEDICTGORD)).trim();
+            var dictsplit = thedict.split("\n");
+            var last = dictsplit[dictsplit.length-1];
             Assert.assertEquals("Wrong results in dictionary",
-                    "## SERIAL = 0\n" +
-                            "## COLUMNS = Chrom,gene_start,gene_end,Gene_Symbol,c\n" +
-                            "#filepath\talias\tstartchrom\tstartpos\tendchrom\tendpos\ttags\n" +
-                            "dd02aed74a26d4989a91f3619ac8dc20.gorz\t1\tchrM\t576\tchrM\t15955\tJ,M\n",
-                    thedict);
+                    "1\tchrM\t576\tchrM\t15955\tJ,M",
+                    last.substring(last.indexOf('\t')+1));
         } finally {
             deleteFolder(folderpath);
         }
@@ -437,7 +436,7 @@ public class UTestGorDictionaryFolder {
         Assert.assertEquals("Wrong result from partgor query", expected, result);
 
         var header = new DictionaryTableMeta();
-        header.loadAndMergeMeta(folderpath.resolve("thedict.gord"));
+        header.loadAndMergeMeta(folderpath.resolve(THEDICTGORD));
         Assert.assertEquals("false", header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY));
 
         partsize = 4;
@@ -522,10 +521,10 @@ public class UTestGorDictionaryFolder {
                 "| write -f bucket -card bucket test.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz;\n" +
                 "gor [#empty#] | top 1";
         TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cache.toString());
-        Assert.assertTrue(Files.exists(workDirPath.resolve("test.gord").resolve("thedict.gord")));
+        Assert.assertTrue(Files.exists(workDirPath.resolve("test.gord").resolve(THEDICTGORD)));
 
         Assert.assertEquals("Nor-ing the folder with -asdict should be the same as noring the dict",
-                TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord").resolve("thedict.gord")),
+                TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord").resolve(THEDICTGORD)),
                 TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")));
     }
 }
