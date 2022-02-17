@@ -179,7 +179,7 @@ object AnalysisUtilities {
     val gorRoot = projectContext.getProjectRoot
     var cacheDir = if (session.getProjectContext.getCacheDir == null) "gortemp" else session.getProjectContext.getCacheDir
     cacheDir = PathUtils.resolve(gorRoot,cacheDir)
-    if (!fileReader.exists(cacheDir)) {
+    if (!fileReader.existsNoAccessValidation(cacheDir)) {
       if (session.getProjectContext.getCacheDir == null) {
         cacheDir = System.getProperty("java.io.tmpdir")
       } else {

@@ -87,9 +87,13 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public DataSource resolveUrl(SourceReference sourceReference) {
+        return resolveUrl(sourceReference, false);
+    }
+
+    public DataSource resolveUrl(SourceReference sourceReference, boolean skipAccessValidation) {
         DataSource dataSource =  GorDriverFactory.fromConfig().getDataSource(sourceReference);
         if (dataSource != null) {
-            validateAccess(dataSource);
+            if(!skipAccessValidation) validateAccess(dataSource);
         } else {
             log.warn("No source found for {}", sourceReference.getUrl());
         }
@@ -114,6 +118,12 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public boolean exists(String file) {
         return resolveUrl(file).exists();
+    }
+
+    public boolean existsNoAccessValidation(String url) {
+        url = convertUrl(url);
+        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).build();
+        return resolveUrl(sourceReference, true).exists();
     }
 
     @Override
