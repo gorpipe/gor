@@ -180,6 +180,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     if (theIterator != null) {
       theIterator.close()
       theIterator = null
+      if (thePipeStep != null) thePipeStep.reportWantsNoMore()
     }
     if (context != null && context.getSession != null) context.getSession.close()
     isClosed = true

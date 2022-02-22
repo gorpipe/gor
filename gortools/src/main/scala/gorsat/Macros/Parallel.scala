@@ -68,7 +68,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     var theDependencies: List[String] = Nil
     var partitionIndex = 1
     var cachePath: String = null
-    val (hasDictFolderWrite, _, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
+    val (hasDictFolderWrite, _, hasForkWrite, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
     val useGordFolders: Boolean = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
     if (useGordFolders) {
       cachePath = theCachePath
@@ -99,7 +99,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
         }
         if (!extraCommands.isEmpty) newCommand += " " + extraCommands
 
-        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName, cachePath))
+        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName, cachePath, hasForkWrite = hasForkWrite))
         theDependencies ::= parKey
 
         partitionIndex += 1
@@ -113,7 +113,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     }
 
     val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify,useGordFolders)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
+    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true, hasForkWrite = hasForkWrite))
 
     MacroParsingResult(parGorCommands, null)
   }

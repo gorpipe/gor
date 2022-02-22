@@ -86,7 +86,7 @@ public class UTestNorDictionary {
     public void testNorDictionaryFolder() {
         var root = workDir.getRoot().toPath();
         var gordfolder = root.resolve("folder.gord");
-        var query = "create xxx = pgor ../tests/data/gor/dbsnp_test.gorz | write -d "+ gordfolder +"; nor -asdict [xxx]";
+        var query = "create xxx = pgor ../tests/data/gor/dbsnp_test.gorz | write "+ gordfolder +"; nor -asdict [xxx]";
         var result = TestUtils.runGorPipeCount(query);
         Assert.assertEquals("Wrong result from nor asdict query on folder", 24, result);
     }

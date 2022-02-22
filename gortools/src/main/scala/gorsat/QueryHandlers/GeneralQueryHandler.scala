@@ -49,21 +49,22 @@ import java.util.Optional
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
 
-  def getResultsPath(nested: GorContext, newCacheFile: String, cacheFileName: String, resultPathParent: Path): (Path, String) = {
-    val ending = cacheFileName.lastIndexOf(".")
-    var extension = cacheFileName.substring(ending)
+  def getResultsPath(nested: GorContext, newCacheFile: String, resultFileName: String): (Path, String) = {
+    val resultFilePath = if (newCacheFile.endsWith(".gor") && resultFileName.endsWith(".gorz")) resultFileName.substring(0,resultFileName.length-1) else resultFileName
+    val ending = resultFilePath.lastIndexOf(".")
+    var extension = resultFilePath.substring(ending)
     if (PathUtils.isLocal(newCacheFile)) {
       val cachePath = if (!PathUtils.isAbsolutePath(newCacheFile)) {
         nested.getSession.getProjectContext.getProjectRootPath.resolve(newCacheFile)
       } else {
         Paths.get(newCacheFile)
       }
-      val resPath = resultPathParent.resolve(cacheFileName)
+      val resPath = Path.of(resultFilePath)
       GorJavaUtilities.createSymbolicLink(resPath,cachePath)
       (resPath,extension)
     } else {
       extension += ".link"
-      val resPath = resultPathParent.resolve(cacheFileName+".link")
+      val resPath = Path.of(resultFilePath+".link")
       Files.writeString(resPath,newCacheFile)
       (resPath,extension)
     }
@@ -83,9 +84,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     if(fileCache != null && (!isCacheDir || writeGord)) {
         resultFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
         val overheadTime = findOverheadTime(commandToExecute)
-        val resultPathParent = Paths.get(resultFileName).getParent
-        val cacheFileName = Paths.get(newCacheFile).getFileName.toString
-        val resultPath = getResultsPath(nested, newCacheFile, cacheFileName, resultPathParent)
+        val resultPath = getResultsPath(nested, newCacheFile, resultFileName)
         cacheRes = fileCache.store(resultPath._1, commandSignature, resultPath._2, overheadTime + System.currentTimeMillis - startTime)
     }
     cacheRes
