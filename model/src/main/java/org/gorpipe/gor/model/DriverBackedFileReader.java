@@ -80,9 +80,13 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public DataSource resolveUrl(String url, boolean writeable) {
+        return resolveUrl(url, writeable, false);
+    }
+
+    public DataSource resolveUrl(String url, boolean writeable, boolean skipAccessValidation) {
         url = convertUrl(url);
         SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
-        return resolveUrl(sourceReference);
+        return resolveUrl(sourceReference, skipAccessValidation);
     }
 
     @Override
@@ -255,7 +259,11 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public OutputStream getOutputStream(String resource, boolean append) throws IOException {
-        StreamSource source = (StreamSource) resolveUrl(resource, true);
+        return getOutputStream(resource, append, false);
+    }
+
+    public OutputStream getOutputStream(String resource, boolean append, boolean skipAccessValidation) throws IOException {
+        StreamSource source = (StreamSource) resolveUrl(resource, true, skipAccessValidation);
         return source.getOutputStream(append);
     }
 
