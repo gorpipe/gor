@@ -98,7 +98,7 @@ object AnalysisUtilities {
     } finally {
       var out: Writer = null
       try {
-        out = new OutputStreamWriter(fileReader.getOutputStream(fileName))
+        out = new OutputStreamWriter(fileReader.getOutputStream(fileName, false, true))
         out.write(header)
         m.foreach(t => out.write(t + "\n"))
       } finally {
