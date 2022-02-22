@@ -174,25 +174,6 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     processedGorCommands
   }
 
-  /**
-    * Resolve parent path of fork template path
-    * @param res
-    * @return
-    */
-  private def resolveForkPathParent(res: String): String = {
-    val i = res.indexOf("#{fork}")
-    if(i != -1) {
-      val k = res.lastIndexOf('/', i)
-      if(k == -1) "." else res.substring(0,k)
-    } else res
-  }
-
-  private def resolveCache(lastCommand: String): String = {
-    val lastField = lastCommand.split(" ").last.trim
-    if(!lastField.startsWith("-")) resolveForkPathParent(lastField)
-    else null
-  }
-
   private def processScript(igorCommands: Array[String], validate: Boolean, suggestName: Boolean): String = {
     // Parse script to execution blocks and a list of all virtual files
     // We collect all execution blocks as they are removed when executed and if there are
@@ -229,6 +210,12 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           val fileSignature = getFileSignatureAndUpdateSignatureMap(firstLevelBlock.query, usedFiles)
           val querySignature = StringUtilities.createMD5(firstLevelBlock.query + fileSignature)
           firstLevelBlock.signature = querySignature
+
+          val cachePath = MacroUtilities.getExplicitWrite(firstLevelBlock.query)
+          if (cachePath.nonEmpty) {
+            firstLevelBlock.cachePath = cachePath.get._1
+            firstLevelBlock.hasForkWrite = cachePath.get._2
+          }
         }
 
         // Expand the executionBlock with macros
@@ -244,11 +231,9 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
           // Get the command to finally execute
           val commandToExecute = newExecutionBlock._2.query
           val cacheFile = newExecutionBlock._2.cachePath
+          val hasForkWrite = newExecutionBlock._2.hasForkWrite
 
-          val cmdsplit = CommandParseUtilities.quoteSafeSplit(commandToExecute, '|')
-          val firstCommand = cmdsplit.head.trim
-          val lastCommand = cmdsplit.last.trim
-          val cachePath = if (cacheFile == null && lastCommand.toLowerCase.startsWith("write ")) resolveCache(lastCommand) else cacheFile
+          val (cachePath,hasFork) = if (cacheFile == null) MacroUtilities.getExplicitWrite(commandToExecute).getOrElse((cacheFile,hasForkWrite)) else (cacheFile,hasForkWrite)
 
           // Extract used files from the final gor command
           val usedFiles = getUsedFiles(commandToExecute)
@@ -272,14 +257,19 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
               executionBlocks -= firstLevelBlock.groupName
             } else {
               // We need to create a new dictionary query to the batch to get the results from expanded queries
-              val gordictfolder = commandToExecute.startsWith("gordictfolder") || commandToExecute.startsWith("gordictfolderpart")
+              val gordictfolder = commandToExecute.toLowerCase.startsWith("gordictfolder") || commandToExecute.toLowerCase.startsWith("gordictfolderpart")
               val querySignature = if(firstLevelBlock.signature!=null&&gordictfolder) firstLevelBlock.signature
               else {
                 val fileSignature = getFileSignatureAndUpdateSignatureMap(commandToExecute, usedFiles)
                 StringUtilities.createMD5(cte.query + fileSignature)
               }
               val query = cte.query
-              executionBatch.createNewCommand(querySignature, query, cte.batchGroupName, cte.createName, cte.cacheFile)
+              if (!gordictfolder && !hasFork && cte.cacheFile!=null && cte.cacheFile.endsWith(".gord")) {
+                val gordResultsPath = cte.cacheFile+"/"+querySignature+".gorz"
+                executionBatch.createNewCommand(querySignature, query.replace(cte.cacheFile,gordResultsPath), cte.batchGroupName, cte.createName, gordResultsPath)
+              } else {
+                executionBatch.createNewCommand(querySignature, query, cte.batchGroupName, cte.createName, cte.cacheFile)
+              }
               eventLogger.commandCreated(cte.createName, firstLevelBlock.groupName, querySignature, cte.query)
             }
           })

@@ -378,7 +378,7 @@ object MacroUtilities {
 
   def appendQuery(finalQuery: String, lastCmd: String, hasWrite: Boolean, cachefile: String = null, cacheFileExists: Boolean = false): String = {
     " <(" + finalQuery + ")" + (if(cachefile!=null && !cacheFileExists) {
-      " | " + (if(hasWrite) lastCmd + (if(cachefile.endsWith(".gord") && !lastCmd.contains(" -d ")) " -d " else " ") + cachefile else "write -d " + cachefile)
+      " | " + (if(hasWrite) lastCmd + " " + cachefile else "write " + cachefile)
     } else if(hasWrite) {
       " | " + lastCmd
     } else {
@@ -406,7 +406,41 @@ object MacroUtilities {
     } else (null, false)
   }
 
-  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, Boolean, String, String) = {
+  def getLastCommand(query: String): String = {
+    val cmdsplit = CommandParseUtilities.quoteSafeSplit(query, '|')
+    cmdsplit.last.trim
+  }
+
+  /**
+    * Resolve parent path of fork template path
+    * @param res
+    * @return
+    */
+  private def resolveForkPathParent(res: String): Option[(String, Boolean)] = {
+    val i = res.indexOf("#{fork}")
+    if(i != -1) {
+      val k = res.lastIndexOf('/', i)
+      val ret = if(k == -1) "." else res.substring(0,k)
+      Option.apply(ret, true)
+    } else Option.apply(res, false)
+  }
+
+  private def resolveCache(lastCommand: String): Option[(String, Boolean)] = {
+    val lastField = lastCommand.split(" ").last.trim
+    if(!lastField.startsWith("-")) resolveForkPathParent(lastField)
+    else Option.empty
+  }
+
+  def getExplicitWrite(query: String): Option[(String,Boolean)] = {
+    val lastCommand = MacroUtilities.getLastCommand(query)
+    if (lastCommand.toLowerCase.startsWith("write ")) {
+      resolveCache(lastCommand)
+    } else {
+      Option.empty
+    }
+  }
+
+  def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, Boolean, Boolean, String, String) = {
     val k = create.query.indexOf(" ")
     val cmdname = create.query.substring(0,k).toLowerCase
     var innerQuery = create.query.trim.slice(k+1, create.query.length)
@@ -426,7 +460,11 @@ object MacroUtilities {
     val lastCmdLower = lastCmd.toLowerCase
     val hasWrite = lastCmdLower.startsWith("write ")
     val didx = if(hasWrite) lastCmd.indexOf(" -d ") else 0
-    val lidx = if(hasWrite) lastCmdLower.indexOf(".gord/") else 0
+    val lidx = if(hasWrite) {
+      if (lastCmdLower.endsWith(".gord")) lastCmdLower.length-5
+      else lastCmdLower.indexOf(".gord/")
+    } else 0
+    val hasForkWrite = lastCmdLower.contains("#{fork}")
     val hasGordFolderWrite = didx > 0 || lidx > 0
     val writeDir = if (didx>0) {
       var k = didx+4
@@ -441,18 +479,18 @@ object MacroUtilities {
     val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
     if(skipcache) {
       val queryAppend = appendQuery(finalQuery, lastCmd, false)
-      (hasGordFolderWrite, false, null, queryAppend)
+      (hasGordFolderWrite, false, hasForkWrite, null, queryAppend)
     } else if(writeDir != null || hasWriteFile) {
       val cacheRes = if(writeDir!=null) writeDir else lastCmd.split(" ").last
       val cachepath = Paths.get(cacheRes)
       val cacheFileExists = Files.exists(cachepath) && !Files.isDirectory(cachepath)
       val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd
-      (hasGordFolderWrite, cacheFileExists, cacheRes, queryAppend)
+      (hasGordFolderWrite, cacheFileExists, hasForkWrite, cacheRes, queryAppend)
     } else {
       val fingerprint = create.signature
       val (cachefile, cacheFileExists) = fileCacheLookup(context, fingerprint)
       val queryAppend = appendQuery(finalQuery, lastCmd, hasWrite, cachefile, cacheFileExists)
-      (hasGordFolderWrite, cacheFileExists, cachefile, queryAppend)
+      (hasGordFolderWrite, cacheFileExists, hasForkWrite, cachefile, queryAppend)
     }
   }
 }

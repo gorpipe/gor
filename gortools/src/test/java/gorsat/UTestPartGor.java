@@ -94,7 +94,7 @@ public class UTestPartGor {
         String[] args = CommandParseUtilities.quoteSafeSplit(query, ' ');
         String[] finalArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        MacroParsingResult result =  info.init("[test]", new ExecutionBlock("[group1]", query, null, dependencies, "group1", null,true),
+        MacroParsingResult result =  info.init("[test]", new ExecutionBlock("[group1]", query, null, dependencies, "group1", null,true, false),
                 new GenericSessionFactory().create().getGorContext(), false, finalArgs, false);
 
         Assert.assertEquals(11, result.createCommands().size());

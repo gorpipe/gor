@@ -31,5 +31,6 @@ case class ExecutionBlock(groupName: String,
                           var signature: String = null,
                           dependencies: Array[String],
                           batchGroupName: String = null,
-                          cachePath: String = null,
-                          isDictionary: Boolean = false)
+                          var cachePath: String = null,
+                          isDictionary: Boolean = false,
+                          var hasForkWrite: Boolean = false)
