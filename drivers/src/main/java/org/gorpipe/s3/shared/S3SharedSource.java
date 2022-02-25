@@ -35,8 +35,9 @@ import java.net.MalformedURLException;
  */
 public class S3SharedSource extends S3Source {
 
-    private String linkFile;
-    private String linkFileContent;
+    // Project link file is a link file within the project that points to this source.
+    private String projectLinkFile;
+    private String projectLinkFileContent;
     private String relativePath;
     private final S3SharedConfiguration s3SharedConfig;
 
@@ -56,34 +57,39 @@ public class S3SharedSource extends S3Source {
     }
 
     @Override
-    public String getLinkFile() {
-        return linkFile;
+    public String getProjectLinkFile() {
+        return projectLinkFile;
     }
 
-    public void setLinkFile(String linkFile) {
-        this.linkFile = linkFile;
+    public void setProjectLinkFile(String projectLinkFile) {
+        this.projectLinkFile = projectLinkFile;
     }
 
     @Override
-    public String getLinkFileContent() {
-        return !Strings.isNullOrEmpty(linkFileContent) ? linkFileContent : getFullPath();
+    public String getProjectLinkFileContent() {
+        return !Strings.isNullOrEmpty(projectLinkFileContent) ? projectLinkFileContent : getFullPath();
     }
 
-    public void setLinkFileContent(String linkFileContent) {
-        this.linkFileContent = linkFileContent;
+    public void setProjectLinkFileContent(String projectLinkFileContent) {
+        this.projectLinkFileContent = projectLinkFileContent;
     }
 
     @Override
     public boolean forceLink() {
-        return linkFile != null && !linkFile.isEmpty();
+        return projectLinkFile != null && !projectLinkFile.isEmpty();
     }
 
     @Override
-    public String getAccessValidationPath() {
+    public String[] getAccessValidationPaths() {
         if (s3SharedConfig.onlyAccessWithLinksOnServer()
             && !getSourceReference().getOriginalSourceReference().isWriteSource() && !getSourceReference().isCreatedFromLink()) {
             throw new GorResourceException("S3 shared resources can only be accessed using links.", null);
         }
-        return getRelativePath();
+        
+        if (getSourceReference().isCreatedFromLink()) {
+            return new String[]{getSourceReference().getOriginalSourceReference().getUrl(), getRelativePath()};
+        } else {
+            return new String[]{getRelativePath()};
+        }
     }
 }

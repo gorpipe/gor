@@ -181,6 +181,13 @@ public class UTestProjectContext {
         fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.rep.link").toString(), false);
     }
 
+    @Test(expected = GorResourceException.class)
+    public void isReadAllowedFromUnaccessibleGorLinkRelativePath() {
+        // Should not be able to access, links with relative paths outside project root (what ever they point to)
+        Path releativePath = projectDir.getRoot().toPath().relativize(sharedDir.getRoot().toPath());
+        fileReader.resolveUrl(releativePath.resolve("unaccessiable.gor.link").toString(), false);
+    }
+
     // Write
 
     private void validateWriteAccess(String url) {

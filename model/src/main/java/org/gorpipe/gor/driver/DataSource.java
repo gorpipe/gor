@@ -31,8 +31,6 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
@@ -59,16 +57,16 @@ public interface DataSource extends AutoCloseable {
     }
 
     /**
-     * Returns path used to validate the access.
+     * Returns paths used to validate the access.
      * @throws  GorResourceException if the path can not be created (
      * for example if there is no access).
      */
-    default String getAccessValidationPath() {
+    default String[] getAccessValidationPaths() {
         if (getSourceReference().isCreatedFromLink()) {
             // For links we just valuate if the user has access for the link.
-            return getSourceReference().getOriginalSourceReference().getUrl();
+            return new String[]{getSourceReference().getOriginalSourceReference().getUrl()};
         }
-        return getName();
+        return new String[]{getName()};
     }
 
     /**
@@ -181,7 +179,7 @@ public interface DataSource extends AutoCloseable {
      * Get the content of a link file, if we decide to create one for this datasource.
      * @return content of a link file pointing to this datasource.
      */
-    default String getLinkFileContent() {
+    default String getProjectLinkFileContent() {
         return getFullPath();
     }
 
@@ -189,7 +187,7 @@ public interface DataSource extends AutoCloseable {
      * The path of the link file.
      * @return path of the link file, null if not set.
      */
-    default String getLinkFile() {
+    default String getProjectLinkFile() {
         return null;
     }
 

@@ -91,8 +91,8 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
             AmazonS3Client client = getClient(s3SecurityContext, bucket);
             source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
 
-            source.setLinkFile(relativePath + ".link");
-            source.setLinkFileContent(sourceReference.getUrl());
+            source.setProjectLinkFile(relativePath + ".link");
+            source.setProjectLinkFileContent(sourceReference.getUrl());
         }
 
         source = handleFallback(sourceReference, source);
