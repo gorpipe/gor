@@ -51,7 +51,7 @@ public class SourceReference {
     private final String linkSubPath;
     private boolean isCreatedFromLink = false;
     private Long linkLastModified = null;
-    private SourceReference originalSourceReference;
+    private SourceReference parentSourceReference;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?
@@ -106,8 +106,8 @@ public class SourceReference {
         this(url, securityContext, parentSourceReference.getCommonRoot(),
                 parentSourceReference.getLookup(), parentSourceReference.getChrSubset(), linkSubPath,
                 parentSourceReference.isWriteSource());
-        if (originalSourceReference == null) {
-            originalSourceReference = parentSourceReference;
+        if (this.parentSourceReference == null) {
+            this.parentSourceReference = parentSourceReference;
         }
     }
 
@@ -169,8 +169,12 @@ public class SourceReference {
         this.linkLastModified = linkLastModified;
     }
 
+    public SourceReference getParentSourceReference() {
+        return parentSourceReference;
+    }
+
     public SourceReference getOriginalSourceReference() {
-        return originalSourceReference;
+        return parentSourceReference != null ? parentSourceReference.getOriginalSourceReference() : this;
     }
 
     @Override

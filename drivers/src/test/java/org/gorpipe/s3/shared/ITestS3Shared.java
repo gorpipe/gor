@@ -180,16 +180,45 @@ public class ITestS3Shared {
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getOriginalSourceReference().getUrl());
+        Assert.assertEquals("a.gorz", source.getSourceReference().getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getParentSourceReference().getUrl());
         Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         source = fileReader.resolveUrl("a.gorz.link");
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getOriginalSourceReference().getUrl());
+        Assert.assertEquals("a.gorz.link", source.getSourceReference().getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getParentSourceReference().getUrl());
         Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
     }
+
+    @Test
+    public void testReadWithUnaccessableLinkFile() throws IOException {
+        Path gorRoot  = workDirPath.resolve("some_project");
+        Path linkFile = workDirPath.resolve("a.gorz.link");
+        Files.createDirectory(gorRoot);
+        Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
+
+        FileReader fileReader = new DriverBackedGorServerFileReader(gorRoot.toString(), null,false ,
+                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
+
+        try {
+            DataSource source = fileReader.resolveUrl("../a.gorz");
+            Assert.fail("Should not be resolved, link outside project");
+        } catch (GorResourceException e) {
+            // Expected
+            Assert.assertTrue(e.getMessage().contains("File paths must be within project scope"));
+        }
+
+        try {
+            DataSource source = fileReader.resolveUrl("../a.gorz.link");
+            Assert.fail("Should not be resolved, link outside project");
+        } catch (GorResourceException e) {
+            // Expected
+            Assert.assertTrue(e.getMessage().contains("File paths must be within project scope"));
+        }
+     }
 
     @Test
     public void testReadDirectly() {

@@ -297,8 +297,8 @@ case class ForkWrite(forkCol: Int,
       if (linkFile.isEmpty) {
         val dataSource = session.getProjectContext.getFileReader.resolveUrl(fileName, true)
         if (dataSource != null && dataSource.forceLink()) {
-          linkFile = dataSource.getLinkFile
-          linkFileContent = dataSource.getLinkFileContent
+          linkFile = dataSource.getProjectLinkFile
+          linkFileContent = dataSource.getProjectLinkFileContent
         }
       } else {
         linkFileContent = PathUtils.resolve(session.getProjectContext.getProjectRoot, fileName)

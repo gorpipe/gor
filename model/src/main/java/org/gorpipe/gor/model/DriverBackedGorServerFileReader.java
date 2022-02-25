@@ -114,29 +114,44 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
     }
 
     private void validateReadAccess(DataSource source) throws GorResourceException {
-        validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
+        validateServerFileNames(source.getAccessValidationPaths());
     }
 
     void validateWriteAccess(DataSource source) throws GorResourceException {
-        validateServerFileName(source.getAccessValidationPath(), commonRoot, allowAbsolutePath);
-        isWithinAllowedFolders(source, writeLocations, commonRoot);
+        String[] validationPaths = source.getAccessValidationPaths();
+        validateServerFileNames(validationPaths);
 
-        
-        if (source.getAccessValidationPath().toLowerCase().endsWith(".link")) {
-            throw new GorResourceException("Writing link files is not allowed", null);
+        isWithinAllowedFolders(source);
+
+        for (String validationPath : validationPaths) {
+            if (validationPath.toLowerCase().endsWith(".link")) {
+                throw new GorResourceException("Writing link files is not allowed", null);
+            }
         }
     }
 
-    public static void isWithinAllowedFolders(DataSource dataSource, List<String> writeLocations, String commonRoot) {
+    public void isWithinAllowedFolders(DataSource dataSource) {
+        for (String validationPath : dataSource.getAccessValidationPaths()) {
+            isWithinAllowedFolders(validationPath, writeLocations, commonRoot);
+        }
+    }
+
+    public static void isWithinAllowedFolders(String fileName, List<String> writeLocations, String commonRoot) {
         for (String location : writeLocations) {
-            if (PathUtils.resolve(Path.of(commonRoot), dataSource.getAccessValidationPath())
+            if (PathUtils.resolve(Path.of(commonRoot), fileName)
                     .startsWith(PathUtils.resolve(commonRoot, location))) {
                 return;
             }
         }
         String message = String.format("Invalid File Path: File path not within folders allowed! Path given: %s. " +
-                "Write locations are %s", dataSource.getAccessValidationPath(), Arrays.toString(writeLocations.toArray()));
-        throw new GorResourceException(message, dataSource.getAccessValidationPath());
+                "Write locations are %s", fileName, Arrays.toString(writeLocations.toArray()));
+        throw new GorResourceException(message, fileName);
+    }
+
+    public void validateServerFileNames(String[] filenames) {
+        for (String filename : filenames) {
+            validateServerFileName(filename, commonRoot, allowAbsolutePath);
+        }
     }
 
     public static void validateServerFileName(String filename, String projectRoot, boolean allowAbsolutePath) throws GorResourceException {

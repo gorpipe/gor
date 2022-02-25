@@ -123,18 +123,18 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public String getLinkFileContent() {
-        return wrapped.getLinkFileContent();
+    public String getProjectLinkFileContent() {
+        return wrapped.getProjectLinkFileContent();
     }
 
     @Override
-    public String getLinkFile() {
-        return wrapped.getLinkFile();
+    public String getProjectLinkFile() {
+        return wrapped.getProjectLinkFile();
     }
 
     @Override
-    public String getAccessValidationPath() {
-        return wrapped.getAccessValidationPath();
+    public String[] getAccessValidationPaths() {
+        return wrapped.getAccessValidationPaths();
     }
 
     public DataSource getWrapped() {
