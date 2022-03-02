@@ -220,7 +220,10 @@ public class FileSource implements StreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        return Files.list(file).map(Path::toString);
+        if (!PathUtils.isAbsolutePath(sourceReference.getUrl())) {
+            var root = Path.of(sourceReference.getCommonRoot());
+            return Files.list(file).map(root::relativize).map(Path::toString);
+        } else return Files.list(file).map(Path::toString);
     }
 
     @Override
