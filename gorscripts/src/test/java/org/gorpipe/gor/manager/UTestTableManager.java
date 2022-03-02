@@ -203,7 +203,7 @@ public class UTestTableManager {
         man.setBucketSize(100);
 
         DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-        Process p;
+        Process p = null;
 
         // Bucketize in process.   Set the pack level, otherwise we will sometimes pack the buckets and fail the test.
         p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100", "--pack_level", "NO_PACKING"}, ".");
@@ -215,6 +215,7 @@ public class UTestTableManager {
         // here to make sure we can do our changes before the bucketzing in the thread finishes.
         try {
             try (TableTransaction trans = TableTransaction.openWriteTransaction(TableManager.DEFAULT_LOCK_TYPE, table, table.getName(), Duration.ofSeconds(10))) {
+
                 if (!trans.getLock().isValid() || !p.isAlive()) {
                     log.info(testTableManagerUtil.waitForProcessPlus(p));
                     Assert.assertTrue("Test not setup correctly, bucketizing finished to early.", false);
