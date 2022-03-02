@@ -34,7 +34,7 @@ project(':drivers') {
         implementation 'com.google.auto.service:auto-service:_'
         implementation "org.aeonbits.owner:owner:_"
         implementation "com.github.samtools:htsjdk:_"
-        implementation libs.jackson.databind
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "com.google.cloud:google-cloud-storage:_"
         implementation "com.amazonaws:aws-java-sdk-s3:_"
         implementation "com.microsoft.azure:azure-storage:_"

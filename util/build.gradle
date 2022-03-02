@@ -29,11 +29,11 @@ project(':util') {
         implementation project(':base')
 
         implementation "commons-configuration:commons-configuration:_"
-        implementation libs.commons.lang3
+        implementation "org.apache.commons:commons-lang3:_"
         implementation "com.zaxxer:HikariCP:_"
 
         testImplementation project(':test')
 
-        testImplementation libs.slf4j
+        testImplementation "org.slf4j:slf4j-api:_"
     }
 }

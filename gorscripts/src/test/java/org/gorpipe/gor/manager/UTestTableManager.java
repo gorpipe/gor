@@ -203,6 +203,7 @@ public class UTestTableManager {
         man.setBucketSize(100);
 
         DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        Process p = null;
 
         // Bucketize in process.   Set the pack level, otherwise we will sometimes pack the buckets and fail the test.
         Process p = testTableManagerUtil.startGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--max_bucket_count", "100", "--pack_level", "NO_PACKING"}, ".");
@@ -214,12 +215,13 @@ public class UTestTableManager {
         // here to make sure we can do our changes before the bucketzing in the thread finishes.
         try {
             try (TableTransaction trans = TableTransaction.openWriteTransaction(TableManager.DEFAULT_LOCK_TYPE, table, table.getName(), Duration.ofSeconds(10))) {
-                if (!trans.getLock().isValid()) {
+
+                if (!trans.getLock().isValid() || !p.isAlive()) {
                     log.info(testTableManagerUtil.waitForProcessPlus(p));
                     Assert.assertTrue("Test not setup correctly, bucketizing finished to early.", false);
                 }
 
-                // Do some changes, add, delete, update.
+                // Do some changes, add, delete, update, add 10, then delete 2.
                 String[] sources2 = IntStream.range(1, 10).mapToObj(i -> String.format("PNX%d", i)).toArray(size -> new String[size]);
                 Map<String, List<String>> dataFiles2 = GorDictionarySetup.createDataFilesMap(
                         name, workDirPath, 10, new int[]{1, 2, 3}, 10, "PN", true, sources2);
@@ -238,7 +240,9 @@ public class UTestTableManager {
                 trans.commit();
             }
         } finally {
-            log.info(testTableManagerUtil.waitForProcessPlus(p));
+            if (p != null) {
+                log.info(testTableManagerUtil.waitForProcessPlus(p));
+            }
         }
 
         // Check that the updates where handled correctly.
@@ -246,7 +250,7 @@ public class UTestTableManager {
 
         Assert.assertEquals("Total number of lines does not match", 1010, table.selectAll().size());
         Assert.assertEquals("New lines should not be bucketized", 10, table.needsBucketizing().size());
-        Assert.assertEquals("Deleted lines should be reinserted", 2, table.selectAll().stream().filter(f -> f.isDeleted()).count());
+        Assert.assertEquals("Deleted lines should be reinserted (marked deleted)", 2, table.selectAll().stream().filter(f -> f.isDeleted()).count());
     }
 
 

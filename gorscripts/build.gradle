@@ -41,13 +41,13 @@ project(':gorscripts') {
         implementation project(':util')
 
         implementation "org.aeonbits.owner:owner:_"
-        implementation libs.logback
-        implementation libs.picocli
-        implementation libs.picocli.shell
-        implementation libs.commons.io
-        implementation libs.commons.lang3
+        implementation "ch.qos.logback:logback-classic:_"
+        implementation "info.picocli:picocli:_"
+        implementation "info.picocli:picocli-shell-jline3:_"
+        implementation "commons-io:commons-io:_"
+        implementation "org.apache.commons:commons-lang3:_"
         implementation "de.tototec:de.tototec.cmdoption:_"
-        implementation libs.jackson.databind
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "org.reflections:reflections:_"
         implementation "com.google.guava:guava:_"
 
@@ -63,11 +63,11 @@ project(':gorscripts') {
         testImplementation "org.scalatest:scalatest_${scalaVersion}:_"
         testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
         testImplementation 'com.github.stefanbirkner:system-rules:_'
-        testImplementation libs.commons.io
-        testImplementation libs.commons.lang3
+        testImplementation "commons-io:commons-io:_"
+        testImplementation "org.apache.commons:commons-lang3:_"
         testImplementation "com.google.guava:guava:_"
-        testImplementation libs.slf4j
-        testImplementation libs.logback
+        testImplementation "org.slf4j:slf4j-api:_"
+        testImplementation "ch.qos.logback:logback-classic:_"
         testImplementation "com.github.samtools:htsjdk:_"
 
         testRuntimeOnly "org.apache.derby:derby:_"

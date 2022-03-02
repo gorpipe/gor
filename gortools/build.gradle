@@ -44,15 +44,15 @@ project(':gortools') {
 
         implementation "org.freemarker:freemarker:_"
         implementation "org.yaml:snakeyaml:_"
-        implementation libs.commons.io
-        implementation libs.commons.lang3
+        implementation "commons-io:commons-io:_"
+        implementation "org.apache.commons:commons-lang3:_"
         implementation "org.scala-lang:scala-compiler:_"
-        implementation libs.jackson.databind
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "org.scalanlp:breeze_${scalaVersion}:_"
         implementation "colt:colt:_"
         implementation "com.github.samtools:htsjdk:_"
         implementation "org.aeonbits.owner:owner:_"
-        implementation libs.logback
+        implementation "ch.qos.logback:logback-classic:_"
         implementation "io.prometheus:simpleclient:_"
         implementation 'org.apache.parquet:parquet-common:_'
         implementation 'org.apache.parquet:parquet-column:_'

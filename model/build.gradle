@@ -36,11 +36,11 @@ project(':model') {
         annotationProcessor 'com.google.auto.service:auto-service:_'
         
         implementation 'com.google.auto.service:auto-service:_'
-        implementation libs.commons.lang3
+        implementation "org.apache.commons:commons-lang3:_"
         implementation "org.aeonbits.owner:owner:_"
         implementation "com.github.samtools:htsjdk:_"
         implementation "com.github.luben:zstd-jni:_"  // 9-5 TODO: 1.4.4.4-5 seems to be broken - fix zstd-jni at an earlier version for now
-        implementation libs.jackson.databind
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation 'org.apache.parquet:parquet-common:_'
         implementation 'org.apache.parquet:parquet-column:_'
         implementation 'org.apache.parquet:parquet-hadoop:_'
@@ -55,7 +55,7 @@ project(':model') {
         testImplementation project(':test')
         testImplementation project(':external')
 
-        testImplementation libs.logback
+        testImplementation "ch.qos.logback:logback-classic:_"
 
         testImplementation Testing.mockito.core
         testImplementation "org.scalatest:scalatest_${scalaVersion}:_"
