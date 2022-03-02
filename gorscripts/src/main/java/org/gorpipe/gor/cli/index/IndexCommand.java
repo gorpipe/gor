@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli.index;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -167,6 +168,8 @@ public class IndexCommand extends HelpOptions implements Runnable {
                 if (r > 0) {
                     byte[] bytes = (totalOffset + "\n").getBytes();
                     baos.write(bytes);
+                } else {
+                    throw new GorResourceException("end of line not found in last line",gorFile);
                 }
             }
             if (!lastwritten && lastbaos != null) {
