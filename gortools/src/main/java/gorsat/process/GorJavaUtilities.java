@@ -31,6 +31,7 @@ import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -573,7 +574,9 @@ public class GorJavaUtilities {
                 GorMeta meta = GorMeta.createAndLoad(fileReader, p);
 
                 if (!meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0 ) {
-                    var outfile = FilenameUtils.removeExtension(p);
+                    var fulldicturi = URI.create(outfolderpath);
+                    var outfilename = PathUtils.relativize(fulldicturi, p);
+                    var outfile = FilenameUtils.removeExtension(outfilename);
                     DictionaryEntry.Builder builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
                     builder.alias(Integer.toString(++i));
                     builder.range(meta.getRange());
