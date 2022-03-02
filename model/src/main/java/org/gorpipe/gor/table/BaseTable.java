@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 import static org.gorpipe.gor.table.util.PathUtils.isLocal;
 import static org.gorpipe.gor.table.util.PathUtils.normalize;
 
-abstract public class BaseTable<T> implements Table<T> {
+public abstract class BaseTable<T> implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
 
@@ -127,11 +127,6 @@ abstract public class BaseTable<T> implements Table<T> {
         return this.id;
     }
 
-    /**
-     * Get real path of this table.
-     *
-     * @return real path of this table.
-     */
     public Path getPath() {
         return PathUtils.toPath(this.path);
     }
@@ -507,9 +502,11 @@ abstract public class BaseTable<T> implements Table<T> {
     }
 
     // Util method.
-    protected void logAfter(TableLog.LogAction action, String argument, TableEntry entry) {
+    protected void logAfter(TableLog.LogAction action, String argument, String... lines) {
         if (useHistory) {
-            tableLog.logAfter(action, argument, entry);
+            for (String line : lines) {
+                tableLog.logAfter(action, argument, line);
+            }
         }
     }
 
