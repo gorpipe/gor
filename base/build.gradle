@@ -27,14 +27,14 @@ project(':base') {
     dependencies {
         implementation "com.googlecode.json-simple:json-simple:_"
         implementation "org.aeonbits.owner:owner:_"
-        implementation libs.commons.io
-        implementation libs.commons.lang3
-        implementation libs.slf4j
-        implementation libs.jackson.databind
-        implementation libs.logback
+        implementation "commons-io:commons-io:_"
+        implementation "org.apache.commons:commons-lang3:_"
+        implementation "org.slf4j:slf4j-api:_"
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
+        implementation "ch.qos.logback:logback-classic:_"
         implementation('net.logstash.logback:logstash-logback-encoder:_')
         implementation 'org.fusesource.jansi:jansi:_' // Needs to be included for Windows
-        implementation libs.slf4j.jcl
+        implementation "org.slf4j:jcl-over-slf4j:_"
 
         testImplementation project(':test')
     }

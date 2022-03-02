@@ -9,8 +9,6 @@ refreshVersions {
     }
 }
 
-enableFeaturePreview("VERSION_CATALOGS")
-
 rootProject.name = 'gor'
 rootProject.buildFileName = "build.gradle"
 

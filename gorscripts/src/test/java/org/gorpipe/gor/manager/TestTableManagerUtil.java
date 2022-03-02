@@ -33,6 +33,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -141,14 +143,21 @@ public class TestTableManagerUtil {
     void waitForBucketizeToStart(DictionaryTable table, Process p) throws InterruptedException, IOException, ExecutionException {
         long startTime = System.currentTimeMillis();
         while (true) {
-            try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {
-                if (!bucketizeLock.isValid()) {
-                    break;
-                }
+            // Wait for the temp file to be created (as then the dict has been read)
+            long tempFiles  = Files.list(table.getRootPath()).filter(f -> f.toString().contains(table.getName() + ".temp.bucketizing.")).count();
+            if (tempFiles == 1) {
+                break;
             }
+            // Option to wait for the bucketize look to be taken (by someone else) but then we don't control which version of the dict is bucektized.
+//            try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {
+//                if (!bucketizeLock.isValid()) {
+//                    break;
+//                }
+//            }
+
             if (System.currentTimeMillis() - startTime > 5000) {
                 log.info(waitForProcessPlus(p));
-                Assert.assertTrue("Test not setup correctly, thread did not get bucketize lock, took too long.", false);
+                Assert.fail("Test not setup correctly, thread did not get bucketize lock, took too long.");
             }
             Thread.sleep(100);
         }

@@ -32,14 +32,14 @@ project(':test') {
         implementation project(':drivers')
         api project(':gortools')
 
-        implementation libs.logback
-        implementation libs.slf4j
+        implementation "ch.qos.logback:logback-classic:_"
+        implementation "org.slf4j:slf4j-api:_"
         implementation Testing.junit4
 
-        implementation libs.commons.lang3
+        implementation "org.apache.commons:commons-lang3:_"
         implementation "commons-lang:commons-lang:_"
         implementation "com.zaxxer:HikariCP:_"
-        implementation libs.commons.io
+        implementation "commons-io:commons-io:_"
         implementation "commons-codec:commons-codec:_"
         implementation "com.google.guava:guava:_"
     }
