@@ -40,7 +40,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
-import java.util.Properties;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 /**
@@ -175,11 +175,11 @@ public class S3Source implements StreamSource {
 
     private Path getPath() {
         if (path == null) {
-            S3FileSystem s3fs;
+            FileSystem s3fs;
             try {
-                s3fs = (S3FileSystem) FileSystems.getFileSystem(URI.create("s3://" + bucket));
+                s3fs = FileSystems.getFileSystem(URI.create("s3://" + bucket));
             } catch (ProviderNotFoundException | FileSystemNotFoundException e) {
-                s3fs = new S3ClientFileSystemProvider().createFileSystem(URI.create("s3://" + bucket), new Properties(), client);
+                s3fs = new S3ClientFileSystemProvider().createFileSystem(URI.create("s3://" + bucket), new HashMap<String, String>(), client);
             }
             path = s3fs.getPath("/" + bucket, key);
         }
