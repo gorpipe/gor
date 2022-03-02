@@ -75,9 +75,9 @@ public class TableLog {
      * @param argument  action argument (can be null if all info is in the entry object)
      * @param entry     entry after update.
      */
-    public void logAfter(LogAction action, String argument, TableEntry entry) {
+    public void logAfter(LogAction action, String argument, String line) {
         String logLine = String.format("%s\t%s\t%s", LocalDateTime.now().format(formatter), action.toString(), argument);
-        logLine += String.format("\t%s", entry.formatEntryNoNewLine());
+        logLine += String.format("\t%s", line);
         logLine += "\n";
         unCommittedActions.add(logLine);
     }

@@ -96,13 +96,13 @@ public class UTestTableLog {
         TableLog tableLog = new TableLog(workDirPath);
 
         tableLog.logAfter(TableLog.LogAction.INSERT, "ARG1",
-                new DictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build());
+                new DictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build().formatEntryNoNewLine());
         tableLog.logAfter(TableLog.LogAction.ADDTOBUCKET, "BUCKET1",
-                new DictionaryEntry.Builder("dummy2.gor", workDirPath).bucket("BUCKET1").alias("A2").build());
+                new DictionaryEntry.Builder("dummy2.gor", workDirPath).bucket("BUCKET1").alias("A2").build().formatEntryNoNewLine());
         tableLog.logAfter(TableLog.LogAction.REMOVEFROMBUCKET, "BUCKET2",
-                new DictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build());
+                new DictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build().formatEntryNoNewLine());
         tableLog.logAfter(TableLog.LogAction.DELETE, "ARG2",
-                new DictionaryEntry.Builder("dummy4.gor", workDirPath).alias("A4").build());
+                new DictionaryEntry.Builder("dummy4.gor", workDirPath).alias("A4").build().formatEntryNoNewLine());
         return tableLog;
     }
 

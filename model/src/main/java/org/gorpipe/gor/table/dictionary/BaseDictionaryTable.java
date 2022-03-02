@@ -203,6 +203,11 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(BucketableTableEntry::getBucket).distinct().collect(Collectors.toList());
     }
 
+    @Override
+    public Iterator<String> getLines() {
+        return getEntries().stream().map(l -> l.formatEntryNoNewLine()).iterator();
+    }
+
     public void insert(Collection<T> lines) {
         int count = 0;
         for (T line : lines) {
@@ -216,7 +221,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
             }
 
             this.tableEntries.insert(line, isHasUniqueTags());
-            logAfter(TableLog.LogAction.INSERT, "", line);
+            logAfter(TableLog.LogAction.INSERT, "", line.formatEntryNoNewLine());
         }
     }
 
@@ -237,7 +242,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     public void delete(Collection<T> lines) {
         for (T line : lines) {
             tableEntries.delete(line, true);
-            logAfter(TableLog.LogAction.DELETE, "", line);
+            logAfter(TableLog.LogAction.DELETE, "", line.formatEntryNoNewLine());
         }
     }
 
@@ -250,6 +255,10 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     private List<T> lineStringsToEntries(String[] lines) {
         List<T> entries = new ArrayList<>();
         for (String line : lines) {
+            line = line.stripLeading();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
             entries.add((T)DictionaryEntry.parseEntry(line, getRootUri(), true));
         }
         return entries;
@@ -275,10 +284,10 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
                     String bucket = lineToRemoveFrom.getBucket();
                     if (lineToRemoveFrom.isDeleted()) {
                         tableEntries.delete(lineToRemoveFrom, false);
-                        logAfter(TableLog.LogAction.DELETE, bucket, lineToRemoveFrom);
+                        logAfter(TableLog.LogAction.DELETE, bucket, lineToRemoveFrom.formatEntryNoNewLine());
                     } else {
                         lineToRemoveFrom.setBucket("");
-                        logAfter(TableLog.LogAction.REMOVEFROMBUCKET, bucket, lineToRemoveFrom);
+                        logAfter(TableLog.LogAction.REMOVEFROMBUCKET, bucket, lineToRemoveFrom.formatEntryNoNewLine());
                     }
                 }
             }
@@ -459,14 +468,14 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
                             line.getContentRelative(), lineToUpdate.getBucket(), bucketLogical));
                 }
                 lineToUpdate.setBucket(bucketLogical);
-                logAfter(TableLog.LogAction.ADDTOBUCKET, bucketLogical, line);
+                logAfter(TableLog.LogAction.ADDTOBUCKET, bucketLogical, line.formatEntryNoNewLine());
             } else {
                 // No line found, must have been deleted.  To be able to use the bucket we must add a new line.
                 T newDeletedLine = (T) TableEntry.copy(line);
                 newDeletedLine.setDeleted(true);
                 newDeletedLine.setBucket(bucketLogical);
                 tableEntries.insert(newDeletedLine, false);
-                logAfter(TableLog.LogAction.INSERT, bucketLogical, line);
+                logAfter(TableLog.LogAction.INSERT, bucketLogical, line.formatEntryNoNewLine());
             }
         }
     }
@@ -520,7 +529,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         protected String sourceColumn;
         protected Boolean uniqueTags;
 
-        public Builder(URI path) {
+        protected Builder(URI path) {
             super(path);
         }
 

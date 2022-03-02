@@ -10,6 +10,7 @@ import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.TableLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +18,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,6 +58,15 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     }
 
     @Override
+    public Iterator<String> getLines() {
+        try {
+            return fileReader.getReader(getPathUri().toString()).lines().iterator();
+        } catch (IOException e) {
+            throw new GorSystemException("Error getting file reader", e);
+        }
+    }
+
+    @Override
     public void insert(Collection<T> lines) {
         Path tempInputFile;
         try {
@@ -65,6 +75,8 @@ public class GorTable<T extends Row> extends BaseTable<T> {
             throw new GorSystemException("Could not create temp file for inserting data", e);
         }
         insert(tempInputFile.toUri());
+
+        logAfter(TableLog.LogAction.INSERT, "", lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
     }
 
     @Override
@@ -73,7 +85,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         insert(entries);
     }
 
-    public void insert(URI gorFile) {
+    private void insert(URI gorFile) {
         // Validate the new file.
         if (isValidateFiles()) {
             validateFile(gorFile.toString());
@@ -81,9 +93,6 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         String gorPipeCommand = createInsertTempFileCommand(gorFile);
         runMergeCommand(gorPipeCommand);
         // Use folder for the transaction.  Then queries can be run on the new file, within the transl
-
-        // TODO: enable
-        //logAfter(TableLog.LogAction.INSERT, "", line);
     }
 
     @Override
@@ -103,12 +112,19 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         delete(entries);
     }
 
-    private List<T> lineStringsToEntries(String[] lines) {
+    protected List<T> lineStringsToEntries(String[] lines) {
         List<T> entries = new ArrayList<>();
         for (String line : lines) {
-            entries.add((T) new RowBase(line));
+            if (line.trim().isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+            entries.add(createRow(line));
         }
         return entries;
+    }
+
+    protected T createRow(String line) {
+        return (T)new RowBase(line);
     }
 
     protected String getInputTempFileEnding() {
@@ -162,10 +178,14 @@ public class GorTable<T extends Row> extends BaseTable<T> {
             os.write(Stream.of(getColumns()).collect(Collectors.joining("\t")).getBytes(StandardCharsets.UTF_8));
             os.write('\n');
             for (Row r : lines) {
-                os.write(r.getAllCols().toString().getBytes(StandardCharsets.UTF_8));
+                writeRowToStream(r, os);
                 os.write('\n');
             }
         }
+    }
+
+    protected void writeRowToStream(Row r, OutputStream os) throws IOException {
+        r.writeRowToStream(os);
     }
 
     private String createInsertTempFileCommand(URI insertFile) {
@@ -181,8 +201,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         tempOutFilePath = getTransactionFolderPath().resolve(
                 String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
 
-        String command = String.format("%s %s %s | write %s", getGorCommand(), mainFile, insertFile.toString(), tempOutFilePath);
-        return command;
+        return String.format("%s %s | merge %s | write %s", getGorCommand(), mainFile, insertFile.toString(), tempOutFilePath);
     }
 
     private void runMergeCommand(String gorPipeCommand) {
