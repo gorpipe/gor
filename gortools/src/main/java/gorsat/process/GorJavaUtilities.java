@@ -41,6 +41,7 @@ import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -565,37 +566,42 @@ public class GorJavaUtilities {
     }
 
     public static synchronized void writeDictionaryFromMeta(DriverBackedFileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
-        var headerWritten = false;
-
         try(Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
             var metapaths = metapathstream.filter(p -> p.endsWith(".meta")).collect(Collectors.toList());
-            int i = 0;
-            for (String p : metapaths) {
-                GorMeta meta = GorMeta.createAndLoad(fileReader, p);
-
-                if (!meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0 ) {
+            var ai = new AtomicInteger();
+            var entries = metapaths.parallelStream()
+                .map(p -> GorMeta.createAndLoad(fileReader, p))
+                .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0)
+                .map(meta -> {
+                    var p = meta.getMetaPath();
                     var fulldicturi = URI.create(outfolderpath);
                     var outfilename = PathUtils.relativize(fulldicturi, p);
                     var outfile = FilenameUtils.removeExtension(outfilename);
-                    DictionaryEntry.Builder builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
-                    builder.alias(Integer.toString(++i));
+                    var builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
+                    var i = ai.incrementAndGet();
+                    builder.alias(Integer.toString(i));
                     builder.range(meta.getRange());
-
                     var tags = meta.getProperty(GorMeta.HEADER_TAGS_KEY, "");
-                    if(!Strings.isNullOrEmpty(tags)) {
+                    if (!Strings.isNullOrEmpty(tags)) {
                         builder.tags(tags.split(","));
-                    } else if(meta.containsProperty(GorMeta.HEADER_CARDCOL_KEY)) {
+                    } else if (meta.containsProperty(GorMeta.HEADER_CARDCOL_KEY)) {
                         builder.tags(meta.getCordColTags());
                     }
-
-                    if (!headerWritten) {
-                        writeHeader(fileReader, dictionarypathwriter, p, tags.isEmpty());
-                        headerWritten = true;
+                    if (i==1) {
+                        try {
+                            writeHeader(fileReader, dictionarypathwriter, p, tags.isEmpty());
+                        } catch (IOException e) {
+                            throw new GorSystemException("Unable to write header to dictionary", e);
+                        }
                     }
-                    dictionarypathwriter.write(builder.build().formatEntry());
+                    return builder.build().formatEntry();
+                }).collect(Collectors.toList());
+
+            if (entries.size() > 0) {
+                for (var entry : entries) {
+                    dictionarypathwriter.write(entry);
                 }
-            }
-            if (!headerWritten) writeDummyHeader(dictionarypathwriter);
+            } else writeDummyHeader(dictionarypathwriter);
         }
     }
 }

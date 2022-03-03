@@ -36,6 +36,7 @@ public class BaseMeta {
     protected HashMap<String, String> headerProps;
     private String[] fileHeader;                     // Columns of the table it self.
     protected boolean saveHeaderLine = false;
+    private String metaPathStr;
 
     /**
      *
@@ -233,6 +234,7 @@ public class BaseMeta {
         if (metaPath == null || !Files.exists(metaPath)) {
             return;
         }
+        this.metaPathStr = metaPath.toString();
 
         try(var br = Files.newBufferedReader(metaPath)) {
             parseMetaReader(br);
@@ -241,10 +243,15 @@ public class BaseMeta {
         }
     }
 
+    public String getMetaPath() {
+        return this.metaPathStr;
+    }
+
     public void loadAndMergeMeta(FileReader fileReader, String metaPath) {
         if (metaPath == null || !fileReader.exists(metaPath)) {
             return;
         }
+        this.metaPathStr = metaPath;
 
         try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
             parseMetaReader(br);
