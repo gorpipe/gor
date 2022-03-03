@@ -46,7 +46,7 @@ object Nor
       maxWalkDepth = CommandParseUtilities.intValueOfOptionWithDefault(args, "-d", Int.MaxValue)
     }
     val hideModificationDate = hasOption(args, "-m")
-    val followLinks = hasOption(args, "-l")
+    val followLinks = !hasOption(args, "-nl")
 
     val inputParams = iargs(0)
     var inputSource: GenomicIterator = null
@@ -157,7 +157,7 @@ object Nor
     }
   }
 
-  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -l -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -nl -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -165,7 +165,7 @@ object Nor
     }
   }
 
-  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -l -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -nl -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
