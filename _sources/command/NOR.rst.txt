@@ -48,7 +48,7 @@ Options
 +-----------------+----------------------------------------------------------------------------------------------------+
 | ``-m``          | Show modification date when using nor to list the content of a folder.                             |
 +-----------------+----------------------------------------------------------------------------------------------------+
-| ``-l``          | Follow links when using nor to list the content of a folder.                                       |
+| ``-nl``         | Don't follow links when using nor to list the content of a folder.                                 |
 +-----------------+----------------------------------------------------------------------------------------------------+
 
 Examples
