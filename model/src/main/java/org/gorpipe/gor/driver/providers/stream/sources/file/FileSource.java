@@ -228,8 +228,8 @@ public class FileSource implements StreamSource {
                 uniqueId = br.readLine();
             }
         }*/
-        File ffile = file.toFile();
-        return new StreamSourceMetadata(this, "file://" + ffile.getCanonicalPath(), ffile.lastModified(), Files.exists(file) ? Files.getLastModifiedTime(file, LinkOption.NOFOLLOW_LINKS).toMillis() : null, ffile.length(), uniqueId, isSubset);
+        var exists = Files.exists(file);
+        return new StreamSourceMetadata(this, "file://" + (exists ? file.toRealPath() : file.normalize().toAbsolutePath()), exists ? Files.getLastModifiedTime(file).toMillis() : 0L, exists ? Files.size(file) : 0L, uniqueId, isSubset);
     }
 
     @Override
