@@ -20,6 +20,7 @@ gor.memoryMonitor.minFreeMemMB=1000
 gor.memoryMonitor.minFreeMemRatio=0.25
 # Ratio of minFreeMem that triggers GC.
 gor.memoryMonitor.gcRatio=2.0
+gor.memoryMonitor.rowsBetweenChecks=10000
 
 # ##################
 # Querylimits
