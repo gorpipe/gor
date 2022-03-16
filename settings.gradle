@@ -14,7 +14,7 @@ rootProject.buildFileName = "build.gradle"
 
 include 'base'
 include 'model'
-include 'documentation'
+//include 'documentation'
 include 'gortools'
 include 'drivers'
 include 'util'
