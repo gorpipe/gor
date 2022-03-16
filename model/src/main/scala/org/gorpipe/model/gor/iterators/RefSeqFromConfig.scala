@@ -43,6 +43,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
   var lastBuff: Array[Byte] = _
   var noReferenceBuildFound = false
   val filemap = new util.HashMap[String, Optional[RacFile]]
+  val notfoundmap = new util.HashSet[String]
 
   override def close(): Unit = {
     filemap.entrySet().stream().forEach( f => f.getValue.ifPresent(f => f.close()) )
@@ -82,7 +83,11 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
             cf
           }
           if( !f.isPresent ) {
-            throw new GorResourceException("Reference file "+chrFilePath+" does not exist", chrFilePath)
+            if (!notfoundmap.contains(chrFilePath)) {
+              notfoundmap.add(chrFilePath)
+              log.debug("Warning: Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
+            }
+            'N'
           } else {
             val buff = new Array[Byte](buffLength)
             f.get().seek(offset)
@@ -99,7 +104,6 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
       case ioex: IOException =>
         throw new GorResourceException("Reference build " + path + " inaccessible", path, ioex)
       case ex: Exception => {
-        noReferenceBuildFound = true
         log.debug("Warning: Reference build " + path + "\n\n"+ex.getMessage)
       }
         'N'
