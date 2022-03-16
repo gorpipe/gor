@@ -320,7 +320,7 @@ public class DriverBackedFileReader extends FileReader {
         try {
             return new SourceReader(source);
         } catch (IOException e) {
-            String name = name = source.getName();
+            var name = source.getName();
             throw ExceptionUtilities.mapGorResourceException(name, resolvedUrl, e);
         }
     }
@@ -345,7 +345,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     private Stream<String> readAndClose(DataSource source) throws IOException {
-        String resolvedUrl = getResolvedUrl(source);
+        String resolvedUrl = PathUtils.fixFileSchema(source.getName());
 
         if (resolvedUrl.startsWith("//db:")) {
             source.close();

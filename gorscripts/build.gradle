@@ -51,7 +51,7 @@ project(':gorscripts') {
         implementation "org.reflections:reflections:_"
         implementation "com.google.guava:guava:_"
 
-        //runtimeOnly project(':documentation')
+        runtimeOnly project(':documentation')
         runtimeOnly project(':drivers')
 
         runtimeOnly "org.scala-lang:scala-reflect:_"
