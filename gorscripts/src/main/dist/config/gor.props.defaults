@@ -20,8 +20,7 @@ gor.memoryMonitor.minFreeMemMB=1000
 gor.memoryMonitor.minFreeMemRatio=0.25
 # Ratio of minFreeMem that triggers GC.
 gor.memoryMonitor.gcRatio=2.0
-# Turn off the memory monitor (default is 10000)
-gor.memoryMonitor.rowsBetweenChecks=0
+gor.memoryMonitor.rowsBetweenChecks=10000
 
 # ##################
 # Querylimits
