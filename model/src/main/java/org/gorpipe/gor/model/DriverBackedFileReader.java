@@ -105,11 +105,6 @@ public class DriverBackedFileReader extends FileReader {
         return dataSource;
     }
 
-    private static String getResolvedUrl(DataSource ds) throws IOException {
-        String cannonicalName = ds.getSourceMetadata().getCanonicalName();
-        return PathUtils.fixFileSchema(cannonicalName);
-    }
-
     @Override
     public String getSecurityContext() {
         return securityContext;
@@ -201,7 +196,7 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public String readHeaderLine(String file) throws IOException {
         final DataSource source = resolveUrl(file);
-        String url = getResolvedUrl(source);
+        String url = PathUtils.fixFileSchema(source.getName());
         if (url.startsWith("//db:")) {
             final int idxSelect = url.indexOf("select ");
             final int idxFrom = url.indexOf(" from ");
@@ -253,7 +248,7 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public BufferedReader getReader(String resource) throws IOException {
         DataSource source = resolveUrl(resource);
-        String resolvedUrl = getResolvedUrl(source);
+        String resolvedUrl = PathUtils.fixFileSchema(source.getName());
         return readSource(source, resolvedUrl);
     }
 
@@ -307,7 +302,7 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public String getDictionarySignature(String dictionary, String[] tags) throws IOException {
         final DataSource source = resolveUrl(dictionary);
-        String dictpath = getResolvedUrl(source);
+        String dictpath = PathUtils.fixFileSchema(source.getName());
         if (source.isDirectory()) {
             dictpath = URI.create(dictpath).resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString();
         }
@@ -325,7 +320,7 @@ public class DriverBackedFileReader extends FileReader {
         try {
             return new SourceReader(source);
         } catch (IOException e) {
-            String name = name = source.getName();
+            var name = source.getName();
             throw ExceptionUtilities.mapGorResourceException(name, resolvedUrl, e);
         }
     }
@@ -350,7 +345,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     private Stream<String> readAndClose(DataSource source) throws IOException {
-        String resolvedUrl = getResolvedUrl(source);
+        String resolvedUrl = PathUtils.fixFileSchema(source.getName());
 
         if (resolvedUrl.startsWith("//db:")) {
             source.close();
