@@ -135,7 +135,7 @@ abstract class TimedRowSource extends GenomicIteratorBase {
 
   def adaptiveMoveToPosition(seekChr: String, seekPos: Int, maxReads: Int = 1000000) {
     incStat("adaptiveMoveToPosition "+seekChr+" "+seekPos)
-    if (myNext == null || (myNext.chr != null && ((myNext.pos >= seekPos && myNext.chr == seekChr) || myNext.chr > seekChr)))
+    if (myNext != null && (myNext.chr != null && ((myNext.pos >= seekPos && myNext.chr == seekChr) || myNext.chr > seekChr)))
       return
     val time_to_stream = (seekPos - last_pos)/bp_per_time
     val seekStreamRatio = time_to_seek/time_to_stream.toFloat;
