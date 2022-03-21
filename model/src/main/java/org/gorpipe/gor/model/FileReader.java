@@ -293,4 +293,6 @@ public abstract class FileReader {
     public DataSource resolveUrl(SourceReference sourceReference) {
         throw new GorSystemException(String.format("This file reader (%s) does not support creating data sources", this.getClass().getName()), null);
     }
+
+    public abstract String getCommonRoot();
 }

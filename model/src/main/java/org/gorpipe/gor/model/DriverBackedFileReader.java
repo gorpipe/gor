@@ -71,6 +71,7 @@ public class DriverBackedFileReader extends FileReader {
         this.constants = constants;
     }
 
+    @Override
     public String getCommonRoot() {
         return commonRoot;
     }
@@ -117,7 +118,11 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public boolean exists(String file) {
-        return resolveUrl(file).exists();
+        try {
+            return resolveUrl(file).exists();
+        } catch (GorResourceException gre) {
+            return false;
+        }
     }
 
     public boolean existsNoAccessValidation(String url) {
@@ -128,17 +133,17 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public String createDirectory(String dir, FileAttribute<?>... attrs) throws IOException {
-        return resolveUrl(dir).createDirectory(attrs);
+        return resolveUrl(dir, true).createDirectory(attrs);
     }
 
     @Override
     public String createDirectoryIfNotExists(String dir, FileAttribute<?>... attrs) throws IOException {
-        return resolveUrl(dir).createDirectoryIfNotExists(attrs);
+        return resolveUrl(dir, true).createDirectoryIfNotExists(attrs);
     }
 
     @Override
     public String createDirectories(String dir, FileAttribute<?>... attrs) throws IOException {
-        return resolveUrl(dir).createDirectories(attrs);
+        return resolveUrl(dir, true).createDirectories(attrs);
     }
 
     @Override
@@ -148,12 +153,12 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public String move(String source, String dest) throws IOException {
-        return resolveUrl(source).move(resolveUrl(dest));
+        return resolveUrl(source).move(resolveUrl(dest, true));
     }
 
     @Override
     public String copy(String source, String dest) throws IOException {
-        return resolveUrl(source).copy(resolveUrl(dest));
+        return resolveUrl(source).copy(resolveUrl(dest, true));
     }
 
     @Override

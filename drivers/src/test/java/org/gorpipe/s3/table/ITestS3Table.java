@@ -1,9 +1,12 @@
 package org.gorpipe.s3.table;
 
+import org.gorpipe.base.security.BundledCredentials;
+import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.s3.shared.ITestS3Shared;
 import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
-import gorsat.TestUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
@@ -22,9 +25,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 
-import static gorsat.TestUtils.LINE_SPLIT_PATTERN;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_KEY;
 import static org.gorpipe.s3.driver.ITestBvlMinOnS3.awsSecurityContext;
+import static org.gorpipe.s3.shared.ITestS3Shared.createSecurityContext;
+import static org.gorpipe.s3.shared.ITestS3Shared.runGorPipeServer;
 
 /**
  * Note, there are S3Shared integration tests in gor-services (ITestS3Shared).
@@ -34,7 +38,7 @@ public class ITestS3Table {
 
     private static String S3_KEY;
     private static String S3_SECRET;
-    private static DriverBackedFileReader fileReader;
+    private DriverBackedFileReader fileReader;
 
     // NOTE: Providing system props for classes does usually not work if the prop is ready in static context.
     @Rule
@@ -43,8 +47,6 @@ public class ITestS3Table {
     @Rule
     public final ProvideSystemProperty otherPropertyIsMissing = new ProvideSystemProperty("aws.secretKey", "");
 
-    @Rule
-    public final ProvideSystemProperty gorSecurityContext = new ProvideSystemProperty("gor.security.context", securityContext());
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -69,16 +71,29 @@ public class ITestS3Table {
         Properties props = DriverUtils.getDriverProperties();
         S3_KEY = props.getProperty("S3_KEY");
         S3_SECRET = props.getProperty("S3_SECRET");
-        fileReader = new DriverBackedFileReader(awsSecurityContext(S3_KEY, S3_SECRET));
+
+        ITestS3Shared.setUpClass();
     }
 
     @Before
     public void setupTest() throws IOException {
         workDirPath = workDir.getRoot().toPath();
+        Files.createDirectory(workDirPath.resolve("some_project"));
+
+        String s3dataSecurityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String awsSecurityContext = awsSecurityContext(S3_KEY, S3_SECRET);;
+        BundledCredentials.Builder b = new BundledCredentials.Builder()
+                .addCredentials(BundledCredentials.fromSecurityContext(s3dataSecurityContext))
+                .addCredentials(BundledCredentials.fromSecurityContext(awsSecurityContext));
+        BundledCredentials bundleCreds = b.build();
+        String securityContext = bundleCreds.addToSecurityContext(null);
+
+        fileReader = new DriverBackedFileReader(securityContext, workDirPath.resolve("some_project").toString(), new Object[]{});
+
     }
 
     private void insertIntoTableGordFile() throws IOException {
-        gordFile = workDirPath.resolve("dict.gord");
+        gordFile = workDirPath.resolve("some_project").resolve("dict.gord");
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
 
         dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053023D").build());
@@ -91,7 +106,8 @@ public class ITestS3Table {
     public void testInsertS3DataBasic() throws IOException {
         insertIntoTableGordFile();
 
-        String[] result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
+        String[] result = runGorPipeServer("gor " + gordFile.toString(),
+                workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
         Assert.assertEquals("Did not retreive the correct data", 759,  result.length);
     }
     
@@ -108,10 +124,11 @@ public class ITestS3Table {
         Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
 
         String bucket = table.getBuckets().get(0).toString();
-        Path bucketFullPath = workDirPath.resolve(bucket);
+        Path bucketFullPath = workDirPath.resolve("some_project").resolve(bucket);
         Assert.assertTrue(Files.exists(bucketFullPath));
 
-        String[] bucketResult = TestUtils.runGorPipeLines("gor " + bucketFullPath.toString());
+       String[] bucketResult = runGorPipeServer("gor " + bucketFullPath.toString(),
+                workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
         Assert.assertEquals("Did not retrieve the correct data", 759,  bucketResult.length);
     }
     
@@ -135,7 +152,8 @@ public class ITestS3Table {
             String bucket = buckets.get(0);
             Assert.assertTrue(table.getFileReader().exists(bucket));
 
-            String[] bucketResult = TestUtils.runGorPipeLines("gor " + bucket);
+            String[] bucketResult = runGorPipeServer("gor " +bucket,
+                    workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
             Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
         } finally {
             // Manual cleanup as this is S3.
@@ -144,9 +162,38 @@ public class ITestS3Table {
             }
         }
     }
+    
+    @Test
+    public void testBucketizeS3DataS3DataBuckets() throws IOException {
+        insertIntoTableGordFile();
 
-    protected String securityContext() throws IOException {
-        return awsSecurityContext(S3_KEY, S3_SECRET);
+        fileReader.createDirectoryIfNotExists("s3data://project/user_data/buckets/");
+
+        DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
+        table.setProperty(HEADER_BUCKET_DIRS_KEY, "s3data://project/user_data/buckets/");
+        table.save();
+        TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
+
+        List<String> buckets = null;
+        try {
+            man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
+
+            table.reload();
+            Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
+
+            buckets = table.getBuckets();
+            String bucket = buckets.get(0);
+            Assert.assertTrue(table.getFileReader().exists(bucket));
+
+            String[] bucketResult = runGorPipeServer("gor "
+                            + workDirPath.resolve("some_project").resolve(bucket.substring("s3data://project/".length())).toString(),
+                    workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
+            Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
+        } finally {
+            // Manual cleanup as this is S3.
+            if (buckets != null) {
+                man.deleteBuckets(table, true, buckets.toArray(new String[buckets.size()]));
+            }
+        }
     }
-
 }

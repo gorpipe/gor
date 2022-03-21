@@ -54,8 +54,12 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         String fileName = relativePath.getFileName().toString();
         String parentPath = relativePath.getParent() != null ? relativePath.getParent().toString() + "/": "";
         int fileNameDotIndex = fileName.indexOf('.');
-        String extraFolder = fileName.substring(0, fileNameDotIndex > 0 ? fileNameDotIndex : fileName.length());
-        String fullUrl = String.format("s3://%s/%s/%s%s/%s",
+        String extraFolder = "";
+        if (!url.endsWith("/")) {
+            // Don't add the extra folder
+            extraFolder = fileName.substring(0, fileNameDotIndex > 0 ? fileNameDotIndex : fileName.length()) + "/";
+        }
+        String fullUrl = String.format("s3://%s/%s/%s%s%s",
                 bucket,
                 getBucketPostfix(project),
                 parentPath,

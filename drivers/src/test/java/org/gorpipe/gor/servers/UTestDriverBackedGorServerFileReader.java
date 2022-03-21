@@ -369,7 +369,8 @@ public class UTestDriverBackedGorServerFileReader {
         Files.write(f1, "somedata".getBytes());
 
         Object[] constants = {};
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants,
+                true, null, Arrays.asList(new String[]{workDirPath.toString()}));
 
         Path c1 = workDirPath.resolve("copy.txt");
         reader.copy(f1.toString(), c1.toString());
@@ -385,7 +386,8 @@ public class UTestDriverBackedGorServerFileReader {
         Files.write(f1, "somedata".getBytes());
 
         Object[] constants = {};
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants,
+                true, null, Arrays.asList(new String[]{workDirPath.toString()}));
 
         Path c1 = workDirPath.resolve("copy.txt");
         reader.move(f1.toString(), c1.toString());

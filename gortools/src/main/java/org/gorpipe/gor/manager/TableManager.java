@@ -34,7 +34,6 @@ import org.gorpipe.gor.table.lock.TableTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;

@@ -344,6 +344,11 @@ public class GorOptions {
 
         if (securityKey == null) {
             securityKey = System.getProperty("gor.security.context");
+
+            if (securityKey == null && session != null && session.getProjectContext() != null
+                    && session.getProjectContext().getFileReader().getSecurityContext() != null) {
+                securityKey = session.getProjectContext().getFileReader().getSecurityContext();
+            }
         }
         this.idxFile = tmpIdxFile;
         this.refFile = tmpRefFile;

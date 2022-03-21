@@ -404,11 +404,11 @@ public class BucketManager<T extends BucketableTableEntry> {
     private void doBucketizeForBucketDir(BaseDictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap) throws IOException {
         Map<String, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
-                        .filter(p -> PathUtils.parent(Path.of(p)).equals(Path.of(bucketDir.toString())))
+                        .filter(p -> PathUtils.parent(Path.of(p)).equals(Path.of(bucketDir)))
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        createBucketFiles(tempTable, newBucketsMapForBucketDir, table.getRootUri().resolve(bucketDir.toString()));
+        createBucketFiles(tempTable, newBucketsMapForBucketDir, table.getRootUri().resolve(bucketDir));
 
         // Move files and update dictionary.
         for (String bucket : newBucketsMapForBucketDir.keySet()) {
