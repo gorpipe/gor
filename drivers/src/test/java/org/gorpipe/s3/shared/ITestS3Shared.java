@@ -337,7 +337,7 @@ public class ITestS3Shared {
         return source;
     }
 
-    private String createSecurityContext(String service, Credentials.OwnerType ownerType, String owner) {
+    public static String createSecurityContext(String service, Credentials.OwnerType ownerType, String owner) {
         Credentials creds = new Credentials.Builder()
                 .service(service)
                 .lookupKey("nextcode-unittest")
@@ -351,16 +351,22 @@ public class ITestS3Shared {
         return bundleCreds.addToSecurityContext("");
     }
 
-    public static void runGorPipeServer(String query, String projectRoot, String securityContext) {
+    public static String runGorPipeServer(String query, String projectRoot, String securityContext) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(new String[]{"-gorroot", projectRoot});
         TestSessionFactory factory = new TestSessionFactory(options, null, true, securityContext);
 
         try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(factory.create()))) {
             pipe.init(query, null);
+
+            StringBuilder result = new StringBuilder();
+            result.append(pipe.getHeader());
+            result.append("\n");
             while (pipe.hasNext()) {
-                pipe.next();
+                result.append(pipe.next());
+                result.append("\n");
             }
+            return result.toString();
         }
     }
 

@@ -138,7 +138,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
 
     public static void isWithinAllowedFolders(String fileName, List<String> writeLocations, String commonRoot) {
         for (String location : writeLocations) {
-            if (PathUtils.resolve(commonRoot, fileName)
+            if (Path.of(PathUtils.resolve(commonRoot, fileName))
                     .startsWith(PathUtils.resolve(commonRoot, location+"/"))) {
                 return;
             }

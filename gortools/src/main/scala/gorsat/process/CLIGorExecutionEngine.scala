@@ -44,7 +44,7 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
   }
 
   override protected def createSession(): GorSession = {
-    val sessionFactory = new CLISessionFactory(pipeOptions)
+    val sessionFactory = new CLISessionFactory(pipeOptions, securityContext)
     sessionFactory.create()
   }
 

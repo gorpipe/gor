@@ -70,7 +70,8 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
         String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, table.getRootUri(), table);
         String[] args = new String[]{
                 gorPipeCommand,
-                "-workers", String.valueOf(workers)};
+                "-workers", String.valueOf(workers),
+                "-gorroot", table.getFileReader().getCommonRoot()};
         log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", args);
 
         PrintStream oldOut = System.out;

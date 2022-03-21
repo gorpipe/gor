@@ -67,11 +67,15 @@ before_script:
     KUBERNETES_MEMORY_REQUEST: 2Gi
     KUBERNETES_MEMORY_LIMIT: 6Gi
   cache:
-    key: "$CI_COMMIT_REF_NAME"
+    #key: "$CI_COMMIT_REF_NAME"   # Cache per branch.
+    key:
+      files:
+        - gradle/wrapper/gradle-wrapper.properties    # Cache per version of Gradle wrapper.
+
     policy: pull
     paths:
-      - .gradle/wrapper
-      - .gradle/caches
+      - .gradle/wrapper/
+      - .gradle/caches/
 
 
 build:
@@ -162,10 +166,11 @@ spotbugs-sast:
     KUBERNETES_CPU_LIMIT: 6
     KUBERNETES_MEMORY_REQUEST: 2Gi
     KUBERNETES_MEMORY_LIMIT: 6Gi
+    GRADLE_PATH: "$CI_PROJECT_DIR/gradlew"
     SAST_JAVA_VERSION: "11"
     JAVA_OPTS: "-Xmx4G"
     SECURE_LOG_LEVEL: "debug"
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true -Dskip.documentation=true"
   rules:
     - if: '$SECURITY_SCAN == "true"'
 
