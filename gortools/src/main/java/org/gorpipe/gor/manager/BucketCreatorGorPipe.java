@@ -37,10 +37,7 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,10 +65,16 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
 
         // Build the gor query (gorpipe)
         String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, table.getRootUri(), table);
-        String[] args = new String[]{
-                gorPipeCommand,
-                "-workers", String.valueOf(workers),
-                "-gorroot", table.getFileReader().getCommonRoot()};
+        List<String> argsList = new ArrayList<>();
+        argsList.add(gorPipeCommand);
+        argsList.add("-workers");
+        argsList.add(String.valueOf(workers));
+        if (table.getFileReader().getCommonRoot() != null) {
+            argsList.add("-gorroot");
+            argsList.add(table.getFileReader().getCommonRoot());
+        }
+        String[] args = argsList.toArray(new String[argsList.size()]);
+
         log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", args);
 
         PrintStream oldOut = System.out;
