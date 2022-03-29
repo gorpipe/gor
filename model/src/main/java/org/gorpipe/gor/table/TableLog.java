@@ -73,7 +73,6 @@ public class TableLog {
      * Create new log record after entry is updated.
      * @param action    action performed
      * @param argument  action argument (can be null if all info is in the entry object)
-     * @param entry     entry after update.
      */
     public void logAfter(LogAction action, String argument, String line) {
         String logLine = String.format("%s\t%s\t%s", LocalDateTime.now().format(formatter), action.toString(), argument);
