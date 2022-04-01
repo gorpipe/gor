@@ -680,10 +680,16 @@ object CommandParseUtilities {
     x
   }
 
+  def removeComments(query: String, allowQuotes: Boolean): String = {
+    val command = new GorCommand(query)
+    command.getWithoutComments(allowQuotes)
+  }
+
   def removeComments(query: String): String = {
     val command = new GorCommand(query)
     command.getWithoutComments
   }
+
 
   def removeComments(commands: Array[String]): Array[String] = {
     val command = new GorCommand(commands.mkString("\r\n"))

@@ -44,8 +44,15 @@ public class GorCommand {
      * @return The command string without comments
      */
     public String getWithoutComments() {
+        return getWithoutComments(false);
+    }
+
+    /**
+     * @return The command string without comments
+     */
+    public String getWithoutComments(boolean allowQuotes) {
         if (cmdNoComment == null) {
-            cmdNoComment = removeComments();
+            cmdNoComment = removeComments(allowQuotes);
         }
         return cmdNoComment;
     }
@@ -56,7 +63,7 @@ public class GorCommand {
      */
     public int posWithComment(int posWithoutComment) {
         if (cmdNoComment == null) {
-            cmdNoComment = removeComments();
+            cmdNoComment = removeComments(false);
         }
         int pos = posWithoutComment;
         if (commentsFound) {
@@ -80,8 +87,8 @@ public class GorCommand {
         return cmd.trim().startsWith("nor ");
     }
 
-    private String removeComments() {
-        positions = new ArrayList<CmdPos>();
+    private String removeComments(boolean allowQuotes) {
+        positions = new ArrayList<>();
         StringBuilder rc = new StringBuilder(cmd);
         int startOfComment = -1;
         int nestedCount = 0;
@@ -89,7 +96,7 @@ public class GorCommand {
         boolean inQuotas = false;
         for (int i = 0; i < cmd.length() - 1; i++) {
             char ch1 = cmd.charAt(i);
-            inQuotas = inQuotas != (ch1 == '"' || ch1 == "'".charAt(0));
+            if (allowQuotes) inQuotas = inQuotas != (ch1 == '"' || ch1 == "'".charAt(0));
             if (!inQuotas) {
                 char ch2 = cmd.charAt(i + 1);
                 if (ch1 == '/' && ch2 == '*') {
