@@ -52,6 +52,13 @@ public class UTestGorGorScriptComments {
     }
 
     @Test
+    public void testQuoteWithinComments() {
+        String query = "/* ' */\ngorrows chr1,1,1";
+        String result = CommandParseUtilities.removeComments(query);
+        Assert.assertEquals("\ngorrows chr1,1,1", result);
+    }
+
+    @Test
     public void testBlockComments() {
         String query = "/* This is a query comment*/\ngorrows chr1,1,1";
         String result = CommandParseUtilities.removeComments(query);
@@ -84,7 +91,9 @@ public class UTestGorGorScriptComments {
 
     @Test
     public void testCommentInQuotes() {
-        TestUtils.runGorPipeCount("norrows 1 /* 'hello/*' */");
+        String query = "norrows 1 /* 'hello/*' */";
+        String result = CommandParseUtilities.removeComments(query, true);
+        Assert.assertEquals("norrows 1 ", result);
     }
 
 
