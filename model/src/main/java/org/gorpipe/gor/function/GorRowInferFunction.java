@@ -66,7 +66,7 @@ public class GorRowInferFunction implements BinaryOperator<Row>, Serializable {
         }
     }
 
-    void inferOther(RowBase row, Row t1) {
+    public void inferOther(RowBase row, Row t1) {
         for( int i = 0; i < row.numCols(); i++ ) {
             if( t1.colAsString(i).length() > 16 ) {
                 ((StringBuilder)row.getAllCols()).setCharAt(i*2, 'S');
@@ -76,7 +76,7 @@ public class GorRowInferFunction implements BinaryOperator<Row>, Serializable {
         }
     }
 
-    Row inferBoth(Row row, Row t1) {
+    public Row inferBoth(Row row, Row t1) {
         int[] sa = new int[row.numCols()];
         StringBuilder sb = new StringBuilder();
         sb.append("I");

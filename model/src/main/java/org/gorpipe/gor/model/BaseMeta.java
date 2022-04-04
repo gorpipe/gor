@@ -29,6 +29,7 @@ public class BaseMeta {
     public static final String HEADER_SERIAL_KEY = "SERIAL";
     public static final String HEADER_CREATED_KEY = "CREATED";
     public static final String HEADER_LINE_COUNT_KEY = "LINE_COUNT";
+    public static final String HEADER_SCHEMA_KEY = "SCHEMA";
     public static final String HEADER_MD5_KEY = "MD5";
     public static final String HEADER_TAGS_KEY = "TAGS";
     public static final String HEADER_COLUMNS_KEY = "COLUMNS";
