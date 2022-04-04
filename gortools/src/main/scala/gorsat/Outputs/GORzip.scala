@@ -61,8 +61,8 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
   def finish() {
     try {
       out.close()
-    } finally {
       getMeta.setMd5(out.getMd5)
+    } finally {
       if (options.writeMeta) {
         val metaout = fileReader.getOutputStream(fileName + ".meta")
         metaout.write(getMeta.formatHeader().getBytes())
