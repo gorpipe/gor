@@ -1,5 +1,6 @@
 package org.gorpipe.gor.model;
 
+import org.gorpipe.gor.function.GorRowInferFunction;
 import org.gorpipe.gor.table.util.GenomicRange;
 
 import java.nio.file.Path;
@@ -33,6 +34,8 @@ public class GorMeta extends BaseMeta {
     String cardColName = null;
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
+    Row inferRow = null;
+    GorRowInferFunction gorRowInferFunction = new GorRowInferFunction();
 
     public void setQuery(String query) {
         setProperty(HEADER_QUERY_KEY, query);
@@ -56,6 +59,9 @@ public class GorMeta extends BaseMeta {
         if(minChr==null) {
             minChr = ir.chr;
             minPos = ir.pos;
+            inferRow = gorRowInferFunction.inferBoth(ir, ir);
+        } else {
+            gorRowInferFunction.inferOther((RowBase)inferRow, ir);
         }
         maxChr = ir.chr;
         maxPos = ir.pos;
@@ -92,6 +98,7 @@ public class GorMeta extends BaseMeta {
     private void updateMeta() {
         if (minChr != null) setProperty(HEADER_RANGE_KEY, getRange().formatAsTabDelimited());
         if (lineCount != -1) setProperty(HEADER_LINE_COUNT_KEY, Long.toString(lineCount));
+        if (inferRow != null) setProperty(HEADER_SCHEMA_KEY, inferRow.toString().replace('\t',','));
         if (cardColIndex != -1) {
             String cardStr = cardSet.toString();
             setProperty(HEADER_CARDCOL_KEY, "[" + cardColName + "]: " + cardStr.substring(1,cardStr.length()-1).replace(" ",""));
