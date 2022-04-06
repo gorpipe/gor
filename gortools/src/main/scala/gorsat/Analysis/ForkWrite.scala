@@ -54,7 +54,8 @@ case class OutputOptions(remove: Boolean = false,
                             writeMeta: Boolean = true,
                             cardCol: String = null,
                             linkFile: String = "",
-                            command: String = null
+                            command: String = null,
+                            infer: Boolean = false
                            )
 
 case class ForkWrite(forkCol: Int,
@@ -147,7 +148,8 @@ case class ForkWrite(forkCol: Int,
     * @return
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
-    OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
+    if (rowHeader==null || useFork) OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
+    else OutFile.driver(name, session.getProjectContext.getFileReader, rowHeader, skipHeader, options)
   }
 
   def openFile(sh: FileHolder) {

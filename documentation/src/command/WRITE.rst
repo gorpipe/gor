@@ -38,6 +38,8 @@ Options
 +-----------------+-----------------------------------------------------------------+
 | ``-m``          | Create MD5 sum file along with the output file.                 |
 +-----------------+-----------------------------------------------------------------+
+| ``-inferschema``| Write schema to the gor meta file.                              |
++-----------------+-----------------------------------------------------------------+
 | ``-i type``     | Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz |
 |                 | Must state the type, which can be FULL, CHROM or TABIX          |
 +-----------------+-----------------------------------------------------------------+

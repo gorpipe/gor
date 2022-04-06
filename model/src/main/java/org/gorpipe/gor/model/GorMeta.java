@@ -35,7 +35,7 @@ public class GorMeta extends BaseMeta {
     int cardColIndex = -1;
     Set<String> cardSet = new TreeSet<>();
     Row inferRow = null;
-    GorRowInferFunction gorRowInferFunction = new GorRowInferFunction();
+    GorRowInferFunction gorRowInferFunction;
 
     public void setQuery(String query) {
         setProperty(HEADER_QUERY_KEY, query);
@@ -46,16 +46,43 @@ public class GorMeta extends BaseMeta {
     }
 
     public void initMetaStats(String cardCol, String header) {
+        initMetaStats(cardCol, header, false);
+    }
+
+    public void initMetaStats(String cardCol, String header, boolean infer) {
         if (cardCol != null) {
             List<String> hsplit = Arrays.asList(header.toLowerCase().split("\t"));
             cardColName = cardCol;
             cardColIndex = hsplit.indexOf(cardCol.toLowerCase());
         }
+        if (infer) {
+           gorRowInferFunction = new GorRowInferFunction();
+        }
 
         lineCount = 0;
     }
 
+    public void setSchema(String[] schema) {
+        setProperty(HEADER_SCHEMA_KEY, String.join(",", schema));
+    }
+
     public void updateMetaStats(Row ir) {
+        if (gorRowInferFunction!=null) updateMetaStatsAndInfer(ir);
+        else {
+            if (minChr == null) {
+                minChr = ir.chr;
+                minPos = ir.pos;
+            }
+            maxChr = ir.chr;
+            maxPos = ir.pos;
+
+            lineCount++;
+
+            if (cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString());
+        }
+    }
+
+    public void updateMetaStatsAndInfer(Row ir) {
         if(minChr==null) {
             minChr = ir.chr;
             minPos = ir.pos;
