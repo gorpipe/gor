@@ -26,7 +26,6 @@ plugins {
     id 'gor.common'
     id 'java-library'
 
-    id 'jacoco'
     id "org.sonarqube"
     id 'nebula.lint'
     id "org.owasp.dependencycheck"
@@ -236,12 +235,6 @@ task integrationTest(type: Test) {
 
 task generateTestReport(type:Exec) {
     commandLine 'python','tests/scripts/genReport.py'
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-    }
 }
 
 // -----------------------------------------------------

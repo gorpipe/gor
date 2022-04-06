@@ -32,7 +32,7 @@ import org.gorpipe.gor.session.GorContext
 
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -noheader", "-d -f -i -t -l -tags -card -prefix -link", 0),
+  CommandArguments("-r -c -m -inferschema -noheader", "-d -f -i -t -l -tags -card -prefix -link", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -64,7 +64,7 @@ class Write extends CommandInfo("WRITE",
 
     if(fileName.isEmpty && useFolder.isEmpty) throw new GorResourceException("No file or folder specified","");
 
-
+    var infer = hasOption(args, "-inferschema")
 
     val card = stringValueOfOptionWithDefault(args, "-card", null)
 
@@ -117,6 +117,6 @@ class Write extends CommandInfo("WRITE",
 
     val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, forkTagArray, dictTagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link, command = argString)), fixedHeader)
+    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, forkTagArray, dictTagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link, command = argString, infer = infer)), fixedHeader)
   }
 }

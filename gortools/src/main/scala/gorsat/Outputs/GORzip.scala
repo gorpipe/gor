@@ -25,7 +25,7 @@ package gorsat.Outputs
 import gorsat.Analysis.OutputOptions
 
 import java.util.zip.Deflater
-import gorsat.Commands.Output
+import gorsat.Commands.{Analysis, Output}
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{FileReader, GorMeta, Row}
@@ -41,24 +41,25 @@ import java.nio.file.Paths
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   * @param idx Whether and index file should be written.
   */
-class GORzip(fileName: String, fileReader: FileReader, header: String = null, skipHeader: Boolean = false, append: Boolean = false, options: OutputOptions) extends Output {
+class GORzip(fileName: String, fileReader: FileReader, header: String = null, skipHeader: Boolean = false, append: Boolean = false, options: OutputOptions, schema: Array[String]) extends Output {
 
   val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), options.columnCompress, options.md5, if(options.md5File) Paths.get(fileName+".md5") else null, if (options.idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, options.idx, options.compressionLevel)
 
   override def getName: String = fileName
 
-  def setup() {
-    getMeta.initMetaStats(options.cardCol, header)
-    if (options.command != null) getMeta.setQuery(options.command);
+  override def setup() {
+    getMeta.initMetaStats(options.cardCol, header, options.infer)
+    if (schema != null) getMeta.setSchema(schema)
+    if (options.command != null) getMeta.setQuery(options.command)
     if (header != null & !skipHeader) out.setHeader(header)
   }
 
-  def process(r: Row) {
+  override def process(r: Row) {
     getMeta.updateMetaStats(r)
     out.write(r)
   }
 
-  def finish() {
+  override def finish() {
     try {
       out.close()
       getMeta.setMd5(out.getMd5)

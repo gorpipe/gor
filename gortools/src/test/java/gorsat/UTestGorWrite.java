@@ -429,6 +429,16 @@ public class UTestGorWrite {
         TestUtils.runGorPipe(query,"-gorroot",tmpdir.toString());
     }
 
+    @Test
+    public void testWriteInfer() throws IOException {
+        var query = "gorrows -p chr1:1-3 | calc u 'hello' | calc m 1 | write test.gorz";
+        TestUtils.runGorPipe(query,"-gorroot",tmpdir.toString());
+        var oschema = Files.readAllLines(tmpdir.resolve("test.gorz.meta")).stream().filter(p -> p.startsWith("## SCHEMA")).map(p -> p.substring(12).trim()).findFirst();
+        Assert.assertTrue(oschema.isPresent());
+        var schema = oschema.get();
+        Assert.assertEquals("S,I,S,I",schema);
+    }
+
     static boolean assertIndexFileIsCorrect(final String filePath) throws IOException {
         final String idxFilePath = filePath + ".gori";
 

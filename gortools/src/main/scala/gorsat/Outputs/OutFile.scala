@@ -25,7 +25,7 @@ package gorsat.Outputs
 import java.nio.file.Path
 import java.util.zip.Deflater
 import gorsat.Analysis.OutputOptions
-import gorsat.Commands.Output
+import gorsat.Commands.{Output, RowHeader}
 import gorsat.parquet.GorParquetFileOut
 import htsjdk.samtools.util.{BlockCompressedInputStream, BlockCompressedOutputStream, Md5CalculatingOutputStream}
 import htsjdk.tribble.index.tabix.{TabixFormat, TabixIndexCreator}
@@ -119,7 +119,15 @@ object OutFile {
     prefix + "\n" + (if(header.startsWith("#")) header else "#"+header)
   }
 
+  def driver(name: String, fileReader: FileReader, inheader: RowHeader, skipHeader: Boolean, options: OutputOptions): Output = {
+    driver(name, fileReader, inheader.toString, skipHeader, options, inheader.columnTypes)
+  }
+
   def driver(name: String, fileReader: FileReader, inheader: String, skipHeader: Boolean, options: OutputOptions): Output = {
+    driver(name, fileReader, inheader, skipHeader, options, null)
+  }
+
+  def driver(name: String, fileReader: FileReader, inheader: String, skipHeader: Boolean, options: OutputOptions, schema: Array[String]): Output = {
     val nameUpper = name.toUpperCase
     val isVCF = nameUpper.endsWith(".VCF") || nameUpper.endsWith(".VCF.GZ") || nameUpper.endsWith(".VCF.BGZ")
 
@@ -147,7 +155,7 @@ object OutFile {
 
     try {
       val out = if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
-        new GORzip(name, fileReader, header, skipHeader, append, options)
+        new GORzip(name, fileReader, header, skipHeader, append, options, schema)
       } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
         new NorFileOut(name, fileReader, header, skipHeader, append, options.md5, options.md5File)
       } else if (nameUpper.endsWith(".PARQUET")) {
@@ -179,7 +187,7 @@ object OutFile {
 
   def apply(name: String, fileReader: FileReader, header: String): Output = driver(name, fileReader, header, skipHeader = false, OutputOptions())
 
-  def apply(name: String, fileReader: FileReader): Output = driver(name, fileReader, null, skipHeader = false, OutputOptions())
+  def apply(name: String, fileReader: FileReader): Output = driver(name, fileReader, null, skipHeader = false, OutputOptions(), null)
 
   def writePrefix(fileReader: FileReader, prefixFileName: String, fileName: String): Unit = {
     val is = fileReader.getInputStream(prefixFileName)
