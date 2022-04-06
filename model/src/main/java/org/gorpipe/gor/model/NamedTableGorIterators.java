@@ -29,7 +29,7 @@ import java.util.WeakHashMap;
  * Session Iterator iterates through gor data that are currently in memory.
  */
 public class NamedTableGorIterators {
-    private final static WeakHashMap<String, TableModel> tableModels = new WeakHashMap<String, TableModel>();
+    private final static WeakHashMap<String, TableModel> tableModels = new WeakHashMap<>();
 
     /**
      * Adds a new iterator to the global iterator context

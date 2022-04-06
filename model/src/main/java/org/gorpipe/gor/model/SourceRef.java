@@ -380,7 +380,8 @@ public class SourceRef {
     private static GenomicIterator iterateFile(String file, String index, String reference, String securityContext,
                                                String commonRoot, ChromoLookup lookup, String chrSubset, GorSession session) throws IOException {
         try {
-            if (GorDriverFactory.fromConfig().config().enabled()) {
+            var isMem = file.startsWith("mem:");
+            if (!isMem && GorDriverFactory.fromConfig().config().enabled()) {
                 SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext, commonRoot, lookup, chrSubset);
                 GenomicIterator newIt;
                 if (session != null) {
@@ -396,7 +397,7 @@ public class SourceRef {
             }
 
             // Issue SM-48  Named in memory table iterator
-            if (file.startsWith("mem:")) {
+            if (isMem) {
                 String name = file.substring(4);
                 return NamedTableGorIterators.getIterator(name);
             } else {
@@ -413,6 +414,7 @@ public class SourceRef {
                 }
             }
         } catch (FileNotFoundException fileNotFoundexception) {
+
             throw ExceptionUtilities.mapGorResourceException(fileNotFoundexception.getMessage(), file, fileNotFoundexception);
         }
     }

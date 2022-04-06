@@ -122,7 +122,7 @@ public class PathUtils {
     }
 
     public static boolean isAbsolutePath(String path) {
-        return path.startsWith("/") || path.contains("://");
+        return path.startsWith("/") || path.contains("://") || path.contains("mem:");
     }
 
     public static boolean isAbsolutePath(URI path) {
