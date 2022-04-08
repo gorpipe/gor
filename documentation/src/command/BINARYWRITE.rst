@@ -32,6 +32,8 @@ Options
 | ``-threshold d`` | The threshold to use when converting imputed genotypes to hard-calls.|
 |                  | The default value is 0.9.                                            |
 +------------------+----------------------------------------------------------------------+
+| ``-batch``       | Write binaryfiles in batches, writing path to nor lines              |
++------------------+----------------------------------------------------------------------+
 
 Examples
 ========

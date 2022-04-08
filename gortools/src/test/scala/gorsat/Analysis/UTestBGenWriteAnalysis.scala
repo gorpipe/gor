@@ -53,7 +53,7 @@ class UTestBGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
     val bgenFile = new File(tmpDir, "bgenFile.bgen")
     val bgenFilePath = bgenFile.getAbsolutePath
 
-    val bgenOut = BGenWriteAnalysis(bgenFilePath, group = false, imputed = false, 2, 3, -1, -1, 4)
+    val bgenOut = BGenWriteAnalysis(bgenFilePath, batch = 0, group = false, imputed = false, 2, 3, -1, -1, 4)
     bgenOut.process(RowObj("chr1\t1\tA\tC\t012301230123"))
     bgenOut.process(RowObj("chr1\t2\tA\tC\t012301230123"))
     bgenOut.finish()
@@ -67,7 +67,9 @@ class UTestBGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
 
   test("test basic - from gorpipe") {
     val bgenFile = new File(tmpDir, "bgenFile.bgen")
+    val bgenBatchFile = new File(tmpDir, "bgenFile#{batch}.bgen")
     val bgenFilePath = bgenFile.getAbsolutePath
+    val bgenBatchFilePath = bgenBatchFile.getAbsolutePath
     val gorFile = new File(tmpDir, "gorFile.gor")
 
     val cont = "CHROM\tPOS\tREF\tALT\tVALUES\n" +
@@ -76,6 +78,9 @@ class UTestBGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
     val fw = new FileWriter(gorFile)
     fw.write(cont)
     fw.close()
+
+    val count = TestUtils.runGorPipeCount("gor " + gorFile.getAbsolutePath + " | binarywrite -batch 1 " + bgenBatchFilePath)
+    Assert.assertEquals(2, count)
 
     TestUtils.runGorPipe("gor " + gorFile.getAbsolutePath + " | binarywrite " + bgenFilePath)
 

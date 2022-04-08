@@ -25,15 +25,36 @@ package gorsat.Analysis
 import gorsat.Commands.Analysis
 import org.gorpipe.gor.driver.bgen.BGenWriterFactory
 import org.gorpipe.gor.model.Row
+import org.gorpipe.model.gor.RowObj
 
-case class BGenWriteAnalysis(fileName: String, group: Boolean, imputed: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, varIdIdx: Int, valueIdx: Int) extends Analysis {
-  val output = BGenWriterFactory.getBGenWriter(fileName, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valueIdx)
+case class BGenWriteAnalysis(fileName: String, batch: Int, group: Boolean, imputed: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, varIdIdx: Int, valueIdx: Int) extends Analysis {
+  val BATCH_REPLACE = "#{batch}"
+  var batchName = fileName.replace(BATCH_REPLACE, batchCount.toString)
+  var output = BGenWriterFactory.getBGenWriter(batchName, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valueIdx)
+  var count = 0L
+  var batchCount = 0
 
   override def process(r: Row): Unit = {
     output.write(r)
+    if (batch>0) {
+      count = (count + 1) % batch
+      if (count == 0) {
+        output.close()
+        batchCount += 1
+        batchName = fileName.replace(BATCH_REPLACE, batchCount.toString)
+        output = BGenWriterFactory.getBGenWriter(fileName, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valueIdx)
+        super.process(RowObj("chrN",0,batchName))
+      }
+    }
   }
 
   override def finish(): Unit = {
     output.close()
+    if (count>0) {
+      batchCount += 1
+      batchName = fileName.replace(BATCH_REPLACE, batchCount.toString)
+      super.process(RowObj("chrN",0,batchName))
+    }
+    super.finish()
   }
 }

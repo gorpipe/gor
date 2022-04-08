@@ -25,16 +25,36 @@ package gorsat.Analysis
 import gorsat.Commands.Analysis
 import org.gorpipe.gor.model.{FileReader, Row}
 import org.gorpipe.gor.driver.pgen.PGenWriterFactory
+import org.gorpipe.model.gor.RowObj
 
-case class PGenWriteAnalysis(fileName: String, imputed: Boolean, threshold: Float, group: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, valueIdx: Int, fileReader: FileReader = null) extends Analysis {
-
-  val output = PGenWriterFactory.getPGenWriter(fileName, refIdx, altIdx, rsIdIdx, valueIdx, group, imputed, threshold, fileReader)
+case class PGenWriteAnalysis(fileName: String, batch: Int, imputed: Boolean, threshold: Float, group: Boolean, refIdx: Int, altIdx: Int, rsIdIdx: Int, valueIdx: Int, fileReader: FileReader = null) extends Analysis {
+  val BATCH_REPLACE = "#{batch}"
+  var batchName = fileName.replace(BATCH_REPLACE, batchCount.toString)
+  var output = PGenWriterFactory.getPGenWriter(batchName, refIdx, altIdx, rsIdIdx, valueIdx, group, imputed, threshold, fileReader)
+  var count = 0L
+  var batchCount = 0
 
   override def process(r: Row): Unit = {
     output.write(r)
+    if (batch>0) {
+      count = (count + 1) % batch
+      if (count == 0) {
+        output.close()
+        batchCount += 1
+        batchName = fileName.replace(BATCH_REPLACE, batchCount.toString)
+        output = PGenWriterFactory.getPGenWriter(batchName, refIdx, altIdx, rsIdIdx, valueIdx, group, imputed, threshold, fileReader)
+        super.process(RowObj("chrN",0,batchName))
+      }
+    }
   }
 
   override def finish(): Unit = {
     output.close()
+    if (count>0) {
+      batchCount += 1
+      batchName = fileName.replace(BATCH_REPLACE, batchCount.toString)
+      super.process(RowObj("chrN",0,batchName))
+    }
+    super.finish()
   }
 }
