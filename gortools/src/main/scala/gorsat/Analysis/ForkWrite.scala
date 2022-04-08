@@ -55,7 +55,8 @@ case class OutputOptions(remove: Boolean = false,
                             cardCol: String = null,
                             linkFile: String = "",
                             command: String = null,
-                            infer: Boolean = false
+                            infer: Boolean = false,
+                            maxseg: Boolean = false
                            )
 
 case class ForkWrite(forkCol: Int,

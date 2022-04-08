@@ -36,6 +36,7 @@ public class GorMeta extends BaseMeta {
     Set<String> cardSet = new TreeSet<>();
     Row inferRow = null;
     GorRowInferFunction gorRowInferFunction;
+    int maxseg = -1;
 
     public void setQuery(String query) {
         setProperty(HEADER_QUERY_KEY, query);
@@ -46,10 +47,10 @@ public class GorMeta extends BaseMeta {
     }
 
     public void initMetaStats(String cardCol, String header) {
-        initMetaStats(cardCol, header, false);
+        initMetaStats(cardCol, header, false, false);
     }
 
-    public void initMetaStats(String cardCol, String header, boolean infer) {
+    public void initMetaStats(String cardCol, String header, boolean infer, boolean maxseg) {
         if (cardCol != null) {
             List<String> hsplit = Arrays.asList(header.toLowerCase().split("\t"));
             cardColName = cardCol;
@@ -58,6 +59,7 @@ public class GorMeta extends BaseMeta {
         if (infer) {
            gorRowInferFunction = new GorRowInferFunction();
         }
+        if (maxseg) this.maxseg = 0;
 
         lineCount = 0;
     }
@@ -67,35 +69,19 @@ public class GorMeta extends BaseMeta {
     }
 
     public void updateMetaStats(Row ir) {
-        if (gorRowInferFunction!=null) updateMetaStatsAndInfer(ir);
-        else {
-            if (minChr == null) {
-                minChr = ir.chr;
-                minPos = ir.pos;
-            }
-            maxChr = ir.chr;
-            maxPos = ir.pos;
-
-            lineCount++;
-
-            if (cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString());
-        }
-    }
-
-    public void updateMetaStatsAndInfer(Row ir) {
-        if(minChr==null) {
+        if (minChr == null) {
             minChr = ir.chr;
             minPos = ir.pos;
-            inferRow = gorRowInferFunction.inferBoth(ir, ir);
-        } else {
+            if (gorRowInferFunction!=null) inferRow = gorRowInferFunction.inferBoth(ir, ir);
+        } else if (gorRowInferFunction!=null) {
             gorRowInferFunction.inferOther((RowBase)inferRow, ir);
         }
         maxChr = ir.chr;
         maxPos = ir.pos;
 
         lineCount++;
-
-        if(cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString());
+        if (maxseg!=-1) maxseg = Math.max(maxseg, ir.colAsInt(2)-maxPos);
+        if (cardColIndex >= 0) cardSet.add(ir.colAsString(cardColIndex).toString());
     }
 
     public GenomicRange getRange() {
@@ -126,6 +112,7 @@ public class GorMeta extends BaseMeta {
         if (minChr != null) setProperty(HEADER_RANGE_KEY, getRange().formatAsTabDelimited());
         if (lineCount != -1) setProperty(HEADER_LINE_COUNT_KEY, Long.toString(lineCount));
         if (inferRow != null) setProperty(HEADER_SCHEMA_KEY, inferRow.toString().replace('\t',','));
+        if (maxseg >= 0) setProperty(MAXSEG_SCHEMA_KEY, Integer.toString(maxseg));
         if (cardColIndex != -1) {
             String cardStr = cardSet.toString();
             setProperty(HEADER_CARDCOL_KEY, "[" + cardColName + "]: " + cardStr.substring(1,cardStr.length()-1).replace(" ",""));
