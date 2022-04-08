@@ -315,11 +315,6 @@ public abstract class Argument extends AbstractListBean {
             } else {
                 reader = fileResolver.apply(valuesPathString);
                 String line = reader.readLine();
-                if (valuesPathString.endsWith(".link")) {
-                    reader.close();
-                    reader = fileResolver.apply(PathUtils.fixFileSchema(line));
-                    line = reader.readLine();
-                }
 
                 values = new ArrayList<>();
 
