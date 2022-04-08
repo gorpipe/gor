@@ -48,7 +48,7 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
   override def getName: String = fileName
 
   override def setup() {
-    getMeta.initMetaStats(options.cardCol, header, options.infer)
+    getMeta.initMetaStats(options.cardCol, header, options.infer, options.maxseg)
     if (schema != null) getMeta.setSchema(schema)
     if (options.command != null) getMeta.setQuery(options.command)
     if (header != null & !skipHeader) out.setHeader(header)
