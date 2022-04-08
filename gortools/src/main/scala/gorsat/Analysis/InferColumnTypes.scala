@@ -30,7 +30,7 @@ import org.gorpipe.gor.model.Row
   * A pipe step to infer column types by looking at column values for some number of rows.
   */
 case class InferColumnTypes() extends Analysis {
-  val MAX_ROW_BUFFER_SIZE: Int = System.getProperty("gor.gorfiltering.max_rows_buffered", "1000").toInt
+  val MAX_ROW_BUFFER_SIZE: Int = System.getProperty("gor.gorfiltering.max_rows_buffered", "10000").toInt
   val MAX_BUFFERED_BYTES: Int = System.getProperty("gor.gorfiltering.max_bytes_buffered", "1073741824").toInt  // Default 1 GB
 
   var collectInBuffer = true
