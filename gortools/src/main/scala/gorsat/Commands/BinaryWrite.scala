@@ -29,7 +29,7 @@ import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.session.GorContext
 
 class BinaryWrite extends CommandInfo("BINARYWRITE",
-  CommandArguments("-imp -gv", "-threshold", 1),
+  CommandArguments("-imp -gv", "-threshold -batch", 1),
   CommandOptions(gorCommand = true, verifyCommand = true)) {
 
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -45,6 +45,8 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
     val group = hasOption(args, "-gv")
 
     val threshold = doubleValueOfOptionWithDefaultWithRangeCheck(args, thresholdOptionString, 0.9, 0, 1)
+
+    val batch = intValueOfOptionWithDefaultWithRangeCheck(args, "-batch", 0, 0)
 
     if (imputed && group) throw new GorParsingException("The -imp and -gv option are currently not allowed together.")
 
@@ -82,10 +84,11 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
     if (altIdx == -1) throw new GorResourceException("There must be one column with name ALT or ALTERNATIVE", fileName)
     if (valIdx == -1) throw new GorResourceException("There must be one column with name VALUES", fileName)
 
+    val inputHeader = if (batch>0) "Chrom\tPos\tfileName" else forcedInputHeader
     if (fileEnding == "pgen") {
-      CommandParsingResult(PGenWriteAnalysis(fileName, imputed, threshold.toFloat, group, refIdx, altIdx, rsIdIdx, valIdx, context.getSession.getProjectContext.getFileReader), forcedInputHeader)
+      CommandParsingResult(PGenWriteAnalysis(fileName, batch, imputed, threshold.toFloat, group, refIdx, altIdx, rsIdIdx, valIdx, context.getSession.getProjectContext.getFileReader), inputHeader)
     } else if (fileEnding == "bgen") {
-      CommandParsingResult(BGenWriteAnalysis(fileName, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valIdx), forcedInputHeader)
+      CommandParsingResult(BGenWriteAnalysis(fileName, batch, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valIdx), inputHeader)
     } else {
       throw new GorParsingException("Unknown file ending: " + fileEnding)
     }

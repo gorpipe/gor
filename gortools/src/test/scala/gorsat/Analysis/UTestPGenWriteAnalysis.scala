@@ -49,7 +49,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
   test("test writing - imputed") {
     val pgenFilePath = tmpDir.resolve("pgenFileImp.pgen")
 
-    val pgenOut = PGenWriteAnalysis(pgenFilePath.toString, imputed = true, 0.99f, group = false, 2, 3, 4, 5)
+    val pgenOut = PGenWriteAnalysis(pgenFilePath.toString, batch = 0, imputed = true, 0.99f, group = false, 2, 3, 4, 5)
     pgenOut.process(RowObj("chr1\t1\tA\tC\tchr1:1:A:C\t~~~~~~~~~~~~~~~~~~~~"))
     pgenOut.finish()
 
@@ -125,7 +125,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
   test("test writing - hardcalls") {
     val pgenFile = tmpDir.resolve("pgenFileHardCalls.pgen")
 
-    val pgenOut = PGenWriteAnalysis(pgenFile.toString, false, -1f, false, 2, 3, 4, 5)
+    val pgenOut = PGenWriteAnalysis(pgenFile.toString, batch = 0, false, -1f, false, 2, 3, 4, 5)
     pgenOut.setup()
     pgenOut.process(RowObj("chr1\t1\tA\tC\tchr1:1:A:C\t0000000000"))
     pgenOut.finish()
