@@ -3,6 +3,7 @@ package org.gorpipe.gor.table;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.model.BaseMeta;
@@ -400,6 +401,8 @@ public abstract class BaseTable<T> implements Table<T> {
             if (!fileReader.exists(file) && PathUtils.isLocal(file)) {
                 throw new GorDataException(String.format("Entry %s does not exists!", file));
             }
+        } catch (GorException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw new GorDataException(String.format("Entry %s can not be verified!", file), ex);
         }
@@ -461,6 +464,7 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     protected void updateFromTempFile(String tempFile, String file) throws IOException {
+        log.debug("Updating main file ({}) from {}", file, tempFile);
         if (fileReader.exists(tempFile)) {
             fileReader.move(tempFile, file);
         }

@@ -131,7 +131,7 @@ public class UTestGorTable {
         GorTable<Row> table = new GorTable<>(gorFile.toUri());
 
         table.insert("chr1\t2\tC","chr1\t3\tG");;
-        table.insert("chr1\t4\tT");
+        table.insert("chr1\t4\tT\n");   // With new line.
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
@@ -146,6 +146,35 @@ public class UTestGorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 1\n" +
+                "## USE_HISTORY = true\n" +
+                "## VALIDATE_FILES = true\n" +
+                "## COLUMNS = chrom,pos,ref\n", meta);
+    }
+
+    @Test
+    public void testDeleteGorTable() throws Exception {
+        String name = "delete";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\nchr1\t2\tC\nchr1\t3\tG\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.delete("chr1\t2\tC");
+        table.save();
+        
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+        Assert.assertEquals("#chrom\tpos\tref\nchr1\t1\tA\nchr1\t3\tG\n", Files.readString(gorFile));
+
+        table.delete("chr1\t3\tG\n");   // With new line
+        table.save();
+        Assert.assertEquals("#chrom\tpos\tref\nchr1\t1\tA\n", Files.readString(gorFile));
+
+        Path metaFile = Path.of(gorFile + ".meta");
+        Assert.assertTrue(Files.exists(metaFile));
+        String meta = Files.readString(metaFile);
+        Assert.assertEquals("## SERIAL = 2\n" +
                 "## USE_HISTORY = true\n" +
                 "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);

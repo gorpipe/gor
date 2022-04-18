@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Collection;
 
 /**
  * Table class representing nor file.
@@ -45,6 +46,11 @@ public class NorTable<T extends Row> extends GorTable<T> {
     @Override
     protected void writeRowToStream(Row r, OutputStream os) throws IOException {
         r.writeNorRowToStream(os);
+    }
+
+    @Override
+    public void delete(Collection<T> lines) {
+        createDeleteTempFile(lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
     }
 }
 

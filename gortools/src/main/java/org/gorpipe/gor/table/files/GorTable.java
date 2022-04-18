@@ -19,15 +19,15 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Table class representing gor file (gor/gorz)
+ *
+ * The internal data is stored in temp files.
+ *
  */
 public class GorTable<T extends Row> extends BaseTable<T> {
 
@@ -60,7 +60,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     @Override
     public Iterator<String> getLines() {
         try {
-            return fileReader.getReader(getPathUri().toString()).lines().iterator();
+            return fileReader.getReader(getMainFile().toString()).lines().iterator();
         } catch (IOException e) {
             throw new GorSystemException("Error getting file reader", e);
         }
@@ -96,20 +96,43 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     }
 
     @Override
-    public void delete(Collection lines) {
-        // How to perform efficient delete.
-        // Sort the input lines.
-        // Read through the file, and filter out unwanted lines, write out the lines.
-        throw new GorSystemException("Not implemented", null);
-
-        // TODO: enable
-        //logAfter(TableLog.LogAction.DELETE, "", line);
+    public void delete(Collection<T> lines) {
+        createDeleteTempFile(lines.stream().map(l -> l.getAllCols()).toArray(String[]::new));
     }
 
     @Override
     public void delete(String... lines) {
-        List<T> entries = lineStringsToEntries(lines);
-        delete(entries);
+        createDeleteTempFile(lines);
+    }
+
+    protected void createDeleteTempFile(String... lines) {
+        String randomString = RandomStringUtils.random(8, true, true);
+        Path localTempPath = getTransactionFolderPath().resolve(
+                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
+
+        String[] strippedLines = Arrays.stream(lines).map(line -> line.endsWith("\n") ? line.substring(0, line.length() - 1) : line).toArray(String[]::new);
+        try (OutputStream os = fileReader.getOutputStream(localTempPath.toString())) {
+            Iterator<String> it = getLines();
+            while (it.hasNext()) {
+                String orgLine = it.next();
+                if (includeLine(orgLine, strippedLines)) {
+                    os.write(orgLine.getBytes(StandardCharsets.UTF_8));
+                    os.write('\n');
+                }
+            }
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
+        tempOutFilePath = localTempPath;
+    }
+
+    private boolean includeLine(String line, String[] skipLines) {
+        for (String skipLine : skipLines) {
+            if (line.equals(skipLine)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected List<T> lineStringsToEntries(String[] lines) {
@@ -124,7 +147,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     }
 
     protected T createRow(String line) {
-        return (T)new RowBase(line);
+        return (T)new RowBase(line.endsWith("\n") ? line.substring(0, line.length() - 1) : line);
     }
 
     protected String getInputTempFileEnding() {
@@ -140,10 +163,11 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         // Move our temp file to the standard temp file and clean up.
         // or if these are links update the link file to point to the new temp file.
         // Clean up (remove old files and temp files)  s
-
+        log.debug(String.format("Saving temp file (%s)to temp main file (%s) ",  tempOutFilePath, getTempMainFileName()));
         try {
             if (tempOutFilePath != null && getFileReader().exists(tempOutFilePath.toString())) {
                 updateFromTempFile(tempOutFilePath.toString(), getTempMainFileName());
+                tempOutFilePath = null;
                 getFileReader().deleteDirectory(getTransactionFolderPath().toString());
             } else if (!getFileReader().exists(getPath().toString())) {
                 writeToFile(Path.of(getTempMainFileName()), new ArrayList<>());
@@ -189,13 +213,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     }
 
     private String createInsertTempFileCommand(URI insertFile) {
-        Path mainFile;
-
-        if (tempOutFilePath == null) {
-            mainFile = getPath();
-        } else {
-            mainFile = tempOutFilePath;
-        }
+        Path mainFile = getMainFile();
 
         String randomString = RandomStringUtils.random(8, true, true);
         tempOutFilePath = getTransactionFolderPath().resolve(
@@ -204,12 +222,20 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         return String.format("%s %s | merge %s | write %s", getGorCommand(), mainFile, insertFile.toString(), tempOutFilePath);
     }
 
-    private void runMergeCommand(String gorPipeCommand) {
+    private Path getMainFile() {
+        Path mainFile;
+        if (tempOutFilePath == null) {
+            mainFile = getPath();
+        } else {
+            mainFile = tempOutFilePath;
+        }
+        return mainFile;
+    }
+
+    protected void runMergeCommand(String gorPipeCommand) {
         String[] args = new String[]{
                 gorPipeCommand,
                 "-workers", "1"};
-        log.trace("Calling bucketize with command args: \"{}\" {} {}", args);
-
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
         CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, getSecurityContext());
