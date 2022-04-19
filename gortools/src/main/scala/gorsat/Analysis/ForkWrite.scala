@@ -313,8 +313,8 @@ case class ForkWrite(forkCol: Int,
   private def writeLinkFile(linkFile: String, linkFileContent: String) : Unit = {
     val linkFileToWrite = if (linkFile.endsWith(".link")) linkFile else linkFile+".link"
     // Use non driver file reader as this is exception from the write no links rule, add extra resolve with the
-    // server reader to validate.
-    session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite))
+    // server reader to validate (skip link extension as writing links is allow forbidden).
+    session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite), true)
     val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
       session.getProjectContext.getProjectRoot, null)
     val os = fileReader.getOutputStream(linkFileToWrite)

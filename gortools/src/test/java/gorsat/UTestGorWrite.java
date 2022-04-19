@@ -24,6 +24,7 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.exceptions.GorResourceException;
 import org.junit.*;
 
 import java.io.*;
@@ -49,9 +50,64 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, tmpdir.resolve("dbsnp.gor"));
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+
+        Assert.assertEquals(tmpdir.resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("dbsnp3.gor.link")));
+
         String linkresult = TestUtils.runGorPipe("gor dbsnp3.gor | top 1", "-gorroot", tmpdir.toString());
         Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
                 "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
+    }
+
+    @Test
+    public void testWritePathWithServerLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -link user_data/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true);
+
+        Assert.assertEquals(tmpdir.resolve("user_data").resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("user_data").resolve("dbsnp3.gor.link")));
+
+        String linkresult = TestUtils.runGorPipe("gor user_data/dbsnp3.gor | top 1", "-gorroot", tmpdir.toString());
+        Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
+                "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
+    }
+
+    @Test
+    public void testWritePathWithUnAuthorizedServerLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        try {
+            TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true);
+            Assert.fail("Should not allow generating link file");
+        } catch (GorResourceException e) {
+            Assert.assertTrue(e.getMessage().contains("/tmp/dbsnp3.gor"));
+        }
+    }
+
+    @Test(expected = Exception.class)
+    public void testWritePathWithInaccessiableLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link s3://bacbucket/dbsnp3.gor", "-gorroot", tmpdir.toString());
+    }
+
+    @Test
+    public void testWritePathWithExistingLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        Files.writeString(tmpdir.resolve("dbsnp3.gor.link"), tmpdir.resolve("dbsnp.gor").toString() + "\n");
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+
+        Assert.assertEquals(tmpdir.resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("dbsnp3.gor.link")));
+    }
+
+    @Test
+    public void testWritePathWithExistingBadLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        Files.writeString(tmpdir.resolve("dbsnp3.gor.link"), "");
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+
+        Assert.assertEquals(tmpdir.resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("dbsnp3.gor.link")));
     }
 
     @Test
