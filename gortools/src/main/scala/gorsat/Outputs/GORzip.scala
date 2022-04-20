@@ -43,7 +43,7 @@ import java.nio.file.Paths
   */
 class GORzip(fileName: String, fileReader: FileReader, header: String = null, skipHeader: Boolean = false, append: Boolean = false, options: OutputOptions, schema: Array[String]) extends Output {
 
-  val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), options.columnCompress, options.md5, if(options.md5File) Paths.get(fileName+".md5") else null, if (options.idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, options.idx, options.compressionLevel)
+  val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), options.columnCompress, options.md5, if(options.md5File) fileReader.toAbsolutePath(fileName+".md5") else null, if (options.idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, options.idx, options.compressionLevel)
 
   override def getName: String = fileName
 

@@ -242,7 +242,12 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public Path toPath(String resource) {
-        return Paths.get(resource);
+        return Path.of(resource);
+    }
+
+    @Override
+    public Path toAbsolutePath(String resource) {
+        return commonRoot!=null&&commonRoot.length()>0 ? Path.of(commonRoot).resolve(resource) : Path.of(resource);
     }
 
     @Override

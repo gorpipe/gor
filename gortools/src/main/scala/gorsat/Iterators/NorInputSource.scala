@@ -57,7 +57,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
       fileReader.iterateFile(fileName, maxWalkDepth, followLinks, showModificationDate)
     }
   } else throw new GorParsingException("Stdin not supported in NOR context.")
-  val norRowIterator: util.Iterator[String] = norRowSource.filter(filter(_)).iterator()
+  val norRowIterator: util.Iterator[String] = if (fileName.endsWith(".meta")) norRowSource.iterator() else norRowSource.filter(filter(_)).iterator()
 
   override def hasNext: Boolean = {
     if (!haveReadHeader) {

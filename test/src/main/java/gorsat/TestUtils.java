@@ -343,6 +343,12 @@ public class TestUtils {
         Assert.assertEquals(desc, result1, result2);
     }
 
+    public static void assertTwoGorpipeResults(String desc, String[] query1, String[] query2) {
+        String result1 = runGorPipe(query1);
+        String result2 = runGorPipe(query2);
+        Assert.assertEquals(desc, result1, result2);
+    }
+
     public static void assertGorpipeResults(String desc, String expected, String query) {
         String result = runGorPipe(query);
         Assert.assertEquals(desc, expected, result);

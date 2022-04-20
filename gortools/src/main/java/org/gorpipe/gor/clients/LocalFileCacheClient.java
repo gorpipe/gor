@@ -100,7 +100,7 @@ public class LocalFileCacheClient implements FileCache {
             // Atomic only store in cache if successful move operation
             var subFolder = getFolderFromFingerprint(fingerprint, true);
             var cacheFile = PathUtils.resolve(subFolder, cacheFilename);
-            String resultPath = moveFile(path, Path.of(cacheFile));
+            var resultPath = moveFile(path, Path.of(cacheFile));
 
             if (!StringUtils.isEmpty(resultPath)) {
                 cache.put(fingerprint, resultPath);
@@ -109,7 +109,7 @@ public class LocalFileCacheClient implements FileCache {
             // If there is no occurance of the fingerprint in the cache file name we need to store a link file to
             // the original file
             if (!cacheFilename.contains(fingerprint)) {
-                File md5File = new File(subFolder.toString(), fingerprint + ".md5link");
+                File md5File = new File(subFolder, fingerprint + ".md5link");
                 FileUtils.writeStringToFile(md5File, resultPath, Charset.defaultCharset());
             }
 
@@ -171,14 +171,20 @@ public class LocalFileCacheClient implements FileCache {
             throw new IllegalArgumentException(String.format("Invalid fingerprint: %1$s, needs to be at least %2$d characters", fingerprint, subFolderSize));
         }
 
+        var currentRoot = rootPath;
+        var commonRoot = fileReader.getCommonRoot();
+        if (commonRoot != null && commonRoot.length() > 0) {
+            currentRoot = PathUtils.resolve(commonRoot, rootPath);
+        }
+
         if (useSubFolders) {
-            var resultPath = PathUtils.resolve(rootPath, fingerprint.substring(0, this.subFolderSize));
+            var resultPath = PathUtils.resolve(currentRoot, fingerprint.substring(0, this.subFolderSize));
             if (createSubFolder) {
                 fileReader.createDirectories(resultPath);
             }
             return resultPath;
         } else {
-            return rootPath;
+            return currentRoot;
         }
     }
 

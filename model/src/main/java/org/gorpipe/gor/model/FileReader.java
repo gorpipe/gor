@@ -160,6 +160,8 @@ public abstract class FileReader {
      */
     public abstract Path toPath(String resource);
 
+    public abstract Path toAbsolutePath(String resource);
+
     /**
      * Get a writer for the specified file
      * @param file
