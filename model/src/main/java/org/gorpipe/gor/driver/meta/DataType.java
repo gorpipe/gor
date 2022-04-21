@@ -59,6 +59,7 @@ public enum DataType {
     CSV(VARIANTS, ".csv"),
     TSV(VARIANTS, ".tsv"),
     TXT(VARIANTS, ".txt"),
+    META(METAINFO, ".meta"),
     MEM(VARIANTS, ".mem"),
     MD5LINK(MD5_LINK, ".md5link");
 

@@ -76,14 +76,19 @@ public class TestUtils {
         return runGorPipeWithOptions(query, true, server, securityContext);
     }
 
-    public static String runGorPipe(String... args) {
+    public static String runGorPipe(String[] args, String whiteCmdListFile, boolean server, String securityContext) {
+        return runGorPipe(args, () -> createSession(args, whiteCmdListFile, server, securityContext));
+    }
 
+    public static String runGorPipe(String[] args, boolean server) {
+        return runGorPipe(args, () -> createSession(args, null, server, null));
+    }
+
+    public static String runGorPipe(String[] args, Supplier<GorSession> sessionSupplier) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        CLISessionFactory factory = new CLISessionFactory(options, null);
-
-        try (PipeInstance pipe = new PipeInstance(new GorContext(factory.create()))) {
+        try (PipeInstance pipe = new PipeInstance(new GorContext(sessionSupplier.get()))) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
             pipe.subProcessArguments(queryToExecute, false, null, false, false, "");
             StringBuilder result = new StringBuilder();
@@ -95,6 +100,14 @@ public class TestUtils {
             }
             return result.toString();
         }
+    }
+
+    public static String runGorPipe(String... args) {
+        return runGorPipe(args, () -> {
+            PipeOptions options = new PipeOptions();
+            options.parseOptions(args);
+            return new CLISessionFactory(options, null).create();
+        });
     }
 
     private static String processQuery(String query, GorSession session) {
@@ -185,11 +198,11 @@ public class TestUtils {
         }
     }
 
-    private static GorSession createSession(String[] args, String whiteListFile, boolean server, String securityContext) {
+    private static GorSession createSession(String[] args, String whiteCmdListFile, boolean server, String securityContext) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, securityContext);
+        TestSessionFactory factory = new TestSessionFactory(options, whiteCmdListFile, server, securityContext);
         return factory.create();
     }
 
@@ -290,12 +303,12 @@ public class TestUtils {
         return runGorPipeCount(args, ()->createCLISession(args));
     }
 
-    public static int runGorPipeCountWithWhitelist(String query, Path whitelistFile) {
+    public static int runGorPipeCountWithWhitelist(String query, Path whiteCmdListFile) {
         String[] args = {query};
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        try (PipeInstance pipe = new PipeInstance(createSession(args, whitelistFile.toAbsolutePath().toString(), false).getGorContext())) {
+        try (PipeInstance pipe = new PipeInstance(createSession(args, whiteCmdListFile.toAbsolutePath().toString(), false).getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
             pipe.init(queryToExecute, false, "");
             int count = 0;
@@ -325,6 +338,12 @@ public class TestUtils {
     }
 
     public static void assertTwoGorpipeResults(String desc, String query1, String query2) {
+        String result1 = runGorPipe(query1);
+        String result2 = runGorPipe(query2);
+        Assert.assertEquals(desc, result1, result2);
+    }
+
+    public static void assertTwoGorpipeResults(String desc, String[] query1, String[] query2) {
         String result1 = runGorPipe(query1);
         String result2 = runGorPipe(query2);
         Assert.assertEquals(desc, result1, result2);

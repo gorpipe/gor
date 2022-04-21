@@ -531,25 +531,36 @@ public class BucketManager<T extends BucketableTableEntry> {
             return;
         }
 
-        Set<String> allBucketDirs = new HashSet<>(getBucketDirs());
-        allBucketDirs.addAll(table.getBuckets().stream().map(b -> PathUtils.parent(b)).collect(Collectors.toSet()));
+        Map<String, List<String>> bucketsToCleanMap = new HashMap<>();
 
-        for (String bucketDir : allBucketDirs) {
-            URI fullPathBucketDir = table.getRootUri().resolve(bucketDir);
+        // Collect buckets to clean.
+        try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
 
-            if (!table.getFileReader().exists(fullPathBucketDir.toString())) {
-                log.debug("Bucket folder {} never been used, nothing to clean.", fullPathBucketDir);
-                continue;
-            }
-            List<String> bucketsToClean = collectBucketsToClean(fullPathBucketDir, force);
+            Set<String> allBucketDirs = new HashSet<>(getBucketDirs());
+            allBucketDirs.addAll(table.getBuckets().stream().map(b -> PathUtils.parent(b)).collect(Collectors.toSet()));
 
-            // Perform the deletion., safest to use the deleteBuckets table methods.
-            if (bucketsToClean.size() > 0) {
-                //deleteBucketFiles(force, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
-                deleteBuckets(force, bucketsToClean.toArray(new String[bucketsToClean.size()]));
-                for (String bucket : bucketsToClean) {
-                    log.warn("Bucket '{}' removed as it is not used", bucket);
+            for (String bucketDir : allBucketDirs) {
+                URI fullPathBucketDir = table.getRootUri().resolve(bucketDir);
+
+                if (!table.getFileReader().exists(fullPathBucketDir.toString())) {
+                    log.debug("Bucket folder {} never been used, nothing to clean.", fullPathBucketDir);
+                    continue;
                 }
+                List<String> bucketsToClean = collectBucketsToClean(fullPathBucketDir, force);
+                if (bucketsToClean.size() > 0) {
+                    bucketsToCleanMap.put(bucketDir, bucketsToClean);
+                }
+            }
+        }
+
+        // Do the cleaning.
+        for (String bucketDir : bucketsToCleanMap.keySet()) {
+            List<String> bucketsToClean = bucketsToCleanMap.get(bucketDir);
+            // Perform the deletion., safest to use the deleteBuckets table methods.
+            //deleteBucketFiles(force, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
+            deleteBuckets(force, bucketsToClean.toArray(new String[0]));
+            for (String bucket : bucketsToClean) {
+                log.warn("Bucket '{}' removed as it is not used", bucket);
             }
         }
     }

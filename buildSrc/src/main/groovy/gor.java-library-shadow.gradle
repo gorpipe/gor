@@ -70,7 +70,7 @@ publishing {
         }
     }
     repositories {
-        if (project.hasProperty('publishToGitlab')) {
+        if (project.hasProperty('publishToGithub')) {
             maven {
                 name = "GitHubPackages"
                 url = "https://maven.pkg.github.com/gorpipe/gor"

@@ -465,8 +465,10 @@ public class UTestDictionary {
         Path cacheroot = root.resolve(cache);
         Files.createDirectory(cacheroot);
         String result = TestUtils.runGorPipe(query,"-gorroot",root.toString(),"-cachedir",cache.toString());
-        Path p = Files.walk(cacheroot).filter(gorp -> gorp.toString().endsWith(".gorz")).findFirst().get();
-        Files.delete(root.resolve(cache).resolve(p));
+        try(var dirstream = Files.walk(cacheroot)) {
+            var p = dirstream.filter(gorp -> gorp.toString().endsWith(".gorz")).findFirst().get();
+            Files.delete(root.resolve(cache).resolve(p));
+        }
         String result2 = TestUtils.runGorPipe(query,"-gorroot",root.toString(),"-cachedir",cache.toString());
         Assert.assertEquals(result, result2);
     }

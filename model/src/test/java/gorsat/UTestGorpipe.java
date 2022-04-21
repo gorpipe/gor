@@ -9,6 +9,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class UTestGorpipe {
     protected File file;
     protected File file2;
     protected String prevDictCache;
+    protected Path workPath;
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -32,6 +34,8 @@ public class UTestGorpipe {
         if (dir.exists()) {
             FileTestUtils.deleteFolder(dir.toPath());
         }
+        workPath = workDir.getRoot().toPath().toAbsolutePath();
+        Files.createDirectories(workPath.resolve("result_cache"));
         file = FileTestUtils.createDummyGorFile(workDir.getRoot());
         file2 = FileTestUtils.createDummyGorFile(workDir.getRoot());
         prevDictCache = System.setProperty("gor.dictionary.cache.active","true");
@@ -79,14 +83,15 @@ public class UTestGorpipe {
 
     private void assertNoOpenFiles(String query, boolean assume) throws InterruptedException, IOException {
         // Warm up to load dyanamically loaded files.
-        TestUtils.runGorPipeCount(query);
+        var args = new String[] {query,"-gorroot",workPath.toString(),"-cachedir","result_cache"};
+        TestUtils.runGorPipeCount(args);
         // GC once to close everything that could possibly be closed by GC while run.
         System.gc();
 
         // Measure and run 100 times
         long count = TestUtils.countOpenFiles();
         for (int i = 0; i < 100; i++) {
-            TestUtils.runGorPipeCount(query);
+            TestUtils.runGorPipeCount(args);
         }
         // Sleep one sec to make sure count open files works correctly (lsof)
         Thread.sleep(1000);

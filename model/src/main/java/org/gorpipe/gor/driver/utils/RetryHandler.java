@@ -69,29 +69,36 @@ public class RetryHandler {
             try {
                 return op.perform();
             } catch (IOException e) {
-                if (e.getMessage().equals("Stale file handle")) {
-                    // Stale file handle errors generally require retries on a higher level as the
-                    // file needs to be reopened.
-                    throw e;
-                }
-                lastException = e;
-                log.warn("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
-                try {
-                    Thread.sleep(sleepMs);
-                    if (onRetry != null) {
-                        onRetry.onRetry(e);
-                    }
-                } catch (InterruptedException e1) {
-                    // If interrupted waiting to retry, throw original exception
-                    throw e;
-                }
                 tries++;
-                if (sleepMs < retryMaxSleepMs) {
-                    sleepMs *= 2;
-                }
+                lastException = e;
+                sleepMs = retryExceptionHandler(retries, onRetry, tries, sleepMs, e);
             }
         }
         throw new IOException("Giving up after " + tries + " retries", lastException);
+    }
+
+    private long retryExceptionHandler(int retries, OnRetryOp onRetry, int tries, long sleepMs, IOException e) throws IOException {
+        if (e.getMessage().equals("Stale file handle")) {
+            // Stale file handle errors generally require retries on a higher level as the
+            // file needs to be reopened.
+            throw e;
+        }
+
+        log.warn("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
+        try {
+            Thread.sleep(sleepMs);
+            if (onRetry != null) {
+                onRetry.onRetry(e);
+            }
+        } catch (InterruptedException e1) {
+            // If interrupted waiting to retry, throw original exception
+            throw e;
+        }
+
+        if (sleepMs < retryMaxSleepMs) {
+            sleepMs *= 2;
+        }
+        return sleepMs;
     }
 
     /**
@@ -113,26 +120,9 @@ public class RetryHandler {
                 op.perform();
                 return;
             } catch (IOException e) {
-                if (e.getMessage().equals("Stale file handle")) {
-                    // Stale file handle errors generally require retries on a higher level as the
-                    // file needs to be reopened.
-                    throw e;
-                }
-                lastException = e;
-                log.debug("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
-                try {
-                    Thread.sleep(sleepMs);
-                    if (onRetry != null) {
-                        onRetry.onRetry(e);
-                    }
-                } catch (InterruptedException e1) {
-                    // If interrupted waiting to retry, throw original exception
-                    throw e;
-                }
                 tries++;
-                if (sleepMs < retryMaxSleepMs) {
-                    sleepMs *= 2;
-                }
+                lastException = e;
+                sleepMs = retryExceptionHandler(retries, onRetry, tries, sleepMs, e);
             }
         }
         throw new IOException("Giving up after " + tries + " retries", lastException);

@@ -155,7 +155,7 @@ public class TestTableManagerUtil {
 //                }
 //            }
 
-            if (System.currentTimeMillis() - startTime > 5000) {
+            if (System.currentTimeMillis() - startTime > 20000) {
                 log.info(waitForProcessPlus(p));
                 Assert.fail("Test not setup correctly, thread did not get bucketize lock, took too long.");
             }

@@ -47,5 +47,9 @@ public enum FileNature {
     /**
      * A reference to a md5 file
      **/
-    MD5_LINK
+    MD5_LINK,
+    /**
+     * A reference to a meta file
+     **/
+    METAINFO
 }
