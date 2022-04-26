@@ -40,6 +40,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
@@ -152,8 +153,8 @@ public class UTestTableManager {
 
         Path gordFile = workDirPath.resolve(name + ".gord");
 
-        final StringWriter out_writer = new StringWriter();
-        final StringWriter err_writer = new StringWriter();
+        final var out_writer = new ByteArrayOutputStream();
+        final var err_writer = new ByteArrayOutputStream();
 
         List<Process> processes = new ArrayList<>();
         for (String alias : dataFiles.keySet()) {
@@ -194,7 +195,7 @@ public class UTestTableManager {
     public void testUpdateWhileBucketize() throws Exception {
         String name = "testUpdateWhileBucketize";
         int fileCount = 1000;
-        String[] sources = IntStream.range(1, fileCount).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
+        String[] sources = IntStream.range(1, fileCount).mapToObj(i -> String.format("PN%d", i)).toArray(String[]::new);
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
@@ -250,14 +251,14 @@ public class UTestTableManager {
 
         Assert.assertEquals("Total number of lines does not match", 1010, table.selectAll().size());
         Assert.assertEquals("New lines should not be bucketized", 10, table.needsBucketizing().size());
-        Assert.assertEquals("Deleted lines should be reinserted (marked deleted)", 2, table.selectAll().stream().filter(f -> f.isDeleted()).count());
+        Assert.assertEquals("Deleted lines should be reinserted (marked deleted)", 2, table.selectAll().stream().filter(BucketableTableEntry::isDeleted).count());
     }
 
     @Test
     public void testMultiprocessBucketize() throws Exception {
         String name = "testMultiprocessBucketize";
         int fileCount = 1000;
-        String[] sources = IntStream.range(1, 1000).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
+        String[] sources = IntStream.range(1, 1000).mapToObj(i -> String.format("PN%d", i)).toArray(String[]::new);
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 

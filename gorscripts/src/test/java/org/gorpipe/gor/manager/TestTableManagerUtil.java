@@ -22,21 +22,14 @@
 
 package org.gorpipe.gor.manager;
 
-import org.apache.commons.io.IOUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.gor.table.lock.TableLock;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -77,12 +70,12 @@ public class TestTableManagerUtil {
         return pb.start();
     }
 
-    String waitForProcessPlus(Process p) throws InterruptedException, IOException, ExecutionException {
+    String waitForProcessPlus(Process p) throws InterruptedException, ExecutionException {
 
         final long timeoutInS = 30;
 
-        final StringWriter out_writer = new StringWriter();
-        final StringWriter err_writer = new StringWriter();
+        final var out_writer = new ByteArrayOutputStream();
+        final var err_writer = new ByteArrayOutputStream();
         startProcessStreamEaters(p, out_writer, err_writer);
         boolean noTimeout = p.waitFor(timeoutInS, TimeUnit.SECONDS);
 
@@ -113,17 +106,17 @@ public class TestTableManagerUtil {
         return processOutput;
     }
 
-    void startProcessStreamEaters(Process p, Writer outWriter, Writer errWriter) {
+    void startProcessStreamEaters(Process p, OutputStream outWriter, OutputStream errWriter) {
         new Thread(() -> {
-            try {
-                IOUtils.copy(p.getInputStream(), outWriter);
+            try(var in = p.getInputStream()) {
+                in.transferTo(outWriter);
             } catch (IOException e) {
                 // Ignore
             }
         }).start();
         new Thread(() -> {
-            try {
-                IOUtils.copy(p.getErrorStream(), errWriter);
+            try(var in = p.getErrorStream()) {
+                in.transferTo(errWriter);
             } catch (IOException e) {
                 // Ignore
             }
@@ -144,9 +137,11 @@ public class TestTableManagerUtil {
         long startTime = System.currentTimeMillis();
         while (true) {
             // Wait for the temp file to be created (as then the dict has been read)
-            long tempFiles  = Files.list(table.getRootPath()).filter(f -> f.toString().contains(table.getName() + ".temp.bucketizing.")).count();
-            if (tempFiles == 1) {
-                break;
+            try(var pathList = Files.list(table.getRootPath())) {
+                long tempFiles  = pathList.filter(f -> f.toString().contains(table.getName() + ".temp.bucketizing.")).count();
+                if (tempFiles == 1) {
+                    break;
+                }
             }
             // Option to wait for the bucketize look to be taken (by someone else) but then we don't control which version of the dict is bucektized.
 //            try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {
