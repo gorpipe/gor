@@ -28,6 +28,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+
 public class UTestRename {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -38,6 +41,19 @@ public class UTestRename {
         String result = TestUtils.runGorPipe(query);
 
         Assert.assertTrue(result.contains("Bar_CAR"));
+    }
+
+    @Test
+    public void testColumnNames() throws IOException {
+        var tmpath = Files.createTempFile("tmp","tsv");
+        try {
+            var query = "norrows 1|calc pn 'pn1'|calc pn2 'pn2'|calc bucket 'bucket1'|hide rownum|select #2,bucket|rename #1 pn|write "+ tmpath.toAbsolutePath();
+            TestUtils.runGorPipe(query);
+            var result = Files.readString(tmpath);
+            Assert.assertEquals("#pn\tbucket\npn2\tbucket1\n",result);
+        } finally {
+            Files.deleteIfExists(tmpath);
+        }
     }
 
     @Test

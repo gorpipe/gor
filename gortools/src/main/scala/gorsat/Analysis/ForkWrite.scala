@@ -24,7 +24,7 @@ package gorsat.Analysis
 
 import java.nio.file.{Files, Paths, StandardOpenOption}
 import java.util.zip.Deflater
-import gorsat.Commands.{Analysis, Output}
+import gorsat.Commands.{Analysis, Output, RowHeader}
 import gorsat.Outputs.OutFile
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorResourceException
@@ -150,7 +150,12 @@ case class ForkWrite(forkCol: Int,
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
     if (rowHeader==null || useFork) OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
-    else OutFile.driver(name, session.getProjectContext.getFileReader, rowHeader, skipHeader, options)
+    else {
+      if (!rowHeader.toString.equals(header)) {
+        rowHeader = RowHeader(header, rowHeader.columnTypes)
+      }
+      OutFile.driver(name, session.getProjectContext.getFileReader, rowHeader, skipHeader, options)
+    }
   }
 
   def openFile(sh: FileHolder) {
