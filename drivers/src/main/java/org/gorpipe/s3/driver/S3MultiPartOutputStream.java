@@ -1,11 +1,11 @@
 package org.gorpipe.s3.driver;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,8 +82,16 @@ public class S3MultiPartOutputStream extends OutputStream {
             return fut.get();
         } catch (InterruptedException | ExecutionException e) {
             AbortMultipartUploadRequest abortMultipartUploadRequest = new AbortMultipartUploadRequest(bucket, key, uploadId);
-            client.abortMultipartUpload(abortMultipartUploadRequest);
-            throw new IOException("Unable to upload multipart to s3 bucket", e);
+            String errorMsg = "Unable to upload multipart to s3 bucket";
+            try {
+                client.abortMultipartUpload(abortMultipartUploadRequest);
+            } catch(SdkClientException ee) {
+                var sw = new StringWriter();
+                var pw = new PrintWriter(sw);
+                ee.printStackTrace(pw);
+                errorMsg += ": ("+uploadId+")" + sw;
+            }
+            throw new IOException(errorMsg, e);
         }
     }
 

@@ -22,6 +22,7 @@
 
 package org.gorpipe.s3.driver;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.google.common.base.Strings;
@@ -40,7 +41,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -109,8 +112,12 @@ public class S3Source implements StreamSource {
     }
 
     private InputStream openRequest(GetObjectRequest request) {
-        S3Object object = client.getObject(request);
-        return object.getObjectContent();
+        try {
+            S3Object object = client.getObject(request);
+            return object.getObjectContent();
+        } catch(SdkClientException sdkClientException) {
+            throw new GorResourceException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")), sourceReference.getUrl(), sdkClientException);
+        }
     }
 
     @Override
