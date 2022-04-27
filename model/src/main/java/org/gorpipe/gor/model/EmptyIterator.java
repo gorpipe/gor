@@ -5,6 +5,7 @@ import org.gorpipe.gor.session.GorSession;
 
 public class EmptyIterator implements GenomicIterator {
     private String header;
+    private String[] types;
 
     public EmptyIterator(String header) {
         this.header = header;
@@ -48,6 +49,16 @@ public class EmptyIterator implements GenomicIterator {
     @Override
     public void setHeader(String header) {
         this.header = header;
+    }
+
+    @Override
+    public String[] getTypes() {
+        return types;
+    }
+
+    @Override
+    public void setTypes(String[] types) {
+        this.types = types;
     }
 
     @Override

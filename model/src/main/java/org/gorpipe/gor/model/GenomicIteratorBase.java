@@ -40,6 +40,7 @@ import java.util.function.Predicate;
  */
 public abstract class GenomicIteratorBase implements GenomicIterator {
     private String header = "";
+    private String[] types;
     private String sourceName = "";
 
     private boolean sourceAlreadyInserted;
@@ -131,6 +132,16 @@ public abstract class GenomicIteratorBase implements GenomicIterator {
     @Override
     public void setHeader(String header) {
         this.header = header;
+    }
+
+    @Override
+    public String[] getTypes() {
+        return types;
+    }
+
+    @Override
+    public void setTypes(String[] types) {
+        this.types = types;
     }
 
     @Override

@@ -271,8 +271,9 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     val inputSourceCommand: String = prepareInputSource(argString, gorString, useStdin)
     val inputHeader: String = preparePipeStep(argString, gorString, forcedInputHeader, inputSourceCommand)
 
-    // todo: get row header from input source, with types if possible
-    thePipeStep.setRowHeader(RowHeader(inputHeader))
+    val types = theInputSource.getTypes
+    val rowHeader = if (types!=null) RowHeader(inputHeader, types) else RowHeader(inputHeader)
+    thePipeStep.setRowHeader(rowHeader)
 
     theIterator = new BatchedPipeStepIteratorAdaptor(theInputSource, thePipeStep, combinedHeader, brsConfig)
 

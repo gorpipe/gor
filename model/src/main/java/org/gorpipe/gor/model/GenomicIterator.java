@@ -67,6 +67,10 @@ public interface GenomicIterator extends Iterator<Row>, RowSourceStats, AutoClos
      */
     void setHeader(String header);
 
+    String[] getTypes();
+
+    void setTypes(String[] types);
+
     /**
      * Seek to the specified genomic position in the data source
      *
