@@ -417,7 +417,7 @@ object MacroUtilities {
     * @return
     */
   private def resolveForkPathParent(res: String): Option[(String, Boolean)] = {
-    val i = res.indexOf("#{fork}")
+    val i = res.indexOf("#{")
     if(i != -1) {
       val k = res.lastIndexOf('/', i)
       val ret = if(k == -1) "." else res.substring(0,k)
@@ -464,7 +464,7 @@ object MacroUtilities {
       if (lastCmdLower.endsWith(".gord")) lastCmdLower.length-5
       else lastCmdLower.indexOf(".gord/")
     } else 0
-    val hasForkWrite = lastCmdLower.contains("#{fork}")
+    val hasForkWrite = lastCmdLower.contains("#{")
     val hasGordFolderWrite = didx > 0 || lidx > 0
     val writeDir = if (didx>0) {
       var k = didx+4

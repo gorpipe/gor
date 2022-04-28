@@ -45,6 +45,15 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
     throw new GorParsingException(s"Too many splits for query. The maximum allowed number of splits is $MAXIMUM_NUMBER_OF_SPLITS but the current query splits into ${chromosomeSplits.size} jobs")
   }
 
+  def patternReplace(str: String, rangeInfo: SplitEntry): String = {
+    str.replace(replacementPattern, rangeInfo.getRange)
+      .replace(WHERE_SPLIT_WINDOW, rangeInfo.getFilter)
+      .replace(CHROM_PATTERN, rangeInfo.chrom)
+      .replace(START_PATTERN, rangeInfo.start.toString)
+      .replace(STOP_PATTERN, (if(rangeInfo.end == -1) SplitManager.MAX_CHROM_SIZE else rangeInfo.end).toString)
+      .replace(RANGETAG_PATTERN, rangeInfo.tag)
+  }
+
   def expandCommand(commandToExecute: String, batchGroupName: String, cachePath: String = null): CommandGroup = {
     var expandedCommands: List[CommandEntry] = List.empty[CommandEntry]
     var removeFromCreates = false
@@ -54,12 +63,7 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
 
       chromosomeSplits.foreach(k => {
         val (n, c, g) = (groupName.replace(replacementPattern, k._1),
-          commandToExecute.replace(replacementPattern, k._2.getRange)
-            .replace(WHERE_SPLIT_WINDOW, k._2.getFilter)
-            .replace(CHROM_PATTERN, k._2.chrom)
-            .replace(START_PATTERN, k._2.start.toString)
-            .replace(STOP_PATTERN, (if(k._2.end == -1) SplitManager.MAX_CHROM_SIZE else k._2.end).toString)
-            .replace(RANGETAG_PATTERN, k._2.tag), batchGroupName)
+          patternReplace(commandToExecute, k._2), batchGroupName)
 
         var mc = c
 
