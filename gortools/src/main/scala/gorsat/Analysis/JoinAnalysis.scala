@@ -636,9 +636,9 @@ object  JoinAnalysis {
 
       if (inclusOnly) combinedHeader = leftHeader
 
-      var missingSEG = Range(0, combinedHeader.split("\t").length - leftHeader.split("\t").length).toList.map(x => emptyString).mkString("\t")
+      var missingSEG = Range(0, combinedHeader.split("\t").length - leftHeader.split("\t").length).toList.map(_ => emptyString).mkString("\t")
 
-      if (leftHeader.split("\t").length != 2) missingSEG = "\t" + missingSEG
+      if (leftHeader.split("\t").length != 2 || (joinType == "snpseg" && missingSEG.isEmpty)) missingSEG = "\t" + missingSEG
 
       if (hasOption(args, "-ic")) combinedHeader = leftHeader + "\tOverlapCount"
       if (hasOption(args, "-ir")) combinedHeader = rightHeader

@@ -60,6 +60,24 @@ public class UTestGorJoin {
     }
 
     @Test
+    public void testJoinR() {
+        var query = "gorrows -p chr1:1-3 | join -snpseg -r <(gorrows -p chr1:1-3 | calc end pos + 2 | calc mapq 10)";
+
+        var res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("join r not returning correct results","chrom\tpos\tmapq\n" +
+                "chr1\t2\t10\n",res);
+    }
+
+    @Test
+    public void testJoinBam() {
+        var query = "gorrows -p chr8:145577711-145584931 | calc x pos +1 | calc y 'y' | join -segseg -maxseg 10000 <(gor ../tests/data/bvl_min/bam/BVL_INDEX_SLC52A2.bam | select 1-3,mapq) | top 1";
+
+        var res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("join r not returning correct results","chrom\tpos\tx\ty\tdistance\tPosx\tEnd\tMapQ\n" +
+                "chr8\t145577711\t145577712\ty\t0\t14557771114557781129\n",res);
+    }
+
+    @Test
     public void testNewIterator() {
         final String query = "gor ../tests/data/gor/dbsnp_test.gorz | join -snpsnp ../tests/data/gor/dbsnp_test.gorz";
         System.setProperty("gor.iterators.useAdaptiveMTP", "false");
