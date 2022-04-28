@@ -235,10 +235,42 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
-    public void testPgorWriteGord() {
-        Path gordpath = workDir.getRoot().toPath().resolve("my.gord").resolve("my.gord");
+    public void testPgorForkWrite() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var folderpath = workDirPath.resolve("folder.gord");
+        var cachedir = workDirPath.resolve("result_cache");
+        Files.createDirectory(cachedir);
         try {
-            var query = "create a = pgor ../tests/data/gor/genes.gor | top 1 | write -d " + gordpath.getParent() + " " + gordpath +
+            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | rownum | calc mod mod(rownum,2) | hide rownum | write -f mod " + folderpath + "/file_#{CHROM}_#{BPSTART}_#{BPSTOP}_#{fork}.gorz;" +
+                    "gor [a] | group chrom -count","-cachedir",cachedir.toString());
+            //"; gor [a] | group chrom -count");
+            Assert.assertEquals(WRONG_RESULT, GENE_GROUP_CHROM, results);
+        } finally {
+            deleteFolder(folderpath);
+        }
+    }
+
+    @Test
+    public void testPgorWriteExplicitFilename() throws IOException {
+        var workDirPath = workDir.getRoot().toPath();
+        var folderpath = workDirPath.resolve("folder.gord");
+        var cachedir = workDirPath.resolve("result_cache");
+        Files.createDirectory(cachedir);
+        try {
+            String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write " + folderpath + "/file_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz;" +
+                    "gor [a] | group chrom -count","-cachedir",cachedir.toString());
+            //"; gor [a] | group chrom -count");
+            Assert.assertEquals(WRONG_RESULT, GENE_GROUP_CHROM, results);
+        } finally {
+            deleteFolder(folderpath);
+        }
+    }
+
+    @Test
+    public void testPgorWriteGord() {
+        Path gordpath = workDir.getRoot().toPath().resolve("my.gord");
+        try {
+            var query = "create a = pgor ../tests/data/gor/genes.gor | top 1 | write " + gordpath +
                     "; gor ../tests/data/gor/genes.gor | group chrom -count";
             String results = TestUtils.runGorPipe(query);
             //"; gor [a] | group chrom -count");
