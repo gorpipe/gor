@@ -441,7 +441,11 @@ public class BamIterator extends GenomicIteratorBase {
 
         @Override
         public CharSequence colsSlice(int startCol, int stopCol) {
-            return null;
+            StringBuilder sb = new StringBuilder();
+            for (int i = startCol; i < stopCol; i++) {
+                appendColumn(sb, i);
+            }
+            return sb.toString();
         }
 
         private void otherCols(StringBuilder sb) {
