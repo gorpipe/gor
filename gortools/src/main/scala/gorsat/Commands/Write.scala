@@ -39,7 +39,7 @@ class Write extends CommandInfo("WRITE",
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
     val useFolder = if (hasOption(args, "-d")) {
       Option.apply(stringValueOfOption(args, "-d"))
-    } else if(fileName.toLowerCase.endsWith(".gord")) {
+    } else if(!executeNor && fileName.toLowerCase.endsWith(".gord")) {
       val fn = fileName
       fileName = ""
       Option.apply(fn)
