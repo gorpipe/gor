@@ -83,6 +83,18 @@ public class UTestNor {
         Files.createSymbolicLink(link, target);
     }
 
+    @Test
+    public void testNorWriteGord() {
+        var tmpgord = projectDir.getRoot().toPath().resolve("my.gord");
+        var currentPath = Path.of(".").toAbsolutePath().normalize();
+        var query = "nor ../tests/data/gor/ | where isDir='false' | grep genes.gorz | select Filepath | replace Filepath '"+currentPath+"/'+Filepath | calc tag 'a' | write "+tmpgord;
+        TestUtils.runGorPipe(query);
+        query = "gor "+tmpgord+"| top 1";
+        var res = TestUtils.runGorPipe(query);
+        Assert.assertEquals("Failed writing gord using nor", "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
+                "chr1\t11868\t14412\tDDX11L1\n", res);
+    }
+
 
     /**
      * Test noring a filesystem
