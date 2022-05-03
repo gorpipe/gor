@@ -212,17 +212,20 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         r.writeRowToStream(os);
     }
 
-    private String createInsertTempFileCommand(URI insertFile) {
+    protected String createInsertTempFileCommand(URI insertFile) {
         Path mainFile = getMainFile();
-
-        String randomString = RandomStringUtils.random(8, true, true);
-        tempOutFilePath = getTransactionFolderPath().resolve(
-                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
+        tempOutFilePath = getNewTempFileName();
 
         return String.format("%s %s | merge %s | write %s", getGorCommand(), mainFile, insertFile.toString(), tempOutFilePath);
     }
 
-    private Path getMainFile() {
+    protected Path getNewTempFileName() {
+        String randomString = RandomStringUtils.random(8, true, true);
+        return getTransactionFolderPath().resolve(
+                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
+    }
+
+    protected Path getMainFile() {
         Path mainFile;
         if (tempOutFilePath == null) {
             mainFile = getPath();
