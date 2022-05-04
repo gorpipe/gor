@@ -104,8 +104,9 @@ public class UTestTableManager {
         Path testFile2 = Files.createFile(testWorkDir.resolve("basicInsertFile2.gor")).normalize();
 
 
-        TableManager man = new TableManager();
+        TableManager man = TableManager.newBuilder().validateFiles(false).build();
         BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
 

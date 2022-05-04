@@ -386,6 +386,7 @@ public class UTestDictionaryTable {
         File gordFile = new File(tableWorkDir.toFile(), "gortable_add_existing_deletedbucket.gord");
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+        dict.setValidateFiles(false);
 
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath15.gor").includeDeleted());
         Assert.assertEquals("Deleted file should be included if option: include_deleted", "filepath15.gor|D|bucket2\n", selectRes);

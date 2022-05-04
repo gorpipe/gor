@@ -5,13 +5,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.dictionary.TableEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
@@ -343,7 +340,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     /**
      * Get a property that could be either defined in config or in the table it self. The table has preference.
-     *
+         *
      * @param key the property key.
      * @param def the value to use if the key is not found.
      * @return the value of
@@ -454,10 +451,11 @@ public abstract class BaseTable<T> implements Table<T> {
     protected TableHeader parseHeaderFromFile(String file) {
         TableHeader newHeader = new TableHeader();
 
-        try(GenomicIterator source = GorDriverFactory.fromConfig().createIterator(this.getFileReader().resolveUrl(file))) {
-            newHeader.setColumns(source.getHeader().split("\t"));
-        } catch (IOException e) {
-            throw new GorDataException("Could not get header for validation from input file " + file);
+        try {
+            String headerLine = fileReader.readHeaderLine(file);
+            newHeader.setColumns(headerLine != null ? headerLine.split("\t") : new String[]{""});
+        } catch (Exception e) {
+            throw new GorDataException("Could not get header for validation from input file " + file, e);
         }
 
         return newHeader;
