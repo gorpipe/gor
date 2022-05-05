@@ -297,4 +297,6 @@ public abstract class FileReader {
     }
 
     public abstract String getCommonRoot();
+
+    public abstract Object[] getConstants();
 }

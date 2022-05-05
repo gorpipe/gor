@@ -56,7 +56,8 @@ public class ProjectContext {
     private ReferenceBuild referenceBuild = new ReferenceBuild();
     private String root;
     private String projectName;
-    private FileReader fileReader;
+    private FileReader fileReader;         // For user files.
+    private FileReader systemFileReader;   // For internal use, reading config etc.
     private FileCache fileCache;
     private GorParallelQueryHandler queryHandler;
     private QueryEvaluator queryEvaluator;
@@ -76,6 +77,7 @@ public class ProjectContext {
         private String root = ".";
         private String projectName;
         private FileReader fileReader = DEFAULT_READER;
+        private FileReader systemFileReader;
         private FileCache fileCache;
         private GorParallelQueryHandler queryHandler;
         private QueryEvaluator queryEvaluator;
@@ -116,6 +118,11 @@ public class ProjectContext {
             return this;
         }
 
+        public Builder setSystemFileReader(FileReader fileReader) {
+            this.systemFileReader = fileReader;
+            return this;
+        }
+
         public Builder setFileCache(FileCache fileCache) {
             this.fileCache = fileCache;
             return this;
@@ -144,6 +151,9 @@ public class ProjectContext {
             projectContext.configFile = configFile;
             projectContext.fileCache = fileCache;
             projectContext.fileReader = fileReader;
+            projectContext.systemFileReader = systemFileReader != null
+                    ? systemFileReader
+                    : new DriverBackedFileReader(fileReader.getSecurityContext(), fileReader.getCommonRoot(), fileReader.getConstants());
             projectContext.logDirectory = logDirectory;
             projectContext.projectName = projectName;
             projectContext.queryEvaluator = queryEvaluator;
@@ -235,6 +245,10 @@ public class ProjectContext {
 
     public FileReader getFileReader() {
         return this.fileReader;
+    }
+
+    public FileReader getSystemFileReader() {
+        return this.systemFileReader;
     }
 
     public FileCache getFileCache() {

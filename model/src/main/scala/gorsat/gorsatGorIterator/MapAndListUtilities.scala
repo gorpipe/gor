@@ -50,17 +50,17 @@ object MapAndListUtilities {
 
   def getSingleHashMap(filename: String, caseInsensitive: Boolean, ic: Int, oc: Array[Int],
                        asSet: Boolean, skipEmpty: Boolean, session: GorSession): singleHashMap = {
-    if(!exists(filename, session.getProjectContext.getFileReader)) return new java.util.HashMap[String, String]()
+    if(!exists(filename, session.getProjectContext.getSystemFileReader)) return new java.util.HashMap[String, String]()
 
-    getSingleHashMap(filename, FileLineIterator(filename, session.getProjectContext.getFileReader), caseInsensitive,
+    getSingleHashMap(filename, FileLineIterator(filename, session.getProjectContext.getSystemFileReader), caseInsensitive,
       ic, oc, asSet, skipEmpty, session)
   }
 
   def getMultiHashMap(filename: String, caseInsensitive: Boolean, ic: Int, oc: Array[Int],
                       session: GorSession): multiHashMap = {
-    if (!exists(filename, session.getProjectContext.getFileReader)) return new java.util.HashMap[String, Array[String]]
+    if (!exists(filename, session.getProjectContext.getSystemFileReader)) return new java.util.HashMap[String, Array[String]]
 
-    getMultiHashMap(filename, FileLineIterator(filename, session.getProjectContext.getFileReader), caseInsensitive, ic, oc, session)
+    getMultiHashMap(filename, FileLineIterator(filename, session.getProjectContext.getSystemFileReader), caseInsensitive, ic, oc, session)
   }
 
   def getMultiHashMap(filename: String, iterator: LineIterator,
@@ -74,13 +74,13 @@ object MapAndListUtilities {
     getMultiHashMap(filename, caseInsensitive, 1, Array(1), session: GorSession)
 
   def getStringArray(filename: String, session: GorSession): Array[String] = {
-    if (!exists(filename, session.getProjectContext.getFileReader)) return Array.empty[String]
+    if (!exists(filename, session.getProjectContext.getSystemFileReader)) return Array.empty[String]
 
-    getStringArray(filename, FileLineIterator(filename, session.getProjectContext.getFileReader), session)
+    getStringArray(filename, FileLineIterator(filename, session.getProjectContext.getSystemFileReader), session)
   }
 
   def getStringTraversable(filename: String, session: GorSession): Traversable[String] = {
-    val reader = session.getProjectContext.getFileReader.getReader(filename)
+    val reader = session.getProjectContext.getSystemFileReader.getReader(filename)
     try {
       val lines = reader.lines()
       val list = lines.collect(Collectors.toList[String])
