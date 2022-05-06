@@ -28,7 +28,7 @@ import gorsat.Iterators.{MultiFileSource, RowArrayIterator}
 import gorsat.Outputs.OutFile
 import gorsat.process.{GenericGorRunner, GenericSessionFactory}
 import org.gorpipe.exceptions.custom.GorWriteQuotaExceededException
-import org.gorpipe.gor.model.{DriverBackedFileReader, DriverBackedGorServerFileReader, GenomicIterator, Row}
+import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorSession
 
 case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.SortInfo], div: Int = 1) extends Analysis {
@@ -69,11 +69,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     ordFileList = outputFile :: ordFileList
     wroteBuffer = true
     val runner = new GenericGorRunner
-    val sortFileReader = session.getProjectContext.getFileReader match {
-      case fileReader: DriverBackedGorServerFileReader =>
-        new DriverBackedFileReader(fileReader.getSecurityContext, fileReader.getCommonRoot, fileReader.getConstants)
-      case _ => session.getProjectContext.getFileReader
-    }
+    val sortFileReader = session.getProjectContext.getSystemFileReader
     runner.run(RowArrayIterator(inputArray, length), OutFile.driver(outputFile, sortFileReader, header, skipHeader = false, OutputOptions(writeMeta = false)))
   }
 

@@ -25,7 +25,7 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.session.ProjectContext;
@@ -40,7 +40,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 /**
  * Created by sigmar on 25/06/15.
@@ -57,12 +56,9 @@ public class UTestNor {
 
     @Before
     public void setUp() throws IOException {
-        ArrayList<String> locations = new ArrayList<>();
-        locations.add("user_data");
-
         projectContext = new ProjectContext.Builder()
                 .setRoot(projectDir.getRoot().getCanonicalPath())
-                .setFileReader(new DriverBackedGorServerFileReader(".", null, false, "", locations))
+                .setFileReader(new DriverBackedFileReader(null, ".", null))
                 .build();
         createSymbolicLink();
     }

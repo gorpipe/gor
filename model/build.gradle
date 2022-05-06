@@ -27,6 +27,7 @@ plugins {
 
 project(':model') {
     dependencies {
+        implementation project(':auth')
         implementation project(':base')
         implementation project(':util')
 

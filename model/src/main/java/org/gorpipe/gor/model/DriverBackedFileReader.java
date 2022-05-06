@@ -82,24 +82,16 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public DataSource resolveUrl(String url, boolean writeable) {
-        return resolveUrl(url, writeable, false);
-    }
-
-    public DataSource resolveUrl(String url, boolean writeable, boolean skipAccessValidation) {
         url = convertUrl(url);
         SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
-        return resolveUrl(sourceReference, skipAccessValidation);
+        return resolveUrl(sourceReference);
     }
 
     @Override
     public DataSource resolveUrl(SourceReference sourceReference) {
-        return resolveUrl(sourceReference, false);
-    }
-
-    public DataSource resolveUrl(SourceReference sourceReference, boolean skipAccessValidation) {
         DataSource dataSource =  GorDriverFactory.fromConfig().getDataSource(sourceReference);
         if (dataSource != null) {
-            if(!skipAccessValidation) validateAccess(dataSource);
+            validateAccess(dataSource);
         } else {
             log.warn("No source found for {}", sourceReference.getUrl());
         }
@@ -123,12 +115,6 @@ public class DriverBackedFileReader extends FileReader {
         } catch (GorResourceException gre) {
             return false;
         }
-    }
-
-    public boolean existsNoAccessValidation(String url) {
-        url = convertUrl(url);
-        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).build();
-        return resolveUrl(sourceReference, true).exists();
     }
 
     @Override
@@ -270,11 +256,7 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public OutputStream getOutputStream(String resource, boolean append) throws IOException {
-        return getOutputStream(resource, append, false);
-    }
-
-    public OutputStream getOutputStream(String resource, boolean append, boolean skipAccessValidation) throws IOException {
-        StreamSource source = (StreamSource) resolveUrl(resource, true, skipAccessValidation);
+        StreamSource source = (StreamSource) resolveUrl(resource, true);
         return source.getOutputStream(append);
     }
 

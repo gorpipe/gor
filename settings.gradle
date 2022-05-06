@@ -12,6 +12,7 @@ refreshVersions {
 rootProject.name = 'gor'
 rootProject.buildFileName = "build.gradle"
 
+include 'auth'
 include 'base'
 include 'model'
 include 'documentation'

@@ -26,6 +26,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.*;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
@@ -515,7 +516,7 @@ public class GorJavaUtilities {
         dictionarypathwriter.write(header);
     }
 
-    private static void writeHeader(DriverBackedFileReader fileReader, Writer dictionarypath, String p, boolean lineFilter) throws IOException {
+    private static void writeHeader(FileReader fileReader, Writer dictionarypath, String p, boolean lineFilter) throws IOException {
         var gorzFile = p.substring(0,p.length()-5);
         if (fileReader.exists(gorzFile)) {
             try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(gorzFile)))) {
@@ -565,7 +566,7 @@ public class GorJavaUtilities {
         return cacheFile;
     }
 
-    public static synchronized void writeDictionaryFromMeta(DriverBackedFileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
+    public static synchronized void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
         try(Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
             var metapaths = metapathstream.filter(p -> p.endsWith(".meta")).collect(Collectors.toList());
             var ai = new AtomicInteger();

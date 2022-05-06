@@ -22,10 +22,11 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.gor.auth.AuthorizationAction;
+import org.gorpipe.gor.auth.GorAuthRoleMatcher;
+import org.gorpipe.gor.auth.SecurityPolicy;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.PluggableGorDriver;
-import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.Util;
@@ -34,32 +35,45 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
  * Gor server file reader.
  * Extends Default file reader adding path restrictions and special handling of result cache directories.
  */
-public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
-    private final boolean allowAbsolutePath;
-    private static final String RESULT_CACHE_DIR = "cache/result_cache";
+public class DriverBackedSecureFileReader extends DriverBackedFileReader {
 
-    private List<String> writeLocations;
+    private static final boolean USE_ROLE_ACCESS_VALIDATION_FOR_READ = Boolean.parseBoolean(System.getProperty("gor.access.read.validate.role", "false"));
+
+    private static final String RESULT_CACHE_DIR = "cache/result_cache";
+    private AccessControlContext accessControlContext;
 
     /**
      * Create reader
      *
-     * @param commonRoot resolved session root
-     * @param constants           The session constants available for file reader
-     * @param allowAbsolutePath   allow absolute path
+     * @param commonRoot            resolved session root
+     * @param constants             the session constants available for file reader
+     * @param securityContext       access keys used by the driver
+     * @param accessControlContext  access control context
      */
-    public DriverBackedGorServerFileReader(String commonRoot, Object[] constants, boolean allowAbsolutePath,
-                                           String securityContext, List<String> writeLocations) {
+    public DriverBackedSecureFileReader(String commonRoot, Object[] constants,
+                                        String securityContext, AccessControlContext accessControlContext) {
         super(securityContext, commonRoot, constants);
-        this.allowAbsolutePath = allowAbsolutePath;
-        this.writeLocations = writeLocations != null ? new ArrayList<>(writeLocations) : new ArrayList<>();
-        this.writeLocations.add("result_cache");
+
+        this.accessControlContext = accessControlContext != null ? accessControlContext : AccessControlContext.builder().build();
+
+        if (!this.accessControlContext.getWriteLocations().contains("result_cache")) {
+            // Must create new acc object that allows us to add the write location.
+            this.accessControlContext = new AccessControlContext(
+                    this.accessControlContext.getAuthInfo(),
+                    new ArrayList<>(this.accessControlContext.getWriteLocations()),
+                    this.accessControlContext.isAllowAbsolutePath(),
+                    this.accessControlContext.getSecurityPolicy());
+            this.accessControlContext.getWriteLocations().add("result_cache");
+        }
     }
 
     @Override
@@ -70,7 +84,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
         return super.getDictionarySignature(dictionary, tags);
     }
 
-    @Override
+    //@Override
     Stream<String> directDbUrl(String resolvedUrl) {
         throw new GorSystemException("Direct queries on db urls not allowed on server. Trying to open " + resolvedUrl, null);
     }
@@ -100,8 +114,8 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
         return super.getFileSignature(file);
     }
 
-    public boolean allowsAbsolutePaths() {
-        return false;
+    public AccessControlContext getAccessControlContext() {
+        return accessControlContext;
     }
 
     @Override
@@ -114,14 +128,35 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
     }
 
     private void validateReadAccess(DataSource source) throws GorResourceException {
+        if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
+            return;
+        }
+
         validateServerFileNames(source.getAccessValidationPaths());
+
+        if (USE_ROLE_ACCESS_VALIDATION_FOR_READ && accessControlContext.getSecurityPolicy() != SecurityPolicy.NONE) {
+            GorAuthRoleMatcher.needsRolebasedAccess(accessControlContext.getAuthInfo(),
+                    source.getName(),
+                    AuthorizationAction.READ);
+        }
     }
 
     void validateWriteAccess(DataSource source) throws GorResourceException {
+        if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
+            return;
+        }
+
         String[] validationPaths = source.getAccessValidationPaths();
         validateServerFileNames(validationPaths);
 
-        isWithinAllowedFolders(source);
+        if (GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), null,  AuthorizationAction.PROJECT_ADMIN)) {
+            return;
+        }
+
+        if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), source.getName(),
+                AuthorizationAction.WRITE)) {
+            isWithinAllowedFolders(source);
+        }
 
         for (String validationPath : validationPaths) {
             if (validationPath.toLowerCase().endsWith(".link")) {
@@ -132,11 +167,11 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
 
     public void isWithinAllowedFolders(DataSource dataSource) {
         for (String validationPath : dataSource.getAccessValidationPaths()) {
-            isWithinAllowedFolders(validationPath, writeLocations, commonRoot);
+            isWithinAllowedFolders(commonRoot, validationPath, accessControlContext.getWriteLocations());
         }
     }
 
-    public static void isWithinAllowedFolders(String fileName, List<String> writeLocations, String commonRoot) {
+    private static void isWithinAllowedFolders(String commonRoot, String fileName, List<String> writeLocations) {
         for (String location : writeLocations) {
             if (Path.of(PathUtils.resolve(commonRoot, fileName))
                     .startsWith(PathUtils.resolve(commonRoot, location+"/"))) {
@@ -150,7 +185,7 @@ public class DriverBackedGorServerFileReader extends DriverBackedFileReader {
 
     public void validateServerFileNames(String[] filenames) {
         for (String filename : filenames) {
-            validateServerFileName(filename, commonRoot, allowAbsolutePath);
+            validateServerFileName(filename, commonRoot, accessControlContext.isAllowAbsolutePath());
         }
     }
 

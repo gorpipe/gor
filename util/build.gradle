@@ -28,6 +28,10 @@ project(':util') {
     dependencies {
         implementation project(':base')
 
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
+        implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.11.0'
+
+        implementation("net.logstash.logback:logstash-logback-encoder:_")
         implementation "commons-configuration:commons-configuration:_"
         implementation "org.apache.commons:commons-lang3:_"
         implementation "com.zaxxer:HikariCP:_"
