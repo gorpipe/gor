@@ -57,7 +57,7 @@ public class GorSessionCacheManager {
 
     public static synchronized GorSessionCache getCache(String requestId) {
         try {
-            log.info("Acquiring gor session cache for request id: {}", requestId);
+            log.debug("Acquiring gor session cache for request id: {}", requestId);
             return gorCache.get(requestId, () -> createCache(requestId));
         } catch (ExecutionException e) {
             throw new GorSystemException("Failed to create got session cache for request id: " + requestId, e);
@@ -69,7 +69,7 @@ public class GorSessionCacheManager {
     }
 
     private static GorSessionCache createCache(String requestId) {
-        log.info("Creating gor session cache for request id: {}", requestId);
+        log.debug("Creating gor session cache for request id: {}", requestId);
         return new GorSessionCache();
     }
 }

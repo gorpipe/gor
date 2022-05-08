@@ -92,7 +92,7 @@ public class PlinkAdjustAdaptor extends gorsat.Commands.Analysis {
         this.sort = sort;
         String pExec = System.getProperty("org.gorpipe.gor.driver.plink.executable");
         if( pExec == null ) {
-            GorDriverConfig cfg = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
+            GorDriverConfig cfg = ConfigManager.getPrefixConfig("gor", GorDriverConfig.class);
             plinkExecutable = cfg.plinkExecutable().split(" ");
         } else plinkExecutable = pExec.split(" ");
     }

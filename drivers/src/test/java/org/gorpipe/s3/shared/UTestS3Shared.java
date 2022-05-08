@@ -1,5 +1,6 @@
 package org.gorpipe.s3.shared;
 
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.DataSource;
@@ -31,6 +32,8 @@ public class UTestS3Shared {
     public void testResolveSourceProjectData() throws IOException {
         // Fallback triggers call to exists (which needs mock or actaul backend), turn that off for now.
         environmentVariables.set("GOR_S3_SHARED_USE_FALLBACK", "false");
+        ConfigManager.clearPrefixConfigCache();
+
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
 
         DataSource source = getDataSourceFromProvider(provider, "user_data/a.gor" , Credentials.OwnerType.System, "some_env");
@@ -45,6 +48,8 @@ public class UTestS3Shared {
     public void testResolveSourceProjectShared() throws IOException {
         // Fallback triggers call to exists (which needs mock or actaul backend), turn that off for now.
         environmentVariables.set("GOR_S3_SHARED_USE_FALLBACK", "false");
+        ConfigManager.clearPrefixConfigCache();
+
         S3SharedSourceProvider provider = new S3ProjectSharedSourceProvider();
 
         DataSource source = getDataSourceFromProvider(provider, "user_data/a.gor" , Credentials.OwnerType.System, "some_env");
@@ -59,6 +64,8 @@ public class UTestS3Shared {
     public void testResolveSourceRegion() throws IOException {
         // Fallback triggers call to exists (which needs mock or actaul backend), turn that off for now.
         environmentVariables.set("GOR_S3_SHARED_USE_FALLBACK", "false");
+        ConfigManager.clearPrefixConfigCache();
+
         S3SharedSourceProvider provider = new S3RegionSharedSourceProvider();
 
         DataSource source = getDataSourceFromProvider(provider, "user_data/a.gor" , Credentials.OwnerType.System, "some_env");
@@ -73,6 +80,8 @@ public class UTestS3Shared {
     public void testResolveSourceGlobal() throws IOException {
         // Fallback triggers call to exists (which needs mock or actaul backend), turn that off for now.
         environmentVariables.set("GOR_S3_SHARED_USE_FALLBACK", "false");
+        ConfigManager.clearPrefixConfigCache();
+
         S3SharedSourceProvider provider = new S3GlobalSharedSourceProvider();
 
         DataSource source = getDataSourceFromProvider(provider, "user_data/a.gor" , Credentials.OwnerType.System, "some_env");

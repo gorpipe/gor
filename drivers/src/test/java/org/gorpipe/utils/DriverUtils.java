@@ -24,7 +24,10 @@ public class DriverUtils {
                 prop.load(inputStream);
             } catch (IOException e) {
                 // Do nothing
+                log.warn("Error reading secrets file", e);
             }
+        } else {
+            log.warn("No secrets file found {}", SECRETS_FILE_NAME);
         }
 
         prop.putAll(System.getenv());

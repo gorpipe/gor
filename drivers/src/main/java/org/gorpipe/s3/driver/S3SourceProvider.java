@@ -54,7 +54,7 @@ public class S3SourceProvider extends StreamSourceProvider {
     private final S3Configuration s3Config;
 
     public S3SourceProvider() {
-        s3Config = ConfigManager.createPrefixConfig("gor.s3", S3Configuration.class);
+        s3Config = ConfigManager.getPrefixConfig("gor.s3", S3Configuration.class);
     }
 
     public S3SourceProvider(GorDriverConfig config, S3Configuration s3Config, FileCache cache,

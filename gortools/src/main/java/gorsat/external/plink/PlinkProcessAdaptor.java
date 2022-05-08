@@ -87,7 +87,7 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
 
     public PlinkProcessAdaptor(GorSession session, PlinkArguments plinkArguments,
                                int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header) throws IOException {
-        GorDriverConfig cfg = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
+        GorDriverConfig cfg = ConfigManager.getPrefixConfig("gor", GorDriverConfig.class);
         plinkExecutable = cfg.plinkExecutable().split(" ");
         this.session = session;
         this.expectedHeader = header;

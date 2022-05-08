@@ -68,7 +68,7 @@ public class PluggableGorDriver implements GorDriver {
 
     public static PluggableGorDriver instance() {
         if (instance == null) {
-            GorDriverConfig gorDriverConfig = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
+            GorDriverConfig gorDriverConfig = ConfigManager.getPrefixConfig("gor", GorDriverConfig.class);
             FileCache cache = new FileCache(gorDriverConfig);
 
             ServiceLoader<StreamSourceIteratorFactory> factoryServiceLoader = ServiceLoader.load(StreamSourceIteratorFactory.class);

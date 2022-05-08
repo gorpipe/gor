@@ -222,8 +222,6 @@ public abstract class BaseTable<T> implements Table<T> {
             throw new GorSystemException("Table " + path + " can not be created as the parent path does not exists!", null);
         }
 
-        updateNFSFolderMetadata();
-
         try {
             fileReader.createDirectoryIfNotExists(getFolderUri().toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
 
@@ -246,8 +244,6 @@ public abstract class BaseTable<T> implements Table<T> {
      * Note:  Reload is called when we open read transaction.
      */
     public void reload() {
-
-        updateNFSFolderMetadata();
 
         log.debug("Loading table {}", getName());
         prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
@@ -359,13 +355,13 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     @SuppressWarnings("squid:S00108") // Emtpy blocks on purpose (enough to force meta data update)
-    protected void updateNFSFolderMetadata() {
+    public void updateNFSFolderMetadata() {
         if (isLocal(getRootUri())) {
             try {
-                try (Stream<Path> paths = Files.list(getRootPath())) {
+                try (Stream<String> paths = fileReader.list(rootUri.toString())) {
                 }
-                if (Files.exists(getFolderPath())) {
-                    try (Stream<Path> paths = Files.list(getFolderPath())) {
+                if (fileReader.exists(getFolderPath().toString())) {
+                    try (Stream<String> paths = fileReader.list(getFolderPath().toString())) {
                     }
                 }
             } catch (IOException e) {

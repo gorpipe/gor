@@ -24,7 +24,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     protected final S3SharedConfiguration s3SharedConfig;
 
     protected S3SharedSourceProvider() {
-        s3SharedConfig = ConfigManager.createPrefixConfig("gor.s3", S3SharedConfiguration.class);
+        s3SharedConfig = ConfigManager.getPrefixConfig("gor.s3", S3SharedConfiguration.class);
     }
 
     protected S3SharedSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,

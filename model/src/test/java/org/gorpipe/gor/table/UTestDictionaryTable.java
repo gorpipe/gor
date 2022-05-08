@@ -44,6 +44,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static org.gorpipe.gor.table.dictionary.DictionaryTableMeta.HEADER_BUCKETIZE_KEY;
+
 
 /**
  * Unit tests for gor table.
@@ -105,6 +107,8 @@ public class UTestDictionaryTable {
 
         dict = new DictionaryTable.Builder<>(gordFile).build();
         Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
+
+        Assert.assertEquals(null, dict.getBooleanConfigTableProperty(HEADER_BUCKETIZE_KEY, null));
     }
 
     @Test
