@@ -241,7 +241,7 @@ public class UTestDictionary {
     }
 
     @Test
-    public void testCacheIsClearedWhenUniqueIdIsChanged() throws IOException {
+    public void testCacheIsClearedWhenUniqueIdIsChanged() throws Exception {
         final String dictionaryFile = this.workDir.newFile("dict.gord").getAbsolutePath();
         final FileWriter dictionaryFileWriter = new FileWriter(dictionaryFile);
         dictionaryFileWriter.write("gorfile1.gor\ttag1\n");
@@ -250,6 +250,9 @@ public class UTestDictionary {
         final Dictionary dict1 = getDictionary(dictionaryFile, this.workDir.getRoot().getAbsolutePath());
         final Dictionary.DictionaryLine[] lines1 = dict1.getSources(new HashSet<>(Collections.singletonList("tag1")), true, false);
         Assert.assertEquals(1, lines1.length);
+
+        // We are dealing with file timestamps here (some systems only have 1s resolution).
+        Thread.sleep(1000);
 
         final FileWriter newDictionaryFileWriter = new FileWriter(dictionaryFile);
         newDictionaryFileWriter.write("gorfile1.gor\ttag1\ngorfile2.gor\ttag1\n");
