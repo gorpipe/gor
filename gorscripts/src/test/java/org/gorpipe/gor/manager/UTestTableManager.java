@@ -311,7 +311,7 @@ public class UTestTableManager {
         log.info("Time using table manager (filter by tag): {}", newTime);
 
         startTime = System.currentTimeMillis();
-        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, "uniqueid", ".", true);
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
         Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN100"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
@@ -334,7 +334,7 @@ public class UTestTableManager {
             DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
 
         startTime = System.currentTimeMillis();
-        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, "uniqueid", ".", true);
+        final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
         Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN515218"), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
 

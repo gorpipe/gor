@@ -32,8 +32,6 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.session.GorSession;
-import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
@@ -135,8 +133,9 @@ public class Dictionary {
         return PathUtils.resolve(commonRoot, path);
     }
 
-    public synchronized static Dictionary getDictionary(String path, FileReader fileReader, String uniqueID, String commonRoot, boolean useCache) {
+    public synchronized static Dictionary getDictionary(String path, FileReader fileReader, String commonRoot, boolean useCache) throws IOException {
         if (useCache) {
+            String uniqueID = fileReader.getFileSignature(path);
             var key = dictCacheKeyFromPathAndRoot(path, commonRoot);
             if (uniqueID == null || uniqueID.equals("")) {
                 dictCache.invalidate(key);
@@ -152,7 +151,7 @@ public class Dictionary {
                 }
             }
         } else {
-            return processDictionary(path, fileReader, uniqueID, commonRoot, false);
+            return processDictionary(path, fileReader, "", commonRoot, false);
         }
     }
 
