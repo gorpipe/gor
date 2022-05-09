@@ -24,7 +24,15 @@ public class GorAuthRoleMatcher {
         return matchRolePatterns(authInfo.getUserRoles(), Arrays.asList(SYSTEM_ADMIN_ROLE));
     }
 
-    public static void needsRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) {
+    /**
+     * Check roled based access.  Throws GorSystemException if no access.
+
+     * @param authInfo                  access info
+     * @param subject                   subject like, like file for file:write:<subject>
+     * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
+     * @throws GorSystemException       if not access.
+     */
+    public static void needsRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) throws GorSystemException {
         if (!hasRolebasedAccess(authInfo.getUserRoles(), authInfo.getProject(), subject, authorizationActions)) {
             log.warn(String.format("User '%s' in project '%s' does not have access to subject '%s' with any of '%s'",
                     authInfo.getUsername(), authInfo.getProject(), subject,
@@ -34,16 +42,33 @@ public class GorAuthRoleMatcher {
         }
     }
 
+    /**
+     * Check roled based access.
+
+     * @param authInfo                  access info
+     * @param subject                   subject like, like file for file:write:<subject>
+     * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
+     * @return  true if we have access to any of the authorizationActions, otherwise false.
+     */
     public static boolean hasRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) {
         return hasRolebasedAccess(authInfo.getUserRoles(), authInfo.getProject(), subject, authorizationActions);
     }
 
+    /**
+     * Check roled based access.
+
+     * @param userRoles                 the roles the user has
+     * @param project                   the project we are in.
+     * @param subject                   subject like, like file for file:write:<subject>
+     * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
+     * @return  true if we have access to any of the authorizationActions, otherwise false.
+     */
     public static boolean hasRolebasedAccess(List<String> userRoles, String project, String subject, AuthorizationAction... authorizationActions) {
         return matchRolePatterns(userRoles, getRolesThatGiveAccess(project, subject, authorizationActions));
     }
 
     // Includes exact roles.
-    private static List<String> getRolesThatGiveAccess(String project, String subject, AuthorizationAction... actions) {
+    static List<String> getRolesThatGiveAccess(String project, String subject, AuthorizationAction... actions) {
         List<String> allowedRoles = new ArrayList<String>();
 
         // Action based.
@@ -56,7 +81,16 @@ public class GorAuthRoleMatcher {
                     allowedRoles.add(PROJECT_REGEX + project + DELIMITER + action.value + DELIMITER + subject);
                 }
             }
+
+            // User data special
+            if (action == AuthorizationAction.WRITE && subject != null && subject.startsWith("user_data/")) {
+                allowedRoles.add(PROJECT_REGEX + project + DELIMITER + AuthorizationAction.WRITE_TO_USER_DATA.value);
+            }
         }
+
+        // TODO:  We might want to skip these admin roles as these particular roles are composite roles and
+        // should include the action.  Leaving it in here for now.  We might want to use non-composite admin roles
+        // hrere.
 
         // Admin and all ops allowed
 
@@ -69,7 +103,7 @@ public class GorAuthRoleMatcher {
         return allowedRoles;
     }
 
-    private static boolean matchRolePatterns(List<String> userRolesPatterns, List<String> allowAccessRoles) {
+    static boolean matchRolePatterns(List<String> userRolesPatterns, List<String> allowAccessRoles) {
         if (userRolesPatterns != null && !userRolesPatterns.isEmpty() && allowAccessRoles != null && !allowAccessRoles.isEmpty()) {
             for (String patternString : userRolesPatterns) {
                 Pattern pattern = patternCache.computeIfAbsent(patternString, p -> RegexpUtils.compilePattern(p));

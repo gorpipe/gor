@@ -17,6 +17,11 @@ public enum AuthorizationAction {
     WRITE("file:write"),
 
     /**
+     * Write link files
+     */
+    WRITE_LINK("file:write_link"),
+
+    /**
      * Write to user data
      *
      * TODO:  Should remove this action and instead of creating prj:amelia:file:write:user_data in Keycloak we should

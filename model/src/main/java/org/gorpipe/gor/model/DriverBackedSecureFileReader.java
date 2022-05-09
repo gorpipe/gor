@@ -33,6 +33,7 @@ import org.gorpipe.gor.util.Util;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -127,38 +128,48 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         }
     }
 
+    @Override
+    public boolean allowsAbsolutePaths() {
+        return accessControlContext.isAllowAbsolutePath();
+    }
+
     private void validateReadAccess(DataSource source) throws GorResourceException {
         if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
             return;
         }
 
-        validateServerFileNames(source.getAccessValidationPaths());
+        validateServerFileNames(source.getAccessValidationPath());
 
         if (USE_ROLE_ACCESS_VALIDATION_FOR_READ && accessControlContext.getSecurityPolicy() != SecurityPolicy.NONE) {
             GorAuthRoleMatcher.needsRolebasedAccess(accessControlContext.getAuthInfo(),
-                    source.getName(),
+                    PathUtils.relativize(URI.create(getCommonRoot()), source.getName()),
                     AuthorizationAction.READ);
         }
     }
 
     void validateWriteAccess(DataSource source) throws GorResourceException {
-        if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
-            return;
-        }
+        // Could add global write access.  Leave this in here as an example.
+        //if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
+        //    return;
+        //}
 
-        String[] validationPaths = source.getAccessValidationPaths();
-        validateServerFileNames(validationPaths);
+        String validationPath = source.getAccessValidationPath();
+        validateServerFileNames(validationPath);
 
         if (GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), null,  AuthorizationAction.PROJECT_ADMIN)) {
             return;
         }
 
-        if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), source.getName(),
+        String relativeSource = PathUtils.relativize(URI.create(getCommonRoot()), source.getName());
+
+        if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), relativeSource,
                 AuthorizationAction.WRITE)) {
             isWithinAllowedFolders(source);
         }
 
-        for (String validationPath : validationPaths) {
+
+        if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), relativeSource,
+                AuthorizationAction.WRITE_LINK)) {
             if (validationPath.toLowerCase().endsWith(".link")) {
                 throw new GorResourceException("Writing link files is not allowed", null);
             }
@@ -166,9 +177,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
     }
 
     public void isWithinAllowedFolders(DataSource dataSource) {
-        for (String validationPath : dataSource.getAccessValidationPaths()) {
-            isWithinAllowedFolders(commonRoot, validationPath, accessControlContext.getWriteLocations());
-        }
+        isWithinAllowedFolders(commonRoot,  dataSource.getAccessValidationPath(), accessControlContext.getWriteLocations());
     }
 
     private static void isWithinAllowedFolders(String commonRoot, String fileName, List<String> writeLocations) {
@@ -183,7 +192,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         throw new GorResourceException(message, fileName);
     }
 
-    public void validateServerFileNames(String[] filenames) {
+    public void validateServerFileNames(String... filenames) {
         for (String filename : filenames) {
             validateServerFileName(filename, commonRoot, accessControlContext.isAllowAbsolutePath());
         }
@@ -201,6 +210,31 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
                 String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", filename, projectRoot);
                 throw new GorResourceException(message, filename);
             }
+        }
+    }
+
+    public static URI[] getProjectRelativePaths(String projectRoot, String... filenames) {
+        var realProjectRoot = URI.create(projectRoot);
+
+        URI[] ret = new URI[filenames.length];
+        for (int i = 0; i < filenames.length; i++) {
+            ret[i] =  PathUtils.relativize(realProjectRoot, URI.create(filenames[i]));
+        }
+
+        return ret;
+    }
+
+    public static void validateServerProjectRelativeURI(URI uri, String projectRoot, boolean allowsAbsolutePath) {
+        if (PathUtils.isLocal(uri) && !allowsAbsolutePath
+                && (PathUtils.isAbsolutePath(uri) || !uri.normalize().equals(uri))) {
+            String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", uri.toString(), projectRoot);
+            throw new GorResourceException(message, PathUtils.resolve(projectRoot, uri.toString()));
+        }
+    }
+
+    public void validateServerURIs(URI... uris) {
+        for (URI uri : uris) {
+            validateServerProjectRelativeURI(uri, commonRoot, allowsAbsolutePaths());
         }
     }
 }

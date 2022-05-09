@@ -138,8 +138,8 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public String[] getAccessValidationPaths() {
-        return wrapped.getAccessValidationPaths();
+    public String getAccessValidationPath() {
+        return wrapped.getAccessValidationPath();
     }
 
     public DataSource getWrapped() {
