@@ -76,7 +76,7 @@ public class PlatformAuth extends GorAuth {
                 String username = getUsername(jwt);
                 long expiration = getExpiration(jwt);
                 String userId = getSub(jwt);
-                List<String> userRoles = useRolesFromToken ? getUserRoles(jwt) : null;
+                List<String> userRoles = getUserRoles(jwt);
                 gorAuthInfo = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, userId, userRoles, 0, expiration));
                 gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
             } catch (Exception e) {
