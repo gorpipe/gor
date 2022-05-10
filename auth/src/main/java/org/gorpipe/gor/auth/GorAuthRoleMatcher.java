@@ -7,13 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class GorAuthRoleMatcher {
     private static final Logger log = LoggerFactory.getLogger(GorAuthRoleMatcher.class);
 
-    private static Map<String, Pattern> patternCache = new HashMap<>();
+    private static Map<String, Pattern> patternCache = new ConcurrentHashMap<>();
 
     public static final String PROJECT_REGEX = "prj:";
     public static final String DELIMITER = ":";
