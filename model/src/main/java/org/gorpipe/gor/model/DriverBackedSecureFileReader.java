@@ -156,7 +156,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         String validationPath = source.getAccessValidationPath();
         validateServerFileNames(validationPath);
 
-        if (GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), null,  AuthorizationAction.PROJECT_ADMIN)) {
+        if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
             return;
         }
 
