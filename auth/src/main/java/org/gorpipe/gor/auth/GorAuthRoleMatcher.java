@@ -106,10 +106,12 @@ public class GorAuthRoleMatcher {
     static boolean matchRolePatterns(List<String> userRolesPatterns, List<String> allowAccessRoles) {
         if (userRolesPatterns != null && !userRolesPatterns.isEmpty() && allowAccessRoles != null && !allowAccessRoles.isEmpty()) {
             for (String patternString : userRolesPatterns) {
-                Pattern pattern = patternCache.computeIfAbsent(patternString, p -> RegexpUtils.compilePattern(p));
-                for (String role : allowAccessRoles) {
-                    if (matchRoles(pattern, role)) {
-                        return true;
+                if (!Strings.isNullOrEmpty(patternString)) {
+                    Pattern pattern = patternCache.computeIfAbsent(patternString, p -> RegexpUtils.compilePattern(p));
+                    for (String role : allowAccessRoles) {
+                        if (!Strings.isNullOrEmpty(role) && matchRoles(pattern, role)) {
+                            return true;
+                        }
                     }
                 }
             }

@@ -134,10 +134,6 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
     }
 
     private void validateReadAccess(DataSource source) throws GorResourceException {
-        if (GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(accessControlContext.getAuthInfo())) {
-            return;
-        }
-
         validateServerFileNames(source.getAccessValidationPath());
 
         if (USE_ROLE_ACCESS_VALIDATION_FOR_READ && accessControlContext.getSecurityPolicy() != SecurityPolicy.NONE) {
@@ -166,7 +162,6 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
                 AuthorizationAction.WRITE)) {
             isWithinAllowedFolders(source);
         }
-
 
         if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), relativeSource,
                 AuthorizationAction.WRITE_LINK)) {

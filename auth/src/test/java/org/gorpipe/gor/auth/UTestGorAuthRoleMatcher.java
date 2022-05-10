@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.gorpipe.gor.auth.GorAuthRoleMatcher.SYSTEM_ADMIN_ROLE;
+
 public class UTestGorAuthRoleMatcher {
 
 
@@ -102,6 +104,12 @@ public class UTestGorAuthRoleMatcher {
                 GorAuthRoleMatcher.getRolesThatGiveAccess("p1", "user_data/user1/file1", AuthorizationAction.WRITE_TO_USER_DATA)));
 
 
+    }
+
+    @Test
+    public void testSystemAdminAcccess() {
+        GorAuthInfo authInfo = new GeneralAuthInfo("p1", "u1", Arrays.asList("role1", SYSTEM_ADMIN_ROLE, "rol2"));
+        Assert.assertEquals(true, GorAuthRoleMatcher.hasRolebasedSystemAdminAccess(authInfo));
     }
 
 
