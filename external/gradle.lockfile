@@ -3,9 +3,10 @@
 # This file is expected to be part of source control.
 ch.qos.logback:logback-classic:1.2.10=runtimeClasspath,testRuntimeClasspath
 ch.qos.logback:logback-core:1.2.10=runtimeClasspath,testRuntimeClasspath
-com.fasterxml.jackson.core:jackson-annotations:2.13.1=runtimeClasspath,testRuntimeClasspath
-com.fasterxml.jackson.core:jackson-core:2.13.1=runtimeClasspath,testRuntimeClasspath
-com.fasterxml.jackson.core:jackson-databind:2.13.1=runtimeClasspath,testRuntimeClasspath
+com.fasterxml.jackson.core:jackson-annotations:2.13.2=runtimeClasspath,testRuntimeClasspath
+com.fasterxml.jackson.core:jackson-core:2.13.2=runtimeClasspath,testRuntimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.13.2=runtimeClasspath,testRuntimeClasspath
+com.fasterxml.jackson:jackson-bom:2.13.2=runtimeClasspath,testRuntimeClasspath
 com.googlecode.json-simple:json-simple:1.1.1=runtimeClasspath,testRuntimeClasspath
 commons-io:commons-io:2.11.0=runtimeClasspath,testRuntimeClasspath
 junit:junit:4.10=runtimeClasspath
