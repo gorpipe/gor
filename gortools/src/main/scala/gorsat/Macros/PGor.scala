@@ -46,7 +46,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
                                           inputArguments: Array[String],
                                           options: Array[String],
                                           skipCache: Boolean): MacroParsingResult = {
-    var partitionedGorCommands: util.Map[String, ExecutionBlock] = new util.HashMap[String, ExecutionBlock]()
+    var partitionedGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
     var theDependencies: util.List[String] = new util.ArrayList[String]()
     val replacePattern = if (SplitManager.useWholeChromosomeSplit(create.query))
       SplitManager.REGULAR_REPLACEMENT_PATTERN else SplitManager.SPLIT_REPLACEMENT_PATTERN
@@ -62,7 +62,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
         cachePath = theCachePath
         if (!cacheFileExists) {
           val noDict = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-gordfolder","dict").equals("nodict")
-          val (tcmd, theDeps: util.List[String], partGorCmds: util.Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict, hasForkWrite)
+          val (tcmd, theDeps: util.List[String], partGorCmds: util.LinkedHashMap[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict, hasForkWrite)
           theDependencies = theDeps
           partitionedGorCommands = partGorCmds
           tcmd
@@ -70,7 +70,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
           "gor " + cachePath
         }
       } else {
-        val (tcmd, theDeps: util.List[String], partGorCmds: util.Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders, false, hasForkWrite = hasForkWrite)
+        val (tcmd, theDeps: util.List[String], partGorCmds: util.LinkedHashMap[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders, false, hasForkWrite = hasForkWrite)
         theDependencies = theDeps
         partitionedGorCommands = partGorCmds
         tcmd
@@ -87,8 +87,8 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
     MacroParsingResult(partitionedGorCommands, null)
   }
 
-  def makeGorDict(context: GorContext, noWithin: Boolean, createKey: String, create: ExecutionBlock, replacePattern: String, queryAppend: String, cachePath: String, useGordFolder: Boolean, noDict: Boolean, hasForkWrite: Boolean): (String,util.List[String],util.Map[String, ExecutionBlock]) = {
-    val partitionedGorCommands = new util.HashMap[String, ExecutionBlock]()
+  def makeGorDict(context: GorContext, noWithin: Boolean, createKey: String, create: ExecutionBlock, replacePattern: String, queryAppend: String, cachePath: String, useGordFolder: Boolean, noDict: Boolean, hasForkWrite: Boolean): (String,util.List[String],util.LinkedHashMap[String, ExecutionBlock]) = {
+    val partitionedGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
     val theDependencies: util.List[String] = new util.ArrayList[String]()
     val theKey = createKey.slice(1, createKey.length - 1)
     val gorReplacement = if( noWithin ) "gor -nowithin -p " else "gor -p "

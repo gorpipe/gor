@@ -69,7 +69,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     }
 
     val extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query)
-    var parGorCommands = new util.HashMap[String, ExecutionBlock]()
+    val parGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
 
     var cachePath: String = null
     val (hasDictFolderWrite, _, _, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)

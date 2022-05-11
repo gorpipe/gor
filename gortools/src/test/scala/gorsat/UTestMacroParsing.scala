@@ -148,7 +148,7 @@ class UTestMacroParsing extends AnyFunSuite with BeforeAndAfter {
       val head = eset.next()
       val last = eset.next()
       assert(head.getKey == "[xxx_##REGULAR_CHR_REPLACE##]")
-      assert(head.getKey == "[xxx]")
+      assert(last.getKey == "[xxx]")
 
       val command1 = head.getValue
       val command2 = last.getValue

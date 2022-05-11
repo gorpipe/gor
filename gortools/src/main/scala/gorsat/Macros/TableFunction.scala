@@ -41,7 +41,7 @@ class TableFunction extends MacroInfo("TABLEFUNCTION", CommandArguments("", "", 
                                           options: Array[String],
                                           skipCache: Boolean): MacroParsingResult = {
 
-    var creates = new util.HashMap[String, ExecutionBlock]
+    val creates = new util.LinkedHashMap[String, ExecutionBlock]
     val newQuery = "gor " + create.query.substring(this.name.length+1)
     creates.put(createKey, ExecutionBlock(create.groupName, newQuery, create.signature, create.dependencies, create.batchGroupName))
 

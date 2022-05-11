@@ -65,7 +65,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val partsSource = inputSource1.source
     val header = inputSource1.header
     val extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query).trim
-    var parGorCommands = new util.HashMap[String, ExecutionBlock]()
+    val parGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     var partitionIndex = 1
