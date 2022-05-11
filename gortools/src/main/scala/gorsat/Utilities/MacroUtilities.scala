@@ -411,35 +411,6 @@ object MacroUtilities {
     cmdsplit.last.trim
   }
 
-  /**
-    * Resolve parent path of fork template path
-    * @param res
-    * @return
-    */
-  private def resolveForkPathParent(res: String): Option[(String, Boolean)] = {
-    val i = res.indexOf("#{")
-    if(i != -1) {
-      val k = res.lastIndexOf('/', i)
-      val ret = if(k == -1) "." else res.substring(0,k)
-      Option.apply(ret, true)
-    } else Option.apply(res, false)
-  }
-
-  private def resolveCache(lastCommand: String): Option[(String, Boolean)] = {
-    val lastField = lastCommand.split(" ").last.trim
-    if(!lastField.startsWith("-")) resolveForkPathParent(lastField)
-    else Option.empty
-  }
-
-  def getExplicitWrite(query: String): Option[(String,Boolean)] = {
-    val lastCommand = MacroUtilities.getLastCommand(query)
-    if (lastCommand.toLowerCase.startsWith("write ")) {
-      resolveCache(lastCommand)
-    } else {
-      Option.empty
-    }
-  }
-
   def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, Boolean, Boolean, String, String) = {
     val k = create.query.indexOf(" ")
     val cmdname = create.query.substring(0,k).toLowerCase

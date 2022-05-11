@@ -9,14 +9,11 @@
  * with deCODE.
  */
 
-package org.gorpipe.gor.servers;
+package org.gorpipe.gor.model;
 
 import com.nextcode.gor.driver.utils.DatabaseHelper;
 import org.gorpipe.exceptions.GorResourceException;
-
 import org.gorpipe.gor.driver.utils.TestUtils;
-import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
-import org.gorpipe.gor.model.DbSource;
 import org.gorpipe.util.collection.extract.Extract;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -31,19 +28,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * UTestDriverBackedGorServerFileReader is testing the DriverBackedGorServerFileReader
+ * UTestDriverBackedSecureFileReader is testing the DriverBackedSecureFileReader
  *
  * @version $Id$
  */
-public class UTestDriverBackedGorServerFileReader {
+public class UTestDriverBackedSecureFileReader {
 
-    private static final Logger log = LoggerFactory.getLogger(UTestDriverBackedGorServerFileReader.class);
+    private static final Logger log = LoggerFactory.getLogger(UTestDriverBackedSecureFileReader.class);
 
     private static String[] paths;
 
@@ -71,7 +71,8 @@ public class UTestDriverBackedGorServerFileReader {
     @Test
     public void testFileSignature() throws Exception {
         File f1 = File.createTempFile("test", ".txt");
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", null, true, null, null);
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null, null,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
         final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
         Assert.assertEquals(f1SignatureA, reader.getFileSignature(f1.getAbsolutePath()));
 
@@ -128,7 +129,8 @@ public class UTestDriverBackedGorServerFileReader {
         // Test with allow absolute links.
         //
 
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader(d1.toString() + "/", constants, true, null, null);
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(d1.toString() + "/", constants,
+                null, AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         final String[] fileContent = reader.readAll(file.toString());
 
@@ -164,7 +166,7 @@ public class UTestDriverBackedGorServerFileReader {
         // Test with not allow absolute links.
         //
 
-        reader = new DriverBackedGorServerFileReader(d1 + "/", constants, false, null, null);
+        reader = new DriverBackedSecureFileReader(d1 + "/", constants, null, null);
 
         // Test standard link file (absolute path in link).
         final String[] linke1Content2 = reader.readAll(link1name);
@@ -204,7 +206,8 @@ public class UTestDriverBackedGorServerFileReader {
     @Test
     public void testSymbolicLinks() throws Exception {
         final Object[] constants = {};
-        final DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+        final DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Setup temporary file structure to test with
         final Path root = Files.createTempDirectory("symlinktest");
@@ -271,7 +274,8 @@ public class UTestDriverBackedGorServerFileReader {
 
         Object[] constants = {};
 
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Test read standard file
 
@@ -312,7 +316,8 @@ public class UTestDriverBackedGorServerFileReader {
 
         Object[] constants = {};
 
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants, true, null, null);
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Test reading gor.db.credentials
 
@@ -369,8 +374,10 @@ public class UTestDriverBackedGorServerFileReader {
         Files.write(f1, "somedata".getBytes());
 
         Object[] constants = {};
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants,
-                true, null, Arrays.asList(new String[]{workDirPath.toString()}));
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+                AccessControlContext.builder()
+                        .withAllowAbsolutePath(true)
+                        .withWriteLocations(Arrays.asList(new String[]{workDirPath.toString()})).build());
 
         Path c1 = workDirPath.resolve("copy.txt");
         reader.copy(f1.toString(), c1.toString());
@@ -386,8 +393,10 @@ public class UTestDriverBackedGorServerFileReader {
         Files.write(f1, "somedata".getBytes());
 
         Object[] constants = {};
-        DriverBackedGorServerFileReader reader = new DriverBackedGorServerFileReader("", constants,
-                true, null, Arrays.asList(new String[]{workDirPath.toString()}));
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+                AccessControlContext.builder()
+                        .withAllowAbsolutePath(true)
+                        .withWriteLocations(Arrays.asList(new String[]{workDirPath.toString()})).build());
 
         Path c1 = workDirPath.resolve("copy.txt");
         reader.move(f1.toString(), c1.toString());

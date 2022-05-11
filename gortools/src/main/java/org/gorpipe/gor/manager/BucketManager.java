@@ -46,9 +46,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gorpipe.gor.table.util.PathUtils.relativize;
-import static org.gorpipe.gor.table.util.PathUtils.resolve;
-
 public class BucketManager<T extends BucketableTableEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(BucketManager.class);
@@ -248,7 +245,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         this.bucketDirs.clear();
         if (newBucketDirs != null && newBucketDirs.size() > 0) {
             for (String p : newBucketDirs) {
-                this.bucketDirs.add(relativize(table.getRootUri(), p));
+                this.bucketDirs.add(PathUtils.relativize(table.getRootUri(), p));
             }
         } else {
             this.bucketDirs.add(getDefaultBucketDir());
@@ -408,7 +405,7 @@ public class BucketManager<T extends BucketableTableEntry> {
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        createBucketFiles(tempTable, newBucketsMapForBucketDir, table.getRootUri().resolve(bucketDir));
+        createBucketFiles(tempTable, newBucketsMapForBucketDir, PathUtils.resolve(table.getRootUri(), bucketDir));
 
         // Move files and update dictionary.
         for (String bucket : newBucketsMapForBucketDir.keySet()) {
@@ -488,7 +485,7 @@ public class BucketManager<T extends BucketableTableEntry> {
      */
     private void deleteBucketFiles(boolean force, String... buckets) throws IOException {
         for (String bucket : buckets) {
-            URI bucketFile = resolve(table.getRootUri(), bucket);
+            URI bucketFile = PathUtils.resolve(table.getRootUri(), bucket);
             if (table.getFileReader().exists(bucketFile.toString())) {
                 // !GM last access time. Setting as 0 for now which basically disables the graceperiod.
                 long lastAccessTime = 0; // Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
@@ -656,7 +653,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         lock.assertValid();
 
         List<Path> relBucketsToDelete = bucketsToDelete != null
-                ? bucketsToDelete.stream().map(b -> resolve(table.getRootPath(), b)).collect(Collectors.toList())
+                ? bucketsToDelete.stream().map(b -> PathUtils.resolve(table.getRootPath(), b)).collect(Collectors.toList())
                 : null;
 
         List<T> lines2bucketize = table.selectAll().stream()

@@ -29,4 +29,4 @@ package gorsat.Script
   * @param commandEntries   List of create statements
   * @param removeFromCreate Indicates if the group should be removed from the list of active execution blocks
   */
-case class CommandGroup( commandEntries: List[CommandEntry], removeFromCreate: Boolean)
+case class CommandGroup( commandEntries: java.util.List[CommandEntry], removeFromCreate: Boolean)

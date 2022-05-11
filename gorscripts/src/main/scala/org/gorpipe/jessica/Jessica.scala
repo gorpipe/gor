@@ -50,8 +50,8 @@ object Jessica extends App {
   val commandlineOptions = new PipeOptions
   commandlineOptions.parseOptions(args)
 
-  val brsConfig: BatchedReadSourceConfig = ConfigManager.createPrefixConfig("jessica", classOf[BatchedReadSourceConfig])
-  val gorConfig: GorConfig = ConfigManager.createPrefixConfig("jessica", classOf[GorConfig])
+  val brsConfig: BatchedReadSourceConfig = ConfigManager.getPrefixConfig("jessica", classOf[BatchedReadSourceConfig])
+  val gorConfig: GorConfig = ConfigManager.getPrefixConfig("jessica", classOf[GorConfig])
 
   ExceptionUtilities.setShowStackTrace(true)
 

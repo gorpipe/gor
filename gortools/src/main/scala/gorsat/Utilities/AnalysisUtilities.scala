@@ -90,7 +90,7 @@ object AnalysisUtilities {
     theMap
   }
 
-  def writeList(fileReader: DriverBackedFileReader, fileName: String, header: String, m: List[String]) : Unit = {
+  def writeList(fileReader: FileReader, fileName: String, header: String, m: List[String]) : Unit = {
     val idx = fileName.lastIndexOf('/')
     val parent = if (idx > 0) fileName.substring(0,idx) else null
     try {
@@ -98,7 +98,7 @@ object AnalysisUtilities {
     } finally {
       var out: Writer = null
       try {
-        out = new OutputStreamWriter(fileReader.getOutputStream(fileName, false, true))
+        out = new OutputStreamWriter(fileReader.getOutputStream(fileName, false))
         out.write(header)
         m.foreach(t => out.write(t + "\n"))
       } finally {
@@ -175,11 +175,10 @@ object AnalysisUtilities {
 
   def theCacheDirectory(session: GorSession): String = {
     val projectContext = session.getProjectContext
-    val fileReader = projectContext.getFileReader.asInstanceOf[DriverBackedFileReader]
     val gorRoot = projectContext.getProjectRoot
     var cacheDir = if (session.getProjectContext.getCacheDir == null) "gortemp" else session.getProjectContext.getCacheDir
     cacheDir = PathUtils.resolve(gorRoot,cacheDir)
-    if (!fileReader.existsNoAccessValidation(cacheDir)) {
+    if (!projectContext.getSystemFileReader.exists(cacheDir)) {
       if (session.getProjectContext.getCacheDir == null) {
         cacheDir = System.getProperty("java.io.tmpdir")
       } else {

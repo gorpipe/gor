@@ -1,0 +1,35 @@
+plugins {
+    id "gor.java-library-shadow"       // TODO: Needed for SM, needs refactoring.
+}
+
+project(':auth') {
+    dependencies {
+        internal project(':base')
+        internal project(':util')
+        //internal project(':platform:base')
+
+        implementation "com.auth0:java-jwt:_"
+        implementation "io.grpc:grpc-api:_"
+        implementation("me.dinowernli:java-grpc-prometheus:_") { exclude group: 'io.grpc', module: 'grpc-all' } // Note: transitively adds grpc-all:1.0.0
+        implementation 'ch.qos.logback:logback-classic:_'
+        implementation "org.aeonbits.owner:owner:_"
+        implementation 'org.glassfish:javax.json:_'
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
+        implementation("net.logstash.logback:logstash-logback-encoder:_")
+        implementation "com.google.inject:guice:_"
+        implementation "javax.annotation:javax.annotation-api:1.3.+"
+        implementation 'org.eclipse.microprofile.jwt:microprofile-jwt-auth-api:_'
+        implementation 'com.google.http-client:google-http-client:_'
+        implementation "com.squareup.retrofit2:retrofit:_"
+        implementation "com.squareup.retrofit2:converter-jackson:_"
+
+        implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.11.0'
+
+        //testImplementation("${gorArtifactGroupId}:gor-test:${gorVersion}")
+        testImplementation project(':test')
+        testImplementation "org.mockito:mockito-core:_"
+        testImplementation "org.mockito:mockito-inline:_"
+        testImplementation "commons-lang:commons-lang:_"
+        testImplementation "com.github.stefanbirkner:system-rules:_"
+    }
+}

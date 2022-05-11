@@ -22,10 +22,13 @@
 
 package org.gorpipe.gor.table.util;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -36,6 +39,8 @@ import java.nio.file.Paths;
  * Created by gisli on 21/06/2017.
  */
 public class PathUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(PathUtils.class);
 
     private PathUtils() {}
 
@@ -292,6 +297,8 @@ public class PathUtils {
         if (ds != null) {
             return ds.getSourceMetadata().getLastModified();
         } else {
+            log.warn(String.format("Signature for %s is defaulting to currentTimeMillis (project root: %s)", fileName, commonRoot),
+                    new GorSystemException("Stacktrace", null));
             return System.currentTimeMillis();
         }
     }

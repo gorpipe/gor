@@ -80,16 +80,16 @@ public class S3SharedSource extends S3Source {
     }
 
     @Override
-    public String[] getAccessValidationPaths() {
+    public String getAccessValidationPath() {
         if (s3SharedConfig.onlyAccessWithLinksOnServer()
             && !getSourceReference().getOriginalSourceReference().isWriteSource() && !getSourceReference().isCreatedFromLink()) {
             throw new GorResourceException("S3 shared resources can only be accessed using links.", null);
         }
-        
+
         if (getSourceReference().isCreatedFromLink()) {
-            return new String[]{getSourceReference().getOriginalSourceReference().getUrl(), getRelativePath()};
+            return getSourceReference().getOriginalSourceReference().getUrl();
         } else {
-            return new String[]{getRelativePath()};
+            return getRelativePath();
         }
     }
 }

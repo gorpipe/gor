@@ -109,7 +109,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
                 sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | write -c %s;%n",
                         bucket, table.getPath(), table.getSourceColumn(), tags,
                         table.getSecurityContext() != null ? table.getSecurityContext() : "",
-                        rootUri.resolve(bucket)));
+                        PathUtils.resolve(rootUri, bucket)));
             }
         }
 

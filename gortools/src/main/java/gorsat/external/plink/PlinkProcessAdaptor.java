@@ -27,7 +27,6 @@ import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.model.Row;
@@ -88,7 +87,7 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
 
     public PlinkProcessAdaptor(GorSession session, PlinkArguments plinkArguments,
                                int refIdx, int altIdx, int rsIdx, int valueIdx, boolean hc, float th, boolean vcf, String header) throws IOException {
-        GorDriverConfig cfg = ConfigManager.createPrefixConfig("gor", GorDriverConfig.class);
+        GorDriverConfig cfg = ConfigManager.getPrefixConfig("gor", GorDriverConfig.class);
         plinkExecutable = cfg.plinkExecutable().split(" ");
         this.session = session;
         this.expectedHeader = header;
@@ -210,9 +209,9 @@ public class PlinkProcessAdaptor extends gorsat.Commands.Analysis {
 
     private void setNewPGenStream() throws IOException {
         this.pfnIdx = (this.pfnIdx + 1) & 1;
-        var fileReader = (DriverBackedFileReader)session.getProjectContext().getFileReader();
-        var pgenFileReader = fileReader instanceof DriverBackedGorServerFileReader ? new DriverBackedFileReader(fileReader.getSecurityContext(), fileReader.getCommonRoot(), fileReader.getConstants()) : fileReader;
-        this.writer = PGenWriterFactory.getPGenWriter(getCurrentInputFile() + PGEN_ENDING, this.refIdx, this.altIdx, this.rsIdIdx, this.valueIdx, this.hardCalls, !this.hardCalls, this.threshold, pgenFileReader);
+        var fileReader = session.getProjectContext().getSystemFileReader();
+        this.writer = PGenWriterFactory.getPGenWriter(getCurrentInputFile() + PGEN_ENDING, this.refIdx,
+                this.altIdx, this.rsIdIdx, this.valueIdx, this.hardCalls, !this.hardCalls, this.threshold, fileReader);
     }
 
     String getCurrentInputFile() {

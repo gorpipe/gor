@@ -5,13 +5,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.dictionary.TableEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
@@ -225,8 +222,6 @@ public abstract class BaseTable<T> implements Table<T> {
             throw new GorSystemException("Table " + path + " can not be created as the parent path does not exists!", null);
         }
 
-        updateNFSFolderMetadata();
-
         try {
             fileReader.createDirectoryIfNotExists(getFolderUri().toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
 
@@ -249,8 +244,6 @@ public abstract class BaseTable<T> implements Table<T> {
      * Note:  Reload is called when we open read transaction.
      */
     public void reload() {
-
-        updateNFSFolderMetadata();
 
         log.debug("Loading table {}", getName());
         prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
@@ -329,7 +322,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     private String insertTableFolderIntoFilePath(String pathString) {
         String fileName = Path.of(pathString).getFileName().toString();
-        return getFolderPath().resolve(fileName).toString();
+        return PathUtils.resolve(getFolderPath(), (fileName)).toString();
     }
 
     private String insertTempIntoFileName(String pathString) {
@@ -343,7 +336,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     /**
      * Get a property that could be either defined in config or in the table it self. The table has preference.
-     *
+         *
      * @param key the property key.
      * @param def the value to use if the key is not found.
      * @return the value of
@@ -362,13 +355,13 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     @SuppressWarnings("squid:S00108") // Emtpy blocks on purpose (enough to force meta data update)
-    protected void updateNFSFolderMetadata() {
+    public void updateNFSFolderMetadata() {
         if (isLocal(getRootUri())) {
             try {
-                try (Stream<Path> paths = Files.list(getRootPath())) {
+                try (Stream<String> paths = fileReader.list(rootUri.toString())) {
                 }
-                if (Files.exists(getFolderPath())) {
-                    try (Stream<Path> paths = Files.list(getFolderPath())) {
+                if (fileReader.exists(getFolderPath().toString())) {
+                    try (Stream<String> paths = fileReader.list(getFolderPath().toString())) {
                     }
                 }
             } catch (IOException e) {
@@ -425,14 +418,15 @@ public abstract class BaseTable<T> implements Table<T> {
         } else {
             // Validate the header.
             if (this.header.getColumns().length != lineHeader.getColumns().length) {
-                throw new GorDataException(String.format("Can not update dictionary. The number of columns does not match (dict: %d, line: %d)",
-                        this.header.getColumns().length, lineHeader.getColumns().length), -1, lineHeader.toString(), header.toString());
+                throw new GorDataException(String.format("Can not update dictionary %s. The number of columns does not match (dict: %d, line: %d)",
+                        getPath(), this.header.getColumns().length, lineHeader.getColumns().length), -1, lineHeader.toString(), header.toString());
             }
 
             if (FORCE_SAME_COLUMN_NAMES && this.header.isProper() && lineHeader.isProper() &&
                     !String.join(",", this.header.getColumns()).equals(String.join(",", lineHeader.getColumns()))) {
-                throw new GorDataException(String.format("Can not update dictionary - The columns do not match (dict: %s vs line: %s)",
-                        String.join(",", this.header.getColumns()), String.join(",", lineHeader.getColumns())), -1, lineHeader.toString(), header.toString() );
+                throw new GorDataException(String.format("Can not update dictionary %s.  The columns do not match (dict: %s vs line: %s)",
+                        getPath(), String.join(",", this.header.getColumns()), String.join(",",
+                                lineHeader.getColumns())), -1, lineHeader.toString(), header.toString() );
             }
         }
     }
@@ -454,10 +448,11 @@ public abstract class BaseTable<T> implements Table<T> {
     protected TableHeader parseHeaderFromFile(String file) {
         TableHeader newHeader = new TableHeader();
 
-        try(GenomicIterator source = GorDriverFactory.fromConfig().createIterator(this.getFileReader().resolveUrl(file))) {
-            newHeader.setColumns(source.getHeader().split("\t"));
-        } catch (IOException e) {
-            throw new GorDataException("Could not get header for validation from input file " + file);
+        try {
+            String headerLine = fileReader.readHeaderLine(file);
+            newHeader.setColumns(headerLine != null ? headerLine.split("\t") : new String[]{""});
+        } catch (Exception e) {
+            throw new GorDataException("Could not get header for validation from input file " + file, e);
         }
 
         return newHeader;

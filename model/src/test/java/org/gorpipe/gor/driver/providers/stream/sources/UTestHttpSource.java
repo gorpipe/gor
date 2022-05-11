@@ -44,7 +44,7 @@ public class UTestHttpSource extends CommonStreamTests {
     protected StreamSource createSource(String name) throws IOException {
         //TODO: the config interface should probably rather be injected
         Set<StreamSourceIteratorFactory> initialFactories = new HashSet<>();
-        HTTPSourceProvider httpSourceProvider = new HTTPSourceProvider(ConfigManager.createPrefixConfig("gor", GorDriverConfig.class), null
+        HTTPSourceProvider httpSourceProvider = new HTTPSourceProvider(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class), null
                 , initialFactories);
         HTTPSource httpSource = httpSourceProvider.resolveDataSource(new SourceReference(name));
 

@@ -217,7 +217,7 @@ public class UTestConfigManager {
         sysprops.setSystemProperty(TEST_PROPERTY_E, SYSTEM_PROPERTY_E);
 
         // Create config instance and supply a specific prefix
-        TestConfig config = ConfigManager.createPrefixConfig(prefix, TestConfig.class);
+        TestConfig config = ConfigManager.getPrefixConfig(prefix, TestConfig.class);
 
         assertEquals(TEST_PROPERTY_DEFAULT_VALUE_A, config.getTestPropertyA());
         assertEquals("p1.B", config.getTestPropertyB());

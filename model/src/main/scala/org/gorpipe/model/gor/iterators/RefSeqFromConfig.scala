@@ -93,7 +93,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
             f.get().seek(offset)
             val l = f.get().read(buff, 0, buffLength)
             if( l == -1 ){
-              log.warn("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
+              log.info("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
               return 'N'
             }
             lufo.addObject(buffKey, buff)

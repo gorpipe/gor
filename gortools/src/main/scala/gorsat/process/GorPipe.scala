@@ -47,8 +47,8 @@ object GorPipe extends GorPipeFirstOrderCommands {
     version = "Unknown"
   }
 
-  val brsConfig: BatchedReadSourceConfig = ConfigManager.createPrefixConfig("gor", classOf[BatchedReadSourceConfig])
-  val gorConfig: GorConfig = ConfigManager.createPrefixConfig("gor", classOf[GorConfig])
+  val brsConfig: BatchedReadSourceConfig = ConfigManager.getPrefixConfig("gor", classOf[BatchedReadSourceConfig])
+  val gorConfig: GorConfig = ConfigManager.getPrefixConfig("gor", classOf[GorConfig])
 
   /**
     * Main definition accepts an argument string and ensures database sources are initialized.

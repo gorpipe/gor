@@ -253,6 +253,18 @@ public class ConfigManager {
         return config;
     }
 
+    public static <T extends Config> T getPrefixConfig(Class<? extends T> clazz, Map<?, ?>... configs) {
+        ConfigComponent configComponentAnnotation = clazz.getAnnotation(ConfigComponent.class);
+
+        if (configComponentAnnotation != null) {
+            return getPrefixConfig(configComponentAnnotation.value(), clazz, configs);
+        } else {
+            log.warn("Expected a ConfigComponent annotation on configuration interface {} but found none. " +
+                    "Loading only with system properties.", clazz.getName());
+            return createConfig(clazz, configs);
+        }
+    }
+
     /**
      * Get a config object populated by the following config maps:
      * <p>

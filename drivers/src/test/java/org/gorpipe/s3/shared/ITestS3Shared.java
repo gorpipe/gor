@@ -8,7 +8,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
+import org.gorpipe.gor.model.DriverBackedSecureFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
@@ -174,7 +174,7 @@ public class ITestS3Shared {
         Files.createDirectory(gorRoot);
         Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
 
-        FileReader fileReader = new DriverBackedGorServerFileReader(gorRoot.toString(), null,false ,
+        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
         DataSource source = fileReader.resolveUrl("a.gorz");
 
@@ -200,7 +200,7 @@ public class ITestS3Shared {
         Files.createDirectory(gorRoot);
         Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
 
-        FileReader fileReader = new DriverBackedGorServerFileReader(gorRoot.toString(), null,false ,
+        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
 
         try {
@@ -223,7 +223,7 @@ public class ITestS3Shared {
     @Test
     public void testReadDirectly() {
         Path gorRoot  = workDirPath.resolve("some_project");
-        FileReader fileReader = new DriverBackedGorServerFileReader(gorRoot.toString(), null,false ,
+        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
 
         try {

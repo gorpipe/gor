@@ -34,6 +34,6 @@ import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
   * @param virtualFiles     New virtual files resulting from macro expansion
   * @param aliases          New aliases resulting from macro expansion
   */
-case class MacroParsingResult(createCommands: Map[String, ExecutionBlock],
+case class MacroParsingResult(createCommands: java.util.LinkedHashMap[String, ExecutionBlock],
                               virtualFiles: Map[String, String],
                               aliases: singleHashMap = null)

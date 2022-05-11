@@ -44,7 +44,7 @@ case class ExecutionBatch(level: Int) {
   def getBlocks: Array[ExecutionBlock] = executionBlocks.toArray
   def hasBlocks: Boolean = executionBlocks.nonEmpty
 
-  def createNewCommand(signature: String, query: String, batchGroupName: String, createName: String, cacheFile: String) : ExecutionCommand = {
+  def createNewCommand(signature: String, query: String, batchGroupName: String, createName: String, cacheFile: String) : ExecutionCommand = synchronized {
     var command = ExecutionCommand(signature, query, batchGroupName, createName, cacheFile)
     executionCommands += command
     command

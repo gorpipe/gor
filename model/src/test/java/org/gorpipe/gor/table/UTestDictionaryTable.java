@@ -44,6 +44,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static org.gorpipe.gor.table.dictionary.DictionaryTableMeta.HEADER_BUCKETIZE_KEY;
+
 
 /**
  * Unit tests for gor table.
@@ -105,6 +107,8 @@ public class UTestDictionaryTable {
 
         dict = new DictionaryTable.Builder<>(gordFile).build();
         Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
+
+        Assert.assertEquals(null, dict.getBooleanConfigTableProperty(HEADER_BUCKETIZE_KEY, null));
     }
 
     @Test
@@ -386,6 +390,7 @@ public class UTestDictionaryTable {
         File gordFile = new File(tableWorkDir.toFile(), "gortable_add_existing_deletedbucket.gord");
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+        dict.setValidateFiles(false);
 
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath15.gor").includeDeleted());
         Assert.assertEquals("Deleted file should be included if option: include_deleted", "filepath15.gor|D|bucket2\n", selectRes);

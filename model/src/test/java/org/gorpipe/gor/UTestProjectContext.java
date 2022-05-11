@@ -24,7 +24,8 @@ package org.gorpipe.gor;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.DriverBackedGorServerFileReader;
+import org.gorpipe.gor.model.AccessControlContext;
+import org.gorpipe.gor.model.DriverBackedSecureFileReader;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -42,14 +43,15 @@ public class UTestProjectContext {
     @Rule
     public TemporaryFolder sharedDir = new TemporaryFolder();
 
-    private DriverBackedGorServerFileReader fileReader;
+    private DriverBackedSecureFileReader fileReader;
 
     @Before
     public void setUp() throws IOException {
         ArrayList<String> locations = new ArrayList<>();
         locations.add("user_data");
         locations.add("studies");
-        fileReader = new DriverBackedGorServerFileReader(projectDir.getRoot().getCanonicalPath(), null,false , "", locations);
+        fileReader = new DriverBackedSecureFileReader(projectDir.getRoot().getCanonicalPath(), null, "",
+                AccessControlContext.builder().withWriteLocations(locations).build());
 
         File userDataDir = new File(fileReader.getCommonRoot() + "/user_data");
         userDataDir.mkdir();

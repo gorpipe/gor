@@ -9,12 +9,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collection;
 
 /**
  * Table class representing nor file.
  */
 public class NorTable<T extends Row> extends GorTable<T> {
+
+    public final String HEADER_PRIMARY_KEY_KEY = "PRIMARY_KEY";
 
     private static final Logger log = LoggerFactory.getLogger(NorTable.class);
 
@@ -51,6 +54,24 @@ public class NorTable<T extends Row> extends GorTable<T> {
     @Override
     public void delete(Collection<T> lines) {
         createDeleteTempFile(lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
+    }
+
+    @Override
+    protected String createInsertTempFileCommand(URI insertFile) {
+        String key = getProperty(HEADER_PRIMARY_KEY_KEY);
+
+        if (key == null) {
+            return super.createInsertTempFileCommand(insertFile);
+        }
+
+        Path mainFile = getMainFile();
+        tempOutFilePath = getNewTempFileName();
+
+        // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
+        return String.format("%s %s | map <(%s %s) -c %s -n %s -m 'Include' | where %sx = 'Include' | hide %sx" +
+                        " | merge %s | sort -c %s | write %s",
+                getGorCommand(), mainFile, getGorCommand(), insertFile, key, key, key, key, 
+                insertFile, key, tempOutFilePath);
     }
 }
 

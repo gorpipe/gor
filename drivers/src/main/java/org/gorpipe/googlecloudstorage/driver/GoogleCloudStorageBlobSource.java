@@ -94,7 +94,7 @@ public class GoogleCloudStorageBlobSource implements StreamSource {
     private void init() {
         Storage storage;
 
-        GorConfig gorConfig = ConfigManager.createPrefixConfig("gor", GorConfig.class);
+        GorConfig gorConfig = ConfigManager.getPrefixConfig("gor", GorConfig.class);
         String googleApplicationCredentials = gorConfig.googleApplicationCredentials();
         if( json == null && googleApplicationCredentials != null && googleApplicationCredentials.length() > 0 ) {
             json = googleApplicationCredentials;
