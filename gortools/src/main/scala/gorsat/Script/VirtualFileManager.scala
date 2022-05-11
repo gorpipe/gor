@@ -67,7 +67,7 @@ class VirtualFileManager {
     virtualFileMap.get(groupName)
   }
 
-  def addRange(executionBlocks: ExecutionBlocks): Unit = {
+  def addRange(executionBlocks: ExecutionBlocks): Unit = synchronized {
     executionBlocks.values().forEach(executionBlockEntry => {
       add(executionBlockEntry)
     })

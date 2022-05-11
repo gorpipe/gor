@@ -796,119 +796,114 @@ public class GorJavaUtilities {
         return Tuple2.apply(activeExecutionBlocks, dependantExecutionBlocks);
     }
 
-    public static Tuple2<String,List<String>> processBlocks(GorContext context, boolean suggestName, Map<String,ExecutionBlock> executionBlocks, Map<String,String> aliases, Map<String,String> fileSignatureMap, Map<String,String> singleFileSignatureMap, VirtualFileManager virtualFileManager, ExecutionBatch executionBatch, boolean validate) {
+    public static Tuple2<String,List<String>> processBlocks(GorContext context, boolean suggestName, Map<String,ExecutionBlock> executionBlocks, Map<String,String> aliases, Map<String,String> fileSignatureMap, Map<String,String> singleFileSignatureMap, VirtualFileManager virtualFileManager, ExecutionBatch executionBatch, boolean validate, String currentGorCmd) {
         var session = context.getSession();
         var eventLogger = session.getEventLogger();
-        var gorCommand = new String[] {""};
+        var gorCommand = new String[] {currentGorCmd};
         var allUsedFiles = new ArrayList<String>();
         var cAllUsedFiles = Collections.synchronizedList(allUsedFiles);
-        Arrays.stream(executionBatch.getBlocks()).parallel().forEach(firstLevelBlock -> {
-            try {
-                Thread.sleep(1);
-                firstLevelBlock.query_$eq(virtualFileManager.replaceVirtualFiles(firstLevelBlock.query()));
+        Arrays.stream(executionBatch.getBlocks()).forEach(firstLevelBlock -> {
+            firstLevelBlock.query_$eq(virtualFileManager.replaceVirtualFiles(firstLevelBlock.query()));
 
-                var query = firstLevelBlock.query();
-                var queryLower = query.toLowerCase();
-                var isParallelQuery = queryLower.startsWith("pgor ") || queryLower.startsWith("partgor ") || queryLower.startsWith("parallel ");
-                if (validate&&firstLevelBlock.signature()==null&&firstLevelBlock.query()!=null&&isParallelQuery) {
-                    var usedFiles = getUsedFiles(query, session);
-                    var fileSignature = getFileSignatureAndUpdateSignatureMap(session, fileSignatureMap, singleFileSignatureMap, query, usedFiles);
-                    var querySignature = StringUtilities.createMD5(query + fileSignature);
-                    firstLevelBlock.signature_$eq(querySignature);
+            var query = firstLevelBlock.query();
+            var queryLower = query.toLowerCase();
+            var isParallelQuery = queryLower.startsWith("pgor ") || queryLower.startsWith("partgor ") || queryLower.startsWith("parallel ");
+            if (validate&&firstLevelBlock.signature()==null&&firstLevelBlock.query()!=null&&isParallelQuery) {
+                var usedFiles = getUsedFiles(query, session);
+                var fileSignature = getFileSignatureAndUpdateSignatureMap(session, fileSignatureMap, singleFileSignatureMap, query, usedFiles);
+                var querySignature = StringUtilities.createMD5(query + fileSignature);
+                firstLevelBlock.signature_$eq(querySignature);
 
-                    var cachePath = getExplicitWrite(query);
-                    if (cachePath.isPresent()) {
-                        Tuple2<String,Boolean> cp = cachePath.get();
-                        firstLevelBlock.cachePath_$eq(cp._1());
-                        firstLevelBlock.hasForkWrite_$eq(cp._2());
-                    }
+                var cachePath = getExplicitWrite(query);
+                if (cachePath.isPresent()) {
+                    Tuple2<String,Boolean> cp = cachePath.get();
+                    firstLevelBlock.cachePath_$eq(cp._1());
+                    firstLevelBlock.hasForkWrite_$eq(cp._2());
                 }
+            }
 
-                // Expand the executionBlock with macros
-                var newExecutionBlocks = expandMacros(context, aliases, Map.of(firstLevelBlock.groupName(), firstLevelBlock), validate);
+            // Expand the executionBlock with macros
+            var newExecutionBlocks = expandMacros(context, aliases, Map.of(firstLevelBlock.groupName(), firstLevelBlock), validate);
 
-                // We need to determine if there is any dependency in the new executions, remove dependent blocks and
-                // add them to the executionBlocks map
-                var tmpExecutionBlocks = splitBasedOnDependencies(virtualFileManager, newExecutionBlocks);
-                var activeExecutionBlocks = tmpExecutionBlocks._1;
-                var dependentExecutionBlocks = tmpExecutionBlocks._2;
+            // We need to determine if there is any dependency in the new executions, remove dependent blocks and
+            // add them to the executionBlocks map
+            var tmpExecutionBlocks = splitBasedOnDependencies(virtualFileManager, newExecutionBlocks);
+            var activeExecutionBlocks = tmpExecutionBlocks._1;
+            var dependentExecutionBlocks = tmpExecutionBlocks._2;
 
-                virtualFileManager.addRange(activeExecutionBlocks);
+            virtualFileManager.addRange(activeExecutionBlocks);
 
-                for (Map.Entry<String,ExecutionBlock> newExecutionBlock : activeExecutionBlocks.entrySet()) {
-                    // Get the command to finally execute
-                    var commandToExecute = newExecutionBlock.getValue().query();
-                    var cacheFile = newExecutionBlock.getValue().cachePath();
-                    var hasForkWrite = newExecutionBlock.getValue().hasForkWrite();
+            for (Map.Entry<String,ExecutionBlock> newExecutionBlock : activeExecutionBlocks.entrySet()) {
+                // Get the command to finally execute
+                var commandToExecute = newExecutionBlock.getValue().query();
+                var cacheFile = newExecutionBlock.getValue().cachePath();
+                var hasForkWrite = newExecutionBlock.getValue().hasForkWrite();
 
-                    String cachePath;
-                    boolean hasFork;
-                    if (cacheFile == null) {
-                        var ocache = getExplicitWrite(commandToExecute);
-                        if(ocache.isPresent()) {
-                            var tup = ocache.get();
-                            cachePath = tup._1;
-                            hasFork = tup._2;
-                        } else {
-                            cachePath = cacheFile;
-                            hasFork = hasForkWrite;
-                        }
+                String cachePath;
+                boolean hasFork;
+                if (cacheFile == null) {
+                    var ocache = getExplicitWrite(commandToExecute);
+                    if(ocache.isPresent()) {
+                        var tup = ocache.get();
+                        cachePath = tup._1;
+                        hasFork = tup._2;
                     } else {
                         cachePath = cacheFile;
                         hasFork = hasForkWrite;
                     }
-
-                    // Extract used files from the final gor command
-                    var usedFiles = getUsedFiles(commandToExecute, session);
-
-                    // Create the split manager to use from the query (might contain -split option)
-                    var splitManager = SplitManager.createFromCommand(newExecutionBlock.getKey(), commandToExecute, context);
-
-                    // Expand execution blocks based on the active split
-                    var commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock.getKey(), cachePath);
-
-                    // Remove this command from the execution blocks if needed
-                    if (commandGroup.removeFromCreate()) {
-                        executionBlocks.remove(firstLevelBlock.groupName());
-                    }
-
-                    // Update gorcommand and add new queries if needed
-                    for (var cte : commandGroup.commandEntries()) {
-                        if (cte.createName().equals("[]")) {
-                            // This is the final command, we apply it and remove it from the execution blocks
-                            gorCommand[0] = cte.query();
-                            executionBlocks.remove(firstLevelBlock.groupName());
-                        } else {
-                            // We need to create a new dictionary query to the batch to get the results from expanded queries
-                            var commandLower = commandToExecute.toLowerCase();
-                            var gordictfolder = commandLower.startsWith("gordictfolder") || commandLower.startsWith("gordictfolderpart");
-                            String querySignature;
-                            if (firstLevelBlock.signature()!=null&&gordictfolder) {
-                                querySignature = firstLevelBlock.signature();
-                            } else {
-                                var fileSignature = getFileSignatureAndUpdateSignatureMap(session, fileSignatureMap, singleFileSignatureMap, commandToExecute, usedFiles);
-                                querySignature = StringUtilities.createMD5(cte.query() + fileSignature);
-                            }
-                            var ctequery = cte.query();
-                            if (!gordictfolder && !hasFork && cte.cacheFile()!=null && cte.cacheFile().endsWith(".gord")) {
-                                var gordResultsPath = cte.cacheFile()+"/"+querySignature+".gorz";
-                                executionBatch.createNewCommand(querySignature, ctequery.replace(cte.cacheFile(),gordResultsPath), cte.batchGroupName(), cte.createName(), gordResultsPath);
-                            } else {
-                                executionBatch.createNewCommand(querySignature, ctequery, cte.batchGroupName(), cte.createName(), cte.cacheFile());
-                            }
-                            eventLogger.commandCreated(cte.createName(), firstLevelBlock.groupName(), querySignature, cte.query());
-                        }
-                    }
-
-                    // Collect files if we are suggesting virtual file name
-                    if (suggestName) cAllUsedFiles.addAll(usedFiles.stream().filter(x -> !x.startsWith("[")).collect(Collectors.toList()));
+                } else {
+                    cachePath = cacheFile;
+                    hasFork = hasForkWrite;
                 }
 
-                // Add dictionary entries back to the execution blocks lists but process other entries
-                executionBlocks.putAll(dependentExecutionBlocks);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                // Extract used files from the final gor command
+                var usedFiles = getUsedFiles(commandToExecute, session);
+
+                // Create the split manager to use from the query (might contain -split option)
+                var splitManager = SplitManager.createFromCommand(newExecutionBlock.getKey(), commandToExecute, context);
+
+                // Expand execution blocks based on the active split
+                var commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock.getKey(), cachePath);
+
+                // Remove this command from the execution blocks if needed
+                if (commandGroup.removeFromCreate()) {
+                    executionBlocks.remove(firstLevelBlock.groupName());
+                }
+
+                // Update gorcommand and add new queries if needed
+                for (var cte : commandGroup.commandEntries()) {
+                    if (cte.createName().equals("[]")) {
+                        // This is the final command, we apply it and remove it from the execution blocks
+                        gorCommand[0] = cte.query();
+                        executionBlocks.remove(firstLevelBlock.groupName());
+                    } else {
+                        // We need to create a new dictionary query to the batch to get the results from expanded queries
+                        var commandLower = commandToExecute.toLowerCase();
+                        var gordictfolder = commandLower.startsWith("gordictfolder") || commandLower.startsWith("gordictfolderpart");
+                        String querySignature;
+                        if (firstLevelBlock.signature()!=null&&gordictfolder) {
+                            querySignature = firstLevelBlock.signature();
+                        } else {
+                            var fileSignature = getFileSignatureAndUpdateSignatureMap(session, fileSignatureMap, singleFileSignatureMap, commandToExecute, usedFiles);
+                            querySignature = StringUtilities.createMD5(cte.query() + fileSignature);
+                        }
+                        var ctequery = cte.query();
+                        if (!gordictfolder && !hasFork && cte.cacheFile()!=null && cte.cacheFile().endsWith(".gord")) {
+                            var gordResultsPath = cte.cacheFile()+"/"+querySignature+".gorz";
+                            executionBatch.createNewCommand(querySignature, ctequery.replace(cte.cacheFile(),gordResultsPath), cte.batchGroupName(), cte.createName(), gordResultsPath);
+                        } else {
+                            executionBatch.createNewCommand(querySignature, ctequery, cte.batchGroupName(), cte.createName(), cte.cacheFile());
+                        }
+                        eventLogger.commandCreated(cte.createName(), firstLevelBlock.groupName(), querySignature, cte.query());
+                    }
+                }
+
+                // Collect files if we are suggesting virtual file name
+                if (suggestName) cAllUsedFiles.addAll(usedFiles.stream().filter(x -> !x.startsWith("[")).collect(Collectors.toList()));
             }
+
+            // Add dictionary entries back to the execution blocks lists but process other entries
+            executionBlocks.putAll(dependentExecutionBlocks);
             // Replace any virtual file in the current query
         });
         Collections.sort(allUsedFiles);

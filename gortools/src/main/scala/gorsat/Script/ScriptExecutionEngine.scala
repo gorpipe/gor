@@ -201,7 +201,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
       // Create a new batch of execution blocks which are independent from each other
       executionBatch = getNextBatch(level)
-      val (gorCmd,usedFiles) = GorJavaUtilities.processBlocks(context, suggestName, executionBlocks, aliases, fileSignatureMap, singleFileSignatureMap, virtualFileManager, executionBatch, validate)
+      val (gorCmd,usedFiles) = GorJavaUtilities.processBlocks(context, suggestName, executionBlocks, aliases, fileSignatureMap, singleFileSignatureMap, virtualFileManager, executionBatch, validate, gorCommand)
       gorCommand = gorCmd
       allUsedFiles = usedFiles
       // Execute the current batch
