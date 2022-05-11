@@ -31,7 +31,6 @@ case class ExecutionGraph(gorCommands: Array[String]) {
 
   val levels: Array[List[ExecutionBlock]] = buildLevels()
 
-
   private def buildLevels(): Array[List[ExecutionBlock]] = {
     val l = ArrayBuffer[List[ExecutionBlock]]()
     if (root != null) {

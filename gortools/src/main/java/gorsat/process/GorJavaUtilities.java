@@ -802,7 +802,7 @@ public class GorJavaUtilities {
         var gorCommand = new String[] {currentGorCmd};
         var allUsedFiles = new ArrayList<String>();
         var cAllUsedFiles = Collections.synchronizedList(allUsedFiles);
-        Arrays.stream(executionBatch.getBlocks()).forEach(firstLevelBlock -> {
+        Arrays.stream(executionBatch.getBlocks()).parallel().forEach(firstLevelBlock -> {
             firstLevelBlock.query_$eq(virtualFileManager.replaceVirtualFiles(firstLevelBlock.query()));
 
             var query = firstLevelBlock.query();
