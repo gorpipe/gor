@@ -25,9 +25,9 @@ package gorsat.Script
 import scala.collection.mutable.ArrayBuffer
 
 case class ExecutionGraph(gorCommands: Array[String]) {
-  val blocks: Map[String, ExecutionBlock] = ScriptExecutionEngine.parseScript(gorCommands)
-  var remainingBlocks: Map[String, ExecutionBlock] = Map[String, ExecutionBlock]()
-  val root: ExecutionBlock = blocks.getOrElse("[]", null)
+  val blocks: java.util.Map[String, ExecutionBlock] = ScriptExecutionEngine.parseScript(gorCommands)
+  var remainingBlocks: java.util.Map[String, ExecutionBlock] = new java.util.HashMap[String, ExecutionBlock]()
+  val root: ExecutionBlock = blocks.getOrDefault("[]", null)
 
   val levels: Array[List[ExecutionBlock]] = buildLevels()
 
@@ -36,7 +36,8 @@ case class ExecutionGraph(gorCommands: Array[String]) {
     val l = ArrayBuffer[List[ExecutionBlock]]()
     if (root != null) {
       l += List(root)
-      remainingBlocks = blocks - "[]"
+      remainingBlocks = new java.util.HashMap()
+      remainingBlocks.remove("[]")
       var nextLevel = buildNextLevel(l(0))
       while (nextLevel.nonEmpty) {
         l += nextLevel
@@ -60,13 +61,13 @@ case class ExecutionGraph(gorCommands: Array[String]) {
     blocks.foreach( block => {
       block.dependencies.foreach(d => {
         byName.get(d) match {
-          case Some(eb) => remainingBlocks += d -> eb
+          case Some(eb) => remainingBlocks.put(d, eb)
           case None =>
         }
       })
-      remainingBlocks.get("[" + block.groupName + "]") match {
-        case Some(_) =>
-        case None =>
+      if (!remainingBlocks.containsKey("[" + block.groupName + "]")) {
+        //case Some(_) =>
+        //case None =>
           noInterdependencies = noInterdependencies ++ List(block)
       }
     })
@@ -82,11 +83,12 @@ case class ExecutionGraph(gorCommands: Array[String]) {
   }
 
   private def addToNextLevel(block: ExecutionBlock, nextLevel: List[ExecutionBlock]): List[ExecutionBlock] = {
-    remainingBlocks -= block.groupName
+    remainingBlocks.remove(block.groupName)
     val level = block.dependencies.map(d => {
-      remainingBlocks.get(d) match {
-        case Some(eb) => remainingBlocks -= d; eb
-        case None => null
+      if (remainingBlocks.containsKey(d)) {
+        remainingBlocks.remove(d)
+      } else {
+        null
       }
     }).filter( p => p != null).toList
     nextLevel ++ level

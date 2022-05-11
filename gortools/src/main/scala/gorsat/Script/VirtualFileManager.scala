@@ -68,9 +68,9 @@ class VirtualFileManager {
   }
 
   def addRange(executionBlocks: ExecutionBlocks): Unit = {
-    executionBlocks.foreach { executionBlockEntry =>
-      add(executionBlockEntry._2)
-    }
+    executionBlocks.values().forEach(executionBlockEntry => {
+      add(executionBlockEntry)
+    })
   }
 
   def add(executionBlock: ExecutionBlock): Unit = {

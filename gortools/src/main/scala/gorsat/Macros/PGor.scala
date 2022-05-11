@@ -28,6 +28,8 @@ import gorsat.Script._
 import gorsat.Utilities.MacroUtilities.getCachePath
 import org.gorpipe.gor.session.GorContext
 
+import java.util
+
 /***
   * PGOR macro used to preprocess standalone pgor commands into create statement plus gor query. Also performs expansion
   * based on active build and splits. Also if a custom split options are used it performs a split based on input chromosome,
@@ -44,7 +46,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
                                           inputArguments: Array[String],
                                           options: Array[String],
                                           skipCache: Boolean): MacroParsingResult = {
-    var partitionedGorCommands = Map.empty[String, ExecutionBlock]
+    var partitionedGorCommands: util.Map[String, ExecutionBlock] = new util.HashMap[String, ExecutionBlock]()
     var theDependencies: List[String] = Nil
     val replacePattern = if (SplitManager.useWholeChromosomeSplit(create.query))
       SplitManager.REGULAR_REPLACEMENT_PATTERN else SplitManager.SPLIT_REPLACEMENT_PATTERN
@@ -60,7 +62,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
         cachePath = theCachePath
         if (!cacheFileExists) {
           val noDict = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-gordfolder","dict").equals("nodict")
-          val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict, hasForkWrite)
+          val (tcmd, theDeps: List[String], partGorCmds: util.Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict, hasForkWrite)
           theDependencies = theDeps
           partitionedGorCommands = partGorCmds
           tcmd
@@ -68,15 +70,15 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
           "gor " + cachePath
         }
       } else {
-        val (tcmd, theDeps: List[String], partGorCmds: Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders, false, hasForkWrite = hasForkWrite)
+        val (tcmd, theDeps: List[String], partGorCmds: util.Map[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, " <("+createSlice+")", cachePath, useGordFolders, false, hasForkWrite = hasForkWrite)
         theDependencies = theDeps
         partitionedGorCommands = partGorCmds
         tcmd
       }
-      partitionedGorCommands += (createKey -> Script.ExecutionBlock(create.groupName, theCommand, create.signature,
+      partitionedGorCommands.put(createKey, Script.ExecutionBlock(create.groupName, theCommand, create.signature,
         theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
     } else {
-      partitionedGorCommands += (createKey -> ExecutionBlock(create.groupName,
+      partitionedGorCommands.put(createKey, ExecutionBlock(create.groupName,
         "xxxxgor " + createSlice, create.signature,
         create.dependencies, create.batchGroupName)) // this should nolonger happen
     }
