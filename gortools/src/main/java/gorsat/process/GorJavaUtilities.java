@@ -884,7 +884,7 @@ public class GorJavaUtilities {
                         if (firstLevelBlock.signature()!=null&&gordictfolder) {
                             querySignature = firstLevelBlock.signature();
                         } else {
-                            var fileSignature = getFileSignatureAndUpdateSignatureMap(session, fileSignatureMap, singleFileSignatureMap, commandToExecute, usedFiles);
+                            var fileSignature = validate ? getFileSignatureAndUpdateSignatureMap(session, fileSignatureMap, singleFileSignatureMap, commandToExecute, usedFiles) : "";
                             querySignature = StringUtilities.createMD5(cte.query() + fileSignature);
                         }
                         var ctequery = cte.query();
