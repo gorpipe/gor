@@ -36,7 +36,7 @@ case class ExecutionGraph(gorCommands: Array[String]) {
     val l = ArrayBuffer[List[ExecutionBlock]]()
     if (root != null) {
       l += List(root)
-      remainingBlocks = new java.util.HashMap()
+      remainingBlocks = new java.util.HashMap(blocks)
       remainingBlocks.remove("[]")
       var nextLevel = buildNextLevel(l(0))
       while (nextLevel.nonEmpty) {

@@ -95,9 +95,7 @@ public class GorScriptAnalyzer {
             tasksByLevel.add(tasksInLevel);
         }
         extraTasks = new ArrayList<>();
-        executionGraph.remainingBlocks().values().forEach(block -> {
-            extraTasks.add(getGorScriptTask(block));
-        });
+        executionGraph.remainingBlocks().values().forEach(block -> extraTasks.add(getGorScriptTask(block)));
     }
 
     private GorScriptTask getGorScriptTask(ExecutionBlock block) {
