@@ -88,7 +88,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         clientconfig.setMaxConnections(s3Config.connectionPoolSize());
         // It looks like GOR is returning stale connections to the pool so we need always check if the connection is valid.
         // See issue: https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/issues/315
-        clientconfig.setValidateAfterInactivityMillis(1);
+        clientconfig.setValidateAfterInactivityMillis(s3Config.validateAfterInactivityMillis());
         log.debug("Creating S3Client for {}", cred);
         if (cred == null || cred.isNull()) {
             Regions region = Regions.DEFAULT_REGION;
