@@ -29,6 +29,7 @@ import gorsat.process.GorPipeCommands
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
+import java.util
 import scala.collection.JavaConverters._
 
 /**
@@ -55,7 +56,7 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
   }
 
   def expandCommand(commandToExecute: String, batchGroupName: String, cachePath: String = null): CommandGroup = {
-    var expandedCommands: List[CommandEntry] = List.empty[CommandEntry]
+    var expandedCommands: util.List[CommandEntry] = new util.ArrayList[CommandEntry]()
     var removeFromCreates = false
 
     if (commandToExecute.contains(replacementPattern)) {
@@ -71,12 +72,12 @@ case class SplitManager( groupName: String, chromosomeSplits:Map[String,SplitEnt
           val repstr = if (splitOverlap != "") "-" + splitOpt + splits + ":" + splitOverlap + " " else "-" + splitOpt + splits + " "
           mc = mc.replace(repstr, "")
         }
-        expandedCommands ::= CommandEntry(n, mc, g, cachePath)
+        expandedCommands.add(0, CommandEntry(n, mc, g, cachePath))
       })
 
       removeFromCreates = true
     } else {
-      expandedCommands ::= CommandEntry(groupName, commandToExecute, batchGroupName, cachePath)
+      expandedCommands.add(0, CommandEntry(groupName, commandToExecute, batchGroupName, cachePath))
     }
 
     CommandGroup(expandedCommands, removeFromCreates)

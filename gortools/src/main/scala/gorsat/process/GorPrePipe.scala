@@ -34,6 +34,8 @@ import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.gor.session.GorSession
 
 import java.util.function.Predicate
+import java.util.stream.Collectors
+import scala.collection.JavaConverters
 import scala.collection.JavaConverters._
 
 object GorPrePipe {
@@ -168,7 +170,6 @@ object GorPrePipe {
   // Server side - alias replacement done in client
   def getAliasesAndCreates(inputCommand: String, session: GorSession): Array[String] = {
 
-    var createdFiles = Map.empty[String, String]
     var equiVFlist: List[(String, String)] = Nil
     var aliases:singleHashMap = new java.util.HashMap[String, String]()
 
@@ -183,11 +184,15 @@ object GorPrePipe {
     try {
       val modifiedInputCommands = inputCommands.map(x => pgorReplacer(replaceAllAliases(x, mainAliasMap)))
       engine.execute(modifiedInputCommands)
-      createdFiles = engine.getCreatedFiles
+      val createdFiles = engine.getCreatedFiles
       equiVFlist = engine.getVirtualFiles
       aliases = engine.getAliases
 
-      outArray ++= createdFiles.toList.map(x => "createdFiles\t" + x._1 + "\t" + x._2)
+      val list: List[String] = Nil
+      createdFiles.entrySet().forEach(x => {
+        list :+ "createdFiles\t" + x.getKey + "\t" + x.getValue
+      })
+      outArray ++= list
       outArray ++= equiVFlist.map(x => "equiVFlist\t" + x._1 + "\t" + x._2)
       outArray ++= aliases.asScala.map(x => "aliases\t" + x._1 + "\t" + x._2)
 

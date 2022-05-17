@@ -31,6 +31,7 @@ import org.gorpipe.exceptions.{GorDataException, GorParsingException}
 import org.gorpipe.gor.model.FileReader
 import org.gorpipe.gor.session.{GorContext, GorSession}
 
+import java.util
 import scala.collection.mutable
 
 /**
@@ -68,7 +69,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     }
 
     val extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query)
-    var parGorCommands = Map.empty[String, ExecutionBlock]
+    val parGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
 
     var cachePath: String = null
     val (hasDictFolderWrite, _, _, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
@@ -91,13 +92,13 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
 
       if (extraCommands.nonEmpty) newCmd += extraCommands
 
-      parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCmd, create.signature, create.dependencies, create.batchGroupName, cachePath))
+      parGorCommands.put(parKey, ExecutionBlock(create.groupName, newCmd, create.signature, create.dependencies, create.batchGroupName, cachePath))
       theDependencies ::= parKey
     })
 
     val gordict = if (useGordFolders) "gordictfolderpart" else "gordictpart"
     val theCommand = partitions.keys.foldLeft(gordict) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
+    parGorCommands.put(createKey, ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)
   }

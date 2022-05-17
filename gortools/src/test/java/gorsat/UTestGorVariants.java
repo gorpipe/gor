@@ -56,7 +56,7 @@ public class UTestGorVariants {
                 "chrM\t100\t100\tQ2\t83\t60\t1M\t51T7C41\tMT\t16293\t-276\tT\t@\tX0=1 X1=0 RG=R1 XG=0 AM=37 NM=2 SM=37 XM=2 XO=0 MQ=60 XT=U RB=hs37d5\n" +
                 "chrM\t10000001\t10000001\tQ3\t97\t37\t1M\t50T7C42\tMT\t49\t-16321\tT\tH\tX0=1 X1=0 RG=R1 XG=0 AM=37 NM=2 SM=37 XM=2 XO=0 MQ=37 XT=U RB=hs37d5\n").getBytes());
 
-        String[] args = new String[]{"gor " + p.toString() + " | variants -count", "-config", "../tests/data/ref_mini/gor_config.txt"};
+        String[] args = new String[]{"gor " + p + " | variants -count", "-config", "../tests/data/ref_mini/gor_config.txt"};
 
         long count = TestUtils.countOpenFiles();
         String result = TestUtils.runGorPipe(args);
