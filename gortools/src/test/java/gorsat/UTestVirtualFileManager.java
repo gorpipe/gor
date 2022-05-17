@@ -34,9 +34,9 @@ public class UTestVirtualFileManager {
         VirtualFileManager manager = new VirtualFileManager();
         manager.add("xxx");
 
-        Assert.assertTrue(manager.get("xxx").isDefined());
-        Assert.assertTrue(manager.get("[xxx]").isDefined());
-        Assert.assertTrue(manager.get("[ xxx ]").isDefined());
+        Assert.assertTrue(manager.get("xxx") != null);
+        Assert.assertTrue(manager.get("[xxx]") != null);
+        Assert.assertTrue(manager.get("[ xxx ]") != null);
     }
 
     @Test
@@ -44,9 +44,9 @@ public class UTestVirtualFileManager {
         VirtualFileManager manager = new VirtualFileManager();
         manager.add("[yyy]");
 
-        Assert.assertTrue(manager.get("yyy").isDefined());
-        Assert.assertTrue(manager.get("[yyy]").isDefined());
-        Assert.assertTrue(manager.get("[ yyy ]").isDefined());
+        Assert.assertTrue(manager.get("yyy") != null);
+        Assert.assertTrue(manager.get("[yyy]") != null);
+        Assert.assertTrue(manager.get("[ yyy ]") != null);
     }
 
     @Test
@@ -54,9 +54,9 @@ public class UTestVirtualFileManager {
         VirtualFileManager manager = new VirtualFileManager();
         manager.add("[   vvv  ]");
 
-        Assert.assertTrue(manager.get("vvv").isDefined());
-        Assert.assertTrue(manager.get("[vvv]").isDefined());
-        Assert.assertTrue(manager.get("[ vvv ]").isDefined());
+        Assert.assertTrue(manager.get("vvv") != null);
+        Assert.assertTrue(manager.get("[vvv]") != null);
+        Assert.assertTrue(manager.get("[ vvv ]") != null);
     }
 
     @Test
@@ -95,45 +95,45 @@ public class UTestVirtualFileManager {
         manager.add("foo");
 
         Assert.assertEquals(1, manager.size());
-        VirtualFileEntry entry = manager.get("foo").get();
-        Assert.assertEquals("[foo]", entry.name());
-        Assert.assertFalse(entry.isExternal());
-        Assert.assertNull(entry.fileName());
-        Assert.assertFalse(entry.isOriginal());
+        VirtualFileEntry entry = manager.get("foo");
+        Assert.assertEquals("[foo]", entry.name);
+        Assert.assertFalse(entry.isExternal);
+        Assert.assertNull(entry.fileName);
+        Assert.assertFalse(entry.isOriginal);
 
         manager.updateCreatedFile("foo", "foo_file");
         manager.setAllAsOriginal();
-        entry = manager.get("foo").get();
-        Assert.assertEquals("[foo]", entry.name());
-        Assert.assertFalse(entry.isExternal());
-        Assert.assertEquals("foo_file", entry.fileName());
-        Assert.assertTrue(entry.isOriginal());
+        entry = manager.get("foo");
+        Assert.assertEquals("[foo]", entry.name);
+        Assert.assertFalse(entry.isExternal);
+        Assert.assertEquals("foo_file", entry.fileName);
+        Assert.assertTrue(entry.isOriginal);
     }
 
     @Test
     public void addExternalVirtualReference() {
         VirtualFileManager manager = new VirtualFileManager();
         manager.add("file:foo");
-        Assert.assertTrue(manager.get("file:foo").get().isExternal());
+        Assert.assertTrue(manager.get("file:foo").isExternal);
 
         manager.add("grid:bar");
-        Assert.assertTrue(manager.get("grid:bar").get().isExternal());
+        Assert.assertTrue(manager.get("grid:bar").isExternal);
 
         manager.add("gorgrid:bar");
-        Assert.assertTrue(manager.get("gorgrid:bar").get().isExternal());
+        Assert.assertTrue(manager.get("gorgrid:bar").isExternal);
     }
 
     @Test
     public void urlLikeExternalVirtualReferenceMapping() {
         VirtualFileManager manager = new VirtualFileManager();
         manager.add("file://foo");
-        Assert.assertFalse(manager.get("file://foo").get().isExternal());
+        Assert.assertFalse(manager.get("file://foo").isExternal);
 
         manager.add("grid:/bar");
-        Assert.assertTrue(manager.get("grid:/bar").get().isExternal());
+        Assert.assertTrue(manager.get("grid:/bar").isExternal);
 
         manager.add("gorgrid:s3://bar");
-        Assert.assertTrue(manager.get("gorgrid:s3://bar").get().isExternal());
+        Assert.assertTrue(manager.get("gorgrid:s3://bar").isExternal);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class UTestVirtualFileManager {
 
         manager.updateCreatedFile("foo", "foo_file.txt");
         Assert.assertEquals(1, manager.getCreatedFiles().size());
-        Assert.assertEquals("foo_file.txt", manager.get("foo").get().fileName());
+        Assert.assertEquals("foo_file.txt", manager.get("foo").fileName);
 
         try {
             manager.updateCreatedFile("foo", "");
@@ -166,7 +166,7 @@ public class UTestVirtualFileManager {
 
         manager.updateCreatedFile("foo", "foo_file2.txt");
         Assert.assertEquals(1, manager.getCreatedFiles().size());
-        Assert.assertEquals("foo_file2.txt", manager.get("foo").get().fileName());
+        Assert.assertEquals("foo_file2.txt", manager.get("foo").fileName);
 
         manager.updateCreatedFile("bar", "bar_file.txt");
         manager.updateCreatedFile("xxx", "xxx_file.txt");
@@ -267,8 +267,8 @@ public class UTestVirtualFileManager {
         manager.addQuery("create xxx = gorrows -p chr1:10-1000 | top 100 | join [grid:foo];create yyy = gor [xxx] | join [ file:/tmp/foo.txt];gor [yyy]");
         VirtualFileEntry[] entries = manager.getExternalVirtualFiles();
         Assert.assertEquals(2, entries.length);
-        Assert.assertEquals("[file:/tmp/foo.txt]", entries[0].name());
-        Assert.assertEquals("[grid:foo]", entries[1].name());
+        Assert.assertEquals("[file:/tmp/foo.txt]", entries[0].name);
+        Assert.assertEquals("[grid:foo]", entries[1].name);
     }
 
     @Test
@@ -278,8 +278,8 @@ public class UTestVirtualFileManager {
         manager.addQuery(query);
         VirtualFileEntry[] entries = manager.getExternalVirtualFiles();
         Assert.assertEquals(2, entries.length);
-        Assert.assertEquals("[file:/tmp/foo.txt]", entries[0].name());
-        Assert.assertEquals("[grid:foo]", entries[1].name());
+        Assert.assertEquals("[file:/tmp/foo.txt]", entries[0].name);
+        Assert.assertEquals("[grid:foo]", entries[1].name);
 
         manager.updateCreatedFile("[file:/tmp/foo.txt]", "file1.txt");
         String newQuery = manager.replaceVirtualFiles(query);

@@ -99,7 +99,7 @@ public class UTestPartGor {
 
         Assert.assertEquals(11, result.createCommands().size());
 
-        int count =  result.createCommands().keys().toStream().count(x -> x.contains("test_"));
+        var count =  result.createCommands().keySet().stream().filter(x -> x.contains("test_")).count();
         Assert.assertEquals(10, count);
 
         String[] lines = TestUtils.runGorPipeLinesNoHeader(query);

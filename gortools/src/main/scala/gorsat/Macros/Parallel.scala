@@ -29,6 +29,8 @@ import gorsat.process.{GorInputSources, GorJavaUtilities, GorPipeMacros, SourceP
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
+import java.util
+
 /**
   * PArallel macro is used to create generic paralisation of gor commands. Parallel takes in a split file or nested
   * query through the -parts option. Each row in the split file will create a parallel execution of the resulting
@@ -63,7 +65,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val partsSource = inputSource1.source
     val header = inputSource1.header
     val extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query).trim
-    var parGorCommands = Map.empty[String, ExecutionBlock]
+    val parGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
     var partitionIndex = 1
@@ -97,9 +99,9 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
           val srcmd = newCommand.substring(0,i)
           if (GorJavaUtilities.isPGorCmd(srcmd)) newCommand = srcmd+"-gordfolder nodict "+newCommand.substring(i)
         }
-        if (!extraCommands.isEmpty) newCommand += " " + extraCommands
+        if (extraCommands.nonEmpty) newCommand += " " + extraCommands
 
-        parGorCommands += (parKey -> ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName, cachePath, hasForkWrite = hasForkWrite))
+        parGorCommands.put(parKey, ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName, cachePath, hasForkWrite = hasForkWrite))
         theDependencies ::= parKey
 
         partitionIndex += 1
@@ -113,7 +115,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     }
 
     val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify,useGordFolders)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
-    parGorCommands += (createKey -> ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true, hasForkWrite = hasForkWrite))
+    parGorCommands.put(createKey, ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true, hasForkWrite = hasForkWrite))
 
     MacroParsingResult(parGorCommands, null)
   }

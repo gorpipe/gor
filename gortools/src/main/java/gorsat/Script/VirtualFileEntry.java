@@ -20,10 +20,14 @@
  *  END_COPYRIGHT
  */
 
-package gorsat.Script
+package gorsat.Script;
 
-case class VirtualFileEntry(name: String) {
-  var isExternal = false
-  var isOriginal = false
-  var fileName: String = _
+public class VirtualFileEntry {
+  public VirtualFileEntry(String name) {
+    this.name = name;
+  }
+  public String name;
+  public boolean isExternal = false;
+  public boolean isOriginal = false;
+  public String fileName;
 }

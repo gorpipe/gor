@@ -207,7 +207,7 @@ public class FileSource implements StreamSource {
 
     @Override
     public void delete() throws IOException {
-        Files.delete(file);
+        Files.deleteIfExists(file);
     }
 
     @Override
