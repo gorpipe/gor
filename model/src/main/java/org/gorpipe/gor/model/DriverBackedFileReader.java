@@ -215,14 +215,22 @@ public class DriverBackedFileReader extends FileReader {
         }
 
         try(var it = GorDriverFactory.fromConfig().createIterator(source)) {
-            return it.getHeader();
-        } catch (GorException e) {
-            try (InputStream str = ((StreamSource) source).open()) {
-                BufferedReader r = new BufferedReader(new InputStreamReader(str));
-                return r.readLine();
+            if (it!=null) {
+                return it.getHeader();
+            } else {
+                return loadRawHeader(source);
             }
+        } catch (GorException e) {
+            return loadRawHeader(source);
         } finally {
             source.close();
+        }
+    }
+
+    private String loadRawHeader(DataSource source) throws IOException {
+        try (InputStream str = ((StreamSource) source).open()) {
+            BufferedReader r = new BufferedReader(new InputStreamReader(str));
+            return r.readLine();
         }
     }
 
