@@ -9,6 +9,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class UTestDriverBackedFileReader {
     DriverBackedFileReader driverBackedFileReader;
@@ -19,6 +20,13 @@ public class UTestDriverBackedFileReader {
     @Before
     public void init() {
         driverBackedFileReader = new DriverBackedFileReader("", temporaryFolder.getRoot().getAbsolutePath(), null);
+    }
+
+    @Test
+    public void testFileReader() throws IOException {
+        var path = Path.of("../tests/data/bvl_min/bam/BVL_INDEX_SLC52A2.bam").toAbsolutePath().normalize();
+        var header = driverBackedFileReader.readHeaderLine(path.toString());
+        Assert.assertEquals("Chromo\tPos\tEnd\tQName\tFlag\tMapQ\tCigar\tMD\tMRNM\tMPOS\tISIZE\tSEQ\tQUAL\tTAG_VALUES", header);
     }
 
     @Test
