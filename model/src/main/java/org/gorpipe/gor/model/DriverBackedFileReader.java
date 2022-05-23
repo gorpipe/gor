@@ -24,6 +24,7 @@ package org.gorpipe.gor.model;
 
 import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.ExceptionUtilities;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
@@ -213,11 +214,23 @@ public class DriverBackedFileReader extends FileReader {
             return header.toString();
         }
 
+        try(var it = GorDriverFactory.fromConfig().createIterator(source)) {
+            if (it!=null) {
+                return it.getHeader();
+            } else {
+                return loadRawHeader(source);
+            }
+        } catch (GorException e) {
+            return loadRawHeader(source);
+        } finally {
+            source.close();
+        }
+    }
+
+    private String loadRawHeader(DataSource source) throws IOException {
         try (InputStream str = ((StreamSource) source).open()) {
             BufferedReader r = new BufferedReader(new InputStreamReader(str));
             return r.readLine();
-        } finally {
-            if (source != null) source.close();
         }
     }
 

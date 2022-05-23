@@ -257,7 +257,7 @@ object GorCsvSel {
             val start = outCol*valSize
             var i = 0
             while(i < valSize) {
-              ladd.setCharAt(start+i, unknownVal.charAt(i))
+              ladd.setCharAt(originalLength+start+i, unknownVal.charAt(i))
               i += 1
             }
           } else if (!pipeFrom.wantsNoMore) {
@@ -272,21 +272,20 @@ object GorCsvSel {
 
     def parallelFixedSizeSingleVal(sh: ColHolder, pipeFrom: Processor): Unit = {
       val originalLength = ladd.length()
-      ladd.setLength(originalLength+pbt.numberOfPns*valSize)
+      ladd.setLength(originalLength+pbt.numberOfPns)
       IntStream.range(0, pbt.numberOfPns).parallel().forEach(outCol => {
         val buckNo = pbt.pnIdxToBuckIdx(outCol)
         val buckPos = pbt.pnIdxToBuckPos(outCol)
         val bucketRow = sh.buckRows(buckNo)
         if (bucketRow == null) {
           if (unknown) {
-            val start = outCol*valSize
-            ladd.setCharAt(start, unknownVal.charAt(0))
+            ladd.setCharAt(outCol+originalLength, unknownVal.charAt(0))
           } else if (!pipeFrom.wantsNoMore) {
             throw new GorDataException("Problem with input data when generating row: " + line + "\n\n")
           }
         } else {
           val offset = sh.offsetArray(buckNo)
-          val start = offset + buckPos * valSize
+          val start = offset + buckPos
           ladd.setCharAt(outCol+originalLength, bucketRow.charAt(start))
         }
       })
