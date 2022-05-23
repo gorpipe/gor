@@ -214,8 +214,7 @@ public class DriverBackedFileReader extends FileReader {
             return header.toString();
         }
 
-        try {
-            var it = GorDriverFactory.fromConfig().createIterator(source);
+        try(var it = GorDriverFactory.fromConfig().createIterator(source)) {
             return it.getHeader();
         } catch (GorException e) {
             try (InputStream str = ((StreamSource) source).open()) {
