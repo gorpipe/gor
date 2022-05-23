@@ -37,7 +37,7 @@ import java.io.InputStream;
  * <p>
  * Wrapper around a stream source.
  * <p>
- * If it detects consecutive range opens - it will extend the request size up to a maximum (default 10MB) .
+ * If it detects consecutive range opens - it will extend the request size up to a maximum (default 100MB) .
  * Subsequent range requests will be served from the extended request stream as long as within a (forward) seekable range.
  * When boundaries are reached, new stream will be opened - again extending the request size if the maximum has not been reached.
  * <p>
@@ -62,9 +62,10 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     private static final Logger log = LoggerFactory.getLogger(ExtendedRangeWrapper.class);
 
     public static final int DEFAULT_SEEK_THRESHOLD = 32 * 1024;  // 32kB
-    public static final int DEFAULT_MAX_RANGE = 20 * 1024 * 1024;  // 10MB
+    public static final int DEFAULT_MAX_RANGE = 100 * 1024 * 1024;  // 100MB
 
     private final int seekThreshold;
+    private final int maxRange;
 
     ExtendedRangeStream extendedRangeStream;
 
@@ -77,6 +78,7 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     public ExtendedRangeWrapper(StreamSource source, int seekThreshold, int maxRange) {
         super(source);
         this.seekThreshold = seekThreshold;
+        this.maxRange = maxRange;
     }
 
     @Override
@@ -164,7 +166,7 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
                 in.close();
 
                 // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.
-                long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, DEFAULT_MAX_RANGE));
+                long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
 
                 // 3. Open new 'in' stream at last position + new request length
                 RequestRange range = RequestRange.fromFirstLength(bookKeeping.getFirst() + getPosition(), rlen);
