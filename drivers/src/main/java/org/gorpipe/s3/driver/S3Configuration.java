@@ -46,6 +46,11 @@ public interface S3Configuration extends Config {
     @DefaultValue("15")
     int connectionRetries();
 
+    @Documentation("S3 max error retry")
+    @Key("gor.s3.validate.after.inactivity")
+    @DefaultValue("100")
+    int validateAfterInactivityMillis();
+
     @Documentation("S3 endpoint url")
     @Key("gor.s3.endpoint")
     @DefaultValue("")
