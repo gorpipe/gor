@@ -178,10 +178,13 @@ public class BamIterator extends GenomicIteratorBase {
 
     @Override
     public String getHeader() {
-        String[] headers = new String[columns.length];
-        for (int i = 0; i < headers.length; i++) {
-            headers[i] = HEADER[columns[i]];
-        }
+        String[] headers;
+        if (columns != null) {
+            headers = new String[columns.length];
+            for (int i = 0; i < headers.length; i++) {
+                headers[i] = HEADER[columns[i]];
+            }
+        } else headers = HEADER;
         return String.join("\t",headers);
     }
 
