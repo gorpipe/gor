@@ -86,7 +86,7 @@ public class CramIterator extends BamIterator {
      * @param cramFile The CRAM File to iterate through
      * @param columns  The columns to be included, or null to include all
      */
-    public CramIterator(ChromoLookup lookup, CramFile cramFile, int[] columns) throws IOException {
+    public CramIterator(ChromoLookup lookup, CramFile cramFile, int[] columns) {
         this.cramFile = cramFile;
         this.columns = columns;
         this.lookup = lookup;
