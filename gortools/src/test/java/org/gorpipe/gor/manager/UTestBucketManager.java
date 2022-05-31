@@ -536,6 +536,36 @@ public class UTestBucketManager {
         Assert.assertEquals("Wrong number of buckets created", 0, bucketsCreated);
     }
 
+    @Test
+    public void testRepeatedBucketize() throws Exception {
+        String name = "testSimpleBucketize";
+
+        Path dataDir = workDirPath.resolve("data");
+        Files.createDirectory(dataDir);
+        String[] sources = IntStream.range(1, 150).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
+        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
+                name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
+
+        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(10);
+        buc.setBucketSize(50);
+
+        int bucketsCreated = 0;
+        int iterations = 0;
+        do {
+            int iterBucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1);
+            Assert.assertEquals("Wrong number of buckets created", 1, iterBucketsCreated);
+            bucketsCreated += iterBucketsCreated;
+            iterations++;
+        } while (table.needsBucketizing().size() >= buc.getMinBucketSize());
+
+        Assert.assertEquals("Wrong number of buckets created", 4, bucketsCreated);
+        Assert.assertEquals("Wrong number of iterations", 4, iterations);
+        Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
+    }
+
     private BaseDictionaryTable<DictionaryEntry> createTable(Path path) {
         return new DictionaryTable.Builder<>(path).useHistory(true).validateFiles(false).build();
     }

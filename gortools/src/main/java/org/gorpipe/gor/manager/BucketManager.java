@@ -159,6 +159,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             if (maxBucketCount <= 0) {
                 maxBucketCount = Integer.parseInt(table.getConfigTableProperty(HEADER_BUCKET_MAX_BUCKETS, Integer.toString(DEFAULT_MAX_BUCKET_COUNT)));
+                maxBucketCount = maxBucketCount > 0 ? maxBucketCount : 10000;
             }
 
             //cleanTempBucketFolders(bucketizeLock);
@@ -332,7 +333,7 @@ public class BucketManager<T extends BucketableTableEntry> {
      *
      * @param bucketizeLock  the bucketize lock to use.
      * @param packLevel      pack level to use (see BucketPackLevel).
-     * @param maxBucketCount Maximum number of buckets to generate on this call.
+     * @param maxBucketCount Maximum number of buckets to generate on this call (positive integer).
      * @return number of buckets created.
      * @throws IOException
      */
@@ -361,7 +362,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             // Find which buckets to delete and which buckets to create.
 
-            bucketsToDelete = findBucketsToDelete(trans.getLock(), packLevel, unbucketizedCount);
+            bucketsToDelete = findBucketsToDelete(trans.getLock(), packLevel, unbucketizedCount, maxBucketCount);
             newBucketsMap = findBucketsToCreate(trans.getLock(), bucketsToDelete, maxBucketCount);
 
             if (log.isDebugEnabled()) {
@@ -600,9 +601,10 @@ public class BucketManager<T extends BucketableTableEntry> {
      * @param lock              table lock
      * @param packLevel         pack level (see BucketPackLevel).
      * @param unbucketizedCount how many files are not bucketized at all.
+     * @param maxBucketCount    Maximum number of buckets to generate on this call (positive integer).
      * @return buckets to be deleted.
      */
-    private Collection<String> findBucketsToDelete(TableLock lock, BucketPackLevel packLevel, int unbucketizedCount) {
+    private Collection<String> findBucketsToDelete(TableLock lock, BucketPackLevel packLevel, int unbucketizedCount, int maxBucketCount) {
         lock.assertValid();
 
         // Count active files per bucket
@@ -632,23 +634,36 @@ public class BucketManager<T extends BucketableTableEntry> {
             // Create new full buckets from partial files, starting with the smallest.
             int totalFilesNeeding = unbucketizedCount
                     + bucketCounts.values().stream().filter(i -> i < getBucketSize()).mapToInt(Integer::intValue).sum();
-            int totalNewBuckets = totalFilesNeeding / getBucketSize();
-            int totalSpaceLeftInNewBuckets = totalNewBuckets * getBucketSize() - unbucketizedCount;
+            int totalNeededNewBuckets = totalFilesNeeding / getBucketSize();
+            int totalNewBuckets = Math.min(totalNeededNewBuckets, maxBucketCount);
 
-            for (Map.Entry<String, Integer> entry : bucketCounts.entrySet().stream()
-                    .filter(e -> e.getValue() < getBucketSize())
-                    .sorted(Map.Entry.comparingByValue()).collect(Collectors.toList())) {
-                if (totalSpaceLeftInNewBuckets <= 0) {
-                    break;
+            if (totalNewBuckets == totalNeededNewBuckets) {
+                // We are creating all the needed buckets, the last bucket might have some space left in it.  Remove
+                // the smallest existing bucket to fill the new one up.
+                int totalSpaceLeftInNewBuckets = totalNewBuckets * getBucketSize() - unbucketizedCount;
+
+                for (Map.Entry<String, Integer> entry : bucketCounts.entrySet().stream()
+                        .filter(e -> e.getValue() < getBucketSize())
+                        .sorted(Map.Entry.comparingByValue()).collect(Collectors.toList())) {
+                    if (totalSpaceLeftInNewBuckets <= 0) {
+                        break;
+                    }
+                    bucketsToDelete.add(entry.getKey());
+                    totalSpaceLeftInNewBuckets -= entry.getValue();
                 }
-                bucketsToDelete.add(entry.getKey());
-                totalSpaceLeftInNewBuckets -= entry.getValue();
             }
         }
 
         return bucketsToDelete;
     }
 
+    /**
+     * Find which buckets to create.
+     * @param lock
+     * @param bucketsToDelete
+     * @param maxBucketCount    Maximum number of buckets to generate on this call (positive integer).
+     * @return
+     */
     private Map<String, List<T>> findBucketsToCreate(TableLock lock, Collection<String> bucketsToDelete, int maxBucketCount) {
         lock.assertValid();
 
@@ -678,7 +693,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
         Map<String, List<T>> bucketsToCreate = new HashMap<>();
         bucketDirCount = null;
-        for (int i = 1; i <= Math.min(bucketCreateCount, maxBucketCount > 0 ? maxBucketCount : Integer.MAX_VALUE); i++) {
+        for (int i = 1; i <= Math.min(bucketCreateCount, maxBucketCount); i++) {
             String bucketDir = pickBucketDir();
             int nextToBeAddedIndex = (i - 1) * getBucketSize();
             int nextBucketSize = Math.min(getBucketSize(), lines2bucketize.size() - nextToBeAddedIndex);
