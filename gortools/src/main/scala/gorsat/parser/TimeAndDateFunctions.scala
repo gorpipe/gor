@@ -38,9 +38,9 @@ object TimeAndDateFunctions {
     functions.register("EDATE", getSignatureLongString2String(edateWithFormat), edateWithFormat _)
     functions.register("DATE", getSignatureEmpty2String(currentdate), currentdate _)
     functions.register("DATE", getSignatureString2String(currentdateWithFormat), currentdateWithFormat _)
-    functions.register("DAYDIFF", getSignatureStringStringString2Long(daydiff), daydiff _)
-    functions.register("MONTHDIFF", getSignatureStringStringString2Long(monthdiff), monthdiff _)
-    functions.register("YEARDIFF", getSignatureStringStringString2Long(yeardiff), yeardiff _)
+    functions.register("DAYDIFF", getSignatureStringStringString2Int(daydiff), daydiff _)
+    functions.register("MONTHDIFF", getSignatureStringStringString2Int(monthdiff), monthdiff _)
+    functions.register("YEARDIFF", getSignatureStringStringString2Int(yeardiff), yeardiff _)
     functions.register("CURRENTDATE", getSignatureEmpty2String(currentdate), currentdate _)
     functions.register("CURRENTDATE", getSignatureString2String(currentdateWithFormat), currentdateWithFormat _)
     functions.register("ADDYEARS", getSignatureStringStringInt2String(addyears), addyears _)
@@ -53,30 +53,30 @@ object TimeAndDateFunctions {
     functions.register("DAYOFYEAR", getSignatureStringString2Int(dayofyear), dayofyear _)
   }
 
-  def yeardiff(format: sFun, date1: sFun, date2: sFun): lFun = {
+  def yeardiff(format: sFun, date1: sFun, date2: sFun): iFun = {
     cvp => {
       val dateFormat = new SimpleDateFormat(format(cvp))
       val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
       val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
-      Duration.between(parsedDate1, parsedDate2).toDays / 365
+      Duration.between(parsedDate1, parsedDate2).toDays.intValue() / 365
     }
   }
 
-  def monthdiff(format: sFun, date1: sFun, date2: sFun): lFun = {
+  def monthdiff(format: sFun, date1: sFun, date2: sFun): iFun = {
     cvp => {
       val dateFormat = new SimpleDateFormat(format(cvp))
       val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
       val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
-      Duration.between(parsedDate1, parsedDate2).toDays / 30
+      Duration.between(parsedDate1, parsedDate2).toDays.intValue() / 30
     }
   }
 
-  def daydiff(format: sFun, date1: sFun, date2: sFun): lFun = {
+  def daydiff(format: sFun, date1: sFun, date2: sFun): iFun = {
     cvp => {
       val dateFormat = new SimpleDateFormat(format(cvp))
       val parsedDate1 = dateFormat.parse(date1(cvp)).toInstant
       val parsedDate2 = dateFormat.parse(date2(cvp)).toInstant
-      Duration.between(parsedDate1, parsedDate2).toDays
+      Duration.between(parsedDate1, parsedDate2).toDays.intValue()
     }
   }
 
