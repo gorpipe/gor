@@ -122,7 +122,7 @@ final class VariableWidthPGenOutputStream extends PGenOutputStream<VariantRecord
         firstTwelve[2] = STANDARD_PLINK2_FORMAT_MAGIG_BYTE;
         ByteArray.writeInt(firstTwelve, 3, ByteOrder.LITTLE_ENDIAN, this.numberOfVariants);
         ByteArray.writeInt(firstTwelve, 7, ByteOrder.LITTLE_ENDIAN, this.numberOfSamples);
-        firstTwelve[11] = 0x07;
+        firstTwelve[11] = 0x47;
         this.os.write(firstTwelve);
     }
 
