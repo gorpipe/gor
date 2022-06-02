@@ -39,6 +39,8 @@ object TypeConversionFunctions {
     functions.register("BASE26", getSignatureInt2String(base26), base26 _)
     functions.register("BASEPN", getSignatureInt2String(basePn), basePn _)
     functions.register("FLOAT", getSignatureString2Double(string2Float), string2Float _)
+    functions.register("FLOAT", getSignatureInt2Double(int2Float), int2Float _)
+    functions.register("FLOAT", getSignatureLong2Double(long2Float), long2Float _)
     functions.register("FLOAT", getSignatureDouble2Double(float2Float), float2Float _)
     functions.register("FLOAT", getSignatureStringDouble2Double(string2FloatWithDefault), string2FloatWithDefault _)
     functions.register("NUMBER", getSignatureString2Double(string2Float), string2Float _)
@@ -203,6 +205,14 @@ object TypeConversionFunctions {
     }
   }
 
+  def int2Float(ex: iFun): dFun = {
+    cvp =>
+      ex(cvp).toInt
+  }
+  def long2Float(ex: lFun): dFun = {
+    cvp =>
+      ex(cvp).toLong
+  }
   def float2Float(ex: dFun): dFun = {
     cvp =>
       ex(cvp)
