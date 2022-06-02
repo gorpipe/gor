@@ -44,7 +44,7 @@ public abstract class BaseTable<T> implements Table<T> {
     private String id = null;           // Unique id (based on full path, just so we don't always have to refer to full path).
     protected String prevSerial;        //
 
-    protected BaseMeta header; // Header info.
+    protected TableHeader header; // Header info.
 
     protected final URI historyDir;     // Backup dir for older versions of this dictionary (absolute) (if requested).
     private boolean useHistory = true;
@@ -132,6 +132,9 @@ public abstract class BaseTable<T> implements Table<T> {
         return rootUri;
     }
 
+    public TableHeader getHeader() {
+        return header;
+    }
     /**
      * Get the table folder path.   The table folder is hidden folder that sits next to
      * the dictionary and contains various files related to it.

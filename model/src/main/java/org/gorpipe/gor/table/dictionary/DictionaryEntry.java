@@ -68,12 +68,12 @@ public class DictionaryEntry extends BucketableTableEntry {
      *
      * @param line          the line to parse.
      * @param rootUri       root URI to resolve relative paths.
-     * @param relativesContent should we relatives the content (only needed if reading from a outside source)
+     * @param needsRelativize should we relatives the content (only needed if reading from a outside source)
      * @return new entry from the entryString
      */
-    public static DictionaryEntry parseEntry(String line, URI rootUri, boolean relativesContent) {
+    public static DictionaryEntry parseEntry(String line, URI rootUri, boolean needsRelativize) {
         List<String> columns = tabSplitter.splitToList(line);
-        return parseEntry(columns, rootUri, relativesContent);
+        return parseEntry(columns, rootUri, needsRelativize);
     }
 
     public static DictionaryEntry parseEntry(String line, URI rootUri) {
@@ -81,17 +81,14 @@ public class DictionaryEntry extends BucketableTableEntry {
         return parseEntry(columns, rootUri, false);
     }
 
-    public static DictionaryEntry parseEntry(List<String> columns, URI rootUri, boolean relativesContent) {
+    public static DictionaryEntry parseEntry(List<String> columns, URI rootUri, boolean needsRelativize) {
         if (columns.isEmpty()) {
             return null;
         }
 
         final List<String> fileInfo = pipeSplitter.splitToList(columns.get(0).replace('\\', '/'));
         String content = fixFileSchema(fileInfo.get(0));
-        if (relativesContent) {
-            content = PathUtils.relativize(rootUri, content);
-        }
-        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(content, rootUri).contentVerified();
+        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(content, rootUri).needsRelativize(needsRelativize);
 
         final String flags = fileInfo.size() > 2 ? fileInfo.get(1) : null;
         final boolean lineDeleted = flags != null && flags.toLowerCase().contains("d");
@@ -187,8 +184,8 @@ public class DictionaryEntry extends BucketableTableEntry {
 
         @Override
         public DictionaryEntry build() {
-            return new DictionaryEntry(contentVerified ? contentLogical : relativize(rootUri, contentLogical), rootUri, alias, tags != null ? tags.toArray(new String[0]) : null, range,
-                    contentVerified ? bucketLogical : relativize(rootUri, bucketLogical), isDeleted, sourceInserted);
+            return new DictionaryEntry(!needsRelativize ? contentLogical : relativize(rootUri, contentLogical), rootUri, alias, tags != null ? tags.toArray(new String[0]) : null, range,
+                    !needsRelativize ? bucketLogical : relativize(rootUri, bucketLogical), isDeleted, sourceInserted);
         }
 
     }

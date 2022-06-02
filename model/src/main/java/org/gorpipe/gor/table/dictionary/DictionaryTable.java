@@ -148,18 +148,6 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         insert(lines);
     }
 
-    /**
-     * @param content new content, absolute or relative to the table.
-     */
-    public void insert(String content) {
-        insert(new DictionaryEntry.Builder(content, getRootUri()).build());
-    }
-
-    public void delete(String content) {
-        delete(new DictionaryEntry.Builder(content, getRootUri()).build());
-    }
-
-
     @Override
     protected void saveTempMainFile() {
         log.debug("Saving {} entries for table {}", tableEntries.size(), getName());

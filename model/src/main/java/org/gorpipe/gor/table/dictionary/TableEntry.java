@@ -266,7 +266,7 @@ public abstract class TableEntry {
         protected String alias;
         protected List<String> tags = new ArrayList<>();
         protected GenomicRange range;
-        protected boolean contentVerified = false;
+        protected boolean needsRelativize = true;
 
         /**
          * Create entry builder.
@@ -304,8 +304,8 @@ public abstract class TableEntry {
             return self();
         }
 
-        public B contentVerified() {
-            this.contentVerified = true;
+        public B needsRelativize(boolean val) {
+            this.needsRelativize = val;
             return self();
         }
 

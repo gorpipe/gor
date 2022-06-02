@@ -69,43 +69,31 @@ public class UTestTableFilter {
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(0),
                 selectStringFilter(dict, dict.filter().files(workDirPath.resolve(testName + "_pn1.gor").toString())).trim());
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(3),
-                selectStringFilter(dict, dict.filter().files(testName + "_pn4.gor")).trim());
+                selectStringFilter(dict, dict.filter().files("/abs/path/" + testName + "_pn4.gor")).trim());
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(3),
-                selectStringFilter(dict, dict.filter().files(workDirPath.resolve(testName + "_pn4.gor").toString())).trim());
+                selectStringFilter(dict, dict.filter().files("/abs/path/" + testName + "_pn4.gor")).trim());
 
         // Buckets
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(1) + "\n" + FileUtils.readLines(gordFile, "UTF-8").get(0),
                 selectStringFilter(dict, dict.filter().buckets(testName + "_bucket1.gor")).trim());
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(1) + "\n" + FileUtils.readLines(gordFile, "UTF-8").get(0),
-                selectStringFilter(dict, dict.filter().buckets(workDirPath.resolve(testName + "_bucket1.gor").toString())).trim());
+                selectStringFilter(dict, dict.filter().buckets( testName + "_bucket1.gor")).trim());
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(3) + "\n" + FileUtils.readLines(gordFile, "UTF-8").get(2),
-                selectStringFilter(dict, dict.filter().buckets(testName + "_bucket2.gor")).trim());
+                selectStringFilter(dict, dict.filter().buckets("/abs/path/" + testName + "_bucket2.gor")).trim());
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(3) + "\n" + FileUtils.readLines(gordFile, "UTF-8").get(2),
-                selectStringFilter(dict, dict.filter().buckets(workDirPath.resolve(testName + "_bucket2.gor").toString())).trim());
+                selectStringFilter(dict, dict.filter().buckets("/abs/path/" + testName + "_bucket2.gor")).trim());
 
     }
 
     // Setup data.  4 files two buckets.
     private File createDictOne(Path workDirPath, String testName) throws IOException {
 
-        FileUtils.write(new File(workDirPath.toFile(),testName + "_pn1.gor"), "chrom\tpos\tcol1\nchr1\t1\tpn1gor\n", "UTF-8");
-        FileUtils.write(new File(workDirPath.toFile(),testName + "_pn2.gor"), "chrom\tpos\tcol1\nchr1\t1\tpn2gor\n", "UTF-8");
-        FileUtils.write(new File(workDirPath.toFile(),testName + "_pn3.gor"), "chrom\tpos\tcol1\nchr1\t1\tpn3gor\n", "UTF-8");
-        FileUtils.write(new File(workDirPath.toFile(),testName + "_pn4.gor"), "chrom\tpos\tcol1\nchr1\t1\tpn4gor\n", "UTF-8");
-        FileUtils.write(new File(workDirPath.toFile(),testName + "_bucket1.gor"),
-                "chrom\tpos\tcol1\tSource\n" +
-                        "chr1\t1\tpn1gor\tpn1\n" +
-                        "chr1\t1\tpn2gor\tpn2\n", "UTF-8");
-        FileUtils.write(new File(workDirPath.toFile(),testName + "_bucket2.gor"),
-                "chrom\tpos\tcol1\tSource\n" +
-                        "chr1\t1\tpn3gor\tpn3\n" +
-                        "chr1\t1\tpn4gor\tpn4\n", "UTF-8");
         File gordFile = new File(workDirPath.toFile(), testName + ".gord");
         FileUtils.write(gordFile,
                 testName + "_pn1.gor|" + testName + "_bucket1.gor\tpn1\n"
-                        + workDirPath.resolve(testName + "_pn2.gor") + "|" + testName + "_bucket1.gor\tpn2\n"
-                        + testName + "_pn3.gor|" + testName + "_bucket2.gor\tpn3\n"
-                        + workDirPath.resolve(testName + "_pn4.gor") + "|" + workDirPath.resolve(testName + "_bucket2.gor") + "\tpn4\n"
+                        + "/abs/path/"  + testName + "_pn2.gor" + "|" + testName + "_bucket1.gor\tpn2\n"
+                        + testName + "_pn3.gor|" + "/abs/path/" + testName + "_bucket2.gor\tpn3\n"
+                        + "/abs/path/"  + testName + "_pn4.gor" + "|" + "/abs/path/"  + testName + "_bucket2.gor" + "\tpn4\n"
                 , "UTF-8");
 
         return gordFile;
