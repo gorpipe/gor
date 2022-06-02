@@ -242,6 +242,9 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
     private List<T> loadLines() {
         log.debug("Loading lines for {}", table.getName());
 
+        boolean hasNeverBeenSavedProperly = TableHeader.NO_SERIAL.equals(table.getHeader().getProperty(TableHeader.HEADER_SERIAL_KEY, TableHeader.NO_SERIAL));
+        boolean needsRelativize = hasNeverBeenSavedProperly || true;  // Because manual editing is common we need to force it for now.
+
         try {
             List<T> newRawLines = new ArrayList<>();
             if (table.getFileReader().exists(table.getPath().toString())) {
@@ -256,10 +259,10 @@ public class TableEntries<T extends BucketableTableEntry> implements ITableEntri
                     }
                     // Read rest of file.
                     try {
-                        Method parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class);
+                        Method parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class, boolean.class);
                         while (line != null) {
                             line = line.trim();
-                            final T entry = (T) parseEntryMethod.invoke(null, line, table.getRootUri());
+                            final T entry = (T) parseEntryMethod.invoke(null, line, table.getRootUri(), needsRelativize);
                             if (entry != null) {
                                 newRawLines.add(entry);
                             }

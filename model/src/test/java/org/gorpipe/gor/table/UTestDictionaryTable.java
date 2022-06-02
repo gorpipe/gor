@@ -41,7 +41,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.gorpipe.gor.table.dictionary.DictionaryTableMeta.HEADER_BUCKETIZE_KEY;
@@ -762,6 +764,26 @@ public class UTestDictionaryTable {
         Assert.assertEquals("Filter deleted fails", "chr1\t1\tpn1gor\tpn1", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f pn1").trim());
 
         Assert.assertEquals("Filter not deleted fails", "chr2\t2\tpn2gor\tpn2", TestUtils.runGorPipeNoHeader(gordFile.getAbsolutePath() + " -f pn2").trim());
+    }
+
+    @Test
+    public void testRewriteOfManuallyWrittenGords() throws IOException {
+        String testName = "testQueryOnReAddedFile";
+        File gordFile = new File(tableWorkDir.toFile(), testName + ".gord");
+        FileUtils.writeStringToFile(gordFile, "./file1.gor\tpn1\n", Charset.defaultCharset());
+        Assert.assertEquals("./file1.gor\tpn1\n", FileUtils.readFileToString(gordFile, Charset.defaultCharset()));
+
+        List<String> files = new ArrayList();
+        List<String> tags = new ArrayList<>();
+        files.add("file1.gor");
+        tags.add("pn1");
+
+        DictionaryTable dict = new DictionaryTable(gordFile.toPath());
+        dict.setValidateFiles(false);
+        dict.insert("file2.gor\tpn2\n");
+        dict.save();
+
+        Assert.assertEquals("file1.gor\tpn1\nfile2.gor\tpn2\n", FileUtils.readFileToString(gordFile, Charset.defaultCharset()));
     }
 
     @SafeVarargs
