@@ -605,6 +605,14 @@ public class UTestAuth {
         Assert.assertEquals(0, info.getProjectId());
         Assert.assertEquals("", info.getUserId());
 
+        info = gorAuthFactory.getGorAuthInfo("bad unparseble");
+        Assert.assertEquals(GeneralAuthInfo.class, info.getClass());
+        Assert.assertEquals("", info.getProject());
+        Assert.assertEquals("", info.getUsername());
+        Assert.assertEquals("", info.getUserRole());
+        Assert.assertEquals(0, info.getProjectId());
+        Assert.assertEquals("", info.getUserId());
+
         info = gorAuthFactory.getGorAuthInfo(
                 "{\"project\":\"project1\"," +
                         "\"projectId\":1}");
