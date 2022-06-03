@@ -29,23 +29,29 @@ public class PlainAuth extends GorAuth {
 
     @Override
     public GorAuthInfo getGorAuthInfo(String sessionKey) {
-        if (Strings.isNullOrEmpty(sessionKey) || "NO_SESSION".equals(sessionKey)) {
-            log.debug("sessionKey is empty");
-            return new GeneralAuthInfo(0, "", "", "", null, 0, 0);
-        } else {
-            GorAuthInfo gorAuthInfo = gorAuthInfoCache.get(sessionKey);
+        GorAuthInfo gorAuthInfo = null;
+        if (!Strings.isNullOrEmpty(sessionKey) && !"NO_SESSION".equals(sessionKey)) {
+            gorAuthInfo = gorAuthInfoCache.get(sessionKey);
             if (gorAuthInfo == null) {
                 try {
                     log.debug("Parsing plain token {}", sessionKey);
                     gorAuthInfo = updateGorAuthInfo(objectMapper.readValue(sessionKey, GeneralAuthInfo.class));
-                    gorAuthInfoCache.add(sessionKey, gorAuthInfo);
                 } catch (IOException e) {
                     log.warn("Error parsing sessionKey {}", sessionKey);
-                    throw new GorSystemException("Error reading GorAuthInfo from session key!", e);
+                    // Ignoring, will default to empty GorAuthInfo.
+                }
+                if (gorAuthInfo != null) {
+                    gorAuthInfoCache.add(sessionKey, gorAuthInfo);
                 }
             }
-            return gorAuthInfo;
         }
+
+        if (gorAuthInfo == null) {
+            // Fallback if no session key or session key not parseble.
+            gorAuthInfo = new GeneralAuthInfo(0, "", "", "", null, 0, 0);
+        }
+
+        return gorAuthInfo;
     }
 
     @Override
