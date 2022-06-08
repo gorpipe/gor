@@ -109,7 +109,7 @@ public class GorAuthFactory {
      * Get the GorAuth appropriate for this session key.
      *
      * @param sessionKey the session key (null, empty and NO_SESSION will all map to the same gorAuth).
-     * @return GorAuth appropriate for the <sessionKey>
+     * @return GorAuth appropriate for the &lt;sessionKey&gt;
      */
     public GorAuth getGorAuth(String sessionKey) {
         try {

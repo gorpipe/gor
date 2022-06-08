@@ -23,8 +23,7 @@
 import com.nextcode.gradle.*
 
 plugins {
-    id "gor.java-internal-library"
-    id 'maven-publish'
+    id "gor.java-library"
     id 'com.github.johnrengelman.shadow'
 }
 
@@ -59,38 +58,3 @@ configurations {
     }
 }
 
-publishing {
-    publications {
-        mavenJavaLibModule(MavenPublication) {  MavenPublication publication ->
-            artifactId = getCustomProjectId()
-            groupId = getCustomGroupId()
-            // Call this method to create correct pom (that excludes the 'internal' dependencies, but add all the
-            // needed external/standard dependencies).
-            CorrectShadowPublishing.configure(publication, project)
-        }
-    }
-    repositories {
-        if (project.hasProperty('publishToGithub')) {
-            maven {
-                name = "GitHubPackages"
-                url = "https://maven.pkg.github.com/gorpipe/gor"
-                credentials {
-                    username = project.findProperty('github_user') ?: System.getenv("GITHUB_ACTOR")
-                    password = project.findProperty('github_token') ?: System.getenv("GITHUB_TOKEN")
-                }
-            }
-        } else {
-            maven {
-                name "gitlab-gor-maven"
-                url uri("https://gitlab.com/api/v4/projects/17033400/packages/maven")
-                credentials(HttpHeaderCredentials) {
-                    name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
-                    value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
-                }
-                authentication {
-                    header(HttpHeaderAuthentication)
-                }
-            }
-        }
-    }
-}

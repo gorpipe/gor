@@ -18,7 +18,7 @@ public interface GorAuthInfo {
     }
 
     /**
-     * Get the project id. Project id < 1 means the project id is not set.
+     * Get the project id. Project id &lt; 1 means the project id is not set.
      *
      * @return the project id.
      */
@@ -26,7 +26,7 @@ public interface GorAuthInfo {
     int getProjectId();
 
     /**
-     * Get the user id. User id < 1 means the user id is not set.
+     * Get the user id. User id &lt; 1 means the user id is not set.
      *
      * @return the user id.
      */
@@ -34,7 +34,7 @@ public interface GorAuthInfo {
     String getUserId();
 
     /**
-     * Get the organization id. Organization id < 1 means the project id is not set.
+     * Get the organization id. Organization id &lt; 1 means the project id is not set.
      *
      * @return the project id.
      */

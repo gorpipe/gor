@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import htsjdk.samtools.SAMException;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 import htsjdk.samtools.util.Log;
@@ -67,4 +68,20 @@ public class SharedFastaReferenceSource extends SharedCachedReferenceSource impl
         return new byte[0];
     }
 
+    @Override
+    public byte[] getReferenceBasesByRegion(SAMSequenceRecord sequenceRecord, int zeroBasedStart, int requestedRegionLength) {
+        if (rsFile != null && rsFile.isIndexed()) {
+            var name = sequenceRecord.getContig();
+            ReferenceSequence sequence = null;
+            try {
+                sequence = rsFile.getSubsequenceAt(name, zeroBasedStart+1, zeroBasedStart+1+requestedRegionLength);
+            } catch (final SAMException e) {
+                // the only way to test if rsFile contains the sequence is to try and catch exception.
+                log.warn("Sequence not found: " + name);
+            }
+            if (sequence != null)
+                return sequence.getBases();
+        }
+        return new byte[0];
+    }
 }

@@ -29,7 +29,7 @@ public class GorAuthRoleMatcher {
      * Check roled based access.  Throws GorSystemException if no access.
 
      * @param authInfo                  access info
-     * @param subject                   subject like, like file for file:write:<subject>
+     * @param subject                   subject like, like file for file:write:&lt;subject&gt;
      * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
      * @throws GorSystemException       if not access.
      */
@@ -47,7 +47,7 @@ public class GorAuthRoleMatcher {
      * Check roled based access.
 
      * @param authInfo                  access info
-     * @param subject                   subject like, like file for file:write:<subject>
+     * @param subject                   subject like, like file for file:write:&lt;subject&gt;
      * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
      * @return  true if we have access to any of the authorizationActions, otherwise false.
      */
@@ -60,7 +60,7 @@ public class GorAuthRoleMatcher {
 
      * @param userRoles                 the roles the user has
      * @param project                   the project we are in.
-     * @param subject                   subject like, like file for file:write:<subject>
+     * @param subject                   subject like, like file for file:write:&lt;subject&gt;
      * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
      * @return  true if we have access to any of the authorizationActions, otherwise false.
      */

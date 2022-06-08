@@ -139,7 +139,7 @@ public abstract class SharedCachedReferenceSource implements CRAMReferenceSource
             Pattern.CASE_INSENSITIVE);
 
     protected List<String> getVariants(final String name) {
-        final List<String> variants = new ArrayList<String>();
+        final List<String> variants = new ArrayList<>();
 
         if (name.equals("M"))
             variants.add("MT");

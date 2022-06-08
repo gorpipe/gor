@@ -22,10 +22,11 @@
 
 package org.gorpipe.gor.model;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
+import htsjdk.samtools.SAMSequenceRecord;
+
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class SharedChromSeqReferenceSource extends SharedCachedReferenceSource implements Closeable {
 
@@ -51,6 +52,28 @@ public class SharedChromSeqReferenceSource extends SharedCachedReferenceSource i
             // we need to catch the exception and return an empty reference
         }
 
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] getReferenceBasesByRegion(SAMSequenceRecord sequenceRecord, int zeroBasedStart, int requestedRegionLength) {
+        var name = sequenceRecord.getContig();
+        var path = Path.of(referencePath).resolve(name + ".txt");
+        if (Files.exists(path)) {
+            try (var referenceFile = new RandomAccessFile(path.toString(), "r")) {
+                referenceFile.seek(zeroBasedStart);
+                var bb = new byte[requestedRegionLength];
+                var r = referenceFile.read(bb);
+                while (r < bb.length) {
+                    var rr = referenceFile.read(bb, r, bb.length - r);
+                    if (rr==-1) break;
+                    else r += rr;
+                }
+                return bb;
+            } catch (IOException e) {
+                // we need to catch the exception and return an empty reference
+            }
+        }
         return new byte[0];
     }
 }
