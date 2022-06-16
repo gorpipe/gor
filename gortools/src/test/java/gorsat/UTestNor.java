@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import gorsat.process.PipeInstance;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -136,6 +137,48 @@ public class UTestNor {
         Assert.assertTrue(count1 != count2);
         Assert.assertEquals("We should receive all 6 lines", 6, count1);
         Assert.assertEquals("We should not get the empty line here, only 2 lines", 2, count2);
+    }
+
+    @Test
+    public void testNorWithQuotes() throws IOException {
+        var path = projectDir.getRoot().toPath();
+        var tsv = "test.tsv";
+        var line = "1\t\"2\t3\"\t4";
+        var nor = "#c1\tc2\tc3\n"+line+"\n";
+        Files.writeString(path.resolve(tsv),nor);
+        var query = "nor "+tsv;
+        var args = new String[] {query,"-gorroot",path.toString()};
+        try (PipeInstance pipe = new PipeInstance(TestUtils.createSession(args, null, false).getGorContext())) {
+            pipe.init(query, false, "");
+            if (pipe.hasNext()) {
+                var row = pipe.getIterator().next();
+                Assert.assertEquals(5, row.numCols());
+                Assert.assertEquals("1", row.colAsString(2));
+                Assert.assertEquals("\"2\t3\"", row.colAsString(3));
+                Assert.assertEquals("4", row.colAsString(4));
+            }
+        }
+    }
+
+    @Test
+    public void testNorCSVWithQuotes() throws IOException {
+        var path = projectDir.getRoot().toPath();
+        var csv = "test.csv";
+        var line = "1,\"2,3\",4";
+        var nor = "#c1,c2,c3\n"+line+"\n";
+        Files.writeString(path.resolve(csv),nor);
+        var query = "nor "+csv;
+        var args = new String[] {query,"-gorroot",path.toString()};
+        try (PipeInstance pipe = new PipeInstance(TestUtils.createSession(args, null, false).getGorContext())) {
+            pipe.init(query, false, "");
+            if (pipe.hasNext()) {
+                var row = pipe.getIterator().next();
+                Assert.assertEquals(5, row.numCols());
+                Assert.assertEquals("1", row.colAsString(2));
+                Assert.assertEquals("\"2\t3\"", row.colAsString(3));
+                Assert.assertEquals("4", row.colAsString(4));
+            }
+        }
     }
 
     @Test

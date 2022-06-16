@@ -26,11 +26,9 @@ import java.io.{BufferedReader, InputStreamReader}
 import java.util
 import java.util.stream
 import java.util.zip.GZIPInputStream
-
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.model.{FileReader, GenomicIteratorBase, Row}
+import org.gorpipe.gor.model.{FileReader, GenomicIteratorBase, QuoteSafeRowBase, Row, RowBase}
 import org.gorpipe.gor.stats.StatsCollector
-import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable
 import scala.io.StdIn
@@ -44,6 +42,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   var mustReCheck: Boolean = true
   var haveReadHeader: Boolean = false
   var myHeader: String = _
+  var myHeaderLength = 0
   val fileNameTUP = fileName.toUpperCase
   val useCSV: Boolean = fileNameTUP.endsWith(".CSV") || fileNameTUP.endsWith(".CSV.GZ")
   var haveLoadedLines = false
@@ -96,7 +95,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   }
 
   override def next(): Row = {
-    RowObj("chrN\t0\t" + nextLine())
+    new QuoteSafeRowBase("chrN\t0\t" + nextLine(), myHeaderLength)
   }
 
   override def seek(seekChr: String, seekPos: Int): Boolean = {
@@ -146,6 +145,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
       myHeader = createNewHeader()
     }
     haveReadHeader = true
+    myHeaderLength = myHeader.split("\t").length
     myHeader
   }
 }

@@ -465,7 +465,7 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
      * @param length Where to stop
      * @return The position of the first tab character after start, or end
      */
-    private static int findNextTab(CharSequence contents, int start, int length) {
+    int findNextTab(CharSequence contents, int start, int length) {
         int end = start;
         while (end < length && contents.charAt(end) != '\t') {
             end++;
@@ -473,7 +473,7 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
         return end;
     }
 
-    static void fillSplitArray(CharSequence input, int[] splitArray) {
+    void fillSplitArray(CharSequence input, int[] splitArray) {
         int numColumns = splitArray.length;
         int start = 0;
         int end = input.length();

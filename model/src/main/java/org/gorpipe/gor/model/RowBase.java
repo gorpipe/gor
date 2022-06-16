@@ -501,7 +501,7 @@ public class RowBase extends Row implements Serializable {
         sb.append(allCols, start, end);
     }
 
-    private static int[] createSplitArray(CharSequence input, int numColumns) {
+    int[] createSplitArray(CharSequence input, int numColumns) {
         int[] splitArray = new int[numColumns];
         fillSplitArray(input, splitArray);
         return splitArray;

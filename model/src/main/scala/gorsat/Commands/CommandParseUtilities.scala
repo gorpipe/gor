@@ -981,11 +981,11 @@ object CommandParseUtilities {
     * @return Zero based index into the inputString where the searchString pattern is located. Returns -1 if
     *         pattern is not found.
     */
-  def quoteSafeIndexOf(inputString: String, searchString: String, par: Boolean = false, from: Int = 0): Int = {
+  def quoteSafeIndexOf(inputString: CharSequence, searchString: String, par: Boolean = false, from: Int = 0): Int = {
     quoteCustomSafeIndexOf(inputString, searchString, getDefaultQuotes, getDefaultBlocks, par, from)
   }
 
-  private def quoteCustomSafeIndexOf(inputString: String, searchString: String, quotes: Array[SplitQuote], blocks: Array[SplitBlock], par: Boolean, from: Int): Int = {
+  def quoteCustomSafeIndexOf(inputString: CharSequence, searchString: String, quotes: Array[SplitQuote], blocks: Array[SplitBlock], par: Boolean, from: Int): Int = {
     var backSlashCount = 0
     var withinQuotes = false
     var quoteType = ' '
@@ -1004,7 +1004,7 @@ object CommandParseUtilities {
     try {
       while (i < inputString.length) {
         val withinBrackets = blocks.exists(x => x.withinBlock > 0)
-        val c = inputString(i)
+        val c = inputString.charAt(i)
 
         if (quotes.exists(x => x.quote == c)) {
           if (withinQuotes && (backSlashCount % 2) == 0) {
