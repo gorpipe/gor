@@ -96,7 +96,7 @@ class LogisticRegressionModel(X: DenseMatrix[Double], y: DenseVector[Double]) {
         val m0 = nullFit.b.length
 
         val r0 = 0 until m0
-        val r1 = m0 to -1
+        val r1 = m0 until m.intValue()
 
         val X0 = X(::, r0)
         val X1 = X(::, r1)
