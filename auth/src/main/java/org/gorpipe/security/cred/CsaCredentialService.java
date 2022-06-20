@@ -4,7 +4,6 @@ import com.google.api.client.util.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.inject.Inject;
 import org.gorpipe.gor.auth.AuthConfig;
 import org.gorpipe.gor.auth.GorAuthInfo;
 import org.gorpipe.exceptions.GorSystemException;
@@ -36,7 +35,6 @@ public class CsaCredentialService extends CsaBaseService {
      *
      * @param config configuration
      */
-    @Inject
     public CsaCredentialService(CsaAuthConfiguration config, AuthConfig authConfig, CredentialsParser parser, AppSessionUtility appSessionUtility) {
         super(config, authConfig);
         this.parser = parser;

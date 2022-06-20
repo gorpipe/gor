@@ -16,7 +16,6 @@ project(':auth') {
         implementation 'org.glassfish:javax.json:_'
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation("net.logstash.logback:logstash-logback-encoder:_")
-        implementation "com.google.inject:guice:_"
         implementation "javax.annotation:javax.annotation-api:_"
         implementation 'org.eclipse.microprofile.jwt:microprofile-jwt-auth-api:_'
         implementation 'com.google.http-client:google-http-client:_'

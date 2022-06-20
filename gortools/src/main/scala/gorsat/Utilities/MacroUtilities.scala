@@ -235,7 +235,9 @@ object MacroUtilities {
     while (keepOn && i < 100000) {
       i += 1
       val argStringBefore = argString
-      fileMap.keySet().toArray().foreach(f => argString = parCmdReplacer(argString, f.toString, fileMap.get(f)))
+      if (fileMap != null) {
+        fileMap.keySet().toArray().foreach(f => argString = parCmdReplacer(argString, f.toString, fileMap.get(f)))
+      }
       if (argString != argStringBefore) keepOn = true else keepOn = false
     }
 

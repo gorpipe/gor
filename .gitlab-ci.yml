@@ -8,7 +8,7 @@ include:
 
 variables:
   DOCKER_DRIVER: overlay2
-  JAVA_BUILDER_IMAGE: nextcode/builderimg-java:openjdk11
+  JAVA_BUILDER_IMAGE: registry.gitlab.com/wuxi-nextcode/sdev/build-images/java-17:latest
   GIT_SUBMODULE_STRATEGY: none
   GIT_DEPTH: 2
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"

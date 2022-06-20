@@ -1,8 +1,6 @@
 package org.gorpipe.security.cred;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.*;
-import com.google.inject.util.Modules;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.exceptions.GorSystemException;
@@ -39,9 +37,7 @@ public class UTestCredentialsService {
         String credJson = "{\"default_credentials\":[],\"credentials\":[{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"csa-test-data\",\"credential_attributes\":{\"key\":\"key\",\"secret\":\"qwertySecret\"},\"owner_type\":\"System\",\"user_default\":false},{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"nextcode-qc-data\",\"credential_attributes\":{\"key\":\"qwerty\",\"secret\":\"qwertySecert\"},\"owner_type\":\"System\",\"user_default\":false}]}";
         Map<String, Object> credMap = new ObjectMapper().readValue(credJson, Map.class);
 
-        Injector injector = Guice.createInjector(Modules.override(new CsaSecurityModule()).with(new AbstractModule() {
-            @Provides
-            @Singleton
+        CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
                 Map overrides = new HashMap<String, String>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
@@ -50,9 +46,9 @@ public class UTestCredentialsService {
                 CsaAuthConfiguration config = ConfigManager.createConfig(CsaAuthConfiguration.class, overrides);
                 return config;
             }
-        }));
+        };
 
-        CsaCredentialService service = injector.getInstance(CsaCredentialService.class);
+        CsaCredentialService service = csaSecurityModule.service();
 
         CsaCredentialService serviceMock = spy(service);
         doReturn(credMap).when(serviceMock).jsonGet(any(String.class));
@@ -70,9 +66,7 @@ public class UTestCredentialsService {
         Map<String, Object> credMap = new ObjectMapper().readValue(credJson, Map.class);
 
 
-        Injector injector = Guice.createInjector(Modules.override(new CsaSecurityModule()).with(new AbstractModule() {
-            @Provides
-            @Singleton
+        CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
                 Map overrides = new HashMap<String, String>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
@@ -80,17 +74,15 @@ public class UTestCredentialsService {
                 return config;
             }
 
-            @Provides
-            @Singleton
-            AppSessionUtility appSessionUtility(GorAuthFactory gorAuthFactory) {
+            public AppSessionUtility appSessionUtility(GorAuthFactory gorAuthFactory) {
                 AppSessionUtility mock = mock(AppSessionUtility.class);
                 when(mock.getSessionContext("session1"))
                         .thenReturn(new GeneralAuthInfo(1, "proj1", "user1", "2", null, 2, 0));
                 return mock;
             }
-        }));
+        };
 
-        CsaCredentialService service = injector.getInstance(CsaCredentialService.class);
+        CsaCredentialService service = csaSecurityModule.service();
 
         CsaCredentialService serviceMock = spy(service);
         doReturn(credMap).when(serviceMock).jsonGet(any(String.class));
@@ -107,9 +99,7 @@ public class UTestCredentialsService {
         String credJson = "{\"default_credentials\":[],\"credentials\":[{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"csa-test-data\",\"credential_attributes\":{\"key\":\"key\",\"secret\":\"qwertySecret\"},\"owner_type\":\"System\",\"user_default\":false},{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"nextcode-qc-data\",\"credential_attributes\":{\"key\":\"qwerty\",\"secret\":\"qwertySecert\"},\"owner_type\":\"System\",\"user_default\":false}]}";
         Map<String, Object> credMap = new ObjectMapper().readValue(credJson, Map.class);
 
-        Injector injector = Guice.createInjector(Modules.override(new CsaSecurityModule()).with(new AbstractModule() {
-            @Provides
-            @Singleton
+        CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
                 Map overrides = new HashMap<String, String>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
@@ -118,9 +108,9 @@ public class UTestCredentialsService {
                 CsaAuthConfiguration config = ConfigManager.createConfig(CsaAuthConfiguration.class, overrides);
                 return config;
             }
-        }));
+        };
 
-        CsaCredentialService service = injector.getInstance(CsaCredentialService.class);
+        CsaCredentialService service = csaSecurityModule.service();
 
         CsaCredentialService serviceMock = spy(service);
         doThrow(new IOException()).doReturn(credMap).when(serviceMock).jsonGet(any(String.class));
@@ -134,9 +124,7 @@ public class UTestCredentialsService {
 
     @Test
     public void testGetCredentialsUnauthorized() throws IOException {
-        Injector injector = Guice.createInjector(Modules.override(new CsaSecurityModule()).with(new AbstractModule() {
-            @Provides
-            @Singleton
+        CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
                 Map overrides = new HashMap<String, String>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
@@ -145,9 +133,9 @@ public class UTestCredentialsService {
                 CsaAuthConfiguration config = ConfigManager.createConfig(CsaAuthConfiguration.class, overrides);
                 return config;
             }
-        }));
+        };
 
-        CsaCredentialService service = injector.getInstance(CsaCredentialService.class);
+        CsaCredentialService service = csaSecurityModule.service();
 
         CsaCredentialService serviceMock = spy(service);
         doThrow(new IOException()).when(serviceMock).jsonGet(any(String.class));

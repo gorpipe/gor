@@ -1,37 +1,54 @@
 package org.gorpipe.security.cred;
 
-import com.google.inject.*;
+import org.gorpipe.base.security.CredentialsParser;
 import org.gorpipe.gor.auth.AuthConfig;
 import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.gor.auth.GorAuthFactory;
 
 /**
  * Created by villi on 20/04/16.
  */
-public class CsaSecurityModule extends AbstractModule {
+public class CsaSecurityModule  {
 
-    private static CsaCredentialService service;
-    private static CsaApiService apiService;
+    private static CsaSecurityModule  csaSecurityModule;
 
-    public CsaSecurityModule() {
+    public static CsaSecurityModule get() {
+        if (csaSecurityModule == null) {
+            csaSecurityModule = new CsaSecurityModule();
+        }
+        return csaSecurityModule;
     }
 
-    @Override
-    protected void configure() {
+    private  CsaCredentialService service;
+    private  CsaApiService apiService;
+
+    private  CsaAuthConfiguration csaAuthConfiguration;
+
+    private  AuthConfig authConfig;
+
+    CsaSecurityModule() {
     }
 
     /**
      * Get CSA Auth configuration
      */
-    @Provides
-    @Singleton
-    public CsaAuthConfiguration config() {
-        return ConfigManager.createPrefixConfig("gor", CsaAuthConfiguration.class);
+
+    public synchronized CsaAuthConfiguration config() {
+        if (csaAuthConfiguration == null) {
+            csaAuthConfiguration = ConfigManager.createPrefixConfig("gor", CsaAuthConfiguration.class);
+        }
+        return csaAuthConfiguration;
     }
 
-    @Provides
-    @Singleton
-    public AuthConfig sessionAuthConfig() {
-        return ConfigManager.createPrefixConfig("gor", AuthConfig.class, System.getenv());
+    public synchronized AuthConfig sessionAuthConfig() {
+        if (authConfig == null) {
+            authConfig = ConfigManager.createPrefixConfig("gor", AuthConfig.class, System.getenv());
+        }
+        return authConfig;
+    }
+
+    public synchronized AppSessionUtility appSessionUtility(GorAuthFactory gorAuthFactory) {
+        return new AppSessionUtility(gorAuthFactory);
     }
 
     /**
@@ -39,21 +56,20 @@ public class CsaSecurityModule extends AbstractModule {
      * Hopefully this can be removed once all components live inside Guice
      * Uses shared validation cache
      */
-    public synchronized static CsaCredentialService service() {
+    public synchronized CsaCredentialService service() {
         if (service == null) {
-            Injector injector = Guice.createInjector(new CsaSecurityModule());
-            if (injector.getInstance(CsaAuthConfiguration.class).getAuthApiEndpoint() != null) {
-                service = injector.getInstance(CsaCredentialService.class);
+            if (config().getAuthApiEndpoint() != null) {
+                service = new CsaCredentialService(config(), sessionAuthConfig(), new CredentialsParser(),
+                        appSessionUtility(new GorAuthFactory(sessionAuthConfig())));
             }
         }
         return service;
     }
 
-    public synchronized static CsaApiService apiService() {
+    public synchronized CsaApiService apiService() {
         if (apiService == null) {
-            Injector injector = Guice.createInjector(new CsaSecurityModule());
-            if (injector.getInstance(CsaAuthConfiguration.class).getAuthApiEndpoint() != null) {
-                apiService = injector.getInstance(CsaApiService.class);
+            if (config().getAuthApiEndpoint() != null) {
+                apiService = new CsaApiService(config(), sessionAuthConfig());
             }
         }
         return apiService;

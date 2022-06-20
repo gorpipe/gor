@@ -127,9 +127,6 @@ public class UTestTableLock {
     public void testRenewExclusiveFileTableLock() throws Exception {
         Field drlp = ExclusiveFileTableLock.class.getDeclaredField("EXCL_DEFAULT_RESERVE_LOCK_PERIOD");
         drlp.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(drlp, drlp.getModifiers() & ~Modifier.FINAL);
         testTableLockRenew(ExclusiveFileTableLock.class, drlp);
     }
 
@@ -535,9 +532,6 @@ public class UTestTableLock {
         
         Field schedField = RenewableLockHelper.class.getDeclaredField("scheduler");
         schedField.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(schedField, schedField.getModifiers() & ~Modifier.FINAL);
         ScheduledExecutorService scheduler = (ScheduledExecutorService) schedField.get(null);
 
         try (TableLock lock = TableLock.acquireRead(tableLockClass, table, lockName, Duration.ofMillis(50))) {

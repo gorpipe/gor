@@ -1,6 +1,5 @@
 package org.gorpipe.security.cred;
 
-import com.google.inject.Inject;
 import org.gorpipe.gor.auth.AuthConfig;
 
 import java.io.IOException;
@@ -17,7 +16,6 @@ public class CsaApiService extends CsaBaseService {
      *
      * @param config configuration
      */
-    @Inject
     public CsaApiService(CsaAuthConfiguration config, AuthConfig authConfig) {
         super(config, authConfig);
     }

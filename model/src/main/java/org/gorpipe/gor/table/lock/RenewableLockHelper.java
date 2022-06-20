@@ -42,7 +42,7 @@ public abstract class RenewableLockHelper {
 
     // Renew delta, i.e. how long before the lock expiries do we try to renew it, only active if less than 0.5 the reserve period.
     private static final Duration DEFAULT_RENEW_LOCK_DELTA = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.process.renew_delta", "86400000"))); // 1 day.  Large as this depends clock syncs.
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+    private static ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = Executors.defaultThreadFactory().newThread(r);
         t.setDaemon(true);
         return t;

@@ -15,7 +15,6 @@ import org.gorpipe.security.cred.CsaSecurityModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -48,7 +47,6 @@ public class GorAuthFactory {
         this(config, null);
     }
 
-    @Inject
     public GorAuthFactory(AuthConfig config, CsaApiService csaApiService) {
         this.config = config;
         this.authCache = CacheBuilder.newBuilder().concurrencyLevel(4)
@@ -163,7 +161,7 @@ public class GorAuthFactory {
             return getNoAuth();
         } else if (SecurityPolicy.CSA.toString().equalsIgnoreCase(policy)) {
             if (csaApiService == null) {
-                csaApiService = CsaSecurityModule.apiService();
+                csaApiService = CsaSecurityModule.get().apiService();
             }
             return new CsaAuth(config, csaApiService);
         } else if (SecurityPolicy.PLATFORM.toString().equalsIgnoreCase(policy)) {

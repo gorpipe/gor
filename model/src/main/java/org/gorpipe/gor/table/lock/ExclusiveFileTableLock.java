@@ -54,7 +54,7 @@ public class ExclusiveFileTableLock extends TableLock {
     private static final Logger log = LoggerFactory.getLogger(ExclusiveFileTableLock.class);
 
     private static final long OLDEST_LOCK_DATE_POSSIBLE = 1388534400;  // Start of year 2014.
-    private static final Duration EXCL_DEFAULT_RESERVE_LOCK_PERIOD = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.lock_period", "43200000"))); // 12 hours.
+    private static Duration EXCL_DEFAULT_RESERVE_LOCK_PERIOD = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.lock_period", "43200000"))); // 12 hours.
 
     private final Duration checkForLockPeriod = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.check_period", "100")));  // Time between check for lock (if waiting.)
 

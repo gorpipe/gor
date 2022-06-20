@@ -1,6 +1,5 @@
 package org.gorpipe.security.cred;
 
-import com.google.inject.Inject;
 import org.gorpipe.gor.auth.GorAuthFactory;
 import org.gorpipe.gor.auth.GorAuthInfo;
 import org.gorpipe.exceptions.GorSystemException;
@@ -14,7 +13,6 @@ public class AppSessionUtility {
     private final static Logger log = LoggerFactory.getLogger(AppSessionUtility.class);
     private final GorAuthFactory gorAuthFactory;
 
-    @Inject
     public AppSessionUtility(GorAuthFactory gorAuthFactory) {
         this.gorAuthFactory = gorAuthFactory;
     }
