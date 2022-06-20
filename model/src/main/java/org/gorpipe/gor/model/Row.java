@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.model.gor.BinaryHolder;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
      * User data for analysis steps that need to provide extra data attached to the row, usually for
      * more efficient processing.
      */
-    public RowObj.BinaryHolder bH;
+    public BinaryHolder bH;
 
     public Row() {
         super();

@@ -27,8 +27,6 @@ import org.gorpipe.gor.model.{Row, RowBase}
 
 object RowObj {
 
-  abstract class BinaryHolder
-
   def splitArray(s: CharSequence): Array[Int] = {
     var i = 0
     var n = 0

@@ -161,6 +161,29 @@ public class UTestNor {
     }
 
     @Test
+    public void testNorCSVMissingColumns() throws IOException {
+        var path = projectDir.getRoot().toPath();
+        var csv = "test.csv";
+        var line = "1,2,3,4";
+        var line2 = "1,2";
+        var nor = "#c1,c2,c3\n"+line+"\n"+line2+"\n";
+        Files.writeString(path.resolve(csv),nor);
+        var query = "nor -nv "+csv;
+        var args = new String[] {query,"-gorroot",path.toString()};
+        try (PipeInstance pipe = new PipeInstance(TestUtils.createSession(args, null, false).getGorContext())) {
+            pipe.init(query, false, "");
+            assert pipe.hasNext();
+            var row = pipe.getIterator().next();
+            Assert.assertEquals(5, row.numCols());
+            Assert.assertEquals("1", row.colAsString(2));
+            assert pipe.hasNext();
+            row = pipe.getIterator().next();
+            Assert.assertEquals(5, row.numCols());
+            Assert.assertEquals("", row.colAsString(4));
+        }
+    }
+
+    @Test
     public void testNorCSVWithQuotes() throws IOException {
         var path = projectDir.getRoot().toPath();
         var csv = "test.csv";

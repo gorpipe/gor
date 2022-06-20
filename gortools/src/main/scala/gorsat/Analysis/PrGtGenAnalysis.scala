@@ -7,8 +7,7 @@ import gorsat.gtgen.GTGen
 import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.RowObj.BinaryHolder
+import org.gorpipe.model.gor.{BinaryHolder, RowObj}
 import org.gorpipe.model.gor.iterators.LineIterator
 
 import scala.collection.mutable

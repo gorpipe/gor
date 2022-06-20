@@ -26,8 +26,7 @@ import gorsat.Commands.{Analysis, BinAggregator, BinAnalysis, BinFactory, BinInf
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorSession
-import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.RowObj.BinaryHolder
+import org.gorpipe.model.gor.{BinaryHolder, RowObj}
 import org.gorpipe.model.gor.iterators.RefSeq
 
 object GorPileup {

@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.model.gor.BinaryHolder;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
@@ -38,15 +39,14 @@ public class RowBase extends Row implements Serializable {
     /**
      * The contents of the row.
      */
-    private CharSequence allCols;
+    CharSequence allCols;
 
     /**
      * The locations of the tab characters within <i>allCols</i> for quick access to individual columns.
      */
-    private int[] splitArray;
+    int[] splitArray;
 
-    private RowBase() {
-    }
+    RowBase() {}
 
     public RowBase(CharSequence input, int numColumns) {
         allCols = input;
@@ -65,7 +65,7 @@ public class RowBase extends Row implements Serializable {
         return toReturn;
     }
 
-    public RowBase(String chr, int pos, CharSequence allCols, int[] sa, RowObj.BinaryHolder bH) {
+    public RowBase(String chr, int pos, CharSequence allCols, int[] sa, BinaryHolder bH) {
         this.chr = chr;
         this.pos = pos;
         this.allCols = allCols;
@@ -507,7 +507,7 @@ public class RowBase extends Row implements Serializable {
         return splitArray;
     }
 
-    private void testColumnIndex(int n) {
+    void testColumnIndex(int n) {
         if (n < 0 ||  n >= numCols()) {
             throw new GorDataException("Column " + n + " does not exist", n, toString());
         }

@@ -26,7 +26,7 @@ import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
 import gorsat.DynIterator
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
-import gorsat.Iterators.{NorInputSource, ServerGorSource, ServerNorGorSource}
+import gorsat.Iterators.{NoValidateNorInputSource, NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{NordIterator, PipeOptions}
 import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
@@ -47,6 +47,7 @@ object Nor
     }
     val hideModificationDate = hasOption(args, "-m")
     val followLinks = !hasOption(args, "-nl")
+    val noValidation = hasOption(args, "-nv")
 
     val inputParams = iargs(0)
     var inputSource: GenomicIterator = null
@@ -138,14 +139,18 @@ object Nor
           if (inputParams.toUpperCase.endsWith("GORD")) {
             var dictPath = Path.of(inputParams)
             val rootPath = context.getSession.getProjectContext.getProjectRootPath
-            if (!dictPath.isAbsolute() && rootPath != null) {
-              dictPath = rootPath.resolve(dictPath);
+            if (!dictPath.isAbsolute && rootPath != null) {
+              dictPath = rootPath.resolve(dictPath)
             }
             if (Files.isDirectory(dictPath)) {
               inputFile = inputParams + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME
             }
           }
-          inputSource = new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
+          inputSource = if (noValidation) {
+            new NoValidateNorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
+          } else {
+            new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
+          }
         }
       }
 
@@ -157,7 +162,7 @@ object Nor
     }
   }
 
-  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -nl -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -nl -fs -nv", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
