@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Ignore("Needs plink2 installed")
 public class UTestPlinkRegression {
     String vcfheader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\ta\tb\tc\td\te\tf\tg\ti\tj\n";
     String regorheader = "Chrom\tPos\tid\tref\talt\tvalues\n";
@@ -119,7 +120,6 @@ public class UTestPlinkRegression {
         if( oldPlinkExec != null ) System.setProperty("org.gorpipe.gor.driver.plink.executable",oldPlinkExec);
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlink2CoreDumpCleanup() throws Exception {
         Path projectPath = Paths.get(".");
@@ -142,7 +142,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionVcfMissingPheno() throws IOException {
         Path pg = Paths.get("vcf.gor");
@@ -159,7 +158,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionVcf() throws IOException {
         Path pg = Paths.get("vcf.gor");
@@ -178,7 +176,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionVcfPgor() throws IOException {
         Path pg = Paths.get("vcf.gor");
@@ -197,7 +194,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionNorPheno() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -216,7 +212,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegression() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -235,7 +230,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionZeroOne() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -254,7 +248,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionQt() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -273,7 +266,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionQtMulti() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -293,7 +285,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionMixed() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -313,7 +304,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testMultiphenoPlinkRegression() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -333,7 +323,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testMultiphenoPlinkRegressionResidualize() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -353,7 +342,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testMultiphenoPlinkRegressionResidualizeFirth() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -373,7 +361,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionPgenWrite() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -408,7 +395,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkRegressionJustHeader() throws IOException {
         Path pg = Paths.get("reg.gor");
@@ -425,7 +411,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlinkAdjustment() throws IOException {
         Path adj = Paths.get("adjust.gor");
@@ -446,7 +431,6 @@ public class UTestPlinkRegression {
         }
     }
 
-    @Ignore("Needs plink2 installed")
     @Test
     public void testPlink() {
         //This script is from Hakon

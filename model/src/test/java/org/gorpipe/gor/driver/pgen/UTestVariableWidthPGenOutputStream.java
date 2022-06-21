@@ -32,7 +32,7 @@ public class UTestVariableWidthPGenOutputStream {
         final FileInputStream fis = new FileInputStream(file);
         Assert.assertEquals(buffer.length, fis.read(buffer));
 
-        final byte[] wanted = {0x6c, 0x1b, 0x10, 1, 0, 0, 0, 4, 0, 0, 0, 0x07, 0x19, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, (byte) 0xff};
+        final byte[] wanted = {0x6c, 0x1b, 0x10, 1, 0, 0, 0, 4, 0, 0, 0, 0x47, 0x19, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, (byte) 0xff};
         Assert.assertArrayEquals(wanted, buffer);
     }
 
