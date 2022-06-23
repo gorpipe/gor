@@ -140,6 +140,13 @@ dependencies {
             }
             because("CVE-2021-44228: Log4j vulnerable to remote code execution")
         }
+
+        implementation("org.apache.tika:tika-core") {
+            version {
+                strictly("[ 1.28.4, 2[")
+            }
+            because("CVE-2016-6809: Deserialization of Untrusted Data in org.apache.tika/tika-core")
+        }
     }
 }
 
