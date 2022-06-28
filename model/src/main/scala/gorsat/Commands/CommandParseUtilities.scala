@@ -811,6 +811,8 @@ object CommandParseUtilities {
     commandUpperCase.startsWith(GOR_DICTIONARY) || commandUpperCase.startsWith(NOR_DICTIONARY)
   }
 
+  private def getDoubleQuotes: Array[SplitQuote] = Array[SplitQuote](SplitQuote('"'))
+
   private def getDefaultQuotes: Array[SplitQuote] = Array[SplitQuote](SplitQuote('\''), SplitQuote('"'))
 
   private def getDefaultBlocks: Array[SplitBlock] = Array[SplitBlock](SplitBlock('(', ')'), SplitBlock('{', '}'))
@@ -983,6 +985,21 @@ object CommandParseUtilities {
     */
   def quoteSafeIndexOf(inputString: CharSequence, searchString: String, par: Boolean = false, from: Int = 0): Int = {
     quoteCustomSafeIndexOf(inputString, searchString, getDefaultQuotes, getDefaultBlocks, par, from)
+  }
+
+  /**
+    * Finds the double quote safe index of searchString in the inputString. Quote safe index ignores texts within single quote (')
+    * and double quotes (") when looking for the search pattern. It also ignores '[]' and '{}' block operators.
+    *
+    * @param inputString  Input string to matsh the searchString pattern
+    * @param searchString Search string pattern to locate the index of
+    * @param par          ???
+    * @param from         Offset into the inputString where to start looking for the searchString pattern
+    * @return Zero based index into the inputString where the searchString pattern is located. Returns -1 if
+    *         pattern is not found.
+    */
+  def doubleQuoteSafeIndexOf(inputString: CharSequence, searchString: String, par: Boolean = false, from: Int = 0): Int = {
+    quoteCustomSafeIndexOf(inputString, searchString, getDoubleQuotes, getDefaultBlocks, par, from)
   }
 
   def quoteCustomSafeIndexOf(inputString: CharSequence, searchString: String, quotes: Array[SplitQuote], blocks: Array[SplitBlock], par: Boolean, from: Int): Int = {
