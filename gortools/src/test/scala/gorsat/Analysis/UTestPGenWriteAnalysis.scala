@@ -70,7 +70,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
     Assert.assertEquals(0, buffer(8))
     Assert.assertEquals(0, buffer(9))
     Assert.assertEquals(0, buffer(10))
-    Assert.assertEquals(0, buffer(11))
+    Assert.assertEquals(64, buffer(11))
 
     buffer.drop(12).forall(b => b == 0)
 
@@ -110,7 +110,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
     Assert.assertEquals(0, buffer(8))
     Assert.assertEquals(0, buffer(9))
     Assert.assertEquals(0, buffer(10))
-    Assert.assertEquals(0, buffer(11))
+    Assert.assertEquals(64, buffer(11))
 
     buffer.drop(12).forall(b => b == 0)
 
@@ -147,7 +147,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
     Assert.assertEquals(0, buffer(8))
     Assert.assertEquals(0, buffer(9))
     Assert.assertEquals(0, buffer(10))
-    Assert.assertEquals(0, buffer(11))
+    Assert.assertEquals(64, buffer(11))
 
     buffer.drop(12).forall(b => b == 0)
 
@@ -185,7 +185,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
     Assert.assertEquals(0, buffer(8))
     Assert.assertEquals(0, buffer(9))
     Assert.assertEquals(0, buffer(10))
-    Assert.assertEquals(0, buffer(11))
+    Assert.assertEquals(64, buffer(11))
 
     buffer.drop(12).forall(b => b == 0)
 
