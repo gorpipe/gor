@@ -34,7 +34,7 @@ public class QuoteSafeRowBase extends RowBase {
 
     @Override
     int findNextTab(CharSequence contents, int start, int length) {
-        var i = CommandParseUtilities.quoteSafeIndexOf(contents, "\t", false, start);
+        var i = CommandParseUtilities.doubleQuoteSafeIndexOf(contents, "\t", false, start);
         return i == -1 ? length : i;
     }
 }

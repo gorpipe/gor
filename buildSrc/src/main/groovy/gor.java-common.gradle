@@ -93,6 +93,7 @@ configurations {
         // TODO: Do we still need this.
         exclude group: 'org.slf4j', module: 'slf4j-simple'
         exclude group: "org.slf4j", module: "slf4j-log4j12"
+        exclude group: "org.slf4j", module: "slf4j-reload4j"
         exclude group: "log4j", module: "log4j"
         // Exclude commons-logging for allprojects(we'll use the slf4j bridges)
         exclude module: 'commons-logging'
