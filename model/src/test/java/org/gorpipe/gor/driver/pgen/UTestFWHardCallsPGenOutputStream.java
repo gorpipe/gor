@@ -34,7 +34,7 @@ public class UTestFWHardCallsPGenOutputStream {
         final FileInputStream fis = new FileInputStream(file);
         Assert.assertEquals(buffer.length, fis.read(buffer));
 
-        final byte[] wanted = {0x6c, 0x1b, 0x02, 1, 0, 0, 0, 4, 0, 0, 0, 0, (byte) 0xe4};
+        final byte[] wanted = {0x6c, 0x1b, 0x02, 1, 0, 0, 0, 4, 0, 0, 0, 64, (byte) 0xe4};
         Assert.assertArrayEquals(wanted, buffer);
     }
 

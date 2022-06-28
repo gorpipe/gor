@@ -35,7 +35,7 @@ public class UTestFWUnPhasedPGenOutputStream {
         final FileInputStream is = new FileInputStream(file);
         Assert.assertEquals(buffer.length, is.read(buffer));
 
-        final byte[] wanted = {0x6c, 0x1b, 0x03, 1, 0, 0, 0, 4, 0, 0, 0, 0, (byte) 0xe4, 0, 0, 0, 0x40, 0, (byte) 0x80, 0, 0};
+        final byte[] wanted = {0x6c, 0x1b, 0x03, 1, 0, 0, 0, 4, 0, 0, 0, 64, (byte) 0xe4, 0, 0, 0, 0x40, 0, (byte) 0x80, 0, 0};
         Assert.assertArrayEquals(wanted, buffer);
     }
 

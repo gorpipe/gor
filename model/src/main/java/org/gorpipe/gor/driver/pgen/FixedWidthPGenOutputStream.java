@@ -96,6 +96,7 @@ abstract class FixedWidthPGenOutputStream<T extends VariantRecord> extends PGenO
         headerBlock[0] = MAGIC_BYTE_1;
         headerBlock[1] = MAGIC_BYTE_2;
         headerBlock[2] = getStorageModeByte();
+        headerBlock[11] = 0x40;
         this.os.write(headerBlock);
     }
 }

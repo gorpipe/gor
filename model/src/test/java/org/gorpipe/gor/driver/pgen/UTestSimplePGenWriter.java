@@ -36,7 +36,7 @@ public class UTestSimplePGenWriter {
         final FileInputStream fis = new FileInputStream(file);
         final byte[] buffer = new byte[13];
         Assert.assertEquals(buffer.length, fis.read(buffer));
-        Assert.assertArrayEquals(new byte[]{0x6c, 0x1b, 0x02, 1, 0, 0, 0, 4, 0, 0, 0, 0, 0x1b}, buffer);
+        Assert.assertArrayEquals(new byte[]{0x6c, 0x1b, 0x02, 1, 0, 0, 0, 4, 0, 0, 0, 64, 0x1b}, buffer);
     }
 
     @Test
@@ -60,6 +60,6 @@ public class UTestSimplePGenWriter {
         final FileInputStream fis = new FileInputStream(file);
         final byte[] buffer = new byte[21];
         Assert.assertEquals(buffer.length, fis.read(buffer));
-        Assert.assertArrayEquals(new byte[]{0x6c, 0x1b, 0x03, 1, 0, 0, 0, 4, 0, 0, 0, 0, 0x64, 0, 0, 0, 0x40, 0, (byte) 0x80, 0x11, (byte) 0xc2}, buffer);
+        Assert.assertArrayEquals(new byte[]{0x6c, 0x1b, 0x03, 1, 0, 0, 0, 4, 0, 0, 0, 64, 0x64, 0, 0, 0, 0x40, 0, (byte) 0x80, 0x11, (byte) 0xc2}, buffer);
     }
 }
