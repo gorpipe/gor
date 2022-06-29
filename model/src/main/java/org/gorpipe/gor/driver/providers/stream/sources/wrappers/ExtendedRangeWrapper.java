@@ -62,7 +62,8 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     private static final Logger log = LoggerFactory.getLogger(ExtendedRangeWrapper.class);
 
     public static final int DEFAULT_SEEK_THRESHOLD = 32 * 1024;  // 32kB
-    public static final int DEFAULT_MAX_RANGE = 100 * 1024 * 1024;  // 100MB
+    public static final int DEFAULT_MAX_RANGE = 100 * 1024 * 1024;
+    public static final int DEFAULT_HEADER_RANGE = 1024 * 1024; // 1MB
 
     private final int seekThreshold;
     private final int maxRange;
@@ -79,6 +80,11 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
         super(source);
         this.seekThreshold = seekThreshold;
         this.maxRange = maxRange;
+    }
+
+    @Override
+    public InputStream open() throws IOException {
+        return open(0, DEFAULT_HEADER_RANGE);
     }
 
     @Override
