@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -90,6 +91,13 @@ public class BaseMeta {
      */
     public boolean containsProperty(String key) {
         return headerProps.containsKey(key);
+    }
+
+    /**
+     * Get the list of available properties.
+     */
+    public Set<String> getPropertyKeys() {
+        return headerProps.keySet();
     }
 
     /**
