@@ -62,7 +62,7 @@ before_script:
     - gitlab-build-01
   variables:
     # Vars for build resources
-    KUBERNETES_CPU_REQUEST: 4
+    KUBERNETES_CPU_REQUEST: 2
     KUBERNETES_CPU_LIMIT: 6
     KUBERNETES_MEMORY_REQUEST: 2Gi
     KUBERNETES_MEMORY_LIMIT: 6Gi

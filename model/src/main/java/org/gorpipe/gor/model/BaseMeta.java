@@ -3,10 +3,12 @@ package org.gorpipe.gor.model;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -259,6 +261,18 @@ public class BaseMeta {
             parseMetaReader(br);
         } catch (IOException ex) {
             throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath, ex);
+        }
+    }
+
+    protected void save(FileReader fileReader) {
+        saveAs(fileReader, this.metaPathStr);
+    }
+
+    protected void saveAs(FileReader fileReader, String fileName) {
+        try(OutputStream os = fileReader.getOutputStream(fileName))  {
+            os.write(formatHeader().getBytes(StandardCharsets.UTF_8));
+        } catch (IOException ioe) {
+            throw new GorSystemException(String.format("Could not save meta file %s", fileName), ioe);
         }
     }
 }

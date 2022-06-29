@@ -216,7 +216,15 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         Path mainFile = getMainFile();
         tempOutFilePath = getNewTempFileName();
 
-        return String.format("%s %s | merge %s | write %s", getGorCommand(), mainFile, insertFile.toString(), tempOutFilePath);
+        String insertPostProcessing = getHeader().getProperty(TableHeader.HEADER_SELECT_TRANSFORM_KEY, "");
+        if (!insertPostProcessing.isEmpty()) {
+            if (!insertPostProcessing.trim().startsWith("|")) {
+                insertPostProcessing = "| " + insertPostProcessing;
+            }
+        }
+
+        return String.format("%s %s | merge %s %s | write %s", getGorCommand(), mainFile, insertFile.toString(),
+                insertPostProcessing, tempOutFilePath);
     }
 
     protected Path getNewTempFileName() {

@@ -152,6 +152,53 @@ public class UTestGorTable {
     }
 
     @Test
+    public void testGorTableMultipleIdenticalInserts() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insert("chr1\t2\tC","chr1\t3\tG");;
+        table.insert("chr1\t2\tC");
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals(content +
+                "chr1\t2\tC\n" +
+                "chr1\t2\tC\n" +
+                "chr1\t3\tG\n", Files.readString(gorFile));
+    }
+
+    @Test
+    public void testGorTableInsertPostProcessing() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+        Files.write(Path.of(gorFile.toString() + ".meta"),
+                "## SELECT_TRANSFORM = sort genome | distinct".getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insert("chr1\t2\tC","chr1\t3\tG");;
+        table.insert("chr1\t2\tC");
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals(content +
+                "chr1\t2\tC\n" +
+                "chr1\t3\tG\n", Files.readString(gorFile));
+    }
+
+    @Test
     public void testDeleteGorTable() throws Exception {
         String name = "delete";
         Path gorFile = workDirPath.resolve(name + ".gor");
