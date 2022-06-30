@@ -83,6 +83,11 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public InputStream openClosable() throws IOException {
+        return open(0, DEFAULT_HEADER_RANGE);
+    }
+
+    @Override
     public InputStream open() throws IOException {
         return open(0, DEFAULT_HEADER_RANGE);
     }
