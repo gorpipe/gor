@@ -11,6 +11,7 @@ import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.gor.table.BaseTable;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.TableLog;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +75,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         } catch (IOException e) {
             throw new GorSystemException("Could not create temp file for inserting data", e);
         }
-        insert(tempInputFile.toUri());
+        insertFiles(tempInputFile.toString());
 
         logAfter(TableLog.LogAction.INSERT, "", lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
     }
@@ -85,12 +86,20 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         insert(entries);
     }
 
-    private void insert(URI gorFile) {
+    @Override
+    public void insertEntries(Collection<DictionaryEntry> entries) {
+        insertFiles(entries.stream().map(DictionaryEntry::getContentReal).toArray(String[]::new));
+    }
+
+
+    private void insertFiles(String... gorFiles) {
         // Validate the new file.
         if (isValidateFiles()) {
-            validateFile(gorFile.toString());
+            for (String gorFile : gorFiles) {
+                validateFile(gorFile);
+            }
         }
-        String gorPipeCommand = createInsertTempFileCommand(gorFile);
+        String gorPipeCommand = createInsertTempFileCommand(gorFiles);
         runMergeCommand(gorPipeCommand);
         // Use folder for the transaction.  Then queries can be run on the new file, within the transl
     }
@@ -103,6 +112,11 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     @Override
     public void delete(String... lines) {
         createDeleteTempFile(lines);
+    }
+
+    @Override
+    public void deleteEntries(Collection<DictionaryEntry> entries) {
+        throw new GorSystemException("DeleteEntries not supported yet for GorTable", null);
     }
 
     protected void createDeleteTempFile(String... lines) {
@@ -212,7 +226,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         r.writeRowToStream(os);
     }
 
-    protected String createInsertTempFileCommand(URI insertFile) {
+    protected String createInsertTempFileCommand(String... insertFiles) {
         Path mainFile = getMainFile();
         tempOutFilePath = getNewTempFileName();
 
@@ -223,7 +237,11 @@ public class GorTable<T extends Row> extends BaseTable<T> {
             }
         }
 
-        return String.format("%s %s | merge %s %s | write %s", getGorCommand(), mainFile, insertFile.toString(),
+        return createInsertTempFileCommandString(mainFile, insertPostProcessing, insertFiles);
+    }
+
+    protected String createInsertTempFileCommandString(Path mainFile, String insertPostProcessing, String[] insertFiles) {
+        return String.format("%s %s %s %s | write %s", getGorCommand(), mainFile, String.join(" ", insertFiles),
                 insertPostProcessing, tempOutFilePath);
     }
 

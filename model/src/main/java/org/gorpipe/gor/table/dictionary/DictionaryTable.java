@@ -23,7 +23,6 @@
 package org.gorpipe.gor.table.dictionary;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.table.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,11 +137,21 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     }
 
     @Override
+    public void insertEntries(Collection<DictionaryEntry> entries) {
+        insert(entries);
+    }
+
+    @Override
+    public void deleteEntries(Collection<DictionaryEntry> entries) {
+        delete(entries);
+    }
+
+    @Override
     public void insert(Map<String, List<String>> data) {
         List<DictionaryEntry> lines = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : data.entrySet()) {
             for (String path : entry.getValue()) {
-                lines.add((DictionaryEntry) new DictionaryEntry.Builder<>(path, getRootUri()).alias(entry.getKey()).build());
+                lines.add(new DictionaryEntry.Builder<>(path, getRootUri()).alias(entry.getKey()).build());
             }
         }
         insert(lines);

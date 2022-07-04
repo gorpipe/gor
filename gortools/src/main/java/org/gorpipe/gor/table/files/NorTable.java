@@ -1,5 +1,6 @@
 package org.gorpipe.gor.table.files;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
@@ -17,7 +18,7 @@ import java.util.Collection;
  */
 public class NorTable<T extends Row> extends GorTable<T> {
 
-    public final String HEADER_PRIMARY_KEY_KEY = "PRIMARY_KEY";
+    public static final String HEADER_PRIMARY_KEY_KEY = "PRIMARY_KEY";
 
     private static final Logger log = LoggerFactory.getLogger(NorTable.class);
 
@@ -33,10 +34,12 @@ public class NorTable<T extends Row> extends GorTable<T> {
         this(uri, null);
     }
 
+    @Override
     protected String getInputTempFileEnding() {
         return ".nor";
     }
 
+    @Override
     protected String getGorCommand() {
         return "nor";
     }
@@ -53,15 +56,21 @@ public class NorTable<T extends Row> extends GorTable<T> {
 
     @Override
     public void delete(Collection<T> lines) {
-        createDeleteTempFile(lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
+        createDeleteTempFile(lines.stream().map(Row::otherCols).toArray(String[]::new));
     }
 
     @Override
-    protected String createInsertTempFileCommand(URI insertFile) {
+    protected String createInsertTempFileCommand(String... insertFiles) {
+        if (insertFiles.length != 1) {
+            throw new GorSystemException("Insert into nor table only supports 1 file at time", null);
+        }
+
+        String insertFile = insertFiles[0];
+
         String key = getProperty(HEADER_PRIMARY_KEY_KEY);
 
         if (key == null) {
-            return super.createInsertTempFileCommand(insertFile);
+            return super.createInsertTempFileCommand(insertFiles);
         }
 
         Path mainFile = getMainFile();
@@ -72,6 +81,13 @@ public class NorTable<T extends Row> extends GorTable<T> {
                         " | merge %s | sort -c %s | write %s",
                 getGorCommand(), mainFile, getGorCommand(), insertFile, key, key, key, key, 
                 insertFile, key, tempOutFilePath);
+    }
+
+    // Need to overwrite this as NOR does not support multiple input files.  Need to merge each file.
+    protected String createInsertTempFileCommandString(Path mainFile, String insertPostProcessing, String[] insertFiles) {
+        return String.format("%s %s | merge %s %s | write %s", getGorCommand(), mainFile,
+                String.join(" | merge ", insertFiles),
+                insertPostProcessing, tempOutFilePath);
     }
 }
 
