@@ -297,6 +297,10 @@ public abstract class Argument extends AbstractListBean {
         return valuesHeader;
     }
 
+    public void setValuesHeader(String[] valuesHeader) {
+        this.valuesHeader = valuesHeader;
+    }
+
     /**
      * Possibly long running, should not be called on the EDT.
      *

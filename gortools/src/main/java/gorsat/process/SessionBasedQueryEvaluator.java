@@ -32,6 +32,7 @@ import java.util.List;
 public class SessionBasedQueryEvaluator extends QueryEvaluator {
 
     GorSession session;
+    String[] header = {};
 
     public SessionBasedQueryEvaluator(GorSession session) {
         this.session = session;
@@ -42,6 +43,7 @@ public class SessionBasedQueryEvaluator extends QueryEvaluator {
         List<String> result = new LinkedList<>();
         try (PipeInstance pipe = PipeInstance.createGorIterator(session.getGorContext())) {
             pipe.init(query, null);
+            header = pipe.getHeaderCols();
             GenomicIterator iterator = pipe.getRowSource();
 
             while (iterator.hasNext()) {
@@ -55,5 +57,10 @@ public class SessionBasedQueryEvaluator extends QueryEvaluator {
     @Override
     public String asValue(String query) {
         return String.join(",", asList(query));
+    }
+
+    @Override
+    public String[] getHeader() {
+        return header;
     }
 }

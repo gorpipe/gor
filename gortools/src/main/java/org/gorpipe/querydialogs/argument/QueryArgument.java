@@ -61,6 +61,7 @@ public class QueryArgument extends Argument {
     public void loadDeferredValues(final boolean checkForHeader, Function<String, BufferedReader> fileResolver) throws IOException {
         List<Object> values = new ArrayList<>();
         List<String> queryResults = queryEvaluator.asList(query);
+        setValuesHeader(queryEvaluator.getHeader());
         for (String line : queryResults) {
             values.add(parseValue(line));
         }
