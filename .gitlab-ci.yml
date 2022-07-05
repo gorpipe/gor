@@ -132,6 +132,7 @@ code_quality:
   tags:
     - gitlab-build-01
   variables:
+    TIMEOUT_SECONDS: "600"
     #CODECLIMATE_DEBUG: "1"
     ENGINE_MEMORY_LIMIT_BYTES: "3221223823"
   artifacts:
