@@ -264,7 +264,8 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     protected void runMergeCommand(String gorPipeCommand) {
         String[] args = new String[]{
                 gorPipeCommand,
-                "-workers", "1"};
+                "-workers", "1",
+                "-gorroot", fileReader.getCommonRoot()};
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
         CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, getSecurityContext());

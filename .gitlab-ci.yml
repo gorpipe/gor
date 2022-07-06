@@ -168,7 +168,7 @@ spotbugs-sast:
     KUBERNETES_MEMORY_REQUEST: 2Gi
     KUBERNETES_MEMORY_LIMIT: 6Gi
     GRADLE_PATH: "$CI_PROJECT_DIR/gradlew"
-    SAST_JAVA_VERSION: "11"
+    SAST_JAVA_VERSION: "17"
     JAVA_OPTS: "-Xmx4G"
     SECURE_LOG_LEVEL: "debug"
     GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true -Dskip.documentation=true"
