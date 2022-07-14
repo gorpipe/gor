@@ -130,6 +130,10 @@ public abstract class BaseTable<T> implements Table<T> {
         return rootUri;
     }
 
+    public String getProjectPath() {
+        return fileReader != null && fileReader.getCommonRoot() != null ? fileReader.getCommonRoot() : Path.of("").toAbsolutePath().toString();
+    }
+
     public TableHeader getHeader() {
         return header;
     }
@@ -248,7 +252,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
         log.debug("Loading table {}", getName());
         prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
-        parseHeader();
+        loadMeta();
 
         validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
@@ -374,7 +378,7 @@ public abstract class BaseTable<T> implements Table<T> {
     /**
      * Parse/load the table header.
      */
-    protected void parseHeader() {
+    protected void loadMeta() {
         log.debug("Parsing header for {}", getName());
         this.header.clear();
 

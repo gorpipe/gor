@@ -162,19 +162,14 @@ public class BaseMeta {
      * Parse header line.
      *
      * @param line line to parse.
-     * @return true if the line was a header line.
      */
-    public boolean parseLine(String line) {
-        if (line == null) {
-            return false;
-        } else if (line.startsWith("##")) {
+    public void parseLine(String line) {
+        if (line == null) return;
+
+        if (line.startsWith("##")) {
             parseMetaLine(line);
-            return true;
-        } else if (line.startsWith("#")) {
-            parseHeaderLine(line);
-            return true;
         } else {
-            return false;
+            parseHeaderLine(line);
         }
     }
 
@@ -229,30 +224,26 @@ public class BaseMeta {
 
     private void parseMetaReader(BufferedReader br) throws IOException {
         String line;
+        boolean isFirstLine = true;
         while ((line = br.readLine()) != null) {
             line = line.trim();
             if (line.length() > 0) {
-                if (isHeaderLine(line)) {
+                if (isHeaderLine(line) || (isFirstLine &&
+                        // gorz and norz contain headerline that does not befin with #
+                        (metaPathStr.endsWith(".gorz")
+                                || metaPathStr.endsWith(".norz")))) {
                     parseLine(line);
                 } else {
                     // Done reading the header.
                     break;
                 }
             }
+            isFirstLine = false;
         }
     }
 
     public void loadAndMergeMeta(Path metaPath) {
-        if (metaPath == null || !Files.exists(metaPath)) {
-            return;
-        }
-        this.metaPathStr = metaPath.toString();
-
-        try(var br = Files.newBufferedReader(metaPath)) {
-            parseMetaReader(br);
-        } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath.toString(), ex);
-        }
+        loadAndMergeMeta(new DriverBackedFileReader(""), metaPath.toString());
     }
 
     public String getMetaPath() {

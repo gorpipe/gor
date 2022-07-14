@@ -1,7 +1,5 @@
 package org.gorpipe.gor.table.files;
 
-import gorsat.process.CLIGorExecutionEngine;
-import gorsat.process.PipeOptions;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorSystemException;
@@ -9,6 +7,7 @@ import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.GorPipeUtils;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.TableLog;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
@@ -100,7 +99,8 @@ public class GorTable<T extends Row> extends BaseTable<T> {
             }
         }
         String gorPipeCommand = createInsertTempFileCommand(gorFiles);
-        runMergeCommand(gorPipeCommand);
+        GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, 1, getProjectPath(), fileReader.getSecurityContext());
+
         // Use folder for the transaction.  Then queries can be run on the new file, within the transl
     }
 
@@ -259,16 +259,5 @@ public class GorTable<T extends Row> extends BaseTable<T> {
             mainFile = tempOutFilePath;
         }
         return mainFile;
-    }
-
-    protected void runMergeCommand(String gorPipeCommand) {
-        String[] args = new String[]{
-                gorPipeCommand,
-                "-workers", "1",
-                "-gorroot", fileReader.getCommonRoot()};
-        PipeOptions options = new PipeOptions();
-        options.parseOptions(args);
-        CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, getSecurityContext());
-        engine.execute();
     }
 }
