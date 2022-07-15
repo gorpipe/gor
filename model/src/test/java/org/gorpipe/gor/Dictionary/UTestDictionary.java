@@ -201,7 +201,8 @@ public class UTestDictionary {
         FileUtils.write(gordChildDict, gorFile.toString(), (Charset) null);
         File gordMotherDict = workDir.newFile("dictMother.gord");
         FileUtils.write(gordMotherDict, gordChildDict.toString(), (Charset) null);
-        TestUtils.assertTwoGorpipeResults("gor " + gordMotherDict.getPath(), "gor " + gorFile.toString());
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                "chr1\t11868\t14412\tDDX11L1\tgorFile.gor\n", TestUtils.runGorPipe("gor " + gordMotherDict.getPath()));
     }
 
     @Test

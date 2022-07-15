@@ -91,7 +91,6 @@ build:
     paths:
       - "**/build/libs/*.jar"
 
-
 .test:
   extends: .build_with_cache
   stage: test
@@ -106,6 +105,32 @@ build:
         - "*/*/*/*/TEST-*.xml"
         - "*/*/*/*/*/TEST-*.xml"
         # Seems like ** does not work properly (even though it is used in the Gitlab docutmentation)
+        #- "**/build/test-results/test/**/TEST-*.xml"
+
+# Is a litle bit faster, but does not publish test results!
+build_test:
+  rules:
+    - when: never
+  extends:
+    - .build_with_cache
+#    - .test
+  stage: build
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+  before_script:
+    - ln -s ${INTEGRATION_TESTS_SECRETS_ENV} tests/config/secrets.env
+  script: ./gradlew --continue test slowTest integrationTest
+  cache:
+    policy: pull-push
+  artifacts:
+    paths:
+      - "**/build/libs/*.jar"
+    reports:
+      junit:
+        - "*/*/*/*/TEST-*.xml"
+        - "*/*/*/*/*/TEST-*.xml"
+        # Seems like ** does not work properly (even though it is used in the Gitlab documentation)
         #- "**/build/test-results/test/**/TEST-*.xml"
 
 

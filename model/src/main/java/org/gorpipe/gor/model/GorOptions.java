@@ -411,8 +411,7 @@ public class GorOptions {
 
         // Moved this assignment to last, so that dictionary discovery will correctly trigger insert source
         this.insertSource = insertSourceOpt
-                || (!isNoLineFilter
-                    && (hasTagFiltering || (hasLocalDictonaryFile && isDictionaryWithBuckets)));
+                || (!isNoLineFilter && (hasTagFiltering || hasLocalDictonaryFile));
     }
 
     public GenomicIterator getIterator() {
