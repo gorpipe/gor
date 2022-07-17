@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_KEY;
+import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_LOCATION_KEY;
 import static org.gorpipe.s3.driver.ITestBvlMinOnS3.awsSecurityContext;
 import static org.gorpipe.s3.shared.ITestS3Shared.createSecurityContext;
 import static org.gorpipe.s3.shared.ITestS3Shared.runGorPipeServer;
@@ -187,6 +188,43 @@ public class ITestS3Table {
 
             String[] bucketResult = runGorPipeServer("gor "
                             + workDirPath.resolve("some_project").resolve(bucket.substring("s3data://project/".length())).toString(),
+                    workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
+            Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
+        } finally {
+            // Manual cleanup as this is S3.
+            if (buckets != null) {
+                man.deleteBuckets(table, true, buckets.toArray(new String[buckets.size()]));
+            }
+        }
+    }
+
+    @Test
+    public void testBucketizeS3DataS3DataBucketsRelative() throws IOException {
+        insertIntoTableGordFile();
+
+        //fileReader.createDirectoryIfNotExists("s3data://project/user_data/buckets/");
+
+        DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
+        table.setProperty(HEADER_BUCKET_DIRS_LOCATION_KEY, "s3data://project");
+        table.save();
+        TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
+
+        List<String> buckets = null;
+        try {
+            man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
+
+            table.reload();
+            Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
+
+            buckets = table.getBuckets();
+            String bucket = buckets.get(0);
+            Assert.assertTrue(table.getFileReader().exists(bucket));
+
+            Path localBucketFile = table.getRootPath().resolve(bucket + ".link");
+
+            Assert.assertEquals("s3data://project/" +  bucket + "\n", Files.readString(localBucketFile));
+
+            String[] bucketResult = runGorPipeServer("gor " + localBucketFile,
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
             Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
         } finally {

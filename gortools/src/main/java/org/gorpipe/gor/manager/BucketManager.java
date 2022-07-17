@@ -66,10 +66,16 @@ public class BucketManager<T extends BucketableTableEntry> {
     public static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofMinutes(30);
     public static final Class<? extends TableLock> DEFAULT_LOCK_TYPE = ExclusiveFileTableLock.class;
 
-    public static final String HEADER_MIN_BUCKET_SIZE_KEY = "GOR_TABLE_MIN_BUCKET_SIZE";
-    public static final String HEADER_BUCKET_SIZE_KEY = "GOR_TABLE_BUCKET_SIZE";
-    public static final String HEADER_BUCKET_DIRS_KEY = "GOR_TABLE_BUCKET_DIRS";
-    public static final String HEADER_BUCKET_MAX_BUCKETS = "GOR_TABLE_BUCKET_MAX_BUCKETS";
+    public static final String HEADER_MIN_BUCKET_SIZE_KEY = "MIN_BUCKET_SIZE";
+    public static final String HEADER_BUCKET_SIZE_KEY = "BUCKET_SIZE";
+
+    // Comma seperated list of bucket dirs.  Absolute or relative to the table dir.
+    public static final String HEADER_BUCKET_DIRS_KEY = "BUCKET_DIRS";
+
+    // Bucket dir root.  Used to find the absolute bucket path if bucket dir is relative.  The path
+    // is <bucket location>/<project relative path to bucket>/<bucket dir>
+    public static final String HEADER_BUCKET_DIRS_LOCATION_KEY = "BUCKET_DIRS_LOCATION";
+    public static final String HEADER_BUCKET_MAX_BUCKETS = "BUCKET_MAX_BUCKETS";
 
     protected Duration gracePeriodForDeletingBuckets = Duration.ofHours(24);
 
@@ -96,6 +102,7 @@ public class BucketManager<T extends BucketableTableEntry> {
 
         setBucketSize(Integer.parseInt(table.getConfigTableProperty(HEADER_BUCKET_SIZE_KEY, Integer.toString(DEFAULT_BUCKET_SIZE))));
         setMinBucketSize(Integer.parseInt(table.getConfigTableProperty(HEADER_MIN_BUCKET_SIZE_KEY, Integer.toString(DEFAULT_MIN_BUCKET_SIZE))));
+
         setBucketDirs(parseBucketDirString(table.getConfigTableProperty(HEADER_BUCKET_DIRS_KEY, null)));
     }
 
@@ -245,10 +252,13 @@ public class BucketManager<T extends BucketableTableEntry> {
     public void setBucketDirs(List<String> newBucketDirs) {
         this.bucketDirs.clear();
         if (newBucketDirs != null && newBucketDirs.size() > 0) {
+            table.setProperty(HEADER_BUCKET_DIRS_KEY, newBucketDirs.stream().map(p -> PathUtils.formatUri(p)).collect(Collectors.joining(",")));
+            
             for (String p : newBucketDirs) {
                 this.bucketDirs.add(PathUtils.relativize(table.getRootUri(), p));
             }
         } else {
+            table.setProperty(HEADER_BUCKET_DIRS_KEY, "");
             this.bucketDirs.add(getDefaultBucketDir());
         }
     }
@@ -406,12 +416,25 @@ public class BucketManager<T extends BucketableTableEntry> {
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        createBucketFiles(tempTable, newBucketsMapForBucketDir, PathUtils.resolve(table.getRootUri(), bucketDir));
+        createBucketFilesForBucketDir(tempTable, newBucketsMapForBucketDir, getAbsoluteBucketDir(bucketDir));
 
         // Move files and update dictionary.
         for (String bucket : newBucketsMapForBucketDir.keySet()) {
             List<T> bucketEntries = newBucketsMapForBucketDir.get(bucket);
             updateTableWithNewBucket(table, bucket, bucketEntries);
+        }
+    }
+
+    private URI getAbsoluteBucketDir(String bucketDir) throws IOException {
+        if (table.containsProperty(HEADER_BUCKET_DIRS_LOCATION_KEY)) {
+            String prefix = table.getProperty(HEADER_BUCKET_DIRS_LOCATION_KEY);
+
+            URI tableRoot = PathUtils.relativize(URI.create(table.getFileReader().getCommonRoot()), table.getRootUri());
+            URI absBucketDir = PathUtils.resolve(URI.create(prefix), PathUtils.resolve(tableRoot, bucketDir).toString());
+            table.getFileReader().createDirectoryIfNotExists(absBucketDir.toString());
+            return absBucketDir;
+        } else {
+            return PathUtils.resolve(table.getRootUri(), bucketDir);
         }
     }
 
@@ -424,7 +447,6 @@ public class BucketManager<T extends BucketableTableEntry> {
 
             table.setProperty(HEADER_BUCKET_SIZE_KEY, Integer.toString(this.getBucketSize()));
             table.setProperty(HEADER_MIN_BUCKET_SIZE_KEY, Integer.toString(this.getMinBucketSize()));
-            table.setProperty(HEADER_BUCKET_DIRS_KEY, bucketDirs.stream().map(p -> PathUtils.formatUri(p)).collect(Collectors.joining(",")));
             trans.commit();
         }
     }
@@ -715,9 +737,9 @@ public class BucketManager<T extends BucketableTableEntry> {
      * @param absBucketDir
      * @throws IOException
      */
-    private void createBucketFiles(BaseDictionaryTable table, Map<String, List<T>> bucketsToCreate, URI absBucketDir) throws IOException {
+    private void createBucketFilesForBucketDir(BaseDictionaryTable table, Map<String, List<T>> bucketsToCreate, URI absBucketDir) throws IOException {
         checkBucketDirExistance(absBucketDir);
-        bucketCreator.createBuckets(table, bucketsToCreate, absBucketDir);
+        bucketCreator.createBucketsForBucketDir(table, bucketsToCreate, absBucketDir);
     }
 
     public static final class Builder<T extends BucketableTableEntry> {

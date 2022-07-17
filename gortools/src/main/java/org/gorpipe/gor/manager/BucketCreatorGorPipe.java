@@ -54,15 +54,15 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
     }
 
     @Override
-    public void createBuckets(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate, URI absBucketDir)
+    public void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate, URI absBucketDir)
             throws IOException {
 
         // Build the gor query (gorpipe)
-        String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, table.getRootUri(), table);
+        String gorPipeCommand = createBucketizeGorCommandForBucketDir(bucketsToCreate, absBucketDir, table);
         GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, workers, table.getProjectPath(), table.getSecurityContext());
     }
 
-    private String createBucketizeGorCommand(Map<String, List<T>> bucketsToCreate, URI rootUri, BaseDictionaryTable<T> table) {
+    private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, URI absBucketDir, BaseDictionaryTable<T> table) {
         // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
         // Tag based, does not work if we are adding more files with same alias, why not?.
         StringBuilder sb = new StringBuilder();
@@ -76,7 +76,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
                 sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | write -c %s;%n",
                         bucket, table.getPath(), table.getSourceColumn(), tags,
                         table.getSecurityContext() != null ? table.getSecurityContext() : "",
-                        PathUtils.resolve(rootUri, bucket)));
+                        PathUtils.resolve(absBucketDir, PathUtils.getFileName(bucket))));
             }
         }
 

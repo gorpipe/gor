@@ -56,7 +56,7 @@ public class PathUtils {
             return null;
         }
 
-        if (isAbsolutePath(path)) {
+        if (isAbsolutePath(path) || root == null || "".equals(root.toString())) {
             return normalize(path);
         }
 
