@@ -7,8 +7,7 @@ import org.gorpipe.gor.table.dictionary.TableEntry;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Interface to work with tables.
@@ -68,7 +67,7 @@ public interface Table<T> {
     /**
      * Get the lines of the table.
      */
-    Iterator<String> getLines();
+    Stream<String> getLines();
 
     /**
      * Insert/update lines.

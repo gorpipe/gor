@@ -203,8 +203,8 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     }
 
     @Override
-    public Iterator<String> getLines() {
-        return getEntries().stream().map(l -> l.formatEntryNoNewLine()).iterator();
+    public Stream<String> getLines() {
+        return getEntries().stream().map(l -> l.formatEntryNoNewLine());
     }
 
     public void insert(Collection<T> lines) {

@@ -2,6 +2,7 @@ package org.gorpipe.gor.table.files;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
@@ -58,9 +59,9 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     }
 
     @Override
-    public Iterator<String> getLines() {
+    public Stream<String> getLines() {
         try {
-            return fileReader.getReader(getMainFile().toString()).lines().iterator();
+            return fileReader.getReader(getMainFile().toString()).lines();
         } catch (IOException e) {
             throw new GorSystemException("Error getting file reader", e);
         }
@@ -126,18 +127,23 @@ public class GorTable<T extends Row> extends BaseTable<T> {
 
         String[] strippedLines = Arrays.stream(lines).map(line -> line.endsWith("\n") ? line.substring(0, line.length() - 1) : line).toArray(String[]::new);
         try (OutputStream os = fileReader.getOutputStream(localTempPath.toString())) {
-            Iterator<String> it = getLines();
-            while (it.hasNext()) {
-                String orgLine = it.next();
-                if (includeLine(orgLine, strippedLines)) {
-                    os.write(orgLine.getBytes(StandardCharsets.UTF_8));
-                    os.write('\n');
-                }
+            try (Stream<String> stream = getLines()) {
+                stream.filter(l -> includeLine(l, strippedLines)).forEach(l -> writeOutLine(os, l));
             }
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
         tempOutFilePath = localTempPath;
+    }
+
+    private void writeOutLine(OutputStream os, String line) {
+        try {
+            os.write(line.getBytes(StandardCharsets.UTF_8));
+            os.write('\n');
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
+
     }
 
     private boolean includeLine(String line, String[] skipLines) {
