@@ -1,5 +1,6 @@
 package org.gorpipe.gor.table.files;
 
+import gorsat.TestUtils;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.junit.*;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class UTestGorTable {
 
@@ -262,5 +264,23 @@ public class UTestGorTable {
                 "## USE_HISTORY = true\n" +
                 "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);
+    }
+
+    @Test
+    public void testGetLines() throws Exception {
+        String name = "getLines";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\nchr1\t2\tC\nchr1\t3\tG\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        String streamContent;
+        try (Stream<String> stream = table.getLines()) {
+            streamContent = stream.collect(Collectors.joining("\n", "", "\n"));
+        }
+
+        Assert.assertEquals(content, streamContent);
     }
 }

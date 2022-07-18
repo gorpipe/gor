@@ -15,8 +15,10 @@ import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -61,7 +63,17 @@ public class GorTable<T extends Row> extends BaseTable<T> {
     @Override
     public Stream<String> getLines() {
         try {
-            return fileReader.getReader(getMainFile().toString()).lines();
+            BufferedReader reader = fileReader.getReader(getMainFile().toString());
+
+            Stream<String> stream = reader.lines();
+            stream.onClose(() -> {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // Ignore, best effort.
+                }
+            });
+            return stream;
         } catch (IOException e) {
             throw new GorSystemException("Error getting file reader", e);
         }
