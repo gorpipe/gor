@@ -36,7 +36,7 @@ public class GorTable<T extends Row> extends BaseTable<T> {
 
     private static final Logger log = LoggerFactory.getLogger(GorTable.class);
 
-    protected Path tempOutFilePath;
+    protected String tempOutFilePath;
 
     public GorTable(Builder builder) {
         super(builder);
@@ -111,9 +111,10 @@ public class GorTable<T extends Row> extends BaseTable<T> {
                 validateFile(gorFile);
             }
         }
-        String gorPipeCommand = createInsertTempFileCommand(gorFiles);
+        String outFile = getNewTempFileName();
+        String gorPipeCommand = createInsertTempFileCommand(getMainFile(), outFile, gorFiles);
         GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, 1, getProjectPath(), fileReader.getSecurityContext());
-
+        tempOutFilePath = outFile;
         // Use folder for the transaction.  Then queries can be run on the new file, within the transl
     }
 
@@ -134,8 +135,8 @@ public class GorTable<T extends Row> extends BaseTable<T> {
 
     protected void createDeleteTempFile(String... lines) {
         String randomString = RandomStringUtils.random(8, true, true);
-        Path localTempPath = getTransactionFolderPath().resolve(
-                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
+        String localTempPath = getTransactionFolderPath().resolve(
+                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString()))).toString();
 
         String[] strippedLines = Arrays.stream(lines).map(line -> line.endsWith("\n") ? line.substring(0, line.length() - 1) : line).toArray(String[]::new);
         try (OutputStream os = fileReader.getOutputStream(localTempPath.toString())) {
@@ -244,37 +245,34 @@ public class GorTable<T extends Row> extends BaseTable<T> {
         r.writeRowToStream(os);
     }
 
-    protected String createInsertTempFileCommand(String... insertFiles) {
-        Path mainFile = getMainFile();
-        tempOutFilePath = getNewTempFileName();
+    protected String createInsertTempFileCommand(String mainFile, String outFile, String... insertFiles) {
+        String mainFileString = fileReader.exists(mainFile) ? mainFile : "";
+        return String.format("%s %s %s %s | write %s", getGorCommand(), mainFileString, String.join(" ", insertFiles),
+                getPostProcessing(), outFile);
+    }
 
+    protected String getPostProcessing() {
         String insertPostProcessing = getHeader().getProperty(TableHeader.HEADER_SELECT_TRANSFORM_KEY, "");
         if (!insertPostProcessing.isEmpty()) {
             if (!insertPostProcessing.trim().startsWith("|")) {
                 insertPostProcessing = "| " + insertPostProcessing;
             }
         }
-
-        return createInsertTempFileCommandString(mainFile, insertPostProcessing, insertFiles);
+        return insertPostProcessing;
     }
 
-    protected String createInsertTempFileCommandString(Path mainFile, String insertPostProcessing, String[] insertFiles) {
-        return String.format("%s %s %s %s | write %s", getGorCommand(), mainFile, String.join(" ", insertFiles),
-                insertPostProcessing, tempOutFilePath);
-    }
-
-    protected Path getNewTempFileName() {
+    protected String getNewTempFileName() {
         String randomString = RandomStringUtils.random(8, true, true);
         return getTransactionFolderPath().resolve(
-                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString())));
+                String.format("result_temp_%s.%s", randomString, FilenameUtils.getExtension(getPath().toString()))).toString();
     }
 
-    protected Path getMainFile() {
-        Path mainFile;
+    protected String getMainFile() {
+        String mainFile;
         if (tempOutFilePath == null) {
-            mainFile = getPath();
+            mainFile = getPath().toString();
         } else {
-            mainFile = tempOutFilePath;
+            mainFile = tempOutFilePath.toString();
         }
         return mainFile;
     }

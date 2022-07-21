@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.Collection;
 
 /**
@@ -60,7 +59,7 @@ public class NorTable<T extends Row> extends GorTable<T> {
     }
 
     @Override
-    protected String createInsertTempFileCommand(String... insertFiles) {
+    protected String createInsertTempFileCommand(String mainFile, String outFile, String... insertFiles) {
         if (insertFiles.length != 1) {
             throw new GorSystemException("Insert into nor table only supports 1 file at time", null);
         }
@@ -69,25 +68,26 @@ public class NorTable<T extends Row> extends GorTable<T> {
 
         String key = getProperty(HEADER_PRIMARY_KEY_KEY);
 
+        String postProcessing = getPostProcessing();
+
         if (key == null) {
-            return super.createInsertTempFileCommand(insertFiles);
+            if (fileReader.exists(mainFile)) {
+                // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
+                return String.format("%s %s | merge %s %s | write %s",
+                        getGorCommand(), mainFile, insertFile, postProcessing, outFile );
+            } else {
+                return String.format("%s %s %s | write %s", getGorCommand(), insertFile, postProcessing, outFile);
+            }
+        } else {
+            if (fileReader.exists(mainFile)) {
+                // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
+                return String.format("%s %s | map <(%s %s) -c %s -n %s -m 'Include' | where %sx = 'Include' | hide %sx" +
+                                " | merge %s | sort -c %s %s | write %s",
+                        getGorCommand(), mainFile, getGorCommand(), insertFile, key, key, key, key,
+                        insertFile, key, postProcessing, outFile );
+            } else {
+                return String.format("%s %s | sort -c %s %s | write %s", getGorCommand(), insertFile, key, postProcessing, outFile);
+            }
         }
-
-        Path mainFile = getMainFile();
-        tempOutFilePath = getNewTempFileName();
-
-        // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
-        return String.format("%s %s | map <(%s %s) -c %s -n %s -m 'Include' | where %sx = 'Include' | hide %sx" +
-                        " | merge %s | sort -c %s | write %s",
-                getGorCommand(), mainFile, getGorCommand(), insertFile, key, key, key, key, 
-                insertFile, key, tempOutFilePath);
-    }
-
-    // Need to overwrite this as NOR does not support multiple input files.  Need to merge each file.
-    protected String createInsertTempFileCommandString(Path mainFile, String insertPostProcessing, String[] insertFiles) {
-        return String.format("%s %s | merge %s %s | write %s", getGorCommand(), mainFile,
-                String.join(" | merge ", insertFiles),
-                insertPostProcessing, tempOutFilePath);
     }
 }
-
