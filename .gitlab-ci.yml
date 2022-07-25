@@ -55,7 +55,7 @@ before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
 
-.build_with_cache:
+.build_with_cache:  
   extends: .on-branches
   image: "$JAVA_BUILDER_IMAGE"
   tags:
@@ -157,7 +157,11 @@ code_quality:
   tags:
     - gitlab-build-01
   variables:
-    TIMEOUT_SECONDS: "600"
+    KUBERNETES_CPU_REQUEST: 2
+    KUBERNETES_CPU_LIMIT: 6
+    KUBERNETES_MEMORY_REQUEST: 3Gi
+    KUBERNETES_MEMORY_LIMIT: 6Gi
+    TIMEOUT_SECONDS: "1200"
     #CODECLIMATE_DEBUG: "1"
     ENGINE_MEMORY_LIMIT_BYTES: "3221223823"
   artifacts:

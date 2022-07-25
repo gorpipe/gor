@@ -36,7 +36,7 @@ docker-build: build ## Build all docker images
 
 
 #
-# Release targets
+# Git targets
 #
 
 
@@ -120,18 +120,17 @@ release-from-release:  ## Release from the given release branch.  Assumes BRANCH
 	# git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
 	# git push origin $(CURRENT_TAG_VERSION)
 
+
+#
+# Release directly from main.
+#
+
 release-from-master:  ## Release from master.
 	git checkout master
 	git pull
 
 	git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
 	git push origin $(CURRENT_TAG_VERSION)
-
-#
-# Release directly from main.
-#
-
-# TBD
 
 #
 # Misc
