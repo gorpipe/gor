@@ -24,6 +24,7 @@ package org.gorpipe.gor.manager;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
@@ -426,16 +427,20 @@ public class BucketManager<T extends BucketableTableEntry> {
     }
 
     private URI getAbsoluteBucketDir(String bucketDir) throws IOException {
-        if (table.containsProperty(HEADER_BUCKET_DIRS_LOCATION_KEY)) {
-            String prefix = table.getProperty(HEADER_BUCKET_DIRS_LOCATION_KEY);
 
+       String bucketDirsLocation = table.getConfigTableProperty(HEADER_BUCKET_DIRS_LOCATION_KEY, "");
+
+        URI absBucketDir;
+        if (!Strings.isNullOrEmpty(bucketDirsLocation)) {
             URI tableRoot = PathUtils.relativize(URI.create(table.getFileReader().getCommonRoot()), table.getRootUri());
-            URI absBucketDir = PathUtils.resolve(URI.create(prefix), PathUtils.resolve(tableRoot, bucketDir).toString());
-            table.getFileReader().createDirectoryIfNotExists(absBucketDir.toString());
-            return absBucketDir;
+            absBucketDir = PathUtils.resolve(URI.create(bucketDirsLocation), PathUtils.resolve(tableRoot, bucketDir).toString());
         } else {
-            return PathUtils.resolve(table.getRootUri(), bucketDir);
+            absBucketDir = PathUtils.resolve(table.getRootUri(), bucketDir);
         }
+
+        table.getFileReader().createDirectoryIfNotExists(absBucketDir.toString());
+
+        return absBucketDir;
     }
 
     private void updateTableWithNewBucket(BaseDictionaryTable table, String bucket, List<T> bucketEntries) {

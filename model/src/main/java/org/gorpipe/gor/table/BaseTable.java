@@ -30,7 +30,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
 
-    private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_FILES_VALIDATE", "true"));
+    private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_VALIDATE_FILES", "true"));
     protected static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
 
@@ -350,7 +350,8 @@ public abstract class BaseTable<T> implements Table<T> {
         if (header.containsProperty(key)) {
             return header.getProperty(key);
         } else {
-            return System.getProperty(key, def);
+            String env = System.getenv("GOR_TABLE_" + key);
+            return env != null ? env : def;
         }
     }
 
