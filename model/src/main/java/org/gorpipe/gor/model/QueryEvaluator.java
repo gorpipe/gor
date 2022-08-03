@@ -27,4 +27,5 @@ import java.util.List;
 public abstract class QueryEvaluator {
     public abstract List<String> asList(String query);
     public abstract String asValue(String query);
+    public abstract String[] getHeader();
 }

@@ -55,14 +55,14 @@ before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
 
-.build_with_cache:
+.build_with_cache:  
   extends: .on-branches
   image: "$JAVA_BUILDER_IMAGE"
   tags:
     - gitlab-build-01
   variables:
     # Vars for build resources
-    KUBERNETES_CPU_REQUEST: 4
+    KUBERNETES_CPU_REQUEST: 2
     KUBERNETES_CPU_LIMIT: 6
     KUBERNETES_MEMORY_REQUEST: 2Gi
     KUBERNETES_MEMORY_LIMIT: 6Gi
@@ -91,7 +91,6 @@ build:
     paths:
       - "**/build/libs/*.jar"
 
-
 .test:
   extends: .build_with_cache
   stage: test
@@ -106,6 +105,32 @@ build:
         - "*/*/*/*/TEST-*.xml"
         - "*/*/*/*/*/TEST-*.xml"
         # Seems like ** does not work properly (even though it is used in the Gitlab docutmentation)
+        #- "**/build/test-results/test/**/TEST-*.xml"
+
+# Is a litle bit faster, but does not publish test results!
+build_test:
+  rules:
+    - when: never
+  extends:
+    - .build_with_cache
+#    - .test
+  stage: build
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+  before_script:
+    - ln -s ${INTEGRATION_TESTS_SECRETS_ENV} tests/config/secrets.env
+  script: ./gradlew --continue test slowTest integrationTest
+  cache:
+    policy: pull-push
+  artifacts:
+    paths:
+      - "**/build/libs/*.jar"
+    reports:
+      junit:
+        - "*/*/*/*/TEST-*.xml"
+        - "*/*/*/*/*/TEST-*.xml"
+        # Seems like ** does not work properly (even though it is used in the Gitlab documentation)
         #- "**/build/test-results/test/**/TEST-*.xml"
 
 
@@ -132,6 +157,11 @@ code_quality:
   tags:
     - gitlab-build-01
   variables:
+    KUBERNETES_CPU_REQUEST: 2
+    KUBERNETES_CPU_LIMIT: 6
+    KUBERNETES_MEMORY_REQUEST: 3Gi
+    KUBERNETES_MEMORY_LIMIT: 6Gi
+    TIMEOUT_SECONDS: "1200"
     #CODECLIMATE_DEBUG: "1"
     ENGINE_MEMORY_LIMIT_BYTES: "3221223823"
   artifacts:
@@ -167,7 +197,7 @@ spotbugs-sast:
     KUBERNETES_MEMORY_REQUEST: 2Gi
     KUBERNETES_MEMORY_LIMIT: 6Gi
     GRADLE_PATH: "$CI_PROJECT_DIR/gradlew"
-    SAST_JAVA_VERSION: "11"
+    SAST_JAVA_VERSION: "17"
     JAVA_OPTS: "-Xmx4G"
     SECURE_LOG_LEVEL: "debug"
     GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true -Dskip.documentation=true"

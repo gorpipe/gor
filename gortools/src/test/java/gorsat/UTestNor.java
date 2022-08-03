@@ -88,8 +88,9 @@ public class UTestNor {
         TestUtils.runGorPipe(query);
         query = "gor "+tmpgord+"| top 1";
         var res = TestUtils.runGorPipe(query);
-        Assert.assertEquals("Failed writing gord using nor", "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
-                "chr1\t11868\t14412\tDDX11L1\n", res);
+        Assert.assertEquals("Failed writing gord using nor",
+                "Chrom\tgene_start\tgene_end\tGene_Symbol\ttag\n" +
+                "chr1\t11868\t14412\tDDX11L1\ta\n", res);
     }
 
 

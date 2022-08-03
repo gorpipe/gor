@@ -28,6 +28,23 @@ import java.util.ArrayList;
  * Gor Command
  */
 public class GorCommand {
+
+    static class CmdPos implements Comparable<CmdPos> {
+        public CmdPos(int pos, int len) {
+            this.pos = pos;
+            this.commentLen = len;
+        }
+
+        public int pos;
+        public int commentLen;
+
+        @Override
+        public int compareTo(CmdPos o) {
+            return (pos < o.pos) ? -1 : ((pos == o.pos) ? 0 : 1);
+
+        }
+    }
+
     private final String cmd;
     private String cmdNoComment = null;
     private ArrayList<CmdPos> positions = null;
@@ -138,20 +155,6 @@ public class GorCommand {
         return t;
     }
 
-    static class CmdPos implements Comparable<CmdPos> {
-        public CmdPos(int pos, int len) {
-            this.pos = pos;
-            this.commentLen = len;
-        }
 
-        public int pos;
-        public int commentLen;
-
-        @Override
-        public int compareTo(CmdPos o) {
-            return (pos < o.pos) ? -1 : ((pos == o.pos) ? 0 : 1);
-
-        }
-    }
 
 }

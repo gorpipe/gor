@@ -27,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -246,12 +247,13 @@ public class UTestDictionaryTable {
     @Test
     public void testAddSingleLine() throws Exception {
         File gordFile = new File(tableWorkDir.toFile(), "gortable_singleline.gord");
-        String dataFileName = Paths.get("../tests/data/gor/genes.gor").toAbsolutePath().toString();
+        Path gorFile =tableWorkDir.resolve("gor1.gor");
+        FileUtils.write(gorFile.toFile(), "chrom\tpos\tcol1\nchr1\t1\tpn1gor\n", "UTF-8");
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
-
-        dict.insert(dataFileName);
+        dict.setLineFilter(false);
+        dict.insert("gor1.gor");
         dict.save();
-        Assert.assertEquals(TestUtils.runGorPipe(gordFile.getCanonicalPath()), TestUtils.runGorPipe(dataFileName));
+        Assert.assertEquals(TestUtils.runGorPipe(gordFile.getCanonicalPath()), TestUtils.runGorPipe(gorFile.toString()));
     }
 
     @Test
@@ -265,6 +267,7 @@ public class UTestDictionaryTable {
 
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
         dict.insert(insertFileName);
+        dict.setLineFilter(false);
         dict.save();
         Assert.assertEquals(TestUtils.runGorPipe(gordFile.getCanonicalPath()), TestUtils.runGorPipe(dataFileName));
     }
@@ -280,6 +283,7 @@ public class UTestDictionaryTable {
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
         dict.insert(Arrays.stream(addFileNames).map(fn -> new DictionaryEntry.Builder(fn, dict.getRootUri()).build()).toArray(DictionaryEntry[]::new));
+        dict.setLineFilter(false);
         dict.save();
         
         Assert.assertEquals(TestUtils.runGorPipe(String.join(" ", Arrays.asList(addFileNames))), TestUtils.runGorPipe(gordFile.getCanonicalPath()));
@@ -295,6 +299,7 @@ public class UTestDictionaryTable {
 
         dict.insert((DictionaryEntry)new DictionaryEntry.Builder(file, dict.getRootUri()).alias("A").build());
         dict.insert((DictionaryEntry)new DictionaryEntry.Builder(file, dict.getRootUri()).alias("B").build());
+        dict.setLineFilter(false);
         dict.save();
         
         Assert.assertEquals("File should be added twice", 2, dict.filter().files(file.toString()).get().size());

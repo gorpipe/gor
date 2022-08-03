@@ -1,6 +1,7 @@
 package org.gorpipe.gor.table.files;
 
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -11,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class UTestNorTable {
@@ -148,5 +150,65 @@ public class UTestNorTable {
                 "## USE_HISTORY = true\n" +
                 "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = A,B,C\n", meta);
+    }
+
+    @Test
+    public void testCreateNorTableFromMultipleInsertsFromEntries() throws Exception {
+        String name = "multipleInserts";
+        Path norFile = workDirPath.resolve(name + ".nor");
+
+        Files.write(workDirPath.resolve("input1.nor"), "#A\tB\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
+
+        NorTable<Row> table = new NorTable<>(norFile.toUri());
+
+        table.insertEntries(List.of((DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toUri()).alias("A").build()));
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"A", "B", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(norFile));
+        Assert.assertEquals( "#A\tB\tref\n" +
+                "chr2\t2\tT\n" , Files.readString(norFile));
+
+        Path metaFile = Path.of(norFile + ".meta");
+        Assert.assertTrue(Files.exists(metaFile));
+
+        Assert.assertEquals("1", table.getProperty("SERIAL"));
+        Assert.assertEquals("true", table.getProperty("USE_HISTORY"));
+        Assert.assertEquals("true", table.getProperty("VALIDATE_FILES"));
+        Assert.assertEquals("A,B,ref", table.getProperty("COLUMNS"));
+    }
+
+    @Test
+    public void testTableInsertFromEntry() throws Exception {
+
+        String name = "multipleInserts";
+        Path norFile = workDirPath.resolve(name + ".nor");
+
+        String content = "#A\tB\tref\nchr1\t1\tA\n";
+        Files.write(norFile, content.getBytes(StandardCharsets.UTF_8));
+
+        Files.write(workDirPath.resolve("input1.nor"), "#A\tB\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
+
+        NorTable<Row> table = new NorTable<>(norFile.toUri());
+
+        table.insertEntries(List.of(
+                (DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toUri()).alias("A").build()));
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"A", "B", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(norFile));
+        Assert.assertEquals( "#A\tB\tref\n" +
+                "chr1\t1\tA\n" +
+                "chr2\t2\tT\n", Files.readString(norFile));
+
+        Path metaFile = Path.of(norFile + ".meta");
+        Assert.assertTrue(Files.exists(metaFile));
+
+        Assert.assertEquals("1", table.getProperty("SERIAL"));
+        Assert.assertEquals("true", table.getProperty("USE_HISTORY"));
+        Assert.assertEquals("true", table.getProperty("VALIDATE_FILES"));
+        Assert.assertEquals("A,B,ref", table.getProperty("COLUMNS"));
     }
 }

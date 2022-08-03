@@ -44,6 +44,9 @@ public class TableHeader extends BaseMeta {
     public static final String HEADER_USE_HISTORY_KEY = "USE_HISTORY";
     public static final String HEADER_VALIDATE_FILES_KEY = "VALIDATE_FILES";
 
+    // Gor code snippet for insert select/post insert transform. For example: sort | distinct
+    public static final String HEADER_SELECT_TRANSFORM_KEY = "SELECT_TRANSFORM";
+
     /**
      * Check if proper table header.
      *

@@ -5,7 +5,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.session.ProjectContext;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
@@ -32,7 +30,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
 
-    private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_FILES_VALIDATE", "true"));
+    private static final boolean DEFAULT_VALIDATE_FILES = Boolean.parseBoolean(System.getProperty("GOR_TABLE_VALIDATE_FILES", "true"));
     protected static final boolean FORCE_SAME_COLUMN_NAMES = false;
     public static final String HISTORY_DIR_NAME = "history";
 
@@ -130,6 +128,10 @@ public abstract class BaseTable<T> implements Table<T> {
 
     public URI getRootUri() {
         return rootUri;
+    }
+
+    public String getProjectPath() {
+        return fileReader != null && fileReader.getCommonRoot() != null ? fileReader.getCommonRoot() : Path.of("").toAbsolutePath().toString();
     }
 
     public TableHeader getHeader() {
@@ -250,7 +252,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
         log.debug("Loading table {}", getName());
         prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
-        parseHeader();
+        loadMeta();
 
         validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
@@ -348,7 +350,8 @@ public abstract class BaseTable<T> implements Table<T> {
         if (header.containsProperty(key)) {
             return header.getProperty(key);
         } else {
-            return System.getProperty(key, def);
+            String env = System.getenv("GOR_TABLE_" + key);
+            return env != null ? env : def;
         }
     }
 
@@ -376,7 +379,7 @@ public abstract class BaseTable<T> implements Table<T> {
     /**
      * Parse/load the table header.
      */
-    protected void parseHeader() {
+    protected void loadMeta() {
         log.debug("Parsing header for {}", getName());
         this.header.clear();
 

@@ -385,6 +385,7 @@ object GeneralQueryHandler {
         val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
         tableHeader.setColumns(header)
       }
+      tableHeader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "false")
       tableHeader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER)
       val dictList = getDictList(dictFiles, chromsrange, fileReader)
       writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)
@@ -403,6 +404,7 @@ object GeneralQueryHandler {
       i += 2
     }
     val tableHeader = new TableHeader
+    tableHeader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "false")
     val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
     tableHeader.setColumns(header)
     val dictList = getPartDictList(dictFiles, partitions)
@@ -426,6 +428,7 @@ object GeneralQueryHandler {
       }
       val tableHeader = new TableHeader
       val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
+      tableHeader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "false")
       tableHeader.setColumns(header)
       val dictList = getPartDictList(dictFiles, partitions)
       writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)

@@ -365,7 +365,9 @@ public class UTestMergeIterator {
         String file2 = createGorFile("Chrom\tPos\tData", "chr1\t2000\t1");
         String dict = createDictFile(String.format("%s\tfirst\tchr1\t0\tchr1\t1000\n%s\tsecond\tchr1\t1001\tchr1\t3000\n", file1, file2));
         GorOptions options = GorOptions.createGorOptions(dict);
-        assertContent("Chrom\tPos\tData\nchr1\t1\t1\nchr1\t2000\t1\n", options);
+        assertContent("Chrom\tPos\tData\tSource\n" +
+                "chr1\t1\t1\tfirst\n" +
+                "chr1\t2000\t1\tsecond\n", options);
     }
 
     @Test
@@ -374,7 +376,9 @@ public class UTestMergeIterator {
         String file2 = createGorFile("Chrom\tPos\tData", "chr1\t2000\t1");
         String dict = createDictFile(String.format("%s\tsecond\tchr1\t1001\tchr1\t3000\n%s\tfirst\tchr1\t0\tchr1\t1000\n", file2, file1));
         GorOptions options = GorOptions.createGorOptions(dict);
-        assertContent("Chrom\tPos\tData\nchr1\t1\t1\nchr1\t2000\t1\n", options);
+        assertContent("Chrom\tPos\tData\tSource\n" +
+                "chr1\t1\t1\tfirst\n" +
+                "chr1\t2000\t1\tsecond\n", options);
     }
 
     @Test
@@ -383,7 +387,9 @@ public class UTestMergeIterator {
         String file2 = createGorFile("Chrom\tStart\tStop\tData", "chr1\t0\t100000000\t2");
         String dict = createDictFile(String.format("%s\tsecond\tchr1\t1001\tchr1\t3000\n%s\tfirst\tchr1\t0\tchr1\t1000\n", file2, file1));
         GorOptions options = GorOptions.createGorOptions(dict);
-        assertContent("Chrom\tStart\tStop\tData\nchr1\t0\t100000000\t2\nchr1\t0\t100000000\t1\n", options);
+        assertContent("Chrom\tStart\tStop\tData\tSource\n" +
+                "chr1\t0\t100000000\t2\tsecond\n" +
+                "chr1\t0\t100000000\t1\tfirst\n", options);
     }
 
     @Test

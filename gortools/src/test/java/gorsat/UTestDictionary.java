@@ -176,7 +176,7 @@ public class UTestDictionary {
     public void testGorDictionaryRead() throws IOException {
         String result = TestUtils.runGorPipe(String.format("gor %s", dictionaryFile.getCanonicalPath()));
         Assert.assertEquals(19, result.split("\n").length);
-        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", result.split("\n")[0]);
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", result.split("\n")[0]);
     }
 
     @Test
@@ -294,7 +294,7 @@ public class UTestDictionary {
     public void testSourceColumnOnPlainDictionary() throws IOException {
         try(GenomicIterator rs = TestUtils.runGorPipeIterator("gor " + dictionaryFile.getCanonicalPath())) {
             Assert.assertEquals("Plain dictionary should include source column",
-                    "Chrom\tgene_start\tgene_end\tGene_Symbol", rs.getHeader());
+                    "Chrom\tgene_start\tgene_end\tGene_Symbol\tSource", rs.getHeader());
         }
     }
 
@@ -541,7 +541,7 @@ public class UTestDictionary {
         Files.writeString(dictpath,header);
         var query = "gor "+dictrelpath;
         var result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString());
-        Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\n",result);
+        Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\tSource\n",result);
         query = "create #x = pgor "+dictrelpath+"|where 2=3; gor [#x]";
         var cachepath = workDirPath.resolve("result_cache");
         Files.createDirectory(cachepath);

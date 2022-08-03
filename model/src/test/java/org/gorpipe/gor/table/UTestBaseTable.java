@@ -230,7 +230,7 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - default not bucketized", "chromo\tpos\tdata\ttag\tSpecial\n", result[0]);
     }
 
@@ -239,7 +239,16 @@ public class UTestBaseTable {
         prepareDictGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
+        Assert.assertEquals("Source col name incorrect - default not bucketized", "chromo\tpos\tdata\ttag\tSource\n", result[0]);
+    }
+
+    @Test
+    public void testSourceColumnDefaultNotBucketizedNoMetaNoY() throws Exception {
+        prepareDictGordFile();
+
+        String[] result;
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - default not bucketized", "chromo\tpos\tdata\ttag\tSource\n", result[0]);
     }
 
@@ -248,13 +257,13 @@ public class UTestBaseTable {
         prepareDictGordFileWithHeader();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - default not bucketized", "chromo\tpos\tdata\ttag\tExtraSpecial\n", result[0]);
     }
 
     @Test
     public void testSourceColumnDefaultBucketized() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
@@ -262,8 +271,17 @@ public class UTestBaseTable {
     }
 
     @Test
+    public void testSourceColumnDefaultBucketizedPgor() throws Exception {
+        prepareTableGordFileBucketized();
+
+        String[] result;
+        result = TestUtils.runGorPipeLines("pgor " + gordFile.toString());
+            Assert.assertEquals("Source col name incorrect - bucketized", "chromo\tpos\tdata\ttag\tSpecial\n", result[0]);
+    }
+
+    @Test
     public void testSourceColumnDefaultBucketizedNoMeta() throws Exception {
-        prepareDictGordFile();
+        prepareDictGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
@@ -272,7 +290,7 @@ public class UTestBaseTable {
 
     @Test
     public void testSourceColumnDefaultBucketizedNoMetaHeaderLine() throws Exception {
-        prepareDictGordFileWithHeader();
+        prepareDictGordFileWithHeaderBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor " + gordFile.toString());
@@ -284,13 +302,13 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -s PAX " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor -s PAX " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\tdata\ttag\tPAX\n", result[0]);
     }
 
     @Test
     public void testSourceColumnBucketized() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -s PAX " + gordFile.toString());
@@ -302,13 +320,13 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y " + gordFile.toString() + " | select 1,2");
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString() + " | select 1,2");
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\n", result[0]);
     }
 
     @Test
     public void testSourceColumnDefaultBucketizedWithSelect() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor " + gordFile.toString() + " | select 1,2");
@@ -321,14 +339,14 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -s PAX " + gordFile.toString() + " | select 1,2");
+        result = TestUtils.runGorPipeLines("gor -s PAX " + gordFile.toString() + " | select 1,2");
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\n", result[0]);
 
     }
 
     @Test
     public void testSourceColumnBucketizedWithSelect() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -s PAX " + gordFile.toString() + " | select 1,2");
@@ -340,14 +358,14 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y " + gordFile.toString() + " | select 1,2,3");
+        result = TestUtils.runGorPipeLines("gor " + gordFile.toString() + " | select 1,2,3");
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\tdata\n", result[0]);
 
     }
 
     @Test
     public void testSourceColumnDefaultBucketizedWithSelectThreeColumns() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor " + gordFile.toString() + " | select 1,2,3");
@@ -360,14 +378,14 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -s PA " + gordFile.toString() + " | select 1,2,3");
+        result = TestUtils.runGorPipeLines("gor -s PA " + gordFile.toString() + " | select 1,2,3");
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\tdata\n", result[0]);
 
     }
 
     @Test
     public void testSourceColumnBucketizedWithSelectThreeColumns() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -s PAX " + gordFile.toString() + " | select 1,2,3");
@@ -400,14 +418,14 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -f a " + gordFile.toString() + " | select 1,2,3");
+        result = TestUtils.runGorPipeLines("gor -f a " + gordFile.toString() + " | select 1,2,3");
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\tdata\n", result[0]);
 
     }
 
     @Test
     public void testSourceColumnDefaultBucketizedWithFiltering() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -f a " + gordFile.toString() + " | select 1,2,3");
@@ -420,14 +438,14 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -s PAX -f a " + gordFile.toString()+ " | select 1,2,3");
+        result = TestUtils.runGorPipeLines("gor -s PAX -f a " + gordFile.toString()+ " | select 1,2,3");
         Assert.assertEquals("Source col name incorrect - -s not bucketized", "chromo\tpos\tdata\n", result[0]);
 
     }
 
     @Test
     public void testSourceColumnBucketizedWithFiltering() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -s PAX -f a " + gordFile.toString() + " | select 1,2,3");
@@ -442,14 +460,14 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -f a,b " + gordFile.toString()+ " | select 1,2,3");
+        result = TestUtils.runGorPipeLines("gor -f a,b " + gordFile.toString()+ " | select 1,2,3");
         Assert.assertEquals("Row count incorrect - -c -f not bucketized", 21, result.length);
 
     }
 
     @Test
     public void testSourceColumnDefaultBucketizedWithMoreFiltering() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -f a,b " + gordFile.toString()+ " | select 1,2,3");
@@ -464,7 +482,7 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -p chr99 " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tSpecial\n", result[0]);
     }
 
@@ -473,7 +491,7 @@ public class UTestBaseTable {
         prepareDictGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -p chr99 " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tSource\n", result[0]);
     }
 
@@ -482,13 +500,13 @@ public class UTestBaseTable {
         prepareDictGordFileWithHeader();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -p chr99 " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tExtraSpecial\n", result[0]);
     }
 
     @Test
     public void testSourceColumnDefaultBucketizedWithEmptyFiltering() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
@@ -497,7 +515,7 @@ public class UTestBaseTable {
 
     @Test
     public void testSourceColumnDefaultBucketizedWithEmptyFilteringNoMeta() throws Exception {
-        prepareDictGordFile();
+        prepareDictGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
@@ -506,7 +524,7 @@ public class UTestBaseTable {
 
     @Test
     public void testSourceColumnDefaultBucketizedWithEmptyFilteringNoMetaWithHeader() throws Exception {
-        prepareDictGordFileWithHeader();
+        prepareDictGordFileWithHeaderBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -p chr99 " + gordFile.toString());
@@ -518,13 +536,13 @@ public class UTestBaseTable {
         prepareTableGordFile();
 
         String[] result;
-        result = TestUtils.runGorPipeLines("gor -Y -p chr99 -s PAX " + gordFile.toString());
+        result = TestUtils.runGorPipeLines("gor -p chr99 -s PAX " + gordFile.toString());
         Assert.assertEquals("Source col name incorrect - empty result not bucketized", "chromo\tpos\tdata\ttag\tPAX\n", result[0]);
     }
 
     @Test
     public void testSourceColumnBucketizedWithEmptyFiltering() throws Exception {
-        prepareTableGordFile();
+        prepareTableGordFileBucketized();
 
         String[] result;
         result = TestUtils.runGorPipeLines("gor -p chr99 -s PAX " + gordFile.toString());
@@ -548,7 +566,13 @@ public class UTestBaseTable {
         dict.insert(new DictionaryEntry.Builder<>(abfile, dict.getRootUri()).alias("ab").build());
         dict.insert(new DictionaryEntry.Builder<>(bcfile, dict.getRootUri()).alias("bc").build());
         dict.save();
+    }
 
+    private void prepareTableGordFileBucketized() throws IOException {
+        prepareTableGordFile();
+
+        gordFile = workDirPath.resolve("dict.gord");
+        DictionaryTable dict =  new DictionaryTable.Builder<>(gordFile).build();
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(2).build();
         man.bucketize(dict.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
     }
@@ -559,8 +583,23 @@ public class UTestBaseTable {
         Files.delete(workDirPath.resolve(".dict/header"));
     }
 
+    private void prepareDictGordFileBucketized() throws IOException {
+        prepareTableGordFileBucketized();
+        Files.delete(workDirPath.resolve("dict.gord.meta"));
+        Files.delete(workDirPath.resolve(".dict/header"));
+    }
+
     private void prepareDictGordFileWithHeader() throws IOException {
         prepareTableGordFile();
+        Files.delete(workDirPath.resolve("dict.gord.meta"));
+        Files.delete(workDirPath.resolve(".dict/header"));
+        String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");
+        content = "#Content\tExtraSpecial\n" + content;
+        FileUtils.writeStringToFile(gordFile.toFile(), content, "utf8");
+    }
+
+    private void prepareDictGordFileWithHeaderBucketized() throws IOException {
+        prepareTableGordFileBucketized();
         Files.delete(workDirPath.resolve("dict.gord.meta"));
         Files.delete(workDirPath.resolve(".dict/header"));
         String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");

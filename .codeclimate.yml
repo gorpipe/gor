@@ -1,10 +1,9 @@
 plugins:
   sonar-java:
     enabled: true
-    #config:
-    #  tests_patterns:
-    #    - src/test/**
-    #    - app/src/test/**
+    config:
+      tests_patterns:
+        - "*/src/test/**"
     #  minimum_severity: critical
     #  sonar.java.source: "8"
 
@@ -22,3 +21,5 @@ exclude_patterns:
   - "**/*.eot"
   - "**/*.otf"
   - "**/*.jar"
+  # Causes StackOverflowError
+  - "**/GorCommand.java"

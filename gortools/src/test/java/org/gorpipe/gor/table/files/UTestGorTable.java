@@ -1,6 +1,10 @@
 package org.gorpipe.gor.table.files;
 
+import gorsat.TestUtils;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.table.TableHeader;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -11,7 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class UTestGorTable {
 
@@ -152,6 +158,119 @@ public class UTestGorTable {
     }
 
     @Test
+    public void testGorTableMultipleIdenticalInserts() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insert("chr1\t2\tC","chr1\t3\tG");;
+        table.insert("chr1\t2\tC");
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals(content +
+                "chr1\t2\tC\n" +
+                "chr1\t2\tC\n" +
+                "chr1\t3\tG\n", Files.readString(gorFile));
+    }
+
+    @Test
+    public void testGorTableInsertPostProcessing() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+        Files.write(Path.of(gorFile.toString() + ".meta"),
+                "## SELECT_TRANSFORM = sort genome | distinct".getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insert("chr1\t2\tC","chr1\t3\tG");;
+        table.insert("chr1\t2\tC");
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals(content +
+                "chr1\t2\tC\n" +
+                "chr1\t3\tG\n", Files.readString(gorFile));
+    }
+
+    @Test
+    public void testCreateGorTableFromMultipleInsertsFromEntries() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        Files.write(workDirPath.resolve("input1.gor"), "#chrom\tpos\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(workDirPath.resolve("input2.gor"), "#chrom\tpos\tref\nchr3\t3\tG\n".getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insertEntries(List.of(
+                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toUri()).alias("A").build(),
+                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toUri()).alias("B").build()));
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals( "#chrom\tpos\tref\n" +
+                "chr2\t2\tT\n" +
+                "chr3\t3\tG\n", Files.readString(gorFile));
+
+        Path metaFile = Path.of(gorFile + ".meta");
+        Assert.assertTrue(Files.exists(metaFile));
+
+        Assert.assertEquals("1", table.getProperty("SERIAL"));
+        Assert.assertEquals("true", table.getProperty("USE_HISTORY"));
+        Assert.assertEquals("true", table.getProperty("VALIDATE_FILES"));
+        Assert.assertEquals("chrom,pos,ref", table.getProperty("COLUMNS"));
+    }
+
+    @Test
+    public void testTableInsertFromEntries() throws Exception {
+        String name = "multipleInserts";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        Files.write(workDirPath.resolve("input1.gor"), "#chrom\tpos\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(workDirPath.resolve("input2.gor"), "#chrom\tpos\tref\nchr3\t3\tG\n".getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        table.insertEntries(List.of(
+                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toUri()).alias("A").build(),
+                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toUri()).alias("B").build()));
+        table.save();
+
+        Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
+
+        Assert.assertTrue(Files.exists(gorFile));
+        Assert.assertEquals( "#chrom\tpos\tref\n" +
+                "chr1\t1\tA\n" +
+                "chr2\t2\tT\n" +
+                "chr3\t3\tG\n", Files.readString(gorFile));
+
+        Path metaFile = Path.of(gorFile + ".meta");
+        Assert.assertTrue(Files.exists(metaFile));
+        String meta = Files.readString(metaFile);
+        Assert.assertEquals("## SERIAL = 1\n" +
+                "## USE_HISTORY = true\n" +
+                "## VALIDATE_FILES = true\n" +
+                "## COLUMNS = chrom,pos,ref\n", meta);
+    }
+
+    @Test
     public void testDeleteGorTable() throws Exception {
         String name = "delete";
         Path gorFile = workDirPath.resolve(name + ".gor");
@@ -178,5 +297,23 @@ public class UTestGorTable {
                 "## USE_HISTORY = true\n" +
                 "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);
+    }
+
+    @Test
+    public void testGetLines() throws Exception {
+        String name = "getLines";
+        Path gorFile = workDirPath.resolve(name + ".gor");
+
+        String content = "#chrom\tpos\tref\nchr1\t1\tA\nchr1\t2\tC\nchr1\t3\tG\n";
+        Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
+
+        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+
+        String streamContent;
+        try (Stream<String> stream = table.getLines()) {
+            streamContent = stream.collect(Collectors.joining("\n", "", "\n"));
+        }
+
+        Assert.assertEquals(content, streamContent);
     }
 }

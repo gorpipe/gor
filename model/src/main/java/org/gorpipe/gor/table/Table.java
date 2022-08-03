@@ -1,11 +1,13 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.TableEntry;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
  * Interface to work with tables.
@@ -65,7 +67,7 @@ public interface Table<T> {
     /**
      * Get the lines of the table.
      */
-    Iterator<String> getLines();
+    Stream<String> getLines();
 
     /**
      * Insert/update lines.
@@ -90,6 +92,12 @@ public interface Table<T> {
     default void insert(T... lines) {
         insert(Arrays.asList(lines));
     }
+
+    /**
+     * Insert dictionary entries/files into this table.
+     * @param entries  the entries to insert.
+     */
+    void insertEntries(Collection<DictionaryEntry> entries);
 
     /**
      * Insert/update lines.
@@ -121,6 +129,12 @@ public interface Table<T> {
     default void delete(T... lines) {
         delete(Arrays.asList(lines));
     }
+
+    /**
+     * Delete the given entries/files.
+     * @param entries   the entries/files.
+     */
+    void deleteEntries(Collection<DictionaryEntry> entries);
 
     void reload();
 

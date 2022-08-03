@@ -1,5 +1,6 @@
 package org.gorpipe.gor.table.files;
 
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.Collection;
 
 /**
@@ -17,7 +17,7 @@ import java.util.Collection;
  */
 public class NorTable<T extends Row> extends GorTable<T> {
 
-    public final String HEADER_PRIMARY_KEY_KEY = "PRIMARY_KEY";
+    public static final String HEADER_PRIMARY_KEY_KEY = "PRIMARY_KEY";
 
     private static final Logger log = LoggerFactory.getLogger(NorTable.class);
 
@@ -33,10 +33,12 @@ public class NorTable<T extends Row> extends GorTable<T> {
         this(uri, null);
     }
 
+    @Override
     protected String getInputTempFileEnding() {
         return ".nor";
     }
 
+    @Override
     protected String getGorCommand() {
         return "nor";
     }
@@ -53,25 +55,39 @@ public class NorTable<T extends Row> extends GorTable<T> {
 
     @Override
     public void delete(Collection<T> lines) {
-        createDeleteTempFile(lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
+        createDeleteTempFile(lines.stream().map(Row::otherCols).toArray(String[]::new));
     }
 
     @Override
-    protected String createInsertTempFileCommand(URI insertFile) {
-        String key = getProperty(HEADER_PRIMARY_KEY_KEY);
-
-        if (key == null) {
-            return super.createInsertTempFileCommand(insertFile);
+    protected String createInsertTempFileCommand(String mainFile, String outFile, String... insertFiles) {
+        if (insertFiles.length != 1) {
+            throw new GorSystemException("Insert into nor table only supports 1 file at time", null);
         }
 
-        Path mainFile = getMainFile();
-        tempOutFilePath = getNewTempFileName();
+        String insertFile = insertFiles[0];
 
-        // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
-        return String.format("%s %s | map <(%s %s) -c %s -n %s -m 'Include' | where %sx = 'Include' | hide %sx" +
-                        " | merge %s | sort -c %s | write %s",
-                getGorCommand(), mainFile, getGorCommand(), insertFile, key, key, key, key, 
-                insertFile, key, tempOutFilePath);
+        String key = getProperty(HEADER_PRIMARY_KEY_KEY);
+
+        String postProcessing = getPostProcessing();
+
+        if (key == null) {
+            if (fileReader.exists(mainFile)) {
+                // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
+                return String.format("%s %s | merge %s %s | write %s",
+                        getGorCommand(), mainFile, insertFile, postProcessing, outFile );
+            } else {
+                return String.format("%s %s %s | write %s", getGorCommand(), insertFile, postProcessing, outFile);
+            }
+        } else {
+            if (fileReader.exists(mainFile)) {
+                // Only pick lines from the orignal file that are not in the insert file (using the primary key field).
+                return String.format("%s %s | map <(%s %s) -c %s -n %s -m 'Include' | where %sx = 'Include' | hide %sx" +
+                                " | merge %s | sort -c %s %s | write %s",
+                        getGorCommand(), mainFile, getGorCommand(), insertFile, key, key, key, key,
+                        insertFile, key, postProcessing, outFile );
+            } else {
+                return String.format("%s %s | sort -c %s %s | write %s", getGorCommand(), insertFile, key, postProcessing, outFile);
+            }
+        }
     }
 }
-

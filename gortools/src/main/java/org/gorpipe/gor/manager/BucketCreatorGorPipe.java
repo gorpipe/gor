@@ -22,10 +22,7 @@
 
 package org.gorpipe.gor.manager;
 
-import gorsat.process.CLIGorExecutionEngine;
-import gorsat.process.PipeOptions;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.output.NullOutputStream;
+import org.gorpipe.gor.table.GorPipeUtils;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -33,10 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,42 +54,15 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
     }
 
     @Override
-    public void createBuckets(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate, URI absBucketDir)
+    public void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate, URI absBucketDir)
             throws IOException {
 
         // Build the gor query (gorpipe)
-        String gorPipeCommand = createBucketizeGorCommand(bucketsToCreate, table.getRootUri(), table);
-        List<String> argsList = new ArrayList<>();
-        argsList.add(gorPipeCommand);
-        argsList.add("-workers");
-        argsList.add(String.valueOf(workers));
-        if (table.getFileReader().getCommonRoot() != null) {
-            argsList.add("-gorroot");
-            argsList.add(table.getFileReader().getCommonRoot());
-        }
-        String[] args = argsList.toArray(new String[argsList.size()]);
-
-        log.trace("Calling bucketize with command args: {} \"{}\" {} {} {} {}", args);
-
-        PrintStream oldOut = System.out;
-
-        PipeOptions options = new PipeOptions();
-        options.parseOptions(args);
-        CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, table.getSecurityContext());
-
-        try (PrintStream newPrintStream = new PrintStream(new NullOutputStream())){
-            System.setOut(newPrintStream);
-            engine.execute();
-        } catch (Exception e) {
-            log.error("Calling bucketize failed.  Command args: {} \"{}\" {} {} {} {} failed", args);
-            throw e;
-        } finally {
-
-            System.setOut(oldOut);
-        }
+        String gorPipeCommand = createBucketizeGorCommandForBucketDir(bucketsToCreate, absBucketDir, table);
+        GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, workers, table.getProjectPath(), table.getSecurityContext());
     }
 
-    private String createBucketizeGorCommand(Map<String, List<T>> bucketsToCreate, URI rootUri, BaseDictionaryTable<T> table) {
+    private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, URI absBucketDir, BaseDictionaryTable<T> table) {
         // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
         // Tag based, does not work if we are adding more files with same alias, why not?.
         StringBuilder sb = new StringBuilder();
@@ -109,7 +76,7 @@ public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements Buc
                 sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | write -c %s;%n",
                         bucket, table.getPath(), table.getSourceColumn(), tags,
                         table.getSecurityContext() != null ? table.getSecurityContext() : "",
-                        PathUtils.resolve(rootUri, bucket)));
+                        PathUtils.resolve(absBucketDir, PathUtils.getFileName(bucket))));
             }
         }
 

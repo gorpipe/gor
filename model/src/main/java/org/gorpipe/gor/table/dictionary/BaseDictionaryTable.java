@@ -61,7 +61,6 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     private boolean hasUniqueTags = false;    //True if we don't want to allow double entries of the same tag
 
     private Boolean bucketize = null;
-    private boolean lineFilter = true;
     private String contentType = null;
 
     protected ITableEntries<T> tableEntries;
@@ -131,11 +130,11 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     }
 
     public Boolean getLineFilter() {
-        return lineFilter;
+        return Boolean.valueOf(header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "true"));
     }
 
     public void setLineFilter(Boolean lineFilter) {
-        this.lineFilter = lineFilter;
+        header.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, lineFilter.toString());
     }
 
     public boolean isHasUniqueTags() {
@@ -204,8 +203,8 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
     }
 
     @Override
-    public Iterator<String> getLines() {
-        return getEntries().stream().map(l -> l.formatEntryNoNewLine()).iterator();
+    public Stream<String> getLines() {
+        return getEntries().stream().map(l -> l.formatEntryNoNewLine());
     }
 
     public void insert(Collection<T> lines) {
@@ -409,7 +408,6 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         hasUniqueTags = Boolean.parseBoolean(getConfigTableProperty(DictionaryTableMeta.HEADER_UNIQUE_TAGS_KEY,  Boolean.toString(hasUniqueTags)));
 
         bucketize = getBooleanConfigTableProperty(DictionaryTableMeta.HEADER_BUCKETIZE_KEY, bucketize);
-        lineFilter = getBooleanConfigTableProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, lineFilter);
     }
 
     /**
@@ -427,7 +425,6 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
 
         this.header.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, this.sourceColumn);
         this.header.setProperty(DictionaryTableMeta.HEADER_UNIQUE_TAGS_KEY, Boolean.toString(this.hasUniqueTags));
-        this.header.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, Boolean.toString(this.lineFilter));
 
         if (bucketize != null) {
             this.header.setProperty(DictionaryTableMeta.HEADER_BUCKETIZE_KEY, Boolean.toString(this.bucketize));
