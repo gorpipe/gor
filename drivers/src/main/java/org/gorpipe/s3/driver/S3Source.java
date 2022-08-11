@@ -25,8 +25,8 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import com.google.common.base.Strings;
-import com.upplication.s3fs.S3FileSystem;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -43,6 +43,8 @@ import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,6 +58,8 @@ public class S3Source implements StreamSource {
     private final String key;
     private final AmazonS3Client client;
     private S3SourceMetadata meta;
+
+    private static Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
 
     private Path path;
 
@@ -128,8 +132,14 @@ public class S3Source implements StreamSource {
     @Override
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
-            ObjectMetadata md = client.getObjectMetadata(bucket, key);
-            meta = new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+            try {
+                meta = metadataCache.get(bucket + key, () -> {
+                    ObjectMetadata md = client.getObjectMetadata(bucket, key);
+                    return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+                });
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
         }
         return meta;
     }
