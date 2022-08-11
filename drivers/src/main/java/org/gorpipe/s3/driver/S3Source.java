@@ -43,6 +43,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -58,8 +59,9 @@ public class S3Source implements StreamSource {
     private final String key;
     private final AmazonS3Client client;
     private S3SourceMetadata meta;
-
-    private static Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
+    private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
+    private static long gotSlowDown = -1;
+    private static final Random rnd = new Random();
 
     private Path path;
 
@@ -133,12 +135,22 @@ public class S3Source implements StreamSource {
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
             try {
+                if (gotSlowDown!=-1) {
+                    if (System.nanoTime()-gotSlowDown < 10000000000L){
+                        Thread.sleep((long) (rnd.nextFloat(1.0f, 9.0f) * 1000));
+                    } else {
+                        gotSlowDown = -1;
+                    }
+                }
                 meta = metadataCache.get(bucket + key, () -> {
                     ObjectMetadata md = client.getObjectMetadata(bucket, key);
                     return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
                 });
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
+            } catch (ExecutionException | InterruptedException e) {
+                if (e.getMessage().contains("Slow Down")) {
+                    gotSlowDown = System.nanoTime();
+                    return getSourceMetadata();
+                } else throw new RuntimeException(e);
             }
         }
         return meta;
