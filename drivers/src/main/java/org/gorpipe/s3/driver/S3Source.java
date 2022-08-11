@@ -147,7 +147,8 @@ public class S3Source implements StreamSource {
                     return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
                 });
             } catch (ExecutionException | InterruptedException e) {
-                if (e.getMessage().contains("Slow Down")) {
+                System.err.println("meta error messsage: " + e.getMessage());
+                if (e.getMessage().contains("Slow Down") || Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).anyMatch(p -> p.contains("Slow Down"))) {
                     gotSlowDown = System.nanoTime();
                     return getSourceMetadata();
                 } else throw new RuntimeException(e);
