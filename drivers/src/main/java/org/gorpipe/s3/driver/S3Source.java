@@ -35,6 +35,8 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -54,6 +56,7 @@ import java.util.stream.Stream;
  * Created by villi on 22/08/15.
  */
 public class S3Source implements StreamSource {
+    private static final Logger log = LoggerFactory.getLogger(S3Source.class);
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
@@ -119,10 +122,19 @@ public class S3Source implements StreamSource {
 
     private InputStream openRequest(GetObjectRequest request) {
         try {
+            slowDown();
             S3Object object = client.getObject(request);
             return object.getObjectContent();
-        } catch(SdkClientException sdkClientException) {
-            throw new GorResourceException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")), sourceReference.getUrl(), sdkClientException);
+        } catch(SdkClientException | InterruptedException sdkClientException) {
+            log.error("range error messsage: " + sdkClientException.getMessage());
+            if (sdkClientException.getMessage().contains("Please reduce") || Arrays.stream(sdkClientException.getStackTrace()).map(StackTraceElement::toString).anyMatch(p -> p.contains("Please reduce"))) {
+                log.error("slowing request");
+                gotSlowDown = System.nanoTime();
+                return openRequest(request);
+            } else {
+                log.error("range stacktrace " + Arrays.stream(sdkClientException.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining()));
+                throw new GorResourceException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")), sourceReference.getUrl(), sdkClientException);
+            }
         }
     }
 
@@ -131,27 +143,35 @@ public class S3Source implements StreamSource {
         return sourceReference.getUrl();
     }
 
+    void slowDown() throws InterruptedException {
+        if (gotSlowDown!=-1) {
+            if (System.nanoTime()-gotSlowDown < 10000000000L){
+                Thread.sleep((long) (rnd.nextFloat(1.0f, 9.0f) * 1000));
+            } else {
+                gotSlowDown = -1;
+            }
+        }
+    }
+
     @Override
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
             try {
-                if (gotSlowDown!=-1) {
-                    if (System.nanoTime()-gotSlowDown < 10000000000L){
-                        Thread.sleep((long) (rnd.nextFloat(1.0f, 9.0f) * 1000));
-                    } else {
-                        gotSlowDown = -1;
-                    }
-                }
+                slowDown();
                 meta = metadataCache.get(bucket + key, () -> {
                     ObjectMetadata md = client.getObjectMetadata(bucket, key);
                     return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
                 });
             } catch (ExecutionException | InterruptedException e) {
-                System.err.println("meta error messsage: " + e.getMessage());
+                log.error("meta error messsage: " + e.getMessage());
                 if (e.getMessage().contains("Slow Down") || Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).anyMatch(p -> p.contains("Slow Down"))) {
+                    log.error("slowing meta");
                     gotSlowDown = System.nanoTime();
                     return getSourceMetadata();
-                } else throw new RuntimeException(e);
+                } else {
+                    log.error("meta stacktrace: " + Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining()));
+                    throw new RuntimeException(e);
+                }
             }
         }
         return meta;
