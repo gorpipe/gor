@@ -135,6 +135,9 @@ public class S3Source implements StreamSource {
                 log.error("range stacktrace " + Arrays.stream(sdkClientException.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining()));
                 throw new GorResourceException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")), sourceReference.getUrl(), sdkClientException);
             }
+        } catch(Exception e) {
+            log.error("range other exception " + e);
+            throw e;
         }
     }
 
@@ -172,6 +175,9 @@ public class S3Source implements StreamSource {
                     log.error("meta stacktrace: " + Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining()));
                     throw new RuntimeException(e);
                 }
+            } catch(Exception e) {
+                log.error("meta other exception " + e);
+                throw e;
             }
         }
         return meta;
