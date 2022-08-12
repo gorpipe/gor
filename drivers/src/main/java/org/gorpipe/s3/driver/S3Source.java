@@ -28,6 +28,7 @@ import com.amazonaws.services.s3.model.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -64,6 +65,7 @@ public class S3Source implements StreamSource {
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
     private static long gotSlowDown = -1;
+    private static long gotRequestSlowDown = -1;
     private static final Random rnd = new Random();
 
     private Path path;
@@ -122,14 +124,14 @@ public class S3Source implements StreamSource {
 
     private InputStream openRequest(GetObjectRequest request) {
         try {
-            slowDown();
+            slowDownRequest();
             S3Object object = client.getObject(request);
             return object.getObjectContent();
         } catch(SdkClientException | InterruptedException sdkClientException) {
             log.error("range error messsage: " + sdkClientException.getMessage());
             if (sdkClientException.getMessage().contains("Please reduce") || Arrays.stream(sdkClientException.getStackTrace()).map(StackTraceElement::toString).anyMatch(p -> p.contains("Please reduce"))) {
                 log.error("slowing request");
-                gotSlowDown = System.nanoTime();
+                gotRequestSlowDown = System.nanoTime();
                 return openRequest(request);
             } else {
                 log.error("range stacktrace " + Arrays.stream(sdkClientException.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining()));
@@ -146,12 +148,22 @@ public class S3Source implements StreamSource {
         return sourceReference.getUrl();
     }
 
-    void slowDown() throws InterruptedException {
+    static void slowDown() throws InterruptedException {
         if (gotSlowDown!=-1) {
             if (System.nanoTime()-gotSlowDown < 10000000000L){
                 Thread.sleep((long) (rnd.nextFloat(1.0f, 9.0f) * 1000));
             } else {
                 gotSlowDown = -1;
+            }
+        }
+    }
+
+    static void slowDownRequest() throws InterruptedException {
+        if (gotRequestSlowDown!=-1) {
+            if (System.nanoTime()-gotRequestSlowDown < 10000000000L){
+                Thread.sleep((long) (rnd.nextFloat(1.0f, 9.0f) * 1000));
+            } else {
+                gotRequestSlowDown = -1;
             }
         }
     }
@@ -165,7 +177,7 @@ public class S3Source implements StreamSource {
                     ObjectMetadata md = client.getObjectMetadata(bucket, key);
                     return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
                 });
-            } catch (ExecutionException | InterruptedException e) {
+            } catch (UncheckedExecutionException | ExecutionException | InterruptedException e) {
                 log.error("meta error messsage: " + e.getMessage());
                 if (e.getMessage().contains("Slow Down") || Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).anyMatch(p -> p.contains("Slow Down"))) {
                     log.error("slowing meta");
