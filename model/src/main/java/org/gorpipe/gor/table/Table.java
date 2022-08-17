@@ -2,7 +2,6 @@ package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.TableEntry;
 
 import java.nio.file.Path;
 import java.util.Arrays;

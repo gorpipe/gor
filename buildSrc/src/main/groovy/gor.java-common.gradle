@@ -161,6 +161,8 @@ tasks.withType(Test) {
     props.load(new FileInputStream("${project.rootDir}/tests/config/unittest.sysproperties"))
     systemProperties = props
 
+    jvmArgs = Arrays.asList("--add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/sun.nio.fs=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED".split(" "))
+
     // Set logback config file.
     systemProperty 'logback.configurationFile', new File("${project.rootDir}/tests/config/logback-test.xml").absolutePath
 

@@ -1,9 +1,10 @@
 package org.gorpipe.gor.table;
 
 import org.apache.commons.io.FilenameUtils;
-import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.files.DictionaryLinkTable;
 import org.gorpipe.gor.table.files.GorTable;
 import org.gorpipe.gor.table.files.NorTable;
 
@@ -33,6 +34,13 @@ public class TableFactory {
                 case "gorz":
                 case "vcf":
                     table = new GorTable(URI.create(tablePath));
+                    break;
+                case "link":
+                    if (tablePath.toLowerCase().endsWith("gord.link")) {
+                        table = new DictionaryLinkTable(URI.create(tablePath), fileReader);
+                    } else {
+                        throw new GorSystemException("Unsupported table type " + tablePath,  null);
+                    }
                     break;
                 default:
                     table = new NorTable(URI.create(tablePath));

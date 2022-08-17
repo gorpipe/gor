@@ -207,6 +207,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         return getEntries().stream().map(l -> l.formatEntryNoNewLine());
     }
 
+    @Override
     public void insert(Collection<T> lines) {
         int count = 0;
         for (T line : lines) {

@@ -160,6 +160,7 @@ public abstract class BaseTable<T> implements Table<T> {
         return this.header.getColumns();
     }
 
+    @Override
     public String getSecurityContext() {
         return fileReader != null ? fileReader.getSecurityContext() : "";
     }
@@ -219,7 +220,6 @@ public abstract class BaseTable<T> implements Table<T> {
         this.fileReader = fileReader;
     }
 
-    @Override
     public void initialize() {
         log.trace("Initialize {}", getName());
 
@@ -391,7 +391,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     /**
      * Validate that the content of the given file matches the content of the table.
-     * @param file
+     * @param file  file to validate
      */
     protected void validateFile(String file) {
         // Validate file existence.
