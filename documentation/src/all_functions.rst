@@ -20,9 +20,11 @@
    functions/daydiff
    functions/decode
    functions/div
+   functions/eform
    functions/float
    functions/floor
    functions/form
+   functions/gform
    functions/gtshare
    functions/if
    functions/indag

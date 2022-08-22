@@ -373,6 +373,14 @@ object ParseUtilities {
   def eString(a: Int, b: Int): String = "%" + a + "." + b + "e"
 
   /**
+   * This method takes two ints and returns a parametrized "g" string
+   * @param a
+   * @param b
+   * @return
+   */
+  def gString(a: Int, b: Int): String = "%" + a + "." + b + "g"
+
+  /**
     * This method takes a double and a string and returns a reformatted string with delimiters replaced.
     *
     * @param d

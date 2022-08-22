@@ -328,6 +328,20 @@ public class UTestTypeAndStringConversion {
         TestUtils.assertCalculated("eform(0.999,7,5)", "9.99000e-01");
         TestUtils.assertCalculated("eform(3.1415926535,4,2)", "3.14e+00");
         TestUtils.assertCalculated("eform(1+3+5,4,2)", "9.00e+00");
+        TestUtils.assertCalculated("gform(3.1415926535,1,4)", "3.142");
+        TestUtils.assertCalculated("gform(1234567890,1,4)", "1.235e+09");
+    }
+
+    @Test
+    public void testGForm() {
+        TestUtils.assertCalculated("gform(5,5,3)", " 5.00");
+        TestUtils.assertCalculated("gform(123,5,5)", "123.00");
+        TestUtils.assertCalculated("gform(1000,10,1)", "     1e+03");
+        TestUtils.assertCalculated("gform(0.999,7,5)", "0.99900");
+        TestUtils.assertCalculated("gform(3.1415926535,4,2)", " 3.1");
+        TestUtils.assertCalculated("gform(1+3+5,4,2)", " 9.0");
+        TestUtils.assertCalculated("gform(3.1415926535,1,4)", "3.142");
+        TestUtils.assertCalculated("gform(1234567890,1,4)", "1.235e+09");
     }
 
     @Test
