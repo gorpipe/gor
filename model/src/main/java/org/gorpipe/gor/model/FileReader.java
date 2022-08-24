@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Collectors;
@@ -295,6 +294,8 @@ public abstract class FileReader {
     public DataSource resolveUrl(SourceReference sourceReference) {
         throw new GorSystemException(String.format("This file reader (%s) does not support creating data sources", this.getClass().getName()), null);
     }
+
+    public abstract String readLinkContent(String url);
 
     public abstract String getCommonRoot();
 
