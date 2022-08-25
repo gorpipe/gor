@@ -224,28 +224,32 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
 
   override def process(r: Row) {
     val aRefseq = r.colAsString(refCol)
-    val stopPos = r.pos + aRefseq.length
-    if (r.chr == rangeChr && r.pos <= rangeStopPos + mergeSpan) {
-      // extending
-      if (stopPos > rangeStopPos) {
-        rangeStopPos = stopPos
-      }
+    if (aRefseq.equals("N")) {
+      super.process(r);
     } else {
-      // See if we need to output existing range
-      if (rangeChr != rangeChrStart) {
-        outputModifiedRows(-1)
+      val stopPos = r.pos + aRefseq.length
+      if (r.chr == rangeChr && r.pos <= rangeStopPos + mergeSpan) {
+        // extending
+        if (stopPos > rangeStopPos) {
+          rangeStopPos = stopPos
+        }
+      } else {
+        // See if we need to output existing range
+        if (rangeChr != rangeChrStart) {
+          outputModifiedRows(-1)
+        }
+        rangeChr = r.chr
+        rangeStartPos = r.pos
+        rangeStopPos = stopPos
+        allRows = new ArrayBuffer[Row]
       }
-      rangeChr = r.chr
-      rangeStartPos = r.pos
-      rangeStopPos = stopPos
-      allRows = new ArrayBuffer[Row]
-    }
-    allRows += r
+      allRows += r
 
-    if (r.pos > rangeStartPos + mergeSpan * 2) {
-      minStartPos = r.pos
-      outputModifiedRows(rangeStartPos + mergeSpan)
-      rangeStartPos = minStartPos
+      if (r.pos > rangeStartPos + mergeSpan * 2) {
+        minStartPos = r.pos
+        outputModifiedRows(rangeStartPos + mergeSpan)
+        rangeStartPos = minStartPos
+      }
     }
   }
 

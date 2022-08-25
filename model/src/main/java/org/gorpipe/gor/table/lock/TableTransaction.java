@@ -102,7 +102,9 @@ public class TableTransaction implements AutoCloseable {
         }
 
         if (lock.isValid() && shared == false) {
-            ((BaseTable)table).updateNFSFolderMetadata();
+            if (table instanceof BaseTable) {
+                ((BaseTable) table).updateNFSFolderMetadata();
+            }
             if (this.closeHook == null) {
                 this.closeHook = () -> {
                     if (lock.getWriteHoldCount() == 1 && this.shouldSave) {

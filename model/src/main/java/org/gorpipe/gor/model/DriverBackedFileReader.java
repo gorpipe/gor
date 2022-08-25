@@ -99,6 +99,34 @@ public class DriverBackedFileReader extends FileReader {
         return dataSource;
     }
 
+    /* Resolve without doing links
+     */
+    private DataSource resolveDataSource(SourceReference sourceReference) throws IOException {
+        DataSource dataSource =  GorDriverFactory.fromConfig().resolveDataSource(sourceReference);
+        if (dataSource != null) {
+            validateAccess(dataSource);
+        } else {
+            log.warn("No source found for {}", sourceReference.getUrl());
+        }
+        return dataSource;
+    }
+
+    @Override
+    public String readLinkContent(String url) {
+        url = convertUrl(url);
+        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).build();
+
+        try (DataSource source = resolveDataSource(sourceReference)) {
+            if (source == null) {
+                throw new GorResourceException("Could not read link, invalid uri: " + url, url, null);
+            } else {
+                return GorDriverFactory.fromConfig().readLink(source);
+            }
+        } catch (IOException e) {
+            throw new GorResourceException("Could not read link: " + url, url, e);
+        }
+    }
+
     @Override
     public String getSecurityContext() {
         return securityContext;

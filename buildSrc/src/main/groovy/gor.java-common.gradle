@@ -171,6 +171,16 @@ tasks.withType(Test) {
 
     maxHeapSize = "1024m"
 
+    // Skips tests if you provide prod project property from command line
+    onlyIf {
+        ! Boolean.getBoolean('skip.tests')
+    }
+
+    reports {
+        junitXml.enabled = true
+        html.enabled = true
+    }
+
     // What parameters should be logged out
     testLogging {
         events "failed", "passed", "skipped", "standardError", "standardOut"
@@ -196,11 +206,6 @@ tasks.withType(Test) {
                         "${result.skippedTestCount} skipped)"
             }
         }
-    }
-
-    reports {
-        junitXml.enabled = true
-        html.enabled = true
     }
 }
 

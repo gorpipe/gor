@@ -270,7 +270,7 @@ public abstract class BaseTable<T> implements Table<T> {
     @Override
     public void commit() {
         try {
-            updateFromTempFile(getTempMetaFileName(), getMetaFileName());
+            updateFromTempFile(getTempMetaFileName(), getMetaPath());
             updateFromTempFile(getTempMainFileName(), getPath().toString());
         } catch (IOException e) {
             throw new GorSystemException("Could not commit " + getPath(), e);
@@ -287,6 +287,36 @@ public abstract class BaseTable<T> implements Table<T> {
     public void save() {
         commitRequest();
         commit();
+    }
+
+    @Override
+    public void delete() {
+        if (getFileReader().exists(getFolderUri().toString())) {
+            try {
+                getFileReader().deleteDirectory(getFolderUri().toString());
+            } catch (IOException e) {
+                // Best effort.
+                log.warn("Could not delete table directory: " + getFolderUri(), e);
+            }
+        }
+
+        if (getFileReader().exists(getMetaPath())) {
+            try {
+                getFileReader().delete(getMetaPath());
+            } catch (IOException e) {
+                // Best effort
+                log.warn("Could not delete table: " + getFolderUri(), e);
+            }
+        }
+
+        if (getFileReader().exists(getPathUri().toString())) {
+            try {
+                getFileReader().delete(getPathUri().toString());
+            } catch (IOException e) {
+                // Best effort
+                log.warn("Could not delete table: " + getFolderUri(), e);
+            }
+        }
     }
 
     protected void updateMetaBeforeSave() {
@@ -307,7 +337,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     protected abstract void saveTempMainFile();
 
-    protected String getMetaFileName() {
+    protected String getMetaPath() {
         return getPath().toString() + ".meta";
     }
 
@@ -316,7 +346,7 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     protected String getTempMetaFileName() {
-        return getTempFileName(getMetaFileName());
+        return getTempFileName(getMetaPath());
     }
 
     protected String getTempFileName(String pathString) {

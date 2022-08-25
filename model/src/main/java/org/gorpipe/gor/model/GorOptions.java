@@ -577,7 +577,7 @@ public class GorOptions {
             hasLocalDictonaryFile = true;
             Dictionary.DictionaryLine sf = Dictionary.parseDictionaryLine(file, null, file);
             addSourceRef(sf.fileRef.physical, sf.fileRef.logical, sf.fileRef.isAcceptedAbsoluteRef, projectContext,
-                    sf.alias, sf.startChr, sf.startPos, sf.stopChr, sf.stopPos, sf.tags, allowBucketAccess, alltags);
+                    sf.alias, sf.startChr, sf.startPos, sf.stopChr, sf.stopPos, sf.tags, allowBucketAccess, alltags, isSilentTagFilter);
         }
     }
 
@@ -700,11 +700,11 @@ public class GorOptions {
 
     private void addSourceRef(String file, ProjectContext projectContext, boolean allowBucketAccess, Set<String> alltags) {
         // A call to this can only take place at the end of a constructor, when all parameters have been set
-        addSourceRef(file, file, session != null && !session.getProjectContext().getFileReader().allowsAbsolutePaths(), projectContext, null, null, -1, null, -1, null, allowBucketAccess, alltags);
+        addSourceRef(file, file, session != null && !session.getProjectContext().getFileReader().allowsAbsolutePaths(), projectContext, null, null, -1, null, -1, null, allowBucketAccess, alltags, isSilentTagFilter);
     }
 
     private void addSourceRef(String physicalFile, String logicalFile, boolean isAcceptedAbsoluteRef, ProjectContext projectContext, String alias,
-                              String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, boolean allowBucketAccess, Set<String> alltags) {
+                              String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, boolean allowBucketAccess, Set<String> alltags, boolean isSilentTagFilter) {
         final String lowerfile = physicalFile.toLowerCase();
         final boolean isDictionary = lowerfile.endsWith(".gord") && !lowerfile.startsWith("mem:");
         final boolean isBGenMultiFile = lowerfile.matches(".*#\\{.*\\}.*\\.bgen");
@@ -829,7 +829,7 @@ public class GorOptions {
                     projectContext.securityKey, projectContext.commonRoot));
         } else {
             addSourceRef(dictionaryLine.fileRef.physical, dictionaryLine.fileRef.logical, dictionaryLine.fileRef.isAcceptedAbsoluteRef, projectContext,
-                    dictionaryLine.alias, dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos, dictionaryLine.tags, allowBucketAccess, alltags);
+                    dictionaryLine.alias, dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos, dictionaryLine.tags, allowBucketAccess, alltags, true);
         }
     }
 
