@@ -206,6 +206,86 @@ public class UTestDictionary {
     }
 
     @Test
+    public void testDictionaryWithDictionaryMultipleFilesMultipleTags() throws Exception {
+        File gorFile11 = workDir.newFile("gorFile11.gor");
+        FileUtils.write(gorFile11, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr1\t1\t10\ttag11", (Charset) null);
+        File gorFile12 = workDir.newFile("gorFile12.gor");
+        FileUtils.write(gorFile12, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr1\t2\t10\ttag12", (Charset) null);
+        File gorFile21 = workDir.newFile("gorFile21.gor");
+        FileUtils.write(gorFile21, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr2\t1\t10\ttag21", (Charset) null);
+        File gorFile22 = workDir.newFile("gorFile22.gor");
+        FileUtils.write(gorFile22, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr2\t2\t10\ttag22", (Charset) null);
+
+        File gordChildDict1 = workDir.newFile("dictChild1.gord");
+        FileUtils.write(gordChildDict1, String.format("%s\t11\t\t\t\t\ttag11\n%s\t12\t\t\t\t\ttag12", gorFile11, gorFile12), (Charset) null);
+        File gordChildDict2 = workDir.newFile("dictChild2.gord");
+        FileUtils.write(gordChildDict2, String.format("%s\t21\t\t\t\t\ttag21\n%s\t22\t\t\t\t\ttag22", gorFile21, gorFile22), (Charset) null);
+
+        File gordMotherDict = workDir.newFile("dictMother.gord");
+        FileUtils.write(gordMotherDict, String.format("%s\t1\t\t\t\t\ttag11,tag12\n%s\t2\t\t\t\t\ttag21,tag22", gordChildDict1, gordChildDict2), (Charset) null);
+
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                "chr1\t1\t10\ttag11\t11\n" +
+                "chr1\t2\t10\ttag12\t12\n" +
+                "chr2\t1\t10\ttag21\t21\n" +
+                "chr2\t2\t10\ttag22\t22\n",
+                TestUtils.runGorPipe(String.format("gor %s", gordMotherDict.getPath())));
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n",
+                TestUtils.runGorPipe(String.format("gor %s -f tag11", gordMotherDict.getPath())));
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n" +
+                        "chr1\t2\t10\ttag12\t12\n",
+                TestUtils.runGorPipe(String.format("gor %s -f tag11,tag12", gordMotherDict.getPath())));
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n" +
+                        "chr2\t2\t10\ttag22\t22\n",
+                TestUtils.runGorPipe(String.format("gor %s -f tag11,tag22", gordMotherDict.getPath())));
+    }
+
+    @Test
+    public void testDictionaryWithDictionaryMultipleFilesMultipleTagsPerGorz() throws Exception {
+        File gorFile11 = workDir.newFile("gorFile11.gor");
+        FileUtils.write(gorFile11, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr1\t1\t10\ttag11\nchr1\t2\t10\ttag12", (Charset) null);
+        File gorFile21 = workDir.newFile("gorFile21.gor");
+        FileUtils.write(gorFile21, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr2\t1\t10\ttag21\nchr2\t2\t10\ttag22", (Charset) null);
+
+        File gordChildDict1 = workDir.newFile("dictChild1.gord");
+        FileUtils.write(gordChildDict1, String.format("%s\t11\t\t\t\t\ttag11,tag12", gorFile11), (Charset) null);
+        File gordChildDict2 = workDir.newFile("dictChild2.gord");
+        FileUtils.write(gordChildDict2, String.format("%s\t21\t\t\t\t\ttag21,tag22", gorFile21), (Charset) null);
+
+        File gordMotherDict = workDir.newFile("dictMother.gord");
+        FileUtils.write(gordMotherDict, String.format("%s\t1\t\t\t\t\ttag11,tag12\n%s\t2\t\t\t\t\ttag21,tag22", gordChildDict1, gordChildDict2), (Charset) null);
+
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n" +
+                        "chr1\t2\t10\ttag12\t11\n" +
+                        "chr2\t1\t10\ttag21\t21\n" +
+                        "chr2\t2\t10\ttag22\t21\n",
+                TestUtils.runGorPipe(String.format("gor %s", gordMotherDict.getPath())));
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n",
+                TestUtils.runGorPipe(String.format("gor %s -f tag11", gordMotherDict.getPath())));
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n" +
+                        "chr1\t2\t10\ttag12\t11\n",
+                TestUtils.runGorPipe(String.format("gor %s -f tag11,tag12", gordMotherDict.getPath())));
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\t11\n" +
+                        "chr2\t2\t10\ttag22\t21\n",
+                TestUtils.runGorPipe(String.format("gor %s -f tag11,tag22", gordMotherDict.getPath())));
+    }
+
+    @Test
     public void testDictionaryWithTagFile() {
         final String query = "create #pns# = nor -asdict " + dictionary.toString() + " | select #2 | rename #1 PN | top 0;\n" +
                 "gor " + dictionary.toString() + " -s PN -ff [#pns#] | top 10";
