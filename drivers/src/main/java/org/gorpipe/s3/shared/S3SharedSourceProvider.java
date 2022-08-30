@@ -95,7 +95,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
             AmazonS3Client client = getClient(s3SecurityContext, bucket);
             source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
 
-            updateSharedSourceLink(source, project);
+            updateSharedSourceLink(source);
         }
 
         source = handleFallback(sourceReference, source);
@@ -103,7 +103,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         return source;
     }
 
-    protected void updateSharedSourceLink(S3SharedSource source, String project) {
+    protected void updateSharedSourceLink(S3SharedSource source) {
         source.setProjectLinkFile(source.getRelativePath() + ".link");
 
         if (s3SharedConfig.useHighestTypeInLinks()) {
