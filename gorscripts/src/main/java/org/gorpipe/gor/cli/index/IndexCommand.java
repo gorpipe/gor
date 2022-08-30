@@ -46,7 +46,7 @@ public class IndexCommand extends HelpOptions implements Runnable {
     @CommandLine.Option(names={"-p","--indexpath"},
             defaultValue = "",
             description = "Path to store the index")
-    private String indexPath;
+    private String indexPath = "/Users/sigmar/";
 
     @CommandLine.Parameters(arity = "1..*",
             paramLabel = "Files",
@@ -169,7 +169,8 @@ public class IndexCommand extends HelpOptions implements Runnable {
                     byte[] bytes = (totalOffset + "\n").getBytes();
                     baos.write(bytes);
                 } else {
-                    throw new GorResourceException("end of line not found in last line",gorFile);
+                    var lastByte = buffer[0];
+                    if (lastByte!='\n') throw new GorResourceException("end of line not found in last line",gorFile);
                 }
             }
             if (!lastwritten && lastbaos != null) {
@@ -186,5 +187,10 @@ public class IndexCommand extends HelpOptions implements Runnable {
         for (String file : files) {
             indexFile(file);
         }
+    }
+
+    public static void main(String[] args) {
+        var ic = new IndexCommand();
+        ic.indexFile("/Users/sigmar/a.gorz");
     }
 }

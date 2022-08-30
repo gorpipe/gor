@@ -327,6 +327,31 @@ public class ITestS3Shared {
         Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
     }
 
+    @Test
+    public void testProjecSharedProjecttWriteUserDataServer() throws IOException {
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String dataPath = "user_data/dummy.gor";
+
+        runGorPipeServer("gorrow 1,2,3 | write s3data://shared-project/" + dataPath, gorRoot, securityContext);
+
+        // Access with shared-project
+        S3ProjectSharedProjectSourceProvider providerSharedProject = new S3ProjectSharedProjectSourceProvider();
+        try (DataSource source = getDataSourceFromProvider(providerSharedProject,  dataPath, Credentials.OwnerType.Project, "some_project")) {
+            if (!source.exists()) {
+                Assert.fail("Source should exists and be accessible using ProjectShredSource");
+            }
+        }
+
+        // Access with just shared
+        S3SharedSourceProvider providerShared = new S3ProjectSharedSourceProvider();
+        try (DataSource source = getDataSourceFromProvider(providerShared, "projects/some_project/" + dataPath, Credentials.OwnerType.Project, "some_project")) {
+            source.delete();
+        }
+
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+    }
+
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,
                                                  Credentials.OwnerType ownerType, String owner) throws IOException {
         SourceReference sourceReference = new SourceReference.Builder(provider.getSharedUrlPrefix() + relativePath)

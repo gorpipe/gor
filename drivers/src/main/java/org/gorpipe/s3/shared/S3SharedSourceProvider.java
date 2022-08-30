@@ -95,13 +95,22 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
             AmazonS3Client client = getClient(s3SecurityContext, bucket);
             source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
 
-            source.setProjectLinkFile(relativePath + ".link");
-            source.setProjectLinkFileContent(sourceReference.getUrl());
+            updateSharedSourceLink(source, project);
         }
 
         source = handleFallback(sourceReference, source);
 
         return source;
+    }
+
+    protected void updateSharedSourceLink(S3SharedSource source, String project) {
+        source.setProjectLinkFile(source.getRelativePath() + ".link");
+
+        if (s3SharedConfig.useHighestTypeInLinks()) {
+            source.setProjectLinkFileContent(S3ProjectDataSourceType.S3POJECTDATA_PREFIX + source.getRelativePath());
+        } else {
+            source.setProjectLinkFileContent(getSharedUrlPrefix() + source.getRelativePath());
+        }
     }
 
     private Credentials getS3DataCredentials(String service, String securityContext) {
