@@ -541,7 +541,7 @@ public class UTestDictionary {
         Files.writeString(dictpath,header);
         var query = "gor "+dictrelpath;
         var result = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString());
-        Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\tSource\n",result);
+        Assert.assertEquals("Wrong result from gor query on empty dictionary","chrom\tpos\n",result);
         query = "create #x = pgor "+dictrelpath+"|where 2=3; gor [#x]";
         var cachepath = workDirPath.resolve("result_cache");
         Files.createDirectory(cachepath);

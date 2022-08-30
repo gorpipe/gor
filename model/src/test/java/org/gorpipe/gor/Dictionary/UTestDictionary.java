@@ -201,8 +201,8 @@ public class UTestDictionary {
         FileUtils.write(gordChildDict, gorFile.toString(), (Charset) null);
         File gordMotherDict = workDir.newFile("dictMother.gord");
         FileUtils.write(gordMotherDict, gordChildDict.toString(), (Charset) null);
-        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
-                "chr1\t11868\t14412\tDDX11L1\tgorFile.gor\n", TestUtils.runGorPipe("gor " + gordMotherDict.getPath()));
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
+                "chr1\t11868\t14412\tDDX11L1\n", TestUtils.runGorPipe("gor " + gordMotherDict.getPath()));
     }
 
     @Test
@@ -283,6 +283,40 @@ public class UTestDictionary {
                         "chr1\t1\t10\ttag11\t11\n" +
                         "chr2\t2\t10\ttag22\t21\n",
                 TestUtils.runGorPipe(String.format("gor %s -f tag11,tag22", gordMotherDict.getPath())));
+    }
+
+    @Test
+    public void testDictionaryWithSingleColumn() throws Exception {
+        File gorFile11 = workDir.newFile("gorFile11.gor");
+        FileUtils.write(gorFile11, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr1\t1\t10\ttag11", (Charset) null);
+        File gorFile12 = workDir.newFile("gorFile12.gor");
+        FileUtils.write(gorFile12, "Chrom\tgene_start\tgene_end\tGene_Symbol\nchr1\t2\t10\ttag12", (Charset) null);
+
+        File gordChildDict1 = workDir.newFile("dictChild1.gord");
+        FileUtils.write(gordChildDict1, String.format("%s\n%s", gorFile11, gorFile12), (Charset) null);
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
+                        "chr1\t1\t10\ttag11\n" +
+                        "chr1\t2\t10\ttag12\n",
+                TestUtils.runGorPipe(String.format("gor %s", gordChildDict1.getPath())));
+
+        try {
+            TestUtils.runGorPipe(String.format("gor %s -f tag11", gordChildDict1.getPath()));
+            Assert.fail("Should throw exception for tag");
+        } catch (Exception e) {
+            // Ignore
+        }
+
+        Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol\tSource\n" +
+                        "chr1\t1\t10\ttag11\tgorFile11.gor\n",
+                TestUtils.runGorPipe(String.format("gor %s -fs -f tag11", gordChildDict1.getPath())));
+
+        try {
+            TestUtils.runGorPipe(String.format("gor %s -f tagX", gordChildDict1.getPath()));
+            Assert.fail("Should throw exception for missing tag");
+        } catch (Exception e) {
+            // Ignore
+        }
     }
 
     @Test

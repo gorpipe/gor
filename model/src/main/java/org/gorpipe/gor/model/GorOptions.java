@@ -21,6 +21,7 @@
  */
 package org.gorpipe.gor.model;
 
+import com.google.common.base.Strings;
 import gorsat.Commands.CommandArguments;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
@@ -574,8 +575,8 @@ public class GorOptions {
                 addSourceRef(file, projectContext, allowBucketAccess, alltags);
             }
         } else {
-            hasLocalDictonaryFile = true;
             Dictionary.DictionaryLine sf = Dictionary.parseDictionaryLine(file, null, file);
+            hasLocalDictonaryFile = hasLocalDictonaryFile || !Strings.isNullOrEmpty(sf.alias) || (sf.tags != null && !sf.tags.isEmpty()) ;
             addSourceRef(sf.fileRef.physical, sf.fileRef.logical, sf.fileRef.isAcceptedAbsoluteRef, projectContext,
                     sf.alias, sf.startChr, sf.startPos, sf.stopChr, sf.stopPos, sf.tags, allowBucketAccess, alltags, isSilentTagFilter);
         }
@@ -790,22 +791,23 @@ public class GorOptions {
         // TODO: Remove when driver framework supports isDirectory
         fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
 
-        final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
+        DictionaryTable table = new DictionaryTable(PathUtils.resolve(projectContext.commonRoot, fileName));
         final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(), commonRoot, this.useDictionaryCache);
-        this.hasLocalDictonaryFile = true;
+
+        isNoLineFilter = isNoLineFilter || !table.getLineFilter();
+        this.hasLocalDictonaryFile = hasLocalDictonaryFile || !gord.getValidTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags
+
         final Dictionary.DictionaryLine[] fileList = gord.getSources(this.columnTags, allowBucketAccess, isSilentTagFilter);
         this.isDictionaryWithBuckets = gord.isDictionaryWithBuckets; //Arrays.stream(fileList).anyMatch(file -> file.sourceInserted);
+        final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
         if (!hasTags && gord.getAnyBucketHasDeletedFile()) {
             if (this.columnTags == null) this.columnTags = new HashSet<>(gord.getValidTags());
             else this.columnTags.addAll(gord.getValidTags());
         }
         for (Dictionary.DictionaryLine line : fileList) {
             subProcessOfProcessDictionary(line, allowBucketAccess, projectContext, alltags,
-                    gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()));
+                    gord.getBucketDeletedFiles(Paths.get(line.fileRef.logical).getFileName().toString()), true );
         }
-
-        var dictpath = PathUtils.resolve(commonRoot, fileName);
-        DictionaryTable table = new DictionaryTable(dictpath);
 
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
@@ -817,11 +819,9 @@ public class GorOptions {
             tableHeader = table.getProperty(TableHeader.HEADER_COLUMNS_KEY);
             if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
         }
-
-        isNoLineFilter = !table.getLineFilter() || isNoLineFilter;
     }
 
-    private void subProcessOfProcessDictionary(Dictionary.DictionaryLine dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags) {
+    private void subProcessOfProcessDictionary(Dictionary.DictionaryLine dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags, boolean isSilentTagFilter) {
         if (dictionaryLine.sourceInserted) {
             files.add(new SourceRef(dictionaryLine.fileRef.logical, dictionaryLine.alias, null, null,
                     dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos,
@@ -829,7 +829,7 @@ public class GorOptions {
                     projectContext.securityKey, projectContext.commonRoot));
         } else {
             addSourceRef(dictionaryLine.fileRef.physical, dictionaryLine.fileRef.logical, dictionaryLine.fileRef.isAcceptedAbsoluteRef, projectContext,
-                    dictionaryLine.alias, dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos, dictionaryLine.tags, allowBucketAccess, alltags, true);
+                    dictionaryLine.alias, dictionaryLine.startChr, dictionaryLine.startPos, dictionaryLine.stopChr, dictionaryLine.stopPos, dictionaryLine.tags, allowBucketAccess, alltags, isSilentTagFilter);
         }
     }
 
