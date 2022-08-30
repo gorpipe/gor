@@ -63,6 +63,23 @@ public class UTestS3Shared {
     }
 
     @Test
+    public void testResolveSourceProjectSharedProject() throws IOException {
+        // Fallback triggers call to exists (which needs mock or actaul backend), turn that off for now.
+        environmentVariables.set("GOR_S3_SHARED_USE_FALLBACK", "false");
+        ConfigManager.clearPrefixConfigCache();
+
+        S3SharedSourceProvider provider = new S3ProjectSharedProjectSourceProvider();
+
+        DataSource source = getDataSourceFromProvider(provider, "user_data/a.gor" , Credentials.OwnerType.System, "some_env");
+
+        Assert.assertNotNull("Source should be resolved", source);
+        Assert.assertEquals("S3", source.getSourceType().getName());
+        Assert.assertEquals("s3data://shared-project/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3://some_s3_bucket/shared/projects/some_project/user_data/a/a.gor", source.getFullPath());
+        Assert.assertEquals("s3data://shared/projects/some_project/user_data/a.gor", source.getProjectLinkFileContent());
+    }
+
+    @Test
     public void testResolveSourceRegion() throws IOException {
         // Fallback triggers call to exists (which needs mock or actaul backend), turn that off for now.
         environmentVariables.set("GOR_S3_SHARED_USE_FALLBACK", "false");
