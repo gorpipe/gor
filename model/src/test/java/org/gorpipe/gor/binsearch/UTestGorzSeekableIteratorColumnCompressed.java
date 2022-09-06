@@ -22,11 +22,10 @@
 
 package org.gorpipe.gor.binsearch;
 
-import org.gorpipe.gor.binsearch.GorZipLexOutputStream;
-import org.gorpipe.gor.binsearch.GorzSeekableIterator;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.model.gor.RowObj;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -70,5 +69,10 @@ public class UTestGorzSeekableIteratorColumnCompressed {
         });
 
         Assert.assertFalse(gsi.hasNext());
+
+
+        DriverBackedFileReader fileReader = new DriverBackedFileReader("");
+        Assert.assertEquals(gsi.getHeader(), fileReader.readHeaderLine(columnCompressed));
+
     }
 }
