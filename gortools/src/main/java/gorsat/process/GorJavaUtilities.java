@@ -519,17 +519,15 @@ public class GorJavaUtilities {
     private static void writeHeader(FileReader fileReader, Writer dictionarypath, String p, boolean lineFilter) throws IOException {
         var gorzFile = p.substring(0,p.length()-5);
         if (fileReader.exists(gorzFile)) {
-            try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(gorzFile)))) {
-                var headerspl = br.readLine().split("\t");
-                var tableheader = new DictionaryTableMeta();
-                tableheader.setColumns(headerspl);
-                tableheader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER);
-                if (!lineFilter) {
-                    tableheader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, Boolean.toString(lineFilter));
-                }
-                var header = tableheader.formatHeader();
-                dictionarypath.write(header);
+            var headerspl = fileReader.readHeaderLine(gorzFile).split("\t");
+            var tableheader = new DictionaryTableMeta();
+            tableheader.setColumns(headerspl);
+            tableheader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER);
+            if (!lineFilter) {
+                tableheader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, Boolean.toString(lineFilter));
             }
+            var header = tableheader.formatHeader();
+            dictionarypath.write(header);
         }
     }
 

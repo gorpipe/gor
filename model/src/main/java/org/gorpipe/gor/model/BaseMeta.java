@@ -8,13 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -177,7 +174,10 @@ public class BaseMeta {
         String[] lineSplit = line.split("[=:]", 2);
         String propName = StringUtils.strip(lineSplit[0], "\t\n #");
         if (propName.equals(HEADER_COLUMNS_KEY)) {
-            setColumns(lineSplit[1].trim().split("[\t,]", -1));
+            // Ignore columns that have non standard characters.  These are errors.
+            if (Charset.forName("UTF-8").newEncoder().canEncode(lineSplit[1])) {
+                setColumns(lineSplit[1].trim().split("[\t,]", -1));
+            }
         } else {
             setProperty(propName, lineSplit[1].trim());
         }
@@ -187,11 +187,24 @@ public class BaseMeta {
         if (containsProperty(HEADER_COLUMNS_KEY)) {
             return;
         }
-        String columnsString = StringUtils.strip(line, "\n #");
+        String columnsString = getColumnStringFromHeaderLine(line);
+
         if (columnsString.length() > 0) {
             setFileHeader(columnsString.split("[\t,]", -1));
             setColumns(fileHeader);
         }
+    }
+
+    /*
+     * Header from column compressed gorz file can contain binary block that begins with 0.  See: GorzSeekableIterator.
+     * TODO:  This should be part of the driver framework (FileReader?) and not repeated here and in GorzSeekableIterator.
+     */
+    private String getColumnStringFromHeaderLine(String header) {
+        int idx = 0;
+        String columns = StringUtils.strip(header,  "\n #");
+        byte[] columnBytes = columns.getBytes();
+        while (idx < columnBytes.length && columnBytes[idx++] != 0);
+        return idx != columnBytes.length ?  new String(columnBytes, 0, idx - 1) : columns;
     }
 
     /**
