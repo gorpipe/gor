@@ -1,8 +1,8 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.TableEntry;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -144,6 +144,8 @@ public interface Table<T> {
      */
     void save();
 
+    void delete();
+
     /**
      * Commit request.
      * Would usually carry out the update without committing it.
@@ -166,4 +168,6 @@ public interface Table<T> {
     String getSecurityContext();
 
     void setColumns(String[] columns);
+
+    void setFileReader(FileReader fileReader);
 }

@@ -25,9 +25,10 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
-import com.google.common.base.Strings;
-import com.upplication.s3fs.S3FileSystem;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -43,6 +44,9 @@ import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,6 +60,8 @@ public class S3Source implements StreamSource {
     private final String key;
     private final AmazonS3Client client;
     private S3SourceMetadata meta;
+    private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
+    private static final Random rnd = new Random();
 
     private Path path;
 
@@ -111,12 +117,12 @@ public class S3Source implements StreamSource {
         return openRequest(req);
     }
 
-    private InputStream openRequest(GetObjectRequest request) {
+    private InputStream openRequest(GetObjectRequest request) throws IOException {
         try {
             S3Object object = client.getObject(request);
             return object.getObjectContent();
         } catch(SdkClientException sdkClientException) {
-            throw new GorResourceException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")), sourceReference.getUrl(), sdkClientException);
+            throw new IOException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")) + ": " + sourceReference.getUrl(), sdkClientException);
         }
     }
 
@@ -128,8 +134,15 @@ public class S3Source implements StreamSource {
     @Override
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
-            ObjectMetadata md = client.getObjectMetadata(bucket, key);
-            meta = new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+            try {
+                meta = metadataCache.get(bucket + key, () -> {
+                    ObjectMetadata md = client.getObjectMetadata(bucket, key);
+                    return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+                });
+            } catch (ExecutionException | UncheckedExecutionException e) {
+                // Need IOException for the retry handler
+                throw new IOException(e);
+            }
         }
         return meta;
     }

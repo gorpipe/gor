@@ -23,6 +23,7 @@
 package org.gorpipe.gor.table.dictionary;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.FileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,6 +108,10 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
 
     public DictionaryTable(URI path) {
         super(path);
+    }
+
+    public DictionaryTable(URI path, FileReader fileReader) {
+        super(path, fileReader);
     }
 
     public DictionaryTable(Path path) {

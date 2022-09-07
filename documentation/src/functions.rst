@@ -150,6 +150,12 @@ Type and String Conversion
    * - ``FORM(num,int,int) : str``
      - Format a number, specifying the space and decimals (C-style %x.yf format style).
      - :ref:`form`
+   * - ``EFORM(num,int,int) : str``
+     - Format a number, specifying the space and decimals (C-style %x.ye format style).
+     - :ref:`eform`
+   * - ``GFORM(num,int,int) : str``
+     - Format a number, specifying the space and decimals (C-style %x.yg format style).
+     - :ref:`gform`
    * - ``REGSEL(str,str-const) : str``
      - Extract a single substring based on regular expression binding pattern, e.g. with single brackets.
      - :ref:`f_regsel`

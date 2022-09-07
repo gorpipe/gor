@@ -160,6 +160,7 @@ public abstract class BaseTable<T> implements Table<T> {
         return this.header.getColumns();
     }
 
+    @Override
     public String getSecurityContext() {
         return fileReader != null ? fileReader.getSecurityContext() : "";
     }
@@ -219,7 +220,6 @@ public abstract class BaseTable<T> implements Table<T> {
         this.fileReader = fileReader;
     }
 
-    @Override
     public void initialize() {
         log.trace("Initialize {}", getName());
 
@@ -270,7 +270,7 @@ public abstract class BaseTable<T> implements Table<T> {
     @Override
     public void commit() {
         try {
-            updateFromTempFile(getTempMetaFileName(), getMetaFileName());
+            updateFromTempFile(getTempMetaFileName(), getMetaPath());
             updateFromTempFile(getTempMainFileName(), getPath().toString());
         } catch (IOException e) {
             throw new GorSystemException("Could not commit " + getPath(), e);
@@ -287,6 +287,36 @@ public abstract class BaseTable<T> implements Table<T> {
     public void save() {
         commitRequest();
         commit();
+    }
+
+    @Override
+    public void delete() {
+        if (getFileReader().exists(getFolderUri().toString())) {
+            try {
+                getFileReader().deleteDirectory(getFolderUri().toString());
+            } catch (IOException e) {
+                // Best effort.
+                log.warn("Could not delete table directory: " + getFolderUri(), e);
+            }
+        }
+
+        if (getFileReader().exists(getMetaPath())) {
+            try {
+                getFileReader().delete(getMetaPath());
+            } catch (IOException e) {
+                // Best effort
+                log.warn("Could not delete table: " + getFolderUri(), e);
+            }
+        }
+
+        if (getFileReader().exists(getPathUri().toString())) {
+            try {
+                getFileReader().delete(getPathUri().toString());
+            } catch (IOException e) {
+                // Best effort
+                log.warn("Could not delete table: " + getFolderUri(), e);
+            }
+        }
     }
 
     protected void updateMetaBeforeSave() {
@@ -307,7 +337,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     protected abstract void saveTempMainFile();
 
-    protected String getMetaFileName() {
+    protected String getMetaPath() {
         return getPath().toString() + ".meta";
     }
 
@@ -316,7 +346,7 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     protected String getTempMetaFileName() {
-        return getTempFileName(getMetaFileName());
+        return getTempFileName(getMetaPath());
     }
 
     protected String getTempFileName(String pathString) {
@@ -391,7 +421,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
     /**
      * Validate that the content of the given file matches the content of the table.
-     * @param file
+     * @param file  file to validate
      */
     protected void validateFile(String file) {
         // Validate file existence.
