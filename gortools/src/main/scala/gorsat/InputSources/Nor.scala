@@ -53,6 +53,7 @@ object Nor
     var inputSource: GenomicIterator = null
 
     try {
+      val inputUpper = inputParams.toUpperCase
       if (CommandParseUtilities.isNestedCommand(inputParams)) {
         try {
           val iteratorCommand = CommandParseUtilities.parseNestedCommand(inputParams)
@@ -81,7 +82,7 @@ object Nor
           }
             throw e
         }
-      } else if (inputParams.toUpperCase.contains(".YML")) {
+      } else if (inputUpper.contains(".YML")) {
         val qr = context.getSession.getSystemContext.getReportBuilder.parse(iargs(0))
         val qra = Array(qr)
         val gorpipe = DynIterator.createGorIterator(context)
@@ -93,7 +94,7 @@ object Nor
         if (gorpipe.getRowSource != null) {
           inputSource = gorpipe.getRowSource
         }
-      } else if (inputParams.toUpperCase.endsWith("PARQUET")) {
+      } else if (inputUpper.endsWith(".PARQUET")) {
         var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
         extraFilterArgs += (if(hasOption(args, "-s")) " " + stringValueOfOption(args, "-s") else "")
 
@@ -109,9 +110,9 @@ object Nor
           val tags = stringValueOfOption(args, "-ff")
           inputSource = new ServerGorSource(inputParams + " -ff " + tags + extraFilterArgs,  context, true)
         } else inputSource = new ServerGorSource(inputParams, context, true)
-      } else if (inputParams.toUpperCase.endsWith("GOR") ||
-        inputParams.toUpperCase.endsWith("GORZ") ||
-        (inputParams.toUpperCase.endsWith("GORD") &&
+      } else if (inputUpper.endsWith(".GOR") ||
+        inputUpper.endsWith(".GORZ") ||
+        (inputUpper.endsWith(".GORD") &&
           !hasOption(args, "-asdict"))) {
 
         var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
@@ -129,14 +130,14 @@ object Nor
           val tags = stringValueOfOption(args, "-ff")
           inputSource = new ServerNorGorSource(inputParams + " -ff " + tags + extraFilterArgs,  context, true)
         } else inputSource = new ServerNorGorSource(inputParams, context, true)
-      } else if (inputParams.toUpperCase.endsWith("NORD") && !hasOption(args, "-asdict")) {
+      } else if (inputUpper.endsWith(".NORD") && !hasOption(args, "-asdict")) {
         inputSource = createNordIterator(inputParams, args, context)
       } else {
-        if (inputParams.toUpperCase.endsWith("NORZ")) {
+        if (inputUpper.endsWith(".NORZ")) {
           inputSource = new ServerGorSource(inputParams, context, true)
         } else {
           var inputFile = inputParams
-          if (inputParams.toUpperCase.endsWith("GORD")) {
+          if (inputUpper.endsWith(".GORD")) {
             var dictPath = Path.of(inputParams)
             val rootPath = context.getSession.getProjectContext.getProjectRootPath
             if (!dictPath.isAbsolute && rootPath != null) {

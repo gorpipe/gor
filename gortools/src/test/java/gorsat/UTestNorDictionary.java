@@ -43,6 +43,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -64,6 +65,16 @@ public class UTestNorDictionary {
         File gorFile = FileTestUtils.createGenericSmallGorFile(workDir.getRoot());
         dictionaryFile = FileTestUtils.createGenericDictionaryFile(workDir.getRoot(), gorFile.getName(),  "generic.gord");
         pnFile = FileTestUtils.createPNTxtFile(workDir.getRoot());
+    }
+
+    @Test
+    public void testNorDirectoryEndsWithGor() throws IOException {
+        var rootPath = workDir.getRoot().toPath();
+        var gorfolder = rootPath.resolve("folder_gor");
+        Files.createDirectory(gorfolder);
+        Files.writeString(gorfolder.resolve("test.txt"),"");
+        int count = TestUtils.runGorPipeCount("nor "+gorfolder);
+        Assert.assertEquals(2, count);
     }
 
     @Test
