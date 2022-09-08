@@ -1004,6 +1004,7 @@ object CommandParseUtilities {
 
   def quoteCustomSafeIndexOf(inputString: CharSequence, searchString: String, quotes: Array[SplitQuote], blocks: Array[SplitBlock], par: Boolean, from: Int): Int = {
     var backSlashCount = 0
+    var lastWasBackSlash = false
     var withinQuotes = false
     var quoteType = ' '
     var i = from
@@ -1029,13 +1030,14 @@ object CommandParseUtilities {
               withinQuotes = false
               patternQuote = false
             }
-          } else if (backSlashCount % 2 == 0) {
+          } else if (!lastWasBackSlash && backSlashCount % 2 == 0) {
             withinQuotes = true
             quoteType = c
             if (searchString(j) == quoteType) patternQuote = true
           }
         }
 
+        lastWasBackSlash = c == '\\'
         if (withinQuotes && c == '\\') backSlashCount += 1 else backSlashCount = 0
 
         if (j == 0) {
