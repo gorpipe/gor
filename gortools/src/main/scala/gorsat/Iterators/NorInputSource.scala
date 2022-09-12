@@ -22,6 +22,8 @@
 
 package gorsat.Iterators
 
+import gorsat.Commands.CommandParseUtilities
+
 import java.io.{BufferedReader, InputStreamReader}
 import java.util
 import java.util.stream
@@ -85,7 +87,8 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     if (hasNext) {
       mustReCheck = true
       if (useCSV) {
-        myNext.replace(',', '\t')
+        val nextSplit = CommandParseUtilities.quoteSafeSplit(myNext, ',')
+        nextSplit.mkString("\t")
       } else {
         myNext
       }

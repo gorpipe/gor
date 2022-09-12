@@ -199,7 +199,7 @@ public class UTestNor {
                 var row = pipe.getIterator().next();
                 Assert.assertEquals(5, row.numCols());
                 Assert.assertEquals("1", row.colAsString(2));
-                Assert.assertEquals("\"2\t3\"", row.colAsString(3));
+                Assert.assertEquals("\"2,3\"", row.colAsString(3));
                 Assert.assertEquals("4", row.colAsString(4));
             }
         }
