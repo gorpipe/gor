@@ -5,9 +5,12 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.utils.TestUtils;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.s3.driver.TestS3SeekableFile;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,7 +42,8 @@ public abstract class BvlTestSuite {
 
     @Test
     public void testUnknownSourceProvidesFileInfo() throws IOException {
-        String source = getSourcePath("bam/not-there.bam");
+        var subpath = "bam/not-there.bam";
+        String source = getSourcePath(subpath);
 
         try {
             GenomicIterator iterator = TestUtils.gorDriver.createIterator(new SourceReference(source));
@@ -50,7 +54,7 @@ public abstract class BvlTestSuite {
             if (ge.getMessage() == null) {
                 throw new RuntimeException("Null message", ge);
             }
-            if (!ge.getUri().contains(source)) {
+            if (!ge.getUri().contains(subpath)) {
                 throw ge;
             }
         } catch (Exception e) {
@@ -61,7 +65,6 @@ public abstract class BvlTestSuite {
                 throw e;
             }
         }
-
     }
 
     @Test
