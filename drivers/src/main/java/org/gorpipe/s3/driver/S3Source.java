@@ -131,14 +131,19 @@ public class S3Source implements StreamSource {
         return sourceReference.getUrl();
     }
 
+    private S3SourceMetadata loadMetadataFromCache(String bucket, String key) throws ExecutionException {
+        meta = metadataCache.get(bucket + key, () -> {
+            ObjectMetadata md = client.getObjectMetadata(bucket, key);
+            return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+        });
+        return meta;
+    }
+
     @Override
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
             try {
-                meta = metadataCache.get(bucket + key, () -> {
-                    ObjectMetadata md = client.getObjectMetadata(bucket, key);
-                    return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
-                });
+                loadMetadataFromCache(bucket, key);
             } catch (ExecutionException | UncheckedExecutionException e) {
                 // Need IOException for the retry handler
                 throw new IOException(e);
@@ -160,11 +165,21 @@ public class S3Source implements StreamSource {
     @Override
     public boolean exists() {
         try {
-            return Files.exists(getPath());
-        } catch (Exception pde) {
-            // For backward compatibility.  doesObjectExists needs less permission than Files.exists, but
-            // it does not handle folders properly.
-            return client.doesObjectExist(bucket, key);
+            // Already in cache, exists
+            loadMetadataFromCache(bucket, key);
+            return true;
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            var throwable = e.getCause();
+            if (throwable instanceof AmazonS3Exception s3exp) {
+                if (s3exp.getStatusCode() == 404) {
+                    try {
+                        return Files.exists(getPath());
+                    } catch (Exception se) {
+                        return false;
+                    }
+                }
+            }
+            throw new GorResourceException("S3 exists failed", bucket+key, throwable);
         }
     }
 
