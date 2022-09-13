@@ -172,10 +172,14 @@ public class S3Source implements StreamSource {
             var throwable = e.getCause();
             if (throwable instanceof AmazonS3Exception s3exp) {
                 if (s3exp.getStatusCode() == 404) {
-                    return Files.exists(getPath());
+                    try {
+                        return Files.exists(getPath());
+                    } catch (Exception se) {
+                        return false;
+                    }
                 }
             }
-            throw new GorResourceException(bucket, key, throwable);
+            throw new GorResourceException("S3 exists failed", bucket+key, throwable);
         }
     }
 
