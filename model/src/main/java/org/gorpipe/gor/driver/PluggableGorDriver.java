@@ -146,10 +146,8 @@ public class PluggableGorDriver implements GorDriver {
         log.debug("Get data source for source reference {}", sourceReference);
         try {
             DataSource source = resolveDataSource(sourceReference);
-            log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
-            DataSource wrapped = sourceReference.writeSource ? source : wrap(handleLinks(source));
-            log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
-            return wrapped;
+            source = sourceReference.writeSource ? source : handleLinks(source);
+            return source;
         } catch (Exception e) {
             throwWithSourceName(e, sourceReference.getUrl());
             return null;  // Never gets here
@@ -169,7 +167,12 @@ public class PluggableGorDriver implements GorDriver {
                 : sourceReference.getUrl();
         SourceProvider provider = providerFromFileName(providerFileName);
 
-        return provider.resolveDataSource(sourceReference);
+        DataSource source = provider.resolveDataSource(sourceReference);
+
+        log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
+        DataSource wrapped = sourceReference.writeSource ? source : wrap(source);
+        log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
+        return wrapped;
     }
 
     /**
@@ -209,6 +212,7 @@ public class PluggableGorDriver implements GorDriver {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
                 var sourceRef = getSourceRef(source, readLink(source), null);
+                source.close();
                 sourceRef.setLinkLastModified(source.getSourceMetadata().getLastModified());
                 DataSource fromLinkSource =  resolveDataSource(sourceRef);
                 fromLinkSource.getSourceReference().setCreatedFromLink(true);
@@ -234,6 +238,7 @@ public class PluggableGorDriver implements GorDriver {
         SourceReference fallbackSourceRef = getSourceRef(source, source.getSourceReference().getUrl()+".link", null);
         DataSource fallbackLinkSource = resolveDataSource(fallbackSourceRef);
         if (fallbackLinkSource != null && fallbackLinkSource.exists()) {
+            source.close();
             // The link file existed, was resolved.
             return handleLinks(fallbackLinkSource);
         } else {

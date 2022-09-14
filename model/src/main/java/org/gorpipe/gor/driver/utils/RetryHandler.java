@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Random;
+import java.util.random.RandomGenerator;
 
 /**
  * Utility class that implements retry logic around arbitrary IO operations.
@@ -63,7 +65,7 @@ public class RetryHandler {
      */
     public <T> T tryOp(IoOp<T> op, int retries, OnRetryOp onRetry) throws IOException {
         int tries = 0;
-        long sleepMs = retryInitialSleepMs;
+        long sleepMs = 0;
         IOException lastException = null;
         while (tries <= retries) {
             try {
@@ -74,14 +76,18 @@ public class RetryHandler {
                 sleepMs = retryExceptionHandler(retries, onRetry, tries, sleepMs, e);
             }
         }
-        throw new IOException("Giving up after " + tries + " retries", lastException);
+        throw new IOException("Giving up after " + tries + " tries.", lastException);
     }
 
-    private long retryExceptionHandler(int retries, OnRetryOp onRetry, int tries, long sleepMs, IOException e) throws IOException {
+    protected long retryExceptionHandler(int retries, OnRetryOp onRetry, int tries, long sleepMs, IOException e) throws IOException {
         if (e.getMessage().equals("Stale file handle")) {
             // Stale file handle errors generally require retries on a higher level as the
             // file needs to be reopened.
             throw e;
+        }
+
+        if (sleepMs <= 0) {
+            sleepMs = Math.round(retryInitialSleepMs * (0.5 + new Random().nextFloat()/2.0));
         }
 
         log.warn("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
@@ -95,9 +101,8 @@ public class RetryHandler {
             throw e;
         }
 
-        if (sleepMs < retryMaxSleepMs) {
-            sleepMs *= 2;
-        }
+        sleepMs = Math.min(sleepMs * 10, retryMaxSleepMs);
+
         return sleepMs;
     }
 
@@ -113,7 +118,7 @@ public class RetryHandler {
      */
     public void tryOp(VoidIoOp op, int retries, OnRetryOp onRetry) throws IOException {
         int tries = 0;
-        long sleepMs = retryInitialSleepMs;
+        long sleepMs = 0;
         IOException lastException = null;
         while (tries <= retries) {
             try {

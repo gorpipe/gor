@@ -52,6 +52,8 @@ public abstract class StreamSourceProvider implements SourceProvider {
     private FileCache cache;
     protected GorDriverConfig config;
 
+    protected RetryHandler retryHandler;
+
     public StreamSourceProvider() {}
 
     public StreamSourceProvider(GorDriverConfig config, FileCache cache, Set<StreamSourceIteratorFactory> initialFactories) {
@@ -122,8 +124,9 @@ public abstract class StreamSourceProvider implements SourceProvider {
         StreamSource source = (StreamSource) input;
         // Wrap with retry logic before full range streaming because retries will look like seeks - no longer looking like sequential reads
         if (config.retriesEnabled()) {
-            source = new RetryWrapper(new RetryHandler(config), source, config.maxRequestRetry(), config.maxReadRetries());
+            source = new RetryWrapper(getRetryHandler(), source, config.maxRequestRetry(), config.maxReadRetries());
         }
+
         if (source.getSourceType().isRemote()) {
             if (config.remoteExtendedRangeStreamingEnabled()) {
                 log.debug("Wrapping remote source with ExtendedRangeWrapper");
@@ -161,6 +164,13 @@ public abstract class StreamSourceProvider implements SourceProvider {
             }
         }
         return source;
+    }
+
+    protected RetryHandler getRetryHandler() {
+        if (retryHandler == null) {
+            retryHandler = new RetryHandler(config);
+        }
+        return retryHandler;
     }
 
     /**
@@ -240,7 +250,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
     private StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {
         for (String index : file.possibleIndexNames()) {
             StreamSource indexSource = resolveDataSource(new SourceReference(index, sourceRef));
-            if (indexSource != null && indexSource.exists()) {
+            if (indexSource != null && indexSource.fileExists()) {
                 indexSource = wrap(indexSource);
                 if (indexSource.exists()) {
                     return indexSource;

@@ -42,6 +42,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.gor.driver.utils.RetryHandler;
 import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.IOException;
@@ -74,6 +75,14 @@ public class S3SourceProvider extends StreamSourceProvider {
         S3Url url = S3Url.parse(sourceReference);
         AmazonS3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
         return new S3Source(client, sourceReference);
+    }
+
+    @Override
+    protected RetryHandler getRetryHandler() {
+        if (retryHandler == null) {
+            retryHandler = new RetryHandler(10 * config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
+        }
+        return retryHandler;
     }
 
     protected AmazonS3Client getClient(String securityContext, String bucket) throws IOException {

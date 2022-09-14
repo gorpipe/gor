@@ -141,7 +141,7 @@ public class DriverBackedFileReader extends FileReader {
     public boolean exists(String file) {
         try {
             return resolveUrl(file).exists();
-        } catch (GorResourceException gre) {
+        } catch (GorResourceException | IOException gre) {
             return false;
         }
     }

@@ -30,7 +30,7 @@ public class UTestRetryWrapper extends UTestFileSource {
     @Override
     protected RetryWrapper createSource(String name) {
         StreamSource toWrap = super.createSource(name);
-        return new RetryWrapper(handler, toWrap, 3, 10);
+        return new RetryWrapper(handler, toWrap, 3, 4);
     }
 
     public long[] getSeeds() {

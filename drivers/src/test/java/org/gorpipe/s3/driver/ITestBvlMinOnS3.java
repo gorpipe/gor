@@ -79,8 +79,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
 
         String source = getSourcePath("derived/raw_bam_to_gor/" + names[0] + ".bam.gor");
         SourceReference ref2 = new SourceReferenceBuilder(source).securityContext(sec).build();
-        S3Source s3 = (S3Source) TestUtils.gorDriver.resolveDataSource(ref2);
-        Assert.assertEquals(10000, s3.getClient().getClientConfiguration().getMaxConnections());
+        DataSource s3 = TestUtils.gorDriver.resolveDataSource(ref2);
         Assert.assertTrue(s3.exists());
     }
 
@@ -95,8 +94,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
 
         String source = "s3://google:01_nextcode_gor_integration_test/csa_test_data/data_sets/bvl_min/derived/raw_bam_to_gor/" + names[0] + ".bam.gor";
         SourceReference ref = new SourceReferenceBuilder(source).securityContext(sec).build();
-        S3Source s3 = (S3Source) TestUtils.gorDriver.resolveDataSource(ref);
-        Assert.assertEquals(10000, s3.getClient().getClientConfiguration().getMaxConnections());
+        DataSource s3 = TestUtils.gorDriver.resolveDataSource(ref);
         Assert.assertTrue(s3.exists());
 
     }
@@ -128,8 +126,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         String source = getSourcePath("derived/raw_bam_to_gor/" + names[0] + ".bam.gor");
         SourceReference ref = new SourceReferenceBuilder(source).build();
 
-        S3Source s3 = (S3Source) TestUtils.gorDriver.resolveDataSource(ref);
-        Assert.assertEquals(10000, s3.getClient().getClientConfiguration().getMaxConnections());
+        DataSource s3 = TestUtils.gorDriver.resolveDataSource(ref);
         Assert.assertTrue(s3.exists());
     }
 
@@ -187,7 +184,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         String source = getSourcePath("derived/raw_bam_to_gor/" + names[0] + ".bam.gor");
         SourceReference ref = new SourceReferenceBuilder(source).securityContext(sec).build();
 
-        S3Source s3 = (S3Source) TestUtils.gorDriver.resolveDataSource(ref);
+        DataSource s3 = TestUtils.gorDriver.resolveDataSource(ref);
         Assert.assertTrue(s3.exists());
 
 

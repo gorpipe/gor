@@ -104,12 +104,13 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public boolean exists() {
-        try {
-            return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
-        } catch (IOException e) {
-            return false;
-        }
+    public boolean exists() throws IOException {
+        return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
+    }
+
+    @Override
+    public boolean fileExists() throws IOException {
+        return retry.tryOp(super::fileExists, requestRetries, defaultOnRetryOp);
     }
 
     @Override
