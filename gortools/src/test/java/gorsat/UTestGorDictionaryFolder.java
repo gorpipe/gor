@@ -88,39 +88,6 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
-    public void testWriteToFolder() {
-        Path folderpath = workDir.getRoot().toPath().resolve("folder1.gord");
-        try {
-            TestUtils.runGorPipe("gor -p chr21 ../tests/data/gor/genes.gor | write "+folderpath);
-            TestUtils.runGorPipe("gor -p chr22 ../tests/data/gor/genes.gor | write "+folderpath);
-            String results = TestUtils.runGorPipe("gor "+folderpath+GROUP_CHROM_COUNT);
-            Assert.assertEquals(WRONG_RESULT, "Chrom\tbpStart\tbpStop\tallCount\n" +
-                    "chr21\t0\t100000000\t669\n" +
-                    "chr22\t0\t100000000\t1127\n", results);
-        } finally {
-            deleteFolder(folderpath);
-        }
-    }
-
-    @Test
-    public void testCreateWriteFolder() throws IOException {
-        var workDirPath = workDir.getRoot().toPath();
-        var folderpath = workDirPath.resolve("folder2.gord");
-        var cache = workDirPath.resolve("result_cache");
-        try {
-            Files.createDirectory(cache);
-            String results = TestUtils.runGorPipe("create a = gor -p chr21 ../tests/data/gor/genes.gor | write " + folderpath +
-                    "; create b = gor -p chr22 ../tests/data/gor/genes.gor | write " + folderpath +
-                    "; gor " + folderpath + GROUP_CHROM_COUNT, "-cachedir",cache.toString());
-            Assert.assertEquals(WRONG_RESULT, "Chrom\tbpStart\tbpStop\tallCount\n" +
-                    "chr21\t0\t100000000\t669\n" +
-                    "chr22\t0\t100000000\t1127\n", results);
-        } finally {
-            deleteFolder(folderpath);
-        }
-    }
-
-    @Test
     @Ignore("Passthrough not supported yet")
     public void testWritePassThrough() {
         Path path = workDir.getRoot().toPath().resolve("gorfile.gorz");

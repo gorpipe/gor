@@ -218,31 +218,8 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  def appendToDictionary(name: String, outputMeta: GorMeta): Unit = {
-    val p = Paths.get(name)
-    var parent = p.getParent
-    if (!parent.isAbsolute) {
-      val root = session.getProjectContext.getProjectRootPath
-      parent = root.resolve(parent)
-    }
-
-    val dict = parent.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)
-    val tags = outputMeta.getTags
-    val cont = p.getFileName + "\t" + 1 + "\t" + outputMeta.getRange.formatAsTabDelimited() + (if(tags!=null) {
-      "\t" + tags + "\n"
-    } else {
-      "\n"
-    })
-    Files.writeString(dict, cont, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
-  }
-
   def outFinish(sh : FileHolder): Unit = {
     sh.out.finish()
-    val name = sh.out.getName
-    if(name != null && (options.useFolder.nonEmpty || name.contains(".gord/")) && !name.toLowerCase.endsWith(".parquet")) {
-      val meta = sh.out.getMeta
-      appendToDictionary(name, meta)
-    }
   }
 
   override def finish() {
