@@ -42,8 +42,8 @@ public interface SourceProvider {
     SourceType[] getSupportedSourceTypes();
 
     /**
-     * Resolve direct data source from source reference. This does no wrapping
-     * and will not follow links.
+     * Resolve direct data source from source reference. This does wrapping
+     * but will not follow links.
      *
      * @param context the context the data source will be created in.
      * @return Data source

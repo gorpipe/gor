@@ -352,7 +352,37 @@ public class UTestBucketManager {
     }
 
     @Test
-    @Ignore("Reenable as part of GOP-1444")
+    public void testCleaningOfOldTempFiles() throws Exception {
+        String name = "testCleaningOfDeletedBuckets";
+
+        // Setup small table
+
+        int fileCount = 2;
+        String[] sources = IntStream.range(1, fileCount).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
+        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
+                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+
+        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(2);
+        buc.setBucketSize(10);
+
+        // Create artificial temp file
+        Path tempFilePath = workDirPath.resolve(buc.getTempTablePrefix() + "111.gord");
+        Files.copy(table.getPath(), tempFilePath);
+        Assert.assertTrue(Files.exists(tempFilePath));
+
+        // Bucketize
+
+        buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 100);
+
+        String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have ten buckets", 1, buckets.length);
+
+        Assert.assertFalse(Files.exists(tempFilePath));
+    }
+
+    @Test
     public void testCleaningOfDeletedBuckets() throws Exception {
         String name = "testCleaningOfDeletedBuckets";
 
@@ -368,7 +398,7 @@ public class UTestBucketManager {
         buc.setMinBucketSize(10);
         buc.setBucketSize(10);
 
-        buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, -1);
+        buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 100);
 
         String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have ten buckets", 10, buckets.length);
