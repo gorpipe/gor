@@ -63,9 +63,9 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
   val out: Writer =
     new java.io.OutputStreamWriter(new BufferedOutputStream(gzippedOutputStream, 1024 * 128))
 
-  override def getName: String = name
+  override def getName(): String = name
 
-  def setup {
+  def setup(): Unit = {
     if (header != null & !skipHeader) {
       if (!header.startsWith("#")) {
         out.write("#")
@@ -74,12 +74,12 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
     }
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     out.write(r.toString)
     out.write('\n')
   }
 
-  def finish {
+  def finish(): Unit = {
     out.flush()
     out.close()
     getMeta.setMd5(interceptingFileOutputStream match {

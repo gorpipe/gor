@@ -29,19 +29,19 @@ abstract class Processor {
   var pipeFrom: Processor
   var rs: GenomicIterator = _
 
-  def reportWantsNoMore()
+  def reportWantsNoMore(): Unit
 
-  def reset()
+  def reset(): Unit
 
-  def from(from: Processor)
+  def from(from: Processor): Unit
 
-  def setup()
+  def setup(): Unit
 
-  def securedSetup(e: Throwable)
+  def securedSetup(e: Throwable): Unit
 
-  def process(r: Row)
+  def process(r: Row): Unit
 
-  def finish()
+  def finish(): Unit
 
-  def securedFinish(e: Throwable)
+  def securedFinish(e: Throwable): Unit
 }

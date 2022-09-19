@@ -27,7 +27,7 @@ import org.gorpipe.gor.model.Row
 case class SlidingRowHandler(binsize: Int, slideSteps: Int) extends RowHandler {
   val binIDgen = SlidingBinIDgen(binsize, slideSteps)
 
-  def process(r: Row, BA: BinAggregator) {
+  def process(r: Row, BA: BinAggregator): Unit = {
     val chr = r.chr
     val pos = r.pos
     var i = -slideSteps

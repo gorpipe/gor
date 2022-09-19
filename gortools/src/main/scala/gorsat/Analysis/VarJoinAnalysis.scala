@@ -93,7 +93,7 @@ object VarJoinAnalysis {
     var gr : GroupHolder = _
     if (!useGroup) groupMap += ("#GR0#" -> singleGroupHolder)
 
-    override def process(lr : Row) {
+    override def process(lr : Row): Unit = {
       if (useGroup && lr.chr != lastLeftChr) {
         groupMap = new scala.collection.mutable.HashMap[String, GroupHolder]
       }
@@ -231,7 +231,7 @@ object VarJoinAnalysis {
       }
 
     }
-    override def finish() {
+    override def finish(): Unit = {
       try { refSeqProvider.close() } finally { rightSource.close() }
     }
   }

@@ -33,10 +33,10 @@ case class PedigreeLookup(session: GorSession, fileName : String, mapcol : Int, 
   var mapVal : String = ""
   var colMap : multiHashMap = _
 
-  override def setup() {
+  override def setup(): Unit = {
     colMap = getPedigreeHashMap(fileName,expandPedigree)
   }
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
 
     key = r.colAsString(mapcol).toString
 

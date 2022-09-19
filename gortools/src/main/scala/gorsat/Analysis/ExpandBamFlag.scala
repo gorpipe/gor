@@ -31,7 +31,7 @@ case class ExpandBamFlag(flagCol : Int) extends Analysis {
   var i = 1
   while (i < 21) { extraCols.setCharAt(i,'\t'); i += 2 }
 
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
     var i = 0
     while (i < 21) {
       extraCols.setCharAt(i,'0'); i += 2

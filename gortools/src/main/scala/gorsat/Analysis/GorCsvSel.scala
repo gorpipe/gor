@@ -159,7 +159,7 @@ object GorCsvSel {
       }
     }
 
-    def initColHolder(sh: ColHolder) {
+    def initColHolder(sh: ColHolder): Unit = {
       if (sh.buckRows == null) {
         sh.buckRows = new Array[CharSequence](maxUsedBuckets)
         sh.offsetArray = new Array[Int](maxUsedBuckets)
@@ -184,7 +184,7 @@ object GorCsvSel {
       else initColHolder(singleColHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var useLineObject = false
       if (r.isInstanceOf[Line]){
         line = r.colAsString(valCol)
@@ -292,7 +292,7 @@ object GorCsvSel {
     }
 
     var lastSize = 0
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       for (key <- groupMap.keys.toList.sorted) {
         var sh: ColHolder = null
         if (useGroup) sh = groupMap(key) else sh = groupMap("theOnlyGroup")

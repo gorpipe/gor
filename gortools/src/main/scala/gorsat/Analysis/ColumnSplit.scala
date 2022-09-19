@@ -30,7 +30,7 @@ case class ColumnSplit(totalNumberOfColumns: Int, column: Int, separator: String
 
   private val isLast: Boolean = column+1 == totalNumberOfColumns
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val colVals = r.colAsString(column).toString.split(separator, -1)
     if (colVals.length == 1) super.process(r)
     else {

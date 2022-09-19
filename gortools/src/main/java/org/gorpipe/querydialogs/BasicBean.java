@@ -297,7 +297,7 @@ public class BasicBean implements Serializable {
         if (changeSupport == null || oldValue == newValue) {
             return;
         }
-        firePropertyChange(propertyName, new Float(oldValue), new Float(newValue));
+        firePropertyChange(propertyName, Float.valueOf(oldValue), Float.valueOf(newValue));
     }
 
     /**
@@ -312,7 +312,7 @@ public class BasicBean implements Serializable {
         if (changeSupport == null || oldValue == newValue) {
             return;
         }
-        firePropertyChange(propertyName, new Double(oldValue), new Double(newValue));
+        firePropertyChange(propertyName, Double.valueOf(oldValue), Double.valueOf(newValue));
     }
 
 

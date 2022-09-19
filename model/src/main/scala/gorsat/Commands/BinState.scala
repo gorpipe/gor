@@ -25,11 +25,11 @@ package gorsat.Commands
 import org.gorpipe.gor.model.Row
 
 abstract class BinState {
-  def initialize(binInfo: BinInfo)
+  def initialize(binInfo: BinInfo): Unit
 
-  def process(r: Row)
+  def process(r: Row): Unit
 
-  def sendToNextProcessor(binInfo: BinInfo, nextProcessor: Processor)
+  def sendToNextProcessor(binInfo: BinInfo, nextProcessor: Processor): Unit
 
   def close(): Unit = {}
 }

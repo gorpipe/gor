@@ -40,7 +40,7 @@ case class ColNumAnalysis() extends Analysis {
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (r.numCols == 2) super.process(r)
     else {
       if (r.numCols == 3)

@@ -60,7 +60,7 @@ case class ProjectSegments(grCols: List[Int], maxSegSize: Int, outgoingHeader: R
 
   var groupMap = Map.empty[String, GroupHolder]
 
-  def chopSegments(rchr: String, rpos: Int) {
+  def chopSegments(rchr: String, rpos: Int): Unit = {
     var allRows: List[Row] = Nil
     groupMap.keys.foreach(key => {
       val gr = groupMap(key)
@@ -90,7 +90,7 @@ case class ProjectSegments(grCols: List[Int], maxSegSize: Int, outgoingHeader: R
   }
 
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
 
     therchr = r.chr
     therpos = r.pos
@@ -142,7 +142,7 @@ case class ProjectSegments(grCols: List[Int], maxSegSize: Int, outgoingHeader: R
     }
   }
 
-  override def finish {
+  override def finish(): Unit = {
     if (useGroup) {
       chopSegments(therchr, stopPos)
       // See if we need to output existing range

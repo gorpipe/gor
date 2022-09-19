@@ -100,7 +100,7 @@ object PipeInstance {
 class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) extends gorsatGorIterator(context) {
 
   // Define second constructor, needed for Java.
-  def this(context: GorContext) {
+  def this(context: GorContext) = {
     this(context, false)
   }
 
@@ -145,7 +145,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     thePipeStep
   }
 
-  override def scalaInit(iparams : String, forcedInputHeader : String = "") {
+  override def scalaInit(iparams : String, forcedInputHeader : String = ""): Unit = {
     theParams = iparams
     if (theIterator != null) {
       close()
@@ -168,7 +168,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     theIterator.next().toString
   }
 
-  def seek(chr : String, pos : Int) {  // We must re-initialize if seek is applied
+  def seek(chr : String, pos : Int): Unit = {  // We must re-initialize if seek is applied
     if (theIterator != null) close()
     val dynIterator = new DynamicRowSource(theParams, context)
     dynIterator.setPositionWithoutChrLimits(chr,pos)
@@ -176,7 +176,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     isClosed = false
   }
 
-  override def close() {
+  override def close(): Unit = {
     if (theIterator != null) {
       theIterator.close()
       theIterator = null

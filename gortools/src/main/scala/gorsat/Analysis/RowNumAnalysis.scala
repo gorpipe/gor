@@ -37,7 +37,7 @@ case class RowNumAnalysis(outgoingHeader: RowHeader) extends Analysis {
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     r.addSingleColumnToRow(m.toString)
     super.process(r)
     m += 1

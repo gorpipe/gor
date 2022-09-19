@@ -28,7 +28,7 @@ import org.gorpipe.gor.model.Row
 case class WaitAnalysis(time: Int) extends Analysis {
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     Thread.sleep(time)
     super.process(r)
   }

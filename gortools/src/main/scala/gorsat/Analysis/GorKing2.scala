@@ -109,7 +109,7 @@ object GorKing {
     val grColsArray: Array[Int] = grCols.toArray
     var ladd = new java.lang.StringBuilder(1024 * 4)
 
-    def initColHolder(sh: ColHolder) {
+    def initColHolder(sh: ColHolder): Unit = {
       if (sh.buckRows == null) {
         sh.buckRows = new Array[CharSequence](maxUsedBuckets)
         sh.offsetArray = new Array[Int](maxUsedBuckets)
@@ -134,7 +134,7 @@ object GorKing {
       else initColHolder(singleColHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var useLineObject = false
       if (r.isInstanceOf[Line]){
         line = r.colAsString(valCol)
@@ -169,7 +169,7 @@ object GorKing {
 
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
 
       for (key <- groupMap.keys.toList.sorted) {
         val GTS = new Array[Char](bui.pbt.numberOfPns)
@@ -325,14 +325,14 @@ object GorKing {
         }
 
         if (ai % 1000 == 0 && gm != null && gm.isCancelled()) {
-          reportWantsNoMore
+          reportWantsNoMore()
           cancelled = true
         }
         ai += 1
       }
     }
 
-    override def finish: Unit = {
+    override def finish(): Unit = {
       val skip_test = if (!t_pi0 && !t_phi && !t_theta) true else false
       if (!cancelled && !needsInitialization) {
         var ai: Int = 0
@@ -350,7 +350,7 @@ object GorKing {
               + '\t' + Nhom(ai) + '\t' + NAai(ai) + '\t' + NAaj(ai) + '\t' + count(ai) + '\t' + pi0 + '\t' + phi + '\t' + theta))
           }
           if (ai % 1000 == 0 && gm != null && gm.isCancelled()) {
-            reportWantsNoMore
+            reportWantsNoMore()
             cancelled = true
           }
           ai += 1

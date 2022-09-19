@@ -29,7 +29,7 @@ import org.gorpipe.model.gor.RowObj
 case class ColTypeAnalysis() extends Analysis {
   override def isTypeInformationNeeded: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (r.numCols == 2) {
       super.process(r)
     } else {

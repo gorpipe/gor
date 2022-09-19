@@ -42,7 +42,7 @@ case class TimeoutMonitor() extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     //noinspection ScalaUselessExpression
     resettingRowCounter += 1
     if (timeout_millis > 0 && resettingRowCounter >= checkEveryXRows) {

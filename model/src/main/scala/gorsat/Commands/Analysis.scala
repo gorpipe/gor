@@ -97,16 +97,16 @@ abstract class Analysis() extends Processor with Cloneable {
     (if (pipeFrom == null) "" else " | ") + (if (pipeTo != null) this.getClass.getSimpleName + pipeTo.toString else this.getClass.getSimpleName)
   }
 
-  def from(from: Processor) {
+  def from(from: Processor) : Unit = {
     pipeFrom = from
   }
 
-  def reportWantsNoMore() {
+  def reportWantsNoMore() : Unit = {
     if (pipeFrom != null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true
   }
 
-  def reset() {
+  def reset() : Unit = {
     if (pipeFrom != null && wantsNoMore) pipeFrom.reset()
     if (pipeTo != null && wantsNoMore) {
       wantsNoMore = false
@@ -144,10 +144,10 @@ abstract class Analysis() extends Processor with Cloneable {
     null
   }
 
-  def setup() {}
+  def setup() : Unit = {}
 
   // To be implemented by the Analysis developer
-  final def securedSetup(oe: Throwable) {
+  final def securedSetup(oe: Throwable) : Unit = {
     try {
       setup()
     } catch {
@@ -160,17 +160,17 @@ abstract class Analysis() extends Processor with Cloneable {
     if (nextProcessor != null) nextProcessor.securedSetup(oe)
   }
 
-  def process(r: Row) {
+  def process(r: Row) : Unit = {
     if (alreadyFinished)
       throw new GorSystemException("Analysis step already finished", null)
     if (!wantsNoMore && nextProcessor != null)
       nextProcessor.process(r)
   }
 
-  def finish() {}
+  def finish() : Unit = {}
 
   // To be implemented by the Analysis developer
-  final def securedFinish(oe: Throwable) {
+  final def securedFinish(oe: Throwable) : Unit = {
     if (alreadyFinished) return
     try {
       isInErrorState = oe != null

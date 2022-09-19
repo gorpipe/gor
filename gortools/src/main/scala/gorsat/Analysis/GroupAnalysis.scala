@@ -81,7 +81,7 @@ object GroupAnalysis {
 
     def formatDouble(d: Double): String = (d formatted "%1.1f").replace(',', '.')
 
-    def initStatHolder(sh: StatHolder) {
+    def initStatHolder(sh: StatHolder): Unit = {
       var i = 0
       while (i < anyCols.size) {
         sh.sums(i) = 0.0
@@ -100,7 +100,7 @@ object GroupAnalysis {
       groupMap = scala.collection.mutable.HashMap.empty[String, StatHolder]
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var sh: StatHolder = null
       val groupID = if (useGroup) r.selectedColumns(grColsArray) else ""
 
@@ -327,7 +327,7 @@ object GroupAnalysis {
   case class GenomeRowHandler() extends RowHandler {
     val binIDgen = RegularBinIDgen(1)
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val binID = binIDgen.ID(1)
       binIDgen.StartAndStop(binID)
       BA.update(r, binID, "chrA", 0, 1000000000)
@@ -337,7 +337,7 @@ object GroupAnalysis {
   case class ChromRowHandler(session: GorSession) extends RowHandler {
     val binIDgen = RegularBinIDgen(1)
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val chr = r.chr
       val binID = binIDgen.ID(1)
       try {

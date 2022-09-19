@@ -92,7 +92,7 @@ object GtLDAnalysis {
     var gr: GroupHolder = _
     if (!useGroup) groupMap += ("#GR0#" -> singleGroupHolder)
 
-    override def process(lr: Row) {
+    override def process(lr: Row): Unit = {
       if (useGroup && lr.chr != lastLeftChr) {
         groupMap = new scala.collection.mutable.HashMap[String, GroupHolder]
       }
@@ -249,7 +249,7 @@ object GtLDAnalysis {
       }
     }
 
-    override def finish {
+    override def finish(): Unit = {
       rightSource.close
     }
   }
@@ -310,7 +310,7 @@ object GtLDAnalysis {
     val leftType = typeHolder('L') // This object is used to denote left-row when it is received in SelfJoinState
     val rightType = typeHolder('R') // This object is used to denote right-row
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val chr = r.chr
       val pos = r.pos
 
@@ -350,13 +350,13 @@ object GtLDAnalysis {
       rRows = Nil
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       val leftOrRight = r.bH.asInstanceOf[typeHolder]
       if (leftOrRight.rowType == 'L' && (useOnlyAsLeftVar == -1 || r.colAsInt(useOnlyAsLeftVar) > 0)) lRows ::= r
       if (leftOrRight.rowType == 'R') rRows ::= r
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       if (nextProcessor.wantsNoMore) return
       if (rRows.nonEmpty && lRows.length * rRows.length < 400) {
         for (lr <- lRows.reverse;
@@ -388,7 +388,7 @@ object GtLDAnalysis {
     BinAnalysis(LDSelfJoinRowHandler(binSize, fuzz, binN), BinAggregator(LDSelfJoinFactory(missingSEG, fuzz, req, otherCols, valuesCol, useOnlyAsLeftVar), binN + 10, binN)) {
   }
 
-  def fd(d: Double): String = (d formatted "%6.4f").replace(',', '.')
+  def fd(d: Double): String = ("%6.4f".format(d)).replace(',', '.')
 
   case class LDcalculation(g00Col : Int) extends Analysis {
     val g10Col = g00Col+1

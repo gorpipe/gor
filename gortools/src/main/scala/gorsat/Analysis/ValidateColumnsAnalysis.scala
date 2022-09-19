@@ -28,7 +28,7 @@ import org.gorpipe.gor.model.Row
 case class ValidateColumnsAnalysis(headerCount:Int, message: String = "", testOnNthRow:Long = 10000L) extends Analysis {
   var counter = 0L
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (counter % testOnNthRow == 0L && headerCount != r.numCols()) {
       throw new RuntimeException(s"Number of columns in header and data do not match for $message")
     }

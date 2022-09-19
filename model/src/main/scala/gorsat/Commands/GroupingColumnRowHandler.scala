@@ -27,7 +27,7 @@ import org.gorpipe.gor.model.Row
 case class GroupingColumnRowHandler(binsize: Int, groupCols: Array[Int]) extends RowHandler {
   val binIDgen = RegularBinIDgen(binsize)
 
-  def process(r: Row, BA: BinAggregator) {
+  def process(r: Row, BA: BinAggregator): Unit = {
     val chr = r.selectedColumns(groupCols)
     val pos = r.pos
     val binID = binIDgen.ID(pos)

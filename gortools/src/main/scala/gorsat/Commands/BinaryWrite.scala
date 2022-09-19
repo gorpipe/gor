@@ -94,7 +94,7 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
     }
   }
 
-  private def unambiguousColumnNames(cols: Traversable[String], nameBeginnings: String*): Boolean = {
+  private def unambiguousColumnNames(cols: Iterable[String], nameBeginnings: String*): Boolean = {
     nameBeginnings.forall(beginning => {
       cols.count(_.startsWith(beginning)) <= 1
     })

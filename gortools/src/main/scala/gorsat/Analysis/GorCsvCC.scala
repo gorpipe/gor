@@ -98,7 +98,7 @@ object GorCsvCC {
     var maxUsedBuckets = 0
     var maxPhenoStats = 0
 
-    def initColHolder(sh: ColHolder) {
+    def initColHolder(sh: ColHolder): Unit = {
       if (sh.buckRows == null) {
         sh.buckRows = new Array[CharSequence](maxUsedBuckets)
         sh.splitArr = new Array[SaHolder](maxUsedBuckets)
@@ -139,7 +139,7 @@ object GorCsvCC {
       else initColHolder(singleColHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       line = r.colAsString(valCol)
       tbpi.buckNameToIdx.get(r.colAsString(buckCol).toString) match {
         case Some(buckNo) =>
@@ -163,7 +163,7 @@ object GorCsvCC {
       }
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       var p0: Double = 0.0
       var p1: Double = 0.0
       var p2: Double = 0.0
@@ -325,7 +325,7 @@ object GorCsvCC {
     }
 
 
-    override def setup: Unit = {
+    override def setup(): Unit = {
       super.setup()
 
       val lookupSignature: String = lookup(fileName1, iteratorCommand1, fileName2, iteratorCommand2)
@@ -369,9 +369,9 @@ object GorCsvCC {
           val phenostatusID = if (r.length == 3) phenotOrder(phenotype + '\t' + ccstatus) else phenotOrder(ccstatus)
           phenoRows += ((tagID, phenostatusID))
         })
-        val phenoRowsLeft = phenoRows.toIterator.map(_._1).toArray
-        val phenoRowsRight = phenoRows.toIterator.map(_._2).toArray
-        val phenoMap = phenoOrderMap.toIterator.map(x => (x._2, x._1)).toMap[Int, String]
+        val phenoRowsLeft = phenoRows.iterator.map(_._1).toArray
+        val phenoRowsRight = phenoRows.iterator.map(_._2).toArray
+        val phenoMap = phenoOrderMap.iterator.map(x => (x._2, x._1)).toMap[Int, String]
         val pnBucketTable = PnBucketParsing.parse(l1).filter(tags.distinct)
         TagBucketPhenoInfo(pnBucketTable, phenoMap, phenoRowsLeft, phenoRowsRight)
       })

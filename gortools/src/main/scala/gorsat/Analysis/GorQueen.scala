@@ -104,7 +104,7 @@ object GorQueen {
     val grColsArray: Array[Int] = grCols.toArray
     var ladd = new java.lang.StringBuilder(1024 * 4)
 
-    def initColHolder(sh: ColHolder) {
+    def initColHolder(sh: ColHolder): Unit = {
       if (sh.buckRows == null) {
         sh.buckRows = new Array[CharSequence](maxUsedBuckets)
         sh.offsetArray = new Array[Int](maxUsedBuckets)
@@ -129,7 +129,7 @@ object GorQueen {
       else initColHolder(singleColHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var useLineObject = false
       if (r.isInstanceOf[Line]){
         line = r.colAsString(valCol)
@@ -163,7 +163,7 @@ object GorQueen {
 
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
 
       for (key <- groupMap.keys.toList.sorted) {
 /*
@@ -313,14 +313,14 @@ object GorQueen {
             j += 1
         }
         if (gm != null && gm.isCancelled()) {
-          reportWantsNoMore
+          reportWantsNoMore()
           cancelled = true
         }
         i += 1
       }
     }
 
-    override def finish: Unit = {
+    override def finish(): Unit = {
       if (!cancelled && !needsInitialization) {
         var i: Int = 0
         while (i < gtSize1 && !cancelled && !wantsNoMore) {
@@ -337,7 +337,7 @@ object GorQueen {
             j += 1
           }
           if (gm != null && gm.isCancelled()) {
-            reportWantsNoMore
+            reportWantsNoMore()
             cancelled = true
           }
           i += 1

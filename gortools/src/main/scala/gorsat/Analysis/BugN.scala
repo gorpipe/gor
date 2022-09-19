@@ -28,19 +28,19 @@ import org.gorpipe.gor.model.Row
 case class BugN(bugType: String, numberValue: Double) extends Analysis {
   var number: Double = numberValue
 
-  override def setup {
+  override def setup(): Unit = {
     if (bugType == "setup" && Math.random < number) {
       number = 0.0; throw new Throwable("BUG setup")
     }
   }
 
-  override def finish {
+  override def finish(): Unit = {
     if (bugType == "finish" && Math.random < number) {
       number = 0.0; throw new Throwable("BUG finish")
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (bugType == "process" && Math.random < number) {
       number = 0.0
       throw new Throwable("BUG process")

@@ -219,7 +219,7 @@ object TypeConversionFunctions {
   }
   def long2Float(ex: lFun): dFun = {
     cvp =>
-      ex(cvp).toLong
+      ex(cvp).toDouble
   }
   def float2Float(ex: dFun): dFun = {
     cvp =>

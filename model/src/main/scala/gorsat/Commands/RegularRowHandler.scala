@@ -27,7 +27,7 @@ import org.gorpipe.gor.model.Row
 case class RegularRowHandler(binsize: Int) extends RowHandler {
   val binIDgen = RegularBinIDgen(binsize)
 
-  def process(r: Row, BA: BinAggregator) {
+  def process(r: Row, BA: BinAggregator): Unit = {
     val chr = r.chr
     val pos = r.pos
     val binID = binIDgen.ID(pos)

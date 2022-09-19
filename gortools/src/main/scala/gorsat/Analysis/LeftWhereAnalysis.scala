@@ -55,7 +55,7 @@ case class LeftWhereAnalysis(session: GorSession, executeNor: Boolean, paramStri
     }
   }
 
-  def emptyBuffer() {
+  def emptyBuffer(): Unit = {
     var c = 0
     buffer.foreach(x => {
       if (filter.evalBooleanFunction(x)) {
@@ -67,14 +67,14 @@ case class LeftWhereAnalysis(session: GorSession, executeNor: Boolean, paramStri
     buffer = new scala.collection.mutable.ArrayBuffer[Row]
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     groupID = r.colsSlice(0, colNum + 1).toString
     if (groupID != lastGroupID && lastGroupID != "") emptyBuffer()
     buffer += r
     lastGroupID = groupID
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     if (!isInErrorState && buffer.nonEmpty) emptyBuffer()
     filter.close()
   }

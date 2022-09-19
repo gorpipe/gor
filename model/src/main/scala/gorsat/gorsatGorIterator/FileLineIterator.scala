@@ -53,7 +53,7 @@ case class FileLineIterator(fileName: String, reader: FileReader) extends LineIt
     }
   }
 
-  def close() {
+  def close(): Unit = {
     allNORrows = null
   }
 }
