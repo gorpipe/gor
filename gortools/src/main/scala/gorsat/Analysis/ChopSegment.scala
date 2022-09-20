@@ -30,7 +30,7 @@ case class ChopSegment(maxSegSize: Int) extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
-  def recursiveChop(r: Row) {
+  def recursiveChop(r: Row): Unit = {
     val rangeStopPos = r.colAsInt(2)
     val rangeStopStringLength = r.colAsString(2).length
     if (rangeStopPos - r.pos > maxSegSize) {
@@ -39,7 +39,7 @@ case class ChopSegment(maxSegSize: Int) extends Analysis {
     } else super.process(r)
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (r.colAsInt(2) - r.pos > maxSegSize) recursiveChop(r)
     else super.process(r)
   }

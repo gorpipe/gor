@@ -69,7 +69,7 @@ case class CigarVarSegs(cigarCol: Int, grCols: Array[Int], useRef: Boolean, outp
 
   def varQual(x: Int): Int = if (x < qualBases.length) qualBases.charAt(x) - 33; else 0
 
-  def outputRow() {
+  def outputRow(): Unit = {
     if (ref != "" || alt != "") {
       if (useRef) {
         if (ref.length == alt.length) {
@@ -106,11 +106,11 @@ case class CigarVarSegs(cigarCol: Int, grCols: Array[Int], useRef: Boolean, outp
     }
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     refSeq.close()
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     readShift = 0
     refShift = 0
     ci = 0

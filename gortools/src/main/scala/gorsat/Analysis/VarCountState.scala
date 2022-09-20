@@ -40,7 +40,7 @@ object VarCountState {
     if (!useGroup) groupMap += ("theOnlyGroup" -> singleStatHolder)
     val grColsArray: Array[Int] = grCols.toArray
 
-    def initStatHolder(sh: StatHolder) {
+    def initStatHolder(sh: StatHolder): Unit = {
       sh.allCount = 0
     }
 
@@ -49,7 +49,7 @@ object VarCountState {
       else initStatHolder(singleStatHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var sh: StatHolder = null
       if (useGroup) {
         val groupID = r.selectedColumns(grColsArray)
@@ -64,7 +64,7 @@ object VarCountState {
       sh.allCount += 1
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       for (key <- groupMap.keys.toList.sorted) {
         var sh: StatHolder = null
         if (useGroup) sh = groupMap(key) else sh = groupMap("theOnlyGroup")

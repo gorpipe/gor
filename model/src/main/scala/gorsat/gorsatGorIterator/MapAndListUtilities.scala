@@ -24,12 +24,11 @@ package gorsat.gorsatGorIterator
 
 import java.nio.file.Files
 import java.util.stream.Collectors
-
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.iterators.LineIterator
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.IterableHasAsScala
 
 
 object MapAndListUtilities {
@@ -79,7 +78,7 @@ object MapAndListUtilities {
     getStringArray(filename, FileLineIterator(filename, session.getProjectContext.getSystemFileReader), session)
   }
 
-  def getStringTraversable(filename: String, session: GorSession): Traversable[String] = {
+  def getStringTraversable(filename: String, session: GorSession): Iterable[String] = {
     val reader = session.getProjectContext.getSystemFileReader.getReader(filename)
     try {
       val lines = reader.lines()
@@ -143,11 +142,11 @@ object MapAndListUtilities {
                   if (caseInsensitive) cols.slice(0, ic).mkString("\t").toUpperCase
                   else cols.slice(0, ic).mkString("\t")
                 if (colMap.getOrDefault(lookupString,null) == null) {
-                  colMap.put(lookupString, (cols(oc.head) /: oc.tail.map(c => cols(c)))(_ + "\t" + _))
+                  colMap.put(lookupString, oc.tail.map(c => cols(c)).foldLeft(cols(oc.head))(_ + "\t" + _))
                 } else {
                   val existingValues = colMap.get(lookupString).split("\t",-1)
                   val newValues = if( skipEmpty ) existingValues.zip(oc.map(c => cols(c))).map(_.productIterator.filter(_.toString.length > 0).mkString(",")) else existingValues.zip(oc.map(c => cols(c))).map( x => x._1 + "," + x._2 )
-                  colMap.put(lookupString, (newValues(0) /: newValues.tail)(_ + "\t" + _))
+                  colMap.put(lookupString, newValues.tail.foldLeft(newValues.head)(_ + "\t" + _))
                 }
               }
             }
@@ -178,7 +177,7 @@ object MapAndListUtilities {
             val cols = x.split("\t", -1)
             mmu.check("getMultiHashMap", mmu.lineNum, x)
             if (cols.length >= ic + ocl) {
-              val (a, b) = (cols.slice(0, ic).mkString("\t"), (cols(oc.head) /: oc.tail.map(c => cols(c)))(_ + "\t" + _))
+              val (a, b) = (cols.slice(0, ic).mkString("\t"), oc.tail.map(c => cols(c)).foldLeft(cols(oc.head))(_ + "\t" + _))
               val cisa = if (caseInsensitive) a.toUpperCase else a
               if(multiMap.containsKey(cisa)) {
                 multiMap.put(cisa, (Array(b) ++ multiMap.get(cisa)).reverse)

@@ -28,15 +28,15 @@ import org.gorpipe.gor.model.Row
 import scala.collection.mutable.ListBuffer
 
 case class ToList(rl: ListBuffer[Row]) extends Output {
-  def setup {
+  def setup(): Unit = {
     /* Nothing needs to be done since the file is already open */
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     rl += r
   }
 
-  def finish {
+  def finish(): Unit = {
     /* Do nothing */
   }
 }

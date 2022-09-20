@@ -60,7 +60,7 @@ case class AdjustAnalysis(adOpt: AdjustOptions, pCol: Int, grCols: List[Int]) ex
 
   lazy val grColsArray: Array[Int] = grCols.toArray
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val sh = getStatHolder(r)
     val columnValue = r.colAsDouble(pCol)
     val adjustedColumnValue = if (columnValue == 0) {

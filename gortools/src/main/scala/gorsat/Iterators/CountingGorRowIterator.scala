@@ -55,5 +55,5 @@ case class CountingGorRowIterator(genomicRange: GenomicRange.Range, segmentValue
 
   override def seek(seekChr: String, seekPos: Int): Boolean = true
 
-  def close {}
+  def close(): Unit = {}
 }

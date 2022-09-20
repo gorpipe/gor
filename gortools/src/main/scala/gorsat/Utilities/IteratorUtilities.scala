@@ -42,9 +42,9 @@ object IteratorUtilities {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  def sortGorFile(inputFileName: String, outputFileName: String, selCols: String = "all", spaceDelim: Boolean = false, useHeader: Boolean = false, skip: Int, gorRoot: String = "") {
+  def sortGorFile(inputFileName: String, outputFileName: String, selCols: String = "all", spaceDelim: Boolean = false, useHeader: Boolean = false, skip: Int, gorRoot: String = ""): Unit = {
 
-    def fileLines(file: java.io.File) = scala.io.Source.fromFile(file, "utf-8", scala.io.Source.DefaultBufSize * 100).getLines // toList
+    def fileLines(file: java.io.File) = scala.io.Source.fromFile(file, "utf-8", scala.io.Source.DefaultBufSize * 100).getLines() // toList
 
     var lines = 0
     var fileNum = 1
@@ -81,13 +81,13 @@ object IteratorUtilities {
 
     var linesSkipped = 0
     while (linesSkipped < skip) {
-      inputFileSource.next
+      inputFileSource.next()
       linesSkipped += 1
     }
 
     var header: String = null
     if (useHeader) {
-      if (spaceDelim) header = inputFileSource.next.split(""" +""", -1).mkString("\t") else header = inputFileSource.next
+      if (spaceDelim) header = inputFileSource.next().split(""" +""", -1).mkString("\t") else header = inputFileSource.next()
     }
 
     if (useHeader && selCols != "all") {
@@ -97,8 +97,8 @@ object IteratorUtilities {
 
     while (inputFileSource.hasNext) {
       var line: String = null
-      if (spaceDelim) line = inputFileSource.next.split(""" +""", -1).mkString("\t")
-      else line = inputFileSource.next
+      if (spaceDelim) line = inputFileSource.next().split(""" +""", -1).mkString("\t")
+      else line = inputFileSource.next()
 
       if (selCols != "all") {
         val col = line.split("\t", -1)

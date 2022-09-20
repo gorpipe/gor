@@ -35,7 +35,7 @@ case class ColSed(matchPattern : String, replacePattern : String,
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
 
     reg.findFirstIn(r.toString) match {
       case Some(x) => {

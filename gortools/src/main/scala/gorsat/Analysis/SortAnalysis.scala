@@ -40,13 +40,13 @@ case class SortAnalysis(header: String,
 case class SortState(sortStep: SortGenome) extends BinState {
   def initialize(binInfo: BinInfo): Unit = {}
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     sortStep.process(r)
   }
 
-  def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+  def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
     sortStep.nextProcessor = nextProcessor
-    sortStep.finish
+    sortStep.finish()
     sortStep.reinit()
   }
 }
@@ -58,7 +58,7 @@ case class SortFactory(header: String, session: GorSession, sortInfo: Array[Sort
 case class SortRowHandler(binsize: Int) extends RowHandler {
   val binIDgen = RegularBinIDgen(binsize)
 
-  def process(r: Row, BA: BinAggregator) {
+  def process(r: Row, BA: BinAggregator): Unit = {
     val chr = r.chr
     val pos = r.pos
     val binID = binIDgen.ID(pos)

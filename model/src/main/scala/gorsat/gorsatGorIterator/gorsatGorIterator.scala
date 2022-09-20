@@ -37,7 +37,7 @@ abstract class gorsatGorIterator(context: GorContext) extends GorIterator {
   def getUsedFiles: List[String]
   def processArguments(args : Array[String], executeNor : Boolean, forcedInputHeader : String = ""): GenomicIterator
 
-  def scalaInit(iparams : String, forcedInputHeader : String = "")
+  def scalaInit(iparams : String, forcedInputHeader : String = ""): Unit
 
 }
 

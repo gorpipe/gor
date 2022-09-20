@@ -31,7 +31,7 @@ object GrannoAnalysis {
   case class GenomeRowHandler() extends RowHandler {
     val binIDgen = RegularBinIDgen(1)
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val binID = binIDgen.ID(1)
       binIDgen.StartAndStop(binID)
       BA.update(r, binID, "chrA", 0, 1000000000)
@@ -41,7 +41,7 @@ object GrannoAnalysis {
   case class ChromRowHandler(session: GorSession) extends RowHandler {
     val binIDgen = RegularBinIDgen(1)
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val chr = r.chr
       val binID = binIDgen.ID(1)
       try {

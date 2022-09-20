@@ -125,13 +125,13 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
     f
   }
 
-  def setContext(ctx: GorContext, executeNor: Boolean) {
+  def setContext(ctx: GorContext, executeNor: Boolean): Unit = {
     this.context = ctx
     this.executeNor = executeNor
     if (refSeq == null) refSeq = context.getSession.getProjectContext.createRefSeq()
   }
 
-  def setColumnNamesAndTypes(colNames: Array[String], colTypes: Array[String]) {
+  def setColumnNamesAndTypes(colNames: Array[String], colTypes: Array[String]): Unit = {
     orgColNames = colNames
     orgColTypes = colTypes
     calcCompiler.setColumnNamesAndTypes(colNames, colTypes)
@@ -203,7 +203,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
     }
   }
 
-  def addSpecialVariablesToSubFilter(filter: ParseArith) {
+  def addSpecialVariablesToSubFilter(filter: ParseArith): Unit = {
     filter.stringVariableMap = stringVariableMap
     filter.doubleVariableMap = doubleVariableMap
     filter.longVariableMap = longVariableMap
@@ -730,13 +730,13 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
 
   def lxfactor: Parser[lFun] =
     lfunction ~ "^" ~ lfactor ^^ {
-      case e ~ "^" ~ v => (line: ColumnValueProvider) => {scala.math.pow(e(line), v(line)).toLong}
+      case e ~ "^" ~ v => (line: ColumnValueProvider) => {scala.math.pow(e(line).toDouble, v(line).toDouble).toLong}
     } |
     lvalue ~ "^" ~ lfactor ^^ {
-      case e ~ "^" ~ v => (line: ColumnValueProvider) => {scala.math.pow(e(line), v(line)).toLong}
+      case e ~ "^" ~ v => (line: ColumnValueProvider) => {scala.math.pow(e(line).toDouble, v(line).toDouble).toLong}
     } |
     ("(" ~> lexpr <~ ")") ~ "^" ~ lfactor ^^ {
-      case e ~ "^" ~ v => (line: ColumnValueProvider) => {scala.math.pow(e(line), v(line)).toLong}
+      case e ~ "^" ~ v => (line: ColumnValueProvider) => {scala.math.pow(e(line).toDouble, v(line).toDouble).toLong}
     } |
     "(" ~> lexpr <~ ")" |
     lfunction |

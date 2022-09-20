@@ -78,9 +78,9 @@ abstract class TimedRowSource extends GenomicIteratorBase {
 
   def openSource(seekChr: String, seekPos: Int, endPos: Int): Unit
 
-  def openSource(seekChr: String, seekPos: Int): Unit = openSource(seekChr, seekPos, -1)
+  def openSource(seekChr: String, seekPos: Int): Unit = openSource(seekChr, seekPos, -1): Unit
 
-  def openSource(): Unit = openSource(null, -1)
+  def openSource(): Unit = openSource(null, -1): Unit
 
   override def hasNext : Boolean = {
     incStat("hasNext")
@@ -109,7 +109,7 @@ abstract class TimedRowSource extends GenomicIteratorBase {
     }
   }
 
-  def measure_time_and_speed(the_chr: String, the_pos: Int) {
+  def measure_time_and_speed(the_chr: String, the_pos: Int): Unit = {
     the_time = System.nanoTime()
     val dt = (the_time-last_time).toDouble
 
@@ -133,7 +133,7 @@ abstract class TimedRowSource extends GenomicIteratorBase {
 
   }
 
-  def adaptiveMoveToPosition(seekChr: String, seekPos: Int, maxReads: Int = 1000000) {
+  def adaptiveMoveToPosition(seekChr: String, seekPos: Int, maxReads: Int = 1000000): Unit = {
     incStat("adaptiveMoveToPosition "+seekChr+" "+seekPos)
     if (myNext != null && (myNext.chr != null && ((myNext.pos >= seekPos && myNext.chr == seekChr) || myNext.chr > seekChr)))
       return
@@ -170,7 +170,7 @@ abstract class TimedRowSource extends GenomicIteratorBase {
 
   }
 
-  def fixedMoveToPosition(seekChr: String, seekPos: Int, maxReads: Int) {
+  def fixedMoveToPosition(seekChr: String, seekPos: Int, maxReads: Int): Unit = {
     incStat("fixedMoveToPosition "+seekChr+" "+seekPos+" seekCount "+seekCount+", tryStreamCount "+tryStreamCount)
     if (sumLog) {
       if (lastSeek) switchCount += 1
@@ -216,12 +216,12 @@ abstract class TimedRowSource extends GenomicIteratorBase {
     true
   }
 
-  def oldSetPosition(seekChr: String, seekPos: Int) {
+  def oldSetPosition(seekChr: String, seekPos: Int): Unit = {
     openSource(seekChr, seekPos)
     myHasNext = hasNext
   }
 
-  def setPosition(chrom: String,pos: Int) {
+  def setPosition(chrom: String,pos: Int): Unit = {
     the_time = System.nanoTime();
     openSource(chrom, pos)
     if (doLog && seekCount < 10) System.out.println("setPosition "+chrom+" "+pos+", the_time "+the_time)

@@ -68,7 +68,7 @@ case class MergeSources(rightSource : GenomicIterator, empty : String, addRightL
     }
   }
 
-  override def setup: Unit = { val dummy = rightSource.hasNext }
+  override def setup(): Unit = { val dummy = rightSource.hasNext }
 
   override def process(lr : Row): Unit = {
     if (lastRightRow != null && lastRightRow.advancedCompare(lr, sortInfo) < 0) {

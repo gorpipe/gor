@@ -31,7 +31,7 @@ case class MonitorProgress(milliSec : Int, gm : GorMonitor) extends Analysis {
   var t = System.currentTimeMillis
   var lastRowChr : String = ""
   var lastRowPos : Int = 0
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
     m += 1
     if (r.chr != lastRowChr) {
       if (lastRowChr != "") gm.log("GOR progress: "+lastRowChr+":"+lastRowPos)
@@ -48,7 +48,7 @@ case class MonitorProgress(milliSec : Int, gm : GorMonitor) extends Analysis {
     lastRowPos = r.pos
     super.process(r)
   }
-  override def finish {
+  override def finish(): Unit = {
     if (lastRowChr != "") gm.log("GOR progress: "+lastRowChr+":"+lastRowPos)
   }
 }

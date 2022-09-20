@@ -45,7 +45,7 @@ abstract class RegressionAnalysis[T: Manifest](lookUpSignature: String, session:
     }).asInstanceOf[RegressionInfo]
   }
 
-  private def getIdentitiesAndPhenoFileTransposed(phenoTable: Traversable[String]) = {
+  private def getIdentitiesAndPhenoFileTransposed(phenoTable: Iterable[String]) = {
     phenoTable.map(_.split('\t')).map(cols => (cols.head, cols.tail)).toArray.unzip
   }
 

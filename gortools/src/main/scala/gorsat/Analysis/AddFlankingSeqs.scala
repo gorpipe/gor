@@ -67,11 +67,11 @@ case class AddFlankingSeqs(session: GorSession, l : Int, rCols : Array[Int], out
     }
     theSeq.toString()
   }
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
     val seq4Cols = rCols.map( c => sequence4Col(r,l,c) )
     super.process(r.rowWithAddedColumn(seq4Cols.tail.foldLeft(seq4Cols.head) ( _ +"\t"+ _) ))
   }
-  override def finish() {
+  override def finish(): Unit = {
     GenomeLookup.close()
   }
 }

@@ -52,7 +52,7 @@ object GtGenAnalysis {
     val grColsArray: Array[Int] = grCols.toArray
 
 
-    def initColHolder(sh: ColHolder) {
+    def initColHolder(sh: ColHolder): Unit = {
       sh.buckValueCols = new Array[mutable.StringBuilder](pbt.numberOfBuckets)
       var i = 0
       while (i < pbt.numberOfBuckets) {
@@ -75,7 +75,7 @@ object GtGenAnalysis {
       else initColHolder(singleColHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var sh: ColHolder = null
       if (useGroup) {
         val groupID = r.selectedColumns(grColsArray)
@@ -100,7 +100,7 @@ object GtGenAnalysis {
       }
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       for (key <- groupMap.keys.toList.sorted) {
         var sh: ColHolder = null
         if (useGroup) sh = groupMap(key) else sh = groupMap("theOnlyGroup")
@@ -178,11 +178,11 @@ object GtGenAnalysis {
     var gr: GroupHolder = _
     if (!useGroup) groupMap += (-1 -> singleGroupHolder)
 
-    def set_coverage(lSeg: CovSEGinfo, rSeg: CovSEGinfo) {
+    def set_coverage(lSeg: CovSEGinfo, rSeg: CovSEGinfo): Unit = {
       if (lSeg.values.charAt(rSeg.buckPos) =='4') lSeg.values.setCharAt(rSeg.buckPos, '0')
     }
 
-    def nested_process(lr: Row, next_lr: Row) {
+    def nested_process(lr: Row, next_lr: Row): Unit = {
 
       leftStart = lr.pos - 1
       leftStop = lr.pos
@@ -328,14 +328,14 @@ object GtGenAnalysis {
 
     var prev_row: Row = _
 
-    override def process(lr: Row) {
+    override def process(lr: Row): Unit = {
       if (prev_row == null) prev_row = lr
       else {
         nested_process(prev_row, lr); prev_row = lr
       }
     }
 
-    override def finish() {
+    override def finish(): Unit = {
       try {
         if (prev_row != null) {
           nested_process(prev_row, null)

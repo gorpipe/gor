@@ -35,7 +35,7 @@ case class MemoryMonitor(logname: String,
     throw new GorLowMemoryException(msg)
   }, minFreeMemMB, minFreeMemRatio)
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     mmu.check(r)
     super.process(r)
   }

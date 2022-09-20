@@ -109,7 +109,7 @@ object GorKing2 {
     val grColsArray: Array[Int] = grCols.toArray
     var ladd = new java.lang.StringBuilder(1024 * 4)
 
-    def initColHolder(sh: ColHolder) {
+    def initColHolder(sh: ColHolder): Unit = {
       if (sh.buckRows == null) {
         sh.buckRows = new Array[CharSequence](maxUsedBuckets)
         sh.offsetArray = new Array[Int](maxUsedBuckets)
@@ -134,7 +134,7 @@ object GorKing2 {
       else initColHolder(singleColHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var useLineObject = false
       if (r.isInstanceOf[Line]){
         line = r.colAsString(valCol)
@@ -169,7 +169,7 @@ object GorKing2 {
 
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       for (key <- groupMap.keys.toList.sorted) {
         val GTS = new Array[Char](bui.pbt.numberOfPns)
         val theBinaryHolderRow = RowObj("chrA", 0, "")
@@ -396,7 +396,7 @@ object GorKing2 {
       if (outrows.length > 0 && !wantsNoMore) { super_process_batch(outrows); outrows = Nil }
     }
 
-    override def finish: Unit = {
+    override def finish(): Unit = {
 
         if (!cancelled && !needsInitialization) {
           /*

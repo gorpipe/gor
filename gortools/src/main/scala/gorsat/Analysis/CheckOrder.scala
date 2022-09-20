@@ -33,7 +33,7 @@ case class CheckOrder(message: String = "") extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (r.chr < lastChr || (r.chr == lastChr && r.pos < lastPos)) {
       val extra = if (message.isEmpty) "" else message + "\n"
       throw new GorDataException(extra + "Wrong order observed at row: " + r + "\nLast row: " + lastChr + ":" + lastPos, -1, getHeader(), r.toString)

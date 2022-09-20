@@ -45,21 +45,21 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
 
   val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), options.columnCompress, options.md5, if(options.md5File) fileReader.toAbsolutePath(fileName+".md5") else null, if (options.idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, options.idx, options.compressionLevel)
 
-  override def getName: String = fileName
+  override def getName(): String = fileName
 
-  override def setup() {
+  override def setup(): Unit = {
     getMeta.initMetaStats(options.cardCol, header, options.infer, options.maxseg)
     if (schema != null) getMeta.setSchema(schema)
     if (options.command != null) getMeta.setQuery(options.command)
     if (header != null & !skipHeader) out.setHeader(header)
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     getMeta.updateMetaStats(r)
     out.write(r)
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     try {
       out.close()
       getMeta.setMd5(out.getMd5)

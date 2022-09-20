@@ -386,7 +386,8 @@ object GeneralQueryHandler {
         tableHeader.setColumns(header)
       }
       tableHeader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "false")
-      tableHeader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER)
+      // For skip writing out the header, as tools will not cope if the lines will not match
+      //tableHeader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER)
       val dictList = getDictList(dictFiles, chromsrange, fileReader)
       writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)
     }

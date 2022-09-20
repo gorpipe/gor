@@ -37,7 +37,7 @@ case class RowArrayIterator(lineList: Array[Row], length: Int) extends GenomicIt
 
   override def seek(seekChr: String, seekPos: Int): Boolean = true
 
-  def close {}
+  def close(): Unit = {}
 }
 
 object RowArrayIterator {

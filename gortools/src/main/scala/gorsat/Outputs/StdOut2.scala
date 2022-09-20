@@ -26,13 +26,13 @@ import gorsat.Commands.Output
 import org.gorpipe.gor.model.Row
 
 case class StdOut2(header: String = null) extends Output {
-  def setup {
+  def setup(): Unit = {
     if (header != null) System.out.println(header)
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     println(r.toString)
   }
 
-  def finish {}
+  def finish(): Unit = {}
 }

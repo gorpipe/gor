@@ -60,7 +60,7 @@ case class VennSeg(grCols: List[Int], sumColumns: List[Int], header: String) ext
   var groupID = ""
 
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val stasto = r.colAsString(2)
 
     if (useGroup) {

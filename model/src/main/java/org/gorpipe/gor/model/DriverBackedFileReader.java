@@ -82,10 +82,14 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    public DataSource resolveUrl(String url, boolean writeable) {
+    public SourceReference createSourceReference(String url, boolean writeable) {
         url = convertUrl(url);
-        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
-        return resolveUrl(sourceReference);
+        return new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
+    }
+
+    @Override
+    public DataSource resolveUrl(String url, boolean writeable) {
+        return resolveUrl(createSourceReference(url, writeable));
     }
 
     @Override
@@ -101,7 +105,8 @@ public class DriverBackedFileReader extends FileReader {
 
     /* Resolve without doing links
      */
-    private DataSource resolveDataSource(SourceReference sourceReference) throws IOException {
+    @Override
+    public DataSource resolveDataSource(SourceReference sourceReference) throws IOException {
         DataSource dataSource =  GorDriverFactory.fromConfig().resolveDataSource(sourceReference);
         if (dataSource != null) {
             validateAccess(dataSource);
@@ -113,10 +118,7 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public String readLinkContent(String url) {
-        url = convertUrl(url);
-        SourceReference sourceReference = new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).build();
-
-        try (DataSource source = resolveDataSource(sourceReference)) {
+        try (DataSource source = resolveDataSource(createSourceReference(url, false))) {
             if (source == null) {
                 throw new GorResourceException("Could not read link, invalid uri: " + url, url, null);
             } else {
@@ -141,7 +143,7 @@ public class DriverBackedFileReader extends FileReader {
     public boolean exists(String file) {
         try {
             return resolveUrl(file).exists();
-        } catch (GorResourceException gre) {
+        } catch (GorResourceException | IOException gre) {
             return false;
         }
     }

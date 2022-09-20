@@ -181,13 +181,13 @@ object IheAnalysis {
 
     val iheContext = new IHEContext
 
-    def fd(d: Double) = (d formatted "%1.1f").replace(',', '.')
+    def fd(d: Double) = ("%1.1f".format(d)).replace(',', '.')
 
-    def fd4(d: Double) = (d formatted "%1.4f").replace(',', '.')
+    def fd4(d: Double) = ("%1.4f".format(d)).replace(',', '.')
 
-    def fe2(d: Double) = (d formatted "%1.2e").replace(',', '.')
+    def fe2(d: Double) = ("%1.2e".format(d)).replace(',', '.')
 
-    override def process(r: Row) {
+    override def process(r: Row): Unit = {
 
       val majAlleleC = r.colAsString(columnOptions.majAlleleCol).charAt(0)
       val secAlleleC = r.colAsString(columnOptions.secAlleleCol).charAt(0)

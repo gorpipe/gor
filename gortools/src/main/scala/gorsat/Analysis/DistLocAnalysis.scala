@@ -32,9 +32,9 @@ case class DistLocAnalysis(m: Int) extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (lastChr != r.chr || lastPos != r.pos) i += 1
-    if (i > m) reportWantsNoMore else super.process(r)
+    if (i > m) reportWantsNoMore() else super.process(r)
     lastChr = r.chr
     lastPos = r.pos
   }

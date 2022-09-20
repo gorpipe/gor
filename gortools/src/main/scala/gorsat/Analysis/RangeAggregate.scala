@@ -82,9 +82,9 @@ case class RangeAggregate(maxRange: Int, useCount: Boolean, useCdist: Boolean, u
   var bufferChr = "chr"
   val emptyCheckSize = 10000
 
-  def formatDouble(d: Double): String = (d formatted "%1.1f").replace(',', '.')
+  def formatDouble(d: Double): String = ("%1.1f".format(d)).replace(',', '.')
 
-  def initStatHolder(sh: StatHolder, chr: String, pos: Int) {
+  def initStatHolder(sh: StatHolder, chr: String, pos: Int): Unit = {
     var i = 0
     while (i < anyCols.size) {
       sh.sums(i) = 0.0
@@ -102,7 +102,7 @@ case class RangeAggregate(maxRange: Int, useCount: Boolean, useCdist: Boolean, u
     sh.lineSet = false
   }
 
-  def initializeBucket(chr: String, pos: Int) {
+  def initializeBucket(chr: String, pos: Int): Unit = {
     if (useGroup) {
       groupMap = scala.collection.mutable.HashMap.empty[String, StatHolder]
     } else {
@@ -110,7 +110,7 @@ case class RangeAggregate(maxRange: Int, useCount: Boolean, useCdist: Boolean, u
     }
   }
 
-  def outputLine(r: Row) {
+  def outputLine(r: Row): Unit = {
     var sh: StatHolder = null
     if (useGroup) {
       val key = r.selectedColumns(grColsArray)
@@ -260,7 +260,7 @@ case class RangeAggregate(maxRange: Int, useCount: Boolean, useCdist: Boolean, u
     super.process(r.rowWithAddedColumn(sh.line))
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (rowCount > emptyCheckSize || r.chr != bufferChr) {
       rowCount = 0
       var nextBufferSize = 0
@@ -363,7 +363,7 @@ case class RangeAggregate(maxRange: Int, useCount: Boolean, useCdist: Boolean, u
 
   }
 
-  override def finish {
+  override def finish(): Unit = {
     var i = 0
     while (i < bufferSize) {
       outputLine(rowBuffer(buffer)(i)); i += 1
@@ -416,9 +416,9 @@ case class AggregateState(binSize: Int, useCount: Boolean, useCdist: Boolean, us
 
   var allRows = new ArrayBuffer[Row]
 
-  def formatDouble(d: Double): String = (d formatted "%1.1f").replace(',', '.')
+  def formatDouble(d: Double): String = ("%1.1f".format(d)).replace(',', '.')
 
-  def initStatHolder(sh: StatHolder) {
+  def initStatHolder(sh: StatHolder): Unit = {
     var i = 0
     while (i < anyCols.size) {
       sh.sums(i) = 0.0
@@ -444,7 +444,7 @@ case class AggregateState(binSize: Int, useCount: Boolean, useCdist: Boolean, us
     allRows = new ArrayBuffer[Row]
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     allRows += r
     var sh: StatHolder = null
     if (useGroup) {
@@ -505,7 +505,7 @@ case class AggregateState(binSize: Int, useCount: Boolean, useCdist: Boolean, us
     }
   }
 
-  def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+  def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
     allRows.foreach(r => {
       var sh: StatHolder = null
       if (useGroup) {

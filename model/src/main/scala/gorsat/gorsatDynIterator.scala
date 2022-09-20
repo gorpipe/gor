@@ -139,7 +139,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     }
   }
 
-  def setRange(seekChr: String, seekPos : Int, endPos : Int) {
+  def setRange(seekChr: String, seekPos : Int, endPos : Int): Unit = {
     incStat("setRange")
     openSource(seekChr, seekPos, endPos)
     seekedChr = seekChr
@@ -184,7 +184,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     (if( prefix.nonEmpty ) prefix+";" else "") + (if( header ) pipeSteps.map(s => { if(s.toLowerCase.contains("sdl")) s else CommandParseUtilities.quoteSafeReplace(s,"|","| top 0 |") }).mkString("| top 0 |")+"| top 0" else pipeSteps.mkString("|"))
   }
 
-  def setPositionWithoutChrLimits(seekChr: String, seekPos : Int) {
+  def setPositionWithoutChrLimits(seekChr: String, seekPos : Int): Unit = {
     close()
     itDyn = createGorIterator(context)
     itDyn.fixHeader = fixHeader
@@ -196,7 +196,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     mustReCheck = true
   }
 
-  def close() {
+  def close() : Unit = {
     if (itDyn != null) itDyn.close() // calls theSource.close
   }
 
@@ -270,7 +270,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       val dns = this
       new Iterator[String] {
         override def hasNext: Boolean = dns.hasNext
-        override def next: String = dns.nextLine
+        override def next(): String = dns.nextLine
       }
     }
   }

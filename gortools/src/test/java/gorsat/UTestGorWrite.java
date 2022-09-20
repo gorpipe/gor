@@ -25,6 +25,7 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.model.GorOptions;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -445,6 +446,17 @@ public class UTestGorWrite {
         String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1", outputPath);
         String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
+    }
+
+    @Test
+    public void testWriteIntoGordFolder() throws IOException {
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("test.gord").resolve("my.gor");
+        Files.createDirectory(outputPath.getParent());
+
+        String query = String.format("gorrow 1,2,3 | write %s", outputPath);
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("#chrom\tbpStart\tbpStop\nchr1\t2\t3\n", Files.readString(outputPath));
+        Assert.assertFalse(Files.exists(outputPath.getParent().resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)));
     }
 
     @Test

@@ -45,9 +45,9 @@ class MemoryMonitorUtil(handler: (Long, List[_]) => Unit,
   var lineNum = 0L
   val bytesInMB: Long = 1024L * 1024L
   val maxRuntimeMem: Long = Runtime.getRuntime.maxMemory(); // Maximum that can be allocated.
-  val minFreeMem: Double = if (reqMinFreeMemMB > 0 && reqMinFreeMemRatio > 0) Math.min(bytesInMB * reqMinFreeMemMB, maxRuntimeMem * reqMinFreeMemRatio.toDouble)
+  val minFreeMem: Double = if (reqMinFreeMemMB > 0 && reqMinFreeMemRatio > 0) Math.min(bytesInMB * reqMinFreeMemMB.toDouble, maxRuntimeMem * reqMinFreeMemRatio.toDouble)
   else if (reqMinFreeMemRatio > 0) maxRuntimeMem * reqMinFreeMemRatio.toDouble
-  else bytesInMB * reqMinFreeMemMB
+  else bytesInMB * reqMinFreeMemMB.toDouble
   val gcMinFreeMem: Long = Math.round(minFreeMem * gcRatio.toDouble)
   var lastGCTime = 0L
   var lastGCDuration = 0L

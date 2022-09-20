@@ -34,7 +34,7 @@ import org.gorpipe.gor.model.{FileReader, Row}
 class CmdFileOut(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false) extends Output {
   val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(fileReader.getOutputStream(name, append)))
 
-  def setup {
+  def setup(): Unit = {
     if (header != null & !skipHeader) {
       val outHeader = header.split("\t", -1).slice(2, 1000000).mkString("\t")
       if (!outHeader.startsWith("#")) {
@@ -44,12 +44,12 @@ class CmdFileOut(name: String, fileReader: FileReader, header: String, skipHeade
     }
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     out.write(r.otherCols)
     out.write('\n')
   }
 
-  def finish {
+  def finish(): Unit = {
     out.flush
     out.close
   }
