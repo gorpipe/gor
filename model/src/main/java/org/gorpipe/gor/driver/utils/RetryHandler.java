@@ -38,16 +38,23 @@ import java.util.Random;
  */
 public class RetryHandler {
     protected final Logger log = LoggerFactory.getLogger(getClass());
+
+    protected Random rand = new Random();
     private final long retryInitialSleepMs;
     private final long retryMaxSleepMs;
+    private final int retryExpBackoff;
+
+    private OnRetryOp onRetryClassOp;
 
     public RetryHandler(GorDriverConfig config) {
-        this(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
+        this(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis(), config.retryExpBackoff(), null);
     }
 
-    public RetryHandler(long retryInitialSleepMs, long retryMaxSleepMs) {
+    public RetryHandler(long retryInitialSleepMs, long retryMaxSleepMs, int retryExpBackoff, OnRetryOp onRetry) {
         this.retryInitialSleepMs = retryInitialSleepMs;
         this.retryMaxSleepMs = retryMaxSleepMs;
+        this.retryExpBackoff = retryExpBackoff;
+        this.onRetryClassOp = onRetry;
     }
 
     /**
@@ -78,33 +85,6 @@ public class RetryHandler {
         throw new IOException("Giving up after " + tries + " tries.", lastException);
     }
 
-    protected long retryExceptionHandler(int retries, OnRetryOp onRetry, int tries, long sleepMs, IOException e) throws IOException {
-        if (e.getMessage().equals("Stale file handle")) {
-            // Stale file handle errors generally require retries on a higher level as the
-            // file needs to be reopened.
-            throw e;
-        }
-
-        if (sleepMs <= 0) {
-            sleepMs = Math.round(retryInitialSleepMs * (0.5 + new Random().nextFloat()/2.0));
-        }
-
-        log.warn("Retry number " + tries + " of " + retries + " and waiting " + sleepMs + "ms of " + retryMaxSleepMs + "ms", e);
-        try {
-            Thread.sleep(sleepMs);
-            if (onRetry != null) {
-                onRetry.onRetry(e);
-            }
-        } catch (InterruptedException e1) {
-            // If interrupted waiting to retry, throw original exception
-            throw e;
-        }
-
-        sleepMs = Math.min(sleepMs * 10, retryMaxSleepMs);
-
-        return sleepMs;
-    }
-
     /**
      * Try an IO operation.  If it fails with any IOException - it will be retried up to a maximum.
      * Before retrying, it will sleep - doing an exponential back-off - sleeping originally for retryInitialSleepMs up to a maximum of retryMaxSleepMs.
@@ -130,6 +110,45 @@ public class RetryHandler {
             }
         }
         throw new IOException("Giving up after " + tries + " retries", lastException);
+    }
+
+    protected long retryExceptionHandler(int retries, OnRetryOp onRetry, int tries, long sleepMs, IOException e) throws IOException {
+        if (onRetryClassOp != null) {
+            onRetryClassOp.onRetry(e);
+        }
+
+        if (onRetry != null) {
+            onRetry.onRetry(e);
+        }
+
+        if (sleepMs <= 0) {
+            sleepMs = calcInitialSleep();
+        }
+
+        log.warn("Try number " + tries + " of " + (retries + 1) + " failed. Waiting for " + sleepMs + "ms before retrying.", e);
+
+        sleep(sleepMs, e);
+        sleepMs = calcNextSleep(sleepMs);
+
+        return sleepMs;
+    }
+
+    protected long calcInitialSleep() {
+        return Math.round(retryInitialSleepMs * (0.5 + rand.nextFloat()/2.0));
+    }
+
+    protected void sleep(long sleepMs, IOException orginalException) throws IOException {
+        try {
+            Thread.sleep(sleepMs);
+        } catch (InterruptedException e1) {
+            // If interrupted waiting to retry, throw original exception
+            Thread.currentThread().interrupt();
+            throw orginalException;
+        }
+    }
+
+    protected long calcNextSleep(long sleepMs) {
+        return Math.min(sleepMs * retryExpBackoff, retryMaxSleepMs);
     }
 
     /**

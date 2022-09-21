@@ -103,7 +103,7 @@ public class DriverBackedFileReader extends FileReader {
         return dataSource;
     }
 
-    /* Resolve without doing links
+    /* Resolve without doing wrap and links
      */
     @Override
     public DataSource resolveDataSource(SourceReference sourceReference) throws IOException {

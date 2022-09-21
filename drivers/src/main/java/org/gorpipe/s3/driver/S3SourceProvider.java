@@ -45,8 +45,10 @@ import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.utils.RetryHandler;
 import org.gorpipe.gor.table.util.PathUtils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileSystemException;
 import java.util.Set;
 
 @AutoService(SourceProvider.class)
@@ -80,7 +82,16 @@ public class S3SourceProvider extends StreamSourceProvider {
     @Override
     protected RetryHandler getRetryHandler() {
         if (retryHandler == null) {
-            retryHandler = new RetryHandler(10 * config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
+            retryHandler = new RetryHandler(10 * config.retryInitialSleep().toMillis(),
+                    config.retryMaxSleep().toMillis(), 5 * config.retryExpBackoff(),
+                    (e) -> {
+                        if (e instanceof FileNotFoundException) {
+                            throw e;
+                        }
+                        if (e instanceof FileSystemException) {
+                            throw e;
+                        }
+                    });
         }
         return retryHandler;
     }

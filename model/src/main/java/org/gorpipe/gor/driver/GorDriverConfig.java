@@ -90,6 +90,11 @@ public interface GorDriverConfig extends Config {
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSleep();
 
+    @Documentation("Retry exponential backoff coefficient")
+    @Key("org.gorpipe.gor.driver.retries.exp_backoff")
+    @DefaultValue("2")
+    int retryExpBackoff();
+
     @Documentation("Whether to automatically extend the range of remote source reads when the driver detects sequential reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.remote")
     @DefaultValue("enabled")

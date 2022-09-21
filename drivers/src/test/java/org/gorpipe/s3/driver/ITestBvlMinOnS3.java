@@ -51,6 +51,8 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         // Ensure no fallback keys
         System.setProperty("aws.accessKeyId", "");
         System.setProperty("aws.secretKey", "");
+
+        System.setProperty("org.gorpipe.gor.driver.retries.initial_sleep", "5 milliseconds");
     }
 
     @Override

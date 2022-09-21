@@ -176,7 +176,7 @@ public class S3Source implements StreamSource {
         } catch (ExecutionException | UncheckedExecutionException e) {
             var throwable = e.getCause();
             if (throwable instanceof AmazonS3Exception s3exp) {
-                if (s3exp.getStatusCode() == 404) {
+                if (s3exp.getStatusCode() == 404 || s3exp.getStatusCode() == 400) {
                     // The meta data check does not handle the existsance of 'folders' correctly, so if we get
                     // 404 and have a folder we need to use Files.exists (with S3 filesystem path) that handles
                     // S3 'folders'.
