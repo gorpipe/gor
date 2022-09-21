@@ -145,7 +145,7 @@ public class PluggableGorDriver implements GorDriver {
     public DataSource getDataSource(SourceReference sourceReference) {
         log.debug("Get data source for source reference {}", sourceReference);
         try {
-            DataSource source = resolveDataSource(sourceReference);
+            DataSource source = wrap(resolveDataSource(sourceReference));
             source = sourceReference.writeSource ? source : handleLinks(source);
             return source;
         } catch (Exception e) {
@@ -166,13 +166,7 @@ public class PluggableGorDriver implements GorDriver {
                 ? PathUtils.resolve(sourceReference.commonRoot,sourceReference.getUrl())
                 : sourceReference.getUrl();
         SourceProvider provider = providerFromFileName(providerFileName);
-
-        DataSource source = provider.resolveDataSource(sourceReference);
-
-        log.debug("Datasource for {} is {}", sourceReference.getUrl(), source);
-        DataSource wrapped = sourceReference.writeSource ? source : wrap(source);
-        log.debug("Wrapped datasource for {} is {}", sourceReference.getUrl(), wrapped);
-        return wrapped;
+        return provider.resolveDataSource(sourceReference);
     }
 
     /**
@@ -212,9 +206,9 @@ public class PluggableGorDriver implements GorDriver {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
                 var sourceRef = getSourceRef(source, readLink(source), null);
-                source.close();
                 sourceRef.setLinkLastModified(source.getSourceMetadata().getLastModified());
-                DataSource fromLinkSource =  resolveDataSource(sourceRef);
+                source.close();
+                DataSource fromLinkSource =  wrap(resolveDataSource(sourceRef));
                 fromLinkSource.getSourceReference().setCreatedFromLink(true);
                 return handleLinks(fromLinkSource);
             }
@@ -236,7 +230,7 @@ public class PluggableGorDriver implements GorDriver {
 
     private DataSource tryResolveWithLink(DataSource source) throws IOException {
         SourceReference fallbackSourceRef = getSourceRef(source, source.getSourceReference().getUrl()+".link", null);
-        DataSource fallbackLinkSource = resolveDataSource(fallbackSourceRef);
+        DataSource fallbackLinkSource = wrap(resolveDataSource(fallbackSourceRef));
         if (fallbackLinkSource != null && fallbackLinkSource.exists()) {
             source.close();
             // The link file existed, was resolved.

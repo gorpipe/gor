@@ -2,6 +2,7 @@ package org.gorpipe.s3.shared;
 
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.WrappedDataSource;
 import org.gorpipe.utils.DriverUtils;
 import gorsat.process.*;
 import org.gorpipe.base.security.BundledCredentials;
@@ -74,7 +75,7 @@ public class ITestS3Shared {
     }
     
     @Test
-    public void testFallBack() throws IOException {
+    public void testFallBackThrough() throws IOException {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
@@ -92,6 +93,18 @@ public class ITestS3Shared {
             Assert.assertTrue(systemErrRule.getLog().contains("File s3global://shared/" + dataPath + " not found at " +
                     "s3global://shared/, trying fallback None"));
         }
+    }
+
+    @Test
+    public void testFallBackProjectToSharedProject() throws IOException {
+        S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz"; // Exists in shared but not in project.
+
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+
+        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getSourceReference().getUrl());
     }
 
     @Test
@@ -244,7 +257,7 @@ public class ITestS3Shared {
     }
 
     @Test
-    //@Ignore("Slow test, ment to be manually run")
+    @Ignore("Slow test, ment to be manually run")
     public void testReadServer() throws IOException {
         Path gorRoot  = workDirPath.resolve("some_project");
         Path linkFile = gorRoot.resolve("a.gorz.link");

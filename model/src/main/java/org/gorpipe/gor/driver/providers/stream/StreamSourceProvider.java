@@ -41,7 +41,9 @@ import org.gorpipe.gor.model.GenomicIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -153,7 +155,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         }
 
         DataType dataType = source.getDataType();
-        if (dataType != null && dataType.nature == FileNature.INDEX) {
+        if (dataType != null && dataType.nature == FileNature.INDEX && source.exists()) {
             log.debug("Detected index source {}", source.getName());
             Long length = source.getSourceMetadata().getLength();
             if (length != null && length < config.maxSizeOfCachedIndexFile().getBytesAsLong()) {
@@ -168,7 +170,16 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
     protected RetryHandler getRetryHandler() {
         if (retryHandler == null) {
-            retryHandler = new RetryHandler(config);
+            retryHandler = new RetryHandler(config.retryInitialSleep().toMillis(),
+                    config.retryMaxSleep().toMillis(), config.retryExpBackoff(),
+                    (e) -> {
+                        if (e instanceof FileNotFoundException) {
+                            throw e;
+                        }
+                        if (e instanceof FileSystemException) {
+                            throw e;
+                        }
+                    });
         }
         return retryHandler;
     }
@@ -249,7 +260,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
     private StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {
         for (String index : file.possibleIndexNames()) {
-            StreamSource indexSource = resolveDataSource(new SourceReference(index, sourceRef));
+            StreamSource indexSource = wrap(resolveDataSource(new SourceReference(index, sourceRef)));
             if (indexSource != null && indexSource.fileExists()) {
                 indexSource = wrap(indexSource);
                 if (indexSource.exists()) {

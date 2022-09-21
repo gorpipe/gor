@@ -24,7 +24,7 @@ public class UTestRetryWrapper extends UTestFileSource {
 
     @Before
     public void setUp() {
-        handler = new RetryHandler(0, 6400);
+        handler = new RetryHandler(0, 6400, 2, null);
     }
 
     @Override
