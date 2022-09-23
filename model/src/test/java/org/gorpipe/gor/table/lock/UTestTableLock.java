@@ -16,10 +16,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
-import org.gorpipe.gor.table.dictionary.TableEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.*;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
@@ -27,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -601,7 +597,7 @@ public class UTestTableLock {
     }
 
 
-    private static String selectStringFilter(BaseDictionaryTable<? extends BucketableTableEntry>.TableFilter filter) {
+    private static String selectStringFilter(TableFilter<? extends DictionaryEntry> filter) {
         return filter.get().stream().map(TableEntry::formatEntry).collect(Collectors.joining());
     }
 

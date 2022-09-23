@@ -30,7 +30,7 @@ import java.util.Set;
  * Interface to work with table entries.
  * @param <T>  type of the table entries.
  */
-public interface ITableEntries<T extends BucketableTableEntry> {
+public interface ITableEntries<T extends DictionaryEntry> {
 
     /**
      * Insert new entry

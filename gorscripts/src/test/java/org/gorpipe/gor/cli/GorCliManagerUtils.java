@@ -26,7 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -172,7 +172,7 @@ public class GorCliManagerUtils {
         }
     }
 
-    void waitForBucketizeToStart(BaseDictionaryTable<BucketableTableEntry> table, Process p) throws InterruptedException, IOException, ExecutionException {
+    void waitForBucketizeToStart(BaseDictionaryTable<DictionaryEntry> table, Process p) throws InterruptedException, IOException, ExecutionException {
         long startTime = System.currentTimeMillis();
         while (true) {
             try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {

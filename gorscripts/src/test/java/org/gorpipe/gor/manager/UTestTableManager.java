@@ -24,12 +24,10 @@ package org.gorpipe.gor.manager;
 
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.Dictionary;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
@@ -91,7 +89,7 @@ public class UTestTableManager {
         Path dictFile = testWorkDir.resolve(name + ".gord");
         
         TableManager man = TableManager.newBuilder().lockTimeout(Duration.ofDays(13)).build();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
     }
@@ -105,7 +103,7 @@ public class UTestTableManager {
 
 
         TableManager man = TableManager.newBuilder().validateFiles(false).build();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
@@ -126,7 +124,7 @@ public class UTestTableManager {
         // Test History option false.
         TableManager manNoHist = TableManager.newBuilder().useHistory(false).build();
         String noHistDict = "noHistDict";
-        BaseDictionaryTable<BucketableTableEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        BaseDictionaryTable<DictionaryEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
         table.save();
         manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
         manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
@@ -188,7 +186,7 @@ public class UTestTableManager {
 
         // Check the result.
         TableManager man = new TableManager();
-        Collection<? extends BucketableTableEntry> entries = man.selectAll(gordFile);
+        Collection<? extends DictionaryEntry> entries = man.selectAll(gordFile);
         Assert.assertEquals("File count incorrect", fileCount, entries.size());
     }
 
@@ -252,7 +250,7 @@ public class UTestTableManager {
 
         Assert.assertEquals("Total number of lines does not match", 1010, table.selectAll().size());
         Assert.assertEquals("New lines should not be bucketized", 10, table.needsBucketizing().size());
-        Assert.assertEquals("Deleted lines should be reinserted (marked deleted)", 2, table.selectAll().stream().filter(BucketableTableEntry::isDeleted).count());
+        Assert.assertEquals("Deleted lines should be reinserted (marked deleted)", 2, table.selectAll().stream().filter(DictionaryEntry::isDeleted).count());
     }
 
     @Test
@@ -312,7 +310,7 @@ public class UTestTableManager {
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
-        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN100"), true, false);
+        Dictionary.DictionaryLine[] oldFiles = d.getSources( Collections.unmodifiableSortedSet(new TreeSet<>(Collections.singletonList("PN100"))), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
 
@@ -335,7 +333,7 @@ public class UTestTableManager {
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
-        Dictionary.DictionaryLine[] oldFiles = d.getSources(table.tagset("PN515218"), true, false);
+        Dictionary.DictionaryLine[] oldFiles = d.getSources(Collections.unmodifiableSortedSet(new TreeSet<>(Collections.singletonList("PN515218"))), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
 
         startTime = System.currentTimeMillis();
@@ -626,7 +624,7 @@ public class UTestTableManager {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFile4}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);
@@ -728,7 +726,7 @@ public class UTestTableManager {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFile4});
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);

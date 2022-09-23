@@ -26,8 +26,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.TableFilter;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
@@ -164,7 +165,7 @@ public class TableManager {
      * @param workers   number of workers to use for bucketization (if needed).
      * @param entries   Files/lines to insert.
      */
-    public void insert(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, BucketableTableEntry... entries) {
+    public void insert(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
         BaseDictionaryTable table = initTable(tableFile);
         insert(table, packLevel, workers, entries);
     }
@@ -177,7 +178,7 @@ public class TableManager {
      * @param workers   number of workers to use for bucketization (if needed).
      * @param entries   Files/lines to insert.
      */
-    public void insert(BaseDictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers, BucketableTableEntry... entries) {
+    public void insert(BaseDictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.insert(entries);
             trans.commit();
@@ -203,7 +204,7 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @param entries   the entries to delete.
      */
-    public void delete(Path tableFile, BucketableTableEntry... entries) {
+    public void delete(Path tableFile, DictionaryEntry... entries) {
         System.err.println("Deleteing entries: " + entries.length);
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
@@ -218,7 +219,7 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @param entries   the entries to delete.
      */
-    public void delete(Path tableFile, BaseDictionaryTable.TableFilter entries) {
+    public void delete(Path tableFile, TableFilter entries) {
         System.err.println("Deleteing entries2: " + entries);
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
@@ -242,7 +243,7 @@ public class TableManager {
      * @param includedDeleted Should deleted files be included in the result.
      * @return entries from the table, matching the given criteria.
      */
-    public List<? extends BucketableTableEntry> select(Path tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
+    public List<? extends DictionaryEntry> select(Path tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
         BaseDictionaryTable table = initTable(tableFile);
         return table.filter()
                 .files(files)
@@ -261,18 +262,18 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @return all entries from table as a collection.
      */
-    public Collection<? extends BucketableTableEntry> selectAll(Path tableFile) {
+    public Collection<? extends DictionaryEntry> selectAll(Path tableFile) {
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             return table.selectAll();
         }
     }
 
-    public void print(BaseDictionaryTable.TableFilter lines) {
+    public void print(TableFilter lines) {
         BaseDictionaryTable table = lines.getTable();
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             for (Object line : lines.get()) {
-                System.out.print(((BucketableTableEntry) line).formatEntry());
+                System.out.print(((DictionaryEntry) line).formatEntry());
             }
         }
     }

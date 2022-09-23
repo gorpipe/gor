@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 /**
  * Class that handles the loading caching of and working with table entries.
  */
-public class TableEntries<T extends BucketableTableEntry> implements ITableEntries<T> {
+public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T> {
     private static final Logger log = LoggerFactory.getLogger(TableEntries.class);
     private final Class<? extends T> clazzOfT;
 

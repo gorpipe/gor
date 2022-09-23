@@ -23,7 +23,7 @@
 package org.gorpipe.gor.manager;
 
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 
 import java.io.IOException;
 import java.net.URI;
@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * Helper class to create bucket files from bucket descriptions.
  */
-public interface BucketCreator<T extends BucketableTableEntry> {
+public interface BucketCreator<T extends DictionaryEntry> {
 
     /**
      * Create bucket files for a single bucket dir.  If there are multiple bucket dirs then this method will be

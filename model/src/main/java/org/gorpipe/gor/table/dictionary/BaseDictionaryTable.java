@@ -23,21 +23,17 @@
 package org.gorpipe.gor.table.dictionary;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.*;
-import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.ByteTextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,7 +46,7 @@ import static org.gorpipe.gor.table.util.PathUtils.*;
  * Created by gisli on 25/07/16.
  *
  */
-public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extends BaseTable<T> {
+public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends BaseTable<T> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseDictionaryTable.class);
 
@@ -151,7 +147,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
      * @param filters filters to filter rows by.
      * @return union of rows as specified by the given filters.
      */
-    public final List<T> selectUninon(TableFilter... filters) {
+    public final List<T> selectUninon(TableFilter<T>... filters) {
         return Arrays.stream(filters).flatMap(f -> f.get().stream()).collect(Collectors.toList());
     }
 
@@ -171,8 +167,8 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
      *
      * @return new filter on this table.
      */
-    public TableFilter filter() {
-        return new TableFilter();
+    public TableFilter<T> filter() {
+        return new TableFilter<>(this);
     }
 
     /**
@@ -199,7 +195,7 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
      * @return List of Path elements representing all the buckets in the table.
      */
     public List<String> getBuckets() {
-        return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(BucketableTableEntry::getBucket).distinct().collect(Collectors.toList());
+        return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(DictionaryEntry::getBucket).distinct().collect(Collectors.toList());
     }
 
     @Override
@@ -544,138 +540,4 @@ public abstract class BaseDictionaryTable<T extends BucketableTableEntry> extend
         public abstract BaseDictionaryTable build();
     }
 
-    /**
-     * Helper class for passing in row filtering criteria.
-     */
-    public class TableFilter {
-        String[] files;
-        String[] aliases;
-        String[] tags;
-        String[] buckets;
-        String chrRange;
-        boolean matchAllTags = false;
-        boolean includeDeleted = false;
-
-        /**
-         * Filter for files names (content)
-         * @param val file names to filter by, absolute or relative to the table.
-         * @return return new filter on files.
-         */
-        public TableFilter files(String... val) {
-            this.files = val != null ? Arrays.stream(val).map(f -> formatUri(resolve(getRootUri(), f))).toArray(String[]::new) : null;
-            return this;
-        }
-
-        /**
-         * Filter for files names (content)
-         * @param val file names to filter by, absolute or relative to the table.
-         * @return return new filter on files.
-         */
-        public TableFilter files(URI... val) {
-            this.files = val != null ? Arrays.stream(val).map(f -> formatUri(resolve(getRootUri(), f))).toArray(String[]::new) : null;
-            return this;
-        }
-
-        public TableFilter aliases(String... val) {
-            this.aliases = val;
-            return this;
-        }
-
-        // Tags matches line tags if line tags, otherwise line alias.
-        public TableFilter tags(String... val) {
-            this.tags = val;
-            return this;
-        }
-
-        public TableFilter matchAllTags(String... val) {
-            this.tags = val;
-            this.matchAllTags = true;
-            return this;
-        }
-
-        public TableFilter buckets(String... val) {
-            this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(resolve(getRootUri(), b))).toArray(String[]::new) : null;
-            return this;
-        }
-
-        public TableFilter buckets(Path... val) {
-            this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(resolve(getRootUri(), b.toString()))).toArray(String[]::new) : null;
-            return this;
-        }
-
-        public TableFilter chrRange(String val) {
-            GenomicRange gr = GenomicRange.parseGenomicRange(val);
-            this.chrRange = gr != null ? gr.formatAsTabDelimited() : null;
-            return this;
-        }
-
-        public TableFilter includeDeleted(boolean val) {
-            this.includeDeleted = val;
-            return this;
-        }
-
-        public TableFilter includeDeleted() {
-            this.includeDeleted = true;
-            return this;
-        }
-
-        /**
-         * Match the line based on the filter.
-         * Notes:
-         * 1. An element (i.e. tags, files ...) in the filter to gets a match if any item in it matches.
-         * <p>
-         * 2. If the filter contains buckets we also include deleted lines.
-         *
-         * @param l    line to match
-         * @return {@code true} if the line matches the filter otherwise {@code false}.
-         */
-        protected boolean match(T l) {
-           return matchIncludeLine(l)
-                   && (matchIsNoFilter()
-                       || (matchFiles(l) && matchAliases(l) && matchTags(l) && matchBuckets(l) && matchRange(l)));
-        }
-
-        private boolean matchIncludeLine(T l) {
-            return !l.isDeleted() || includeDeleted || buckets != null;
-        }
-
-        private boolean matchIsNoFilter() {
-            return files == null && aliases == null && tags == null && buckets == null && chrRange == null;
-        }
-
-        private boolean matchFiles(T l) {
-            return files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentReal()));
-        }
-
-        private boolean matchBuckets(T l) {
-            return buckets == null || (!l.hasBucket() && buckets.length == 0) ||
-                    (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal())));
-        }
-
-        private boolean matchAliases(T l) {
-            return aliases == null || Stream.of(aliases).anyMatch(f -> f.equals(l.getAlias()));
-        }
-
-        private boolean matchTags(T l) {
-            String[] filterTags = l.getFilterTags();
-            return tags == null || (filterTags.length == 0 && tags.length == 0)
-                    || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(filterTags, t)) : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(filterTags, t)));
-        }
-
-        private boolean matchRange(T l) {
-            return chrRange == null || (l.getRange() != null && chrRange.equals(l.getRange().formatAsTabDelimited()));
-        }
-
-        public List<T> get() {
-            log.debug("Selecting lines from dictionary {}", getName());
-            // Set initial candidates for search (this also forces load if not loaded and populates the tagHashToLines index)
-            List<T> lines2Search = getEntries(ArrayUtils.addAll(aliases, tags));
-            return lines2Search.stream().filter(this::match).collect(Collectors.toCollection(ArrayList::new));
-        }
-
-        public BaseDictionaryTable<T> getTable() {
-            return BaseDictionaryTable.this;
-        }
-
-    }
 }

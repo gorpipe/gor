@@ -28,7 +28,7 @@ import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
@@ -48,7 +48,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BucketManager<T extends BucketableTableEntry> {
+public class BucketManager<T extends DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(BucketManager.class);
 
@@ -789,7 +789,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         bucketCreator.createBucketsForBucketDir(table, bucketsToCreate, absBucketDir);
     }
 
-    public static final class Builder<T extends BucketableTableEntry> {
+    public static final class Builder<T extends DictionaryEntry> {
         private final BaseDictionaryTable<T> table;
         private Duration lockTimeout = null;
         private Class<? extends TableLock> lockType = null;

@@ -24,7 +24,7 @@ package org.gorpipe.gor.manager;
 
 import org.gorpipe.gor.table.GorPipeUtils;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 /**
  * Helper class to create bucket file from bucket description.
  */
-public class BucketCreatorGorPipe<T extends BucketableTableEntry> implements BucketCreator<T>  {
+public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCreator<T>  {
 
     private static final Logger log = LoggerFactory.getLogger(BucketCreatorGorPipe.class);
 
