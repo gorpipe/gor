@@ -28,8 +28,7 @@ import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.iterators.LineIterator
 
-import scala.jdk.CollectionConverters.IterableHasAsScala
-
+import scala.jdk.CollectionConverters.collectionAsScalaIterableConverter
 
 object MapAndListUtilities {
 
