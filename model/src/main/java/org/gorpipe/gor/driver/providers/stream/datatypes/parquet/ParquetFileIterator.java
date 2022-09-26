@@ -41,16 +41,13 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.model.ChromoLookup;
-import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
@@ -68,7 +65,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
     private List<Path> parquetPathsForSeek = new ArrayList<>();
     private final ChromoLookup lookup;
     private boolean nor = false;
-    private java.nio.file.Path resultPath;
+    private String resultPath;
     private int[] sortCols;
     private final Configuration configuration = new Configuration(true);
     private final GroupReadSupport readSupport = new GroupReadSupport();
@@ -78,33 +75,31 @@ public class ParquetFileIterator extends GenomicIteratorBase {
     private FilterCompat.Filter filter;
     private String partitioningCol;
     private boolean partColPresent;
+    private FileReader fileReader;
 
-    public ParquetFileIterator(StreamSourceFile parquetFile) {
+    public ParquetFileIterator(StreamSourceFile parquetFile) throws IOException {
         this.lookup = parquetFile.getFileSource().getSourceReference().getLookup();
         this.resultPath = resolvePath(parquetFile);
     }
 
-    private java.nio.file.Path resolvePath(StreamSourceFile parquetFile) {
-        FileSource fileSource = resolveFileSource(parquetFile);
-        SourceReference sourceReference = fileSource.getSourceReference();
-        java.nio.file.Path path = Paths.get(sourceReference.url);
-        if (!path.isAbsolute() && sourceReference.commonRoot != null) {
-            java.nio.file.Path root = Paths.get(sourceReference.commonRoot);
-            path = root.resolve(path);
+    private String resolvePath(StreamSourceFile parquetFile) throws IOException {
+        try(StreamSource fileSource = resolveFileSource(parquetFile)) {
+            SourceReference sourceReference = fileSource.getSourceReference();
+            if (!PathUtils.isAbsolutePath(sourceReference.url) && sourceReference.commonRoot != null) {
+                java.nio.file.Path root = Paths.get(sourceReference.commonRoot);
+                return root.resolve(sourceReference.url).toString();
+            }
+            return sourceReference.url;
         }
-        return path;
     }
 
-    private FileSource resolveFileSource(StreamSourceFile parquetFile) {
+    private StreamSource resolveFileSource(StreamSourceFile parquetFile) {
         StreamSource ss = parquetFile.getFileSource();
-        FileSource fs;
         if (ss instanceof RetryWrapper) {
             RetryWrapper rw = (RetryWrapper) ss;
-            fs = (FileSource) rw.getWrapped();
-        } else {
-            fs = (FileSource) parquetFile.getFileSource();
+            ss = rw.getWrapped();
         }
-        return fs;
+        return ss;
     }
 
     @Override
@@ -112,6 +107,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
         if (gorSession != null) {
             nor = gorSession.getNorContext();
             gorSession.getGorContext().getSortCols().ifPresent(c -> this.sortCols = Arrays.stream(c.split(",")).mapToInt(Integer::parseInt).toArray());
+            fileReader = gorSession.getProjectContext().getFileReader();
         }
         init();
     }
@@ -139,37 +135,38 @@ public class ParquetFileIterator extends GenomicIteratorBase {
         return null;
     }
 
-    private List<Path> init(java.nio.file.Path parquetPath) throws IOException {
-        Collection<java.nio.file.Path> pathCollection;
-        if (Files.isDirectory(parquetPath)) {
-            try(Stream<java.nio.file.Path> walk = Files.walk(parquetPath)) {
+    private List<Path> init(String parquetPath) throws IOException {
+        Collection<String> pathCollection;
+        if (fileReader.isDirectory(parquetPath)) {
+            try(Stream<String> walk = fileReader.list(parquetPath)) {
                 pathCollection = walk
-                        .filter(ParquetFileIterator::isParquetDataFile)
+                        .filter(p -> isParquetDataFile(fileReader, p))
+                        .map(p -> parquetPath.startsWith("s3:/") ? "s3a:/"+p : p )
                         .collect(Collectors.toList());
             }
 
-            Iterator<java.nio.file.Path> pathit = pathCollection.iterator();
+            Iterator<String> pathit = pathCollection.iterator();
             if (pathit.hasNext()) {
-                java.nio.file.Path firstParquetPath = pathit.next();
-                String[] partitioningColumn = extractPartCol(firstParquetPath.toString());
+                var firstParquetPath = pathit.next();
+                String[] partitioningColumn = extractPartCol(firstParquetPath);
                 if(partitioningColumn!=null) {
                     partitioningCol = partitioningColumn[0];
                     if (partitioningCol.toLowerCase().startsWith("chrom")) {
                         nor = true;
-                        pathCollection = pathCollection.stream().sorted(Comparator.comparing(java.nio.file.Path::getParent)).collect(Collectors.toList());
+                        pathCollection = pathCollection.stream().sorted(/*Comparator.comparing(java.nio.file.Path::getParent)*/).collect(Collectors.toList());
                     }
                 }
             }
         } else {
             pathCollection = Collections.singleton(parquetPath);
         }
-        headerInit(pathCollection.stream().findFirst().get().toString(),partitioningCol);
-        return pathCollection.stream().map(p -> new Path(p.toString())).collect(Collectors.toList());
+        headerInit(pathCollection.stream().findFirst().get(),partitioningCol);
+        return pathCollection.stream().map(Path::new).collect(Collectors.toList());
     }
 
-    private static boolean isParquetDataFile(java.nio.file.Path path) {
-        return path.getFileName().toString().endsWith(".parquet")
-                && !Files.isDirectory(path);
+    private static boolean isParquetDataFile(FileReader fileReader, String path) {
+        return path.endsWith(".parquet")
+                && !fileReader.isDirectory(path);
     }
 
     private void updateFilter() {
@@ -219,7 +216,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
             // Use takeWhile(Objects::nonNull) before collect when compiling with jdk9+
             List<ParquetRowReader> parquetRowReaders = parquetPaths.parallelStream().map(path2ParquetReader).collect(Collectors.toList());
             if(path2ParquetReader.getError().isPresent()) throw path2ParquetReader.getError().get();
-            parquetRowReaders.stream().filter(p -> p.row != null).forEach(parquetRowReader -> mergeParquet.add(parquetRowReader));
+            parquetRowReaders.stream().filter(p -> p.row != null).forEach(mergeParquet::add);
             parquetPaths.clear();
         }
     }

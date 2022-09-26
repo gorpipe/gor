@@ -174,8 +174,8 @@ object OutFile {
     }
   }
 
-  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
-    driver(name, fileReader, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, null, None, prefixFile, compressionLevel))
+  def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, columnCompress: Boolean, nor: Boolean, md5: Boolean, md5File: Boolean, infer: Boolean = false, idx: GorIndexType, prefixFile: Option[String] = None, compressionLevel: Int = Deflater.BEST_SPEED): Output =
+    driver(name, fileReader, header, skipHeader, OutputOptions(remove = false, columnCompress = columnCompress, md5 = md5, md5File = md5File, nor = nor, idx, null, null, None, prefixFile, compressionLevel, infer = infer))
 
   def apply(name: String, fileReader: FileReader, header: String, skipHeader: Boolean, nor: Boolean, md5: Boolean): Output = driver(name, fileReader, header, skipHeader, OutputOptions(nor = nor, md5 = md5, md5File = md5))
 
