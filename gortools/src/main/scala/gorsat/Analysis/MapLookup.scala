@@ -30,7 +30,7 @@ import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 
-import scala.jdk.CollectionConverters.MapHasAsScala
+import scala.jdk.CollectionConverters.mapAsScalaMapConverter
 
 case class MapLookup(session: GorSession,
                      iteratorCommand: String,

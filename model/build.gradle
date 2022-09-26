@@ -49,6 +49,8 @@ project(':model') {
         implementation 'org.apache.commons:commons-compress:_'
         implementation "com.zaxxer:HikariCP:_"
 
+        implementation "org.scala-lang.modules:scala-collection-compat_${scalaVersion}:_"
+
         runtimeOnly "org.xerial:sqlite-jdbc:_"
         runtimeOnly ("org.postgresql:postgresql:_")
         runtimeOnly ('org.apache.hadoop:hadoop-mapreduce-client-core:_')
@@ -63,7 +65,6 @@ project(':model') {
         testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
         testImplementation "org.scalatestplus:junit-4-13_${scalaVersion}:_"
         testImplementation("org.postgresql:postgresql:_")
-        testImplementation "org.scala-lang.modules:scala-collection-compat_${scalaVersion}:_"
 
         testRuntimeOnly "org.apache.derby:derby:_"
         testRuntimeOnly "org.apache.derby:derbytools:_"
