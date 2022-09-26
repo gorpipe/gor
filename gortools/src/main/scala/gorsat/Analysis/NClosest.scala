@@ -37,7 +37,7 @@ case class NClosest(groupCols: Int, n: Int) extends Analysis {
     rightRows.sortWith((x, y) => scala.math.abs(x._1) < scala.math.abs(y._1)).slice(0, n).map(x => x._2).foreach(x => super.process(RowObj(r.chr, r.pos, r.otherCols + "\t" + x)))
   }
 
-  override def process(rComb: Row) {
+  override def process(rComb: Row): Unit = {
     val r = rComb.slicedRow(2, groupCols + 2)
     val rightCols = rComb.otherColsSlice(2 + groupCols, rComb.numCols).toString
     var distance = Int.MaxValue

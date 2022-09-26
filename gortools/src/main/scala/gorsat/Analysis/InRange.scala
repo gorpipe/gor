@@ -30,8 +30,8 @@ case class InRange(staChr: String, staPos: Int, stoChr: String, stoPos: Int) ext
   val staRow = RowObj(staChr, staPos, "")
   val stoRow = RowObj(stoChr, stoPos, "")
 
-  override def process(r: Row) {
-    if (stoRow atPriorPos r) reportWantsNoMore
+  override def process(r: Row): Unit = {
+    if (stoRow atPriorPos r) reportWantsNoMore()
     else {
       if (!(r atPriorPos staRow)) super.process(r)
     }

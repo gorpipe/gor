@@ -30,18 +30,18 @@ abstract class Output extends Processor {
   val meta : GorMeta = new GorMeta()
   def getName: String = name
   def getMeta: GorMeta = meta
-  def reportWantsNoMore() {
+  def reportWantsNoMore(): Unit = {
     if (pipeFrom!=null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true
   }
-  def reset() {
+  def reset(): Unit = {
     if (pipeFrom!=null && wantsNoMore) pipeFrom.reset()
     wantsNoMore = false
   }
-  def from (from : Processor) {
+  def from (from : Processor): Unit = {
     pipeFrom = from
   }
-  final def securedSetup(oe : Throwable) {
+  final def securedSetup(oe : Throwable): Unit = {
     try {
       setup()
     } catch {
@@ -50,7 +50,7 @@ abstract class Output extends Processor {
         else throw e
     }
   }
-  final def securedFinish(oe : Throwable) {
+  final def securedFinish(oe : Throwable): Unit = {
     try {
       finish()
     } catch {

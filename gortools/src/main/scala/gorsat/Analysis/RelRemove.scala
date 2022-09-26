@@ -55,12 +55,12 @@ case class RelRemove(session: GorSession,
   val useWeight = if (weightCols.size == 1) true else false
   val weightCol = if (useWeight) weightCols.head else -1
 
-  override def setup() {
+  override def setup(): Unit = {
     allRows = new ArrayBuffer[Row]
     relationships = new ArrayBuffer[(Int,Int)]
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val pni = iooa(r.colAsString(2).toString)
     if (pni >= allRows.size) allRows += r else allRows(pni) = r
     var weight = 0

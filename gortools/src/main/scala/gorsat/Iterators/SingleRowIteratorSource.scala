@@ -66,7 +66,7 @@ class SingleRowIteratorSource(theIterator: GenomicIterator) extends GenomicItera
     theIterator.seek(seekChr,seekPos)
   }
 
-  override def moveToPosition(seekChr : String, seekPos : Int, maxReads: Int = 10000) {
+  override def moveToPosition(seekChr : String, seekPos : Int, maxReads: Int = 10000): Unit = {
     theIterator.moveToPosition(seekChr,seekPos, maxReads)
   }
 

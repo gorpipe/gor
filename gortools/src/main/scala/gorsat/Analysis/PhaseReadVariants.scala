@@ -125,7 +125,7 @@ case class PhaseReadVariants(maxBpMergeDist: Int, session: GorSession) extends A
     buffer.clear()
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     // Id column is number 7.
     val id = r.colAsString(6).toString
     if (r.chr != oldChr || id != oldId) {
@@ -137,7 +137,7 @@ case class PhaseReadVariants(maxBpMergeDist: Int, session: GorSession) extends A
     buffer += r
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     try {
       if (!isInErrorState) {
         outputRows()

@@ -277,7 +277,7 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     }
   }
 
-  private def runQueryHandler(executionCommands: Array[ExecutionCommand]) {
+  private def runQueryHandler(executionCommands: Array[ExecutionCommand]): Unit = {
     if (executionCommands != null && !executionCommands.isEmpty) {
       val activeQueryHandler = if (CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) localQueryHandler else queryHandler
 

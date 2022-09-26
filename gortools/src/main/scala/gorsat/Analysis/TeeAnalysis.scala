@@ -30,27 +30,27 @@ case class TeeAnalysis(teeStep: Analysis) extends Analysis {
 
   var noMoreCount = 0  // left and right report only once each
 
-  override def reportWantsNoMore {
+  override def reportWantsNoMore() : Unit = {
     if (noMoreCount>0 && !wantsNoMore) {
-      if (pipeFrom!=null) pipeFrom.reportWantsNoMore
+      if (pipeFrom!=null) pipeFrom.reportWantsNoMore()
       wantsNoMore = true
     } else noMoreCount += 1
   }
 
-  override def setup {
+  override def setup() : Unit = {
     teeStep.securedSetup(null)
     teeStep.from(this)
   }
 
-  override def process(r : Row) {
+  override def process(r : Row) : Unit ={
     if (!teeStep.wantsNoMore) {
       teeStep.process(RowObj(r.toString))
     }
     super.process(r)
   }
 
-  override def finish {
+  override def finish() : Unit = {
     teeStep.securedFinish(null)
-    super.finish
+    super.finish()
   }
 }

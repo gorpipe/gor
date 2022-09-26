@@ -62,7 +62,7 @@ class SingleIteratorSource(protected val theIterator: IteratorSource, protected 
     true
   }
 
-  override def moveToPosition(seekChr: String, seekPos: Int, maxReads: Int = 10000) {
+  override def moveToPosition(seekChr: String, seekPos: Int, maxReads: Int = 10000): Unit = {
     var reads = 0
     var reachedPos = false
     var theNext: Row = null

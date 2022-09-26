@@ -50,14 +50,6 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
     filemap.clear()
   }
 
-  override def finalize(): Unit = {
-    try {
-      close()
-    } finally {
-      super.finalize()
-    }
-  }
-
   def getBase(chr: String, pos: Int): Char = {
     if (noReferenceBuildFound) return 'N'
     try {
@@ -163,7 +155,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
         val oldTime = keyMap(key).counter
         keyMap(key).counter = timeCounter
         timeMap -= oldTime
-        timeMap = timeMap.insert(timeCounter,key)
+        timeMap = timeMap.updated(timeCounter,key)
         timeCounter += 1
         Some(keyMap(key).obj)
       } else None
@@ -171,7 +163,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
 
     def addObject(key : String, obj : T): Unit = {
       keyMap += (key -> LufoTuple(obj,timeCounter))
-      timeMap = timeMap.insert(timeCounter,key)
+      timeMap = timeMap.updated(timeCounter,key)
       timeCounter+=1
       if (keyMap.size>maxSize) {
         val oldestTime = timeMap.firstKey

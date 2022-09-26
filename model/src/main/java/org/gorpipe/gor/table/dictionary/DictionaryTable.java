@@ -271,14 +271,6 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     //  Some relics from the old dictionary used by GorOptions.
     // -----------------------------------------------------------------------------------
 
-    public static Set<String> tagset(String alias) {
-        return alias != null ? tagset(Collections.singletonList(alias)) : tagset(Collections.emptyList());
-    }
-
-    private static Set<String> tagset(List<String> t) {
-        return t == null ? new HashSet<>() : Collections.unmodifiableSortedSet(new TreeSet<>(t));
-    }
-
     public static Map<Integer, Set<String>> tagmap(String alias) {
         return alias != null ? tagmap(Collections.singletonList(alias)) : tagmap(Collections.emptyList());
     }

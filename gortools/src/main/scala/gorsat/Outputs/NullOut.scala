@@ -26,15 +26,15 @@ import gorsat.Commands.Output
 import org.gorpipe.gor.model.Row
 
 case class NullOut() extends Output {
-  def setup {
+  def setup(): Unit = {
     /* Nothing needs to be done since the file is already open */
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     /* Do nothing */
   }
 
-  def finish {
+  def finish(): Unit = {
     /* Do nothing */
   }
 }

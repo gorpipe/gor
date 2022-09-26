@@ -26,7 +26,7 @@ case class SlidingBinIDgen(var binSize: Int, slideSteps: Int) extends BinIDgen {
   var slideStep = 0
   var stepSize: Int = binSize / slideSteps
 
-  def setStep(step: Int) {
+  def setStep(step: Int): Unit = {
     slideStep = step
   }
 

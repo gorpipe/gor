@@ -28,11 +28,11 @@ import org.gorpipe.gor.model.Row
 case class TopN(maxLines: Int) extends Analysis {
   var m = 0
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     m += 1
     if (m >= maxLines) {
       if (m == maxLines) super.process(r)
-      reportWantsNoMore
+      reportWantsNoMore()
     } else {
       super.process(r)
     }

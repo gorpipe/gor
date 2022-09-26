@@ -27,9 +27,9 @@ abstract class IteratorSource extends java.util.Iterator[String] {
 
   override def next(): String
 
-  def setPosition(seekChr: String, seekPos: Int)
+  def setPosition(seekChr: String, seekPos: Int): Unit
 
-  def close()
+  def close(): Unit
 
   def getHeader: String
 }

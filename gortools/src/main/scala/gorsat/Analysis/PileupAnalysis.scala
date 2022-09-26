@@ -92,17 +92,17 @@ object GorPileup {
 
     var thePos = 0
 
-    def formatDouble(d: Double): String = (d formatted "%1.1f").replace(',', '.')
+    def formatDouble(d: Double): String = "%1.1f".format(d).replace(',', '.')
 
-    def formatDouble4(d: Double): String = (d formatted "%1.4f").replace(',', '.')
+    def formatDouble4(d: Double): String = "%1.4f".format(d).replace(',', '.')
 
-    def formatDoubleScientific2(d: Double): String = (d formatted "%1.2e").replace(',', '.')
+    def formatDoubleScientific2(d: Double): String = "%1.2e".format(d).replace(',', '.')
 
-    def phredScore(d: Double): String = (d formatted "%1.2e").replace(',', '.')
+    def phredScore(d: Double): String = "%1.2e".format(d).replace(',', '.')
 
     //def PhredScore(d : Double) = (java.lang.Math.log10(1.0-d)*(-1000.0)).toInt.min(99999)
 
-    def initStatHolder(sh: StatHolder) {
+    def initStatHolder(sh: StatHolder): Unit = {
       sh.As = 0
       if (!depthOnly) {
         sh.Cs = 0
@@ -141,7 +141,7 @@ object GorPileup {
       } else initStatHolder(singleStatHolder)
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var sh: StatHolder = null
       val baseHolder = r.bH.asInstanceOf[baseHolder]
       val base = baseHolder.code
@@ -205,7 +205,7 @@ object GorPileup {
       } // callSnps
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       val allKeys = if (useGroup) groupIDs.zipWithIndex.toList.sortWith((x, y) => x._1 < y._1) else List(("theOnlyGroup", 0))
       for (key <- allKeys; if key._1 != notUsedYet) {
         var sh: StatHolder = null
@@ -336,7 +336,7 @@ object GorPileup {
 
     def abs(x: Int): Int = if (x < 0) -x else x
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val iSize = scala.math.abs(r.colAsInt(columns.iSizeCol))
       val seqBases = r.colAsString(columns.seqBasesCol)
       val flag = r.colAsInt(columns.flagCol)
@@ -432,8 +432,8 @@ object GorPileup {
   case class pooledPileup(session: GorSession, grCols: List[Int], pa: Parameters, columns: PileupColumns, span: Int, refSeq: RefSeq) extends
     BinAnalysis(pooledPileupRowHandler(grCols, pa, columns), BinAggregator(pooledPileupFactory(session, grCols, pa, refSeq), span + 50, span)) {
 
-    override def finish: Unit = {
-      super.finish
+    override def finish(): Unit = {
+      super.finish()
 
       if (refSeq != null) {
         refSeq.close()
@@ -444,7 +444,7 @@ object GorPileup {
   case class TerminatorValue(var terminateNow: Boolean)
 
   case class Terminator(t: TerminatorValue) extends Analysis {
-    override def process(r: Row) {
+    override def process(r: Row): Unit = {
       if (t.terminateNow) reportWantsNoMore()
       else super.process(r)
     }

@@ -50,14 +50,14 @@ case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: 
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (filter.evalBooleanFunction(r))
       throw new GorDataException(s"Gor throw on: $filterSrc", -1)
     else
       super.process(r)
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     filter.close()
   }
 }

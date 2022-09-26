@@ -30,13 +30,13 @@ case class SkipAnalysis(m: Int) extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (i > m) {
       super.process(r)
     }
     i += 1
   }
 
-  override def finish {
+  override def finish(): Unit = {
   }
 }

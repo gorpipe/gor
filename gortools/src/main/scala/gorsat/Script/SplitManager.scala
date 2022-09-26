@@ -30,7 +30,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 import java.util
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 /**
   * Manager to perform split replacements on gor macros such as pgor and tablefunction. Call expand command to expand

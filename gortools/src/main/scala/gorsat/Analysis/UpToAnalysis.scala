@@ -29,8 +29,8 @@ import org.gorpipe.model.gor.RowObj
 case class UpToAnalysis(chr: String, pos: Int) extends Analysis {
   val refRow = RowObj(chr, pos, "")
 
-  override def process(r: Row) {
-    if (refRow atPriorPos r) reportWantsNoMore
+  override def process(r: Row): Unit = {
+    if (refRow atPriorPos r) reportWantsNoMore()
     else {
       super.process(r)
     }

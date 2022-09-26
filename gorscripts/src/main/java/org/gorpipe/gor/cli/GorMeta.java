@@ -49,7 +49,7 @@ public class GorMeta {
     }
 
     public int report(PrintStream out) throws IOException {
-        DataSource source = gorDriver.resolveDataSource(new SourceReference(file));
+        DataSource source = gorDriver.wrap(gorDriver.resolveDataSource(new SourceReference(file)));
         if (source == null) {
             out.println("Unknown data source " + file);
             return -1;
@@ -58,7 +58,7 @@ public class GorMeta {
         while (followLink && source.getDataType() == DataType.LINK) {
             String linksTo = GorDriverFactory.fromConfig().readLink(source);
             source.close();
-            source = gorDriver.resolveDataSource(new SourceReference(linksTo));
+            source = gorDriver.wrap(gorDriver.resolveDataSource(new SourceReference(linksTo)));
         }
 
         SourceMetadata meta = source.getSourceMetadata();

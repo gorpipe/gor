@@ -23,9 +23,9 @@
 package org.gorpipe.gor.table;
 
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.TableFilter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,10 +34,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -100,7 +97,7 @@ public class UTestTableFilter {
     }
 
     @SafeVarargs
-    private final String selectStringFilter(DictionaryTable table, DictionaryTable.TableFilter... filters) {
+    private final String selectStringFilter(DictionaryTable table, TableFilter<DictionaryEntry>... filters) {
         return table.selectUninon(filters).stream().map(DictionaryEntry::formatEntry).sorted().collect(Collectors.joining());
     }
 }

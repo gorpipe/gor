@@ -63,9 +63,9 @@ object RankAnalysis {
     var rownum = 0
     var allRows = new ArrayBuffer[(Row, RankInfoHolder)]
 
-    def formatDouble(d: Double): String = (d formatted "%1.4f").replace(',', '.')
+    def formatDouble(d: Double): String = ("%1.4f".format(d)).replace(',', '.')
 
-    def initStatHolder(sh: StatHolder) {
+    def initStatHolder(sh: StatHolder): Unit = {
       sh.fList = Nil
     }
 
@@ -75,7 +75,7 @@ object RankAnalysis {
       allRows = new ArrayBuffer[(Row, RankInfoHolder)]
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       var sh: StatHolder = null
 
       val groupID = if (useGroup) r.selectedColumns(grColsArray) else ""
@@ -95,7 +95,7 @@ object RankAnalysis {
       rownum += 1
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       for (key <- groupMap.keys.toList) {
         val sh = groupMap(key)
 

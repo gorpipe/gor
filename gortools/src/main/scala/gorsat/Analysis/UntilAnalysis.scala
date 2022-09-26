@@ -56,14 +56,14 @@ case class UntilAnalysis(context: GorContext, executeNor: Boolean, filterSrc: St
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (filter.evalBooleanFunction(r))
       reportWantsNoMore()
     else
       super.process(r)
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     filter.close()
   }
 }

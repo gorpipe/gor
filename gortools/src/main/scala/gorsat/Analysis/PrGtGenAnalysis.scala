@@ -423,7 +423,7 @@ object PrGtGenAnalysis {
       val tmp = currentRowBuffer
       currentRowBuffer = nextRowBuffer
       nextRowBuffer = tmp
-      nextRowBuffer.clear
+      nextRowBuffer.clear()
     }
   }
 }

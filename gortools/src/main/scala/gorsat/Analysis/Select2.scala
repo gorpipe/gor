@@ -28,7 +28,7 @@ import org.gorpipe.gor.model.Row
 case class Select2(columns: Int*) extends Analysis {
   val colArray = columns.map(x => x - 1).toArray
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     super.process(r.rowWithSelectedColumns(colArray))
   }
 

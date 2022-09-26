@@ -26,8 +26,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
@@ -47,7 +48,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BucketManager<T extends BucketableTableEntry> {
+public class BucketManager<T extends DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(BucketManager.class);
 
@@ -170,7 +171,7 @@ public class BucketManager<T extends BucketableTableEntry> {
                 maxBucketCount = maxBucketCount > 0 ? maxBucketCount : 10000;
             }
 
-            //cleanTempBucketFolders(bucketizeLock);
+            cleanTempBucketData(bucketizeLock);
             cleanOldBucketFiles(bucketizeLock, forceClean);
 
             return doBucketize(bucketizeLock, packLevel, maxBucketCount);
@@ -459,14 +460,18 @@ public class BucketManager<T extends BucketableTableEntry> {
         URI tempTablePath;
         String ext = FilenameUtils.getExtension(table.getPath().toString());
         tempTablePath = table.getRootUri().resolve(
-                "." + table.getName() + ".temp.bucketizing."
-                + RandomStringUtils.random(8, true, true)
-                + (ext.length() > 0 ? "." + ext : ""));
+        getTempTablePrefix()
+            + RandomStringUtils.random(8, true, true)
+            + (ext.length() > 0 ? "." + ext : ""));
 
         log.trace("Creating temp table {}", tempTablePath);
         table.getFileReader().copy(table.getPathUri().toString(), tempTablePath.toString());
 
         return initTempTable(tempTablePath.toString());
+    }
+
+    String getTempTablePrefix() {
+        return "." + table.getName() + ".temp.bucketizing.";
     }
 
     /**
@@ -509,28 +514,70 @@ public class BucketManager<T extends BucketableTableEntry> {
     private void deleteBucketFiles(boolean force, String... buckets) throws IOException {
         for (String bucket : buckets) {
             URI bucketFile = PathUtils.resolve(table.getRootUri(), bucket);
-            if (table.getFileReader().exists(bucketFile.toString())) {
-                // !GM last access time. Setting as 0 for now which basically disables the graceperiod.
-                long lastAccessTime = 0; // Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
+            DataSource source = table.getFileReader().resolveUrl(bucketFile.toString());
+
+            if (source.exists()) {
+                long lastAccessTime = source.getSourceMetadata().getLastModified();
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}", System.currentTimeMillis(),
                         lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
                 if (force || System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()) {
                     log.debug("Deleting bucket file {}", bucketFile);
-                    table.getFileReader().delete(bucketFile.toString());
-                    deleteFileIfExists(bucketFile.toString() + ".gori");
-                    deleteFileIfExists(bucketFile.toString() + ".meta");
+                    source.delete();
+                    deleteFileIfExists(source.getFullPath() + ".gori");
+                    deleteFileIfExists(source.getFullPath() + ".meta");
+                    deleteLinkFileIfExists(bucketFile.toString());
                 }
             }
         }
     }
 
-    private void deleteFileIfExists(String path) {
+    private void deleteFileIfExists(String path) {                      
         try {
-            if (table.getFileReader().exists(path)) {
-                table.getFileReader().delete(path);
+            DataSource source = table.getFileReader().resolveUrl(path);
+            if (source != null && source.exists()) {
+                source.delete();
             }
         } catch (IOException e) {
             //Ignore, file does not exists.
+        }
+    }
+
+    private void deleteLinkFileIfExists(String path) {
+        try {
+            String linkFile = path + (path.endsWith(".link") ? "" : ".link");
+            DataSource linkSource = table.getFileReader().resolveDataSource(table.getFileReader().createSourceReference(linkFile, false));
+            if (linkSource != null && linkSource.exists()) {
+                linkSource.delete();
+            }
+        } catch (Exception e) {
+            //Ignore, assume file does not exists.
+        }
+    }
+
+    /**
+     * Cleans up bucket files/folders.
+     *  1. Temp files from old bucketization runs that might have been left behind.
+     *
+     *  Note:  Temp bucket files that might be left from bucketization will be cleaned as part of standard
+     *         unused bucket cleaning.
+     */
+    void cleanTempBucketData(TableLock bucketizeLock) {
+        if (!bucketizeLock.isValid()) {
+            log.debug("Bucketization in progress, will skip cleaning bucket files.");
+            return;
+        }
+
+        // If get a valid write lock no temp files should be here, so go ahead and clean ALL the temp files for the table
+        try (Stream<String> candStream = table.getFileReader().list(table.getRootUri().toString())) {
+            String prefix = getTempTablePrefix();
+
+            for (String candTempFile : candStream.collect(Collectors.toList())) {
+                if (candTempFile.contains(prefix)) {
+                    table.getFileReader().resolveUrl(table.getRootUri().resolve(candTempFile).toString()).delete();
+                }
+            }
+        } catch (IOException ioe) {
+            log.warn("Got exception when trying to clean up temp folders.  Just logging out the exception", ioe);
         }
     }
 
@@ -742,7 +789,7 @@ public class BucketManager<T extends BucketableTableEntry> {
         bucketCreator.createBucketsForBucketDir(table, bucketsToCreate, absBucketDir);
     }
 
-    public static final class Builder<T extends BucketableTableEntry> {
+    public static final class Builder<T extends DictionaryEntry> {
         private final BaseDictionaryTable<T> table;
         private Duration lockTimeout = null;
         private Class<? extends TableLock> lockType = null;

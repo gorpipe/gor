@@ -30,9 +30,9 @@ import de.tototec.cmdoption.handler.CmdOptionHandler;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.TableFilter;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.logging.GorLogbackUtil;
@@ -44,8 +44,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -257,7 +255,7 @@ public class TableManagerCLI {
         public void run(GenericOptions genericOpts) {
             // We support taking files both as -f option and generic arguments, simply combine those two before running.
             TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            final BaseDictionaryTable.TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
+            final TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
             BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
             tm.delete(Paths.get(genericOpts.table), lines);
         }
@@ -312,7 +310,7 @@ public class TableManagerCLI {
 
         public void run(GenericOptions genericOpts) {
             TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            final BaseDictionaryTable.TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
+            final TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
             tm.print(lines);
         }
     }
@@ -439,7 +437,7 @@ public class TableManagerCLI {
         System.out.println(baos.toString().replace("Usage: gormanager", "Usage: gormanager <table>"));
     }
 
-    private static BaseDictionaryTable.TableFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
+    private static TableFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
         String[] allFiles = (String[]) ArrayUtils.addAll(args.files.toArray(new String[0]), args.files.toArray(new String[0]));
         BaseDictionaryTable table = tm.initTable(Paths.get(genericOpts.table));
 

@@ -26,5 +26,5 @@ import org.gorpipe.gor.model.Row
 
 trait LineIterator extends java.util.Iterator[Row] {
   def nextLine : String
-  def close()
+  def close(): Unit
 }

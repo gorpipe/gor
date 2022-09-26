@@ -32,7 +32,7 @@ case class ColGrep(pattern : String, useAllCols : Boolean, mCols : Array[Int], c
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
     val stringToMatch = if (useAllCols) r.toString else r.selectedColumns(colArray)
     reg.findFirstIn(stringToMatch) match {
       case Some(x) => if(!inverted) super.process(r)

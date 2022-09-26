@@ -43,21 +43,21 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
   var wroteBuffer = false
   // If no quota is set we default to 0 and do not deal with write quotas
   val writeQuota: Long = System.getProperty("gor.querylimits.writequota.mb", "0").toLong * 1024 * 1024
-  var writeQuotaUsed = 0l
+  var writeQuotaUsed = 0L
 
   override def isTypeInformationMaintained: Boolean = true
 
-  def reinit() {
+  def reinit(): Unit = {
     inputArray = new Array[Row](batch)
     ordFileList = List()
     lines = 0
     bufferSize = 0
     alreadySorted = true
     wroteBuffer = false
-    writeQuotaUsed = 0l
+    writeQuotaUsed = 0L
   }
 
-  def sortBuffer(inputArray: Array[Row], length: Int) {
+  def sortBuffer(inputArray: Array[Row], length: Int): Unit = {
     if (!alreadySorted) util.Arrays.parallelSort(inputArray, 0, length, (o1: Row, o2: Row) => o1.advancedCompare(o2, sortInfo))
     val f = java.io.File.createTempFile("gorsort", ".gorz")
     f.deleteOnExit()
@@ -73,7 +73,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     runner.run(RowArrayIterator(inputArray, length), OutFile.driver(outputFile, sortFileReader, header, skipHeader = false, OutputOptions(writeMeta = false)))
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (writeQuota > 0) {
       writeQuotaUsed += r.getAllCols.length
       if (writeQuotaUsed > writeQuota) {
@@ -91,7 +91,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     }
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     if (wroteBuffer) {
       var rSource: GenomicIterator = null
       try {

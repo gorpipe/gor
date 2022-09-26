@@ -163,7 +163,12 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public boolean exists() {
+    public boolean exists() throws IOException  {
+        return fileExists() ? true : Files.exists(getPath());
+    }
+
+    @Override
+    public boolean fileExists() throws IOException  {
         try {
             // Already in cache, exists
             loadMetadataFromCache(bucket, key);
@@ -171,15 +176,14 @@ public class S3Source implements StreamSource {
         } catch (ExecutionException | UncheckedExecutionException e) {
             var throwable = e.getCause();
             if (throwable instanceof AmazonS3Exception s3exp) {
-                if (s3exp.getStatusCode() == 404) {
-                    try {
-                        return Files.exists(getPath());
-                    } catch (Exception se) {
-                        return false;
-                    }
+                if (s3exp.getStatusCode() == 404 || s3exp.getStatusCode() == 400) {
+                    // The meta data check does not handle the existsance of 'folders' correctly, so if we get
+                    // 404 and have a folder we need to use Files.exists (with S3 filesystem path) that handles
+                    // S3 'folders'.
+                    return false;
                 }
             }
-            throw new GorResourceException("S3 exists failed", bucket+key, throwable);
+            throw new IOException("S3 fileExists failed: " + bucket+key, throwable);
         }
     }
 

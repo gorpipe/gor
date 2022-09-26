@@ -135,7 +135,7 @@ case class BucketSplitAnalysis(splitColumn: Int, bucketSize: Int, separator: Str
   /**
     * Helper function to do common validation.
     */
-  def validate(currentValuesCount: Long, valueSize: Int) {
+  def validate(currentValuesCount: Long, valueSize: Int): Unit = {
     if (currentValuesCount == 0) {
       throw new GorDataException("The value column can not be emtpy")
     }

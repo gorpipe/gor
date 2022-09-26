@@ -27,9 +27,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.gorpipe.gor.driver.utils.RetryHandler;
-import org.gorpipe.gor.driver.utils.RetryHandler.OnRetryOp;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,20 +45,22 @@ import java.util.stream.Stream;
  * In this case - we need to track the position in the underlying stream
  * On retry  - close/discard the underlying stream and reopen at the last successfully read position
  * <p>
+ *
+ * Note:
+ * 1. The open calls do not use the defaultOnRetryOp (which skips retries for FileNotFound).  Is that because we
+ *    want retries for open ()
  * Created by villi on 29/08/15.
  */
 public class RetryWrapper extends WrappedStreamSource {
     private final int readRetries;
     private final int requestRetries;
     private final RetryHandler retry;
-    private final DefaultOnRetryOp defaultOnRetryOp;
 
     public RetryWrapper(RetryHandler retry, StreamSource wrapped, int requestRetries, int readRetries) {
         super(wrapped);
         this.requestRetries = requestRetries;
         this.readRetries = readRetries;
         this.retry = retry;
-        this.defaultOnRetryOp = new DefaultOnRetryOp();
     }
 
     @Override
@@ -95,7 +95,7 @@ public class RetryWrapper extends WrappedStreamSource {
 
     @Override
     public StreamSourceMetadata getSourceMetadata() throws IOException {
-        return retry.tryOp(super::getSourceMetadata, requestRetries, defaultOnRetryOp);
+        return retry.tryOp(super::getSourceMetadata, requestRetries);
     }
 
     @Override
@@ -104,23 +104,24 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public boolean exists() {
-        try {
-            return retry.tryOp(super::exists, requestRetries, defaultOnRetryOp);
-        } catch (IOException e) {
-            return false;
-        }
+    public boolean exists() throws IOException {
+        return retry.tryOp(super::exists, requestRetries);
+    }
+
+    @Override
+    public boolean fileExists() throws IOException {
+        return retry.tryOp(super::fileExists, requestRetries);
     }
 
     @Override
     public void delete() throws IOException {
-         retry.tryOp(super::delete, requestRetries, defaultOnRetryOp);
+         retry.tryOp(super::delete, requestRetries, null);
     }
 
     @Override
     public boolean isDirectory() {
         try {
-            return retry.tryOp(super::isDirectory, requestRetries, defaultOnRetryOp);
+            return retry.tryOp(super::isDirectory, requestRetries);
         } catch (IOException e) {
             return false;
         }
@@ -143,25 +144,7 @@ public class RetryWrapper extends WrappedStreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        return retry.tryOp(super::list, requestRetries, defaultOnRetryOp);
-    }
-
-
-
-    /**
-     * A default retry operator. If there is a FileNotFoundException then do not retry.
-     */
-    public static class DefaultOnRetryOp implements OnRetryOp {
-
-        protected DefaultOnRetryOp() {
-        }
-
-        @Override
-        public void onRetry(IOException e) throws IOException {
-            if (e instanceof FileNotFoundException) {
-                throw new IOException("Operation is not retried when a FileNotFoundException occurs", e);
-            }
-        }
+        return retry.tryOp(super::list, requestRetries);
     }
 
     private InputStream wrapStream(InputStream open, long start, Long length) {
@@ -184,7 +167,7 @@ public class RetryWrapper extends WrappedStreamSource {
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-            return retry.tryOp(() -> super.read(b, off, len), readRetries, (lastEx) -> {
+            return retry.tryOp(() -> super.read(b, off, len), readRetries, lastEx -> {
                 StreamUtils.tryClose(in);
                 in = reopen();
             });

@@ -24,7 +24,7 @@ package org.gorpipe.gor.cli;
 
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.SlowTests;
 import org.junit.*;
@@ -119,7 +119,7 @@ public class UTestGorCliManager {
         testTableManagerUtil.executeGorManagerCommand("insert", new String[]{"--alias", "D", dictFile.toString(), testFiles[3]}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);
@@ -170,7 +170,7 @@ public class UTestGorCliManager {
 
         Path dictFile = workDirPath.resolve(name + ".gord");
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
         String result;
 
         // Single file insert.
@@ -255,7 +255,7 @@ public class UTestGorCliManager {
         GorCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         //Verify insert of files
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -301,7 +301,7 @@ public class UTestGorCliManager {
         Path dictFile = workDirPath.resolve(name + ".gord");
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         //Check matching list of tags. If the same set of tags can be found it is replaced by the new line of tags.
         GorCLI.main(new String[]{"manager", "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[0]});
@@ -334,7 +334,7 @@ public class UTestGorCliManager {
         GorCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<BucketableTableEntry> table = man.initTable(dictFile);
+        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);

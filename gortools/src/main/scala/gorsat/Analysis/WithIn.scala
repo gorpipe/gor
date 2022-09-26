@@ -29,10 +29,10 @@ import org.gorpipe.model.gor.RowObj
 case class WithIn(chr: String, start: Int, stop: Int) extends Analysis {
   val refRow = RowObj(chr, stop, "")
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     // check r.pos == 0 to allow lines through produced by group chrom (hence outside of wihtin boundary)
     if( r.pos == 0 ) super.process(r)
-    else if (refRow atPriorPos r) reportWantsNoMore
+    else if (refRow atPriorPos r) reportWantsNoMore()
     else if (chr.equals(r.chr) && r.pos >= start) {
       super.process(r)
     }

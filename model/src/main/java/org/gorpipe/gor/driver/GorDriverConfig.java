@@ -75,20 +75,25 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("Maximum number of times to retry a failing read in a source.")
     @Key("org.gorpipe.gor.driver.retries.max_read_retries")
-    @DefaultValue("10")
+    @DefaultValue("5")
     int maxReadRetries();
 
     @Documentation("The time to wait before the first retry.")
     @Key("org.gorpipe.gor.driver.retries.initial_sleep")
-    @DefaultValue("125 milliseconds")
+    @DefaultValue("100 milliseconds")
     @ConverterClass(DurationConverter.class)
     Duration retryInitialSleep();
 
     @Documentation("The maximum time to wait for retrying.")
     @Key("org.gorpipe.gor.driver.retries.max_sleep")
-    @DefaultValue("64 seconds")
+    @DefaultValue("60 seconds")
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSleep();
+
+    @Documentation("Retry exponential backoff coefficient")
+    @Key("org.gorpipe.gor.driver.retries.exp_backoff")
+    @DefaultValue("2")
+    int retryExpBackoff();
 
     @Documentation("Whether to automatically extend the range of remote source reads when the driver detects sequential reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.remote")

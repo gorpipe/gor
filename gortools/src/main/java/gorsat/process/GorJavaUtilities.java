@@ -522,7 +522,8 @@ public class GorJavaUtilities {
             var headerspl = fileReader.readHeaderLine(gorzFile).split("\t");
             var tableheader = new DictionaryTableMeta();
             tableheader.setColumns(headerspl);
-            tableheader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER);
+            // For skip writing out the header, as tools will not cope if the lines will not match;
+            //tableheader.setFileHeader(DictionaryTableMeta.DEFULT_RANGE_TABLE_HEADER);
             if (!lineFilter) {
                 tableheader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, Boolean.toString(lineFilter));
             }
@@ -588,7 +589,7 @@ public class GorJavaUtilities {
                     }
                     if (i==1) {
                         try {
-                            writeHeader(fileReader, dictionarypathwriter, p, tags.isEmpty());
+                            writeHeader(fileReader, dictionarypathwriter, p, false);
                         } catch (IOException e) {
                             throw new GorSystemException("Unable to write header to dictionary", e);
                         }

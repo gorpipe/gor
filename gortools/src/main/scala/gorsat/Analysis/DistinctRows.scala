@@ -34,7 +34,7 @@ case class DistinctRows() extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (r.pos == lastPos && r.chr.equals(lastChr)) {
       allRows += r
     } else {
@@ -45,7 +45,7 @@ case class DistinctRows() extends Analysis {
     }
   }
 
-  override def finish {
+  override def finish(): Unit = {
     allRows.foreach(x => super.process(x))
     allRows = null
   }
