@@ -30,8 +30,7 @@ import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 import org.slf4j.LoggerFactory
 
-import scala.jdk.CollectionConverters.MapHasAsScala
-
+import scala.jdk.CollectionConverters.mapAsScalaMapConverter
 
 object DagMapAnalysis {
 
