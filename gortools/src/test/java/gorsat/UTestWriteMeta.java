@@ -38,6 +38,7 @@ public class UTestWriteMeta {
         Assert.assertEquals("ChromNOR\tPosNOR\t SERIAL = 0\n" +
                 "chrN\t0\t## SCHEMA = null,null,null,null\n" +
                 "chrN\t0\t## LINE_COUNT = 1\n" +
+                "chrN\t0\t## COLUMNS = Chrom,gene_start,gene_end,Gene_Symbol\n" +
                 "chrN\t0\t## TAGS = \n" +
                 "chrN\t0\t## MD5 = 115d01300249372ae847c139edc02c02\n" +
                 "chrN\t0\t## RANGE = chr1\t11868\tchr1\t11868\n",res);

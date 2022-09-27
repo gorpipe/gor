@@ -165,6 +165,10 @@ public interface DataSource extends AutoCloseable {
         throw new GorResourceException("List directory is not implemented", getSourceType().getName());
     }
 
+    default Stream<String> walk() throws IOException {
+        throw new GorResourceException("Walk directory is not implemented", getSourceType().getName());
+    }
+
     @Override
     void close() throws IOException;
 

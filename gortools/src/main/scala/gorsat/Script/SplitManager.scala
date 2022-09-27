@@ -30,7 +30,6 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 import java.util
-import scala.jdk.CollectionConverters.mapAsScalaMapConverter
 
 /**
   * Manager to perform split replacements on gor macros such as pgor and tablefunction. Call expand command to expand
@@ -128,8 +127,8 @@ object SplitManager {
   def parseBuildSizeSplit(buildSizes: java.util.Map[String, Integer]): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
-    buildSizes.asScala.foreach(c => {
-      chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, getUpperBounds(c._1, c._2, buildSizes)))
+    buildSizes.entrySet().forEach(c => {
+      chromosomeSplits += (c.getKey -> SplitEntry(c.getKey, 0, getUpperBounds(c.getKey, c.getValue, buildSizes)))
     })
 
     chromosomeSplits
@@ -139,13 +138,13 @@ object SplitManager {
   def parseSplitSizeSplit(buildSizes: java.util.Map[String, Integer], buildSplits: java.util.Map[String, Integer]): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
-    buildSizes.asScala.foreach(c => {
-      Option(buildSplits.getOrDefault(c._1, null)) match {
+    buildSizes.entrySet().forEach(c => {
+      Option(buildSplits.getOrDefault(c.getKey, null)) match {
         case Some(chromosomeSplit) =>
-          chromosomeSplits += ((c._1 + "a") -> SplitEntry(c._1, 0, chromosomeSplit - 1))
-          chromosomeSplits += ((c._1 + "b") -> SplitEntry(c._1, chromosomeSplit, getUpperBounds(c._1, c._2, buildSizes)))
+          chromosomeSplits += ((c.getKey + "a") -> SplitEntry(c.getKey, 0, chromosomeSplit - 1))
+          chromosomeSplits += ((c.getKey + "b") -> SplitEntry(c.getKey, chromosomeSplit, getUpperBounds(c.getKey, c.getValue, buildSizes)))
         case None =>
-          chromosomeSplits += (c._1 -> SplitEntry(c._1, 0, getUpperBounds(c._1, c._2, buildSizes)))
+          chromosomeSplits += (c.getKey -> SplitEntry(c.getKey, 0, getUpperBounds(c.getKey, c.getValue, buildSizes)))
       }
     })
 
@@ -159,22 +158,22 @@ object SplitManager {
     // TODO: This split is not clear, there is a different split method based on the split size???
     var splitSize = if (iSplitSize <= 1000 && splitOverlap == 0) (3000000000L / iSplitSize).toInt else iSplitSize
 
-    buildSizes.asScala.foreach(c => {
+    buildSizes.entrySet().forEach(c => {
       var beginBp = 0
       var endBp = splitSize
       var no = 1
 
-      if (c._2 / splitSize > 100) {
+      if (c.getValue / splitSize > 100) {
         throw new GorParsingException("Error in -split option - PGOR does now allow more than 100 splits per chromosome.\nCurrently using " +
-          (c._2 / splitSize) + " splits. Usage -split size[:overlap] : ")
+          (c.getValue / splitSize) + " splits. Usage -split size[:overlap] : ")
       }
 
       if (splitOverlap > splitSize / 2) {
         throw new GorParsingException(s"Error in -split - overlap is too large compared with the split size $splitSize. Usage -split size[:overlap] : ")
       }
 
-      while (beginBp <= c._2) {
-        chromosomeSplits += ((c._1 + "_" + no) -> SplitEntry(c._1, 0.max(beginBp - splitOverlap),  getUpperBounds(c._1, endBp - 1 + splitOverlap, buildSizes)))
+      while (beginBp <= c.getValue) {
+        chromosomeSplits += ((c.getKey + "_" + no) -> SplitEntry(c.getKey, 0.max(beginBp - splitOverlap),  getUpperBounds(c.getKey, endBp - 1 + splitOverlap, buildSizes)))
         beginBp += splitSize
         endBp += splitSize
         no += 1

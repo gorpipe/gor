@@ -109,6 +109,8 @@ public abstract class FileReader {
 
     public abstract Stream<String> list(String dir) throws IOException;
 
+    public abstract Stream<String> walk(String dir) throws IOException;
+
     //public abstract void deleteDirectory(String dir) throws IOException;
 
 

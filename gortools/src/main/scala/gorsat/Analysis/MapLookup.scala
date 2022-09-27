@@ -30,8 +30,6 @@ import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 
-import scala.jdk.CollectionConverters.mapAsScalaMapConverter
-
 case class MapLookup(session: GorSession,
                      iteratorCommand: String,
                      iterator: LineIterator,
@@ -71,9 +69,9 @@ case class MapLookup(session: GorSession,
     if (cartesian) {
       val allCols = r.getAllCols
       if (outCols.length == 1) {
-        colMap.asScala.foreach(y => super.process(RowObj.apply(allCols + "\t" + y._1)))
+        colMap.entrySet().forEach(y => super.process(RowObj.apply(allCols + "\t" + y.getKey)))
       } else {
-        colMap.asScala.foreach(y => super.process(RowObj.apply(allCols + "\t" + y._1 + "\t" + y._2)))
+        colMap.entrySet().forEach(y => super.process(RowObj.apply(allCols + "\t" + y.getKey + "\t" + y.getValue)))
       }
     } else {
       Option(colMap.get(if (caseInsensitive) key.toUpperCase else key)) match {

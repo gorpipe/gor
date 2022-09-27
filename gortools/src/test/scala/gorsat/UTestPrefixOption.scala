@@ -57,7 +57,7 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
 
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
-    val outFile = Outputs.OutFile(outPutFileName, fileReader, inputFileCont.head, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
+    val outFile = Outputs.OutFile(outPutFileName, fileReader, inputFileCont.head, false, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
     outFile.setup
     outFile.process(RowObj(inputFileCont(1)))
     outFile.finish
@@ -84,7 +84,7 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
 
     val outPutFileName = new File(tmpFolder, "output.gorz").getAbsolutePath
 
-    val outFile = Outputs.OutFile(outPutFileName, fileReader, inputFileCont.head, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
+    val outFile = Outputs.OutFile(outPutFileName, fileReader, inputFileCont.head, false, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
     outFile.setup
     outFile.process(RowObj(inputFileCont(1)))
     outFile.finish
@@ -107,7 +107,7 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
 
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
-    val outFile = Outputs.OutFile(outPutFileName, fileReader, "", true, false, false, false, false, GorIndexType.NONE, Option(""))
+    val outFile = Outputs.OutFile(outPutFileName, fileReader, "", true, false, false, false, false, false, GorIndexType.NONE, Option(""))
     outFile.setup
     outFile.process(RowObj(inputFileCont(0)))
     outFile.finish

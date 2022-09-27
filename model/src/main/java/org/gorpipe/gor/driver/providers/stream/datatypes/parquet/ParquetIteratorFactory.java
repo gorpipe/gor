@@ -23,18 +23,25 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 
 import com.google.auto.service.AutoService;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIterator;
 
+import java.io.IOException;
+
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class ParquetIteratorFactory implements StreamSourceIteratorFactory {
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) {
-        return new ParquetFileIterator(file);
+        try {
+            return new ParquetFileIterator(file);
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
     }
 
     @Override
