@@ -164,6 +164,11 @@ public class RetryWrapper extends WrappedStreamSource {
         }
     }
 
+    @Override
+    public Stream<String> walk() throws IOException {
+        return retry.tryOp(super::walk, requestRetries);
+    }
+
     private InputStream wrapStream(InputStream open, long start, Long length) {
         return new RetryInputStream(open, start, length);
     }

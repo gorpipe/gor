@@ -208,6 +208,11 @@ public class S3Source implements StreamSource {
         return Files.list(getPath()).map(Path::toString);
     }
 
+    @Override
+    public Stream<String> walk() throws IOException {
+        return Files.walk(getPath()).map(Path::toString);
+    }
+
     private Path getPath() {
         if (path == null) {
             FileSystem s3fs;

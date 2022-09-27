@@ -60,6 +60,7 @@ public class GorMeta extends BaseMeta {
            gorRowInferFunction = new GorRowInferFunction();
         }
         if (maxseg) this.maxseg = 0;
+        this.setFileHeader(header.split("\t"));
 
         lineCount = 0;
     }
@@ -115,7 +116,8 @@ public class GorMeta extends BaseMeta {
         if (maxseg >= 0) setProperty(MAXSEG_SCHEMA_KEY, Integer.toString(maxseg));
         if (cardColIndex != -1) {
             String cardStr = cardSet.toString();
-            setProperty(HEADER_CARDCOL_KEY, "[" + cardColName + "]: " + cardStr.substring(1,cardStr.length()-1).replace(" ",""));
+            setProperty(HEADER_CARDCOL_KEY, "[" + cardColName + "]: " + cardStr.substring(1, cardStr.length() - 1).replace(" ", ""));
         }
+        if (fileHeader != null && fileHeader.length > 0) setColumns(fileHeader);
     }
 }

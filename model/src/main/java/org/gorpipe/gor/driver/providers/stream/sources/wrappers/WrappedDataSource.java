@@ -118,6 +118,11 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
+    public Stream<String> walk() throws IOException {
+        return wrapped.walk();
+    }
+
+    @Override
     public boolean supportsLinks() {
         return wrapped.supportsLinks();
     }

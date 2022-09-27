@@ -207,6 +207,11 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
+    public Stream<String> walk(String dir) throws IOException {
+        return resolveUrl(dir).walk();
+    }
+
+    @Override
     public String[] readAll(String file) throws IOException {
         try (Stream<String> s = readFile(file)) {
             return s.toArray(String[]::new);

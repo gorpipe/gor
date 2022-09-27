@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -36,7 +35,7 @@ public class BaseMeta {
     public static final String HEADER_COLUMNS_KEY = "COLUMNS";
 
     protected HashMap<String, String> headerProps;
-    private String[] fileHeader;                     // Columns of the table it self.
+    String[] fileHeader;                     // Columns of the table it self.
     protected boolean saveHeaderLine = false;
     private String metaPathStr;
 
@@ -175,7 +174,7 @@ public class BaseMeta {
         String propName = StringUtils.strip(lineSplit[0], "\t\n #");
         if (propName.equals(HEADER_COLUMNS_KEY)) {
             // Ignore columns that have non standard characters.  These are errors.
-            if (Charset.forName("UTF-8").newEncoder().canEncode(lineSplit[1])) {
+            if (StandardCharsets.UTF_8.newEncoder().canEncode(lineSplit[1])) {
                 setColumns(lineSplit[1].trim().split("[\t,]", -1));
             }
         } else {

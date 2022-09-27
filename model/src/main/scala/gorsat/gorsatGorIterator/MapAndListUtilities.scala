@@ -145,8 +145,8 @@ object MapAndListUtilities {
                   colMap.put(lookupString, (cols(oc.head) /: oc.tail.map(c => cols(c)))(_ + "\t" + _))
                 } else {
                   val existingValues = colMap.get(lookupString).split("\t",-1)
-                  val newValues = if( skipEmpty ) existingValues.zip(oc.map(c => cols(c))).map(_.productIterator.filter(_.toString.length > 0).mkString(",")) else existingValues.zip(oc.map(c => cols(c))).map( x => x._1 + "," + x._2 )
-                  colMap.put(lookupString, (newValues(0) /: newValues.tail)(_ + "\t" + _))
+                  val newValues = if( skipEmpty ) existingValues.zip(oc.map(c => cols(c))).map(_.productIterator.filter(_.toString.nonEmpty).mkString(",")) else existingValues.zip(oc.map(c => cols(c))).map(x => x._1 + "," + x._2 )
+                  colMap.put(lookupString, newValues.tail.foldLeft(newValues.head)(_ + "\t" + _))
                 }
               }
             }

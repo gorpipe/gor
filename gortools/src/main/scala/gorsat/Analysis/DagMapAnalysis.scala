@@ -30,8 +30,6 @@ import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 import org.slf4j.LoggerFactory
 
-import scala.jdk.CollectionConverters.mapAsScalaMapConverter
-
 object DagMapAnalysis {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -85,9 +83,9 @@ object DagMapAnalysis {
   def readGraph(filename: String, session: GorSession, iterator: LineIterator, caseInsensitive: Boolean): DAG = {
     val m = MapAndListUtilities.getMultiHashMap(filename, iterator, caseInsensitive, session)
     val dag = DAG(caseInsensitive)
-    m.asScala.foreach(x => {
-      val parentNode = dag.createOrFind(x._1)
-      val childNodes = x._2.map(y => dag.createOrFind(y))
+    m.entrySet().forEach(x => {
+      val parentNode = dag.createOrFind(x.getKey)
+      val childNodes = x.getValue.map(y => dag.createOrFind(y))
       parentNode.childrens :::= childNodes.toList
     })
     dag

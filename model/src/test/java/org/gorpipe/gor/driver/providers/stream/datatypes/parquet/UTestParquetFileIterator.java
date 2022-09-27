@@ -6,6 +6,7 @@ import gorsat.Commands.Analysis;
 import gorsat.ScalaTestUtils;
 import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
@@ -14,7 +15,11 @@ import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.binsearch.GorZipLexOutputStream;
 import org.gorpipe.gor.model.ParquetLine;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.session.SystemContext;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import scala.Tuple2;
 import scala.collection.mutable.ListBuffer;
@@ -38,11 +43,32 @@ public class UTestParquetFileIterator {
         logContext.getLogger("org.apache").setLevel(Level.WARN);
     }
 
+    GorSession gorSession;
+    GorSession norSession;
+
+    @Before
+    public void setup() {
+        gorSession = new GorSession("dummy");
+        norSession = new GorSession("dummy");
+        DriverBackedFileReader fileReader = new DriverBackedFileReader("", Path.of(".").toAbsolutePath().toString(), new Object[] {});
+        ProjectContext projectContext = new ProjectContext.Builder().setFileReader(fileReader).build();
+        SystemContext systemContext = new SystemContext.Builder().build();
+        gorSession.init(projectContext, systemContext, null);
+        norSession.init(projectContext, systemContext, null);
+        norSession.setNorContext(true);
+    }
+
+    @After
+    public void close() {
+        gorSession.close();
+    }
+
     @Test
-    public void shouldReadMultifileData() {
+    public void shouldReadMultifileData() throws IOException {
         //This parquet data is a duplication of the first dataset - hence 96 rows.
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test2.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
+        iterator.init(gorSession);
         iterator.getHeader();
         int count = 0;
         Row lastRow = null;
@@ -57,9 +83,10 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void shouldReadParquetData() {
+    public void shouldReadParquetData() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
+        iterator.init(gorSession);
         iterator.getHeader();
         int count = 0;
         Row lastRow = null;
@@ -74,12 +101,10 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void shouldReadParquetNorData() {
+    public void shouldReadParquetNorData() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        GorSession gorSession = new GorSession("dummy");
-        gorSession.setNorContext(true);
-        iterator.init(gorSession);
+        iterator.init(norSession);
         int count = 0;
         Row lastRow = null;
         while (iterator.hasNext()) {
@@ -93,35 +118,35 @@ public class UTestParquetFileIterator {
     }
 
     @Test(expected = GorSystemException.class)
-    public void shouldFailOnFileNotExistsWhenGettingHeader() {
+    public void shouldFailOnFileNotExistsWhenGettingHeader() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parakeet/dbsnp_test.parakeet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
+        iterator.init(gorSession);
         iterator.getHeader();
     }
 
     @Test
-    public void shouldReadParquetHeader() {
+    public void shouldReadParquetHeader() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
+        iterator.init(gorSession);
         String expectedHeader = "Chrom\tPOS\treference\tallele\tdifferentrsIDs";
         assertEquals(expectedHeader, iterator.getHeader());
     }
 
     @Test
-    public void shouldReadParquetHeaderWithNor() {
+    public void shouldReadParquetHeaderWithNor() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        GorSession gorSession = new GorSession("dummy");
-        gorSession.setNorContext(true);
-        String expectedHeader = "Chrom\tPOS\treference\tallele\tdifferentrsIDs";
+        iterator.init(norSession);
+        String expectedHeader = "ChromNOR\tPosNOR\tChrom\tPOS\treference\tallele\tdifferentrsIDs";
         assertEquals(expectedHeader, iterator.getHeader());
     }
 
     @Test
-    public void doesSupportSeek() {
+    public void doesSupportSeek() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        GorSession gorSession = new GorSession("dummy");
         iterator.init(gorSession);
 
         Assert.assertTrue(iterator.seek("chr22", 0));
@@ -132,10 +157,9 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void seekOnNoneExistingChrom() {
+    public void seekOnNoneExistingChrom() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        GorSession gorSession = new GorSession("dummy");
         iterator.init(gorSession);
 
         Assert.assertTrue(iterator.seek("chr23", 0));
@@ -143,10 +167,9 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void seekOnChromNotInFile() {
+    public void seekOnChromNotInFile() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
-        GorSession gorSession = new GorSession("dummy");
         iterator.init(gorSession);
 
         Assert.assertTrue(iterator.seek("chrM", 0));
@@ -154,9 +177,10 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void shouldHandleSelectCommand() {
+    public void shouldHandleSelectCommand() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
+        iterator.init(gorSession);
         iterator.getHeader();
 
         Tuple2<Analysis,ListBuffer<Row>> selectList = ScalaTestUtils.selectToList();
@@ -172,9 +196,10 @@ public class UTestParquetFileIterator {
     }
 
     @Test
-    public void shouldHandleGorZipLexOutputCommand() {
+    public void shouldHandleGorZipLexOutputCommand() throws IOException {
         StreamSourceFile file = createStreamSourceFile("../tests/data/parquet/dbsnp_test.parquet");
         ParquetFileIterator iterator = new ParquetFileIterator(file);
+        iterator.init(gorSession);
         iterator.getHeader();
         try {
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
