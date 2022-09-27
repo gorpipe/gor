@@ -53,7 +53,7 @@ class StdInputSource() extends IteratorSource {
     }
   }
 
-  def setPosition(seekChr: String, seekPos: Int) {
+  def setPosition(seekChr: String, seekPos: Int): Unit = {
     /* do nothing */
   }
 

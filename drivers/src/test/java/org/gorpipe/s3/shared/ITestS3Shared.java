@@ -1,5 +1,8 @@
 package org.gorpipe.s3.shared;
 
+import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.WrappedDataSource;
 import org.gorpipe.utils.DriverUtils;
 import gorsat.process.*;
 import org.gorpipe.base.security.BundledCredentials;
@@ -72,8 +75,9 @@ public class ITestS3Shared {
     }
     
     @Test
-    public void testFallBack() throws IOException {
+    public void testFallBackThrough() throws IOException {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
         String dataPath = "user_data/a.gor";
         try {
@@ -92,8 +96,21 @@ public class ITestS3Shared {
     }
 
     @Test
+    public void testFallBackProjectToSharedProject() throws IOException {
+        S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz"; // Exists in shared but not in project.
+
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+
+        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getSourceReference().getUrl());
+    }
+
+    @Test
     public void testProjectRead() throws IOException {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
         String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
@@ -109,6 +126,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectReadUserData() throws IOException {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
         String dataPath = "user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz";
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
@@ -125,6 +143,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectSharedRead() throws IOException {
         S3SharedSourceProvider provider = new S3ProjectSharedSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
         String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
@@ -140,6 +159,7 @@ public class ITestS3Shared {
     @Test
     public void testRegionSharedRead() throws IOException {
         S3SharedSourceProvider provider = new S3RegionSharedSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
         String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
@@ -155,6 +175,7 @@ public class ITestS3Shared {
     @Test
     public void testGlobalSharedRead() throws IOException {
         S3SharedSourceProvider provider = new S3GlobalSharedSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
         String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
@@ -236,6 +257,22 @@ public class ITestS3Shared {
     }
 
     @Test
+    @Ignore("Slow test, ment to be manually run")
+    public void testReadServer() throws IOException {
+        Path gorRoot  = workDirPath.resolve("some_project");
+        Path linkFile = gorRoot.resolve("a.gorz.link");
+        Files.createDirectory(gorRoot);
+        //Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(linkFile, "s3data://project/ref/dbsnp.gorz".getBytes(StandardCharsets.UTF_8));
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+
+        String result = runGorPipeServer("a.gorz | top 1000000 | group genome -count", gorRoot.toString(), securityContext);
+
+        Assert.assertEquals("Chrom\tbpStart\tbpStop\tallCount\n" +
+                "chrA\t0\t1000000000\t1000000\n", result);
+    }
+
+    @Test
     public void testProjectWriteRootCLI() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
@@ -244,6 +281,7 @@ public class ITestS3Shared {
         runGorPipeCLI("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
         try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project")) {
             source.delete();
         }
@@ -260,6 +298,7 @@ public class ITestS3Shared {
         runGorPipeCLI("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
         try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project")) {
             source.delete();
         }
@@ -290,6 +329,7 @@ public class ITestS3Shared {
         runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
         try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project")) {
             source.delete();
         }
@@ -320,6 +360,7 @@ public class ITestS3Shared {
         runGorPipeServer("gorrow 1,2,3 | write s3region://shared/" + dataPath, gorRoot, securityContext);
 
         S3SharedSourceProvider provider = new S3RegionSharedSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
         try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env")) {
             source.delete();
         }
@@ -337,6 +378,7 @@ public class ITestS3Shared {
 
         // Access with shared-project
         S3ProjectSharedProjectSourceProvider providerSharedProject = new S3ProjectSharedProjectSourceProvider();
+        providerSharedProject.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
         try (DataSource source = getDataSourceFromProvider(providerSharedProject,  dataPath, Credentials.OwnerType.Project, "some_project")) {
             if (!source.exists()) {
                 Assert.fail("Source should exists and be accessible using ProjectShredSource");
@@ -345,6 +387,7 @@ public class ITestS3Shared {
 
         // Access with just shared
         S3SharedSourceProvider providerShared = new S3ProjectSharedSourceProvider();
+        providerShared.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
         try (DataSource source = getDataSourceFromProvider(providerShared, "projects/some_project/" + dataPath, Credentials.OwnerType.Project, "some_project")) {
             source.delete();
         }
@@ -395,15 +438,21 @@ public class ITestS3Shared {
         }
     }
 
-    public static void runGorPipeCLI(String query, String gorRoot, String securityContext) {
+    public static String runGorPipeCLI(String query, String gorRoot, String securityContext) {
         PipeOptions opts = new PipeOptions();
         opts.gorRoot_$eq(gorRoot);
         GorSessionFactory sessionFactory = new CLISessionFactory(opts, securityContext);
         try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(sessionFactory.create()))) {
             pipe.init(query, null);
+
+            StringBuilder result = new StringBuilder();
+            result.append(pipe.getHeader());
+            result.append("\n");
             while (pipe.hasNext()) {
-                pipe.next();
+                result.append(pipe.next());
+                result.append("\n");
             }
+            return result.toString();
         }
     }
 }

@@ -28,7 +28,7 @@ import org.gorpipe.gor.session.GorSession
 case class ChromRowHandler(session: GorSession) extends RowHandler {
   val binIDgen = RegularBinIDgen(1)
 
-  def process(r: Row, BA: BinAggregator) {
+  def process(r: Row, BA: BinAggregator): Unit = {
     val chr = r.chr
     val binID = binIDgen.ID(1)
     try {

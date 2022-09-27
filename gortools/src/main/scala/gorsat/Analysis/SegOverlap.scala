@@ -89,7 +89,7 @@ case class SegOverlap(ph: ParameterHolder, inRightSource: GenomicIterator, missi
   var gr: GroupHolder = _
   if (!useGroup) groupMap += ("#GR0#" -> singleGroupHolder)
 
-  override def process(lr: Row) {
+  override def process(lr: Row): Unit = {
     if (useGroup && lr.chr != lastLeftChr) {
       groupMap = new scala.collection.mutable.HashMap[String, GroupHolder]
     }
@@ -254,7 +254,7 @@ case class SegOverlap(ph: ParameterHolder, inRightSource: GenomicIterator, missi
     }
   }
 
-  override def finish {
+  override def finish(): Unit = {
     rightSource.close
   }
 

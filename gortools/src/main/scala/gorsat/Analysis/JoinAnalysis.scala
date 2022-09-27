@@ -137,7 +137,7 @@ object  JoinAnalysis {
       prev_row = null
     }
 
-    def output_row(lSeg: SEGinfo, rSeg: SEGinfo) {
+    def output_row(lSeg: SEGinfo, rSeg: SEGinfo): Unit = {
 
       if (!negjoin && !ic) {
         val lr = lSeg.r
@@ -158,7 +158,7 @@ object  JoinAnalysis {
       ovlaps += 1
     }
 
-    def nested_process(lr: Row, next_lr: Row) {
+    def nested_process(lr: Row, next_lr: Row): Unit = {
 
       if (segseg || segsnp) {
         try {

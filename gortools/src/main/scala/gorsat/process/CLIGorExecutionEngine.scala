@@ -39,7 +39,7 @@ import org.gorpipe.gor.RequestStats
   */
 class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String = null, securityContext:String = null) extends GorExecutionEngine {
 
-  def this(args:Array[String], whitelistedCmdFiles:String, securityContext:String) {
+  def this(args:Array[String], whitelistedCmdFiles:String, securityContext:String) = {
     this(PipeOptions.parseInputArguments(args), whitelistedCmdFiles, securityContext)
   }
 

@@ -25,15 +25,15 @@ package gorsat.Commands
 import org.gorpipe.gor.model.Row
 
 abstract class BinAnalysis(rowHandler: RowHandler, binAggregator: BinAggregator) extends Analysis {
-  override def setup {
+  override def setup(): Unit = {
     binAggregator.setNextProcessor(nextProcessor)
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     rowHandler.process(r, binAggregator)
   }
 
-  override def finish {
+  override def finish(): Unit = {
     binAggregator.finalFlush()
   }
 }

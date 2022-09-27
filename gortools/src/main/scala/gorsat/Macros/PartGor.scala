@@ -368,7 +368,7 @@ object PartGor {
   val TAG_PLACEMENT_HOLDER_SINGLE_QUOTE = "#{tags:q}"
   val TAG_PLACEMENT_HOLDER_DOUBLE_QUOTE = "#{tags:dq}"
 
-  def validateTagsInSubquery(subQuery: String) {
+  def validateTagsInSubquery(subQuery: String): Unit = {
     val subQueryUpper = subQuery.toUpperCase
 
     if (!(subQueryUpper.contains(TAG_PLACEMENT_HOLDER.toUpperCase)

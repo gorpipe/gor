@@ -50,7 +50,7 @@ case class ToList(groupCols: Int, withCount: Boolean = false) extends Analysis {
     }
   }
 
-  override def process(rComb: Row) {
+  override def process(rComb: Row): Unit = {
     val r = rComb.slicedRow(2, 2 + groupCols)
     val newKey = r.toString
     if (newKey == lastKey) {
@@ -63,7 +63,7 @@ case class ToList(groupCols: Int, withCount: Boolean = false) extends Analysis {
     }
   }
 
-  override def finish {
+  override def finish(): Unit = {
     if (lastRow != null) outputRows(lastRow, rightRows.reverse)
   }
 }

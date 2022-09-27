@@ -27,11 +27,11 @@ import org.gorpipe.gor.model.Row
 import java.io.OutputStream
 
 class NorOutStream(val header: String = null, val outputStream: OutputStream, skipHeader: Boolean = false) extends OutStream(header, outputStream) {
-  override def setup {
+  override def setup(): Unit = {
     if (header != null & !skipHeader) out.write("#" + header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     out.write(r.otherCols)
     out.write('\n')
   }

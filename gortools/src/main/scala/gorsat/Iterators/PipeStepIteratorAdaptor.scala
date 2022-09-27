@@ -35,7 +35,7 @@ class PipeStepIteratorAdaptor(var sourceIterator: GenomicIterator, val pipeStep:
   var myNext: Row = _
 
   case class BufferAdaptor() extends Analysis {
-    override def process(r: Row) {
+    override def process(r: Row): Unit = {
       if (!wantsNoMore) {
         rowQueue.add(r)
       } else {

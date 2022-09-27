@@ -53,7 +53,7 @@ object GorPipe extends GorPipeFirstOrderCommands {
   /**
     * Main definition accepts an argument string and ensures database sources are initialized.
     */
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
 
     // Display help
     if (args.length < 1 || args(0).isEmpty || args(0).toUpperCase.startsWith("HELP")) {

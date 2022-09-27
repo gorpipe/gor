@@ -87,11 +87,21 @@ public interface DataSource extends AutoCloseable {
     }
 
     /**
-     * Check for existance of source.
+     * Check for existence of source.
      * Currently, only side effect of always returning true is that
      * automatic fallback to link files wont't work with that source
      */
-    boolean exists();
+    boolean exists() throws IOException;
+
+    /**
+     * Check for existence of source, when we know the source is a file. Allows for optimization per source.
+     *
+     * If the source is a not a file the output of this function is undefined (some implementations check )
+     *
+     */
+    default boolean fileExists() throws IOException  {
+        return exists();
+    }
 
     default void delete() throws IOException {
         throw new GorResourceException("Delete is not implemented", getSourceType().getName());

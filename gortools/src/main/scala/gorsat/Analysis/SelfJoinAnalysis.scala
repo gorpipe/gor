@@ -45,7 +45,7 @@ object SelfJoinAnalysis {
     val leftType = typeHolder('L') // This object is used to denote left-row when it is received in SelfJoinState
     val rightType = typeHolder('R') // This object is used to denote right-row
 
-    def process(r: Row, BA: BinAggregator) {
+    def process(r: Row, BA: BinAggregator): Unit = {
       val chr = r.chr
       val pos = r.pos
 
@@ -82,12 +82,12 @@ object SelfJoinAnalysis {
       rRows = Nil
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       val leftOrRight = r.bH.asInstanceOf[typeHolder]
       if (leftOrRight.rowType == 'L') lRows ::= r else rRows ::= r
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       if (rRows.nonEmpty && lRows.length * rRows.length < 400) {
         for (lr <- lRows.reverse) {
           var overlaps = 0

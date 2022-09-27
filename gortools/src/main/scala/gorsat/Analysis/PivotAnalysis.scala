@@ -41,7 +41,7 @@ object PivotAnalysis {
       groupMap = Map.empty[String, Array[Array[(String, Boolean)]]]
     }
 
-    def process(r: Row) {
+    def process(r: Row): Unit = {
       val groupID = if (grColsArray.length > 0) r.selectedColumns(grColsArray) + "\t" else ""
 
       groupMap.get(groupID) match {
@@ -71,7 +71,7 @@ object PivotAnalysis {
       }
     }
 
-    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor) {
+    def sendToNextProcessor(bi: BinInfo, nextProcessor: Processor): Unit = {
       for (key <- groupMap.keys) {
         allColumns = groupMap(key)
         val theOtherCols = new StringBuilder

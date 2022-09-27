@@ -297,9 +297,18 @@ public abstract class FileReader {
         throw new GorSystemException(String.format("This file reader (%s) does not support creating data sources", this.getClass().getName()), null);
     }
 
+    /**
+     * Resolve datasource without resolving links.
+     * @param sourceReference source to resolve.
+     * @return the resolved data source.
+     */
+    public abstract DataSource resolveDataSource(SourceReference sourceReference) throws IOException ;
+
     public abstract String readLinkContent(String url);
 
     public abstract String getCommonRoot();
 
     public abstract Object[] getConstants();
+
+    public abstract SourceReference createSourceReference(String url, boolean writeable);
 }

@@ -157,7 +157,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
     (newRef, newStartPos, newAlleles)
   }
 
-  def outputModifiedRows(flushPosition: Int) {
+  def outputModifiedRows(flushPosition: Int): Unit = {
     val posRowMap = Map.empty[Int, ArrayBuffer[Row]]
     var normVarMap = Map.empty[String, (String, Int, String)]
 
@@ -222,7 +222,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
   }
 
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val aRefseq = r.colAsString(refCol)
     if (aRefseq.equals("N")) {
       super.process(r);
@@ -253,7 +253,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
     }
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     // See if we need to output existing range
     try {
       if (rangeChr != rangeChrStart) {

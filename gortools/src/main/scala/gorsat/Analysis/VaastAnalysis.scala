@@ -49,7 +49,7 @@ case class VaastAnalysis(session: GorSession, caseList : List[String], ctrlList 
                  maxIterations : Int, baleOutAfter : Int, collapsingThreshold : Int,
                  recessive : Boolean, dominant : Boolean, casepene : Int, ctrlpene : Int,
                  usePhase : Boolean, protective : Boolean, maxAf : Double,
-                 gm : GorMonitor, debug : Boolean) {
+                 gm : GorMonitor, debug : Boolean): Unit = {
       vaast.setPnLists(cases.toArray, ctrls.toArray)
       vaast.setNumRandomIterations(maxIterations, baleOutAfter)
       vaast.setModel(recessive, dominant, ctrlpene, casepene, noMaxAlleleCounts, maxAf, protective)
@@ -57,10 +57,10 @@ case class VaastAnalysis(session: GorSession, caseList : List[String], ctrlList 
       vaast.setCancelMonitor(gm)
       vaast.setDebug(debug)
     }
-    def initializeGroup() {
+    def initializeGroup(): Unit = {
       vaast.initializeGroup()
     }
-    def addVariant(variantString : String) {
+    def addVariant(variantString : String): Unit = {
       vaast.addVariant(variantString)
     }
     def calculatePvalue : String = {
@@ -95,10 +95,10 @@ case class VaastAnalysis(session: GorSession, caseList : List[String], ctrlList 
     varSelArray = if (phaseCol == -1) List(pnCol,callCopiesCol,scoreCol).toArray else List(pnCol,callCopiesCol,phaseCol,scoreCol).toArray
   }
 
-  override def setup() { vaastEngine.setModel(caseList,ctrlList,maxIterations,bailOutAfter,collapsingThreshold,
+  override def setup(): Unit = { vaastEngine.setModel(caseList,ctrlList,maxIterations,bailOutAfter,collapsingThreshold,
     recessive,dominant,casepene,ctrlpene,usePhase,protective,maxAf,session.getSystemContext.getMonitor,debug) }
 
-  override def process(r : Row) {
+  override def process(r : Row): Unit = {
     val gene = r.selectedColumns(geneSelArray)
 
     if (gene != lastGene) {
@@ -123,7 +123,7 @@ case class VaastAnalysis(session: GorSession, caseList : List[String], ctrlList 
     }
     vaastEngine.addVariant(seqVarID+"\t"+r.selectedColumns(varSelArray))
   }
-  override def finish() {
+  override def finish(): Unit = {
     if (lastGene != "") {
       val s = vaastEngine.calculatePvalue
       super.process(RowObj(lastGene+"\t"+s))

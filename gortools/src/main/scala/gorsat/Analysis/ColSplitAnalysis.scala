@@ -41,7 +41,7 @@ case class ColSplitAnalysis(col: Int, colnum: Int, sepval: String, missingVal: S
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val colSplit = r.colAsString(col).toString.split(sepval, -1)
     var columnsToAdd = ArrayBuffer[CharSequence]()
 

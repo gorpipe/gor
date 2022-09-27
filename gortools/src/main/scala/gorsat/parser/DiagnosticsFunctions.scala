@@ -166,7 +166,7 @@ object DiagnosticsFunctions {
   def maxFiles(): dFun = {
     _ => {
       osBean match {
-        case bean: UnixOperatingSystemMXBean => bean.getMaxFileDescriptorCount
+        case bean: UnixOperatingSystemMXBean => bean.getMaxFileDescriptorCount.toDouble
         case _ => throw new GorParsingException("Error in MAXFILES - this is only available on a unix platform: ")
       }
     }
@@ -175,7 +175,7 @@ object DiagnosticsFunctions {
   def openFiles(): dFun = {
     _ => {
       osBean match {
-        case bean: UnixOperatingSystemMXBean => bean.getOpenFileDescriptorCount
+        case bean: UnixOperatingSystemMXBean => bean.getOpenFileDescriptorCount.toDouble
         case _ => throw new GorParsingException("Error in OPENFILES - this is only available on a unix platform: ")
       }
     }
@@ -189,31 +189,31 @@ object DiagnosticsFunctions {
 
   def maxMem(): dFun = {
     _ => {
-      Runtime.getRuntime.maxMemory()
+      Runtime.getRuntime.maxMemory().toDouble
     }
   }
 
   def freeMem(): dFun = {
     _ => {
-      Runtime.getRuntime.freeMemory()
+      Runtime.getRuntime.freeMemory().toDouble
     }
   }
 
   def totalMem(): dFun = {
     _ => {
-      Runtime.getRuntime.totalMemory()
+      Runtime.getRuntime.totalMemory().toDouble
     }
   }
 
   def free(): dFun = {
     _ => {
-      osBean.getFreePhysicalMemorySize
+      osBean.getFreePhysicalMemorySize().toDouble
     }
   }
 
   def threadId(): dFun = {
     _ => {
-      Thread.currentThread().getId
+      Thread.currentThread().getId.toDouble
     }
   }
 

@@ -73,7 +73,7 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     inOptions
   }
 
-  override def openSource(chr: String, pos: Int, end: Int) {
+  override def openSource(chr: String, pos: Int, end: Int): Unit = {
     if (theSource == null) {
       val gorOptions = GorOptions.createGorOptions(context, StringUtil.splitReserveQuotesAndParenthesesToArray(options))
       theSource = gorOptions.getIterator(gm)

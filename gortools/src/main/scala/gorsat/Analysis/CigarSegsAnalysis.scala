@@ -49,7 +49,7 @@ case class CigarSegsAnalysis(cigarCol: Int, grCols: Array[Int]) extends Analysis
     (num, control, pos + 1)
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     var readShift = 0
     var refShift = 0
     var ci = 0

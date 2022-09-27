@@ -30,16 +30,16 @@ import java.io.OutputStream
 class OutStream(header: String = null, outputStream: OutputStream) extends Output {
   val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(outputStream), 1024 * 100)
 
-  def setup {
+  def setup(): Unit = {
     if (header != null) out.write(header + "\n")
   }
 
-  def process(r: Row) {
+  def process(r: Row): Unit = {
     out.write(r.toString)
     out.write('\n')
   }
 
-  def finish {
+  def finish(): Unit = {
     out.flush
     out.close
   }

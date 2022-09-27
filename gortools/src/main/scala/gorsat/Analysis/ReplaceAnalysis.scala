@@ -71,7 +71,7 @@ case class ReplaceAnalysis(context: GorContext, executeNor: Boolean, paramString
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val cvp = ReplaceCvp(r)
     try {
        val columnValues = columnsToReplace.indices.map(i => {

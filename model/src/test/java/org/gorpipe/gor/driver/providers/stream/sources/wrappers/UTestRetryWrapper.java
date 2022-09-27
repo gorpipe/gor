@@ -24,13 +24,13 @@ public class UTestRetryWrapper extends UTestFileSource {
 
     @Before
     public void setUp() {
-        handler = new RetryHandler(0, 6400);
+        handler = new RetryHandler(0, 6400, 2, null);
     }
 
     @Override
     protected RetryWrapper createSource(String name) {
         StreamSource toWrap = super.createSource(name);
-        return new RetryWrapper(handler, toWrap, 3, 10);
+        return new RetryWrapper(handler, toWrap, 3, 4);
     }
 
     public long[] getSeeds() {

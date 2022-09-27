@@ -25,5 +25,5 @@ package gorsat.Commands
 import org.gorpipe.gor.model.Row
 
 abstract class RowHandler {
-  def process(r: Row, BA: BinAggregator)
+  def process(r: Row, BA: BinAggregator): Unit
 }

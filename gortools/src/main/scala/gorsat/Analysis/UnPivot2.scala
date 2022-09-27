@@ -70,7 +70,7 @@ case class UnPivot2(header: String, unpivCols: List[Int], oCols: List[Int], outg
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val baseRow = r.rowWithSelectedColumns(remainingColumns)
     for (col <- namedColumns) {
       val addedColumns = Array(col.name, r.colAsString(col.index))

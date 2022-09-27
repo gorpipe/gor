@@ -389,7 +389,7 @@ object CommandParseUtilities {
         if (tmp != -1) n = tmp + offset
 
         if (n == -1 && !ignoreNonExisting) {
-          val s = columnsArray.zipWithIndex.map(x => (x._2 + 1) + ": " + x._1).mkString("\n")
+          val s = columnsArray.zipWithIndex.map(x => (x._2 + 1).toString + ": " + x._1).mkString("\n")
           throw new GorParsingException(s"Column $columnNumberOrName is not in the following header:" + columnsArray.mkString("\t") + "\n\n" + s)
         } else {
           col = n + 1

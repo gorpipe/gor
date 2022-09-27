@@ -35,5 +35,5 @@ case class RowListIterator(lineList: List[Row]) extends GenomicIteratorBase {
 
   override def seek(seekChr: String, seekPos: Int): Boolean = true
 
-  def close() {}
+  def close(): Unit = {}
 }

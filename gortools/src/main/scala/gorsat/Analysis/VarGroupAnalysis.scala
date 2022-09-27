@@ -53,7 +53,7 @@ case class VarGroupAnalysis(refCol: Int, altCol: Int, valCol: Int, grCols: List[
 
   var theColHolder: ColHolder =_
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (lastRow != null) {
       if (lastChr != r.chr || lastPos != r.pos) {
         flush()

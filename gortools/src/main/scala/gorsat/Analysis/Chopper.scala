@@ -36,7 +36,7 @@ case class Chopper(fuzzfac: Int, header: String, session: GorSession) extends An
   // the header with types along.
   override def isTypeInformationMaintained: Boolean = true
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     val stop = r.colAsInt(2)
     var newStart = r.pos - fuzzfac
     if (newStart < 0) newStart = 0

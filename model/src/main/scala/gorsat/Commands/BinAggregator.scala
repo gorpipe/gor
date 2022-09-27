@@ -37,7 +37,7 @@ case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int, useK
   private var currentKey: String = _
   private var nextProcessor: Processor = _
 
-  def setNextProcessor(p: Processor) {
+  def setNextProcessor(p: Processor): Unit = {
     nextProcessor = p
   }
 
@@ -47,7 +47,7 @@ case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int, useK
     else cand
   }
 
-  def update(r: Row, binID: Int, key: String, sta: Int, sto: Int) {
+  def update(r: Row, binID: Int, key: String, sta: Int, sto: Int): Unit = {
     val mID = mInd(binID)
     if (currentKey != key || binID - sBinID >= numBins) {
       flush(key, binID)

@@ -139,7 +139,7 @@ object DagMapAnalysis {
     var theDAG: DAG = _
 
 
-    override def setup() {
+    override def setup(): Unit = {
       if (iteratorCommand != "") theDAG = readGraph(iteratorCommand, session, iterator, caseInsensitive)
       else theDAG = readGraph(fileName, session, caseInsensitive)
       theDAG.pathSeparator = pathSeparator
@@ -147,7 +147,7 @@ object DagMapAnalysis {
       theDAG.showDAGPath = showDAGPAth
     }
 
-    override def process(r: Row) {
+    override def process(r: Row): Unit = {
       val key = if (caseInsensitive) r.colAsString(columns.head).toString.toUpperCase else r.colAsString(columns.head).toString
       theDAG.nodes.get(key) match {
         case Some(_) =>

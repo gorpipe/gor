@@ -64,7 +64,7 @@ case class WhereAnalysis(context: GorContext, executeNor: Boolean, paramString: 
     }
   }
 
-  override def process(r: Row) {
+  override def process(r: Row): Unit = {
     if (!isFilterValid || filter.evalBooleanFunction(r)) {
       // Row is passed if the filter is invalid (TRYWHERE) or if the filter evaluates to true
       statsInc("rows passed through filter")
@@ -74,7 +74,7 @@ case class WhereAnalysis(context: GorContext, executeNor: Boolean, paramString: 
     }
   }
 
-  override def finish() {
+  override def finish(): Unit = {
     filter.close()
   }
 }

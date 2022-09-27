@@ -35,7 +35,7 @@ object CountRows {
     var chrLastReported = "chr"
     var mLastReported = 0L
 
-    override def process(r: Row) {
+    override def process(r: Row): Unit = {
       if (r.chr != chrLastReported) {
         if (chrLastReported != "chr") {
           consoleLogger.info(chrLastReported + ": " + (m - mLastReported) + " rows")
@@ -47,7 +47,7 @@ object CountRows {
       super.process(r)
     }
 
-    override def finish {
+    override def finish(): Unit = {
       consoleLogger.info(chrLastReported + ": " + (m - mLastReported) + " rows")
       consoleLogger.info("Total rows: " + m + " rows")
     }

@@ -40,5 +40,5 @@ case class CountingNorRowIterator(count: Int, offset: Int = 0, step: Int = 1) ex
 
   override def seek(seekChr: String, seekPos: Int): Boolean = true
 
-  def close {}
+  def close(): Unit = {}
 }
