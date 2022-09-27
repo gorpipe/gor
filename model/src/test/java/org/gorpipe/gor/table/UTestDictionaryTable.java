@@ -24,10 +24,7 @@ package org.gorpipe.gor.table;
 
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.*;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -792,7 +789,7 @@ public class UTestDictionaryTable {
     }
 
     @SafeVarargs
-    private final String selectStringFilter(DictionaryTable table, DictionaryTable.TableFilter... filters) {
+    private final String selectStringFilter(DictionaryTable table, TableFilter<DictionaryEntry>... filters) {
         return table.selectUninon(filters).stream().map(DictionaryEntry::formatEntry).sorted().collect(Collectors.joining());
     }
 }

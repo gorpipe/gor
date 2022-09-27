@@ -23,6 +23,7 @@
 package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -30,6 +31,7 @@ import org.gorpipe.gor.util.StringUtil;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,28 +39,105 @@ import static org.gorpipe.gor.table.util.PathUtils.fixFileSchema;
 import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 /**
- * Line from gor dictionar (GORD).
+ * Line from gor dictionary (GORD).
  * <p>
  * Created by gisli on 22/08/16.
+ *
+ * TODO:  Dictinoary entry and SourceRef are almost the samething. DictionaryEntry is basically source ref stored in dict.  Can we combine.  What about SourceReference.
  */
-public class DictionaryEntry extends BucketableTableEntry {
+public class DictionaryEntry extends TableEntry {
 
     private final boolean sourceInserted;
+
+    // Use strings for performance reasons (using Path or URI takes twice as long to parse).
+    protected String bucketLogical;
+    protected Boolean isDeleted;
 
     // Copy constructor.
     public DictionaryEntry(DictionaryEntry entry) {
         super(entry);
         this.sourceInserted = entry.sourceInserted;
+        this.bucketLogical = entry.bucketLogical;
+        this.isDeleted = entry.isDeleted;
     }
 
     protected DictionaryEntry(String contentLogical, URI rootUri, String alias, String[] tags, GenomicRange range, String bucket, boolean isDeleted, boolean sourceInserted) {
-        super(contentLogical, rootUri, alias, tags, range, bucket, isDeleted);
+        super(contentLogical, rootUri, alias, tags, range);
         this.sourceInserted = sourceInserted;
+        this.bucketLogical = bucket;
+        this.isDeleted = isDeleted;
     }
-
 
     private static final Splitter tabSplitter = Splitter.on('\t');
     private static final Splitter pipeSplitter = Splitter.on('|');
+
+    /**
+     * Get unique key for the entry.
+     * NOTE: If they fields used to generate the key are changed then the entries must be deleted and reinserted.
+     */
+    @Override
+    public String getKey() {
+        if (key == null) {
+            String newKey = super.getKey();
+            // We keep deleted entries around for the the bucket (to know what to exclude).
+            // So for each deleted entry we need to add the bucket to the key.
+            if (isDeleted()) {
+                newKey += getBucket();
+            }
+            key = newKey;
+        }
+        return key;
+    }
+
+    /**
+     * Get the bucket (relative path)
+     *
+     * @return  the bucket.
+     */
+    public String getBucket() {
+        return this.bucketLogical;
+    }
+
+    /**
+     * Get the buckets real path.
+     *
+     * @return the buckets real path.
+     */
+    public String getBucketReal() {
+        return getBucket() != null ? PathUtils.resolve(getRootUri(), getBucket()).toString() : null;
+    }
+
+    /**
+     * Get bucket as path.
+     *
+     * @return bucket as path.
+     */
+    public Path getBucketPath() {
+        return getBucket() != null ? Paths.get(getBucket()) : null;
+    }
+
+    /**
+     * Set the bucket logical path.
+     *
+     * @param bucket bucket file, normalized and relative to table or absolute.
+     */
+    protected void setBucket(String bucket) {
+        this.bucketLogical = bucket;
+        this.key = null;
+    }
+
+    public boolean hasBucket() {
+        return !Strings.isNullOrEmpty(getBucket());
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.isDeleted = deleted;
+        this.key = null;
+    }
 
     /**
      * Parse entry from dict file.
@@ -158,16 +237,20 @@ public class DictionaryEntry extends BucketableTableEntry {
         if (!(o instanceof DictionaryEntry)) return false;
         if (!super.equals(o)) return false;
         DictionaryEntry that = (DictionaryEntry) o;
-        return sourceInserted == that.sourceInserted;
+        return Objects.equals(bucketLogical, that.bucketLogical) &&
+                Objects.equals(isDeleted, that.isDeleted) && Objects.equals(sourceInserted, that.sourceInserted);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), sourceInserted);
+        return Objects.hash(super.hashCode(), sourceInserted, bucketLogical, isDeleted);
     }
 
-    public static class Builder<B extends BucketableTableEntry.Builder> extends BucketableTableEntry.Builder<Builder<B>> {
-        private boolean sourceInserted;
+
+    public static class Builder<B extends TableEntry.Builder> extends TableEntry.Builder<Builder<B>> {
+        protected String bucketLogical = null;
+        protected boolean isDeleted = false;
+        private boolean sourceInserted = false;
 
         public Builder(Path contentLogical, URI rootUri) {
             this(contentLogical.toString(), rootUri);
@@ -175,6 +258,16 @@ public class DictionaryEntry extends BucketableTableEntry {
 
         public Builder(String contentLogical, URI rootUri) {
             super(contentLogical, rootUri);
+        }
+
+        public Builder<B> bucket(String bucketLogical) {
+            this.bucketLogical = bucketLogical;
+            return self();
+        }
+
+        public Builder<B> deleted() {
+            this.isDeleted = true;
+            return self();
         }
 
         public Builder<B> sourceInserted(boolean val) {
@@ -187,6 +280,5 @@ public class DictionaryEntry extends BucketableTableEntry {
             return new DictionaryEntry(!needsRelativize ? contentLogical : relativize(rootUri, contentLogical), rootUri, alias, tags != null ? tags.toArray(new String[0]) : null, range,
                     !needsRelativize ? bucketLogical : relativize(rootUri, bucketLogical), isDeleted, sourceInserted);
         }
-
     }
 }

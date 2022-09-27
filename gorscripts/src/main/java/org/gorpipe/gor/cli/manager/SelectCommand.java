@@ -25,7 +25,7 @@ package org.gorpipe.gor.cli.manager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.BucketableTableEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import picocli.CommandLine;
 
 import java.time.Duration;
@@ -51,7 +51,7 @@ public class SelectCommand extends FilterOptions implements Runnable{
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
         BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
 
-        final List<? extends BucketableTableEntry> lines = table.filter()
+        final List<? extends DictionaryEntry> lines = table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
                 .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
                 .tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)
@@ -59,7 +59,7 @@ public class SelectCommand extends FilterOptions implements Runnable{
                 .chrRange(range)
                 .includeDeleted(this.includeDeleted)
                 .get();
-        for (BucketableTableEntry line : lines) {
+        for (DictionaryEntry line : lines) {
             System.out.print(line.formatEntry());
         }
     }
