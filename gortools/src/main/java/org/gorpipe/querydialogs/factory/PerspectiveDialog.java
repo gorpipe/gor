@@ -27,7 +27,7 @@ import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.gor.model.ReportCommand;
 import org.gorpipe.querydialogs.*;
 import org.gorpipe.querydialogs.Dialog;
-import org.gorpipe.querydialogs.argument.StringArgument;
+import org.gorpipe.querydialogs.argument.FormatArgument;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -245,8 +245,8 @@ public class PerspectiveDialog extends Dialog {
             final Argument argument = argumentMap.get(argName2ContentEntry.getKey());
             if (argument != null) {
                 final ArgumentContent.Format format = argName2ContentEntry.getValue().format;
-                if (format != null && argument instanceof StringArgument) {
-                    ((StringArgument) argument).setFormat(format.valueFormat);
+                if (format != null && argument instanceof FormatArgument formatArgument) {
+                    formatArgument.setFormat(format.valueFormat);
                 }
                 argument.setValue(argName2ContentEntry.getValue().value);
             }
@@ -295,8 +295,8 @@ public class PerspectiveDialog extends Dialog {
 
     private String formatArgumentForStore(final Argument arg) {
         String argValue = arg.getValue().toString();
-        if (arg instanceof StringArgument) {
-            final String valueFormat = ((StringArgument) arg).getFormat();
+        if (arg instanceof FormatArgument formatArgument) {
+            final String valueFormat = formatArgument.getFormat();
             final ArgumentContent.Format argContentFormat = ArgumentContent.Format.getFormatByValueFormat(valueFormat);
             if (argContentFormat != null) {
                 argValue = argContentFormat.formatForStore(argValue);

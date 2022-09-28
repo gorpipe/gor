@@ -36,7 +36,7 @@ import java.util.function.Function;
  * Represents an argument that uses a gor/nor query to create the values the user can select from.
  */
 @SuppressWarnings({"serial"})
-public class QueryArgument extends Argument {
+public class QueryArgument extends FormatArgument {
     private final QueryEvaluator queryEvaluator;
     private final String query;
 

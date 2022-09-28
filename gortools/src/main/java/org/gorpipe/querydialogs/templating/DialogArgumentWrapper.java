@@ -26,7 +26,7 @@ import freemarker.template.SimpleHash;
 import freemarker.template.TemplateModel;
 import freemarker.template.TemplateModelException;
 import org.gorpipe.querydialogs.Argument;
-import org.gorpipe.querydialogs.argument.StringArgument;
+import org.gorpipe.querydialogs.argument.FormatArgument;
 
 /**
  * A wrapper for dialog arguments.
@@ -59,8 +59,8 @@ public class DialogArgumentWrapper extends DefaultObjectWrapper {
     }
 
     private String processValue(Argument a) {
-        if (a instanceof StringArgument) {
-            return ((StringArgument) a).getFormattedValue();
+        if (a instanceof FormatArgument formatArgument) {
+            return formatArgument.getFormattedValue();
         }
         return a.toString().trim();
     }
