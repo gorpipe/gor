@@ -28,6 +28,8 @@ import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.session.GorContext
 
+import java.util
+
 class BinaryWrite extends CommandInfo("BINARYWRITE",
   CommandArguments("-imp -gv", "-threshold -batch", 1),
   CommandOptions(gorCommand = true, verifyCommand = true)) {
@@ -46,7 +48,7 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
 
     val threshold = doubleValueOfOptionWithDefaultWithRangeCheck(args, thresholdOptionString, 0.9, 0, 1)
 
-    val batch = intValueOfOptionWithDefaultWithRangeCheck(args, "-batch", 0, 0)
+    val batch = stringValueOfOptionWithDefault(args, "-batch", "")
 
     if (imputed && group) throw new GorParsingException("The -imp and -gv option are currently not allowed together.")
 
@@ -84,11 +86,17 @@ class BinaryWrite extends CommandInfo("BINARYWRITE",
     if (altIdx == -1) throw new GorResourceException("There must be one column with name ALT or ALTERNATIVE", fileName)
     if (valIdx == -1) throw new GorResourceException("There must be one column with name VALUES", fileName)
 
-    val inputHeader = if (batch>0) "Chrom\tPos\tfileName" else forcedInputHeader
+    var batchIndex = -1
+    val inputHeader = if (batch.nonEmpty) {
+      val headerSplit = forcedInputHeader.toLowerCase.split("\t")
+      val batchLow = batch.toLowerCase
+      batchIndex = headerSplit.indexOf(batchLow)
+      "Chrom\tPos\tfileName"
+    } else forcedInputHeader
     if (fileEnding == "pgen") {
-      CommandParsingResult(PGenWriteAnalysis(fileName, batch, imputed, threshold.toFloat, group, refIdx, altIdx, rsIdIdx, valIdx, context.getSession.getProjectContext.getFileReader), inputHeader)
+      CommandParsingResult(PGenWriteAnalysis(fileName, batchIndex, imputed, threshold.toFloat, group, refIdx, altIdx, rsIdIdx, valIdx, context.getSession.getProjectContext.getFileReader), inputHeader)
     } else if (fileEnding == "bgen") {
-      CommandParsingResult(BGenWriteAnalysis(fileName, batch, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valIdx), inputHeader)
+      CommandParsingResult(BGenWriteAnalysis(fileName, batchIndex, group, imputed, refIdx, altIdx, rsIdIdx, varIdIdx, valIdx), inputHeader)
     } else {
       throw new GorParsingException("Unknown file ending: " + fileEnding)
     }
