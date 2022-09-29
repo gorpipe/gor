@@ -25,6 +25,7 @@ import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.querydialogs.Argument;
 import org.gorpipe.querydialogs.ArgumentDescription;
 import org.gorpipe.querydialogs.ArgumentType;
+import org.gorpipe.querydialogs.util.ValueFormatter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,20 +37,22 @@ import java.util.function.Function;
  * Represents an argument that uses a gor/nor query to create the values the user can select from.
  */
 @SuppressWarnings({"serial"})
-public class QueryArgument extends Argument {
+public class QueryArgument extends FormatArgument {
     private final QueryEvaluator queryEvaluator;
     private final String query;
 
-    public QueryArgument(ArgumentDescription argDescr, Boolean optional, Object defaultValue, String query, List<String> operators, Boolean advanced, Integer displayWidth, QueryEvaluator queryEvaluator) {
+    public QueryArgument(ArgumentDescription argDescr, boolean quoted, ValueFormatter formatter, Boolean optional, Object defaultValue, String query, List<String> operators, Boolean advanced, Integer displayWidth, QueryEvaluator queryEvaluator) {
         super(ArgumentType.QUERY, argDescr, optional, defaultValue, DEFERRED_LIST, null, operators, advanced, displayWidth);
         this.queryEvaluator = queryEvaluator;
         this.query = query;
+        setFormattingParameters(formatter, quoted, ValueFormatter.VALUES_FORMAT);
     }
 
     public QueryArgument(final QueryArgument arg) {
         super(arg);
         this.queryEvaluator = arg.queryEvaluator;
         this.query = arg.query;
+        setFormattingParameters(arg.formatter, arg.quoted, arg.format);
     }
 
     @Override

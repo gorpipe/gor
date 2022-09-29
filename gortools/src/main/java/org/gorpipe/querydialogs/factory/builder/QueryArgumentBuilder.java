@@ -26,6 +26,7 @@ import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.querydialogs.ArgumentDescription;
 import org.gorpipe.querydialogs.argument.QueryArgument;
 import org.gorpipe.querydialogs.factory.ArgumentBuilder;
+import org.gorpipe.querydialogs.util.ValueFormatter;
 
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,12 @@ public class QueryArgumentBuilder extends ArgumentBuilder {
         final Boolean advanced = (Boolean) attributes.get("advanced");
         final Integer displayWidth = getDisplayWidth(attributes);
 
-        return new QueryArgument(argDescr, optional, defaultValue, query, operators, advanced, displayWidth, queryEvaluator);
+        final boolean quoted = !attributes.containsKey("quoted") || attributes.get("quoted") == Boolean.TRUE;
+        ValueFormatter formatter = null;
+        if (attributes.containsKey("format")) {
+            formatter = new ValueFormatter((Map<Object, String>) attributes.get("format"));
+        }
+
+        return new QueryArgument(argDescr, quoted, formatter, optional, defaultValue, query, operators, advanced, displayWidth, queryEvaluator);
     }
 }
