@@ -118,14 +118,4 @@ public class StringArgument extends FormatArgument {
         return getValue() == null || getValue().toString().trim().isEmpty();
     }
 
-    private void setFormattingParameters(final ValueFormatter inpFormatter, final boolean inpQuoted, final String format) {
-        this.formatter = inpFormatter;
-        this.format = format;
-        this.quoted = inpQuoted;
-    }
-
-    public ValueFormatter getFormatter() {
-        return formatter;
-    }
-
 }

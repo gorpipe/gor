@@ -110,4 +110,14 @@ public abstract class FormatArgument extends Argument {
         }
         return sb.toString();
     }
+
+    void setFormattingParameters(final ValueFormatter inpFormatter, final boolean inpQuoted, final String format) {
+        this.formatter = inpFormatter;
+        this.format = format;
+        this.quoted = inpQuoted;
+    }
+
+    public ValueFormatter getFormatter() {
+        return formatter;
+    }
 }
