@@ -136,7 +136,7 @@ build_test:
 
 unittest:
   extends: .test
-  script: ./gradlew :model:test --tests "org.gorpipe.gor.model.UTestMergeIterator.singleFileHeaderIsValid" --debug --stacktrace
+  script: ./gradlew :model:test --tests "org.gorpipe.gor.model.UTestMergeIterator.singleFileHeaderIsValid" --info --stacktrace
 
 
 slowtest:
