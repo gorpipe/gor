@@ -136,7 +136,7 @@ build_test:
 
 unittest:
   extends: .test
-  script: ./gradlew test --info --stacktrace
+  script: ./gradlew --continue test
 
 
 slowtest:
