@@ -126,11 +126,9 @@ public class UTestGorOptions {
 
 
         // Ensure a system wide common root is used if no other is specified
-        System.setProperty("gor.common.root", "kalli");
-        checkValidResults("1.mem", false, null, filelist("kalli/1.mem"));
+        checkValidResults("1.mem", "kalli", false, null, filelist("kalli/1.mem"));
         // Ensure a system wide common root is NOT used if other is specified
-        checkValidResults("1.mem -r Palli", false, null, filelist("Palli/1.mem"));
-        System.setProperty("gor.common.root", "");
+        checkValidResults("1.mem -r Palli", null, false, null, filelist("Palli/1.mem"));
         checkValidResults("file://1.mem", false, null, filelist("1.mem"));
         checkValidResults("1.mem", false, null, filelist("1.mem"));
         checkValidResults("file://1.mem", false, null, filelist("1.mem"));
@@ -151,6 +149,18 @@ public class UTestGorOptions {
                 insertSource, sourceColName, files);
     }
 
+    private void checkValidResults(String args, String root, boolean insertSource,
+                                   String sourceColName, SourceRef... files) {
+        var fileReader = new DriverBackedFileReader("", root, new Object[0]) {
+            @Override
+            public boolean allowsAbsolutePaths() {
+                return false;
+            }
+        };
+        checkValidResults(args, fileReader,-1, 0, Integer.MAX_VALUE,
+                insertSource, sourceColName, files);
+    }
+
     private void checkValidResults(String args, int chromo, int begin, int end,
                                    boolean insertSource, String sourceColName, SourceRef... files) {
         // Check the passed in commandline
@@ -159,6 +169,17 @@ public class UTestGorOptions {
 
         // Export the command line from the earlier options and parse again into new options object for checking
         final GorOptions opt2 = GorOptions.createGorOptions(opt.toString());
+        checkValidOptionsParse(chromo, begin, end, insertSource, sourceColName, opt2, files);
+    }
+
+    private void checkValidResults(String args, FileReader fileReader, int chromo, int begin, int end,
+                                   boolean insertSource, String sourceColName, SourceRef... files) {
+        // Check the passed in commandline
+        final GorOptions opt = GorOptions.createGorOptions(args, fileReader);
+        checkValidOptionsParse(chromo, begin, end, insertSource, sourceColName, opt, files);
+
+        // Export the command line from the earlier options and parse again into new options object for checking
+        final GorOptions opt2 = GorOptions.createGorOptions(opt.toString(), fileReader);
         checkValidOptionsParse(chromo, begin, end, insertSource, sourceColName, opt2, files);
     }
 

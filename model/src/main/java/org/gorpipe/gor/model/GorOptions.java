@@ -269,10 +269,14 @@ public class GorOptions {
     }
 
     public static GorOptions createGorOptions(String query) {
+        return createGorOptions(query, org.gorpipe.gor.session.ProjectContext.DEFAULT_READER);
+    }
+
+    public static GorOptions createGorOptions(String query, org.gorpipe.gor.model.FileReader fileReader) {
         String[] arguments = CommandParseUtilities.quoteSafeSplit(query, ' ');
         GorSession session = new GorSession("-1");
         SystemContext systemContext = new SystemContext.Builder().build();
-        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(org.gorpipe.gor.session.ProjectContext.DEFAULT_READER).build();
+        org.gorpipe.gor.session.ProjectContext projectContext = new org.gorpipe.gor.session.ProjectContext.Builder().setFileReader(fileReader).build();
         GorSessionCache gorSessionCache = new GorSessionCache();
         session.init(projectContext,systemContext,gorSessionCache);
         return createGorOptions(session.getGorContext(), arguments);
@@ -358,7 +362,11 @@ public class GorOptions {
         this.monitor = monId != null ? ResourceMonitor.find(monId) : null;
 
         if (commonRootOpt == null) { // If not specified on command line, try the vm default
-            commonRootOpt = System.getProperty("gor.common.root");
+            if (session != null && session.getProjectContext() != null) {
+                commonRootOpt = session.getProjectContext().getFileReader().getCommonRoot();
+            } else {
+                commonRootOpt = System.getProperty("gor.common.root");
+            }
         }
         if (commonRootOpt != null) {
             if (commonRootOpt.trim().length() == 0) {
