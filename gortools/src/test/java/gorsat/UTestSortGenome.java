@@ -52,12 +52,17 @@ import java.util.Objects;
  */
 public class UTestSortGenome {
     private File orderGor;
+    private Path dir;
+    private GorSession session;
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
 
     @Before
     public void setUpTest() throws IOException {
+        dir = Files.createTempDirectory("sorttest");
+        GorSessionFactory factory = new GenericSessionFactory("", dir.toAbsolutePath().toString());
+        session = factory.create();
         orderGor = FileTestUtils.createTempFile(workDir.getRoot(), "order.gor",
                 "Chrom\tPos\tOrder\n" +
                         "chr1\t1\tb\n" +
@@ -117,7 +122,7 @@ public class UTestSortGenome {
     @Test
     public void testVcfGorOrder() {
         String curdir = new File(".").getAbsolutePath();
-        GenomicIterator inputSource = new FastGorSource("../tests/data/external/samtools/test.vcf", curdir, null, false, null, 0);
+        GenomicIterator inputSource = new FastGorSource("../tests/data/external/samtools/test.vcf", curdir, session.getGorContext(), false, null, 0);
         Analysis analyser = new TopN(10);
         PipeStepIteratorAdaptor pit = new PipeStepIteratorAdaptor(inputSource, analyser, null);
 
@@ -137,11 +142,8 @@ public class UTestSortGenome {
     @Test
     public void testGorOrder() throws IOException {
         String curdir = new File(".").getAbsolutePath();
-        GenomicIterator inputSource = new FastGorSource(orderGor.getCanonicalPath(), curdir, null, false, null, 0);
+        GenomicIterator inputSource = new FastGorSource(orderGor.getCanonicalPath(), curdir, session.getGorContext(), false, null, 0);
         String header = inputSource.getHeader();
-        Path dir = Files.createTempDirectory("sorttest");
-        GorSessionFactory factory = new GenericSessionFactory("", dir.toAbsolutePath().toString());
-        GorSession session = factory.create();
         Analysis analyser = new SortAnalysis(header, session, 500000000, null);
         PipeStepIteratorAdaptor pit = new PipeStepIteratorAdaptor(inputSource, analyser, header);
 
