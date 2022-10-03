@@ -50,7 +50,7 @@ case class BGenWriteAnalysis(fileName: String, batch: Int, group: Boolean, imput
   }
 
   override def finish(): Unit = {
-    output.close()
+    if (output !=null) output.close()
     if (currentBatch.nonEmpty) {
       super.process(RowObj("chrN",0,currentBatch))
     }

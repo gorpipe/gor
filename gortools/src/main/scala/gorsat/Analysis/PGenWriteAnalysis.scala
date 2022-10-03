@@ -49,7 +49,7 @@ case class PGenWriteAnalysis(fileName: String, batch: Int, imputed: Boolean, thr
   }
 
   override def finish(): Unit = {
-    output.close()
+    if (output != null) output.close()
     if (currentBatch.nonEmpty) super.process(RowObj("chrN",0,currentBatch))
     super.finish()
   }
