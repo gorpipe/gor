@@ -39,7 +39,7 @@ plugins {
 
 ext {
     gorArtifactGroupId = 'com.wuxinextcode.gor'
-    scalaVersion = 2.12
+    scalaVersion = 2.13
 }
 
 // -----------------------------------------------------
