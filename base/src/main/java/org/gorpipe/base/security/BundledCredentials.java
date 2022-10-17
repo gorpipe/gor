@@ -284,7 +284,9 @@ public class BundledCredentials implements CredentialsProvider {
         public Builder addCredentials(Credentials... creds) {
             for (Credentials cred : creds) {
                 Map<String, Credentials> m = getServiceMap(cred.getService());
-                m.put(cred.getLookupKey(), cred);
+                if (cred.getLookupKey() != null) {
+                    m.put(cred.getLookupKey(), cred);
+                }
                 if (cred.isUserDefault()) {
                     addDefaultCredentials(cred);
                 }

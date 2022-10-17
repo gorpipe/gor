@@ -24,6 +24,7 @@ package org.gorpipe.gor.table.lock;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.Table;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public class ExclusiveFileTableLock extends TableLock {
      */
     public ExclusiveFileTableLock(Table table, String name) {
         super(table, name);
-        this.lockPath = table.getFolderPath().resolve(String.format("%s.%s.excl.lock", table.getName(), name));
+        this.lockPath = PathUtils.resolve(Path.of(table.getFolderPath()), String.format("%s.%s.excl.lock", table.getName(), name));
     }
 
     @Override

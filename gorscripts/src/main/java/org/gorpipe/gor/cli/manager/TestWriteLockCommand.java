@@ -51,7 +51,7 @@ public class TestWriteLockCommand extends ManagerOptions implements Runnable{
     public void run() {
         Duration lockTimeoutDuration = Duration.ofSeconds(lockTimeout);
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(lockTimeoutDuration).build();
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableLock lock = TableLock.acquireWrite(tm.getLockType(), table, lockName, lockTimeoutDuration)) {
             Thread.sleep(period);

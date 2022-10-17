@@ -224,7 +224,7 @@ public class PathUtils {
 
     public static String getParent(String path) {
         var idx = path.lastIndexOf("/");
-        return path.substring(0,idx);
+        return idx >= 0 ? path.substring(0,idx) : "";
     }
 
     public static String getFileName(String path) {
@@ -232,15 +232,7 @@ public class PathUtils {
         return path.substring(idx+1);
     }
 
-    public static String parent(String path) {
-        return parent(Path.of(path)).toString();
-    }
-
-    public static Path parent(Path path) {
-        return path.getParent() != null ? path.getParent() : path.toAbsolutePath().getParent();
-    }
-
-    public static URI parent(URI uri) {
+    public static URI getParent(URI uri) {
         return uri.getPath().endsWith("/") ? uri.resolve("..") : uri.resolve(".");
     }
 
@@ -301,6 +293,10 @@ public class PathUtils {
                     new GorSystemException("Stacktrace", null));
             return System.currentTimeMillis();
         }
+    }
+
+    public static String getCurrentAbsolutePath() {
+        return Path.of("").toAbsolutePath().toString();
     }
 
 }

@@ -63,20 +63,20 @@ public class UTestGenomicRange {
         Assert.assertEquals("Full range, different chromosomes", "chrM:0-chrY:1000000", range.toString());
 
         range = new GenomicRange("chrM",0,"",-1);
-        Assert.assertEquals("From location: from very beginning", "chrM:0", range.toString());
+        Assert.assertEquals("From location: from very beginning", "chrM", range.toString());
 
         range = new GenomicRange("chrY",1000000,null,-1);
         Assert.assertEquals("From location: from the very end", "chrY:1000000", range.toString());
 
         // test out of bounds, I assume that gor handles these as invalid chromosones
         range = new GenomicRange(null,0,"",-1);
-        Assert.assertEquals("Invalid start range no end defined", ":0", range.toString());
+        Assert.assertEquals("Invalid start range no end defined", "", range.toString());
 
         range = new GenomicRange(null,-1,"",100000);
-        Assert.assertEquals("Invalid end range no beginning specified", ":-100000", range.toString());
+        Assert.assertEquals("Invalid end range no beginning specified", "-100000", range.toString());
 
         range = new GenomicRange("",0,"",100000);
-        Assert.assertEquals("Invalid start and end range", ":0-100000", range.toString());
+        Assert.assertEquals("Invalid start and end range", "-100000", range.toString());
 
 
         // Test format
@@ -111,13 +111,13 @@ public class UTestGenomicRange {
 
         // out of bounds
         range = new GenomicRange("",0,"",-1);
-        Assert.assertEquals("Format: Invalid beginning no end specified", "\t0\t\t", range.formatAsTabDelimited());
+        Assert.assertEquals("Format: Invalid beginning no end specified", "\t\t\t", range.formatAsTabDelimited());
 
         range = new GenomicRange("",-1,"",100000000);
         Assert.assertEquals("Format: Skipping to chr", "\t\t\t100000000", range.formatAsTabDelimited());
 
         range = new GenomicRange("",0,"",10000000);
-        Assert.assertEquals("Format: Skipping to chr", "\t0\t\t10000000", range.formatAsTabDelimited());
+        Assert.assertEquals("Format: Skipping to chr", "\t\t\t10000000", range.formatAsTabDelimited());
     }
 
     @Test

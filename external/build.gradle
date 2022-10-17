@@ -26,7 +26,5 @@ plugins {
 project(':external') {
     dependencies {
         implementation project(':base')
-
-        implementation "org.slf4j:slf4j-api:_"
     }
 }

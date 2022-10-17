@@ -24,21 +24,17 @@ package org.gorpipe.gor.table.dictionary;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.gorpipe.gor.table.util.PathUtils.isLocal;
 import static org.gorpipe.gor.table.util.PathUtils.resolve;
 
 /**
@@ -56,23 +52,17 @@ public abstract class TableEntry {
     private final String contentRelative;              // Normalized URI as specified in the table (normalized and absolute or relative to the table).
     private final String alias;
     private final String[] tags;                       // For performance use string array.
-    private String[] filterTags;                       // Caching this.
     private final GenomicRange range;
 
-    private final URI rootUri;                // Root for relative paths (parent folder of the table).  Absolute path.
     protected String key;                     // Unique key for the entry.
-    private int indexOrderKey;                // Use to get correct order when getting values from hash maps.
 
     // Copy constructor.
     TableEntry(TableEntry entry) {
-        this.rootUri = entry.getRootUri();
         this.contentRelative = entry.contentRelative;
         this.alias = entry.alias;
         this.tags = entry.getTags();
-        this.filterTags = entry.getFilterTags();
         this.range = entry.getRange();
         this.key = entry.getKey();
-        this.indexOrderKey = entry.indexOrderKey;
     }
 
     /**
@@ -88,7 +78,6 @@ public abstract class TableEntry {
      TableEntry(String contentLogical, URI rootUri, String alias, String[] tags, GenomicRange range) {
         assert rootUri != null;
 
-        this.rootUri = rootUri;
         this.contentRelative = contentLogical;
         this.alias = alias;
         this.tags = tags != null ? tags : EMPTY_TAGS_LIST;
@@ -128,16 +117,12 @@ public abstract class TableEntry {
     
     public abstract String formatEntryNoNewLine();
 
-    public URI getRootUri() {
-        return rootUri;
-    }
-
     public String getContentRelative() {
         return contentRelative;
     }
 
-    public String getContentReal() {
-        return resolve(getRootUri(), getContentRelative()).toString();
+    public String getContentReal(URI rootUri) {
+        return resolve(rootUri, getContentRelative()).toString();
     }
 
     public String getContent() {
@@ -160,79 +145,15 @@ public abstract class TableEntry {
      * Correctly combine tags and the alias for filtering (in most cases should be used rather than getTags or getAlias)
      */
     public String[] getFilterTags() {
-        if (filterTags == null) {
-            if (tags != null && tags.length > 0) {
-                filterTags = tags;
-            } else if (alias != null) {
-                filterTags = new String[]{alias};
-            } else {
-                filterTags = EMPTY_TAGS_LIST;
-            }
-        }
-        return filterTags;
-    }
-
-    // For backward compatibility.
-
-    /**
-     * Get content/file logical path.
-     *
-     * @param commonRoot the common root
-     * @return logcial path relative to commonRoot or absolute if path is not part of the common root.
-     */
-    public String getLogical(String commonRoot) {
-        return PathUtils.formatUri(commonRoot != null ? getCommonRootRelative(getContentReal(), commonRoot) : getContentReal());
-    }
-
-    // For backward compatibility.
-
-    /**
-     * Get content/file pysycial path.
-     * Pysical path is the real path of the content/file.
-     *
-     * @param commonRoot the common root
-     * @return physical path relative to commonRoot or absolute (real path) if path is not part of the common root.
-     */
-    public String getPhysical(String commonRoot) {
-        URI commonRelativePath = URI.create(commonRoot != null ? getCommonRootRelative(getContentReal(), commonRoot) : getContentReal());
-        return PathUtils.formatUri(PathUtils.toRealPath(commonRelativePath));
-    }
-
-    /**
-     * Find relative path to common root (or absolute if it does not start with common root).
-     *
-     * @param resolvedPath resolvedPath (absolute)
-     * @param commonRoot   commmon root (not null).
-     * @return path to common root (or absolute if it does not start with common root)
-     */
-    private String getCommonRootRelative(String resolvedPath, String commonRoot) {
-        if (resolvedPath == null || !isLocal(resolvedPath)) {
-            return resolvedPath;
-        }
-
-        URI commonRootReal = resolve(getRootUri(), commonRoot);
-
-        if (resolvedPath.startsWith(commonRootReal.toString())) {
-            return commonRootReal.relativize(URI.create(resolvedPath)).toString();
+        if (tags != null && tags.length > 0) {
+            return tags;
+        } else if (alias != null) {
+            return new String[]{alias};
         } else {
-            return resolvedPath;
+            return EMPTY_TAGS_LIST;
         }
     }
 
-    // For backward compatibility.
-    public boolean isAcceptedAbsoluteRef() {
-        // TODO:  We are only handling top level links here, old impl handles lower level links.
-        String contentReal = getContentReal();
-        return !isLocal(contentReal) || Files.isSymbolicLink(Paths.get(contentReal));
-    }
-
-    public int getIndexOrderKey() {
-        return indexOrderKey;
-    }
-
-    public void setIndexOrderKey(int l) {
-        this.indexOrderKey = l;
-    }
 
     public static TableEntry copy(TableEntry template) {
         try {

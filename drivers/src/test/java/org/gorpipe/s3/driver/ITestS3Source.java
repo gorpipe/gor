@@ -87,7 +87,7 @@ public class ITestS3Source extends CommonStreamTests {
         Path p = Paths.get("genes.gord");
         try {
             Files.write(p, (getDataName("dummy.gor")+"\tstuff").getBytes());
-            String securityContext = ITestBvlMinOnS3.awsSecurityContext(S3_KEY, S3_SECRET);
+            String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
             String res = TestUtils.runGorPipe("create xxx = gor -f 'stuff' genes.gord | top 10; gor [xxx]", true, securityContext);
             Assert.assertEquals("Wrong result from s3 dictionary", "chrom\tpos\ta\tSource\n" +
                     "chr1\t0\tb\tstuff\n", res);
@@ -103,7 +103,7 @@ public class ITestS3Source extends CommonStreamTests {
     }
     @Override
     protected SourceReference mkSourceReference(String name) throws IOException {
-        return new SourceReferenceBuilder(name).securityContext(ITestBvlMinOnS3.awsSecurityContext(S3_KEY, S3_SECRET)).build();
+        return new SourceReferenceBuilder(name).securityContext(DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET)).build();
     }
 
     @Override

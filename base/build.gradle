@@ -29,12 +29,10 @@ project(':base') {
         implementation "org.aeonbits.owner:owner:_"
         implementation "commons-io:commons-io:_"
         implementation "org.apache.commons:commons-lang3:_"
-        implementation "org.slf4j:slf4j-api:_"
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "ch.qos.logback:logback-classic:_"
         implementation('net.logstash.logback:logstash-logback-encoder:_')
         implementation 'org.fusesource.jansi:jansi:_' // Needs to be included for Windows
-        implementation "org.slf4j:jcl-over-slf4j:_"
 
         testImplementation project(':test')
     }

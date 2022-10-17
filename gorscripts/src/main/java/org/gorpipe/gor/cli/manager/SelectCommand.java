@@ -49,7 +49,7 @@ public class SelectCommand extends FilterOptions implements Runnable{
     public void run() {
         String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         final List<? extends DictionaryEntry> lines = table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)

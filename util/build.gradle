@@ -37,7 +37,5 @@ project(':util') {
         implementation "com.zaxxer:HikariCP:_"
 
         testImplementation project(':test')
-
-        testImplementation "org.slf4j:slf4j-api:_"
     }
 }

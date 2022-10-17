@@ -22,6 +22,7 @@
 
 plugins {
     id 'gor.java-library'
+    id "java-test-fixtures"
 }
 
 project(':drivers') {
@@ -39,6 +40,12 @@ project(':drivers') {
         implementation "com.amazonaws:aws-java-sdk-s3:_"
         implementation "com.microsoft.azure:azure-storage:_"
         implementation 'io.nextflow:nxf-s3fs:_' // Add com.upplication.s3fs
+
+        testFixturesImplementation project(':base')
+        testFixturesImplementation project(':model')
+        testFixturesImplementation "org.slf4j:slf4j-api:_"
+
+        testImplementation(testFixtures(project(":drivers")))
 
         testImplementation project(':test')
         testImplementation project(':util')

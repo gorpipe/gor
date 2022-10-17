@@ -159,8 +159,8 @@ public class UTestTableManagerCLI {
         Assert.assertEquals("Insert failed", testFiles[2] + "\tC\n" + testFiles[3] + "\tD\n", result);
         Assert.assertEquals("Insert failed", 2, table.selectAll().size());
 
-        Files.createDirectories(table.getRootPath().resolve("X"));
-        Files.createDirectories(table.getRootPath().resolve("Y"));
+        Files.createDirectories(Path.of(table.getRootPath()).resolve("X"));
+        Files.createDirectories(Path.of(table.getRootPath()).resolve("Y"));
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--min_bucket_size", "1", "--bucket_dirs", "X,Y"}, ".", true);
         table.reload();
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
@@ -215,9 +215,9 @@ public class UTestTableManagerCLI {
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Incorrect multiinsert",
-                testFiles[0] + "\t\tchr1\t-1\tchr1\t-1\tA\n" +
+                testFiles[0] + "\t\tchr1\t0\tchr1\t\tA\n" +
                         testFiles[1] + "\t2\t\t\t\t\tB\n" +
-                        testFiles[2] + "\t3\tchr3\t-1\tchr3\t-1\tC\n", result);
+                        testFiles[2] + "\t3\tchr3\t0\tchr3\t\tC\n", result);
 
         // Multi file insert with incorrect number of files.
         table.delete(table.selectAll());

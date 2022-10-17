@@ -81,7 +81,7 @@ public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCr
         }
 
         // Must add no-op gor command as the create commands can not be run on their own.
-        sb.append("gor 1.mem| top 1\n");
+        sb.append("gorrow 1,2 | top 0\n");
         return sb.toString();
     }
 }

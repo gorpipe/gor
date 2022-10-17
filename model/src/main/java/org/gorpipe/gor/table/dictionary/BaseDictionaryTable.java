@@ -42,6 +42,8 @@ import static org.gorpipe.gor.table.util.PathUtils.*;
 
 /**
  * Base class for tables and dictionaries.
+ *
+ * For now keep as separate file from DictionaryTable as abstract class allows us to use T.  Still needs refactoring.
  * <p>
  * Created by gisli on 25/07/16.
  *
@@ -141,6 +143,10 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
         this.hasUniqueTags = hasUniqueTags;
     }
 
+    public String getContentReal(T entry) {
+        return resolve(getRootUri(), entry.getContentRelative()).toString();
+    }
+
     /**
      * Select the union of the rows defined by the given filters.
      *
@@ -174,12 +180,13 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
     /**
      * Get optimized lines.
      *
-     * @param columnTags         map of column nr to a list of tags to filter the column on.
-     *                           Seems to only set for -f -ff options ( and then uses col 3)
+     * @param tags               a list of tags to filter the column on.
+     *                           Seems to only set for -f -ff options
      * @param allowBucketAccess  can the optimizer use buckets.
+     * @param isSilentTagFilter
      * @return                   optimzed list of files to data for the given tags.
      */
-    protected abstract List<? extends T> getOptimizedLines(Map<Integer, Set<String>> columnTags, boolean allowBucketAccess);
+    protected abstract List<? extends T> getOptimizedLines(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter);
 
     public List<T> getEntries() {
         return tableEntries.getEntries();
@@ -198,6 +205,10 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
         return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(DictionaryEntry::getBucket).distinct().collect(Collectors.toList());
     }
 
+    public boolean hasBuckets() {
+        return isBucketize();
+    }
+
     @Override
     public Stream<String> getLines() {
         return getEntries().stream().map(l -> l.formatEntryNoNewLine());
@@ -213,7 +224,7 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
             }
             // Validate the new file.
             if (isValidateFiles()) {
-                validateFile(line.getContentReal());
+                validateFile(getContentReal(line));
             }
 
             this.tableEntries.insert(line, isHasUniqueTags());
@@ -324,9 +335,9 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
             List<T> matchingLines = filter().tags(tags).get();
             fingerPrintString = new ByteTextBuilder(matchingLines.size() * 300);
             for (T line : matchingLines) {
-                fingerPrintString.append(line.getContentReal());
+                fingerPrintString.append(getContentReal(line));
                 fingerPrintString.append((byte) '&');
-                fingerPrintString.append(getLastModifiedTime(line.getContentReal(), getSecurityContext(), commonRoot));
+                fingerPrintString.append(getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot));
             }
         } else {
             fingerPrintString = new ByteTextBuilder(300);
@@ -359,7 +370,7 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
             // Empty tags here means no tags so replace with null.
             List<T> matchingLines = filter().tags(tags).get();
             for (T line : matchingLines) {
-                lastModified = Math.max(lastModified, getLastModifiedTime(line.getContentReal(), getSecurityContext(), commonRoot));
+                lastModified = Math.max(lastModified, getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot));
             }
         } else {
             lastModified = Math.max(lastModified, getLastModifiedTime(getPath().toString(), getSecurityContext(), commonRoot));
@@ -490,7 +501,7 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
     public String getFileEndingFromContent() {
         List<T> entries = getEntries();
         if (!entries.isEmpty()) {
-            return getFileEndingFromContentFile(entries.get(0).getContentReal());
+            return getFileEndingFromContentFile(getContentReal(entries.get(0)));
         }
         return null;
     }

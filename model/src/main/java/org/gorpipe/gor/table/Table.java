@@ -4,7 +4,6 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Stream;
@@ -30,13 +29,13 @@ public interface Table<T> {
      *
      * @return absolute path to this table.
      */
-    Path getPath();
+    String getPath();
 
     /**
      * Get the path to the table folder (used for additional table data)
      * @return  the table folder path.
      */
-    Path getFolderPath();
+    String getFolderPath();
 
     String[] getColumns();
 
@@ -163,7 +162,7 @@ public interface Table<T> {
 
     void initialize();
 
-    Path getRootPath();
+    String getRootPath();
 
     String getSecurityContext();
 

@@ -35,6 +35,7 @@ import org.gorpipe.gor.table.lock.TableTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
@@ -148,13 +149,17 @@ public class TableManager {
      * @param path path to the table.
      * @return the table given by {@code path}.
      */
-    public BaseDictionaryTable initTable(Path path) {
-        if (path.toString().toLowerCase().endsWith(".gord")) {
-            return new DictionaryTable.Builder<>(path.toUri()).useHistory(this.useHistory)
+    public BaseDictionaryTable initTable(String path) {
+        if (path.toLowerCase().endsWith(".gord")) {
+            return new DictionaryTable.Builder<>(URI.create(path)).useHistory(this.useHistory)
                     .fileReader(fileReader).validateFiles(this.validateFiles).build();
         } else {
             throw new RuntimeException("BaseTable of type " + path.toString() + " are not supported!");
         }
+    }
+
+    public BaseDictionaryTable initTable(Path path) {
+        return initTable(path.toString());
     }
 
     /**
@@ -165,7 +170,7 @@ public class TableManager {
      * @param workers   number of workers to use for bucketization (if needed).
      * @param entries   Files/lines to insert.
      */
-    public void insert(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
+    public void insert(String tableFile, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
         BaseDictionaryTable table = initTable(tableFile);
         insert(table, packLevel, workers, entries);
     }
@@ -204,7 +209,7 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @param entries   the entries to delete.
      */
-    public void delete(Path tableFile, DictionaryEntry... entries) {
+    public void delete(String tableFile, DictionaryEntry... entries) {
         System.err.println("Deleteing entries: " + entries.length);
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
@@ -219,7 +224,7 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @param entries   the entries to delete.
      */
-    public void delete(Path tableFile, TableFilter entries) {
+    public void delete(String tableFile, TableFilter entries) {
         System.err.println("Deleteing entries2: " + entries);
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
@@ -243,7 +248,7 @@ public class TableManager {
      * @param includedDeleted Should deleted files be included in the result.
      * @return entries from the table, matching the given criteria.
      */
-    public List<? extends DictionaryEntry> select(Path tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
+    public List<? extends DictionaryEntry> select(String tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
         BaseDictionaryTable table = initTable(tableFile);
         return table.filter()
                 .files(files)
@@ -262,7 +267,7 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @return all entries from table as a collection.
      */
-    public Collection<? extends DictionaryEntry> selectAll(Path tableFile) {
+    public Collection<? extends DictionaryEntry> selectAll(String tableFile) {
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             return table.selectAll();
@@ -287,7 +292,7 @@ public class TableManager {
      * @param maxBucketCount Maximum number of buckets to generate on this call.
      * @param bucketDirs     array of directories to bucketize to, ignored if null.  The dirs are absolute or relative to the table dir.
      */
-    public void bucketize(Path tableFile, BucketManager.BucketPackLevel packLevel, int workers, int maxBucketCount, List<String> bucketDirs) {
+    public void bucketize(String tableFile, BucketManager.BucketPackLevel packLevel, int workers, int maxBucketCount, List<String> bucketDirs) {
         BaseDictionaryTable table = initTable(tableFile);
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
@@ -322,7 +327,7 @@ public class TableManager {
      * @param tableFile the path to the table file.
      * @param buckets   list of buckets to be deleted.
      */
-    public void deleteBuckets(Path tableFile, String... buckets) {
+    public void deleteBuckets(String tableFile, String... buckets) {
         BaseDictionaryTable table = initTable(tableFile);
         deleteBuckets(table, false, buckets);
     }

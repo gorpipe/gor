@@ -67,12 +67,12 @@ public class DictionaryLinkTable implements Table {
     }
 
     @Override
-    public Path getPath() {
+    public String getPath() {
         return linkedTable.getPath();
     }
 
     @Override
-    public Path getFolderPath() {
+    public String getFolderPath() {
         return linkedTable.getFolderPath();
     }
 
@@ -191,7 +191,7 @@ public class DictionaryLinkTable implements Table {
     }
 
     @Override
-    public Path getRootPath() {
+    public String getRootPath() {
         return linkedTable.getRootPath();
     }
 

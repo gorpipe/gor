@@ -82,8 +82,8 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-        Path dictionaryPath = table.getPath();
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
         String query = "partgor -dict " + dictionaryPath.toAbsolutePath().toString() + " -f " + String.join(",", sources) +
@@ -147,8 +147,8 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-        Path dictionaryPath = table.getPath();
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
         String query = "create pns = norrows 100 -offset 1 | calc Source 'PN'+str(#1) | select #2 | signature -timeres 1; partgor -dict " + dictionaryPath.toAbsolutePath().toString() + " -ff <(nor [pns]) " +
@@ -176,8 +176,8 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-        Path dictionaryPath = table.getPath();
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
         String query = "create pns = norrows 500 -offset 1 | calc Source 'PN'+str(#1) | select #2 | signature -timeres 1; partgor -dict " + dictionaryPath.toAbsolutePath().toString() + " -ff <(nor [pns]) " +
@@ -205,8 +205,8 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-        Path dictionaryPath = table.getPath();
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
         String query = "create pns = norrows 2000 -offset 4000 | calc Source 'PN'+str(#1) | select #2 | signature -timeres 1; partgor -dict " + dictionaryPath.toAbsolutePath().toString() + " -ff [pns] " +
@@ -234,14 +234,15 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-        Path dictionaryPath = table.getPath();
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        String dictionaryPath = table.getPath();
 
         man.bucketize(dictionaryPath, BucketManager.BucketPackLevel.NO_PACKING, 8, 10000, null);
 
         // Create the partgor
-        String query = "create pns = norrows 1000 -offset 1000 | calc Source 'PN'+str(#1) | select #2 | signature -timeres 1; partgor -dict " + dictionaryPath.toAbsolutePath().toString() + " -ff [pns] " +
-                " <(gor " + dictionaryPath.toAbsolutePath().toString() + " -f #{tags})";
+        String query = "create pns = norrows 1000 -offset 1000 | calc Source 'PN'+str(#1) | select #2 | signature -timeres 1; partgor -dict "
+                + Path.of(dictionaryPath).toAbsolutePath().toString() + " -ff [pns] "
+                + " <(gor " + Path.of(dictionaryPath).toAbsolutePath().toString() + " -f #{tags})";
 
         String[] lines = TestUtils.runGorPipeLinesNoHeader(query);
         Assert.assertEquals(10000, lines.length);

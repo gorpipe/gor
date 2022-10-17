@@ -91,15 +91,15 @@ public interface StreamSource extends DataSource {
     /**
      * Copy between two stream sources.
      */
-    default String copy(StreamSource dest) throws IOException {
-        if (getSourceType() != dest.getSourceType()) {
-            throw new GorResourceException(String.format("Can not copy between different source types (%s to %s)",
+    default String copy(DataSource dest) throws IOException {
+        if (!(dest instanceof StreamSource)) {
+            throw new GorResourceException(String.format("Can only copy between stream sources, but between (%s to %s)",
                     getFullPath(), dest.getFullPath()), null);
         }
         String sourcePath = getFullPath();
         if (!sourcePath.equals(dest)) {
             try (InputStream inputStream = open();
-                 OutputStream outputStream = dest.getOutputStream()) {
+                 OutputStream outputStream = ((StreamSource)dest).getOutputStream()) {
                 inputStream.transferTo(outputStream);
             }
         }

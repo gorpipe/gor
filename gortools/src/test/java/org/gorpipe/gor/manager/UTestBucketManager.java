@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.manager;
 
+import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
@@ -40,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -144,7 +144,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
@@ -299,7 +299,7 @@ public class UTestBucketManager {
             Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                     name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-            DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+            DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
             BucketManager buc = new BucketManager(table);
             buc.setMinBucketSize(20);
             buc.setBucketSize(100);
@@ -307,7 +307,7 @@ public class UTestBucketManager {
             String bucketDir = resolve(table.getRootUri(), buc.pickBucketDir()).toString();
 
             Path dictPath = Paths.get(workDir.getRoot().toString(), name + ".gord");
-            Assert.assertEquals("Dictionary file not created", dictPath, table.getPath());
+            Assert.assertEquals("Dictionary file not created", dictPath.toString(), table.getPath());
             Assert.assertTrue("Dictionary file not created", Files.exists(dictPath));
 
             String dictContent = FileUtils.readFileToString(dictPath.toFile(), Charset.defaultCharset());
@@ -362,14 +362,14 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
         buc.setBucketSize(10);
 
         // Create artificial temp file
         Path tempFilePath = workDirPath.resolve(buc.getTempTablePrefix() + "111.gord");
-        Files.copy(table.getPath(), tempFilePath);
+        Files.copy(Path.of(table.getPath()), tempFilePath);
         Assert.assertTrue(Files.exists(tempFilePath));
 
         // Bucketize
@@ -393,7 +393,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
         buc.setBucketSize(10);
@@ -405,24 +405,24 @@ public class UTestBucketManager {
 
         // Delete one bucket, normal grace (use TableManager).
         buc.deleteBuckets(buckets[0]);
-        Assert.assertTrue("Bucket file should not be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[0])));
+        Assert.assertTrue("Bucket file should not be deleted", Files.exists(Path.of(table.getRootPath()).resolve(buckets[0])));
         TableLock lock = new NoTableLock(table, table.getName());
         lock.lock(false, Duration.ofMillis(10000));
         buc.cleanOldBucketFiles(lock, true);
-        Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[0])));
+        Assert.assertFalse("Bucket file should be deleted", Files.exists(Path.of(table.getRootPath()).resolve(buckets[0])));
 
         // Delete one bucket, no grace period (use BucketManager).
         buc.gracePeriodForDeletingBuckets = Duration.ofMillis(0);
         buc.deleteBuckets(buckets[1]);
-        Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[1])));
+        Assert.assertFalse("Bucket file should be deleted", Files.exists(Path.of(table.getRootPath()).resolve(buckets[1])));
 
         // Delete one bucket, short grace period (lastAccessTime is measured in secs, we must use quite large delays)
         buc.gracePeriodForDeletingBuckets = Duration.ofMillis(2000);
         buc.deleteBuckets(buckets[2]);
-        Assert.assertTrue("Bucket file should not be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[2])));
+        Assert.assertTrue("Bucket file should not be deleted", Files.exists(Path.of(table.getRootPath()).resolve(buckets[2])));
         Thread.sleep(5000);
         buc.cleanOldBucketFiles(lock, false);
-        Assert.assertFalse("Bucket file should be deleted", Files.exists(PathUtils.resolve(table.getRootPath(), buckets[2])));
+        Assert.assertFalse("Bucket file should be deleted", Files.exists(Path.of(table.getRootPath()).resolve(buckets[2])));
     }
 
     @Test
@@ -433,7 +433,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
         buc.setBucketSize(10);  // Keep the bucketsize small as we use random (makes very unlikely that we get all the buckets in the same folder)
@@ -453,11 +453,11 @@ public class UTestBucketManager {
             Assert.assertEquals("Wrong number of buckets", fileCount / buc.getBucketSize(), bucketsCreated);
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
             buckets = table.filter().get().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
-            List<String> bucketFolders = buckets.stream().map(l -> PathUtils.parent(l)).distinct().collect(Collectors.toList());
+            List<String> bucketFolders = buckets.stream().map(l -> PathUtils.getParent(l)).distinct().collect(Collectors.toList());
             Assert.assertEquals("Incorrect number of bucket folders", 1, bucketFolders.size());
             Assert.assertEquals("Incorrect bucket folder(s)", buc.pickBucketDir(), bucketFolders.get(0));
             for (String bucket : buckets) {
-                Assert.assertTrue("Bucket does not exists", Files.exists(table.getRootPath().resolve(bucket)));
+                Assert.assertTrue("Bucket does not exists", Files.exists(Path.of(PathUtils.resolve(table.getRootPath(), bucket))));
             }
 
             List<String> bucketDirs = new ArrayList();
@@ -511,8 +511,8 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFilesB = GorDictionarySetup.createDataFilesMap(
                 name + 'B', workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sourcesB);
 
-        DictionaryTable tableA = DictionaryTable.createDictionaryWithData(name + 'A', workDirPath, dataFilesA);
-        DictionaryTable tableB = DictionaryTable.createDictionaryWithData(name + 'B', workDirPath, dataFilesB);
+        DictionaryTable tableA = TestUtils.createDictionaryWithData(name + 'A', workDirPath, dataFilesA);
+        DictionaryTable tableB = TestUtils.createDictionaryWithData(name + 'B', workDirPath, dataFilesB);
 
         List<String> bucketDirs = new ArrayList();
         bucketDirs.add("someCustomDir");
@@ -554,7 +554,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         table.setBucketize(false);
 
         BucketManager buc = new BucketManager(table);
@@ -576,7 +576,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
@@ -603,7 +603,7 @@ public class UTestBucketManager {
     private void testBucketDirsHelper(BucketManager buc, BaseDictionaryTable<DictionaryEntry> table, List<String> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (String bucketDir : bucketDirs) {
-            Path bucketDirFull = resolve(table.getRootPath(), bucketDir);
+            Path bucketDirFull = Path.of(resolve(table.getRootPath(), bucketDir));
             if (!Files.exists(bucketDirFull)) {
                 Files.createDirectories(bucketDirFull);
                 bucketDirFull.toFile().deleteOnExit();
@@ -616,12 +616,12 @@ public class UTestBucketManager {
         Assert.assertEquals("Wrong number of buckets", fileCount / buc.getBucketSize(), bucketsCreated);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
         buckets = table.filter().get().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
-        List<String> createdBucketFolders = buckets.stream().map(p -> PathUtils.parent(p)).distinct().collect(Collectors.toList());
+        List<String> createdBucketFolders = buckets.stream().map(p -> PathUtils.getParent(p)).distinct().collect(Collectors.toList());
         Assert.assertEquals("Incorrect number of bucket folders", bucketDirs.size(), createdBucketFolders.size());
         Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet(bucketDirs), new TreeSet(createdBucketFolders));
         for (String bucket : buckets) {
             Assert.assertTrue(String.format("Bucket %s does not exists", PathUtils.resolve(table.getRootPath(), bucket)),
-                    Files.exists(PathUtils.resolve(table.getRootPath(), bucket)));
+                    Files.exists(Path.of(PathUtils.resolve(table.getRootPath(), bucket))));
         }
     }
 

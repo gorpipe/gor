@@ -17,15 +17,25 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.stream.Stream;
 
-import static org.gorpipe.gor.table.util.PathUtils.isLocal;
-import static org.gorpipe.gor.table.util.PathUtils.normalize;
+import static org.gorpipe.gor.table.util.PathUtils.*;
 
+
+/**
+ * Class representing table.
+ * Covers:
+ * - table meta data, including basic meta data loading.
+ * - building blocks/mechanism for updating table (includig support for transactions and two phase commit).
+ *
+ * Does not cover:
+ * - Loading of data/entries
+ *
+ * @param <T>
+ */
 public abstract class BaseTable<T> implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseTable.class);
@@ -60,6 +70,10 @@ public abstract class BaseTable<T> implements Table<T> {
         if (builder.useHistory != null) {
             setUseHistory(builder.useHistory);
         }
+
+        if (builder.id != null) {
+            setId(builder.id);
+        }
     }
 
     /**
@@ -81,12 +95,12 @@ public abstract class BaseTable<T> implements Table<T> {
             this.folderPath = rootUri;
         } else if (GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME.equals(fileName)) {
             // thedict passed in (gord folder content)
-            this.rootUri = normalize(PathUtils.parent(uri));
+            this.rootUri = normalize(PathUtils.getParent(uri));
             this.path = PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
             this.folderPath = rootUri;
         } else {
             // Old school dict.
-            this.rootUri = normalize(PathUtils.parent(uri));
+            this.rootUri = normalize(PathUtils.getParent(uri));
             this.path = PathUtils.resolve(rootUri, fileName);
             this.folderPath = PathUtils.toURIFolder(PathUtils.resolve(rootUri, "." + this.name).toString()); // PathUtils.resolve(rootUri, "." + this.name);
         }
@@ -114,16 +128,20 @@ public abstract class BaseTable<T> implements Table<T> {
         return this.id;
     }
 
-    public Path getPath() {
-        return PathUtils.toPath(this.path);
+    private void setId(String id) {
+        this.id = id;
+    }
+
+    public String getPath() {
+        return PathUtils.formatUri(this.path);
     }
 
     public URI getPathUri() {
         return this.path;
     }
 
-    public Path getRootPath() {
-        return PathUtils.toPath(rootUri);
+    public String getRootPath() {
+        return PathUtils.formatUri(rootUri);
     }
 
     public URI getRootUri() {
@@ -131,7 +149,11 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     public String getProjectPath() {
-        return fileReader != null && fileReader.getCommonRoot() != null ? fileReader.getCommonRoot() : Path.of("").toAbsolutePath().toString();
+        return fileReader != null && fileReader.getCommonRoot() != null ? fileReader.getCommonRoot() : PathUtils.getCurrentAbsolutePath();
+    }
+
+    public String getContentReal(String releativePath) {
+        return resolve(getRootUri(), releativePath).toString();
     }
 
     public TableHeader getHeader() {
@@ -148,8 +170,8 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     // For testing and code that just runs on local.
-    public Path getFolderPath() {
-        return PathUtils.toPath(folderPath);
+    public String getFolderPath() {
+        return PathUtils.formatUri(folderPath);
     }
 
     public void setColumns(String... columns) {
@@ -228,10 +250,11 @@ public abstract class BaseTable<T> implements Table<T> {
         }
 
         try {
+            // TODO:  
             fileReader.createDirectoryIfNotExists(getFolderUri().toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
 
             if (this.isUseHistory()) {
-                fileReader.createDirectoryIfNotExists(this.historyDir.toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+                fileReader.createDirectories(this.historyDir.toString(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
             }
         } catch (IOException ioe) {
             throw new GorSystemException("Could not create directory", ioe);
@@ -271,9 +294,9 @@ public abstract class BaseTable<T> implements Table<T> {
     public void commit() {
         try {
             updateFromTempFile(getTempMetaFileName(), getMetaPath());
-            updateFromTempFile(getTempMainFileName(), getPath().toString());
+            updateFromTempFile(getTempMainFileName(), getPathUri().toString());
         } catch (IOException e) {
-            throw new GorSystemException("Could not commit " + getPath(), e);
+            throw new GorSystemException("Could not commit " + getPathUri(), e);
         }
 
         if (isUseHistory()) {
@@ -338,11 +361,11 @@ public abstract class BaseTable<T> implements Table<T> {
     protected abstract void saveTempMainFile();
 
     protected String getMetaPath() {
-        return getPath().toString() + ".meta";
+        return getPathUri().toString() + ".meta";
     }
 
     protected String getTempMainFileName() {
-        return getTempFileName(getPath().toString());
+        return getTempFileName(getPathUri().toString());
     }
 
     protected String getTempMetaFileName() {
@@ -356,8 +379,8 @@ public abstract class BaseTable<T> implements Table<T> {
     }
 
     private String insertTableFolderIntoFilePath(String pathString) {
-        String fileName = Path.of(pathString).getFileName().toString();
-        return PathUtils.resolve(getFolderPath(), (fileName)).toString();
+        String fileName = PathUtils.getFileName(pathString);
+        return PathUtils.resolve(getFolderPath(), (fileName));
     }
 
     private String insertTempIntoFileName(String pathString) {
@@ -413,9 +436,9 @@ public abstract class BaseTable<T> implements Table<T> {
         log.debug("Parsing header for {}", getName());
         this.header.clear();
 
-        this.header.loadAndMergeMeta(getFolderPath().resolve("header")); // For backward compatibility.
-        this.header.loadAndMergeMeta(getPath());
-        this.header.loadAndMergeMeta(Path.of(getPath().toString() + ".meta"));
+        this.header.loadAndMergeMeta(fileReader, PathUtils.resolve(getFolderPath(), "header")); // For backward compatibility.
+        this.header.loadAndMergeMeta(fileReader, getPathUri().toString());
+        this.header.loadAndMergeMeta(fileReader,getPathUri().toString() + ".meta");
     }
 
 
@@ -516,6 +539,8 @@ public abstract class BaseTable<T> implements Table<T> {
         protected Boolean validateFiles;
         protected FileReader fileReader;
 
+        protected String id;
+
         protected Builder(URI path) {
             this.path = path;
         }
@@ -537,6 +562,11 @@ public abstract class BaseTable<T> implements Table<T> {
 
         public B validateFiles(boolean val) {
             this.validateFiles = val;
+            return self();
+        }
+
+        public B id(String val) {
+            this.id = val;
             return self();
         }
 

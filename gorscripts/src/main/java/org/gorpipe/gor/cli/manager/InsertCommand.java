@@ -29,6 +29,7 @@ import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.util.PathUtils;
 import picocli.CommandLine;
 
 import java.nio.file.Paths;
@@ -76,7 +77,7 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
         TableManager tm = TableManager.newBuilder()
                 .useHistory(!nohistory).minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
 
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
             if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
@@ -88,8 +89,8 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
             }
 
             table.insert(this.files.stream()
-                    .map(f -> relativize(table.getRootPath(), Paths.get(f)))
-                    .map(p -> new DictionaryEntry.Builder<>(p, table.getRootUri())
+                    .map(f -> PathUtils.relativize(table.getRootUri(), f))
+                    .map(s -> new DictionaryEntry.Builder<>(s, table.getRootUri())
                             .range(GenomicRange.parseGenomicRange(this.range))
                             .alias(alias)
                             .tags(this.tags)

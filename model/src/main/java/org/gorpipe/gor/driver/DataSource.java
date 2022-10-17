@@ -32,6 +32,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
 
@@ -48,6 +49,15 @@ public interface DataSource extends AutoCloseable {
      * Name of source - should contain enough information to resolve the source - e.g. a url.
      */
     String getName();
+
+
+    /**
+     * Path representation of this data source (Should be constructed with the right filesystem)
+     */
+    default Path getPath() {
+        throw new GorResourceException("getPath is not implemented for ", getSourceType().getName());
+
+    }
 
     /**
      * Returns full path for DataSource

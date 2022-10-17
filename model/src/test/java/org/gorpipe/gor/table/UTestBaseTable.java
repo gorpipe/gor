@@ -39,6 +39,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -87,7 +89,7 @@ public class UTestBaseTable {
 
         // Check empty tag list
         Assert.assertEquals("Error in get signature without tag list",
-                new ByteTextBuilder(dict.getPath().toString() + "&" + dict.getPath().toFile().lastModified()).md5(), dict.getSignature());
+                new ByteTextBuilder(dict.getPath().toString() + "&" + Path.of(dict.getPath()).toFile().lastModified()).md5(), dict.getSignature());
     }
 
     @Test
@@ -104,7 +106,7 @@ public class UTestBaseTable {
         Assert.assertEquals(lastModified2, bfile.toFile().lastModified());
 
         // Check empty tag list
-        Assert.assertEquals("Error in get lastmodified without tag list", dict.getPath().toFile().lastModified(), dict.getLastModified());
+        Assert.assertEquals("Error in get lastmodified without tag list", Path.of(dict.getPath()).toFile().lastModified(), dict.getLastModified());
     }
 
     @Test
@@ -621,12 +623,8 @@ public class UTestBaseTable {
         URI path = URI.create("x/y/z.gor");
         DictionaryEntry entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
 
-        Assert.assertEquals("Relative path, wrong absolute path", gordFile.getParent().resolve(path.toString()).toString(), entry.getContentReal());
+        Assert.assertEquals("Relative path, wrong absolute path", gordFile.getParent().resolve(path.toString()).toString(), entry.getContentReal(dict.getRootUri()));
         Assert.assertEquals("Relative path, wrong relative path", "x/y/z.gor", entry.getContentRelative());
-
-        Assert.assertEquals("Relative path, wrong physical path", "a/b/x/y/z.gor", entry.getPhysical(commonRoot));
-        Assert.assertEquals("Relative path, wrong logical path", "a/b/x/y/z.gor", entry.getLogical(commonRoot));
-        Assert.assertEquals("Relatvie path, wrong isAcceptedAbsoluteRef", false, entry.isAcceptedAbsoluteRef());
 
 
         // Absolute (to subfolder)
@@ -634,48 +632,34 @@ public class UTestBaseTable {
         entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Absolute path to subfolder, wrong absolute path", path.toString(), entry.getContentReal());
+        Assert.assertEquals("Absolute path to subfolder, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootUri()));
         Assert.assertEquals("Absolute path to subfolder, wrong relative path", "x/y/z.gor", entry.getContentRelative());
-
-        Assert.assertEquals("Absolute path to subfolder, wrong physical path", "a/b/x/y/z.gor", entry.getPhysical(commonRoot));
-        Assert.assertEquals("Absolute path to subfolder, wrong logical path", "a/b/x/y/z.gor", entry.getLogical(commonRoot));
-        Assert.assertEquals("Absolute path to subfolder, wrong isAcceptedAbsoluteRef", false, entry.isAcceptedAbsoluteRef());
 
         // Absolute path
         Path pathPath = Paths.get("t1.gor").toAbsolutePath();
         entry = new DictionaryEntry.Builder(pathPath, dict.getRootUri()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Absolute path, wrong absolute path", pathPath.toString(), entry.getContentReal());
+        Assert.assertEquals("Absolute path, wrong absolute path", pathPath.toString(), entry.getContentReal(dict.getRootUri()));
         Assert.assertEquals("Absolute path, wrong relative path", pathPath.toString(), entry.getContentRelative());
-
-        Assert.assertEquals("Absolute path, wrong physical path", URI.create(pathPath.toString()), URI.create(entry.getPhysical(commonRoot)));
-        Assert.assertEquals("Absolute path, wrong logical path", URI.create(pathPath.toString()), URI.create(entry.getLogical(commonRoot)));
-        Assert.assertEquals("Absolute path, wrong isAcceptedAbsoluteRef", false, entry.isAcceptedAbsoluteRef());
 
         // Absolute uri
         path = URI.create(Paths.get(".").toAbsolutePath().normalize().resolve("t2.gor").toString());
         entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Absolute uri, wrong absolute path", path.getPath(), entry.getContentReal());
+        Assert.assertEquals("Absolute uri, wrong absolute path", path.getPath(), entry.getContentReal(dict.getRootUri()));
         Assert.assertEquals("Absolute uri, wrong relative path", path.getPath(), entry.getContentRelative());
 
-        Assert.assertEquals("Absolute uri, wrong physical path", path.getPath(), entry.getPhysical(commonRoot));
-        Assert.assertEquals("Absolute uri, wrong logical path", path.getPath(), entry.getLogical(commonRoot));
-        Assert.assertEquals("Absolute uri, wrong isAcceptedAbsoluteRef", false, entry.isAcceptedAbsoluteRef());
 
         // With schmea
         path = URI.create("s3://someaddress/path/x/y?a=b;c=d#xxx");
         entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal());
+        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootUri()));
         Assert.assertEquals("Schema path wrong relative path", path.toString(), entry.getContentRelative());
 
-        Assert.assertEquals("Schema path wrong physical path", path.toString(), entry.getPhysical(commonRoot));
-        Assert.assertEquals("Schema path wrong logical path", path.toString(), entry.getLogical(commonRoot));
-        Assert.assertEquals("Schema path wrong isAcceptedAbsoluteRef", true, entry.isAcceptedAbsoluteRef());
 
         // Link file
         Path tmpDir = Files.createTempDirectory("linkdir");
@@ -686,15 +670,12 @@ public class UTestBaseTable {
         entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal());
+        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootUri()));
         Assert.assertEquals("Schema path wrong relative path", "link_to_some.gor", entry.getContentRelative());
-
-        Assert.assertEquals("Schema path wrong physical path", "a/b/link_to_some.gor", entry.getPhysical(commonRoot));
-        Assert.assertEquals("Schema path wrong logical path", "a/b/link_to_some.gor", entry.getLogical(commonRoot));
-        Assert.assertEquals("Schema path wrong isAcceptedAbsoluteRef", true, entry.isAcceptedAbsoluteRef());
 
         dict.save();
     }
+
 
     @Test
     public void testSpecialCharInPath() throws Exception {
@@ -722,7 +703,7 @@ public class UTestBaseTable {
         dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").build());
         dict.save();
 
-        List<? extends DictionaryEntry> lines = dict.getOptimizedLines(DictionaryTable.tagmap("ABC1234"), false);
+        List<? extends DictionaryEntry> lines = dict.getOptimizedLines(new HashSet<>(Arrays.asList("ABC1234")), false, false);
         Assert.assertEquals("Optimizer failed if line readded - wrong number of files", 1, lines.size());
 
         String[] result = TestUtils.runGorPipeLines("gor -f ABC1234 " + gordFile.toString());

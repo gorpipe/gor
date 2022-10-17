@@ -103,10 +103,10 @@ public class UTestDictionaryTable {
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile).build();
         dict.save();
 
-        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
+        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath().toString(), dict.getPath());
 
         dict = new DictionaryTable.Builder<>(gordFile).build();
-        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
+        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath().toString(), dict.getPath());
 
         Assert.assertEquals(null, dict.getBooleanConfigTableProperty(HEADER_BUCKETIZE_KEY, null));
     }
@@ -133,7 +133,7 @@ public class UTestDictionaryTable {
         dict.setProperty("TestProp", "SomeValue");
         dict.save();
 
-        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
+        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath().toString(), dict.getPath());
 
         dict = new DictionaryTable.Builder<>(gordFile).embeddedHeader(true).build();
         dict.reload();
@@ -149,7 +149,7 @@ public class UTestDictionaryTable {
         dict.setProperty("TestProp", "SomeValue");
         dict.save();
 
-        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath(), dict.getPath());
+        Assert.assertEquals("Path check failed", gordFile.toAbsolutePath().toString(), dict.getPath());
         Assert.assertTrue("Should be external header", Files.exists(Path.of(dict.getPath().toString() + ".meta")));
 
         dict = new DictionaryTable.Builder<>(gordFile).embeddedHeader(false).build();
@@ -187,7 +187,7 @@ public class UTestDictionaryTable {
         
         Assert.assertArrayEquals("Columns def returned correctly", columnDef, dict.getColumns());
 
-        DictionaryTable dict2 = new DictionaryTable(gordFile.toPath());
+        DictionaryTable dict2 = new DictionaryTable(gordFile.getPath());
         Assert.assertArrayEquals("Columns def loaded correctly", columnDef, dict2.getColumns());
     }
 
@@ -214,19 +214,19 @@ public class UTestDictionaryTable {
         String tableName = "gortable_create_options";
         File gordFile = new File(tableWorkDir.toFile(), tableName + ".gord");
         String dataFileName = Paths.get("../tests/data/gor/genes.gor").toAbsolutePath().toString();
-        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).sourceColumn("PNA").useHistory(true).embeddedHeader(true).build();
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toString()).sourceColumn("PNA").useHistory(true).embeddedHeader(true).build();
 
         dict.insert(dataFileName);
         dict.save();
         
         Assert.assertTrue("BaseTable file was not created", gordFile.exists());
-        Assert.assertTrue("History folder was not created", new File(dict.getFolderPath().toFile(), BaseDictionaryTable.HISTORY_DIR_NAME).exists());
+        Assert.assertTrue("History folder was not created", new File(dict.getFolderPath(), BaseDictionaryTable.HISTORY_DIR_NAME).exists());
         Assert.assertEquals("Source column not set correctly", "PNA", dict.getSourceColumn());
 
         dataFileName = genesSmall.getCanonicalPath();
         dict.insert(dataFileName);
         dict.save();
-        Assert.assertEquals("Incorrect number of entries in the history folder", 1, new File(dict.getFolderPath().toFile(), BaseDictionaryTable.HISTORY_DIR_NAME).list().length);
+        Assert.assertEquals("Incorrect number of entries in the history folder", 1, new File(dict.getFolderPath(), BaseDictionaryTable.HISTORY_DIR_NAME).list().length);
 
         // Test turn off history.
         String tableNameNoHist = "gortable_create_options_no_hist";
@@ -236,7 +236,7 @@ public class UTestDictionaryTable {
         dictNoHist.insert(dataFileName);
         dictNoHist.save();
         Assert.assertTrue("BaseTable file was not created", gordFileNoHist.exists());
-        Assert.assertTrue("History folder was created", !new File(dictNoHist.getFolderPath().toFile(), BaseDictionaryTable.HISTORY_DIR_NAME).exists());
+        Assert.assertTrue("History folder was created", !new File(dictNoHist.getFolderPath(), BaseDictionaryTable.HISTORY_DIR_NAME).exists());
     }
 
     // Test table operations (on unbucketized table).
@@ -312,7 +312,7 @@ public class UTestDictionaryTable {
         dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath20.gor"), dict.getRootUri()).range(GenomicRange.parseGenomicRange("chr8")).build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath20.gor").includeDeleted());
-        Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t-1\tchr8\t-1\n", selectRes);
+        Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t0\tchr8\n", selectRes);
     }
 
     @Test

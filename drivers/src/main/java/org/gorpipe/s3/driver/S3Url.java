@@ -22,6 +22,7 @@
 
 package org.gorpipe.s3.driver;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
 
@@ -64,7 +65,16 @@ public class S3Url {
             throw new MalformedURLException("Expected scheme to be s3 in url: " + uri);
         }
         S3Url result = new S3Url();
-        result.lookupKey = uri.getAuthority().toLowerCase();
+        if (uri.getAuthority() != null) {
+            result.lookupKey = uri.getAuthority();
+            result.path = uri.getPath();
+        } else {
+            // Note: Different s3path implementations don't agree where the bucket is located, Some say as host (authority) (s3Url) some say as first element of path (S3Path)
+            String[] pathParts = StringUtils.stripStart(uri.getPath(), "/").split("/", 2);
+            result.lookupKey = pathParts[0];
+            result.path = pathParts.length > 1 ? pathParts[1] : "";
+        }
+
         if (result.lookupKey.contains(":")) {
             String[] bucketParts = result.lookupKey.split(":");
             if (bucketParts.length != 2) {
@@ -74,7 +84,7 @@ public class S3Url {
         } else {
             result.bucket = result.lookupKey;
         }
-        result.path = uri.getPath();
+
         if (result.path.startsWith("/")) {
             result.path = result.path.substring(1);
         }

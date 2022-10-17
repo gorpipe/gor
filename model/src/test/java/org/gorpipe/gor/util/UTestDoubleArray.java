@@ -257,7 +257,7 @@ public class UTestDoubleArray extends TestCase {
      * Test method
      */
     public void testConvertToDoubleArray() {
-        Double[] expArr = new Double[]{new Double(1), new Double(2), new Double(3)};
+        Double[] expArr = new Double[]{Double.valueOf(1), Double.valueOf(2), Double.valueOf(3)};
         double[] actArr = DoubleArray.toDoubleArray(expArr);
         for (int i = 0; i < actArr.length; i++) {
             TestCase.assertEquals(expArr[i].doubleValue(), actArr[i], 0);

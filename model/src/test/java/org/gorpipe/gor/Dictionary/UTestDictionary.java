@@ -57,7 +57,7 @@ public class UTestDictionary {
             "filepath12.gor|bucket2\t\tchr1\t1\tchr2\t20000\ttagJ,tagK\n" +
             "filepath13.gor|bucket2\ttag1000\n" +
             "filepath14.gor|D|bucket2\ttagL\n" +
-            "filepath15.gor|D|bucket2\n" +
+            "filepath15.gor|D|bucket2\ttagL2\n" +
             "filepath16.gor\ttagD\n" +
             "filepath17.gor\ttagB\n" +
             "filepath18.gor\ttagJ,tagM\n" +
@@ -398,5 +398,21 @@ public class UTestDictionary {
 
     public static Dictionary getDictionary(String path, String commonRoot) throws IOException {
         return Dictionary.getDictionary(path, ProjectContext.DEFAULT_READER, commonRoot, true);
+    }
+
+    @Test
+    public void testReadOfFileInBucketWithDeletedFiles() throws Exception {
+        File gordFile = workDir.newFile("testReadOfFileInBucketWithDeletedFiles.gord");
+        FileUtils.write(gordFile, gort1, (Charset) null);
+        HashSet<String> tagList = new HashSet<>();
+        //tagList.addAll(Arrays.asList("tagI", "tagJ", "tagK", "tag1000"));
+        tagList.addAll(Arrays.asList("tagI", "tagJ", "tag1000"));
+
+        Dictionary dict1 = getDictionary(gordFile.getPath(), ".");
+        List<Dictionary.DictionaryLine> res1 = Arrays.asList(dict1.getSources(tagList, true, false));
+
+        String[] res1String = res1.stream().map(Dictionary.DictionaryLine::toPreciseString).sorted().toArray(String[]::new);
+
+        Assert.assertTrue(res1String[0].endsWith("/bucket2 null null null -1 [tag1000, tagI, tagJ, tagK, tagL, tagL2]"));
     }
 }

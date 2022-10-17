@@ -28,9 +28,11 @@ import gorsat.Utilities.AnalysisUtilities;
 import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
 import org.apache.commons.lang.SystemUtils;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +44,12 @@ import javax.management.ObjectName;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -320,6 +325,43 @@ public class TestUtils {
         }
     }
 
+    public static String runGorPipeServer(String query, String projectRoot, String securityContext) {
+        PipeOptions options = new PipeOptions();
+        options.parseOptions(new String[]{"-gorroot", projectRoot});
+        TestSessionFactory factory = new TestSessionFactory(options, null, true, securityContext);
+
+        try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(factory.create()))) {
+            pipe.init(query, null);
+
+            StringBuilder result = new StringBuilder();
+            result.append(pipe.getHeader());
+            result.append("\n");
+            while (pipe.hasNext()) {
+                result.append(pipe.next());
+                result.append("\n");
+            }
+            return result.toString();
+        }
+    }
+
+    public static String runGorPipeCLI(String query, String gorRoot, String securityContext) {
+        PipeOptions opts = new PipeOptions();
+        opts.gorRoot_$eq(gorRoot);
+        GorSessionFactory sessionFactory = new CLISessionFactory(opts, securityContext);
+        try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(sessionFactory.create()))) {
+            pipe.init(query, null);
+
+            StringBuilder result = new StringBuilder();
+            result.append(pipe.getHeader());
+            result.append("\n");
+            while (pipe.hasNext()) {
+                result.append(pipe.next());
+                result.append("\n");
+            }
+            return result.toString();
+        }
+    }
+
     public static void assertTwoGorpipeResults(String query1, String query2) {
         String result1 = runGorPipe(query1);
         String result2 = runGorPipe(query2);
@@ -498,5 +540,25 @@ public class TestUtils {
         String[] lines = runGorPipeWithCleanup(query, new File[]{left, right});
 
         Assert.assertArrayEquals(expected, lines);
+    }
+
+    /**
+     * Create or update dictionary.
+     *
+     * @param name     name of the dictionary.
+     * @param rootPath root path
+     * @param data     map with alias to files, to be add to the dictionary.
+     * @return new table created with the given data.
+     */
+    public static DictionaryTable createDictionaryWithData(String name, Path rootPath, Map<String, List<String>> data) {
+        Path tablePath = rootPath.resolve(name + ".gord");
+        if (Files.exists(tablePath)) {
+            throw new GorSystemException("Table already exists:  " + tablePath, null);
+        }
+        DictionaryTable table = new DictionaryTable.Builder<>(tablePath.toUri()).useHistory(true).validateFiles(false).build();
+        table.insert(data);
+        table.setBucketize(true);
+        table.save();
+        return table;
     }
 }

@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.table.dictionary;
 
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.util.GenomicRange;
@@ -31,11 +30,9 @@ import org.gorpipe.gor.util.StringUtil;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
-import static org.gorpipe.gor.table.util.PathUtils.fixFileSchema;
 import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 /**
@@ -51,7 +48,7 @@ public class DictionaryEntry extends TableEntry {
 
     // Use strings for performance reasons (using Path or URI takes twice as long to parse).
     protected String bucketLogical;
-    protected Boolean isDeleted;
+    protected boolean isDeleted;
 
     // Copy constructor.
     public DictionaryEntry(DictionaryEntry entry) {
@@ -68,8 +65,9 @@ public class DictionaryEntry extends TableEntry {
         this.isDeleted = isDeleted;
     }
 
-    private static final Splitter tabSplitter = Splitter.on('\t');
-    private static final Splitter pipeSplitter = Splitter.on('|');
+    public boolean isSourceInserted() {
+        return sourceInserted;
+    }
 
     /**
      * Get unique key for the entry.
@@ -103,17 +101,8 @@ public class DictionaryEntry extends TableEntry {
      *
      * @return the buckets real path.
      */
-    public String getBucketReal() {
-        return getBucket() != null ? PathUtils.resolve(getRootUri(), getBucket()).toString() : null;
-    }
-
-    /**
-     * Get bucket as path.
-     *
-     * @return bucket as path.
-     */
-    public Path getBucketPath() {
-        return getBucket() != null ? Paths.get(getBucket()) : null;
+    public String getBucketReal(URI rootUri) {
+        return getBucket() != null ? PathUtils.resolve(rootUri, getBucket()).toString() : null;
     }
 
     /**
@@ -151,12 +140,12 @@ public class DictionaryEntry extends TableEntry {
      * @return new entry from the entryString
      */
     public static DictionaryEntry parseEntry(String line, URI rootUri, boolean needsRelativize) {
-        List<String> columns = tabSplitter.splitToList(line);
+        List<String> columns = StringUtil.split(line);
         return parseEntry(columns, rootUri, needsRelativize);
     }
 
     public static DictionaryEntry parseEntry(String line, URI rootUri) {
-        List<String> columns = tabSplitter.splitToList(line);
+        List<String> columns = StringUtil.split(line);
         return parseEntry(columns, rootUri, false);
     }
 
@@ -165,15 +154,16 @@ public class DictionaryEntry extends TableEntry {
             return null;
         }
 
-        final List<String> fileInfo = pipeSplitter.splitToList(columns.get(0).replace('\\', '/'));
-        String content = fixFileSchema(fileInfo.get(0));
-        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(content, rootUri).needsRelativize(needsRelativize);
+        final int indexOf = columns.get(0).indexOf('|');
+        final String file = indexOf > 0 ? columns.get(0).substring(0, indexOf) : columns.get(0);
+        final String flags = indexOf > 0 && columns.get(0).length() - indexOf > 2 && columns.get(0).charAt(indexOf + 2) == '|' ?
+                String.valueOf( columns.get(0).charAt(indexOf + 1) ) : null;
+        final String bucketFileName = indexOf > 1 ? (flags != null ? columns.get(0).substring(indexOf + 3) : columns.get(0).substring(indexOf + 1)) : null;
 
-        final String flags = fileInfo.size() > 2 ? fileInfo.get(1) : null;
         final boolean lineDeleted = flags != null && flags.toLowerCase().contains("d");
-        final String bucketFileName = fileInfo.size() > 2 ? fileInfo.get(2) : (fileInfo.size() > 1 ? fileInfo.get(1) : null);
         final String alias = columns.size() > 1 ? columns.get(1) : null;
 
+        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(file, rootUri).needsRelativize(needsRelativize);
         builder.bucket(bucketFileName).alias(alias);
 
         if (lineDeleted) {

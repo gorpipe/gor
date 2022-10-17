@@ -27,6 +27,8 @@ import org.gorpipe.exceptions.GorSystemException;
 
 import java.util.Arrays;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 /**
  * Helper class to map genomic range to string and back.
  * <p>
@@ -36,6 +38,12 @@ public class GenomicRange {
 
     public static final GenomicRange EMPTY_RANGE = new GenomicRange();
 
+    // How to treat empty values in the string rep.   These values are picked for backward compatibility with existing code.
+    private static final String EMPTY_START_CHR = "";
+    private static final int EMPTY_START_POS = 0;
+    private static final String EMPTY_STOP_CHR = "~"; // ~ is last in ascii.
+    private static final int EMPTY_STOP_POS = Integer.MAX_VALUE;
+
     private final String startChr;
     private final int startPos;
     private final String stopChr;
@@ -44,17 +52,17 @@ public class GenomicRange {
 
 
     public GenomicRange() {
-        this("", -1, "", -1);
+        this(EMPTY_START_CHR, EMPTY_START_POS, EMPTY_STOP_CHR, EMPTY_STOP_POS);
         this.isEmpty = true;
 
     }
 
     public GenomicRange(String startChr, int startPos, String stopChr, int stopPos) {
         // TODO:  Add more validation (if pos then chr, start <= stop)
-        this.startChr = startChr != null ? startChr : "";
-        this.startPos = startPos;
-        this.stopChr = stopChr != null ? stopChr : "";
-        this.stopPos = stopPos;
+        this.startChr = !isNullOrEmpty(startChr) ? startChr : EMPTY_START_CHR;
+        this.startPos = startPos >= 0 ? startPos : EMPTY_START_POS;
+        this.stopChr = !isNullOrEmpty(stopChr) ? stopChr : EMPTY_STOP_CHR;
+        this.stopPos = stopPos >= 0 ? stopPos : EMPTY_STOP_POS;
         this.isEmpty = false;
     }
 
@@ -81,13 +89,13 @@ public class GenomicRange {
     @Override
     public String toString() {
         return String.format("%s%s%s%s%s%s%s",
-                this.startChr,
-                this.startPos >= 0 || (this.startChr.equals(this.stopChr) && this.stopPos >= 0) ? ":" : "",
-                this.startPos >= 0 ? + this.startPos : "",
-                !this.stopChr.isEmpty() || this.stopPos > 0 ? "-" : "",
-                !this.startChr.equals(this.stopChr) ? this.stopChr : "",
-                !this.startChr.equals(this.stopChr) && !this.stopChr.isEmpty() && this.stopPos >= 0 ? ":" : "",
-                this.stopPos >= 0 ? this.stopPos : "");
+                !EMPTY_START_CHR.equals(this.startChr) ? this.startChr : "",
+                !EMPTY_START_CHR.equals(this.startChr) && (this.startPos != EMPTY_START_POS ||  this.stopPos != EMPTY_STOP_POS)  ? ":" : "",
+                !EMPTY_START_CHR.equals(this.startChr) && (this.startPos != EMPTY_START_POS ||  this.stopPos != EMPTY_STOP_POS)  ? this.startPos : "",
+                !EMPTY_STOP_CHR.equals(this.stopChr) || this.stopPos != EMPTY_STOP_POS ? "-" : "",
+                !this.startChr.equals(this.stopChr) && !EMPTY_STOP_CHR.equals(this.stopChr)  ? this.stopChr : "",
+                !this.startChr.equals(this.stopChr) && !EMPTY_STOP_CHR.equals(this.stopChr) && this.stopPos != EMPTY_STOP_POS ? ":" : "",
+                this.stopPos != EMPTY_STOP_POS ? this.stopPos : "");
     }
 
     public String formatAsTabDelimited() {
@@ -101,13 +109,13 @@ public class GenomicRange {
         if (isEmpty) {
             sb.append("\t\t\t");
         } else {
-            sb.append(this.startChr);
+            sb.append(!EMPTY_START_CHR.equals(this.startChr) ? this.startChr : "");
             sb.append('\t');
-            sb.append(this.startPos >= 0 || !this.startChr.isEmpty() ? this.startPos : "");
+            sb.append(this.startPos != EMPTY_START_POS || (!EMPTY_START_CHR.equals(this.startChr) && this.startPos >= 0) ? this.startPos : "");
             sb.append('\t');
-            sb.append(this.stopChr);
+            sb.append(!EMPTY_STOP_CHR.equals(this.stopChr) ? this.stopChr : "");
             sb.append('\t');
-            sb.append(this.stopPos >= 0 || !this.stopChr.isEmpty() ? this.stopPos : "");
+            sb.append(this.stopPos != EMPTY_STOP_POS ? this.stopPos : "");
         }
         return sb;
     }

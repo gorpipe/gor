@@ -56,6 +56,8 @@ project(':gorscripts') {
 
         runtimeOnly "org.scala-lang:scala-reflect:_"
 
+
+        testImplementation(testFixtures(project(":drivers")))
         testImplementation project(':test')
         testImplementation project(':util')
 
@@ -66,8 +68,6 @@ project(':gorscripts') {
         testImplementation "commons-io:commons-io:_"
         testImplementation "org.apache.commons:commons-lang3:_"
         testImplementation "com.google.guava:guava:_"
-        testImplementation "org.slf4j:slf4j-api:_"
-        testImplementation "ch.qos.logback:logback-classic:_"
         testImplementation "com.github.samtools:htsjdk:_"
 
         testRuntimeOnly "org.apache.derby:derby:_"

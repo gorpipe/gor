@@ -39,12 +39,9 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -55,13 +52,13 @@ import java.util.stream.Stream;
  * Created by villi on 22/08/15.
  */
 public class S3Source implements StreamSource {
+    private static final boolean USE_META_CACHE = true ;
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
     private final AmazonS3Client client;
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
-    private static final Random rnd = new Random();
 
     private Path path;
 
@@ -99,6 +96,7 @@ public class S3Source implements StreamSource {
     @Override
     public OutputStream getOutputStream(boolean append) throws IOException {
         if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
+        invalidateMeta();
         return new S3MultiPartOutputStream(client, bucket, key);
     }
 
@@ -131,19 +129,31 @@ public class S3Source implements StreamSource {
         return sourceReference.getUrl();
     }
 
+    private S3SourceMetadata loadMetadata(String bucket, String key) throws ExecutionException {
+        if (USE_META_CACHE) {
+            return loadMetadataFromCache(bucket, key);
+        } else {
+            return createMetaData(bucket, key);
+        }
+    }
+
+    private S3SourceMetadata createMetaData(String bucket, String key) {
+        ObjectMetadata md = client.getObjectMetadata(bucket, key);
+        return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+    }
+
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) throws ExecutionException {
-        meta = metadataCache.get(bucket + key, () -> {
-            ObjectMetadata md = client.getObjectMetadata(bucket, key);
-            return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+        return metadataCache.get(bucket + key, () -> {
+            // TODO:  If the object does not exists we don't cache.  This method will throw exception and the loader will exit.
+            return createMetaData(bucket, key);
         });
-        return meta;
     }
 
     @Override
     public S3SourceMetadata getSourceMetadata() throws IOException {
         if (meta == null) {
             try {
-                loadMetadataFromCache(bucket, key);
+                meta = loadMetadata(bucket, key);
             } catch (ExecutionException | UncheckedExecutionException e) {
                 // Need IOException for the retry handler
                 throw new IOException(e);
@@ -171,30 +181,35 @@ public class S3Source implements StreamSource {
     public boolean fileExists() throws IOException  {
         try {
             // Already in cache, exists
-            loadMetadataFromCache(bucket, key);
+            loadMetadata(bucket, key);
             return true;
+        } catch (AmazonS3Exception e) {
+            return checkFileExistsMetaDataException(e);
         } catch (ExecutionException | UncheckedExecutionException e) {
-            var throwable = e.getCause();
-            if (throwable instanceof AmazonS3Exception s3exp) {
-                if (s3exp.getStatusCode() == 404 || s3exp.getStatusCode() == 400) {
-                    // The meta data check does not handle the existsance of 'folders' correctly, so if we get
-                    // 404 and have a folder we need to use Files.exists (with S3 filesystem path) that handles
-                    // S3 'folders'.
-                    return false;
-                }
-            }
-            throw new IOException("S3 fileExists failed: " + bucket+key, throwable);
+            return checkFileExistsMetaDataException(e.getCause());
         }
+    }
+
+    private boolean checkFileExistsMetaDataException(Throwable e) throws IOException {
+        if (e instanceof AmazonS3Exception s3exp) {
+            if (s3exp.getStatusCode() == 404 || s3exp.getStatusCode() == 400) {
+                // The meta data check does not handle the existsance of 'folders' correctly, so if we get
+                // 404 and have a folder we need to use Files.exists (with S3 filesystem path) that handles
+                // S3 'folders'.
+                return false;
+            }
+        }
+        throw new IOException("S3 fileExists failed: " + bucket+key, e);
     }
 
     @Override
     public String createDirectory(FileAttribute<?>... attrs) throws IOException {
-        return Files.createDirectory(getPath()).toString();
+        return Files.createDirectory(getPath()).toUri().toString();
     }
 
     @Override
     public String createDirectories(FileAttribute<?>... attrs) throws IOException {
-        return Files.createDirectories(getPath()).toString();
+        return Files.createDirectories(getPath()).toUri().toString();
     }
 
     @Override
@@ -205,29 +220,47 @@ public class S3Source implements StreamSource {
     @Override
     public void delete() throws IOException {
         Files.delete(getPath());
+        invalidateMeta();
+    }
+
+    private void invalidateMeta() {
+        meta = null;
+        metadataCache.invalidate(bucket + key);
+    }
+
+    public String copy(S3Source dest) throws IOException {
+        Files.copy(getPath(), dest.getPath());
+        return getName();
     }
 
     @Override
     public Stream<String> list() throws IOException {
-        return Files.list(getPath()).map(Path::toString);
+        return Files.list(getPath()).map(p -> p.toUri().toString());
     }
+
 
     @Override
     public Stream<String> walk() throws IOException {
-        return Files.walk(getPath()).map(Path::toString);
+        return Files.walk(getPath()).map(p -> p.toUri().toString());
     }
 
-    private Path getPath() {
+    @Override
+    public Path getPath() {
         if (path == null) {
-            FileSystem s3fs;
-            try {
-                s3fs = FileSystems.getFileSystem(URI.create("s3://" + bucket));
-            } catch (ProviderNotFoundException | FileSystemNotFoundException e) {
-                s3fs = new S3ClientFileSystemProvider().createFileSystem(URI.create("s3://" + bucket), new HashMap<String, String>(), client);
-            }
-            path = s3fs.getPath("/" + bucket, key);
+            path = getS3Path(bucket, key, client);
         }
         return path;
+    }
+
+    public static Path getS3Path(String bucket, String key, AmazonS3Client client) {
+        FileSystem s3fs;
+        try {
+            s3fs = S3ClientFileSystemProvider.getInstance().getFileSystem(client);
+        } catch (ProviderNotFoundException | FileSystemNotFoundException e) {
+            s3fs = S3ClientFileSystemProvider.getInstance().newFileSystem(client, null);
+        }
+        return s3fs.getPath("/" + bucket, key);
+        //return s3fs.getPath(key);
     }
 
     @Override

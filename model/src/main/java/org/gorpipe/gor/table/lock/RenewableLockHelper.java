@@ -71,10 +71,7 @@ public abstract class RenewableLockHelper {
                     reservedTo = calcExpirationTime();
                 } catch (Throwable t) {
                     log.error("Could not renew lock because of an exception!", t);
-                    // Could not renew the lock, the state of this process is unknown and we should exit.  Users of the lock need to use
-                    // shutdown hooks for proper cleaning.
-                    // TODO:  Shutdown is very harsh so for now we leave it out and just try to release the lock.  Users should assert the lock state before use.
-                    //System.exit(-1);
+                    // Could not renew the lock, the state of this process is unknown and we should exit.
                     release();
                 }
             }, periodMS, periodMS, TimeUnit.MILLISECONDS);

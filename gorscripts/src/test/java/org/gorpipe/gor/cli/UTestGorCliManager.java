@@ -153,8 +153,8 @@ public class UTestGorCliManager {
         Assert.assertEquals("Insert failed", testFiles[2] + "\tC\n" + testFiles[3] + "\tD\n", result);
         Assert.assertEquals("Insert failed", 2, table.selectAll().size());
 
-        Files.createDirectories(table.getRootPath().resolve("X"));
-        Files.createDirectories(table.getRootPath().resolve("Y"));
+        Files.createDirectories(Path.of(table.getRootPath()).resolve("X"));
+        Files.createDirectories(Path.of(table.getRootPath()).resolve("Y"));
         testTableManagerUtil.executeGorManagerCommand( "bucketize", new String[]{"-w", "1", "--min_bucket_size", "1", "--bucket_dirs", "X,Y", table.getPath().toString()}, ".", true);
         table.reload();
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());

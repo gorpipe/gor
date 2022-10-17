@@ -3,8 +3,6 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.auth.BasicAWSCredentials;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonFilesTests;
 import org.gorpipe.utils.DriverUtils;
-import org.gorpipe.base.security.BundledCredentials;
-import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.junit.BeforeClass;
@@ -14,8 +12,6 @@ import org.junit.contrib.java.lang.system.SystemErrRule;
 
 import java.io.IOException;
 import java.util.Properties;
-
-import static org.gorpipe.s3.driver.ITestBvlMinOnS3.awsSecurityContext;
 
 public class ITestFilesS3Source extends CommonFilesTests {
 
@@ -51,7 +47,7 @@ public class ITestFilesS3Source extends CommonFilesTests {
 
     @Override
     protected String securityContext() throws IOException {
-        return awsSecurityContext(S3_KEY, S3_SECRET);
+        return DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
     }
 
 

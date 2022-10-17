@@ -39,8 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.*;
@@ -316,7 +314,7 @@ public class BucketManager<T extends DictionaryEntry> {
             if (bucketDirCount == null) {
                 bucketDirCount = table.getEntries().stream()
                         .filter(l -> l.getBucket() != null)
-                        .map(l -> PathUtils.parent(l.getBucket()))
+                        .map(l -> PathUtils.getParent(l.getBucket()))
                         .filter(p -> bucketDirs.contains(p))
                         .collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));
                 // Make sure all the bucketDirs are represented in the map.
@@ -387,15 +385,17 @@ public class BucketManager<T extends DictionaryEntry> {
         // Run separate bucketization run for each bucket dir (for space and for fast move of the results).
         // TODO:  This can be run in parallel if running on cluster, if local it might be better do just run sequeneally
         //        Reason to run this per bucket dir is having tmp files on that dir so the move is fast.
-        for (String bucketDir : getBucketDirs()) {
-            doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap);
+        if (!newBucketsMap.isEmpty()) {
+            for (String bucketDir : getBucketDirs()) {
+                doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap);
+            }
         }
 
         // Clean up
         log.trace("Deleting temp table {}", tempTable.getPath());
         tempTable.delete();
 
-        if (bucketsToDelete.size() > 0) {
+        if (!bucketsToDelete.isEmpty()) {
             try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
                 // Delete buckets that are to be deleted.
                 deleteBuckets(trans.getLock(), false, bucketsToDelete.toArray(new String[bucketsToDelete.size()]));
@@ -409,7 +409,7 @@ public class BucketManager<T extends DictionaryEntry> {
     private void doBucketizeForBucketDir(BaseDictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap) throws IOException {
         Map<String, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
-                        .filter(p -> PathUtils.parent(Path.of(p)).equals(Path.of(bucketDir)))
+                        .filter(p -> PathUtils.getParent(p).equals(PathUtils.stripTrailingSlash(bucketDir)))
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
@@ -604,7 +604,7 @@ public class BucketManager<T extends DictionaryEntry> {
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
 
             Set<String> allBucketDirs = new HashSet<>(getBucketDirs());
-            allBucketDirs.addAll(table.getBuckets().stream().map(b -> PathUtils.parent(b)).collect(Collectors.toSet()));
+            allBucketDirs.addAll(table.getBuckets().stream().map(b -> PathUtils.getParent(b)).collect(Collectors.toSet()));
 
             for (String bucketDir : allBucketDirs) {
                 URI fullPathBucketDir = table.getRootUri().resolve(bucketDir);
@@ -638,7 +638,7 @@ public class BucketManager<T extends DictionaryEntry> {
         List<String> bucketsToDelete = new ArrayList<>();
         try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir.toString())) {
             for (String f : pathList.collect(Collectors.toList())) {
-                String fileName = Path.of(f).getFileName().toString();
+                String fileName = PathUtils.getFileName(f);
                 String bucketFile = PathUtils.relativize(table.getRootUri(), fullPathBucketDir.resolve(f).toString());
                 // !GM last access time.  Setting as 0 for now which basically disables the graceperiod.
                 long lastAccessTime = 0; //Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
@@ -736,7 +736,7 @@ public class BucketManager<T extends DictionaryEntry> {
     private Map<String, List<T>> findBucketsToCreate(TableLock lock, Collection<String> bucketsToDelete, int maxBucketCount) {
         lock.assertValid();
 
-        List<Path> relBucketsToDelete = bucketsToDelete != null
+        List<String> relBucketsToDelete = bucketsToDelete != null
                 ? bucketsToDelete.stream().map(b -> PathUtils.resolve(table.getRootPath(), b)).collect(Collectors.toList())
                 : null;
 
@@ -744,7 +744,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 .filter(l -> !l.hasBucket()
                         || (!l.isDeleted()
                             && relBucketsToDelete != null
-                            && relBucketsToDelete.contains(Paths.get(l.getBucketReal()))))
+                            && relBucketsToDelete.contains(l.getBucketReal(table.getRootUri()))))
                 .collect(Collectors.toList());
 
         int bucketCreateCount = (int) Math.ceil((double) lines2bucketize.size() / getBucketSize());

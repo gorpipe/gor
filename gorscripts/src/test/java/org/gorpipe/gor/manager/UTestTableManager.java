@@ -39,8 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,8 +105,8 @@ public class UTestTableManager {
         TableManager man = TableManager.newBuilder().validateFiles(false).build();
         BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
-        man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        man.insert(dictFile, BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
+        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).collect(Collectors.joining());
 
@@ -186,7 +186,7 @@ public class UTestTableManager {
 
         // Check the result.
         TableManager man = new TableManager();
-        Collection<? extends DictionaryEntry> entries = man.selectAll(gordFile);
+        Collection<? extends DictionaryEntry> entries = man.selectAll(gordFile.toString());
         Assert.assertEquals("File count incorrect", fileCount, entries.size());
     }
 
@@ -202,7 +202,7 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         Process p = null;
 
         // Bucketize in process.   Set the pack level, otherwise we will sometimes pack the buckets and fail the test.
@@ -262,7 +262,7 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(20);
         buc.setBucketSize(100);
@@ -299,20 +299,22 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = DictionaryTable.createDictionaryWithData(name, workDirPath, dataFiles);
-
-        long startTime = System.currentTimeMillis();
-        log.info("Time select all: {}", startTime);
-        table.reloadForce();
-        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap(    "PN100"), false);
-        long newTime = System.currentTimeMillis() - startTime;
-        log.info("Time using table manager (filter by tag): {}", newTime);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        long startTime;
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
         Dictionary.DictionaryLine[] oldFiles = d.getSources( Collections.unmodifiableSortedSet(new TreeSet<>(Collections.singletonList("PN100"))), true, false);
         long oldTime = System.currentTimeMillis() - startTime;
         log.info("Time using old dictionary code: {}", oldTime);
+        System.out.println(String.format("Time using old dictionary code: %d", oldTime));
+
+        startTime = System.currentTimeMillis();
+        table.reloadForce();
+        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(new HashSet<>(Arrays.asList("PN100")), false, false);
+        long newTime = System.currentTimeMillis() - startTime;
+        log.info("Time using table manager (filter by tag): {}", newTime);
+        System.out.println(String.format("Time using table manager (filter by tag): %d", newTime));
 
         Assert.assertEquals("Old and new impl dont give same number of files", oldFiles.length, newFiles.size());
         Assert.assertTrue("Much slower than old implementtion", newTime - oldTime < 500);
@@ -329,7 +331,8 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-            DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
+        //DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
+        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/gorman/100k_gorman_test/100k_orginal.gord"));
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
@@ -338,14 +341,40 @@ public class UTestTableManager {
 
         startTime = System.currentTimeMillis();
         table.reloadForce();
-        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(table.tagmap("PN515218"), false);
+        List<? extends DictionaryEntry> newFiles = table.getOptimizedLines(new HashSet<>(Arrays.asList("PN515218")), true, false);
         long newTime = System.currentTimeMillis() - startTime;
-
-        log.info("Time using table manager: {}", newTime);
-        log.info("Time using old dictionary code: {}", oldTime);
+        
+        System.out.println(String.format("Time using table manager (load and filter by single tag): %d ms (%d files)", newTime, newFiles.size()));
+        log.info("Time using table manager: {} ms", newTime);
+        System.out.println(String.format("Time using old dictionary code (load and filter by single tag): %d ms (%d files)", oldTime, oldFiles.length));
+        log.info("Time using old dictionary code: {} ms", oldTime);
 
         Assert.assertEquals("Old and new impl dont give same number of files", oldFiles.length, newFiles.size());
-        Assert.assertTrue("Much slower than old implementtion", newTime - oldTime < 500);
+        Assert.assertTrue("Much slower than old implementation", newTime - oldTime < 500);
+
+
+        Set<String> randomTags = new HashSet<>();
+        List<String> allTags = table.getAllActiveTags().stream().toList();
+        Random rand = new Random();
+        for (int i = 0; i < 10000; i++) {
+            randomTags.add(allTags.get(rand.nextInt(allTags.size() - 1)));
+        }
+
+        startTime = System.currentTimeMillis();
+        oldFiles = d.getSources(Collections.unmodifiableSortedSet(new TreeSet<>(randomTags)), true, false);
+        oldTime = System.currentTimeMillis() - startTime;
+
+        startTime = System.currentTimeMillis();
+        newFiles = table.getOptimizedLines(new HashSet<>(randomTags), true, false);
+        newTime = System.currentTimeMillis() - startTime;
+
+        System.out.println(String.format("Time using table manager (filter by %d tags): %d ms (%d files)", randomTags.size(), newTime, newFiles.size()));
+        log.info("Time get {} using table manager: {} ms", randomTags.size(), newTime);
+        System.out.println(String.format("Time using old dictionary code (filter by %d tags): %d ms (%d files)", randomTags.size(), oldTime, oldFiles.length));
+        log.info("Time get {} using old dictionary code: {} ms", randomTags.size(), oldTime);
+
+        Assert.assertEquals("Old and new impl dont give same number of files", oldFiles.length, newFiles.size());
+        Assert.assertTrue("Much slower than old implementation", newTime - oldTime < 500);
     }
 
     @Ignore
@@ -485,7 +514,7 @@ public class UTestTableManager {
         DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
-        DictionaryTable table1 = DictionaryTable.createDictionaryWithData(name + 1, workDirPath, new HashMap<>());
+        DictionaryTable table1 = TestUtils.createDictionaryWithData(name + 1, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table1, false, BucketManager.BucketPackLevel.NO_PACKING);
     }
 
@@ -505,7 +534,7 @@ public class UTestTableManager {
 
         man.setBucketSize(1);
         man.setMinBucketSize(1);
-        DictionaryTable table2 = DictionaryTable.createDictionaryWithData(name + 2, workDirPath, new HashMap<>());
+        DictionaryTable table2 = TestUtils.createDictionaryWithData(name + 2, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table2, true, BucketManager.BucketPackLevel.NO_PACKING);
         Assert.assertEquals("Number of used buckets wrong", table2.filter().get().size(), table2.filter().get().stream().map(e -> e.getBucket()).filter(b -> b != null).distinct().count());
     }
@@ -526,7 +555,7 @@ public class UTestTableManager {
 
         man.setBucketSize(4);
         man.setMinBucketSize(2);
-        DictionaryTable table3 = DictionaryTable.createDictionaryWithData(name + 3, workDirPath, new HashMap<>());
+        DictionaryTable table3 = TestUtils.createDictionaryWithData(name + 3, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table3, true, BucketManager.BucketPackLevel.NO_PACKING);
         Assert.assertEquals("Number of used buckets wrong", table3.selectAll().size() / 2, table3.filter().get().stream().map(e -> e.getBucket()).filter(b -> b != null).distinct().count());
     }
@@ -548,7 +577,7 @@ public class UTestTableManager {
 
         man.setBucketSize(4);
         man.setMinBucketSize(2);
-        DictionaryTable table4 = DictionaryTable.createDictionaryWithData(name + 4, workDirPath, new HashMap<>());
+        DictionaryTable table4 = TestUtils.createDictionaryWithData(name + 4, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table4, true, BucketManager.BucketPackLevel.FULL_PACKING);
         Assert.assertEquals("Number of used buckets wrong", table4.selectAll().size() / 4 + (table4.selectAll().size() % 4) / 2,
                 table4.filter().get().stream().map(e -> e.getBucket()).filter(b -> b != null).distinct().count());
@@ -563,8 +592,8 @@ public class UTestTableManager {
         table.save();
         
         if (bucketize) man.bucketize(table.getPath(), pack, 1, 1000, null);
-        TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " | select 1-6");
-        TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + entries[0].getContentReal().toString(), "gor " + table.getPath().toString() + " -f " + pns[0] + " | select 1-6");
+        TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + table.getContentReal(entries[0]), "gor " + table.getPath().toString() + " | select 1-6");
+        TestUtils.assertTwoGorpipeResults("Unexpected content", "gor " + table.getContentReal(entries[0]), "gor " + table.getPath().toString() + " -f " + pns[0] + " | select 1-6");
 
         table.reload();
         table.delete(table.filter().aliases(pns[0]).get());
@@ -577,7 +606,7 @@ public class UTestTableManager {
             System.err.println("Added: " + pns[i]);
             try {
                 System.err.println(table.getPath());
-                System.err.println(FileUtils.readFileToString(table.getPath().toFile(), Charset.defaultCharset()));
+                System.err.println(FileUtils.readFileToString(new File(table.getPath()), Charset.defaultCharset()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -594,11 +623,11 @@ public class UTestTableManager {
 
             table.reload();
 
-            TestUtils.assertTwoGorpipeResults("Unexpected tag content", "gor " + entries[i].getContentReal().toString(), "gor " + table.getPath().toString() + " -f " + pns[i] + " | select 1-6");
+            TestUtils.assertTwoGorpipeResults("Unexpected tag content", "gor " + table.getContentReal(entries[i]), "gor " + table.getPath().toString() + " -f " + pns[i] + " | select 1-6");
 
             TestUtils.assertTwoGorpipeResults("Unexpected all content",
-                    "gor " + activeEntries.stream().map(e -> e.getContentReal().toString()).collect(Collectors.joining(" ")),
-                    "gor " + table.getPath().toString() + " | select 1-6");
+                    "gor " + activeEntries.stream().map(e -> table.getContentReal(e)).collect(Collectors.joining(" ")) + " | sort 1" ,
+                    "gor " + table.getPath().toString() + " | select 1-6" + " | sort 1" );
         }
         // Must reload to update from bucketizing (as that is not called on the table).
         table.reload();
@@ -633,7 +662,7 @@ public class UTestTableManager {
         //String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
         List<String> aliases = new ArrayList<>();
         aliases.add("B");
-        man.delete(dictFile, table.filter()
+        man.delete(dictFile.toString(), table.filter()
                 //.files(allFiles.length > 0 ? allFiles : null)
                 .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
                 //.tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)
@@ -668,8 +697,8 @@ public class UTestTableManager {
         Assert.assertEquals("Insert failed", testFile3 + "\tC\n" + testFile4 + "\tD\n", result);
         Assert.assertEquals("Insert failed", 2, table.selectAll().size());
 
-        Files.createDirectories(table.getRootPath().resolve("X"));
-        Files.createDirectories(table.getRootPath().resolve("Y"));
+        Files.createDirectories(Path.of(table.getRootPath()).resolve("X"));
+        Files.createDirectories(Path.of(table.getRootPath()).resolve("Y"));
         testTableManagerUtil.executeGorManagerCommand(table.getPath().toString(), null, "bucketize", new String[]{"-w", "1", "--min_bucket_size", "1", "--bucket_dirs", "X,Y"}, ".", true);
         table.reload();
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());

@@ -22,12 +22,11 @@
 
 package org.gorpipe.gor.table.dictionary;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.*;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
@@ -48,10 +47,16 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     private List<T> rawLines;
     // For indices we use hashed values.  Insert into the dict is much much faster, and it takes a lot less space.  Getting data takes
     // a little bit longer as you could get small list of values you need to loop through.
-    private ArrayListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
-    private ArrayListMultimap<Integer, T> contentHashToLines;
-    private int nextIndexOrderKey = 0;
+    private ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
+    private ListMultimap<Integer, T> contentHashToLines;
+
+    List<T> activeLines;
+    private Multiset<String> activeTags;
+    private int deletedTagsCount = 0;
     private final BaseDictionaryTable<T> table;
+
+    private boolean dataLoaded = false;
+    private boolean tagHashLoaded = false;
 
     /**
      * Construct new dict file from the given path and chromosome cache.
@@ -65,7 +70,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     }
 
     @Override
-    public void insert(T line, boolean hasUniqueTags) {
+    synchronized public void insert(T line, boolean hasUniqueTags) {
         // Update the line to make it complete and check if double entries are allowed.
         T oldLine;
 
@@ -86,38 +91,34 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
         addEntryToTagMap(line);
     }
 
-        /**
-         * Remove line from the table.
-         *
-         * @param lineToRemove template of the line to remove.
-         * @param keepIfBucket if true and the line has bucket we mark the line deleted, else we just remove the line.
-         */
-        @Override
-        public void delete(T lineToRemove, boolean keepIfBucket) {
-            T line = this.findLine(lineToRemove);
-            if (line != null) {
-                if (line.getIndexOrderKey() >= 0 && line.getIndexOrderKey() < getEntries().size()
-                        && line.equals(getEntries().get(line.getIndexOrderKey()))) {
-                    getEntries().remove(line.getIndexOrderKey());
-                } else {
-                    getEntries().remove(line);
-                }
-                removeEntryFromContentMap(line);
-                removeEntryFromTagMap(line);
+    /**
+     * Remove line from the table.
+     *
+     * @param lineToRemove template of the line to remove.
+     * @param keepIfBucket if true and the line has bucket we mark the line deleted, else we just remove the line.
+     */
+    @Override
+    synchronized public void delete(T lineToRemove, boolean keepIfBucket) {
+        T line = this.findLine(lineToRemove);
+        if (line != null) {
+            getEntries().remove(line);
+            removeEntryFromContentMap(line);
+            removeEntryFromTagMap(line);
 
-                if (line.hasBucket() && keepIfBucket) {
-                    // NOTE: the deleted flag is part of the hashCode so we remove and add again if we change it.
-                    T entry = (T) TableEntry.copy(line);
-                    entry.setDeleted(true);
-                    getEntries().add(entry);
-                    addEntryToContentMap(entry);
-                    addEntryToTagMap(entry);
-                }
+            if (line.hasBucket() && keepIfBucket) {
+                // NOTE: the deleted flag is part of the hashCode so we remove and add again if we change it.
+                T entry = (T) TableEntry.copy(line);
+                entry.setDeleted(true);
+                getEntries().add(entry);
+                addEntryToContentMap(entry);
+                addEntryToTagMap(entry);
             }
         }
+    }
 
     @Override
-    public void clear() {
+    synchronized public void clear() {
+        dataLoaded = false;
         this.rawLines = null;
         clearContentMap();
         clearTagMap();
@@ -125,7 +126,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
 
     @Override
     public List<T> getEntries() {
-        if (this.rawLines == null) {
+        if (!this.dataLoaded) {
             loadLinesAndUpdateIndices();
         }
 
@@ -135,13 +136,14 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     @Override
     public List<T> getEntries(String... aliasesAndTags) {
         List<T> lines2Search = getEntries();
-        if (tagHashToLines == null) {
+        if (!tagHashLoaded) {
             updateTagMap();
         }
         if (tagHashToLines != null && aliasesAndTags != null) {
             // If we have tags and tag map to lines we use that to get a better list of lines to search..
             lines2Search = Arrays.stream(aliasesAndTags).flatMap(t -> tagHashToLines.get(t.hashCode()).stream())
-                    .sorted(Comparator.comparing(TableEntry::getIndexOrderKey)).distinct().collect(Collectors.toList());
+                    .sorted(Comparator.comparing(TableEntry::getKey)).distinct()
+                    .collect(Collectors.toList());
         }
         return lines2Search;
     }
@@ -152,48 +154,67 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     }
 
     @Override
+    public List<T> getActiveLines() {
+        if (!dataLoaded) {
+            loadLinesAndUpdateIndices();
+        }
+        return activeLines;
+    }
+
+    @Override
     public boolean isLoaded() {
         return this.rawLines != null;
     }
 
     @Override
     public Set<String> getAllActiveTags() {
-        // Note:  Slow implementation, could use caching.
-        Set<String> allTags = new HashSet<>();
-        Iterator<T> it = iterator();
-        while (it.hasNext()) {
-            T entry = it.next();
-            if (!entry.isDeleted()) {
-                allTags.addAll(Arrays.asList(entry.getFilterTags())); // Capture all tags found in dictionary files
-            }
+        if (!dataLoaded) {
+            loadLinesAndUpdateIndices();
         }
-        return allTags;
+        return activeTags.elementSet();
     }
 
     @Override
-    public long size() {
+    public boolean hasDeletedTags() {
+        return deletedTagsCount > 0;
+    }
+
+    @Override
+    public int size() {
         return getEntries().size();
     }
 
     private void updateContentMap() {
-        contentHashToLines = ArrayListMultimap.create(getEntries().size(), 1);
-        nextIndexOrderKey = 0;
-        for (T entry : getEntries()) {
+        contentHashToLines = ArrayListMultimap.create(rawLines.size(), 1);
+        activeLines = new ArrayList<>(rawLines.size());
+        activeTags = HashMultiset.create();
+
+        for (T entry : rawLines) {
             addEntryToContentMap(entry);
         }
     }
 
-    private void updateTagMap() {
-        tagHashToLines = ArrayListMultimap.create(getEntries().size(), 1);
-        for (T entry : getEntries()) {
+    synchronized private void updateTagMap() {
+        if (tagHashLoaded) return;
+        tagHashToLines = ArrayListMultimap.create(rawLines.size(), 1);
+        for (T entry : rawLines) {
             addEntryToTagMap(entry);
         }
+        tagHashLoaded = true;
     }
 
     private void addEntryToContentMap(T entry) {
-        entry.setIndexOrderKey(nextIndexOrderKey++);
         if (contentHashToLines != null) {
             contentHashToLines.put(entry.getSearchHash(), entry);
+        }
+
+        if (!entry.isDeleted()) {
+            activeLines.add(entry);
+            if (activeTags != null) {
+                activeTags.addAll(Arrays.asList(entry.getFilterTags()));
+            }
+        } else {
+            deletedTagsCount++;
         }
     }
 
@@ -209,6 +230,14 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
         if (contentHashToLines != null) {
             contentHashToLines.remove(entry.getSearchHash(), entry);
         }
+        if (!entry.isDeleted()) {
+            activeLines.remove(entry);
+            if (activeTags != null) {
+                Multisets.removeOccurrences(activeTags, Arrays.asList(entry.getFilterTags()));
+            }
+        } else {
+            deletedTagsCount--;
+        }
     }
 
     private void removeEntryFromTagMap(T entry) {
@@ -221,18 +250,22 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
 
     private void clearContentMap() {
         contentHashToLines = null;
-        nextIndexOrderKey = 0;
+        activeLines = null;
+        activeTags = null;
+        deletedTagsCount = 0;
     }
 
     private void clearTagMap() {
+        tagHashLoaded = false;
         tagHashToLines = null;
     }
 
-
-    private void loadLinesAndUpdateIndices() {
+    synchronized private void loadLinesAndUpdateIndices() {
+        if (dataLoaded) return;
+        log.trace("Loading entries into table {} {}", table.getName(), table);
         this.rawLines = this.loadLines();
         this.updateContentMap();
-
+        dataLoaded = true;
         log.trace("Loaded {} entries into table {}", this.rawLines.size(), table.getName());
     }
 
@@ -242,36 +275,36 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     private List<T> loadLines() {
         log.debug("Loading lines for {}", table.getName());
 
+        // Relativesing the data is expensive, but because manual editing is common we need to do it if the file has not been
+        // saved by table service before.
         boolean hasNeverBeenSavedProperly = TableHeader.NO_SERIAL.equals(table.getHeader().getProperty(TableHeader.HEADER_SERIAL_KEY, TableHeader.NO_SERIAL));
-        boolean needsRelativize = hasNeverBeenSavedProperly || true;  // Because manual editing is common we need to force it for now.
+        boolean needsRelativize = hasNeverBeenSavedProperly;
 
         try {
-            List<T> newRawLines = new ArrayList<>();
-            if (table.getFileReader().exists(table.getPath().toString())) {
-                try (BufferedReader br = table.getFileReader().getReader(table.getPath().toString())) {
-                    String line;
-                    // Remove the header.  For large file it helps not having to check for the header on each line.
-                    while ((line = br.readLine()) != null) {
-                        line = line.trim();
-                        if (line.length() != 0 && !TableHeader.isHeaderLine(line)) {
-                            break;
-                        }
-                    }
-                    // Read rest of file.
-                    try {
-                        Method parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class, boolean.class);
-                        while (line != null) {
-                            line = line.trim();
-                            final T entry = (T) parseEntryMethod.invoke(null, line, table.getRootUri(), needsRelativize);
-                            if (entry != null) {
-                                newRawLines.add(entry);
-                            }
+            List<T> newRawLines =  new ArrayList<>();
+            if (table.getFileReader().exists(table.getPathUri().toString())) {
+                try (BufferedReader br = table.getFileReader().getReader(table.getPathUri().toString())) {
 
-                            line = br.readLine();
-                        }
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+                    Method parseEntryMethod;
+                    try {
+                        parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class, boolean.class);
+                    } catch (NoSuchMethodException ex) {
                         throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName(), ex);
                     }
+                    br.lines().parallel()
+                        .map(l -> {
+                            String line = l.trim();
+                            if (!line.isEmpty() && !line.startsWith("#")) {
+                                try {
+                                    return (T) parseEntryMethod.invoke(null, line, table.getRootUri(), needsRelativize);
+                                } catch(IllegalAccessException | InvocationTargetException ex){
+                                    throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName(), ex);
+                                }
+                            }
+                            return null;
+                        })
+                        .filter(e -> e != null)
+                        .forEachOrdered(e -> newRawLines.add(e));
                 }
             }
             return newRawLines;

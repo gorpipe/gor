@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.table.lock;
 
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.Table;
 
 import java.time.Duration;
 
@@ -32,7 +32,7 @@ import java.time.Duration;
  */
 public class NoTableLock extends TableLock {
 
-    public NoTableLock(BaseDictionaryTable table, String name) {
+    public NoTableLock(Table table, String name) {
         super(table, name);
     }
 
@@ -63,7 +63,7 @@ public class NoTableLock extends TableLock {
 
     @Override
     public int getWriteHoldCount() {
-        return 0;
+        return 1;
     }
 
     @Override

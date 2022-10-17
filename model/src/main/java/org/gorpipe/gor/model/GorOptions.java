@@ -32,16 +32,15 @@ import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.filters.InFilter;
 import org.gorpipe.gor.driver.filters.RowFilter;
-import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.monitor.GorMonitor;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
@@ -88,6 +87,7 @@ public class GorOptions {
      * True if we cache all the parsed lines of a dictionary once we have read it, and make a hash map from pn's to lines.
      */
     private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+    private final boolean useTable = true;
     /**
      * The gorPipeSession
      */
@@ -730,7 +730,11 @@ public class GorOptions {
         if (isDictionary) {
             // Must decide how to treat range and tag information for dictionary files
             try {
-                processDictionary(fileName, allowBucketAccess, projectContext, isSilentTagFilter, alltags);
+                if (useTable) {
+                    processDictionaryTable(fileName, allowBucketAccess, projectContext, isSilentTagFilter, alltags);
+                } else {
+                    processDictionary(fileName, allowBucketAccess, projectContext, isSilentTagFilter, alltags);
+                }
             } catch (IOException e) {
                 throw new GorSystemException(e);
             }
@@ -841,10 +845,55 @@ public class GorOptions {
         }
     }
 
-    public static String getFileSignature(String fileName, String securityContext) throws IOException {
-        //TODO: This method should really take in SourceReference or better yet be removed and replaced with calls to datasource.getUniqueId
-        DataSource ds = GorDriverFactory.fromConfig().getDataSource(new SourceReferenceBuilder(fileName).securityContext(securityContext).build());
-        return getFileSignature(ds);
+    private void processDictionaryTable(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
+        // TODO: Remove when driver framework supports isDirectory
+        fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
+        DictionaryTable table = DictionaryTable.getDictionaryTable(fileName, session.getProjectContext().getFileReader(), this.useDictionaryCache);
+
+        this.isNoLineFilter = isNoLineFilter || !table.getLineFilter();
+        this.hasLocalDictonaryFile = hasLocalDictonaryFile || !table.getAllActiveTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags
+
+        final List<DictionaryEntry> fileList = table.getOptimizedLines(this.columnTags, allowBucketAccess, isSilentTagFilter);
+        this.isDictionaryWithBuckets = table.hasBuckets();
+
+        final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
+        if (!hasTags && table.hasDeletedEntries()) {
+            if (this.columnTags == null) {
+                this.columnTags = new HashSet<>(table.getAllActiveTags());
+            } else {
+                this.columnTags.addAll(table.getAllActiveTags());
+            }
+        }
+
+        if (sourceColName == null) {
+            // Note:  if multiple dicts or dicts and files the first dict with source column defined will
+            //        determine the source column name.
+            sourceColName = table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
+        }
+
+        if (tableHeader == null) {
+            tableHeader = table.getProperty(TableHeader.HEADER_COLUMNS_KEY);
+            if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
+        }
+
+        for (DictionaryEntry line : fileList) {
+            subProcessOfProcessDictionaryTable(table, line, allowBucketAccess, projectContext, alltags,
+                    table.getBucketDeletedFiles(PathUtils.getFileName(line.getContent())), true );
+        }
+    }
+
+    private void subProcessOfProcessDictionaryTable(DictionaryTable table, DictionaryEntry dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags, boolean isSilentTagFilter) {
+        String contentReal = table.getContentReal(dictionaryLine);
+        if (dictionaryLine.isSourceInserted()) {
+            files.add(new SourceRef(contentReal, dictionaryLine.getAlias(), null, null,
+                    dictionaryLine.getRange().getStartChr(), dictionaryLine.getRange().getStartPos(), dictionaryLine.getRange().getStopChr(), dictionaryLine.getRange().getStopPos(),
+                    new HashSet<>(Arrays.asList(dictionaryLine.getTags())), deletedTags, dictionaryLine.isSourceInserted(),
+                    projectContext.securityKey, projectContext.commonRoot));
+        } else {
+            addSourceRef(contentReal, contentReal, false, projectContext,
+                    dictionaryLine.getAlias(), dictionaryLine.getRange().getStartChr(), dictionaryLine.getRange().getStartPos(), dictionaryLine.getRange().getStopChr(), dictionaryLine.getRange().getStopPos(),
+                    new HashSet<>(Arrays.asList(dictionaryLine.getTags())), allowBucketAccess, alltags, isSilentTagFilter);
+        }
     }
 
     public static String getFileSignature(DataSource source) throws IOException {

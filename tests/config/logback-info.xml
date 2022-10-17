@@ -24,6 +24,10 @@
     <logger name="org.gorpipe.gor.driver.utils.FileCacheManager" level="TRACE"/>
     -->
 
+    <logger name="com.nextcode" level="TRACE"/>
+    <logger name="org.gorpipe.gor.table" level="TRACE"/>
+    <logger name="org.gorpipe.gor.table.Dictionary" level="TRACE"/>
+
     <root level="info">
         <appender-ref ref="STDERR"/>
     </root>

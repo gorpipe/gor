@@ -49,8 +49,8 @@ public class DeleteCommand extends FilterOptions implements Runnable{
         TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
 
         String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toPath());
-        tm.delete(dictionaryFile.toPath(), table.filter()
+        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
+        tm.delete(dictionaryFile.toString(), table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
                 .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
                 .tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)

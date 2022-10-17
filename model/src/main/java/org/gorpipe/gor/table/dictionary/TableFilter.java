@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -77,11 +76,6 @@ public class TableFilter<T extends DictionaryEntry> {
         return this;
     }
 
-    public TableFilter<T> buckets(Path... val) {
-        this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(PathUtils.resolve(baseDictionaryTable.getRootUri(), b.toString()))).toArray(String[]::new) : null;
-        return this;
-    }
-
     public TableFilter<T> chrRange(String val) {
         GenomicRange gr = GenomicRange.parseGenomicRange(val);
         this.chrRange = gr != null ? gr.formatAsTabDelimited() : null;
@@ -123,12 +117,12 @@ public class TableFilter<T extends DictionaryEntry> {
     }
 
     private boolean matchFiles(T l) {
-        return files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentReal()));
+        return files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentReal(getTable().getRootUri())));
     }
 
     private boolean matchBuckets(T l) {
         return buckets == null || (!l.hasBucket() && buckets.length == 0) ||
-                (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal())));
+                (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal(getTable().getRootUri()))));
     }
 
     private boolean matchAliases(T l) {

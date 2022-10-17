@@ -55,6 +55,6 @@ public class BucketizeCommand extends CommandBucketizeOptions implements Runnabl
         TableManager tm = TableManager.newBuilder().minBucketSize(this.minBucketSize).bucketSize(this.bucketSize)
                 .useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout))
                 .build();
-        tm.bucketize(dictionaryFile.toPath(), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().collect(Collectors.toList()));
+        tm.bucketize(dictionaryFile.toString(), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().collect(Collectors.toList()));
     }
 }

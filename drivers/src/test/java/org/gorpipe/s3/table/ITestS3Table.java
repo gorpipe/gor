@@ -3,7 +3,7 @@ package org.gorpipe.s3.table;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.s3.shared.ITestS3Shared;
 import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
@@ -25,11 +25,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 
+import static gorsat.TestUtils.runGorPipeServer;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_KEY;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_LOCATION_KEY;
-import static org.gorpipe.s3.driver.ITestBvlMinOnS3.awsSecurityContext;
-import static org.gorpipe.s3.shared.ITestS3Shared.createSecurityContext;
-import static org.gorpipe.s3.shared.ITestS3Shared.runGorPipeServer;
+import static org.gorpipe.utils.DriverUtils.awsSecurityContext;
 
 /**
  * Note, there are S3Shared integration tests in gor-services (ITestS3Shared).
@@ -81,7 +80,7 @@ public class ITestS3Table {
         workDirPath = workDir.getRoot().toPath();
         Files.createDirectory(workDirPath.resolve("some_project"));
 
-        String s3dataSecurityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String s3dataSecurityContext = DriverUtils.createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String awsSecurityContext = awsSecurityContext(S3_KEY, S3_SECRET);;
         BundledCredentials.Builder b = new BundledCredentials.Builder()
                 .addCredentials(BundledCredentials.fromSecurityContext(s3dataSecurityContext))
@@ -180,7 +179,7 @@ public class ITestS3Table {
             man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
 
             table.reload();
-            Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
+            Assert.assertEquals("New lines should be bucketized", 0, table.needsBucketizing().size());
 
             buckets = table.getBuckets();
             String bucket = buckets.get(0);
@@ -220,9 +219,9 @@ public class ITestS3Table {
             String bucket = buckets.get(0);
             Assert.assertTrue(table.getFileReader().exists(bucket));
 
-            Path localBucketFile = table.getRootPath().resolve(bucket + ".link");
+            String localBucketFile = PathUtils.resolve(table.getRootPath(), bucket + ".link");
 
-            Assert.assertEquals("s3data://project/" +  bucket + "\n", Files.readString(localBucketFile));
+            Assert.assertEquals("s3data://project/" +  bucket + "\n", Files.readString(Path.of(localBucketFile)));
 
             String[] bucketResult = runGorPipeServer("gor " + localBucketFile,
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");

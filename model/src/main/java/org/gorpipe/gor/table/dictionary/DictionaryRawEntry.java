@@ -110,7 +110,8 @@ public class DictionaryRawEntry extends DictionaryEntry {
 
     @Override
     public final boolean isDeleted() {
-        if (isDeleted == null) {
+        // Use bucketLogical as that is set at the same time, and the deleted flag is only set if we have bucket.
+        if (bucketLogical == null) {
             parseFileInfoLocal();
         }
         return isDeleted;

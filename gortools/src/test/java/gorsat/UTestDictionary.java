@@ -525,7 +525,8 @@ public class UTestDictionary {
     }
 
     @Test
-    public void testEmptyGorDictionary() throws IOException {
+    public void
+    testEmptyGorDictionary() throws IOException {
         var workDirPath = workDir.getRoot().toPath();
         var path = Paths.get("one/two");
         var dictpath = workDirPath.resolve(path);

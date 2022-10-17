@@ -97,7 +97,7 @@ public abstract class FileTable<T extends Row> extends BaseTable<T> {
 
     @Override
     public void insertEntries(Collection<DictionaryEntry> entries) {
-        insertFiles(entries.stream().map(DictionaryEntry::getContentReal).toArray(String[]::new));
+        insertFiles(entries.stream().map(e -> getContentReal(e.getContentRelative())).toArray(String[]::new));
     }
 
     protected void insertFiles(String... gorFiles) {

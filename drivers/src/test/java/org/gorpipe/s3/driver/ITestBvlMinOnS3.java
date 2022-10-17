@@ -23,6 +23,8 @@ import org.junit.experimental.categories.Category;
 import java.io.IOException;
 import java.util.Properties;
 
+import static org.gorpipe.utils.DriverUtils.awsSecurityContext;
+
 @Category(IntegrationTests.class)
 public class ITestBvlMinOnS3 extends BvlTestSuite {
 
@@ -63,14 +65,6 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     @Override
     protected String securityContext() throws IOException {
         return awsSecurityContext(S3_KEY, S3_SECRET);
-    }
-
-    public static String awsSecurityContext(String key, String secret) throws IOException {
-        // Credentials for gor_unittest user in nextcode AWS account
-        Credentials cred = new Credentials.Builder().service("s3").lookupKey("nextcode-unittest").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();
-        Credentials bogus = new Credentials.Builder().service("s3").lookupKey("bla").set(Credentials.Attr.KEY, "DummyKey").set(Credentials.Attr.SECRET, "DummySecret").build();
-        BundledCredentials creds = new BundledCredentials.Builder().addCredentials(bogus, cred).build();
-        return creds.addToSecurityContext(null);
     }
 
     @Test

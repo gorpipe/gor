@@ -2,10 +2,7 @@ package org.gorpipe.s3.shared;
 
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.WrappedDataSource;
 import org.gorpipe.utils.DriverUtils;
-import gorsat.process.*;
-import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
@@ -30,6 +27,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+
+import static gorsat.TestUtils.runGorPipeCLI;
+import static gorsat.TestUtils.runGorPipeServer;
+import static org.gorpipe.utils.DriverUtils.createSecurityContext;
 
 @Category(IntegrationTests.class)
 public class ITestS3Shared {
@@ -81,7 +82,7 @@ public class ITestS3Shared {
 
         String dataPath = "user_data/a.gor";
         try {
-            DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+            getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
             Assert.fail("No fallback should throw error");
         } catch (GorResourceException gre) {
             Assert.assertTrue(systemErrRule.getLog().contains("File s3data://project/" + dataPath + " not found at " +
@@ -196,7 +197,7 @@ public class ITestS3Shared {
         Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
 
         FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
-                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
+                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
         DataSource source = fileReader.resolveUrl("a.gorz");
 
         Assert.assertNotNull("Source should be resolved", source);
@@ -222,10 +223,10 @@ public class ITestS3Shared {
         Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
 
         FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
-                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
+                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
 
         try {
-            DataSource source = fileReader.resolveUrl("../a.gorz");
+            fileReader.resolveUrl("../a.gorz");
             Assert.fail("Should not be resolved, link outside project");
         } catch (GorResourceException e) {
             // Expected
@@ -245,7 +246,7 @@ public class ITestS3Shared {
     public void testReadDirectly() {
         Path gorRoot  = workDirPath.resolve("some_project");
         FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
-                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env"), null);
+                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
 
         try {
             fileReader.resolveUrl("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz");
@@ -264,7 +265,7 @@ public class ITestS3Shared {
         Files.createDirectory(gorRoot);
         //Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
         Files.write(linkFile, "s3data://project/ref/dbsnp.gorz".getBytes(StandardCharsets.UTF_8));
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
 
         String result = runGorPipeServer("a.gorz | top 1000000 | group genome -count", gorRoot.toString(), securityContext);
 
@@ -274,7 +275,7 @@ public class ITestS3Shared {
 
     @Test
     public void testProjectWriteRootCLI() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "dummy.gor";
 
@@ -291,7 +292,7 @@ public class ITestS3Shared {
 
     @Test
     public void testProjectWriteUserDataCLI() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy.gor";
 
@@ -308,7 +309,7 @@ public class ITestS3Shared {
 
     @Test
     public void testProjectWriteRootServer() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "dummy.gor";
 
@@ -322,7 +323,7 @@ public class ITestS3Shared {
 
     @Test
     public void testProjectWriteUserDataServer() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy.gor";
 
@@ -339,7 +340,7 @@ public class ITestS3Shared {
 
     @Test
     public void testSharedWriteRootServer() throws IOException {
-        String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env");
+        String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "dummy.gor";
 
@@ -353,7 +354,7 @@ public class ITestS3Shared {
 
     @Test
     public void testSharedWriteUserDataServer() throws IOException {
-        String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env");
+        String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy.gor";
 
@@ -370,7 +371,7 @@ public class ITestS3Shared {
 
     @Test
     public void testProjecSharedProjecttWriteUserDataServer() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project");
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy.gor";
 
@@ -401,60 +402,11 @@ public class ITestS3Shared {
                                                  Credentials.OwnerType ownerType, String owner) throws IOException {
         SourceReference sourceReference = new SourceReference.Builder(provider.getSharedUrlPrefix() + relativePath)
                 .commonRoot("projects/some_project")
-                .securityContext(createSecurityContext(provider.getService(), ownerType, owner))
+                .securityContext(createSecurityContext(provider.getService(), ownerType, owner, S3_KEY, S3_SECRET))
                 .build();
         DataSource source = provider.resolveDataSource(sourceReference);
         return source;
     }
 
-    public static String createSecurityContext(String service, Credentials.OwnerType ownerType, String owner) {
-        Credentials creds = new Credentials.Builder()
-                .service(service)
-                .lookupKey("nextcode-unittest")
-                .ownerType(ownerType)
-                .ownerId(owner)
-                .set(Credentials.Attr.KEY, S3_KEY)
-                .set(Credentials.Attr.SECRET, S3_SECRET)
-                .set(Credentials.Attr.REGION, "us-west-2")
-                .build();
-        BundledCredentials bundleCreds = new BundledCredentials.Builder().addCredentials(creds).build();
-        return bundleCreds.addToSecurityContext("");
-    }
 
-    public static String runGorPipeServer(String query, String projectRoot, String securityContext) {
-        PipeOptions options = new PipeOptions();
-        options.parseOptions(new String[]{"-gorroot", projectRoot});
-        TestSessionFactory factory = new TestSessionFactory(options, null, true, securityContext);
-
-        try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(factory.create()))) {
-            pipe.init(query, null);
-
-            StringBuilder result = new StringBuilder();
-            result.append(pipe.getHeader());
-            result.append("\n");
-            while (pipe.hasNext()) {
-                result.append(pipe.next());
-                result.append("\n");
-            }
-            return result.toString();
-        }
-    }
-
-    public static String runGorPipeCLI(String query, String gorRoot, String securityContext) {
-        PipeOptions opts = new PipeOptions();
-        opts.gorRoot_$eq(gorRoot);
-        GorSessionFactory sessionFactory = new CLISessionFactory(opts, securityContext);
-        try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(sessionFactory.create()))) {
-            pipe.init(query, null);
-
-            StringBuilder result = new StringBuilder();
-            result.append(pipe.getHeader());
-            result.append("\n");
-            while (pipe.hasNext()) {
-                result.append(pipe.next());
-                result.append("\n");
-            }
-            return result.toString();
-        }
-    }
 }

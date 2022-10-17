@@ -22,8 +22,11 @@
 
 package org.gorpipe.gor.table.dictionary;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +34,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -106,6 +108,8 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
 
     private boolean useEmbeddedHeader = false;  // Should the header be embeded in the table file stored in header file the table data dir.
 
+    private TableAccessOptimizer tableAccessOptimizer;
+
     public DictionaryTable(URI path) {
         super(path);
     }
@@ -117,14 +121,16 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     public DictionaryTable(Path path) {
         super(path.toUri());
     }
-    
+
     public DictionaryTable(String path) {
         super(URI.create(path));
     }
 
     public DictionaryTable(Builder builder) {
         super(builder);
-        this.useEmbeddedHeader = builder.useEmbededHeader;
+        if (builder.useEmbededHeader != null) {
+            this.useEmbeddedHeader = builder.useEmbededHeader;
+        }
     }
 
     @Override
@@ -135,10 +141,15 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     }
 
     @Override
-    public List<? extends DictionaryEntry> getOptimizedLines(Map<Integer, Set<String>> columnTags, boolean allowBucketAccess) {
-        final TableAccessOptimizer optimizer = new TableAccessOptimizer(this);
-        optimizer.update(this.selectAll(), columnTags, allowBucketAccess);
-        return optimizer.getLines();
+    public List<DictionaryEntry> getOptimizedLines(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
+        return getTableAccessOptimizer().getOptimizedEntries(tags, allowBucketAccess, isSilentTagFilter);
+    }
+
+    private TableAccessOptimizer getTableAccessOptimizer() {
+        if (tableAccessOptimizer == null) {
+            tableAccessOptimizer = new DefaultTableAccessOptimizer(this);
+        }
+        return tableAccessOptimizer;
     }
 
     @Override
@@ -198,34 +209,24 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     public void commit() {
         super.commit();
         try {
-            updateFromTempFile(getFolderUri().resolve("header").toString(), getTempFileName(getFolderUri().resolve("header").toString()));
+            if (!useEmbeddedHeader) {
+                updateFromTempFile(getFolderUri().resolve("header").toString(), getTempFileName(getFolderUri().resolve("header").toString()));
+            }
         } catch (IOException e) {
             throw new GorSystemException("Could not move header", e);
         }
     }
 
-    /**
-     * Create or update dictionary.
-     *
-     * @param name     name of the dictionary.
-     * @param rootPath root path
-     * @param data     map with alias to files, to be add to the dictionary.
-     * @return new table created with the given data.
-     */
-    public static DictionaryTable createDictionaryWithData(String name, Path rootPath, Map<String, List<String>> data) {
-        Path tablePath = rootPath.resolve(name + ".gord");
-        if (Files.exists(tablePath)) {
-            throw new GorSystemException("Table already exists:  " + tablePath, null);
-        }
-        DictionaryTable table = new Builder<>(tablePath.toUri()).useHistory(true).validateFiles(false).build();
-        table.insert(data);
-        table.setBucketize(true);
-        table.save();
-        return table;
+    public boolean hasDeletedEntries() {
+        return this.tableEntries.hasDeletedTags();
+    }
+
+    public Collection<String> getBucketDeletedFiles(String path) {
+        return getTableAccessOptimizer().getBucketDeletedFiles(path);
     }
 
     public abstract static class AbstractBuilder<B extends AbstractBuilder<B>> extends BaseDictionaryTable.Builder<B> {
-        boolean useEmbededHeader = false;
+        Boolean useEmbededHeader = null;
 
         private AbstractBuilder(URI path) {
             super(path);
@@ -259,12 +260,32 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         }
     }
 
-    public static Builder newBuilder(URI path) {
-        return new Builder<>(path);
+    final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
+
+    public synchronized static DictionaryTable getDictionaryTable(String path, FileReader fileReader, boolean useCache) throws IOException {
+        if (useCache) {
+            String uniqueID = fileReader.getFileSignature(path);
+            var key = dictCacheKeyFromPathAndRoot(path, fileReader.getCommonRoot());
+            if (uniqueID == null || uniqueID.equals("")) {
+                dictCache.invalidate(key);
+                return new DictionaryTable.Builder<>(path).fileReader(fileReader).id(uniqueID).build();
+            } else {
+                DictionaryTable dictFromCache = dictCache.getIfPresent(key);
+                if (dictFromCache == null || !dictFromCache.getId().equals(uniqueID)) {
+                    DictionaryTable newDict = new DictionaryTable.Builder<>(path).fileReader(fileReader).id(uniqueID).build();
+                    dictCache.put(key, newDict);
+                    return newDict;
+                } else {
+                    return dictFromCache;
+                }
+            }
+        } else {
+            return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
+        }
     }
 
-    public static Builder newBuilder(Path path) {
-        return new Builder<>(path);
+    private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
+        return PathUtils.resolve(commonRoot, path);
     }
 
     // -----------------------------------------------------------------------------------

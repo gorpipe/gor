@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -137,7 +138,7 @@ public class TestTableManagerUtil {
         long startTime = System.currentTimeMillis();
         while (true) {
             // Wait for the temp file to be created (as then the dict has been read)
-            try(var pathList = Files.list(table.getRootPath())) {
+            try(var pathList = Files.list(Path.of(table.getRootPath()))) {
                 long tempFiles  = pathList.filter(f -> f.toString().contains(table.getName() + ".temp.bucketizing.")).count();
                 if (tempFiles == 1) {
                     break;
