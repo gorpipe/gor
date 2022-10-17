@@ -105,11 +105,14 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
         source.setProjectLinkFile(source.getRelativePath() + ".link");
+        source.setProjectLinkFileContent(findSharedSourceLinkContent(source));
+    }
 
+    protected String findSharedSourceLinkContent(S3SharedSource source) {
         if (s3SharedConfig.useHighestTypeInLinks()) {
-            source.setProjectLinkFileContent(S3ProjectDataSourceType.S3POJECTDATA_PREFIX + source.getRelativePath());
+            return S3ProjectSharedSourceType.S3PROJECTSHARED_PREFIX + source.getRelativePath();
         } else {
-            source.setProjectLinkFileContent(getSharedUrlPrefix() + source.getRelativePath());
+            return getSharedUrlPrefix() + source.getRelativePath();
         }
     }
 

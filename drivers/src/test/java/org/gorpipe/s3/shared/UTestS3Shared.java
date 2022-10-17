@@ -59,7 +59,7 @@ public class UTestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3data://shared/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/shared/user_data/a/a.gor", source.getFullPath());
-        Assert.assertEquals("s3data://project/user_data/a.gor", source.getProjectLinkFileContent());
+        Assert.assertEquals("s3data://shared/user_data/a.gor", source.getProjectLinkFileContent());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class UTestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3region://shared/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/shared/user_data/a/a.gor", source.getFullPath());
-        Assert.assertEquals("s3data://project/user_data/a.gor", source.getProjectLinkFileContent());
+        Assert.assertEquals("s3data://shared/user_data/a.gor", source.getProjectLinkFileContent());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class UTestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3global://shared/user_data/a.gor", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://some_s3_bucket/shared/user_data/a/a.gor", source.getFullPath());
-        Assert.assertEquals("s3data://project/user_data/a.gor", source.getProjectLinkFileContent());
+        Assert.assertEquals("s3data://shared/user_data/a.gor", source.getProjectLinkFileContent());
     }
 
     @Test

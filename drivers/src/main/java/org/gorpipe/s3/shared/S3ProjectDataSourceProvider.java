@@ -52,4 +52,8 @@ public class S3ProjectDataSourceProvider extends S3SharedSourceProvider {
         return fallBackUrl;
     }
 
+    @Override
+    protected String findSharedSourceLinkContent(S3SharedSource source) {
+        return getSharedUrlPrefix() + source.getRelativePath();
+    }
 }

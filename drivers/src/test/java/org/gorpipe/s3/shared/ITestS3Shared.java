@@ -374,6 +374,8 @@ public class ITestS3Shared {
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy.gor";
 
+        Assert.assertFalse(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+
         runGorPipeServer("gorrow 1,2,3 | write s3data://shared-project/" + dataPath, gorRoot, securityContext);
 
         // Access with shared-project

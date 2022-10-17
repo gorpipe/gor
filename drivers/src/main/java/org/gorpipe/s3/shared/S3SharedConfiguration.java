@@ -37,7 +37,7 @@ public interface S3SharedConfiguration extends S3Configuration {
     @DefaultValue("true")
     boolean onlyAccessWithLinksOnServer();
 
-    @Documentation("Should S3 shared resources always use highest level (s3datat://project) i links")
+    @Documentation("Should S3 shared resources always use highest level (s3datat://shared) i links")
     @Key("GOR_S3_SHARED_USE_HIGHEST_TYPE_IN_LINKS")
     @DefaultValue("true")
     boolean useHighestTypeInLinks();
