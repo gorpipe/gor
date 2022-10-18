@@ -289,16 +289,17 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
                     try {
                         parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class, boolean.class);
                     } catch (NoSuchMethodException ex) {
-                        throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName(), ex);
+                        throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName() + ", no parseEntry method!", ex);
                     }
                     br.lines().parallel()
                         .map(l -> {
-                            String line = l.trim();
+                            String line = l;
                             if (!line.isEmpty() && !line.startsWith("#")) {
                                 try {
                                     return (T) parseEntryMethod.invoke(null, line, table.getRootUri(), needsRelativize);
                                 } catch(IllegalAccessException | InvocationTargetException ex){
-                                    throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName(), ex);
+                                    throw new GorSystemException("Error Initializing Query, can not create entry of type: "
+                                            + clazzOfT.getName() + ", error parsing line: \"" + l + "\"", ex);
                                 }
                             }
                             return null;

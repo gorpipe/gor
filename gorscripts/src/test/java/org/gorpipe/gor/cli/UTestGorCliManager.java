@@ -206,9 +206,9 @@ public class UTestGorCliManager {
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Incorrect multiinsert",
-                testFiles[0] + "\tA\tchr1\t-1\tchr1\t-1\n" +
+                testFiles[0] + "\tA\tchr1\t0\tchr1\t2147483647\n" +
                         testFiles[1] + "\t\t\t\t\t\t2,B\n" +
-                        testFiles[2] + "\t\tchr3\t-1\tchr3\t-1\t3,C\n", result);
+                        testFiles[2] + "\t\tchr3\t0\tchr3\t2147483647\t3,C\n", result);
 
         // Multi file insert with incorrect number of files.
         table.delete(table.selectAll());

@@ -312,7 +312,7 @@ public class UTestDictionaryTable {
         dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath20.gor"), dict.getRootUri()).range(GenomicRange.parseGenomicRange("chr8")).build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath20.gor").includeDeleted());
-        Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t0\tchr8\n", selectRes);
+        Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t0\tchr8\t2147483647\n", selectRes);
     }
 
     @Test

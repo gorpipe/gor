@@ -33,16 +33,24 @@ import static com.google.common.base.Strings.isNullOrEmpty;
  * Helper class to map genomic range to string and back.
  * <p>
  * Created by gisli on 22/08/16.
+ *
+ * Notes:
+ * 1. Empty stop range implies same range as the start.
+ * 2. "", NULL and -1 imply not specified values.
  */
 public class GenomicRange {
 
     public static final GenomicRange EMPTY_RANGE = new GenomicRange();
 
     // How to treat empty values in the string rep.   These values are picked for backward compatibility with existing code.
-    private static final String EMPTY_START_CHR = "";
-    private static final int EMPTY_START_POS = 0;
-    private static final String EMPTY_STOP_CHR = "~"; // ~ is last in ascii.
-    private static final int EMPTY_STOP_POS = Integer.MAX_VALUE;
+    public static final String MIN_START_CHR = "";
+    public static final int MIN_START_POS = 0;
+    public static final String MAX_STOP_CHR = "~";
+    public static final int MAX_STOP_POS = Integer.MAX_VALUE;
+
+    static final String NOTSET_CHR = "?";
+    static final int NOTSET_POS = -1;
+
 
     private final String startChr;
     private final int startPos;
@@ -52,50 +60,51 @@ public class GenomicRange {
 
 
     public GenomicRange() {
-        this(EMPTY_START_CHR, EMPTY_START_POS, EMPTY_STOP_CHR, EMPTY_STOP_POS);
+        this(null, -1, null, -1);
         this.isEmpty = true;
 
     }
 
     public GenomicRange(String startChr, int startPos, String stopChr, int stopPos) {
         // TODO:  Add more validation (if pos then chr, start <= stop)
-        this.startChr = !isNullOrEmpty(startChr) ? startChr : EMPTY_START_CHR;
-        this.startPos = startPos >= 0 ? startPos : EMPTY_START_POS;
-        this.stopChr = !isNullOrEmpty(stopChr) ? stopChr : EMPTY_STOP_CHR;
-        this.stopPos = stopPos >= 0 ? stopPos : EMPTY_STOP_POS;
-        this.isEmpty = false;
+        this.startChr = !isNullOrEmpty(startChr) ? startChr : NOTSET_CHR;
+        this.startPos = startPos >= 0 ? startPos : NOTSET_POS;
+        this.stopChr = !isNullOrEmpty(stopChr) ? stopChr : this.NOTSET_CHR;
+        this.stopPos = stopPos >= 0 ? stopPos : NOTSET_POS;
+        this.isEmpty = isNullOrEmpty(startChr) && startPos < 0 && isNullOrEmpty(stopChr) && stopPos < 0;
     }
 
     public GenomicRange(String startChr, int startPos) {
-        this(startChr, startPos, "", -1);
+        this(startChr, startPos, NOTSET_CHR, NOTSET_POS);
     }
 
     public String getStartChr() {
-        return startChr;
+        return !NOTSET_CHR.equals(startChr) ? startChr : null;
     }
 
     public int getStartPos() {
-        return startPos;
+        return NOTSET_POS != startPos ? startPos : MIN_START_POS;
     }
 
     public String getStopChr() {
-        return stopChr;
+        return !NOTSET_CHR.equals(stopChr) ? stopChr : getStartChr();
     }
 
     public int getStopPos() {
-        return stopPos;
+        return NOTSET_POS != stopPos ? stopPos : MAX_STOP_POS;
     }
 
     @Override
     public String toString() {
+        if (isEmpty) return "";
         return String.format("%s%s%s%s%s%s%s",
-                !EMPTY_START_CHR.equals(this.startChr) ? this.startChr : "",
-                !EMPTY_START_CHR.equals(this.startChr) && (this.startPos != EMPTY_START_POS ||  this.stopPos != EMPTY_STOP_POS)  ? ":" : "",
-                !EMPTY_START_CHR.equals(this.startChr) && (this.startPos != EMPTY_START_POS ||  this.stopPos != EMPTY_STOP_POS)  ? this.startPos : "",
-                !EMPTY_STOP_CHR.equals(this.stopChr) || this.stopPos != EMPTY_STOP_POS ? "-" : "",
-                !this.startChr.equals(this.stopChr) && !EMPTY_STOP_CHR.equals(this.stopChr)  ? this.stopChr : "",
-                !this.startChr.equals(this.stopChr) && !EMPTY_STOP_CHR.equals(this.stopChr) && this.stopPos != EMPTY_STOP_POS ? ":" : "",
-                this.stopPos != EMPTY_STOP_POS ? this.stopPos : "");
+                !NOTSET_CHR.equals(this.startChr) ? this.startChr : "",
+                !NOTSET_CHR.equals(this.startChr) && this.startPos != NOTSET_POS  ? ":" : "",
+                !NOTSET_CHR.equals(this.startChr) && this.startPos != NOTSET_POS  ? this.startPos : "",
+                !this.startChr.equals(this.stopChr) || this.stopPos != NOTSET_POS ? "-" : "",
+                !NOTSET_CHR.equals(this.stopChr) && !this.startChr.equals(this.stopChr) ? this.stopChr : "",
+                !NOTSET_CHR.equals(this.stopChr) && !this.startChr.equals(this.stopChr) && this.stopPos != NOTSET_POS ? ":" : "",
+                this.stopPos != NOTSET_POS ? this.stopPos : "");
     }
 
     public String formatAsTabDelimited() {
@@ -109,13 +118,13 @@ public class GenomicRange {
         if (isEmpty) {
             sb.append("\t\t\t");
         } else {
-            sb.append(!EMPTY_START_CHR.equals(this.startChr) ? this.startChr : "");
+            sb.append(!NOTSET_CHR.equals(this.startChr) ? this.startChr : "");
             sb.append('\t');
-            sb.append(this.startPos != EMPTY_START_POS || (!EMPTY_START_CHR.equals(this.startChr) && this.startPos >= 0) ? this.startPos : "");
+            sb.append(getStartPos());
             sb.append('\t');
-            sb.append(!EMPTY_STOP_CHR.equals(this.stopChr) ? this.stopChr : "");
+            sb.append(!NOTSET_CHR.equals(stopChr) ? stopChr : (!NOTSET_CHR.equals(this.startChr) ? this.startChr : ""));
             sb.append('\t');
-            sb.append(this.stopPos != EMPTY_STOP_POS ? this.stopPos : "");
+            sb.append(getStopPos());
         }
         return sb;
     }
@@ -132,7 +141,7 @@ public class GenomicRange {
         }
 
         if (genomicRange.isEmpty()) {
-            return new GenomicRange("",-1, "", -1);
+            return new GenomicRange();
         }
 
         Boolean testChromosom = false;
@@ -174,8 +183,7 @@ public class GenomicRange {
         int startLocation =  startLoc[1].length() > 0 ? parseLocationWithError(startLoc[1]) : -1;
         int stopLocation = stopLoc[1].length() > 0 ? parseLocationWithError(stopLoc[1]) : -1;
 
-        return new GenomicRange(startChromosome, startLocation,
-                                stopChromosome, stopLocation);
+        return new GenomicRange(startChromosome, startLocation, stopChromosome, stopLocation);
     }
 
     private static int parseLocationWithError(String location) {

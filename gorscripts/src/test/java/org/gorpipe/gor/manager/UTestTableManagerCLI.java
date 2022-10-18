@@ -215,9 +215,9 @@ public class UTestTableManagerCLI {
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Incorrect multiinsert",
-                testFiles[0] + "\t\tchr1\t0\tchr1\t\tA\n" +
+                testFiles[0] + "\t\tchr1\t0\tchr1\t2147483647\tA\n" +
                         testFiles[1] + "\t2\t\t\t\t\tB\n" +
-                        testFiles[2] + "\t3\tchr3\t0\tchr3\t\tC\n", result);
+                        testFiles[2] + "\t3\tchr3\t0\tchr3\t2147483647\tC\n", result);
 
         // Multi file insert with incorrect number of files.
         table.delete(table.selectAll());
