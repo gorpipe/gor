@@ -50,7 +50,35 @@ update-branch:   ## Update the current branch
 	git submodule update --init --recursive
 
 
-update-master-version: update-master    ## Update version on the master branch, assumes NEW_VERSION is passed in.
+#
+# Release from master.
+#
+
+release-milestone-from-master:  ## Release from master based on milestone (MILESTONE must be passed in)
+	@buildSrc/src/main/scripts/release_milestone_from_master.sh 17033400 ${MILESTONE}
+
+
+release-from-master:  ## Release from master (VERSION must be passed in).  DEPRECATED:  Use release-milestone-from-master instead.
+	@if [ -z "${VERSION}" ]; then { echo "ERROR:  VERSION should be set! Exiting..."; exit 1; }; fi
+
+	git checkout master
+	git pull
+
+	echo "${VERSION}" > VERSION
+	git add VERSION
+
+	# Commit and push to the branch
+	git commit -m "Updated version to ${VERSION}"
+	git push
+
+	git tag -a "v${VERSION}" -m "Releasing GOR v${VERSION}"
+	git push origin "v${VERSION}"
+
+#
+# Release from release branch.
+#
+
+update-master-version: update-master    ## Update version on the master branch, assumes NEW_VERSION is passed in. DEPRECATED:  Use release-milestone-from-master instead.
 	@if [ -z "${NEW_VERSION}" ]; then { echo "ERROR:  NEW_VERSION should be set! Exiting..."; exit 1; }; fi
 
 	# Update version on master
@@ -64,12 +92,8 @@ update-master-version: update-master    ## Update version on the master branch, 
 	git commit -m "Updated version to ${NEW_VERSION} on master."
 	git push -u origin "Update_master_version_to_${NEW_VERSION}"
 
-#
-# Release from release branch.
-#
-
 # Create a release branch with library locks and update version info.
-create-release-branch: update-master  ## Create a release branch, assumes BRANCH_VERSION is passed in.
+create-release-branch: update-master  ## Create a release branch, assumes BRANCH_VERSION is passed in.  DEPRECATED:  Use release-milestone-from-master instead.
 	@if [ -z "${BRANCH_VERSION}" ]; then { echo "ERROR:  BRANCH_VERSION should be set! Exiting..."; exit 1; }; fi
 
 	# Create the release branch.
@@ -92,7 +116,7 @@ create-release-branch: update-master  ## Create a release branch, assumes BRANCH
 	# Must also Call update-master-version.
 
 
-update-release-version:  ## Update version on the development branch, assumes BRANCH_VERSION, NEW_VERSION is passed in.
+update-release-version:  ## Update version on the development branch, assumes BRANCH_VERSION, NEW_VERSION is passed in.  DEPRECATED:  Use release-milestone-from-master instead.
 	@if [ -z "${BRANCH_VERSION}" ]; then { echo "ERROR: BRANCH_VERSION should be set! Exiting..."; exit 1; }; fi
 	@if [ -z "${NEW_VERSION}" ]; then { echo "ERROR:  NEW_VERSION should be set! Exiting..."; exit 1; }; fi
 
@@ -110,7 +134,7 @@ update-release-version:  ## Update version on the development branch, assumes BR
 	git push
 
 
-release-from-release:  ## Release from the given release branch.  Assumes BRANCH_VERSION is passed in.
+release-from-release:  ## Release from the given release branch.  Assumes BRANCH_VERSION is passed in. DEPRECATED:  Use release-milestone-from-master instead.
 	@if [ -z "${BRANCH_VERSION}" ]; then { echo "ERROR: BRANCH_VERSION should be set! Exiting..."; exit 1; }; fi
 
 	# Check out release the branch
@@ -119,18 +143,6 @@ release-from-release:  ## Release from the given release branch.  Assumes BRANCH
 
 	# git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
 	# git push origin $(CURRENT_TAG_VERSION)
-
-
-#
-# Release directly from main.
-#
-
-release-from-master:  ## Release from master.
-	git checkout master
-	git pull
-
-	git tag -a ${CURRENT_TAG_VERSION} -m "Releasing gor-services ${CURRENT_TAG_VERSION}"
-	git push origin $(CURRENT_TAG_VERSION)
 
 #
 # Misc
