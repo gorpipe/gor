@@ -62,3 +62,17 @@ curl  --silent --header 'Content-Type: application/json' --header "PRIVATE-TOKEN
 #
 
 curl --verbose --header "PRIVATE-TOKEN: ${TOKEN}" -X PUT "https://gitlab.com/api/v4/projects/${PROJECT_ID}/milestones/${MILESTONE_ID}?state_event=close"
+
+#
+# Update the version
+#
+if [[ "${UPDATE_VERSION}" != "FALSE" ]]; then
+  # Update the version numbers
+  NEW_VERSION="$(buildSrc/src/main/scripts/version.sh ${MILESTONE} feature)-SNAPSHOT"
+  echo ${NEW_VERSION} > VERSION
+  git add VERSION
+
+  # Commit and push to the branch
+  git commit -m "Updated version to ${NEW_VERSION}"
+  git push
+fi
