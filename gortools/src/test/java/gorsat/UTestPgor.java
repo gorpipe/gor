@@ -24,9 +24,18 @@ package gorsat;
 
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class UTestPgor {
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
 
 
     @Test
@@ -99,5 +108,17 @@ public class UTestPgor {
         String result = TestUtils.runGorPipe("create xxx = pgor <(gorrow chr15,34260920,34357291) | where ##WHERE_SPLIT_WINDOW## | calc f0 '##WHERE_SPLIT_WINDOW##' | calc f1 '#{CHROM}:#{BPSTART}-#{BPSTOP}'; gor [xxx]");
         Assert.assertEquals("Wrong result from pgor range replace query","chrom\tbpStart\tbpStop\tf0\tf1\n" +
                 "chr15\t34260920\t34357291\t0 <= #2i\tchr15:0-1000000000\n",result);
+    }
+
+    @Test
+    public void testPgorServerMode() throws IOException {
+        Path projectDir = workDir.getRoot().toPath();
+        Files.copy(Path.of("../tests/data/gor/genes.gor"), projectDir.resolve("genes.gor"));
+        Files.createDirectory(projectDir.resolve("result_cache"));
+
+        String query = "pgor genes.gor | top 10";
+
+        String lines = TestUtils.runGorPipeServer(query, projectDir.toString(), "");
+        Assert.assertEquals(11938, lines.length());
     }
 }

@@ -146,6 +146,9 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
     public String getContentReal(T entry) {
         return resolve(getRootUri(), entry.getContentRelative()).toString();
     }
+    public String getContentProjectRelative(T entry) {
+        return relativize(getProjectPath(),  resolve(getRootUri(), entry.getContentRelative()).toString());
+    }
 
     /**
      * Select the union of the rows defined by the given filters.

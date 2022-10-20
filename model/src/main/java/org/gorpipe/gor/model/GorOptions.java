@@ -883,7 +883,8 @@ public class GorOptions {
     }
 
     private void subProcessOfProcessDictionaryTable(DictionaryTable table, DictionaryEntry dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags, boolean isSilentTagFilter) {
-        String contentReal = table.getContentReal(dictionaryLine);
+        String contentReal = table.getContentProjectRelative(dictionaryLine);
+
         if (dictionaryLine.isSourceInserted()) {
             files.add(new SourceRef(contentReal, dictionaryLine.getAlias(), null, null,
                     dictionaryLine.getRange().getStartChr(), dictionaryLine.getRange().getStartPos(), dictionaryLine.getRange().getStopChr(), dictionaryLine.getRange().getStopPos(),

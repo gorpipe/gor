@@ -327,7 +327,7 @@ public class TestUtils {
 
     public static String runGorPipeServer(String query, String projectRoot, String securityContext) {
         PipeOptions options = new PipeOptions();
-        options.parseOptions(new String[]{"-gorroot", projectRoot});
+        options.parseOptions(new String[]{"-gorroot", projectRoot, "-cachedir", projectRoot + "/result_cache"});
         TestSessionFactory factory = new TestSessionFactory(options, null, true, securityContext);
 
         try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(factory.create()))) {

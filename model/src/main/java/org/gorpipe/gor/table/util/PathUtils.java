@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table.util;
 
+import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -106,9 +107,24 @@ public class PathUtils {
         if (path == null) {
             return null;
         }
+
         Path norm = normalize(path);
         // Need to help path to do this right.
         return norm.startsWith(root) ? root.relativize(norm) : norm;
+    }
+
+    public static String relativize(String root, String path) {
+        if (path == null) {
+            return null;
+        }
+
+        if (Strings.isNullOrEmpty(root)) {
+            return path;
+        }
+
+        String norm = normalize(path);
+        // Need to help path to do this right.
+        return norm.startsWith(root) ? norm.substring(stripTrailingSlash(root).length() + 1) : norm;
     }
 
     public static URI relativize(URI root, URI path) {

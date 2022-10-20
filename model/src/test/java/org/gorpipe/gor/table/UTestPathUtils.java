@@ -76,4 +76,28 @@ public class UTestPathUtils {
 
         Assert.assertEquals("d/x.gor", PathUtils.relativize(URI.create(Paths.get("a/b/c/y.gord").getParent().toString()), "a/b/c/d/x.gor"));
     }
+
+    @Test
+    public void testRelativizeString() {
+        Assert.assertEquals(null, PathUtils.relativize("a/b/c", null));
+
+        Assert.assertEquals("a/b/c", PathUtils.relativize((String)null, "a/b/c"));
+
+        Assert.assertEquals("/a/b/c", PathUtils.relativize("", "/a/b/c"));
+
+        Assert.assertEquals("d", PathUtils.relativize("a/b/c", "a/b/c/d"));
+        Assert.assertEquals("d", PathUtils.relativize("/a/b/c", "/a/b/c/d"));
+        Assert.assertEquals("d", PathUtils.relativize("/a/b/c", "d"));
+
+        Assert.assertEquals("d", PathUtils.relativize("a/b/c/", "a/b/c/d"));
+        Assert.assertEquals("d", PathUtils.relativize("/a/b/c/", "/a/b/c/d"));
+        Assert.assertEquals("d", PathUtils.relativize("/a/b/c/", "d"));
+
+        Assert.assertEquals("a/b/c/d", PathUtils.relativize("/", "/a/b/c/d"));
+
+        Assert.assertEquals("/e/f/g", PathUtils.relativize("/a/b/c", "/e/f/g"));
+        Assert.assertEquals("b/c/f", PathUtils.relativize("/a/b/c", "b/c/f"));
+
+        Assert.assertEquals("d/x.gor", PathUtils.relativize(Path.of("a/b/c/y.gord").getParent().toString(), "a/b/c/d/x.gor"));
+    }
 }

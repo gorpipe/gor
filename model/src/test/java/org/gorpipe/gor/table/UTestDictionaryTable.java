@@ -27,6 +27,7 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.dictionary.*;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.util.GenomicRange;
+import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -42,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.gorpipe.gor.table.dictionary.DictionaryTableMeta.HEADER_BUCKETIZE_KEY;
@@ -786,6 +788,45 @@ public class UTestDictionaryTable {
         dict.save();
 
         Assert.assertEquals("file1.gor\tpn1\nfile2.gor\tpn2\n", FileUtils.readFileToString(gordFile, Charset.defaultCharset()));
+    }
+
+    @Test
+    public void testDictionaryTableRead() throws Exception {
+        String name = "testDictionaryTableRead";
+        int fileCount = 4;
+        String[] sources = new String[]{"A", "B", "C", "D"};
+        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
+                name, tableWorkDir, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, tableWorkDir, dataFiles);
+
+        Path dictFile = tableWorkDir.resolve(name + ".gord");
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                "chr1\t1\tA\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tA\n" +
+                "chr1\t1\tB\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t22871\tB\n" +
+                "chr1\t1\tC\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t102164\tC\n" +
+                "chr1\t1\tD\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t231848\tD\n" +
+                "chr1\t2\tA\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t280385\tA\n" +
+                "chr1\t2\tB\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t68250\tB\n" +
+                "chr1\t2\tC\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t387368\tC\n" +
+                "chr1\t2\tD\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t387482\tD\n" +
+                "chr1\t3\tA\tLineData for the chromosome and position line 1 3\tThis line should be long enough for this test purpose\t321302\tA\n" +
+                "chr1\t3\tB\tLineData for the chromosome and position line 1 3\tThis line should be long enough for this test purpose\t240923\tB\n", TestUtils.runGorPipe(dictFile.toString() + " | top 10"));
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                "chr1\t1\tA\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tA\n" +
+                "chr1\t1\tB\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t22871\tB\n" +
+                "chr1\t1\tC\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t102164\tC\n" +
+                "chr1\t1\tD\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t231848\tD\n" +
+                "chr1\t2\tA\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t280385\tA\n" +
+                "chr1\t2\tB\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t68250\tB\n" +
+                "chr1\t2\tC\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t387368\tC\n" +
+                "chr1\t2\tD\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t387482\tD\n" +
+                "chr1\t3\tA\tLineData for the chromosome and position line 1 3\tThis line should be long enough for this test purpose\t321302\tA\n" +
+                "chr1\t3\tB\tLineData for the chromosome and position line 1 3\tThis line should be long enough for this test purpose\t240923\tB\n", TestUtils.runGorPipeServer(dictFile.toString() + " | top 10" , tableWorkDir.toString(), ""));
+
+
+
     }
 
     @SafeVarargs
