@@ -49,9 +49,13 @@ fi
 # Tag
 #
 
-RELEASE_NOTES="<h3>Description:</h3>${MILESTONE_DESCRIPTION}"$(curl --silent --header "PRIVATE-TOKEN: ${TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/milestones/${MILESTONE_ID}/issues" \
+RELEASE_NOTES=""
+RELEASE_NOTES=${RELEASE_NOTES}$( [ ! -z ${MILESTONE_DESCRIPTION} ] && printf "### Description:\\\\r\\\\n%s\\\\r\\\\n" "${MILESTONE_DESCRIPTION}" || printf "")
+RELEASE_NOTES=${RELEASE_NOTES}$(curl --silent --header "PRIVATE-TOKEN: ${TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/milestones/${MILESTONE_ID}/issues" \
    | jq -r '.[]  | select( .labels | contains(["TechDebt"]) | not) | "\(.title) (\(.labels[0]))"' \
-   | awk 'BEGIN {ORS=""; print "<h3>Issues:</h3><ul>"} {print "<li> " $0} END {print "</ul>"}')
+   | awk 'BEGIN {ORS=""; print "### Issues\\r\\n"} {print "* " $0 "\\r\\n"} END {print ""}')
+
+
 DATA_JSON='{ "name": "'"v${MILESTONE}"'", "tag_name": "'"v${MILESTONE}"'", "ref": "master", "description": "'"${RELEASE_NOTES}"'", "milestones": ["'"${MILESTONE}"'"] }'
 
 printf "%s" $DATA_JSON | jq
