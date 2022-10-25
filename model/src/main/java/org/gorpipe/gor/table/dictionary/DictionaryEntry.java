@@ -236,6 +236,17 @@ public class DictionaryEntry extends TableEntry {
         return Objects.hash(super.hashCode(), sourceInserted, bucketLogical, isDeleted);
     }
 
+    @Override
+    public String toString() {
+        return "DictionaryEntry{" + toStringFields() + '}';
+    }
+
+    protected String toStringFields() {
+        return super.toStringFields() +
+                ", sourceInserted=" + sourceInserted +
+                ", bucketLogical='" + bucketLogical + '\'' +
+                ", isDeleted=" + isDeleted;
+    }
 
     public static class Builder<B extends TableEntry.Builder> extends TableEntry.Builder<Builder<B>> {
         protected String bucketLogical = null;

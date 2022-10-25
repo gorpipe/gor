@@ -181,6 +181,19 @@ public abstract class TableEntry {
         return Objects.hashCode(this.getKey());
     }
 
+    @Override
+    public String toString() {
+        return "TableEntry{" + toStringFields() + '}';
+    }
+
+    protected String toStringFields() {
+        return "contentRelative='" + contentRelative + '\'' +
+                ", alias='" + alias + '\'' +
+                ", tags=" + Arrays.toString(tags) +
+                ", range=" + range +
+                ", key='" + key + '\'';
+    }
+
     public abstract static class Builder<B extends Builder> {
         protected String contentLogical;
         protected URI rootUri;

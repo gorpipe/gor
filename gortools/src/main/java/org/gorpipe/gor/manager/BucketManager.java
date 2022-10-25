@@ -64,6 +64,7 @@ public class BucketManager<T extends DictionaryEntry> {
     static final String BUCKET_FILE_PREFIX = "bucket"; // Use to identify which files are bucket files.
 
     public static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofMinutes(30);
+    public static final Duration BUCKET_CLEANUP_INTERVAL = Duration.ofMinutes(30);
     public static final Class<? extends TableLock> DEFAULT_LOCK_TYPE = ExclusiveFileTableLock.class;
 
     public static final String HEADER_MIN_BUCKET_SIZE_KEY = "MIN_BUCKET_SIZE";
@@ -92,6 +93,8 @@ public class BucketManager<T extends DictionaryEntry> {
     private int minBucketSize;
 
     private BucketCreator<T> bucketCreator;
+
+    private long lastCleanupTimeMillis = 0;
 
     /**
      * Default constructor.
@@ -169,8 +172,11 @@ public class BucketManager<T extends DictionaryEntry> {
                 maxBucketCount = maxBucketCount > 0 ? maxBucketCount : 10000;
             }
 
-            cleanTempBucketData(bucketizeLock);
-            cleanOldBucketFiles(bucketizeLock, forceClean);
+            if (System.currentTimeMillis() - lastCleanupTimeMillis > BUCKET_CLEANUP_INTERVAL.toMillis()) {
+                lastCleanupTimeMillis = System.currentTimeMillis();
+                cleanTempBucketData(bucketizeLock);
+                cleanOldBucketFiles(bucketizeLock, forceClean);
+            }
 
             return doBucketize(bucketizeLock, packLevel, maxBucketCount);
         } catch (IOException e) {
@@ -362,7 +368,7 @@ public class BucketManager<T extends DictionaryEntry> {
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
 
             // Check if we have enough data to start bucketizing.
-
+            log.trace("Bucketize - Get unbucketized count");
             int unbucketizedCount = table.needsBucketizing().size();
             if (packLevel == BucketPackLevel.NO_PACKING && unbucketizedCount < getEffectiveMinBucketSize()) {
                 log.debug("Bucketize - Nothing to bucketize, aborting {} unbucketized but {} is minimum.",
@@ -371,7 +377,7 @@ public class BucketManager<T extends DictionaryEntry> {
             }
 
             // Find which buckets to delete and which buckets to create.
-
+            log.trace("Bucketize - Finding files to bucketize");
             bucketsToDelete = findBucketsToDelete(trans.getLock(), packLevel, unbucketizedCount, maxBucketCount);
             newBucketsMap = findBucketsToCreate(trans.getLock(), bucketsToDelete, maxBucketCount);
 
@@ -379,6 +385,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 log.debug("Bucketize - Bucketizing {} files into {} buckets",
                         newBucketsMap.values().stream().map(List::size).mapToInt(Integer::intValue).sum(), newBucketsMap.keySet().size());
             }
+            log.trace("Bucketize - Creating the temptable");
             tempTable = createTempTable(trans.getLock());
         }
 
@@ -387,6 +394,7 @@ public class BucketManager<T extends DictionaryEntry> {
         //        Reason to run this per bucket dir is having tmp files on that dir so the move is fast.
         if (!newBucketsMap.isEmpty()) {
             for (String bucketDir : getBucketDirs()) {
+                log.trace("Bucketize - Bucketizing dir {}", bucketDir);
                 doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap);
             }
         }
@@ -562,6 +570,7 @@ public class BucketManager<T extends DictionaryEntry> {
      *         unused bucket cleaning.
      */
     void cleanTempBucketData(TableLock bucketizeLock) {
+        log.trace("Bucketize - cleanTempBucketData - begin");
         if (!bucketizeLock.isValid()) {
             log.debug("Bucketization in progress, will skip cleaning bucket files.");
             return;
@@ -579,6 +588,7 @@ public class BucketManager<T extends DictionaryEntry> {
         } catch (IOException ioe) {
             log.warn("Got exception when trying to clean up temp folders.  Just logging out the exception", ioe);
         }
+        log.trace("Bucketize - cleanTempBucketData - end");
     }
 
     /**
@@ -593,6 +603,7 @@ public class BucketManager<T extends DictionaryEntry> {
      * @param force force cleaning, ignoring grace periods.
      */
     protected void cleanOldBucketFiles(TableLock bucketizeLock, boolean force) throws IOException {
+        log.trace("Bucketize - cleanOldBucketFiles - begin");
         if (!bucketizeLock.isValid()) {
             log.debug("Bucketization in progress, will skip cleaning bucket files.");
             return;
@@ -622,6 +633,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
         // Do the cleaning.
         for (String bucketDir : bucketsToCleanMap.keySet()) {
+            log.trace("Bucketize - cleanOldBucketFiles - clean {}", bucketDir);
             List<String> bucketsToClean = bucketsToCleanMap.get(bucketDir);
             // Perform the deletion., safest to use the deleteBuckets table methods.
             //deleteBucketFiles(force, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
@@ -630,12 +642,15 @@ public class BucketManager<T extends DictionaryEntry> {
                 log.warn("Bucket '{}' removed as it is not used", bucket);
             }
         }
+
+        log.trace("Bucketize - cleanOldBucketFiles - End");
     }
 
     private List<String> collectBucketsToClean(URI fullPathBucketDir, boolean force) throws IOException {
         // Collect buckets to be deleted. Note:  We don't need to get table read lock as we have bucket lock so the
         // bucket part of the table will not change in away that will affect us.
         List<String> bucketsToDelete = new ArrayList<>();
+        Set<String> usedBuckets = new HashSet<>(table.getBuckets());
         try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir.toString())) {
             for (String f : pathList.collect(Collectors.toList())) {
                 String fileName = PathUtils.getFileName(f);
@@ -649,7 +664,7 @@ public class BucketManager<T extends DictionaryEntry> {
                         && (System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()
                             || force)) {
                     // This bucket file has not been accessed for some time.
-                    if (table.filter().buckets(bucketFile).get().size() == 0) {
+                    if (!usedBuckets.contains(bucketFile)) {
                         // This bucket is not used in the table so mark it for deletion.
                         bucketsToDelete.add(bucketFile);
                     }

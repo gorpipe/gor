@@ -271,7 +271,7 @@ public class BaseMeta {
         try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
             parseMetaReader(br);
         } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query. Can not read file " + metaPath, metaPath, ex);
+            throw new GorResourceException(String.format("Error Initializing Query. Can not read file '%s' (%s)", metaPath, ex.getMessage()), metaPath, ex);
         }
     }
 

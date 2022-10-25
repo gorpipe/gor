@@ -113,6 +113,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
         for (DictionaryEntry entry : table.getEntries()) {
             processEntry(entry);
         }
+        isStatsUpdated = true;
     }
 
     private void processEntry(DictionaryEntry entry) {
@@ -133,8 +134,6 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
                 bucketTagsList.get(bucketIdx).addAll(Arrays.asList(entry.getFilterTags()));
             }
         }
-
-        isStatsUpdated = true;
     }
 
     private List<DictionaryEntry> calcOptimizeFileList(Set<String> tags, boolean allowBucketAccess, Set<String> badTags) {
