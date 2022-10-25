@@ -97,10 +97,22 @@ public class ITestS3Source extends CommonStreamTests {
     }
 
     @Test
+    public void testS3Write() {
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gor");
+    }
+
+    @Test
+    public void testS3WriteServerMode() throws IOException {
+        String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gor", true, securityContext, new String[] {"s3://"});
+    }
+
+    @Test
     public void testS3NotAllBytesEx() {
         TestUtils.runGorPipe("gor s3://nextcode-unittest/csa_test_data/data_sets/gor_driver_testfiles/ensgenes_transcripts.gor");
         Assert.assertFalse(systemErrRule.getLog().contains("Not all bytes were read from the S3ObjectInputStream"));
     }
+
     @Override
     protected SourceReference mkSourceReference(String name) throws IOException {
         return new SourceReferenceBuilder(name).securityContext(DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET)).build();

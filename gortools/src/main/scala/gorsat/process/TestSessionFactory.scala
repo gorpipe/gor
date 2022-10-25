@@ -22,7 +22,6 @@
 
 package gorsat.process
 
-import java.nio.file.Paths
 import gorsat.QueryHandlers.GeneralQueryHandler
 import org.gorpipe.gor.clients.LocalFileCacheClient
 import org.gorpipe.gor.model.{AccessControlContext, DriverBackedFileReader, DriverBackedSecureFileReader}
@@ -39,7 +38,7 @@ import scala.collection.JavaConverters
   * @param whitelistedCmdFiles  File for white listing
   * @param server               Indicates if the session is running on server or not
   */
-class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean, securityContext:String = null) extends GorSessionFactory{
+class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean, securityContext:String = null, allowedWriteLocations:Array[String] = Array[String]("test", "user_data")) extends GorSessionFactory{
 
   override def create(): GorSession = {
     val requestId = pipeOptions.requestId
@@ -48,7 +47,6 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
 
     val session = new GorSession(requestId)
 
-    val allowedWriteLocations = Array[String]("test", "user_data")
     val allowedWriteLocationList = JavaConverters.seqAsJavaList(allowedWriteLocations)
 
     val fileReader = createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList);

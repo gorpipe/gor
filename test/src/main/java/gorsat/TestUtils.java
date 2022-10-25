@@ -64,6 +64,8 @@ public class TestUtils {
 
     public static final String LINE_SPLIT_PATTERN = "(?<=\n)";
 
+    private static String[] DEFAULT_WRITE_LOCATIONS = {"test", "user_data"};
+
     /**
      * Run goripe
      *
@@ -81,12 +83,16 @@ public class TestUtils {
         return runGorPipeWithOptions(query, true, server, securityContext);
     }
 
+    public static String runGorPipe(String query, boolean server, String securityContext, String[] writeLocations) {
+        return runGorPipeWithOptions(query, true, server, securityContext, writeLocations);
+    }
+
     public static String runGorPipe(String[] args, String whiteCmdListFile, boolean server, String securityContext) {
         return runGorPipe(args, () -> createSession(args, whiteCmdListFile, server, securityContext));
     }
 
     public static String runGorPipe(String[] args, boolean server) {
-        return runGorPipe(args, () -> createSession(args, null, server, null));
+        return runGorPipe(args, () -> createSession(args, null, server, (String)null));
     }
 
     public static String runGorPipe(String[] args, Supplier<GorSession> sessionSupplier) {
@@ -184,7 +190,7 @@ public class TestUtils {
     }
 
     public static int runGorPipeCount(String[] args, boolean server) {
-        return runGorPipeCount(args, () -> createSession(args, null, server, null));
+        return runGorPipeCount(args, () -> createSession(args, null, server, (String)null));
     }
 
     public static int runGorPipeCount(String[] args, Supplier<GorSession> sessionSupplier) {
@@ -204,16 +210,24 @@ public class TestUtils {
     }
 
     private static GorSession createSession(String[] args, String whiteCmdListFile, boolean server, String securityContext) {
+        return createSession(args, whiteCmdListFile, server, securityContext, DEFAULT_WRITE_LOCATIONS);
+    }
+
+    private static GorSession createSession(String[] args, String whiteCmdListFile, boolean server, String securityContext, String[] writeLocations) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        TestSessionFactory factory = new TestSessionFactory(options, whiteCmdListFile, server, securityContext);
+        TestSessionFactory factory = new TestSessionFactory(options, whiteCmdListFile, server, securityContext, writeLocations);
         return factory.create();
     }
 
     private static GorSession createSession(boolean server, String securityContext) {
+        return createSession(server, securityContext, DEFAULT_WRITE_LOCATIONS);
+    }
+
+    private static GorSession createSession(boolean server, String securityContext, String[] writeLocations) {
         String[] args = {};
-        return createSession(args, null, server, securityContext);
+        return createSession(args, null, server, securityContext, writeLocations);
     }
 
     public static String[] runGorPipeLines(String query) {
@@ -229,8 +243,11 @@ public class TestUtils {
     }
 
     public static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server, String securityContext) {
+        return runGorPipeWithOptions(query, includeHeader, server, securityContext, DEFAULT_WRITE_LOCATIONS);
+    }
 
-        try (PipeInstance pipe = createPipeInstance(server, securityContext)) {
+    public static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server, String securityContext, String[] writeLocations) {
+        try (PipeInstance pipe = createPipeInstance(server, securityContext, writeLocations)) {
             String queryToExecute = processQuery(query, pipe.getSession());
             pipe.init(queryToExecute, null);
             StringBuilder result = new StringBuilder();
@@ -248,6 +265,10 @@ public class TestUtils {
 
     private static PipeInstance createPipeInstance(boolean server, String securityContext) {
         return PipeInstance.createGorIterator(new GorContext(createSession(server, securityContext)));
+    }
+
+    private static PipeInstance createPipeInstance(boolean server, String securityContext, String[] writeLocations) {
+        return PipeInstance.createGorIterator(new GorContext(createSession(server, securityContext, writeLocations)));
     }
 
     public static GenomicIterator runGorPipeIterator(String query) {
@@ -328,7 +349,7 @@ public class TestUtils {
     public static String runGorPipeServer(String query, String projectRoot, String securityContext) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(new String[]{"-gorroot", projectRoot, "-cachedir", projectRoot + "/result_cache"});
-        TestSessionFactory factory = new TestSessionFactory(options, null, true, securityContext);
+        TestSessionFactory factory = new TestSessionFactory(options, null, true, securityContext, DEFAULT_WRITE_LOCATIONS);
 
         try (PipeInstance pipe = PipeInstance.createGorIterator(new GorContext(factory.create()))) {
             pipe.init(query, null);
@@ -501,10 +522,14 @@ public class TestUtils {
     }
 
     public static GorSession createSession(String[] args, String whiteListFile, boolean server) {
+        return createSession(args, whiteListFile, server, DEFAULT_WRITE_LOCATIONS);
+    }
+
+    public static GorSession createSession(String[] args, String whiteListFile, boolean server, String[] writeLocations) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, null);
+        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, null, writeLocations);
         return factory.create();
     }
 

@@ -1,9 +1,9 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class S3MultiPartOutputStream extends OutputStream {
+    private static final Logger log = LoggerFactory.getLogger(S3MultiPartOutputStream.class);
+
     final static int MAX_CAPACITY = 1<<26;
     ByteBuffer baos1 = ByteBuffer.allocate(MAX_CAPACITY);
     ByteBuffer baos2 = ByteBuffer.allocate(MAX_CAPACITY);
@@ -81,15 +83,15 @@ public class S3MultiPartOutputStream extends OutputStream {
         try {
             return fut.get();
         } catch (InterruptedException | ExecutionException e) {
-            AbortMultipartUploadRequest abortMultipartUploadRequest = new AbortMultipartUploadRequest(bucket, key, uploadId);
             String errorMsg = "Unable to upload multipart to s3 bucket";
-            try {
-                client.abortMultipartUpload(abortMultipartUploadRequest);
-            } catch(SdkClientException ee) {
-                var sw = new StringWriter();
-                var pw = new PrintWriter(sw);
-                ee.printStackTrace(pw);
-                errorMsg += ": ("+uploadId+")" + sw;
+            if (uploadId!=null) {
+                AbortMultipartUploadRequest abortMultipartUploadRequest = new AbortMultipartUploadRequest(bucket, key, uploadId);
+                try {
+                    client.abortMultipartUpload(abortMultipartUploadRequest);
+                } catch (Exception ee) {
+                    log.error("S3 write abort failed", ee);
+                    errorMsg += ": Could not abort (" + uploadId + ")";
+                }
             }
             throw new IOException(errorMsg, e);
         }
