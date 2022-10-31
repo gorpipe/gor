@@ -22,16 +22,16 @@ public class S3GlobalSharedSourceProvider extends S3SharedSourceProvider {
 
     @Override
     public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{S3GlobalSharedSourceType.S3GLOBALSHARED};
+        return new SourceType[]{S3GlobalSharedSourceType.TYPE};
     }
 
     @Override
     public String getService() {
-        return S3GlobalSharedSourceType.S3GLOBALSHARED_SERVICE;
+        return S3GlobalSharedSourceType.SERVICE;
     }
 
     @Override
     protected String getSharedUrlPrefix() {
-        return S3GlobalSharedSourceType.S3GLOBALSHARED_PREFIX;
+        return S3GlobalSharedSourceType.PREFIX;
     }
 }

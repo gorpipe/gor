@@ -190,6 +190,70 @@ public class ITestS3Shared {
     }
 
     @Test
+    public void testProjectFileRead() throws IOException {
+        S3SharedSourceProvider provider = new S3ProjectDataFileSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
+
+        Assert.assertEquals("S3", source.getSourceType().getName());
+        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+
+        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
+        }
+    }
+
+    @Test
+    public void testProjectSharedFileRead() throws IOException {
+        S3SharedSourceProvider provider = new S3ProjectSharedFileSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+
+        Assert.assertEquals("S3", source.getSourceType().getName());
+        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+
+        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
+        }
+    }
+
+    @Test
+    public void testRegionSharedFileRead() throws IOException {
+        S3SharedSourceProvider provider = new S3RegionSharedFileSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+
+        Assert.assertEquals("S3", source.getSourceType().getName());
+        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+
+        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
+        }
+    }
+
+    @Test
+    public void testGlobalSharedFileRead() throws IOException {
+        S3SharedSourceProvider provider = new S3GlobalSharedFileSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+
+        Assert.assertEquals("S3", source.getSourceType().getName());
+        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+
+        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
+        }
+    }
+
+    @Test
     public void testReadWithLinkFile() throws IOException {
         Path gorRoot  = workDirPath.resolve("some_project");
         Path linkFile = gorRoot.resolve("a.gorz.link");

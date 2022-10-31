@@ -53,19 +53,23 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         Path relativePath = Path.of(getRelativePath(url));
         String fileName = relativePath.getFileName().toString();
         String parentPath = relativePath.getParent() != null ? relativePath.getParent().toString() + "/": "";
-        int fileNameDotIndex = fileName.indexOf('.');
-        String extraFolder = "";
-        if (!url.endsWith("/")) {
-            // Don't add the extra folder
-            extraFolder = fileName.substring(0, fileNameDotIndex > 0 ? fileNameDotIndex : fileName.length()) + "/";
-        }
         String fullUrl = String.format("s3://%s/%s/%s%s%s",
                 bucket,
                 getBucketPostfix(project),
                 parentPath,
-                extraFolder,
+                getExtraFolder(url, fileName),
                 fileName);
         return fullUrl;
+    }
+
+    protected String getExtraFolder(String url, String fileName) {
+        int fileNameDotIndex = fileName.indexOf('.');
+        String extraFolder = "";
+        if (!url.endsWith("/")) {
+            // Only add the extra folder if not folder (ends with /)
+            extraFolder = fileName.substring(0, fileNameDotIndex > 0 ? fileNameDotIndex : fileName.length()) + "/";
+        }
+        return extraFolder;
     }
 
 
@@ -110,7 +114,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
     protected String findSharedSourceLinkContent(S3SharedSource source) {
         if (s3SharedConfig.useHighestTypeInLinks()) {
-            return S3ProjectSharedSourceType.S3PROJECTSHARED_PREFIX + source.getRelativePath();
+            return S3ProjectSharedSourceType.PREFIX + source.getRelativePath();
         } else {
             return getSharedUrlPrefix() + source.getRelativePath();
         }

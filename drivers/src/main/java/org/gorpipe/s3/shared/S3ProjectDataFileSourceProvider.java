@@ -11,29 +11,29 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import java.util.Set;
 
 @AutoService(SourceProvider.class)
-public class S3ProjectDataSourceProvider extends S3SharedSourceProvider {
+public class S3ProjectDataFileSourceProvider extends S3SharedFileSourceProvider {
 
-    public S3ProjectDataSourceProvider() {
+    public S3ProjectDataFileSourceProvider() {
     }
 
-    public S3ProjectDataSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,
-                                       Set<StreamSourceIteratorFactory> initialFactories) {
+    public S3ProjectDataFileSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,
+                                           Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, s3Config, cache, initialFactories);
     }
 
     @Override
     public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{S3ProjectDataSourceType.TYPE};
+        return new SourceType[]{S3ProjectDataFileSourceType.TYPE};
     }
 
     @Override
     public String getService() {
-        return S3ProjectDataSourceType.SERVICE;
+        return S3ProjectDataFileSourceType.SERVICE;
     }
 
     @Override
     protected String getSharedUrlPrefix() {
-        return S3ProjectDataSourceType.PREFIX;
+        return S3ProjectDataFileSourceType.PREFIX;
     }
 
     @Override
@@ -41,14 +41,14 @@ public class S3ProjectDataSourceProvider extends S3SharedSourceProvider {
         if (project == null || project.isEmpty() || ".".equals(project)) {
             throw new GorResourceException(
                     String.format("Project must be set for project based shared s3 folders (%s)",
-                            S3ProjectDataSourceType.PREFIX), null);
+                            S3ProjectDataFileSourceType.PREFIX), null);
         }
         return String.format("projects/%s", project);
     }
 
     @Override
     protected String getFallbackUrl(String url) {
-        String fallBackUrl = S3ProjectSharedSourceType.PREFIX + getRelativePath(url);
+        String fallBackUrl = S3ProjectSharedFileSourceType.PREFIX + getRelativePath(url);
         return fallBackUrl;
     }
 

@@ -23,22 +23,22 @@ public class S3ProjectSharedProjectSourceProvider extends S3SharedSourceProvider
 
     @Override
     public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{S3ProjectSharedProjectSourceType.S3PROJECTSHAREDPROJECT};
+        return new SourceType[]{S3ProjectSharedProjectSourceType.TYPE};
     }
 
     @Override
     public String getService() {
-        return S3ProjectSharedProjectSourceType.S3PROJECTSHAREDPROJECT_SERVICE;
+        return S3ProjectSharedProjectSourceType.SERVICE;
     }
 
     @Override
     protected String getSharedUrlPrefix() {
-        return S3ProjectSharedProjectSourceType.S3PROJECTSHAREDPROJECT_PREFIX;
+        return S3ProjectSharedProjectSourceType.PREFIX;
     }
     
     @Override
     protected String getFallbackUrl(String url) {
-        return S3RegionSharedSourceType.S3REGIONSHARED_PREFIX +  getRelativePath(url);
+        return S3RegionSharedSourceType.PREFIX +  getRelativePath(url);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class S3ProjectSharedProjectSourceProvider extends S3SharedSourceProvider
         source.setProjectLinkFile(source.getRelativePath() + ".link");
 
         source.setProjectLinkFileContent(String.format("%sprojects/%s/%s",
-                S3ProjectSharedSourceType.S3PROJECTSHARED_PREFIX, project, source.getRelativePath()));
+                S3ProjectSharedSourceType.PREFIX, project, source.getRelativePath()));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class S3ProjectSharedProjectSourceProvider extends S3SharedSourceProvider
         if (project == null || project.isEmpty() || ".".equals(project)) {
             throw new GorResourceException(
                     String.format("Project must be set for project based shared s3 folders (%s)",
-                            S3ProjectSharedProjectSourceType.S3PROJECTSHAREDPROJECT_PREFIX), null);
+                            S3ProjectSharedProjectSourceType.PREFIX), null);
         }
         return String.format("shared/projects/%s", project);
     }

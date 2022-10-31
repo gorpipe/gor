@@ -10,34 +10,34 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import java.util.Set;
 
 @AutoService(SourceProvider.class)
-public class S3ProjectSharedSourceProvider extends S3SharedSourceProvider {
+public class S3RegionSharedFileSourceProvider extends S3SharedFileSourceProvider {
 
-    public S3ProjectSharedSourceProvider() {
+    public S3RegionSharedFileSourceProvider() {
     }
 
-    public S3ProjectSharedSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,
-                                         Set<StreamSourceIteratorFactory> initialFactories) {
+    public S3RegionSharedFileSourceProvider(GorDriverConfig config, S3SharedConfiguration s3Config, FileCache cache,
+                                            Set<StreamSourceIteratorFactory> initialFactories) {
         super(config, s3Config, cache, initialFactories);
     }
 
     @Override
     public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{S3ProjectSharedSourceType.TYPE};
+        return new SourceType[]{S3RegionSharedFileSourceType.TYPE};
     }
 
     @Override
     public String getService() {
-        return S3ProjectSharedSourceType.SERVICE;
+        return S3RegionSharedFileSourceType.SERVICE;
     }
 
     @Override
     protected String getSharedUrlPrefix() {
-        return S3ProjectSharedSourceType.PREFIX;
+        return S3RegionSharedFileSourceType.PREFIX;
     }
-    
+
     @Override
     protected String getFallbackUrl(String url) {
-        String fallBackUrl = S3RegionSharedSourceType.PREFIX +  getRelativePath(url);
+        String fallBackUrl = S3GlobalSharedFileSourceType.PREFIX + getRelativePath(url);
         return fallBackUrl;
     }
 }
