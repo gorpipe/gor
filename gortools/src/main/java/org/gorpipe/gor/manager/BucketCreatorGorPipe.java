@@ -73,9 +73,10 @@ public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCr
                     .distinct()
                     .collect(Collectors.joining(","));
             if (tags.length() > 0) {
-                sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | write -c %s;%n",
+                sb.append(String.format("create #%s# = gor %s -s %s -f %s %s | sort 1 -c %s | write -c %s;%n",
                         bucket, table.getPath(), table.getSourceColumn(), tags,
                         table.getSecurityContext() != null ? table.getSecurityContext() : "",
+                        table.getSourceColumn(),
                         PathUtils.resolve(absBucketDir, PathUtils.getFileName(bucket))));
             }
         }

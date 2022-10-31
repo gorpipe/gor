@@ -3,6 +3,7 @@ package org.gorpipe.security.cred;
 import com.google.api.client.util.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.ExecutionError;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.gor.auth.AuthConfig;
 import org.gorpipe.gor.auth.GorAuthInfo;
@@ -60,7 +61,7 @@ public class CsaCredentialService extends CsaBaseService {
         }
         try {
             return credentialsCache.get(key, () -> getCredentialsBundle(projectName, userId));
-        } catch (UncheckedExecutionException | ExecutionException e) {
+        } catch (UncheckedExecutionException | ExecutionException | ExecutionError e ) {
             throw new GorSystemException("Error getting credentials for user: " + userName + " in project: " + projectName, e.getCause());
         }
     }
@@ -100,6 +101,9 @@ public class CsaCredentialService extends CsaBaseService {
         BundledCredentials.Builder builder = new BundledCredentials.Builder();
         if (list != null) {
             List<Credentials> credList = parser.parseFromJson(list);
+            if (credList.isEmpty()) {
+                log.warn("No credentials found for {}", parms);
+            }
             Collections.sort(credList, (Credentials c1, Credentials c2) -> c2.getOwnerType().compareTo(c1.getOwnerType()));
             for (Credentials cred : credList) {
                 if (cred.getLookupKey() != null) {
@@ -108,6 +112,8 @@ public class CsaCredentialService extends CsaBaseService {
                     builder.addDefaultCredentials(cred);
                 }
             }
+        } else {
+            log.warn("No credentials found for {}", parms);
         }
         return builder.build();
     }

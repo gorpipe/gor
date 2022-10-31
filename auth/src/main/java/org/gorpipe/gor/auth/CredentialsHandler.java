@@ -25,7 +25,7 @@ public class CredentialsHandler {
         if (!gorAuthFactory.isNoneSecurityPolicy() && csaSecurityService != null) {
             try {
                 bundledCredentialsFromCredService = csaSecurityService.getCredentials(info);
-            } catch (GorSystemException e) {
+            } catch (Exception e) {
                 log.error("Error getting credentials from credentials service.  Will continue with credentials from security context.", e);
             }
         }

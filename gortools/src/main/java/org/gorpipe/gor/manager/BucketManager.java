@@ -172,7 +172,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 maxBucketCount = maxBucketCount > 0 ? maxBucketCount : 10000;
             }
 
-            if (System.currentTimeMillis() - lastCleanupTimeMillis > BUCKET_CLEANUP_INTERVAL.toMillis()) {
+            if (forceClean || System.currentTimeMillis() - lastCleanupTimeMillis > BUCKET_CLEANUP_INTERVAL.toMillis()) {
                 lastCleanupTimeMillis = System.currentTimeMillis();
                 cleanTempBucketData(bucketizeLock);
                 cleanOldBucketFiles(bucketizeLock, forceClean);
