@@ -51,7 +51,10 @@ case class PGenWriteAnalysis(fileName: String, batch: Int, imputed: Boolean, thr
 
   override def finish(): Unit = {
     if (output != null) output.close()
-    if (currentBatch.nonEmpty) super.process(RowObj("chrN",0,currentBatch))
+    if (currentBatch.nonEmpty) {
+      val batchName = fileName.replace(BATCH_REPLACE, currentBatch)
+      super.process(RowObj("chrN",0,batchName))
+    }
     super.finish()
   }
 }
