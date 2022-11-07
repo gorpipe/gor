@@ -97,6 +97,18 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
             this.sortType = t;
         }
 
+        public int getSortColumn() {
+            return this.sortColumn;
+        }
+
+        public SortOrder getSortOrder() {
+            return this.sortOrder;
+        }
+
+        public SortType getSortType() {
+            return this.sortType;
+        }
+
         int sortColumn;
         SortOrder sortOrder;
         SortType sortType;

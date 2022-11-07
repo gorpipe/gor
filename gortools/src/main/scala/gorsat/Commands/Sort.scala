@@ -88,7 +88,7 @@ object Sort {
 
       for (i <- ucols.indices) {
         val colsToAdd = columnsFromHeader(cleanCols(i), forcedInputHeader, executeNor)
-        colsToAdd.reverse.map(y => new Row.SortInfo(y, if (colOrder(i) == "r") Row.SortOrder.REVERSE else Row
+        colsToAdd.map(y => new Row.SortInfo(y, if (colOrder(i) == "r") Row.SortOrder.REVERSE else Row
           .SortOrder.FORWARD,
           if (colType(i) == "n") Row.SortType.NUMBERIC else Row.SortType.STRING)).foreach(sortInfo ::= _)
       }

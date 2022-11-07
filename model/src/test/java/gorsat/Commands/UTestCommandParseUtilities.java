@@ -4,6 +4,9 @@ import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Test;
+import scala.collection.JavaConverters;
+import scala.collection.immutable.List;
+import scala.jdk.javaapi.CollectionConverters;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -179,5 +182,73 @@ public class UTestCommandParseUtilities {
     public void testGetExtensionForQueryNorHeaderWithTogor() {
         String result = CommandParseUtilities.getExtensionForQuery("nor abc.gor | togor", true);
         Assert.assertEquals(".header.gor", result);
+    }
+
+    @Test
+    public void testHeaderColumnParsingWithColumnNames() {
+
+        // Test specific columns
+        var result = CommandParseUtilities.columnsFromHeader("a,d", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        var javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(2, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(5, javaResult.get(1));
+
+        // Test with range operator
+        result = CommandParseUtilities.columnsFromHeader("a-e", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(5, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(3, javaResult.get(1));
+        Assert.assertEquals(6, javaResult.get(4));
+
+        // Test with open ended range operator
+        result = CommandParseUtilities.columnsFromHeader("a,d-", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(5, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(5, javaResult.get(1));
+        Assert.assertEquals(8, javaResult.get(4));
+
+        // Test with open ended range operator
+        result = CommandParseUtilities.columnsFromHeader("d-", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(4, result.length());
+        Assert.assertEquals(5, javaResult.get(0));
+        Assert.assertEquals(8, javaResult.get(3));
+    }
+
+    @Test
+    public void testHeaderColumnParsingWithColumnIndices() {
+
+        // Test specific columns
+        var result = CommandParseUtilities.columnsFromHeader("#1,#4", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        var javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(2, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(5, javaResult.get(1));
+
+        // Test with range operator
+        result = CommandParseUtilities.columnsFromHeader("#1-#5", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(5, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(3, javaResult.get(1));
+        Assert.assertEquals(6, javaResult.get(4));
+
+        // Test with open ended range operator
+        result = CommandParseUtilities.columnsFromHeader("#1,#4-", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(5, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(5, javaResult.get(1));
+        Assert.assertEquals(8, javaResult.get(4));
+
+        // Test with open ended range operator
+        result = CommandParseUtilities.columnsFromHeader("#4-", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+        javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(4, result.length());
+        Assert.assertEquals(5, javaResult.get(0));
+        Assert.assertEquals(8, javaResult.get(3));
     }
 }
