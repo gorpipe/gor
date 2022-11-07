@@ -142,7 +142,7 @@ public class QueryCommand extends HelpOptions implements Runnable{
 
         String[] args;
         if (inputIsScript) {
-            args = new String[]{"-script " + query};
+            args = new String[]{"-script", query};
         } else {
             args = new String[]{query};
         }
