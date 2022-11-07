@@ -29,7 +29,7 @@ plugins {
 project(':documentation') {
 
     task generateText (type: kr.motd.gradle.sphinx.gradle.SphinxTask){
-        onlyIf { ! Boolean.getBoolean('skip.documentation') }
+        onlyIf { project.hasProperty('include.documentation') }
         builder = "text"
         sourceDirectory = "${project.projectDir}/src"
         outputDirectory = "${project.buildDir}/text"
@@ -37,7 +37,7 @@ project(':documentation') {
     }
 
     task generateHtml (type: kr.motd.gradle.sphinx.gradle.SphinxTask){
-        onlyIf { ! Boolean.getBoolean('skip.documentation') }
+        onlyIf { project.hasProperty('include.documentation') }
         builder = "html"
         sourceDirectory = "${project.projectDir}/src"
         outputDirectory = "${project.buildDir}/html"
@@ -45,7 +45,7 @@ project(':documentation') {
 
     task generateGorCommandsToolsHelp( type: GenerateGorToolsHelpTask ){
         dependsOn generateText
-        onlyIf { ! Boolean.getBoolean('skip.documentation') }
+        onlyIf { project.hasProperty('include.documentation') }
 
         header = "COMMANDS"
         helpText = "Try HELP COMMANDS, HELP FUNCTIONS or HELP followed by some of these commands:"
@@ -56,7 +56,7 @@ project(':documentation') {
 
     task generateGorFunctionsToolsHelp( type: GenerateGorToolsHelpTask ){
         dependsOn generateText
-        onlyIf { ! Boolean.getBoolean('skip.documentation') }
+        onlyIf { project.hasProperty('include.documentation') }
 
         header = "FUNCTIONS"
         helpText = "Try HELP FUNCTIONS or HELP followed by some of these functions:"
@@ -67,15 +67,25 @@ project(':documentation') {
 
     task generateGorFunctionsHelp( type: GenerateGorToolsHelpTask ){
         dependsOn generateText
-        onlyIf { ! Boolean.getBoolean('skip.documentation') }
+        onlyIf { project.hasProperty('include.documentation') }
 
         inputDir = new File(generateText.outputDirectory, "functions")
         outputFile = new File(generateText.outputDirectory, "functions_help.txt")
     }
 
+
+    if (!project.hasProperty('include.documentation') ) {
+        project.tasks.generateMetadataFileForMavenJavaLibModulePublication.onlyIf {false}
+        project.tasks.publishMavenJavaLibModulePublicationToMavenLocal .onlyIf {false}
+        project.afterEvaluate {
+            project.tasks.generatePomFileForMavenJavaLibModulePublication.enabled = false
+            project.tasks."publishMavenJavaLibModulePublicationToGitlab-gor-mavenRepository".onlyIf {false}
+        }
+    }
+
     jar {
         dependsOn generateGorCommandsToolsHelp, generateGorFunctionsToolsHelp, generateHtml
-        onlyIf { ! Boolean.getBoolean('skip.documentation') }
+        onlyIf { project.hasProperty('include.documentation') }
 
         from "${generateGorCommandsToolsHelp.outputFile}"
         from "${generateGorFunctionsToolsHelp.outputFile}"

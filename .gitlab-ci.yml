@@ -83,7 +83,7 @@ build:
   image: "$JAVA_BUILDER_IMAGE"
   stage: build
   variables:
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   script: ./gradlew classes
   cache:
     policy: pull-push
@@ -96,7 +96,7 @@ build:
   stage: test
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   before_script:
     - ln -s ${INTEGRATION_TESTS_SECRETS_ENV} tests/config/secrets.env
   artifacts:
@@ -117,7 +117,7 @@ build_test:
   stage: build
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
   before_script:
     - ln -s ${INTEGRATION_TESTS_SECRETS_ENV} tests/config/secrets.env
   script: ./gradlew --continue test slowTest integrationTest
@@ -185,7 +185,7 @@ dependency_scanning:
     # analysis, however, the license management plugin calls the build task so we have to manually
     # disable tests and documentation generation.
     SECURE_LOG_LEVEL: "debug"
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dskip.tests=true"
   artifacts:
     paths: [gl-dependency-scanning-report.json]
 
@@ -200,7 +200,7 @@ spotbugs-sast:
     SAST_JAVA_VERSION: "17"
     JAVA_OPTS: "-Xmx4G"
     SECURE_LOG_LEVEL: "debug"
-    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true -Dskip.documentation=true"
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.caching=true -Dskip.tests=true"
   rules:
     - if: '$SECURITY_SCAN == "true"'
 
@@ -209,7 +209,7 @@ publish:
     - .build_with_cache
     - .on-releasable-or-semver-tag-only
   stage: publish
-  script: ./gradlew publish -x test -x slowTest -x integrationTest
+  script: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation
 
 
 # Disable default tasks that should not be triggered.
