@@ -1,3 +1,4 @@
+#!/bin/bash
 # -----------------------------
 # Script to release given a milestone number.
 #
@@ -11,6 +12,8 @@
 # 4. Creates a release (tags the the current master branch)
 # 5. Closes the milestone.
 # -----------------------------
+
+set -e
 
 PROJECT_ID=$1
 MILESTONE=$2
