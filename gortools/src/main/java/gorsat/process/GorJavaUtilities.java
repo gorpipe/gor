@@ -31,6 +31,7 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
@@ -43,6 +44,8 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -566,36 +569,36 @@ public class GorJavaUtilities {
     }
 
     public static synchronized void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
-        try(Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
+        try (Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
             var metapaths = metapathstream.filter(p -> p.endsWith(".meta")).collect(Collectors.toList());
             var ai = new AtomicInteger();
             var entries = metapaths.parallelStream()
-                .map(p -> GorMeta.createAndLoad(fileReader, p))
-                .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0)
-                .map(meta -> {
-                    var p = meta.getMetaPath();
-                    var fulldicturi = URI.create(outfolderpath);
-                    var outfilename = PathUtils.relativize(fulldicturi, p);
-                    var outfile = FilenameUtils.removeExtension(outfilename);
-                    var builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
-                    var i = ai.incrementAndGet();
-                    builder.alias(Integer.toString(i));
-                    builder.range(meta.getRange());
-                    var tags = meta.getProperty(GorMeta.HEADER_TAGS_KEY, "");
-                    if (!Strings.isNullOrEmpty(tags)) {
-                        builder.tags(tags.split(","));
-                    } else if (meta.containsProperty(GorMeta.HEADER_CARDCOL_KEY)) {
-                        builder.tags(meta.getCordColTags());
-                    }
-                    if (i==1) {
-                        try {
-                            writeHeader(fileReader, dictionarypathwriter, p, false);
-                        } catch (IOException e) {
-                            throw new GorSystemException("Unable to write header to dictionary", e);
+                    .map(p -> GorMeta.createAndLoad(fileReader, p))
+                    .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0)
+                    .map(meta -> {
+                        var p = meta.getMetaPath();
+                        var fulldicturi = URI.create(outfolderpath);
+                        var outfilename = PathUtils.relativize(fulldicturi, p);
+                        var outfile = FilenameUtils.removeExtension(outfilename);
+                        var builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
+                        var i = ai.incrementAndGet();
+                        builder.alias(Integer.toString(i));
+                        builder.range(meta.getRange());
+                        var tags = meta.getProperty(GorMeta.HEADER_TAGS_KEY, "");
+                        if (!Strings.isNullOrEmpty(tags)) {
+                            builder.tags(tags.split(","));
+                        } else if (meta.containsProperty(GorMeta.HEADER_CARDCOL_KEY)) {
+                            builder.tags(meta.getCordColTags());
                         }
-                    }
-                    return builder.build().formatEntry();
-                }).collect(Collectors.toList());
+                        if (i == 1) {
+                            try {
+                                writeHeader(fileReader, dictionarypathwriter, p, false);
+                            } catch (IOException e) {
+                                throw new GorSystemException("Unable to write header to dictionary", e);
+                            }
+                        }
+                        return builder.build().formatEntry();
+                    }).collect(Collectors.toList());
 
             if (entries.size() > 0) {
                 for (var entry : entries) {
@@ -603,5 +606,22 @@ public class GorJavaUtilities {
                 }
             } else writeDummyHeader(dictionarypathwriter);
         }
+    }
+
+    public static Optional<String[]> parseDictionaryColumn(String[] dictList, FileReader fileReader) {
+        return Arrays.stream(dictList).mapMulti((BiConsumer<String, Consumer<String[]>>) (df, consumer) -> {
+            var dflow = df.toLowerCase();
+            if (dflow.endsWith(".gord") || dflow.endsWith(".nord")) {
+                var dt = new DictionaryTable(URI.create(df), fileReader);
+                var cols = dt.getColumns();
+                if (cols!=null) consumer.accept(cols);
+            } else {
+                try {
+                    consumer.accept(fileReader.readHeaderLine(df).split("\t"));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).findFirst();
     }
 }

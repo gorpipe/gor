@@ -415,6 +415,54 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
+    public void testPartGorPgorDictionaryHeader() throws IOException {
+        var bucketFile = workDirPath.resolve("buckets.tsv");
+        Path variantBucketFile1 = workDirPath.resolve("variants1.gor");
+        Path variantBucketFile2 = workDirPath.resolve("variants2.gor");
+        Path variantBucketFile3 = workDirPath.resolve("variants3.gor");
+        Path variantBucketFile4 = workDirPath.resolve("variants4.gor");
+        var variantDictFile = workDirPath.resolve("variants.gord");
+        Files.writeString(variantBucketFile1,"Chrom\tpos\tref\talt\tbucket\tvalues\n"+
+                "chr1\t1\tA\tC\t1\t0\ta\n"+
+                "chr1\t2\tG\tC\t1\t0\ta\n"+
+                "chr1\t3\tA\tC\t1\t0\ta\n"+
+                "chr1\t4\tG\tC\t1\t0\ta\n");
+        Files.writeString(variantBucketFile2,"Chrom\tpos\tref\talt\tbucket\tvalues\n"+
+                "chr1\t1\tA\tC\t1\t0\tb\n"+
+                "chr1\t2\tG\tC\t1\t2\tb\n"+
+                "chr1\t3\tA\tC\t1\t0\tb\n"+
+                "chr1\t4\tG\tC\t1\t2\tb\n");
+        Files.writeString(variantBucketFile3,"Chrom\tpos\tref\talt\tbucket\tvalues\n"+
+                "chr1\t1\tA\tC\t1\t1\tc\n"+
+                "chr1\t2\tG\tC\t1\t0\tc\n"+
+                "chr1\t3\tA\tC\t1\t1\tc\n"+
+                "chr1\t4\tG\tC\t1\t0\tc\n");
+        Files.writeString(variantBucketFile4,"Chrom\tpos\tref\talt\tbucket\tvalues\n"+
+                "chr1\t1\tA\tC\t1\t1\td\n"+
+                "chr1\t2\tG\tC\t1\t1\td\n"+
+                "chr1\t3\tA\tC\t1\t1\td\n"+
+                "chr1\t4\tG\tC\t1\t1\td\n");
+        Files.writeString(variantDictFile,"variants1.gor\ta\n"+
+                "variants2.gor\tb\n"+
+                "variants3.gor\tc\n"+
+                "variants4.gor\td\n");
+
+        var expected = "Chrom\tpos\tref\talt\tbucket\tvalues\tSource\n";
+        final var WRONG_RES_PARTGOR = "Wrong result from partgor query";
+
+        int partsize = 2;
+        var query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(gor "+variantDictFile+" -nf -s Source -f #{tags} | top 0);" +
+                "gor [#s1#] | top 0";
+        var result = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());
+        Assert.assertEquals(WRONG_RES_PARTGOR, expected, result);
+
+        query = "create #s1# = partgor -dict "+variantDictFile+" -partsize "+partsize+" <(pgor "+variantDictFile+" -nf -s Source -f #{tags} | top 0);" +
+                "gor [#s1#] | top 0";
+        result = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());
+        Assert.assertEquals(WRONG_RES_PARTGOR, expected, result);
+    }
+
+    @Test
     public void testExplicitWrite() throws IOException {
         var query = "create a = gor ../tests/data/gor/genes.gor | top 1 | write "+ workDirPath.resolve("test.gor").toAbsolutePath() +"; gor [a] | group chrom -count";
         var results = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());

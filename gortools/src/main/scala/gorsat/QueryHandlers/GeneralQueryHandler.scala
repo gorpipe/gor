@@ -25,7 +25,7 @@ package gorsat.QueryHandlers
 import gorsat.Analysis.CheckOrder
 
 import java.lang
-import java.nio.file.{Files, LinkOption, Path, Paths, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths}
 import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
@@ -428,9 +428,9 @@ object GeneralQueryHandler {
         i += 2
       }
       val tableHeader = new TableHeader
-      val header = fileReader.readHeaderLine(dictFiles.head).split("\t")
+      val header = GorJavaUtilities.parseDictionaryColumn(dictFiles.toArray, fileReader)
       tableHeader.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "false")
-      tableHeader.setColumns(header)
+      if (header.isPresent) tableHeader.setColumns(header.get())
       val dictList = getPartDictList(dictFiles, partitions)
       writeList(fileReader, outfile, tableHeader.formatHeader(), dictList)
     }
