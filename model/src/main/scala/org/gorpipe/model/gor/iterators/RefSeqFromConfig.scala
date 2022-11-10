@@ -77,18 +77,18 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
           if( !f.isPresent ) {
             if (!notfoundmap.contains(chrFilePath)) {
               notfoundmap.add(chrFilePath)
-              log.debug("Warning: Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
+              log.info("Warning: Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
             }
             'N'
           } else {
             val buff = new Array[Byte](buffLength)
             f.get().seek(offset)
             val l = f.get().read(buff, 0, buffLength)
-            if( l == -1 ){
+            lufo.addObject(buffKey, buff)
+            if( l == -1 ) {
               log.info("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
               return 'N'
             }
-            lufo.addObject(buffKey, buff)
             refByteToChar(buff(pos - offset - 1))
           }
       }
@@ -118,7 +118,6 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
         i += 1
       }
       return strbuff.toString
-      // return lastBuff.slice(pos1-offset-1,pos2-offset-1).toString
     }
     val strbuff = new StringBuilder(pos2 - pos1 + 1)
     var i = pos1
