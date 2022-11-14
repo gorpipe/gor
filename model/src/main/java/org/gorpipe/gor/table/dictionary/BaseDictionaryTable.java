@@ -410,6 +410,11 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
         if (prevSerial.equals(TableHeader.NO_SERIAL) || !this.header.getProperty(TableHeader.HEADER_SERIAL_KEY).equals(prevSerial)) {
             tableEntries.clear();
         }
+    }
+
+    @Override
+    protected void loadMeta() {
+        super.loadMeta();
 
         // Reload meta data from the table, use the current values as defaults, so if the table has already been saved
         // the reload will replace the set values.  If the table has never been saved we keep the set values (we

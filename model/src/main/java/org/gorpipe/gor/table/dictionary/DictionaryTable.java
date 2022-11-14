@@ -106,7 +106,9 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryTable.class);
 
-    private boolean useEmbeddedHeader = false;  // Should the header be embeded in the table file stored in header file the table data dir.
+    public static final boolean useCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+
+    private boolean useEmbeddedHeader = false;  // Should the header be embedded in the table file stored in header file the table data dir.
 
     private TableAccessOptimizer tableAccessOptimizer;
 
@@ -174,6 +176,18 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     }
 
     @Override
+    public void insert(Collection<DictionaryEntry> lines) {
+        super.insert(lines);
+        tableAccessOptimizer = null;
+    }
+
+    @Override
+    public void delete(Collection<DictionaryEntry> lines) {
+        super.delete(lines);
+        tableAccessOptimizer = null;
+    }
+
+    @Override
     protected void saveTempMainFile() {
         log.debug("Saving {} entries for table {}", tableEntries.size(), getName());
 
@@ -215,6 +229,20 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         } catch (IOException e) {
             throw new GorSystemException("Could not move header", e);
         }
+    }
+
+    @Override
+    public void save() {
+        super.save();
+        if (useCache) {
+            updateCache(this);
+        }
+    }
+
+    @Override
+    public void reload() {
+        super.reload();
+        tableAccessOptimizer = null;
     }
 
     public boolean hasDeletedEntries() {
@@ -262,6 +290,10 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
 
     final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
 
+    public synchronized static DictionaryTable getDictionaryTable(String path, FileReader fileReader) throws IOException {
+        return getDictionaryTable(path, fileReader, useCache);
+    }
+
     public synchronized static DictionaryTable getDictionaryTable(String path, FileReader fileReader, boolean useCache) throws IOException {
         if (useCache) {
             String uniqueID = fileReader.getFileSignature(path);
@@ -276,11 +308,29 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
                     dictCache.put(key, newDict);
                     return newDict;
                 } else {
+                    // Need to reload the meta as it can lye in files outside the gord file.
+                    dictFromCache.loadMeta();
                     return dictFromCache;
                 }
             }
         } else {
             return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
+        }
+    }
+
+    public synchronized static void updateCache(DictionaryTable table) {
+        String uniqueID = null;
+        try {
+            uniqueID = table.getFileReader().getFileSignature(table.getPath());
+        } catch (IOException e) {
+            throw new GorSystemException(e);
+        }
+        var key = dictCacheKeyFromPathAndRoot(table.getPath(), table.getFileReader().getCommonRoot());
+        if (uniqueID == null || uniqueID.equals("")) {
+            log.warn("Trying to put table with non unique id ({}) into cache", uniqueID);
+        } else {
+            table.setId(uniqueID);
+            dictCache.put(key, table);
         }
     }
 

@@ -49,7 +49,7 @@ public abstract class BaseTable<T> implements Table<T> {
                                         // table and contains various files related to it.
     private final URI rootUri;          // uri to table root (just to improve performance when working with uri's).
     private final String name;          // Name of the table.
-    private String id = null;           // Unique id (based on full path, just so we don't always have to refer to full path).
+    private String id = null;           // Unique id (based on full path (and possibly timestamp), just so we don't always have to refer to full path).
     protected String prevSerial;        //
 
     protected TableHeader header; // Header info.
@@ -128,7 +128,7 @@ public abstract class BaseTable<T> implements Table<T> {
         return this.id;
     }
 
-    private void setId(String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -272,13 +272,9 @@ public abstract class BaseTable<T> implements Table<T> {
      * Note:  Reload is called when we open read transaction.
      */
     public void reload() {
-
         log.debug("Loading table {}", getName());
         prevSerial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
         loadMeta();
-
-        validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
-        useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
     }
 
 
@@ -439,6 +435,9 @@ public abstract class BaseTable<T> implements Table<T> {
         this.header.loadAndMergeMeta(fileReader, PathUtils.resolve(getFolderPath(), "header")); // For backward compatibility.
         this.header.loadAndMergeMeta(fileReader, getPathUri().toString());
         this.header.loadAndMergeMeta(fileReader,getPathUri().toString() + ".meta");
+
+        validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
+        useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));
     }
 
 
