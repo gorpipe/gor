@@ -3,6 +3,11 @@
     To use this configuration file, specify the following JVM config option (pointing to the correct path of this file):
         java -Dlogback.configurationFile=path_to/logback-trace.xml
     -->
+    <!--
+        <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook">
+        <delay>120000</delay>
+    </shutdownHook>
+    -->
 
     <!--
     Add a context listener that will change the log level of JUL according to the SLF4J log level. This will ensure
@@ -27,7 +32,7 @@
     <logger name="com.nextcode" level="TRACE"/>
     <logger name="org.gorpipe.gor.table" level="TRACE"/>
     <logger name="org.gorpipe.gor.table.Dictionary" level="TRACE"/>
-    <logger name=" org.gorpipe.gor.manager" level="TRACE"/>
+    <logger name="org.gorpipe.gor.manager" level="TRACE"/>
 
     <root level="INFO">
         <appender-ref ref="STDERR"/>

@@ -46,7 +46,7 @@ project(':gortools') {
         implementation "org.yaml:snakeyaml:_"
         implementation "commons-io:commons-io:_"
         implementation "org.apache.commons:commons-lang3:_"
-        implementation "org.scala-lang:scala-compiler:_"
+
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "org.scalanlp:breeze_${scalaVersion}:_"
         implementation "colt:colt:_"

@@ -22,9 +22,7 @@ project(':auth') {
         implementation "com.squareup.retrofit2:retrofit:_"
         implementation "com.squareup.retrofit2:converter-jackson:_"
 
-        implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.11.0'
 
-        //testImplementation("${gorArtifactGroupId}:gor-test:${gorVersion}")
         testImplementation project(':test')
         testImplementation "org.mockito:mockito-core:_"
         testImplementation "org.mockito:mockito-inline:_"
