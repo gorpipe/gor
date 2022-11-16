@@ -204,19 +204,6 @@
       });
   </script>
 
-  {# Do not conflict with RTD insertion of analytics script #}
-  {% if not READTHEDOCS %}
-    {% if theme_analytics_id %}
-    <!-- Theme Analytics -->
-    <script>
-    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-    ga('create', '{{ theme_analytics_id }}, 'auto');
-    ga('send', 'pageview');
-    </script>
-    <script async src='https://www.google-analytics.com/analytics.js'></script>
-    {% endif %}
-  {% endif %}
-
   {%- block footer %} {% endblock %}
 
 </body>
