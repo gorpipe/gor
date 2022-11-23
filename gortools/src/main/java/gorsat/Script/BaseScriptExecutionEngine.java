@@ -1,6 +1,7 @@
 package gorsat.Script;
 
 import gorsat.Commands.CommandParseUtilities;
+import gorsat.Commands.Write;
 import gorsat.Utilities.AnalysisUtilities;
 import gorsat.Utilities.MacroUtilities;
 import gorsat.Utilities.StringUtilities;
@@ -10,6 +11,7 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.table.util.PathUtils;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -58,16 +60,26 @@ public class BaseScriptExecutionEngine {
         }
     }
 
-    private Optional<Tuple2<String,Boolean>> resolveCache(String lastCommand) {
-        var fields = lastCommand.split(" ");
-        var lastField = fields[fields.length-1].trim();
+    private Optional<Tuple2<String,Boolean>> resolveCache(GorContext context, String lastCommand, ExecutionBlock queryBlock) {
+        var write = new Write();
+        var split = CommandParseUtilities.quoteSafeSplit(lastCommand.substring(6).trim(), ' ');
+        var args = write.validateArguments(split);
+        String lastField;
+        if (args.length==0) {
+            var writeFilePath = context.getSession().getProjectContext().getFileCache().tempLocation(queryBlock.signature(), ".gord");
+            writeFilePath = PathUtils.relativize(context.getSession().getProjectContext().getProjectRoot(), writeFilePath);
+            queryBlock.query_$eq(queryBlock.query() + " " + writeFilePath);
+            lastField = writeFilePath;
+        } else {
+            lastField = args[0].trim();
+        }
         return !lastField.startsWith("-") ? resolveForkPathParent(lastField) : Optional.empty();
     }
 
-    public Optional<Tuple2<String,Boolean>> getExplicitWrite(String query) {
-        var lastCommand = MacroUtilities.getLastCommand(query);
+    public Optional<Tuple2<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {
+        var lastCommand = MacroUtilities.getLastCommand(queryBlock.query());
         if (lastCommand.toLowerCase().startsWith("write ")) {
-            return resolveCache(lastCommand);
+            return resolveCache(context, lastCommand, queryBlock);
         } else {
             return Optional.empty();
         }
@@ -219,7 +231,7 @@ public class BaseScriptExecutionEngine {
                 var querySignature = StringUtilities.createMD5(query + fileSignature);
                 firstLevelBlock.signature_$eq(querySignature);
 
-                var cachePath = getExplicitWrite(query);
+                var cachePath = getExplicitWrite(context, firstLevelBlock);
                 if (cachePath.isPresent()) {
                     Tuple2<String,Boolean> cp = cachePath.get();
                     firstLevelBlock.cachePath_$eq(cp._1());
@@ -238,16 +250,17 @@ public class BaseScriptExecutionEngine {
 
             virtualFileManager.addRange(activeExecutionBlocks);
 
-            for (Map.Entry<String,ExecutionBlock> newExecutionBlock : activeExecutionBlocks.entrySet()) {
+            for (Map.Entry<String,ExecutionBlock> newExecutionBlockEntry : activeExecutionBlocks.entrySet()) {
                 // Get the command to finally execute
-                var commandToExecute = newExecutionBlock.getValue().query();
-                var cacheFile = newExecutionBlock.getValue().cachePath();
-                var hasForkWrite = newExecutionBlock.getValue().hasForkWrite();
+                var newExecutionBlock = newExecutionBlockEntry.getValue();
+                var commandToExecute = newExecutionBlock.query();
+                var cacheFile = newExecutionBlock.cachePath();
+                var hasForkWrite = newExecutionBlock.hasForkWrite();
 
                 String cachePath;
                 boolean hasFork;
                 if (cacheFile == null) {
-                    var ocache = getExplicitWrite(commandToExecute);
+                    var ocache = getExplicitWrite(context, newExecutionBlock);
                     if(ocache.isPresent()) {
                         var tup = ocache.get();
                         cachePath = tup._1;
@@ -265,10 +278,10 @@ public class BaseScriptExecutionEngine {
                 var usedFiles = getUsedFiles(commandToExecute, session);
 
                 // Create the split manager to use from the query (might contain -split option)
-                var splitManager = SplitManager.createFromCommand(newExecutionBlock.getKey(), commandToExecute, context);
+                var splitManager = SplitManager.createFromCommand(newExecutionBlockEntry.getKey(), commandToExecute, context);
 
                 // Expand execution blocks based on the active split
-                var commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlock.getKey(), cachePath);
+                var commandGroup = splitManager.expandCommand(commandToExecute, newExecutionBlockEntry.getKey(), cachePath);
 
                 // Remove this command from the execution blocks if needed
                 if (commandGroup.removeFromCreate()) {

@@ -5,16 +5,18 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
+
 public class UTestGorDictionaryFolder {
     static final String WRONG_RESULT = "Wrong results in write folder";
     static final String GROUP_CHROM_COUNT = " | group chrom -count";
-    static final String THEDICTGORD = "thedict.gord";
 
     static String GENE_PGOR_TOP1 = "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
             "chr1\t11868\t14412\tDDX11L1\n" +
@@ -176,7 +178,7 @@ public class UTestGorDictionaryFolder {
         var genespath = Paths.get(genes);
         var genesdest = workDirPath.resolve(genespath.getFileName());
         Files.copy(genespath,genesdest);
-        var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/"+THEDICTGORD+GROUP_CHROM_COUNT;
+        var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/"+DEFAULT_FOLDER_DICTIONARY_NAME+GROUP_CHROM_COUNT;
         var results = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cachePath.toString());
         Assert.assertEquals(WRONG_RESULT, GENE_GROUP_CHROM, results);
     }
@@ -194,7 +196,7 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
-    public void testPgorWriteGordFolder() throws IOException {
+    public void testPgorWriteGordFolder() {
         var folderpath = workDirPath.resolve("folder.gord");
 
         String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | top 1 | write " + folderpath +
@@ -202,12 +204,12 @@ public class UTestGorDictionaryFolder {
         Assert.assertEquals(WRONG_RESULT, GENE_PGOR_TOP1, results);
 
         Assert.assertEquals("Nor-ing the folder with -asdict should be the same as noring the dict",
-                TestUtils.runGorPipe("nor -asdict " + folderpath.resolve(THEDICTGORD)),
+                TestUtils.runGorPipe("nor -asdict " + folderpath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME)),
                 TestUtils.runGorPipe("nor -asdict " + folderpath));
     }
 
     @Test
-    public void testPgorForkWrite() throws IOException {
+    public void testPgorForkWrite() {
         var folderpath = workDirPath.resolve("folder.gord");
 
         String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | rownum | calc mod mod(rownum,2) | hide rownum | write -f mod " + folderpath + "/file_#{CHROM}_#{BPSTART}_#{BPSTOP}_#{fork}.gorz;" +
@@ -216,7 +218,7 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
-    public void testPgorWriteExplicitFilename() throws IOException {
+    public void testPgorWriteExplicitFilename() {
         var folderpath = workDirPath.resolve("folder.gord");
         String results = TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | write " + folderpath + "/file_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz;" +
                 "gor [a] | group chrom -count","-cachedir",cachePath.toString());
@@ -229,12 +231,39 @@ public class UTestGorDictionaryFolder {
         Path folderpath = workDirPath.resolve("folder.gord");
         TestUtils.runGorPipe("create a = pgor ../tests/data/gor/genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c " + folderpath +
                 "; gor [a] | group chrom -count");
-        String thedict = Files.readString(folderpath.resolve(THEDICTGORD)).trim();
+        String thedict = Files.readString(folderpath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME)).trim();
         var dictsplit = thedict.split("\n");
         var last = dictsplit[dictsplit.length-1];
         Assert.assertEquals("Wrong results in dictionary",
                 "1\tchrM\t576\tchrM\t15955\tJ,M",
                 last.substring(last.indexOf('\t')+1));
+    }
+
+    @Test
+    public void testPgorWriteCacheFolderWithCardinality() throws IOException {
+        var workPath = workDir.getRoot().toPath();
+        var folderpath = workPath.resolve("result_cache");
+        Files.createDirectories(folderpath);
+        var genespath = Path.of("../tests/data/gor/genes.gor");
+        Files.copy(genespath, workPath.resolve(genespath.getFileName()));
+        TestUtils.runGorPipe("create a = pgor genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c;" +
+                "gor [a] | group chrom -count", "-gorroot", workPath.toAbsolutePath().toString(), "-cachedir", "result_cache");
+        try(var thedictstream = Files.walk(folderpath, FileVisitOption.FOLLOW_LINKS)) {
+            var thedict = thedictstream.filter(p -> p.getFileName().toString().equals(DEFAULT_FOLDER_DICTIONARY_NAME)).map(p -> {
+                try {
+                    return Files.readString(p);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }).findFirst();
+
+            Assert.assertTrue(thedict.isPresent());
+            var dictsplit = thedict.get().split("\n");
+            var last = dictsplit[dictsplit.length-1];
+            Assert.assertEquals("Wrong results in dictionary",
+                    "1\tchrM\t576\tchrM\t15955\tJ,M",
+                    last.substring(last.indexOf('\t')+1));
+        }
     }
 
     @Test
@@ -389,7 +418,7 @@ public class UTestGorDictionaryFolder {
         Assert.assertEquals(WRONG_RES_PARTGOR, expected, result);
 
         var header = new DictionaryTableMeta();
-        header.loadAndMergeMeta(folderpath.resolve(THEDICTGORD));
+        header.loadAndMergeMeta(folderpath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME));
         Assert.assertEquals("false", header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY));
 
         partsize = 4;
@@ -479,7 +508,7 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
-    public void testGordFolder() throws IOException {
+    public void testGordFolder() {
         var query = "create #variants# = gorrows -p chr1:1-1000 | merge <(gorrows -p chr10:1-1000) | merge <(gorrows -p chr2:1-1000) | merge <(gorrows -p chr21:1-1000) | calc ref 'A' | calc alt 'C';\n" +
                 "create #pns# = norrows 10000 | calc PN 'PN_'+right('000000'+str(#1),5) | select PN | top 1000;\n" +
                 "create #genotypes# = pgor [#variants#] \n" +
@@ -507,10 +536,10 @@ public class UTestGorDictionaryFolder {
                 "| write -f bucket -card bucket test.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz;\n" +
                 "gor [#empty#] | top 1";
         TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cachePath.toString());
-        Assert.assertTrue(Files.exists(workDirPath.resolve("test.gord").resolve(THEDICTGORD)));
+        Assert.assertTrue(Files.exists(workDirPath.resolve("test.gord").resolve(DEFAULT_FOLDER_DICTIONARY_NAME)));
 
         Assert.assertEquals("Nor-ing the folder with -asdict should be the same as noring the dict",
-                TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord").resolve(THEDICTGORD)),
+                TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord").resolve(DEFAULT_FOLDER_DICTIONARY_NAME)),
                 TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")));
     }
 }

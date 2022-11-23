@@ -36,7 +36,7 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorParallelQueryHandler}
+import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorOptions, GorParallelQueryHandler}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.TableHeader
@@ -104,9 +104,21 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     cacheFile
   }
 
+  def isDictionaryFolderMacro(cmdUpper : String): Boolean = {
+    cmdUpper.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART) || cmdUpper.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER)
+  }
+
+  def generateDictionaryFile(commandToExecute: String, fileRoot: String, fileReader: FileReader, useMd5: Boolean, cacheFile: String): Unit = {
+    if (isDictionaryFolderMacro(commandToExecute.toUpperCase()) && !fileReader.exists(PathUtils.resolve(fileRoot, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
+      runCommand(context, commandToExecute, cacheFile, useMd5, theTheDict = true)
+    }
+  }
+
   def executeBatch(commandSignatures: Array[String], commandsToExecute: Array[String], batchGroupNames: Array[String], cacheFiles: Array[String], gorMonitor: GorMonitor): Array[String] = {
     val fileNames = new Array[String](commandSignatures.length)
     val fileCache = context.getSession.getProjectContext.getFileCache
+    val fileReader = context.getSession.getProjectContext.getFileReader
+    val fileRoot = context.getSession.getProjectContext.getProjectRoot
     var commandList: List[() => Unit] = Nil
     val useMd5 = System.getProperty("gor.caching.md5.enabled", "false").toBoolean
 
@@ -128,6 +140,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
               runAndStoreInCache(nested, fileCache, useMd5)
             }
           } else {
+            generateDictionaryFile(commandToExecute, fileRoot, fileReader, useMd5, cacheFile)
             nested.cached(cacheFile)
             cacheFile
           }
@@ -299,7 +312,7 @@ object GeneralQueryHandler {
 
   private def writeOutGorDictionaryFolder(fileReader: FileReader, outfolderpath: String, useTheDict: Boolean): Unit = {
     val outpath = if(useTheDict) {
-      if (outfolderpath.endsWith("/")) outfolderpath+"thedict.gord" else outfolderpath+"/thedict.gord"
+      if (outfolderpath.endsWith("/")) outfolderpath+GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME else outfolderpath+"/"+GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
     } else {
       var idx = outfolderpath.lastIndexOf("/")
       if (idx == -1) {

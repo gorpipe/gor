@@ -27,7 +27,7 @@
 package gorsat.Utilities
 
 import gorsat.Utilities.AnalysisUtilities._
-import gorsat.Commands.CommandParseUtilities
+import gorsat.Commands.{CommandParseUtilities, Write}
 import gorsat.Script.{ExecutionBlock, ScriptParsers}
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
