@@ -24,6 +24,7 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
@@ -74,7 +75,16 @@ public class UTestDictionary {
         dicionaryFileWihtBuckets = FileTestUtils.createTempFile(workDir.getRoot(), "buckets.gord",
                 String.format("%s|%s\ta\n%s|%s\tb\n",
                         gorFile.getCanonicalPath(), gorFileBucket.getCanonicalPath(), gorFile.getCanonicalPath(), gorFileBucket.getCanonicalPath()));
+    }
 
+    @Test
+    public void testReadUnknownDictionary() throws IOException {
+        try {
+            TestUtils.runGorPipe("gor x.gord ", true);
+            Assert.fail("Should throw exception");
+        } catch (GorException rex) {
+            Assert.assertTrue(rex.getMessage(), rex.getMessage().contains("x.gord"));
+        }
     }
 
     @Test

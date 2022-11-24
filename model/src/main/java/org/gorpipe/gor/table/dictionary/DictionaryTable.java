@@ -24,16 +24,20 @@ package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -295,8 +299,14 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     }
 
     public synchronized static DictionaryTable getDictionaryTable(String path, FileReader fileReader, boolean useCache) throws IOException {
+        // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
+        //        exception if file does not exists.
+        if (!fileReader.exists(path)) {
+            throw new NoSuchFileException(path);
+        }
         if (useCache) {
-            String uniqueID = fileReader.getFileSignature(path);
+            SourceMetadata meta = fileReader.resolveUrl(path).getSourceMetadata();
+            String uniqueID = meta.getUniqueId();
             var key = dictCacheKeyFromPathAndRoot(path, fileReader.getCommonRoot());
             if (uniqueID == null || uniqueID.equals("")) {
                 dictCache.invalidate(key);
@@ -314,6 +324,10 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
                 }
             }
         } else {
+            if (!fileReader.exists(path)) {
+                //throw new GorResourceException(String.format("Dictionary %s does not exist.", path), path);
+                throw new FileNotFoundException(path);
+            }
             return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
         }
     }

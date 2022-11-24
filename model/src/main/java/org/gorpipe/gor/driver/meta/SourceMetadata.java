@@ -56,8 +56,8 @@ public class SourceMetadata {
         this.canonicalName = canonicalName;
         this.lastModified = lastModified;
         this.linkLastModified = linkLastModified;
-        if (uniqueId == null && canonicalName != null && lastModified != null) {
-            this.uniqueId = Util.md5(canonicalName + ":" + lastModified);
+        if (uniqueId == null && canonicalName != null) {
+            this.uniqueId = Util.md5(canonicalName + (lastModified != null ? ":" + lastModified : ""));
         } else {
             this.uniqueId = uniqueId;
         }

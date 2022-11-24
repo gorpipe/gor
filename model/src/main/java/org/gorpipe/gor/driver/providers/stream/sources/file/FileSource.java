@@ -238,16 +238,13 @@ public class FileSource implements StreamSource {
 
     @Override
     public StreamSourceMetadata getSourceMetadata() throws IOException {
-        String uniqueId = null;
-        // This is a performance hit on nfs, should find a way to make this more efficient
-        /*File md5file = new File(file.getCanonicalPath() + ".md5");
-        if( md5file.isFile() ){
-            try (BufferedReader br = new BufferedReader(new FileReader(md5file))) {
-                uniqueId = br.readLine();
-            }
-        }*/
+        // TODO:  Why does FileSource behave differently than most other sources.  We should only af the exists case here.
         var exists = Files.exists(file);
-        return new StreamSourceMetadata(this, "file://" + (exists ? file.toRealPath() : file.normalize().toAbsolutePath()), exists ? Files.getLastModifiedTime(file).toMillis() : 0L, exists ? Files.size(file) : 0L, uniqueId, isSubset);
+        if (exists) {
+            return new StreamSourceMetadata(this, "file://" +  file.toRealPath(), Files.getLastModifiedTime(file).toMillis(), Files.size(file), null, isSubset);
+        } else {
+            return new StreamSourceMetadata(this, "file://" + file.normalize().toAbsolutePath(), 0L, 0L, null, isSubset);
+        }
     }
 
     @Override
