@@ -24,6 +24,7 @@ package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.jcraft.jsch.IO;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
@@ -294,11 +295,24 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
 
     final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
 
-    public synchronized static DictionaryTable getDictionaryTable(String path, FileReader fileReader) throws IOException {
-        return getDictionaryTable(path, fileReader, useCache);
+
+    public static DictionaryTable getOrCreateTable(String path, FileReader fileReader) throws IOException {
+        return getOrCreateTable(path, fileReader, useCache);
     }
 
-    public synchronized static DictionaryTable getDictionaryTable(String path, FileReader fileReader, boolean useCache) throws IOException {
+    public static DictionaryTable getOrCreateTable(String path, FileReader fileReader, boolean useCache) throws IOException {
+        try {
+            return getTable(path, fileReader, useCache);
+        } catch (NoSuchFileException e) {
+            return new DictionaryTable(URI.create(path), fileReader);
+        }
+    }
+
+    public synchronized static DictionaryTable getTable(String path, FileReader fileReader) throws IOException {
+        return getTable(path, fileReader, useCache);
+    }
+
+    public synchronized static DictionaryTable getTable(String path, FileReader fileReader, boolean useCache) throws IOException {
         // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
         //        exception if file does not exists.
         if (!fileReader.exists(path)) {
@@ -324,10 +338,6 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
                 }
             }
         } else {
-            if (!fileReader.exists(path)) {
-                //throw new GorResourceException(String.format("Dictionary %s does not exist.", path), path);
-                throw new FileNotFoundException(path);
-            }
             return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
         }
     }

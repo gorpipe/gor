@@ -848,7 +848,7 @@ public class GorOptions {
     private void processDictionaryTable(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
         // TODO: Remove when driver framework supports isDirectory
         fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
-        DictionaryTable table = DictionaryTable.getDictionaryTable(fileName, session.getProjectContext().getFileReader());
+        DictionaryTable table = DictionaryTable.getTable(fileName, session.getProjectContext().getFileReader());
 
         this.isNoLineFilter = isNoLineFilter || !table.getLineFilter();
         this.hasLocalDictonaryFile = hasLocalDictonaryFile || !table.getAllActiveTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags
