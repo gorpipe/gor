@@ -333,7 +333,7 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
                     return newDict;
                 } else {
                     // Need to reload the meta as it can lye in files outside the gord file.
-                    dictFromCache.loadMeta();
+                    // Not thread safe: dictFromCache.loadMeta();
                     return dictFromCache;
                 }
             }
@@ -345,7 +345,8 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
     public synchronized static void updateCache(DictionaryTable table) {
         String uniqueID = null;
         try {
-            uniqueID = table.getFileReader().getFileSignature(table.getPath());
+            SourceMetadata meta = table.getFileReader().resolveUrl(table.getPath()).getSourceMetadata();
+            uniqueID = meta.getUniqueId();
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
