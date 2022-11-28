@@ -24,6 +24,7 @@ package gorsat.Script
 
 import gorsat.Commands.CommandArguments
 import gorsat.Commands.CommandParseUtilities.validateCommandArguments
+import gorsat.Utilities.MacroUtilities
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
 import org.gorpipe.gor.session.GorContext
 
@@ -94,11 +95,15 @@ abstract case class MacroInfo(name: String,
   private def standardPreProcessing(commands: Array[String], summaryCommand: String, context: GorContext, createName: String): Array[String] = {
     var newCommands: List[String] = Nil
     commands.foreach { command =>
-      val (a, b) = ScriptParsers.createParser(command)
+      val (a, _) = ScriptParsers.createParser(command)
 
       if (a.isEmpty) {
         val commandPosition = command.toUpperCase.indexOf(this.name)
-        val theCommand = s"$summaryCommand [$createName]"
+        val theCommand = if (MacroUtilities.getLastCommand(command).toUpperCase.startsWith("WRITE ")) {
+          s"$summaryCommand [$createName] | top 0"
+        } else {
+          s"$summaryCommand [$createName]"
+        }
         val extraCreate = s"create $createName = ${this.name.toLowerCase} ${command.slice(commandPosition + this.name.length + 1, command.length)}"
 
         newCommands ::= theCommand

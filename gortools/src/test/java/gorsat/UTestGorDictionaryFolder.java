@@ -122,12 +122,15 @@ public class UTestGorDictionaryFolder {
         workDirPath = workDir.getRoot().toPath();
         cachePath = workDirPath.resolve("result_cache");
         Files.createDirectory(cachePath);
+
+        var genespath = Path.of("../tests/data/gor/genes.gor");
+        Files.copy(genespath, workDirPath.resolve(genespath.getFileName()));
     }
 
     @Test
     @Ignore("Passthrough not supported yet")
     public void testWritePassThrough() {
-        Path path = workDir.getRoot().toPath().resolve("gorfile.gorz");
+        Path path = workDirPath.resolve("gorfile.gorz");
         String results = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write -p " + path);
         Assert.assertEquals(WRONG_RESULT, "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
                 "chr1\t11868\t14412\tDDX11L1\n" , results);
@@ -135,7 +138,7 @@ public class UTestGorDictionaryFolder {
 
     @Test
     public void testCreateWrite() {
-        Path path = workDir.getRoot().toPath().resolve("gorfile.gorz");
+        Path path = workDirPath.resolve("gorfile.gorz");
         String results = TestUtils.runGorPipe("create a = gor -p chr21 ../tests/data/gor/genes.gor | write " + path + "; gor "+path+GROUP_CHROM_COUNT);
         Assert.assertEquals(WRONG_RESULT, "Chrom\tbpStart\tbpStop\tallCount\n" +
                 "chr21\t0\t100000000\t669\n" , results);
@@ -143,7 +146,7 @@ public class UTestGorDictionaryFolder {
 
     @Test
     public void testGorCardinalityColumn() throws IOException {
-        Path path = workDir.getRoot().toPath().resolve("gorfile.gorz");
+        Path path = workDirPath.resolve("gorfile.gorz");
         TestUtils.runGorPipe("gor -p chr21 ../tests/data/gor/genes.gor | calc c substr(gene_symbol,0,1) | write -card c " + path);
         Path metapath = path.getParent().resolve("gorfile.gorz.meta");
         try(Stream<String> stream = Files.lines(metapath).filter(l -> !l.startsWith("## QUERY:"))) {
@@ -173,22 +176,14 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
-    public void testParallelPgorDictFolderWrite() throws IOException {
-        var genes = "../tests/data/gor/genes.gor";
-        var genespath = Paths.get(genes);
-        var genesdest = workDirPath.resolve(genespath.getFileName());
-        Files.copy(genespath,genesdest);
+    public void testParallelPgorDictFolderWrite() {
         var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); gor mu.gord/"+DEFAULT_FOLDER_DICTIONARY_NAME+GROUP_CHROM_COUNT;
         var results = TestUtils.runGorPipe(query,"-gorroot",workDirPath.toString(),"-cachedir",cachePath.toString());
         Assert.assertEquals(WRONG_RESULT, GENE_GROUP_CHROM, results);
     }
 
     @Test
-    public void testParallelPgorDictFolderWriteServerMode() throws IOException {
-        var genes = "../tests/data/gor/genes.gor";
-        var genespath = Paths.get(genes);
-        var genesdest = workDirPath.resolve(genespath.getFileName());
-        Files.copy(genespath,genesdest);
+    public void testParallelPgorDictFolderWriteServerMode() {
         var query = "create a = parallel -parts <(norrows 2) <(pgor genes.gor | rownum | calc modrow mod(rownum,2) | where modrow=#{col:RowNum} | write test/mu.gord/#{fork}_#{CHROM}_#{BPSTART}_#{BPSTOP}.gorz -f modrow -card modrow); norrows 1";
         var args = new String[] {query,"-gorroot",workDirPath.toString(),"-cachedir",cachePath.toString()};
         var results = TestUtils.runGorPipeCount(args, true);
@@ -240,14 +235,17 @@ public class UTestGorDictionaryFolder {
     }
 
     @Test
+    public void testPgorWriteEmptyOutput() {
+        int count = TestUtils.runGorPipeCount("pgor genes.gor | top 1 | write test.gord", workDirPath.toAbsolutePath().toString());
+        Assert.assertEquals("Pgor with write should return empty result", 0, count);
+    }
+
+    @Test
     public void testPgorWriteCacheFolderWithCardinality() throws IOException {
-        var workPath = workDir.getRoot().toPath();
-        var folderpath = workPath.resolve("result_cache");
+        var folderpath = workDirPath.resolve("result_cache");
         Files.createDirectories(folderpath);
-        var genespath = Path.of("../tests/data/gor/genes.gor");
-        Files.copy(genespath, workPath.resolve(genespath.getFileName()));
         TestUtils.runGorPipe("create a = pgor genes.gor | where chrom = 'chrM' | calc c substr(gene_symbol,0,1) | write -card c;" +
-                "gor [a] | group chrom -count", "-gorroot", workPath.toAbsolutePath().toString(), "-cachedir", "result_cache");
+                "gor [a] | group chrom -count", "-gorroot", workDirPath.toAbsolutePath().toString(), "-cachedir", "result_cache");
         try(var thedictstream = Files.walk(folderpath, FileVisitOption.FOLLOW_LINKS)) {
             var thedict = thedictstream.filter(p -> p.getFileName().toString().equals(DEFAULT_FOLDER_DICTIONARY_NAME)).map(p -> {
                 try {
