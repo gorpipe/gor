@@ -25,6 +25,7 @@ package org.gorpipe.gor.manager;
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
@@ -423,6 +424,73 @@ public class UTestBucketManager {
         Thread.sleep(5000);
         buc.cleanOldBucketFiles(lock, false);
         Assert.assertFalse("Bucket file should be deleted", Files.exists(Path.of(table.getRootPath()).resolve(buckets[2])));
+    }
+
+    @Test
+    public void testCleaningOfDeletedBucketsExtraFiles() throws Exception {
+        String name = "testCleaningOfDeletedBucketsExtraFiles";
+
+        // Setup small table and move one bucket to be linked, adding meta and gori files.
+
+        int fileCount = 10;
+        GorDictionarySetup dictionarySetup = new GorDictionarySetup(workDirPath, name, fileCount, 5, new int[]{1,2,3}, 10, false);
+        DictionaryTable table = new DictionaryTable(dictionarySetup.dictionary);
+
+        String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
+
+        String bucketFileName = name + "_bucketfile_Bucket0.gor";
+        Files.writeString(workDirPath.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
+        Files.writeString(workDirPath.resolve(bucketFileName + DataType.GORI.suffix), "## Dummy gori");
+
+        // Delete bucket with extra files.
+
+        BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
+        bucketManager.gracePeriodForDeletingBuckets = Duration.ofMillis(0);
+        bucketManager.deleteBuckets(bucketFileName);
+        buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have 1 bucket", 1, buckets.length);
+
+        Assert.assertFalse("Bucket should be deleted", Files.exists(workDirPath.resolve(bucketFileName)));
+        Assert.assertFalse("Meta should be deleted", Files.exists(workDirPath.resolve(bucketFileName +  DataType.META.suffix)));
+        Assert.assertFalse("gori should be deleted", Files.exists(workDirPath.resolve(bucketFileName + DataType.GORI.suffix)));
+    }
+
+    @Test
+    public void testCleaningOfDeletedLinkedBuckets() throws Exception {
+        String name = "testCleaningOfDeletedLinkedBuckets";
+
+        // Setup small table and move one bucket to be linked, adding meta and gori files.
+
+        int fileCount = 10;
+        GorDictionarySetup dictionarySetup = new GorDictionarySetup(workDirPath, name, fileCount, 5, new int[]{1,2,3}, 10, false);
+        DictionaryTable table = new DictionaryTable(dictionarySetup.dictionary);
+
+        String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
+
+        Path linkFolder = workDirPath.resolve("linkfolder");
+        Files.createDirectory(linkFolder);
+        String bucketFileName = name + "_bucketfile_Bucket0.gor";
+
+        Files.move(workDirPath.resolve(bucketFileName), linkFolder.resolve(bucketFileName));
+        Files.writeString(linkFolder.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
+        Files.writeString(linkFolder.resolve(bucketFileName + DataType.GORI.suffix), "## Dummy gori");
+        Files.writeString(workDirPath.resolve(bucketFileName + DataType.LINK.suffix), linkFolder.resolve(bucketFileName).toString());
+
+        // Delete the linked bucket.
+
+        BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
+        bucketManager.gracePeriodForDeletingBuckets = Duration.ofMillis(0);
+        bucketManager.deleteBuckets(bucketFileName);
+        buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have 1 bucket", 1, buckets.length);
+
+        Assert.assertFalse("Link should be deleted", Files.exists(workDirPath.resolve(bucketFileName + DataType.LINK.suffix)));
+
+        Assert.assertFalse("Bucket should be deleted", Files.exists(linkFolder.resolve(bucketFileName)));
+        Assert.assertFalse("Meta should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.META.suffix)));
+        Assert.assertFalse("gori should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.GORI.suffix)));
     }
 
     @Test
