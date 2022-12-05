@@ -119,7 +119,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
     private void processEntry(DictionaryEntry entry) {
         if (entry.hasBucket()) {
             final int bucketIdx = bucketToIdx.computeIfAbsent(entry.getBucket(), bucket -> {
-                resetBucketNames.add(entry.getBucketReal(table.getRootUri()));
+                resetBucketNames.add(entry.bucketLogical);
                 bucketTagsList.add(new HashSet<>());
                 bucketActiveCount.add(0);
                 bucketTotalCount.add(0);

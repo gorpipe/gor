@@ -440,20 +440,22 @@ public class UTestBucketManager {
         Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
 
         String bucketFileName = name + "_bucketfile_Bucket0.gor";
-        Files.writeString(workDirPath.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
-        Files.writeString(workDirPath.resolve(bucketFileName + DataType.GORI.suffix), "## Dummy gori");
+        Path relativeBucketDirPath = Path.of("." + name + "/buckets");
+        Path bucketDirPath = workDirPath.resolve(relativeBucketDirPath);
+        Files.writeString(bucketDirPath.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
+        Files.writeString(bucketDirPath.resolve(bucketFileName + DataType.GORI.suffix), "## Dummy gori");
 
         // Delete bucket with extra files.
 
         BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
         bucketManager.gracePeriodForDeletingBuckets = Duration.ofMillis(0);
-        bucketManager.deleteBuckets(bucketFileName);
+        bucketManager.deleteBuckets(relativeBucketDirPath.resolve(bucketFileName).toString());
         buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have 1 bucket", 1, buckets.length);
 
-        Assert.assertFalse("Bucket should be deleted", Files.exists(workDirPath.resolve(bucketFileName)));
-        Assert.assertFalse("Meta should be deleted", Files.exists(workDirPath.resolve(bucketFileName +  DataType.META.suffix)));
-        Assert.assertFalse("gori should be deleted", Files.exists(workDirPath.resolve(bucketFileName + DataType.GORI.suffix)));
+        Assert.assertFalse("Bucket should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName)));
+        Assert.assertFalse("Meta should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName +  DataType.META.suffix)));
+        Assert.assertFalse("gori should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName + DataType.GORI.suffix)));
     }
 
     @Test
@@ -471,22 +473,24 @@ public class UTestBucketManager {
 
         Path linkFolder = workDirPath.resolve("linkfolder");
         Files.createDirectory(linkFolder);
+        Path relativeBucketDirPath = Path.of("." + name + "/buckets");
+        Path bucketDirPath = workDirPath.resolve(relativeBucketDirPath);
         String bucketFileName = name + "_bucketfile_Bucket0.gor";
 
-        Files.move(workDirPath.resolve(bucketFileName), linkFolder.resolve(bucketFileName));
+        Files.move(bucketDirPath.resolve(bucketFileName), linkFolder.resolve(bucketFileName));
         Files.writeString(linkFolder.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
         Files.writeString(linkFolder.resolve(bucketFileName + DataType.GORI.suffix), "## Dummy gori");
-        Files.writeString(workDirPath.resolve(bucketFileName + DataType.LINK.suffix), linkFolder.resolve(bucketFileName).toString());
+        Files.writeString(bucketDirPath.resolve(bucketFileName + DataType.LINK.suffix), linkFolder.resolve(bucketFileName).toString());
 
         // Delete the linked bucket.
 
         BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
         bucketManager.gracePeriodForDeletingBuckets = Duration.ofMillis(0);
-        bucketManager.deleteBuckets(bucketFileName);
+        bucketManager.deleteBuckets(relativeBucketDirPath.resolve(bucketFileName).toString());
         buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have 1 bucket", 1, buckets.length);
 
-        Assert.assertFalse("Link should be deleted", Files.exists(workDirPath.resolve(bucketFileName + DataType.LINK.suffix)));
+        Assert.assertFalse("Link should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName + DataType.LINK.suffix)));
 
         Assert.assertFalse("Bucket should be deleted", Files.exists(linkFolder.resolve(bucketFileName)));
         Assert.assertFalse("Meta should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.META.suffix)));

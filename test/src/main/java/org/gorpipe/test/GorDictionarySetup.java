@@ -189,9 +189,12 @@ public class GorDictionarySetup {
         this.dataFiles = data.values().stream().flatMap(Collection::stream).toArray(String[]::new);
 
         // Bucketize
+        Path bucketRelPath = Path.of("." + name +"/buckets");
+        Path bucketDir = root.resolve(bucketRelPath);
+        Files.createDirectories(bucketDir);
 
         for (int i = 0; i < this.bucketFiles.length; i++) {
-            this.bucketFiles[i] = Paths.get(name + "_bucketfile_Bucket" + i + ".gor");
+            this.bucketFiles[i] = bucketRelPath.resolve(name + "_bucketfile_Bucket" + i + ".gor");
             this.bucketFiles[i].toFile().deleteOnExit();
         }
 

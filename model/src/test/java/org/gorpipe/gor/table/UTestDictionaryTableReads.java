@@ -18,6 +18,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -27,10 +28,9 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class UTestDictionaryTableReads {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-
+    private Path workDirPath;
     private static String gort1 = "filepath1.gor\ttag0\n" +
             "filepath2.gor\ttagA\n" +
             "filepath3.gor\ttagB\n" +
@@ -51,8 +51,8 @@ public class UTestDictionaryTableReads {
             "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\n" +
             "filepath7.gor\t\tchr3\t10000\tchr4\t10000\ttagF1,tagF2\n" +
             "filepath8.gor\ttagA\n" +
-            "filepath9.gor|bucket1\ttagG\n" +
-            "filepath10.gor|bucket1\ttagH\n" +
+            "filepath9.gor|buckets/bucket1\ttagG\n" +
+            "filepath10.gor|buckets/bucket1\ttagH\n" +
             "filepath11.gor|bucket2\ttagI\n" +
             "filepath12.gor|bucket2\t\tchr1\t1\tchr2\t20000\ttagJ,tagK\n" +
             "filepath13.gor|bucket2\ttag1000\n" +
@@ -73,6 +73,8 @@ public class UTestDictionaryTableReads {
 
     @Before
     public void setUp() throws Exception {
+        workDirPath = workDir.getRoot().toPath();
+
         gorFile = FileTestUtils.createGenericSmallGorFile(workDir.getRoot());
         simpleDictionary = FileTestUtils.createGenericDictionaryFile(workDir.getRoot(), gorFile.getCanonicalPath(), "dictionary1.gord");
         pnFile = FileTestUtils.createPNTsvFile(workDir.getRoot());
@@ -416,6 +418,45 @@ public class UTestDictionaryTableReads {
 
         String[] res1String = res1.stream().map(DictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);
 
-        Assert.assertTrue(res1String[0].endsWith("/bucket2\t\t\t\t\t\ttagL2,tag1000,tagL,tagJ,tagK,tagI"));
+        Assert.assertEquals("bucket2\t\t\t\t\t\ttagL2,tag1000,tagL,tagJ,tagK,tagI", res1String[0]);
+    }
+
+    @Test
+    public void testReadBucketFileGorPipe() throws Exception {
+        String name = "testReadBucketFileGorPipe";
+        int fileCount = 10;
+
+        GorDictionarySetup dictionarySetup = new GorDictionarySetup(name, fileCount, 5, new int[]{1,2,3}, 10);
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                        "chr1\t1\tPN1\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tPN1\n" +
+                        "chr1\t1\tPN1\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tPN3\n",
+                TestUtils.runGorPipe(String.format("gor %s | top 2", dictionarySetup.dictionary)));
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                        "chr1\t1\tPN10\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t11410\tPN7\n" +
+                        "chr1\t1\tPN10\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t11410\tPN6\n",
+                TestUtils.runGorPipe(String.format("gor %s -f PN6,PN7,PN8,PN8 | top 2", dictionarySetup.dictionary)));
+    }
+
+    @Test
+    public void testReadBucketFileGorPipeRelativeRoot() throws Exception {
+        String name = "testReadBucketFileGorPipeRelativeRoot";
+        int fileCount = 10;
+
+        Path dictFolder = workDirPath.resolve("source");
+        Files.createDirectories(dictFolder);
+
+        GorDictionarySetup dictionarySetup = new GorDictionarySetup(dictFolder, name, fileCount, 5, new int[]{1,2,3}, 10, false);
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                        "chr1\t1\tPN1\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tPN1\n" +
+                        "chr1\t1\tPN1\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tPN3\n",
+                TestUtils.runGorPipe(new String[]{String.format("gor source/%s | top 2", dictionarySetup.dictionary.getFileName()), "-gorroot", workDirPath.toString()}, false));
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                        "chr1\t1\tPN10\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t11410\tPN7\n" +
+                        "chr1\t1\tPN10\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t11410\tPN6\n",
+                TestUtils.runGorPipe(new String[]{String.format("gor source/%s -f PN6,PN7,PN8,PN8 | top 2", dictionarySetup.dictionary.getFileName()), "-gorroot", workDirPath.toString()}, false));
     }
 }

@@ -824,9 +824,28 @@ public class UTestDictionaryTable {
                 "chr1\t2\tD\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t387482\tD\n" +
                 "chr1\t3\tA\tLineData for the chromosome and position line 1 3\tThis line should be long enough for this test purpose\t321302\tA\n" +
                 "chr1\t3\tB\tLineData for the chromosome and position line 1 3\tThis line should be long enough for this test purpose\t240923\tB\n", TestUtils.runGorPipeServer(dictFile.toString() + " | top 10" , tableWorkDir.toString(), ""));
+    }
 
+    @Test
+    public void testDictionaryTableReadFromBucket() throws Exception {
+        String name = "testDictionaryTableRead";
+        int fileCount = 4;
+        String[] sources = new String[]{"A", "B", "C", "D"};
+        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
+                name, tableWorkDir, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+        DictionaryTable table = TestUtils.createDictionaryWithData(name, tableWorkDir, dataFiles);
 
+        Path dictFile = tableWorkDir.resolve(name + ".gord");
 
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                        "chr1\t1\tA\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tA\n" +
+                        "chr1\t1\tB\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t22871\tB\n",
+                TestUtils.runGorPipe(dictFile.toString() + " | top 2"));
+
+        Assert.assertEquals("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
+                        "chr1\t1\tA\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tA\n" +
+                        "chr1\t1\tB\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t22871\tB\n",
+                TestUtils.runGorPipeServer(dictFile.toString() + " | top 2" , tableWorkDir.toString(), ""));
     }
 
     @SafeVarargs
