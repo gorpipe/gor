@@ -36,7 +36,7 @@ variables:
   before_script:
     - export VERSION_FROM_FILE="$(cat VERSION)"
   rules:
-    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH && $VERSION_FROM_FILE =~ /.*-SNAPSHOT$/
+    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH && $VERSION_FROM_FILE =~ /.*-SNAPSHOT.*/i
     - if: $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
 
 .on-semver-tag-only:
