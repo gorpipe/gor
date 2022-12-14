@@ -26,6 +26,7 @@ import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -315,4 +317,22 @@ public class PathUtils {
         return Path.of("").toAbsolutePath().toString();
     }
 
+    public static boolean isLinkFile(String path) {
+        return path.endsWith(DataType.LINK.suffix);
+    }
+
+    /**
+     * Get the final link content.
+     * NOTE:  This method does only support reading links from disk, in many cases we should rather use the
+     *        FileReader.readLinkContent, that uses the driver framework.
+     * @param root
+     * @param path      the path to check.
+     * @return the final link content (recursively traverse the links) if link file, otherwise the original path.
+     * @throws IOException thrown if the link file can not be read.
+     */
+    public static String readLinkContent(Path root, String path) throws IOException {
+        return PathUtils.isLinkFile(path) && root != null
+                ? readLinkContent(root, relativize(root, Path.of(Files.readString(resolve(root, path)))).toString())
+                : path;
+    }
 }

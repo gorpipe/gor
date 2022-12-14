@@ -182,7 +182,7 @@ object AnalysisUtilities {
       if (session.getProjectContext.getCacheDir == null) {
         cacheDir = System.getProperty("java.io.tmpdir")
       } else {
-        throw new GorSystemException("Cache directory given by -cacheDir ('" + cacheDir + "') does not exist", null)
+        throw new GorSystemException("Cache directory given by -cachedir ('" + cacheDir + "') does not exist", null)
       }
     }
     cacheDir

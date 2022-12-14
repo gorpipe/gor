@@ -50,6 +50,7 @@ public class LocalFileCacheClient implements FileCache {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFileCacheClient.class);
 
+    // Path from project root to cache root.
     private final String rootPath;
     private final boolean useSubFolders;
     private final int subFolderSize;
@@ -81,7 +82,7 @@ public class LocalFileCacheClient implements FileCache {
         try {
             // Note we do not touch the file here when it is already cached. As the local cache only survives a
             // single run.
-            return cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint));
+            return PathUtils.readLinkContent(getProjectRoot(), cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint)));
         } catch (Exception ex) {
             /* Do nothing */
         }
@@ -113,7 +114,7 @@ public class LocalFileCacheClient implements FileCache {
                 FileUtils.writeStringToFile(md5File, resultPath, Charset.defaultCharset());
             }
 
-            return resultPath;
+            return PathUtils.readLinkContent(getProjectRoot(), resultPath);
         } catch (IOException ioe) {
             log.error("Error when attempting to store file in cache", ioe);
         }
@@ -133,7 +134,7 @@ public class LocalFileCacheClient implements FileCache {
                     && !lookupFileName.equalsIgnoreCase(fromNewName)) {
                 Path to = Paths.get(parentFilePath, fromNewName);
                 moveFile(path, to);
-                return to.toString();
+                return PathUtils.readLinkContent(getProjectRoot(), to.toString());
             }
 
         } catch (IOException ioe) {
@@ -186,6 +187,10 @@ public class LocalFileCacheClient implements FileCache {
         } else {
             return currentRoot;
         }
+    }
+
+    private Path getProjectRoot() {
+        return fileReader != null && fileReader.getCommonRoot() != null ? Path.of(fileReader.getCommonRoot()) : null;
     }
 
     private Cache<String, String> createCache() {
