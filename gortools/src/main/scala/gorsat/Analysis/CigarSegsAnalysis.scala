@@ -61,8 +61,8 @@ case class CigarSegsAnalysis(cigarCol: Int, grCols: Array[Int]) extends Analysis
       id += 1
       cigarControl match {
         case 'M' | '=' | 'X' => {
-          if (useGroup) super.process(RowObj(r.chr, r.pos - 1 + refShift, (r.pos + refShift + numBases - 1) + "\t" + id + "\t" + gccolumns))
-          else super.process(RowObj(r.chr, r.pos - 1 + refShift, (r.pos + refShift + numBases - 1) + "\t" + id))
+          if (useGroup) super.process(RowObj(r.chr, r.pos - 1 + refShift, s"${(r.pos + refShift + numBases - 1)}\t$id\t$gccolumns"))
+          else super.process(RowObj(r.chr, r.pos - 1 + refShift, s"${(r.pos + refShift + numBases - 1)}\t$id"))
           refShift += numBases
           readShift += numBases
         }

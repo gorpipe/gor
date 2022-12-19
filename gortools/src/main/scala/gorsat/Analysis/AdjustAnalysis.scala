@@ -82,7 +82,7 @@ case class AdjustAnalysis(adOpt: AdjustOptions, pCol: Int, grCols: List[Int]) ex
   var numberOfStatHolders = 0
 
   private def getNewStatHolder(): StatHolder = {
-    val file = File.createTempFile("adjustAnalysisTmpFile", numberOfStatHolders + ".tmp.gz")
+    val file = File.createTempFile("adjustAnalysisTmpFile", s"$numberOfStatHolders.tmp.gz")
     numberOfStatHolders += 1
     StatHolder(file)
   }
