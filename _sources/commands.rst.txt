@@ -38,6 +38,9 @@ Commands
    * - :ref:`CMD`
      - Run an external operating system command from within NOR.
      - GOR/NOR
+   * - :ref:`COLOREDOUTPUT`
+     - Color the output of a not og gor query.
+     - GOR/NOR
    * - :ref:`COLNUM`
      - Prefixes cell data with the number of the column in the output from which the cell data comes.
      - GOR/NOR
