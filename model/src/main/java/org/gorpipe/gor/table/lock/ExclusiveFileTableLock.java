@@ -72,7 +72,7 @@ public class ExclusiveFileTableLock extends TableLock {
      */
     public ExclusiveFileTableLock(Table table, String name) {
         super(table, name);
-        this.lockPath = PathUtils.resolve(Path.of(table.getFolderPath()), String.format("%s.%s.excl.lock", table.getName(), name));
+        this.lockPath = Path.of(PathUtils.resolve(table.getFolderPath(), String.format("%s.%s.excl.lock", table.getName(), name)));
     }
 
     @Override

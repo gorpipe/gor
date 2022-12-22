@@ -58,7 +58,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val linkCacheFilePath = Path.of(linkCacheFileNameBaseAdjusted + ".link")
 
     Files.writeString(linkCacheFilePath,
-      PathUtils.resolve(nested.getSession.getProjectContext.getProjectRootPath, writeLocationPath).toString)
+      PathUtils.resolve(nested.getSession.getProjectContext.getProjectRoot, writeLocationPath).toString)
     val extension = linkCacheFileNameBaseAdjusted.substring(linkCacheFileNameBaseAdjusted.lastIndexOf(".")) + ".link"
 
     (linkCacheFilePath, extension)
@@ -77,9 +77,9 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val isCacheDir = fileReader.isDirectory(writeLocationPath)
 
     if(fileCache != null && (!isCacheDir || writeGord)) {
-        val linkCacheFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
+        val candidateCacheFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
+        val resultLinkPath = getResultsLinkPath(nested, writeLocationPath, candidateCacheFileName)
         val overheadTime = findOverheadTime(commandToExecute)
-        val resultLinkPath = getResultsLinkPath(nested, writeLocationPath, linkCacheFileName)
         cacheRes = fileCache.store(resultLinkPath._1, commandSignature, resultLinkPath._2, overheadTime + System.currentTimeMillis - startTime)
     }
     cacheRes
