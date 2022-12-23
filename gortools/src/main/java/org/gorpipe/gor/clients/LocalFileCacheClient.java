@@ -82,7 +82,7 @@ public class LocalFileCacheClient implements FileCache {
         try {
             // Note we do not touch the file here when it is already cached. As the local cache only survives a
             // single run.
-            return PathUtils.readLinkContent(getProjectRoot(), cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint)));
+            return PathUtils.readLocalLinkContentForGord(getProjectRoot(), cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint)));
         } catch (Exception ex) {
             /* Do nothing */
         }
@@ -114,7 +114,7 @@ public class LocalFileCacheClient implements FileCache {
                 FileUtils.writeStringToFile(md5File, resultPath, Charset.defaultCharset());
             }
 
-            return PathUtils.readLinkContent(getProjectRoot(), resultPath);
+            return PathUtils.readLocalLinkContentForGord(getProjectRoot(), resultPath);
         } catch (IOException ioe) {
             log.error("Error when attempting to store file in cache", ioe);
         }
@@ -134,7 +134,7 @@ public class LocalFileCacheClient implements FileCache {
                     && !lookupFileName.equalsIgnoreCase(fromNewName)) {
                 Path to = Paths.get(parentFilePath, fromNewName);
                 moveFile(path, to);
-                return PathUtils.readLinkContent(getProjectRoot(), to.toString());
+                return PathUtils.readLocalLinkContentForGord(getProjectRoot(), to.toString());
             }
 
         } catch (IOException ioe) {
@@ -190,7 +190,7 @@ public class LocalFileCacheClient implements FileCache {
     }
 
     private String getProjectRoot() {
-        return fileReader != null && fileReader.getCommonRoot() != null ? fileReader.getCommonRoot() : null;
+        return fileReader != null && fileReader.getCommonRoot() != null ?fileReader.getCommonRoot() : null;
     }
 
     private Cache<String, String> createCache() {
