@@ -317,12 +317,8 @@ public class PathUtils {
         return path.endsWith(DataType.LINK.suffix);
     }
 
-    public static boolean isGordLinkFile(String path) {
-        return path.endsWith(  DataType.GORD.suffix + DataType.LINK.suffix);
-    }
-
     /**
-     * Get the final link content for local links.
+     * Get the final link content.
      * NOTE:  This method does only support reading links from disk, in many cases we should rather use the
      *        FileReader.readLinkContent, that uses the driver framework.
      * @param root
@@ -330,18 +326,9 @@ public class PathUtils {
      * @return the final link content (recursively traverse the links) if link file, otherwise the original path.
      * @throws IOException thrown if the link file can not be read.
      */
-    public static String readLocalLinkContent(String root, String path) throws IOException {
+    public static String readLinkContent(String root, String path) throws IOException {
         return PathUtils.isLinkFile(path) && root != null
-                ? readLocalLinkContent(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
-                : path;
-    }
-
-    /**
-     * Gords are not handled by the driver framework (yet), and hence we must manually resolve the links to gords.
-     */
-    public static String readLocalLinkContentForGord(String root, String path) throws IOException {
-        return PathUtils.isGordLinkFile(path) && root != null
-                ? readLocalLinkContentForGord(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
+                ? readLinkContent(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
                 : path;
     }
 }
