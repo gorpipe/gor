@@ -190,32 +190,32 @@
 <section id="setting-up-test-data">
 <h2>Setting up test data<a class="headerlink" href="#setting-up-test-data" title="Permalink to this headline">¶</a></h2>
 <p>Test data for GOR is obtained by cloning the GOR test data repository (<a class="reference external" href="https://github.com/gorpipe/gor-test-data">https://github.com/gorpipe/gor-test-data</a>) as a submodule into the tests/data folder:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git submodule update --init --recursive
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
 </pre></div>
 </div>
 </section>
 <section id="getting-started-with-gorpipe">
 <h2>Getting started with GORPipe<a class="headerlink" href="#getting-started-with-gorpipe" title="Permalink to this headline">¶</a></h2>
 <p>To get started with GORPipe, compile the code:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make build
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>build
 </pre></div>
 </div>
 <p>Now gor queries can been run against test data. For example via:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gortools/build/install/gor-scripts/bin/gorpipe <span class="s2">&quot;gor tests/data/gor/dbsnp_test.gor | top 10&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gortools/build/install/gor-scripts/bin/gorpipe<span class="w"> </span><span class="s2">&quot;gor tests/data/gor/dbsnp_test.gor | top 10&quot;</span>
 </pre></div>
 </div>
 <p>The results should be as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom   POS     reference       allele  differentrsIDs
-chr1    <span class="m">10179</span>   C       CC      rs367896724
-chr1    <span class="m">10250</span>   A       C       rs199706086
-chr10   <span class="m">60803</span>   T       G       rs536478188
-chr10   <span class="m">61023</span>   C       G       rs370414480
-chr11   <span class="m">61248</span>   G       A       rs367559610
-chr11   <span class="m">66295</span>   C       A       rs61869613
-chr12   <span class="m">60162</span>   C       G       rs544101329
-chr12   <span class="m">60545</span>   A       T       rs570991495
-chr13   <span class="m">19020013</span>        C       T       rs181615907
-chr13   <span class="m">19020145</span>        G       T       rs28970552
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom<span class="w">   </span>POS<span class="w">     </span>reference<span class="w">       </span>allele<span class="w">  </span>differentrsIDs
+chr1<span class="w">    </span><span class="m">10179</span><span class="w">   </span>C<span class="w">       </span>CC<span class="w">      </span>rs367896724
+chr1<span class="w">    </span><span class="m">10250</span><span class="w">   </span>A<span class="w">       </span>C<span class="w">       </span>rs199706086
+chr10<span class="w">   </span><span class="m">60803</span><span class="w">   </span>T<span class="w">       </span>G<span class="w">       </span>rs536478188
+chr10<span class="w">   </span><span class="m">61023</span><span class="w">   </span>C<span class="w">       </span>G<span class="w">       </span>rs370414480
+chr11<span class="w">   </span><span class="m">61248</span><span class="w">   </span>G<span class="w">       </span>A<span class="w">       </span>rs367559610
+chr11<span class="w">   </span><span class="m">66295</span><span class="w">   </span>C<span class="w">       </span>A<span class="w">       </span>rs61869613
+chr12<span class="w">   </span><span class="m">60162</span><span class="w">   </span>C<span class="w">       </span>G<span class="w">       </span>rs544101329
+chr12<span class="w">   </span><span class="m">60545</span><span class="w">   </span>A<span class="w">       </span>T<span class="w">       </span>rs570991495
+chr13<span class="w">   </span><span class="m">19020013</span><span class="w">        </span>C<span class="w">       </span>T<span class="w">       </span>rs181615907
+chr13<span class="w">   </span><span class="m">19020145</span><span class="w">        </span>G<span class="w">       </span>T<span class="w">       </span>rs28970552
 </pre></div>
 </div>
 </section>
@@ -237,7 +237,7 @@ chr13   <span class="m">19020145</span>        G       T       rs28970552
 <section id="setting-environment-variables">
 <h3>Setting environment variables<a class="headerlink" href="#setting-environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo vim /etc/paths
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/paths
 </pre></div>
 </div>
 <p>and add the following lines:</p>

@@ -193,68 +193,68 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>GORROWS -<span class="no">p</span> chr1:0-10
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom    pos
-chr1     <span class="m">0</span>
-chr1     <span class="m">1</span>
-chr1     <span class="m">2</span>
-chr1     <span class="m">3</span>
-chr1     <span class="m">4</span>
-chr1     <span class="m">5</span>
-chr1     <span class="m">6</span>
-chr1     <span class="m">7</span>
-chr1     <span class="m">8</span>
-chr1     <span class="m">9</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom<span class="w">    </span>pos
+chr1<span class="w">     </span><span class="m">0</span>
+chr1<span class="w">     </span><span class="m">1</span>
+chr1<span class="w">     </span><span class="m">2</span>
+chr1<span class="w">     </span><span class="m">3</span>
+chr1<span class="w">     </span><span class="m">4</span>
+chr1<span class="w">     </span><span class="m">5</span>
+chr1<span class="w">     </span><span class="m">6</span>
+chr1<span class="w">     </span><span class="m">7</span>
+chr1<span class="w">     </span><span class="m">8</span>
+chr1<span class="w">     </span><span class="m">9</span>
 </pre></div>
 </div>
 <p>The following example generates 10 rows where the segment value is the length between the start and stop positions.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>GORROWS -<span class="no">p</span> chr1:0-10 -segment 100
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom    bpStart bpStop
-chr1     <span class="m">0</span>       <span class="m">100</span>
-chr1     <span class="m">1</span>       <span class="m">101</span>
-chr1     <span class="m">2</span>       <span class="m">102</span>
-chr1     <span class="m">3</span>       <span class="m">103</span>
-chr1     <span class="m">4</span>       <span class="m">104</span>
-chr1     <span class="m">5</span>       <span class="m">105</span>
-chr1     <span class="m">6</span>       <span class="m">106</span>
-chr1     <span class="m">7</span>       <span class="m">107</span>
-chr1     <span class="m">8</span>       <span class="m">108</span>
-chr1     <span class="m">9</span>       <span class="m">109</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom<span class="w">    </span>bpStart<span class="w"> </span>bpStop
+chr1<span class="w">     </span><span class="m">0</span><span class="w">       </span><span class="m">100</span>
+chr1<span class="w">     </span><span class="m">1</span><span class="w">       </span><span class="m">101</span>
+chr1<span class="w">     </span><span class="m">2</span><span class="w">       </span><span class="m">102</span>
+chr1<span class="w">     </span><span class="m">3</span><span class="w">       </span><span class="m">103</span>
+chr1<span class="w">     </span><span class="m">4</span><span class="w">       </span><span class="m">104</span>
+chr1<span class="w">     </span><span class="m">5</span><span class="w">       </span><span class="m">105</span>
+chr1<span class="w">     </span><span class="m">6</span><span class="w">       </span><span class="m">106</span>
+chr1<span class="w">     </span><span class="m">7</span><span class="w">       </span><span class="m">107</span>
+chr1<span class="w">     </span><span class="m">8</span><span class="w">       </span><span class="m">108</span>
+chr1<span class="w">     </span><span class="m">9</span><span class="w">       </span><span class="m">109</span>
 </pre></div>
 </div>
 <p>The following example generates 10 rows where the step value is the size between each position in the generated rows.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>GORROWS -<span class="no">p</span> chr1:0-100 -step 10
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom    pos
-chr1     <span class="m">0</span>
-chr1     <span class="m">10</span>
-chr1     <span class="m">20</span>
-chr1     <span class="m">30</span>
-chr1     <span class="m">40</span>
-chr1     <span class="m">50</span>
-chr1     <span class="m">60</span>
-chr1     <span class="m">70</span>
-chr1     <span class="m">80</span>
-chr1     <span class="m">90</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom<span class="w">    </span>pos
+chr1<span class="w">     </span><span class="m">0</span>
+chr1<span class="w">     </span><span class="m">10</span>
+chr1<span class="w">     </span><span class="m">20</span>
+chr1<span class="w">     </span><span class="m">30</span>
+chr1<span class="w">     </span><span class="m">40</span>
+chr1<span class="w">     </span><span class="m">50</span>
+chr1<span class="w">     </span><span class="m">60</span>
+chr1<span class="w">     </span><span class="m">70</span>
+chr1<span class="w">     </span><span class="m">80</span>
+chr1<span class="w">     </span><span class="m">90</span>
 </pre></div>
 </div>
 <p>The following example generates 10 rows where the segment value is the length between the start and stop positions.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>GORROWS -<span class="no">p</span> chr1:0-100 -segment 100 -step 10
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom    bpStart bpStop
-chr1     <span class="m">0</span>       <span class="m">100</span>
-chr1     <span class="m">10</span>      <span class="m">110</span>
-chr1     <span class="m">20</span>      <span class="m">120</span>
-chr1     <span class="m">30</span>      <span class="m">130</span>
-chr1     <span class="m">40</span>      <span class="m">140</span>
-chr1     <span class="m">50</span>      <span class="m">150</span>
-chr1     <span class="m">60</span>      <span class="m">160</span>
-chr1     <span class="m">70</span>      <span class="m">170</span>
-chr1     <span class="m">80</span>      <span class="m">180</span>
-chr1     <span class="m">90</span>      <span class="m">190</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom<span class="w">    </span>bpStart<span class="w"> </span>bpStop
+chr1<span class="w">     </span><span class="m">0</span><span class="w">       </span><span class="m">100</span>
+chr1<span class="w">     </span><span class="m">10</span><span class="w">      </span><span class="m">110</span>
+chr1<span class="w">     </span><span class="m">20</span><span class="w">      </span><span class="m">120</span>
+chr1<span class="w">     </span><span class="m">30</span><span class="w">      </span><span class="m">130</span>
+chr1<span class="w">     </span><span class="m">40</span><span class="w">      </span><span class="m">140</span>
+chr1<span class="w">     </span><span class="m">50</span><span class="w">      </span><span class="m">150</span>
+chr1<span class="w">     </span><span class="m">60</span><span class="w">      </span><span class="m">160</span>
+chr1<span class="w">     </span><span class="m">70</span><span class="w">      </span><span class="m">170</span>
+chr1<span class="w">     </span><span class="m">80</span><span class="w">      </span><span class="m">180</span>
+chr1<span class="w">     </span><span class="m">90</span><span class="w">      </span><span class="m">190</span>
 </pre></div>
 </div>
 </section>
