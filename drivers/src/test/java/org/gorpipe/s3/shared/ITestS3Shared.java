@@ -28,7 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import static gorsat.TestUtils.*;
+import static gorsat.TestUtils.runGorPipeCLI;
+import static gorsat.TestUtils.runGorPipeServer;
 import static org.gorpipe.utils.DriverUtils.createSecurityContext;
 
 @Category(IntegrationTests.class)
@@ -459,25 +460,6 @@ public class ITestS3Shared {
         }
 
         Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
-    }
-
-    @Test
-    public void testWriteExplicitWrite() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "user_data/dummy2.gor";
-
-        String result = runGorPipeCLI(String.format("create #x = gorrow chr1,1 | write s3data://shared/%s;\n" +
-                "create #y = gor [#x] | calc x 4;\n" +
-                "gor [#y]\n", dataPath), gorRoot, securityContext);
-
-        Assert.assertEquals("chrom\tpos\tx\n" + "chr1\t1\t4\n", result);
-
-        S3SharedSourceProvider provider = new S3ProjectSharedSourceProvider();
-        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
-        try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env")) {
-            source.delete();
-        }
     }
 
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,

@@ -94,6 +94,10 @@ public class PathUtils {
         return normalize(root.resolve(path));
     }
 
+    public static Path resolve(Path root, String path) {
+        return resolve(root, Path.of(path));
+    }
+
     /**
      * Get relativize to table or absolute path.
      *
@@ -326,9 +330,9 @@ public class PathUtils {
      * @return the final link content (recursively traverse the links) if link file, otherwise the original path.
      * @throws IOException thrown if the link file can not be read.
      */
-    public static String readLinkContent(String root, String path) throws IOException {
+    public static String readLinkContent(Path root, String path) throws IOException {
         return PathUtils.isLinkFile(path) && root != null
-                ? readLinkContent(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
+                ? readLinkContent(root, relativize(root, Path.of(Files.readString(resolve(root, path)))).toString())
                 : path;
     }
 }

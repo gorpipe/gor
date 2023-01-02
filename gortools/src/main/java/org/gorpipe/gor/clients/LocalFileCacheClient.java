@@ -189,8 +189,8 @@ public class LocalFileCacheClient implements FileCache {
         }
     }
 
-    private String getProjectRoot() {
-        return fileReader != null && fileReader.getCommonRoot() != null ? fileReader.getCommonRoot() : null;
+    private Path getProjectRoot() {
+        return fileReader != null && fileReader.getCommonRoot() != null ? Path.of(fileReader.getCommonRoot()) : null;
     }
 
     private Cache<String, String> createCache() {
