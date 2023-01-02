@@ -22,9 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -50,15 +47,9 @@ import java.nio.file.FileSystemException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public abstract class StreamSourceProvider implements SourceProvider {
-
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
-    private static final Cache<DataSource, String> linkCache = CacheBuilder.newBuilder().maximumSize(10000).concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
-
     private final Map<DataType, StreamSourceIteratorFactory> dataTypeToFactory = new HashMap<>();
     private FileCache cache;
     protected GorDriverConfig config;
@@ -109,21 +100,6 @@ public abstract class StreamSourceProvider implements SourceProvider {
      */
     @Override
     public String readLink(DataSource source) throws IOException {
-        if (USE_LINK_CACHE) {
-            try {
-                return linkCache.get(source, () -> readLinkContent(source));
-            } catch (ExecutionException | UncheckedExecutionException e) {
-                if (e.getCause() instanceof IOException) {
-                    throw (IOException) e.getCause();
-                }
-                throw new IOException(e.getCause());
-            }
-        } else {
-            return readLinkContent(source);
-        }
-    }
-
-    private String readLinkContent(DataSource source) throws IOException {
         String path = StreamUtils.readString((StreamSource) source, 10000);
         if (source instanceof FileSource) { //FileSource handling is a special case due to FileSource.close() implementation
             source.close();

@@ -49,22 +49,28 @@ import java.util.Optional
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
 
-  def getResultsLinkPath(nested: GorContext, writeLocationPath: String, linkCacheFileNameBase: String): (Path, String) = {
-    val linkCacheFileNameBaseAdjusted = if (writeLocationPath.endsWith(".gor") && linkCacheFileNameBase.endsWith(".gorz")) {
-      linkCacheFileNameBase.substring(0, linkCacheFileNameBase.length - 1)
+  def getResultsPath(nested: GorContext, newCacheFile: String, resultFileName: String): (Path, String) = {
+    val resultFilePath = if (newCacheFile.endsWith(".gor") && resultFileName.endsWith(".gorz")) resultFileName.substring(0,resultFileName.length-1) else resultFileName
+    val ending = resultFilePath.lastIndexOf(".")
+    var extension = resultFilePath.substring(ending)
+    if (PathUtils.isLocal(newCacheFile)) {
+      val cachePath = if (!PathUtils.isAbsolutePath(newCacheFile)) {
+        nested.getSession.getProjectContext.getProjectRootPath.resolve(newCacheFile)
+      } else {
+        Paths.get(newCacheFile)
+      }
+      val resPath = Path.of(resultFilePath)
+      GorJavaUtilities.createSymbolicLink(resPath,cachePath)
+      (resPath,extension)
     } else {
-      linkCacheFileNameBase
+      extension += ".link"
+      val resPath = Path.of(resultFilePath+".link")
+      Files.writeString(resPath,newCacheFile)
+      (resPath,extension)
     }
-    val linkCacheFilePath = Path.of(linkCacheFileNameBaseAdjusted + ".link")
-
-    Files.writeString(linkCacheFilePath,
-      PathUtils.resolve(nested.getSession.getProjectContext.getProjectRootPath, writeLocationPath).toString)
-    val extension = linkCacheFileNameBaseAdjusted.substring(linkCacheFileNameBaseAdjusted.lastIndexOf(".")) + ".link"
-
-    (linkCacheFilePath, extension)
   }
 
-  def runAndStoreLinkFileInCache(nested: GorContext, writeLocationPath: String, fileCache: FileCache, useMd5: Boolean): String = {
+  def runAndStoreLinkFileInCache(nested: GorContext, newCacheFile: String, fileCache: FileCache, useMd5: Boolean): String = {
     val startTime = System.currentTimeMillis
     val fileReader = nested.getSession.getProjectContext.getFileReader
     val commandToExecute = nested.getCommand
@@ -72,15 +78,14 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val isGord = commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)
     val noDict = commandToExecute.toLowerCase.contains(" -nodict ")
     val writeGord = isGord && !noDict
-    var cacheRes = writeLocationPath
-    val resultFileName = runCommand(nested, commandToExecute, if (isGord) writeLocationPath else null, useMd5, theTheDict = true)
-    val isCacheDir = fileReader.isDirectory(writeLocationPath)
-
+    var cacheRes = newCacheFile
+    var resultFileName = runCommand(nested, commandToExecute, if (isGord) newCacheFile else null, useMd5, theTheDict = true)
+    val isCacheDir = fileReader.isDirectory(newCacheFile)
     if(fileCache != null && (!isCacheDir || writeGord)) {
-        val linkCacheFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
+        resultFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
         val overheadTime = findOverheadTime(commandToExecute)
-        val resultLinkPath = getResultsLinkPath(nested, writeLocationPath, linkCacheFileName)
-        cacheRes = fileCache.store(resultLinkPath._1, commandSignature, resultLinkPath._2, overheadTime + System.currentTimeMillis - startTime)
+        val resultPath = getResultsPath(nested, newCacheFile, resultFileName)
+        cacheRes = fileCache.store(resultPath._1, commandSignature, resultPath._2, overheadTime + System.currentTimeMillis - startTime)
     }
     cacheRes
   }
@@ -128,9 +133,9 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
           cacheFile = GorJavaUtilities.verifyLinkFileLastModified(context.getSession.getProjectContext,cacheFile)
           // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
           fileNames(i) = if (cacheFile == null) {
-            val writeLocationPath = cacheFiles(i)
-            if (writeLocationPath != null) {
-              runAndStoreLinkFileInCache(nested, writeLocationPath, fileCache, useMd5)
+            val newCacheFile = cacheFiles(i)
+            if(newCacheFile!=null) {
+              runAndStoreLinkFileInCache(nested, newCacheFile, fileCache, useMd5)
             } else {
               runAndStoreInCache(nested, fileCache, useMd5)
             }

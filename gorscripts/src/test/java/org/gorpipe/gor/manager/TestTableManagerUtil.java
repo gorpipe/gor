@@ -144,12 +144,19 @@ public class TestTableManagerUtil {
                     break;
                 }
             }
+            // Option to wait for the bucketize look to be taken (by someone else) but then we don't control which version of the dict is bucektized.
+//            try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {
+//                if (!bucketizeLock.isValid()) {
+//                    break;
+//                }
+//            }
 
             if (System.currentTimeMillis() - startTime > 20000) {
                 log.info(waitForProcessPlus(p));
                 Assert.fail("Test not setup correctly, thread did not get bucketize lock, took too long.");
             }
-            Thread.sleep(1);
+            Thread.sleep(100);
         }
+        Thread.sleep(1000);  // Making sure we have read the table after we get the lock.
     }
 }

@@ -65,7 +65,7 @@ public class UTestMissingGorTemp {
         try {
             TestUtils.runGorPipeIteratorOnMain(args);
         } catch (GorSystemException e) {
-            if (e.getMessage().contains("Cache directory given by -cachedir")) exc = true;
+            if (e.getMessage().contains("Cache directory given by -cacheDir")) exc = true;
         }
         System.out.close();
         System.setOut(old);

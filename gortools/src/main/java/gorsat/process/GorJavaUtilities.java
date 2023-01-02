@@ -535,7 +535,7 @@ public class GorJavaUtilities {
         }
     }
 
-    public synchronized static void createSymbolicLinkSafe(Path resultPath, Path cachePath) throws IOException {
+    public synchronized static void createSymbolicLink(Path resultPath, Path cachePath) throws IOException {
         if (!Files.exists(resultPath, LinkOption.NOFOLLOW_LINKS)) {
             Files.createSymbolicLink(resultPath, cachePath);
         } else if(Files.isSymbolicLink(resultPath)) {
@@ -544,31 +544,25 @@ public class GorJavaUtilities {
         }
     }
 
-    /*
-     * Return the cachefile is valid, otherwise null.
-     *
-     * NOTE:  At first glance it would make sense to have this check in the FileCache, as it relates directly
-     *        to the filecache integrity, but as the data pointed to might be on external source (s3, http)
-     *        and we might not have access to data (to check timestamps) in the FileCache.
-     */
     public static String verifyLinkFileLastModified(ProjectContext projectContext, String cacheFile) {
-        if (cacheFile!=null && cacheFile.toLowerCase().endsWith(".link")) {
+        if (cacheFile!=null) {
             var fileReader = projectContext.getFileReader();
             var cachePath = Paths.get(cacheFile);
             if (!cachePath.isAbsolute()) {
                 cachePath = projectContext.getProjectRootPath().resolve(cachePath);
             }
-
-            try {
-                var ds = fileReader.resolveUrl(cacheFile);
-                var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
-                var lastModified = ds.getSourceMetadata().getLastModified();
-                if (linkLastModified != null && lastModified > linkLastModified) {
-                    Files.delete(cachePath);
-                    cacheFile = null;
+            if (Files.isSymbolicLink(cachePath) || cacheFile.toLowerCase().endsWith(".link")) {
+                try {
+                    var ds = fileReader.resolveUrl(cacheFile);
+                    var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
+                    var lastModified = ds.getSourceMetadata().getLastModified();
+                    if (linkLastModified != null && lastModified > linkLastModified) {
+                        Files.delete(cachePath);
+                        cacheFile = null;
+                    }
+                } catch (IOException e) {
+                    // Ignore
                 }
-            } catch (IOException e) {
-                // Ignore
             }
         }
         return cacheFile;

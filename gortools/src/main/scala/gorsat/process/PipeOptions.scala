@@ -113,9 +113,9 @@ class PipeOptions {
   var virtualFile: String = _
   // Sets the current project root. Value from the -gorroot option
   var gorRoot: String = _
-  // Sets the cache dir, full path or relative to project root. Value from the -cachedir option
+  // Sets the cache dir, full path or relative to project root. Value from the -cacheDir option
   var cacheDir: String = _
-  // Sets the log directory, normally not used and only for legacy compatibility. Value from the -logdir option (deprecated?)
+  // Sets the log directory, normally not used and only for legacy compatibility. Value from the -logdir option (depricated?)
   var logDir: String = _
   // Specifies which query handler to use. Value from the -queryhandler option
   var queryHandler: String = _
