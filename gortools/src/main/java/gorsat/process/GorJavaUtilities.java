@@ -551,7 +551,7 @@ public class GorJavaUtilities {
             if (!cachePath.isAbsolute()) {
                 cachePath = projectContext.getProjectRootPath().resolve(cachePath);
             }
-            if (Files.isSymbolicLink(cachePath) || cacheFile.toLowerCase().endsWith(".link")) {
+            if (/*Files.isSymbolicLink(cachePath) ||*/ cacheFile.toLowerCase().endsWith(".link")) {
                 try {
                     var ds = fileReader.resolveUrl(cacheFile);
                     var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
