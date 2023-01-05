@@ -403,6 +403,29 @@ public class ITestS3Shared {
     }
 
     @Test
+    public void testProjectWriteUserDataWithIndexServer() throws IOException {
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
+        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String dataPath = "user_data/dummy.gorz";
+
+        runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
+
+        S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        try (DataSource source = getDataSourceFromProvider(provider, dataPath + ".gori", Credentials.OwnerType.Project, "some_project")) {
+            Assert.assertTrue(source.exists());
+            source.delete();
+        }
+
+        try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project")) {
+            source.delete();
+        }
+
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+    }
+
+    @Test
     public void testSharedWriteRootServer() throws IOException {
         String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();

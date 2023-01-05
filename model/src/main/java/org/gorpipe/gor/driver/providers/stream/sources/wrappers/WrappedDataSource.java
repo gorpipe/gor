@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
@@ -164,5 +165,10 @@ public class WrappedDataSource implements DataSource {
     @Override
     public SourceReference getSourceReference() {
         return wrapped.getSourceReference();
+    }
+
+    @Override
+    public GorIndexType useIndex() {
+        return wrapped.useIndex();
     }
 }
