@@ -296,17 +296,17 @@ public class BaseScriptExecutionEngine {
                         executionBlocks.remove(firstLevelBlock.groupName());
                     } else {
                         // We need to create a new dictionary query to the batch to get the results from expanded queries
-                        var isGorDictFolder = commandToExecute.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER())
-                                || commandToExecute.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART());
+                        var commandLower = commandToExecute.toLowerCase();
+                        var gordictfolder = commandLower.startsWith("gordictfolder") || commandLower.startsWith("gordictfolderpart");
                         String querySignature;
-                        if (firstLevelBlock.signature()!=null&&isGorDictFolder) {
+                        if (firstLevelBlock.signature()!=null&&gordictfolder) {
                             querySignature = firstLevelBlock.signature();
                         } else {
                             var fileSignature = validate ? getFileSignatureAndUpdateSignatureMap(session, commandToExecute, usedFiles) : "";
                             querySignature = StringUtilities.createMD5(cte.query() + fileSignature);
                         }
                         var ctequery = cte.query();
-                        if (!isGorDictFolder && !hasFork && cte.cacheFile()!=null && cte.cacheFile().endsWith(".gord")) {
+                        if (!gordictfolder && !hasFork && cte.cacheFile()!=null && cte.cacheFile().endsWith(".gord")) {
                             var gordResultsPath = cte.cacheFile()+"/"+querySignature+".gorz";
                             executionBatch.createNewCommand(querySignature, ctequery.replace(cte.cacheFile(),gordResultsPath), cte.batchGroupName(), cte.createName(), gordResultsPath);
                         } else {
