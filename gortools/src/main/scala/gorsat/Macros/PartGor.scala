@@ -96,7 +96,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
       theDependencies ::= parKey
     })
 
-    val gordict = if (useGordFolders) "gordictfolderpart" else "gordictpart"
+    val gordict = if (useGordFolders) CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART else CommandParseUtilities.GOR_DICTIONARY_PART
     val theCommand = partitions.keys.foldLeft(gordict) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
     parGorCommands.put(createKey, ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
 
