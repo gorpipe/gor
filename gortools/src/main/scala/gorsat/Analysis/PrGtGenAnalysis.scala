@@ -121,7 +121,7 @@ object PrGtGenAnalysis {
     extends PnBucketTable(pbt.buckNameToIdx, pbt.buckIdxToName, pbt.buckIdxToBuckSize,
       pbt.pnToIdx, pbt.pnIdxToName, pbt.pnIdxToBuckIdx, pbt.pnIdxToBuckPos) {
 
-    val buckSums: Array[Int] = buckIdxToBuckSize.toIterator.take(numberOfBuckets - 1).scanLeft(0)((sum, curr) => sum + curr).toArray
+    val buckSums: Array[Int] = buckIdxToBuckSize.iterator.take(numberOfBuckets - 1).scanLeft(0)((sum, curr) => sum + curr).toArray
 
     val users = mutable.Set.empty[AnyRef]
 

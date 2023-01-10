@@ -30,6 +30,8 @@ import de.tototec.cmdoption.handler.CmdOptionHandler;
 import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
 import gorsat.process.GorPipeMacros;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.logging.GorLogbackUtil;
 import org.gorpipe.gor.binsearch.GorIndexFile;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -146,7 +148,7 @@ public class GorToolsCLI {
         public void run() {
             int fi = gorfile.lastIndexOf('/')+1;
             String filename =  gorfile.substring(fi);
-            Path gorindex = Paths.get(filename+".gori");
+            Path gorindex = Paths.get(DataUtil.toFile(filename, DataType.GORI));
             GorIndexType indexType = fullindex ? GorIndexType.FULLINDEX : GorIndexType.CHROMINDEX;
             try (GorIndexFile file = new GorIndexFile(gorindex.toFile(), indexType)) {
                 file.generateForGorz(gorfile);

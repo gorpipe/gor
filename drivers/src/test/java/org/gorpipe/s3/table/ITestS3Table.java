@@ -2,8 +2,10 @@ package org.gorpipe.s3.table;
 
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.shared.ITestS3Shared;
 import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
@@ -219,7 +221,7 @@ public class ITestS3Table {
             String bucket = buckets.get(0);
             Assert.assertTrue(table.getFileReader().exists(bucket));
 
-            String localBucketFile = PathUtils.resolve(table.getRootPath(), bucket + ".link");
+            String localBucketFile = PathUtils.resolve(table.getRootPath(), DataUtil.toFile( bucket, DataType.LINK));
 
             Assert.assertEquals("s3data://project/" +  bucket + "\n", Files.readString(Path.of(localBucketFile)));
 

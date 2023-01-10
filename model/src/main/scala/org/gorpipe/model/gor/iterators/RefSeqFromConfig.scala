@@ -25,11 +25,12 @@ package org.gorpipe.model.gor.iterators
 import java.io.IOException
 import java.util
 import java.util.Optional
-
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, RacFile}
+import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
@@ -62,7 +63,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
           lastBuff = buffer
           refByteToChar(buffer(pos - offset - 1))
         case None =>
-          val chrFilePath =path + "/" + chr + ".txt"
+          val chrFilePath = DataUtil.toFile(path + "/" + chr, DataType.TXT)
           val f = if( filemap.containsKey(chrFilePath) ) filemap.get(chrFilePath) else {
             val cf = Optional.ofNullable(fileReader match {
               case dbfr: DriverBackedFileReader =>

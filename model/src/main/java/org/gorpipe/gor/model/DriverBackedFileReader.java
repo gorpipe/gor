@@ -36,6 +36,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
@@ -319,7 +320,7 @@ public class DriverBackedFileReader extends FileReader {
                 path = root.resolve(path);
             }
             if (Files.isDirectory(path)) {
-                if (!path.getFileName().toString().toLowerCase().endsWith(".gord")) {
+                if (!DataUtil.isGord(path.getFileName().toString())) {
                     return getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
                 } else if (Files.exists(path.resolve(path.getFileName()))) {
                     source = resolveUrl(file + "/" + path.getFileName());

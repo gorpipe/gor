@@ -30,6 +30,7 @@ import gorsat.{DynIterator, Iterators}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 /**
   * SourceProvider simplifies access to sources used by various commands, where the source can be either
@@ -51,7 +52,7 @@ case class SourceProvider(inputSource: String, context: GorContext, executeNor: 
 
   private def handleFile(): Unit = {
     source = if (executeNor) {
-      if (inputSource.endsWith(".gorz") || inputSource.endsWith(".gor")) {
+      if (DataUtil.isGorz(inputSource) || DataUtil.isGor(inputSource)) {
         new Iterators.ServerNorGorSource(inputSource, context, executeNor)
       } else {
         new Iterators.NorInputSource(inputSource, context.getSession.getProjectContext.getFileReader, false, true, 0,

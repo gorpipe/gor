@@ -1,7 +1,9 @@
 package org.nanohttpd.protocols.http;
 
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.utils.TestUtils;
+import org.gorpipe.gor.util.DataUtil;
 
 
 import java.io.File;
@@ -36,7 +38,7 @@ public class TestFileHttpServer extends NanoHTTPD {
     public TestFileHttpServer(int port, File serverRoot) throws IOException {
         super(port);
         if (serverRoot == null) {
-            this.serverRoot = new File(TestUtils.getTestFile("dummy.gor")).getParentFile();
+            this.serverRoot = new File(TestUtils.getTestFile(DataUtil.toFile("dummy", DataType.GOR))).getParentFile();
         } else {
             if (!serverRoot.exists() || !serverRoot.isDirectory()) {
                 throw new IOException("Server root must exist and be a directory: " + serverRoot.getAbsolutePath());

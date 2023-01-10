@@ -32,11 +32,10 @@ import gorsat.Utilities.MacroUtilities._
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.util.DataUtil
 
-import java.util.function.Predicate
-import java.util.stream.Collectors
-import scala.collection.JavaConverters
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.MapHasAsScala
+
 
 object GorPrePipe {
 
@@ -108,7 +107,7 @@ object GorPrePipe {
                 val subFiles = getUsedFiles(iteratorCommand, session)
                 usedFiles :::= subFiles
               } else {
-                if (inputArguments.exists(inputArgument => inputArgument.endsWith(".gord") || inputArgument.endsWith(".nord"))) {
+                if (inputArguments.exists(inputArgument => DataUtil.isGord(inputArgument) || DataUtil.isNord(inputArgument))) {
                   var tags: List[String] = List[String]()
                   if (CommandParseUtilities.hasOption(cargs, "-f")) {
                     tags = CommandParseUtilities.stringValueOfOption(cargs, "-f")
@@ -122,10 +121,12 @@ object GorPrePipe {
                     }
                   }
                   val dictFiles = inputArguments.collect {
-                    case s: String if (s.endsWith(".gord") || s.endsWith(".nord")) && !s.startsWith("-") =>
+                    case s: String if (DataUtil.isGord(s) || DataUtil.isNord(s)) && !s.startsWith("-") =>
                       if (tags.isEmpty) "#gordict#" + s else "#gordict#" + s + "#gortags#" + tags.mkString(",")
                   }
-                  val otherFiles = inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-") && !(argumentEntry.endsWith(".gord") || argumentEntry.endsWith(".nord")))
+                  val otherFiles = inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-") &&
+                    !(DataUtil.isGord(argumentEntry) || DataUtil.isNord(argumentEntry)))
+
                   usedFiles :::= otherFiles ::: dictFiles
                 } else if(isSql) {
                   if (of.nonEmpty) {

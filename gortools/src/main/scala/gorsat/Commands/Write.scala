@@ -28,7 +28,9 @@ import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 
 class Write extends CommandInfo("WRITE",
@@ -39,7 +41,7 @@ class Write extends CommandInfo("WRITE",
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
     val useFolder = if (hasOption(args, "-d")) {
       Option.apply(stringValueOfOption(args, "-d"))
-    } else if(!executeNor && fileName.toLowerCase.endsWith(".gord")) {
+    } else if(!executeNor && DataUtil.isGord(fileName)) {
       val fn = fileName
       fileName = ""
       Option.apply(fn)
@@ -111,13 +113,40 @@ class Write extends CommandInfo("WRITE",
     handleIndex
 
     skipHeader = hasOption(args, "-noheader")
-    val fileType = FilenameUtils.getExtension(fileName)
-    if (skipHeader && List("gor", "gorz", "nor", "norz").contains(fileType)) {
+    val fileType = "." + FilenameUtils.getExtension(fileName.toLowerCase())
+    if (skipHeader && DataType.getWritableFormats().contains(fileType)) {
       throw new GorParsingException("Option -noheader (skip header) is not valid with gor/gorz/nor/norz")
     }
 
     val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
 
-    CommandParsingResult(ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, OutputOptions(remove, columnCompress, true, md5, executeNor || (forkCol == 0 && remove), idx, forkTagArray, dictTagArray, prefix, prefixFile, compressionLevel, useFolder, skipHeader, cardCol = card, linkFile = link, command = argString, infer = infer, maxseg = maxseg)), fixedHeader)
+    CommandParsingResult(
+      ForkWrite(forkCol,
+        fileName,
+        context.getSession,
+        forcedInputHeader,
+        OutputOptions(
+          remove,
+          columnCompress,
+          true,
+          md5,
+          executeNor || (forkCol == 0 && remove),
+          idx,
+          forkTagArray,
+          dictTagArray,
+          prefix,
+          prefixFile,
+          compressionLevel,
+          useFolder,
+          skipHeader,
+          cardCol = card,
+          linkFile = link,
+          command = argString,
+          infer = infer,
+          maxseg = maxseg
+        )
+      ),
+      fixedHeader
+    )
   }
 }

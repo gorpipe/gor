@@ -25,6 +25,8 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -60,8 +62,16 @@ public class UTestCram {
 
     @Test
     public void readCramFromBamLinkWithFastaReference() throws IOException {
-        bamLinkFile = FileTestUtils.createTempFile(workDir.getRoot(), "cram_query_sorted.bam.link", Paths.get("../tests/data/external/samtools/cram_query_sorted.cram").toAbsolutePath().toString());
-        String[] lines = TestUtils.runGorPipeLines("gor " + bamLinkFile.getCanonicalPath() + " -ref ../tests/data/external/samtools/cram_query_sorted.fasta");
+        bamLinkFile = FileTestUtils.createTempFile(workDir.getRoot(),
+                DataUtil.toLinkFile("cram_query_sorted", DataType.BAM),
+                Paths.get(
+                        DataUtil.toFile( "../tests/data/external/samtools/cram_query_sorted", DataType.CRAM)
+                ).toAbsolutePath().toString()
+        );
+        String[] lines = TestUtils.runGorPipeLines("gor " +
+                bamLinkFile.getCanonicalPath() +
+                " -ref " +
+                DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA));
         Assert.assertEquals(8, lines.length);
     }
 
@@ -69,8 +79,11 @@ public class UTestCram {
     @Test
     public void readCramWithFastaReferenceFromProperty() {
         try {
-            System.setProperty("gor.driver.cram.fastareferencesource", "../tests/data/external/samtools/cram_query_sorted.fasta");
-            String[] lines = TestUtils.runGorPipeLines("gor ../tests/data/external/samtools/cram_query_sorted.cram");
+            System.setProperty(
+                    "gor.driver.cram.fastareferencesource",
+                    DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA)
+            );
+            String[] lines = TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
             Assert.assertEquals(8, lines.length);
         } finally {
             System.clearProperty("gor.driver.cram.fastareferencesource");
@@ -80,7 +93,11 @@ public class UTestCram {
     @Test
     public void readCramWithFastaReferenceFromConfig() {
         System.clearProperty("gor.driver.cram.fastareferencesource");
-        String[] args = new String[]{"gor ../tests/data/external/samtools/cram_query_sorted.cram", "-config", "../tests/config/gor_unittests_config.txt"};
+        String[] args = new String[]{
+                "gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM),
+                "-config",
+                DataUtil.toFile("../tests/config/gor_unittests_config", DataType.TXT)
+        };
         int count = TestUtils.runGorPipeCount(args);
         Assert.assertEquals(7, count);
     }
@@ -89,7 +106,10 @@ public class UTestCram {
     public void readCramWithFastaReferenceFromConfigException() throws IOException {
         File wrongConfigFile = createWrongConfigFile(workDir.getRoot());
         System.clearProperty("gor.driver.cram.fastareferencesource");
-        String[] args = new String[]{"gor ../tests/data/external/samtools/cram_query_sorted.cram", "-config", wrongConfigFile.getCanonicalPath()};
+        String[] args = new String[]{
+                "gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM),
+                "-config",
+                wrongConfigFile.getCanonicalPath()};
         try {
             TestUtils.runGorPipeCount(args);
         } catch (GorResourceException e) {
@@ -101,11 +121,11 @@ public class UTestCram {
     @Test
     public void readCramWithFastaReferenceAndGenerateMissingAttributes() {
         try {
-            System.setProperty("gor.driver.cram.fastareferencesource", "../tests/data/external/samtools/cram_query_sorted.fasta");
+            System.setProperty("gor.driver.cram.fastareferencesource", DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA));
             System.setProperty("gor.driver.cram.generatemissingattributes", "false");
-            String[] linesWithoutMissingAttributes = TestUtils.runGorPipeLines("gor ../tests/data/external/samtools/cram_query_sorted.cram");
+            String[] linesWithoutMissingAttributes = TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
             System.setProperty("gor.driver.cram.generatemissingattributes", "true");
-            String[] linesWithMissingAttributes = TestUtils.runGorPipeLines("gor ../tests/data/external/samtools/cram_query_sorted.cram");
+            String[] linesWithMissingAttributes = TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
 
             Assert.assertEquals(8, linesWithoutMissingAttributes.length);
             Assert.assertEquals(8, linesWithMissingAttributes.length);
@@ -122,31 +142,32 @@ public class UTestCram {
 
     @Test(expected = GorResourceException.class)
     public void readCramWithNoReference() {
-        TestUtils.runGorPipeLines("gor ../tests/data/external/samtools/cram_query_sorted.cram");
+        TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
     }
 
     @Test(expected = GorResourceException.class)
     public void readCramWithReferenceFileButFileNotFound() {
-        TestUtils.runGorPipeLines("gor ../tests/data/external/samtools/cram_query_sorted.cram -ref /foo/bar.fasta");
+        TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM) + " -ref " + DataUtil.toFile("/foo/bar", DataType.FASTA));
     }
 
     @Test(expected = GorSystemException.class)
     public void readCramWithIncompatibleFastaReference() {
-        TestUtils.runGorPipeLines("gor ../tests/data/external/samtools/cram_query_sorted.cram -ref ../tests/data/external/samtools/ce.fa");
+        TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM) + " -ref " + DataUtil.toFile( "../tests/data/external/samtools/ce", DataType.FA));
     }
 
     @Test
     public void readCramWithFastaReferenceInRefFile() throws IOException {
 
         String basePath = "../tests/data/external/samtools";
-        String[] filesToCopy = {"cram_query_sorted.cram", "cram_query_sorted.cram.crai"};
+        String fileName = DataUtil.toFile("cram_query_sorted", DataType.CRAM);
+        String[] filesToCopy = {fileName, DataUtil.toFile(fileName, DataType.CRAI)};
         copyFiles(basePath, workDir.getRoot().toString(), filesToCopy);
 
         // Create ref file for the cramFile
         File referenceFile = workDir.newFile("cram_query_sorted.cram.ref");
-        FileUtils.writeStringToFile(referenceFile, "../tests/data/external/samtools/cram_query_sorted.fasta", Charset.defaultCharset());
+        FileUtils.writeStringToFile(referenceFile, DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA), Charset.defaultCharset());
 
-        String[] lines = TestUtils.runGorPipeLines(String.format("gor %1$s/cram_query_sorted.cram", workDir.getRoot()));
+        String[] lines = TestUtils.runGorPipeLines(String.format("gor %1$s/" + fileName, workDir.getRoot()));
         Assert.assertEquals(8, lines.length);
     }
 

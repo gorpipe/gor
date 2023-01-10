@@ -62,12 +62,12 @@ object Sql {
       if (chr != null) {
         seek = myCommand.substring(sPos + 4, sEnd).replace("chr", chr)
         var pos = seek.indexOf("pos-end")
-        if (pos != -1) seek = seek.replace("pos", (start + 1) + "").replace("end", end + "")
+        if (pos != -1) seek = seek.replace("pos", (start + 1).toString).replace("end", end.toString)
         else if (seek.contains("pos")) {
           pos = seek.indexOf("pos-")
-          if (end == -1) seek = seek.replace("pos", start + "")
-          else if (start == end && pos != -1) seek = seek.replace("pos-", start + "")
-          else seek = seek.replace("pos", start + "-") + end
+          if (end == -1) seek = seek.replace("pos", start.toString)
+          else if (start == end && pos != -1) seek = seek.replace("pos-", start.toString)
+          else seek = seek.replace("pos", s"$start-") + end
         }
       }
       myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1, myCommand.length)

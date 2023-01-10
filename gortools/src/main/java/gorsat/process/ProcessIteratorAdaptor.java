@@ -31,6 +31,7 @@ import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -410,7 +411,13 @@ public class ProcessIteratorAdaptor extends GenomicIteratorBase implements Seria
                 String match = matcher.group();
                 if (match.startsWith("'")) split.add(match.substring(1, match.length() - 1));
                 else {
-                    boolean isFile = match.contains("/") || match.endsWith(".R") || match.endsWith(".py") || match.endsWith(".sh") || match.endsWith(".gor") || match.endsWith("gorz") || match.endsWith(".txt");
+                    boolean isFile = match.contains("/") ||
+                            DataUtil.isRScript(match) ||
+                            DataUtil.isPythonScript(match) ||
+                            DataUtil.isShellScript(match) ||
+                            DataUtil.isGor(match) ||
+                            DataUtil.isGorz(match) ||
+                            DataUtil.isTxt(match);
                     if (isFile) {
                         Path fmatch;
                         if (fileRoot != null && !match.startsWith("/")) {

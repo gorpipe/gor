@@ -27,6 +27,8 @@ package org.gorpipe.test;
  */
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -194,7 +196,7 @@ public class GorDictionarySetup {
         Files.createDirectories(bucketDir);
 
         for (int i = 0; i < this.bucketFiles.length; i++) {
-            this.bucketFiles[i] = bucketRelPath.resolve(name + "_bucketfile_Bucket" + i + ".gor");
+            this.bucketFiles[i] = bucketRelPath.resolve(name + "_bucketfile_Bucket" + i + DataType.GOR.suffix);
             this.bucketFiles[i].toFile().deleteOnExit();
         }
 
@@ -256,7 +258,7 @@ public class GorDictionarySetup {
 
         // Create dictionary file.
 
-        this.dictionary = Files.createTempFile(root, name + "_dictionary_", ".gord");
+        this.dictionary = Files.createTempFile(root, name + "_dictionary_", DataType.GORD.suffix);
         this.dictionary.toFile().deleteOnExit();
         try (PrintWriter out = new PrintWriter(this.dictionary.toFile())) {
             for (String dataFile : this.dataFiles) {
@@ -330,10 +332,10 @@ public class GorDictionarySetup {
         Path dictDataDir = Files.createDirectory(Paths.get(root, name, "data"));
         dictDataDir.toFile().deleteOnExit();
 
-        Path pnBucketMapPath = Files.createFile(Paths.get(root, name, name + "_buckets.tsv"));
+        Path pnBucketMapPath = Files.createFile(Paths.get(root, name, DataUtil.toFile(name + "_buckets", DataType.TSV)));
         pnBucketMapPath.toFile().deleteOnExit();
 
-        Path gordPath = Files.createFile(Paths.get(root, name, name + ".gord"));
+        Path gordPath = Files.createFile(Paths.get(root, name, name + DataType.GORD.suffix));
         pnBucketMapPath.toFile().deleteOnExit();
 
         List<String> bucketTemplateList = new ArrayList<>();
@@ -366,7 +368,7 @@ public class GorDictionarySetup {
                 gordPrintWriter.println(String.format("data/%s_bucket_%s.gor\t%s\tchr1\t0\tchrZ\t1000000000\t%s",
                         name, bucket, bucket, pnArrayAsString));
 
-                Path bucketDataPath = Files.createFile(Paths.get(root, name, "data", name + "_bucket_" + bucket +".gor"));
+                Path bucketDataPath = Files.createFile(Paths.get(root, name, "data", name + "_bucket_" + bucket + DataType.GOR.suffix));
                 try(PrintWriter bucketDataPrintWriter = new PrintWriter(bucketDataPath.toFile())) {
                     bucketDataPrintWriter.println("#Chrom\tPos\tId\tRef\tAlt\tBucket\tValues");
                     for (int lineIndex = 1; lineIndex <= numberOfVariants; lineIndex++) {

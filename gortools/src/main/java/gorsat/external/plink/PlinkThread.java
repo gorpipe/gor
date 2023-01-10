@@ -24,6 +24,7 @@ package gorsat.external.plink;
 
 import gorsat.Commands.CommandParseUtilities;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -67,7 +68,7 @@ class PlinkThread implements Callable<Boolean> {
         plinkArgList.add("1600");
         if( vcf ) {
             plinkArgList.add("--vcf");
-            plinkArgList.add(pgenPath + ".vcf");
+            plinkArgList.add(pgenPath + DataType.VCF.suffix);
             plinkArgList.add("--pheno");
             plinkArgList.add(args.pheno);
         } else {

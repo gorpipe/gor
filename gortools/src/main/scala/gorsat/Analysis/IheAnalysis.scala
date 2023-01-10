@@ -235,7 +235,7 @@ object IheAnalysis {
 
       val pNIHE2 = iheContext.inheritanceErrorProb(iheContext.prob2GT(gtC, pgtC, lodC, gt2C), iheContext.prob2GT(gtF, pgtF, lodF, gt2F), iheContext.prob2GT(gtM, pgtM, lodM, gt2M))
 
-      super.process(r.rowWithAddedColumn((if (dIHE) 1 else 0) + "\t" + fe2(pNIHE2)))
+      super.process(r.rowWithAddedColumn(s"${if (dIHE) 1 else 0}\t${fe2(pNIHE2)}"))
     }
   }
 }

@@ -28,6 +28,7 @@ import Commands.CommandParseUtilities
 import process._
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.session.GorContext
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
@@ -67,7 +68,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     GorPipeCommands.register()
 
     // Create a test file
-    patientsPathSNP = Files.createTempFile("patientSNP", ".gor")
+    patientsPathSNP = Files.createTempFile("patientSNP", DataType.GOR.suffix)
     var outputFile: File = patientsPathSNP.toFile
     outputFile.deleteOnExit()
     var outputWriter: PrintWriter = new PrintWriter(outputFile)
@@ -76,7 +77,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("chr1\t1000\t2.0\t2010-10-3")
     outputWriter.close()
 
-    patientsPathSEG = Files.createTempFile("patientSEG", ".gor")
+    patientsPathSEG = Files.createTempFile("patientSEG", DataType.GOR.suffix)
     outputFile = patientsPathSEG.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -85,7 +86,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("chr1\t1500\t2000\t2.0\t2010-10-3")
     outputWriter.close()
 
-    patientsPathSEGWithRefReference = Files.createTempFile("patientSEGWithRef", ".gor")
+    patientsPathSEGWithRefReference = Files.createTempFile("patientSEGWithRef", DataType.GOR.suffix)
     outputFile = patientsPathSEGWithRefReference.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -93,7 +94,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("chr1\t500\t1000\t1.0\t2010-10-3\tA\tAA")
     outputWriter.close()
 
-    patientsPathSEGWithAltCallAllele = Files.createTempFile("patientSEGWithAllele", ".gor")
+    patientsPathSEGWithAltCallAllele = Files.createTempFile("patientSEGWithAllele", DataType.GOR.suffix)
     outputFile = patientsPathSEGWithAltCallAllele.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -101,7 +102,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("chr1\t500\t1000\t1.0\t2010-10-3\tA\tAA\tAAA")
     outputWriter.close()
 
-    patientsPathSEGWithReference = Files.createTempFile("patientSEGWithRef2", ".gor")
+    patientsPathSEGWithReference = Files.createTempFile("patientSEGWithRef2", DataType.GOR.suffix)
     outputFile = patientsPathSEGWithReference.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -109,7 +110,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("chr1\t500\t1000\t1.0\t2010-10-3\tAA")
     outputWriter.close()
 
-    patientsPathSEGWithAllele = Files.createTempFile("patientSEGWithAllele2", ".gor")
+    patientsPathSEGWithAllele = Files.createTempFile("patientSEGWithAllele2", DataType.GOR.suffix)
     outputFile = patientsPathSEGWithAllele.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -118,7 +119,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.close()
 
     // Create a test file
-    singleColumnsPath = Files.createTempFile("singlecolumns", ".txt")
+    singleColumnsPath = Files.createTempFile("singlecolumns", DataType.TXT.suffix)
     outputFile = singleColumnsPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -126,7 +127,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("d1")
     outputWriter.close()
 
-    twoColumnsPath = Files.createTempFile("twocolumns", ".txt")
+    twoColumnsPath = Files.createTempFile("twocolumns", DataType.TXT.suffix)
     outputFile = twoColumnsPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -134,7 +135,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("d1\t100")
     outputWriter.close()
 
-    threeColumnsPath = Files.createTempFile("threecolumns", ".txt")
+    threeColumnsPath = Files.createTempFile("threecolumns", DataType.TXT.suffix)
     outputFile = threeColumnsPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -142,7 +143,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("d1\t100\tbar")
     outputWriter.close()
 
-    norColumnsPath = Files.createTempFile("norcolumns", ".txt")
+    norColumnsPath = Files.createTempFile("norcolumns", DataType.TXT.suffix)
     outputFile = norColumnsPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -150,7 +151,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     outputWriter.println("v1\tfoo")
     outputWriter.close()
 
-    pnListPath = Files.createTempFile("pnlist", ".txt")
+    pnListPath = Files.createTempFile("pnlist", DataType.TXT.suffix)
     outputFile = pnListPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -383,7 +384,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
 
     //Cleanup files created by the write command
     FileUtils.deleteQuietly(new File("foo"))
-    FileUtils.deleteQuietly(new File("foo.md5"))
+    FileUtils.deleteQuietly(new File( "foo.md5"))
     FileUtils.deleteQuietly(new File("foo_bar.txt"))
     FileUtils.deleteQuietly(new File("foo_bar.txt.md5"))
     FileUtils.deleteQuietly(new File("foo_foo.txt"))

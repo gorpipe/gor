@@ -40,6 +40,7 @@ import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSys
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorOptions, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.table.util.PathUtils
+import org.gorpipe.gor.util.DataUtil
 import org.slf4j.LoggerFactory
 
 import java.io.OutputStreamWriter
@@ -189,12 +190,7 @@ object AnalysisUtilities {
   }
 
   def getTempFileName(outfile: String): String = {
-    if (outfile.endsWith( """.norz""")) outfile.replace( """.norz""", """.temptempfile.norz""")
-    else if (outfile.endsWith( """.tsv""")) outfile.replace( """.tsv""", """.temptempfile.tsv""")
-    else if (outfile.endsWith( """.txt""")) outfile.replace( """.txt""", """.temptempfile.txt""")
-    else if (outfile.endsWith( """.nor""")) outfile.replace( """.nor""", """.temptempfile.nor""")
-    else outfile.replace( """.gorz""", """.temptempfile.gorz""")
-
+    DataUtil.toTempTempFile(outfile)
   }
 
   def validateExternalSource(input:String): Unit = {
@@ -229,12 +225,12 @@ object AnalysisUtilities {
       var dsource: DynamicNorSource = null
       var rightFile = CommandParseUtilities.stringValueOfOption(largs, "-ff")
 
-      if (rightFile.toUpperCase.endsWith(".NORZ") && !(rightFile.slice(0, 2) == "<(")) {
+      if (DataUtil.isNorSource(rightFile) && !rightFile.startsWith("<(")) {
         if (doHeader) rightFile = "<(nor " + rightFile + " | top 0 )"
         else rightFile = "<(nor " + rightFile + " )"
       }
 
-      if (rightFile.slice(0, 2) == "<(") {
+      if (CommandParseUtilities.isNestedCommand(rightFile)) {
         iteratorCommand = CommandParseUtilities.parseNestedCommand(rightFile)
         if (!iteratorCommand.toUpperCase.startsWith("NOR")) {
           throw new GorParsingException("Error in nested query - nested queries in this context must be NOR queries: ")

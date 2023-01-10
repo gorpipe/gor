@@ -29,6 +29,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Util;
 
 import java.io.File;
@@ -165,7 +166,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
 
         if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), relativeSource,
                 AuthorizationAction.WRITE_LINK)) {
-            if (validationPath.toLowerCase().endsWith(".link")) {
+            if (DataUtil.isLink(validationPath)) {
                 throw new GorResourceException("Writing link files is not allowed", null);
             }
         }

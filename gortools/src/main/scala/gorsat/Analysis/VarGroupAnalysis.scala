@@ -174,9 +174,9 @@ case class VarGroupAnalysis(refCol: Int, altCol: Int, valCol: Int, grCols: List[
       idx -= 1
     }
 
-    if (unknownCount == 0) former + "/" + latter
+    if (unknownCount == 0) s"$former/$latter"
     else if (unknownCount == numberOfAltAlleles) "./."
-    else if (latter == 0 || former == 0) "./" + latter
+    else if (latter == 0 || former == 0) s"./$latter"
     else throw new GorResourceException("Inconsistent genotypes.", "VARGROUP")
   }
 

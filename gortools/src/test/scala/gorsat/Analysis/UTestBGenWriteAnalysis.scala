@@ -27,6 +27,8 @@ import java.nio.ByteOrder
 import java.nio.file.Files
 import gorsat.TestUtils
 import org.apache.commons.io.FileUtils
+import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.util.collection.ByteArray
 import org.junit.Assert
@@ -50,7 +52,7 @@ class UTestBGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("test basic") {
-    val bgenFile = new File(tmpDir, "bgenFile.bgen")
+    val bgenFile = new File(tmpDir, DataUtil.toFile("bgenFile", DataType.BGEN));
     val bgenFilePath = bgenFile.getAbsolutePath
 
     val bgenOut = BGenWriteAnalysis(bgenFilePath, batch = -1, group = false, imputed = false, 2, 3, -1, -1, 4)

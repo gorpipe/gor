@@ -41,7 +41,7 @@ trait Expressions {
     expressions.foreach(ex => ex.setContext(context, forNor))
   }
 
-  def compileExpressions(rowHeader: RowHeader, exprSrc: Seq[String], cmd: String, newColumns: String): Unit = {
+  def compileExpressions(rowHeader: RowHeader, exprSrc: Array[String], cmd: String, newColumns: String): Unit = {
     expressions.foreach(filter => {
       filter.setColumnNamesAndTypes(rowHeader.columnNames, rowHeader.columnTypes)
     })

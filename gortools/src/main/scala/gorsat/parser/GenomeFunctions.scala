@@ -373,7 +373,7 @@ object GenomeFunctions {
       else {
         val ch1 = Math.round(((1.0 - p1) * 93.0) + 33).toChar
         val ch2 = Math.round(((1.0 - p2) * 93.0) + 33).toChar
-        ch1 + "" + ch2
+        s"$ch1$ch2"
       }
     }
   }

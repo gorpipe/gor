@@ -30,6 +30,7 @@ import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 class GtGen extends CommandInfo("GTGEN",
   CommandArguments("", "-tag -gc -maxseg", 2, 2),
@@ -58,11 +59,7 @@ class GtGen extends CommandInfo("GTGEN",
     var buckTagItCommand = ""
     var buckTagDNS: DynamicNorSource = null
     var buckTagHeader = ""
-    val buckTagFile = {
-      val cand = iargs.head
-      val cl = cand.toUpperCase
-      if ((cl.endsWith(".NORZ") || cl.endsWith(".TSV") || cl.endsWith(".NOR")) && !(cl.slice(0, 2) == "<(")) "<(nor " + cand + " )" else cand
-    }
+    val buckTagFile = CommandParseUtilities.toNorSource(iargs.head.trim)
 
     try {
       val buckTagSource = SourceProvider(buckTagFile, context, executeNor = executeNor, isNor = true)

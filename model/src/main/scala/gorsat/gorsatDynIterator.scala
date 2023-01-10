@@ -171,7 +171,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         val args = CommandParseUtilities.quoteSafeSplitAndTrim(pipeSteps(i),' ')
         val (inputArguments, _) = CommandParseUtilities.validateCommandArguments(args, CommandArguments("-u -s -i","-e",numNonArgs))
         val rightFile = inputArguments(1).trim
-        if (rightFile.slice(0,2)=="<(") {
+        if (CommandParseUtilities.isNestedCommand(rightFile)) {
           val mergeCommand = CommandParseUtilities.parseNestedCommandUntrimmed(rightFile)
           pipeSteps(i) = pipeSteps(i).replace("<("+mergeCommand+")","<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly)+")")
         } else {

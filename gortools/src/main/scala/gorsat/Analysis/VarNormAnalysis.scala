@@ -136,7 +136,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
           if (i >= aNewRef.length) {
             aNewRef = refSeq.getBases(chrom, aNewPos - aNewRef.length, aNewPos - 1).toUpperCase
           } else if (i > 0) {
-            aNewRef = aNewRef.slice(i, aNewRef.length).toUpperCase + refSeq.getBases(chrom, aNewPos - i + aNewRef.length, aNewPos - 1 + aNewRef.length).toUpperCase
+            aNewRef = s"${aNewRef.slice(i, aNewRef.length).toUpperCase}${refSeq.getBases(chrom, aNewPos - i + aNewRef.length, aNewPos - 1 + aNewRef.length).toUpperCase()}"
           }
         }
       }
@@ -144,12 +144,12 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
       if (alleleNum > 1) {
         if (aNewRef != newRef || aNewPos != newStartPos) return (ref, pos, ialleles)
         else {
-          newAlleles += alleleSep + (if (addBase) refSeq.getBase(chrom, aNewPos - 1).toUpper + aNewAllele else aNewAllele)
+          newAlleles += s"$alleleSep${if (addBase) s"${refSeq.getBase(chrom, aNewPos - 1).toUpper}$aNewAllele" else aNewAllele}"
         }
       } else {
         addBase = if (vcfForm && (aNewAllele.length == 0 || aNewRef.length == 0)) true else false
-        newAlleles = if (addBase) refSeq.getBase(chrom, aNewPos - 1).toUpper + aNewAllele else aNewAllele
-        newRef = if (addBase) refSeq.getBase(chrom, aNewPos - 1).toUpper + aNewRef else aNewRef
+        newAlleles = if (addBase) s"${refSeq.getBase(chrom, aNewPos - 1).toUpper}$aNewAllele" else aNewAllele
+        newRef = if (addBase) s"${refSeq.getBase(chrom, aNewPos - 1).toUpper}$aNewRef" else aNewRef
         newStartPos = if (addBase) aNewPos - 1 else aNewPos
       }
       alleleNum += 1
@@ -172,7 +172,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
       if (!(rrRef.length == 1 && alleles.length == 1 || rrRef == alleles)) {
         /* modify alleles */
         val (nRefseq, nRangeStartPos, nNewAlleles) = {
-          val lookup = rrRef + "\t" + rr.pos + "\t" + alleles
+          val lookup = s"$rrRef\t${rr.pos}\t$alleles"
           normVarMap.get(lookup) match {
             case Some(normVar) => normVar
             case None =>
@@ -182,19 +182,19 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
               normVar
           }
         }
-        l = rr.colAsString(0) + "\t" + nRangeStartPos
+        l = s"${rr.colAsString(0)}\t$nRangeStartPos"
         var c = 2
         if (seg) {
-          l += "\t" + (nRangeStartPos + nRefseq.length)
+          l += s"\t${(nRangeStartPos + nRefseq.length)}"
           c = 3
         }
         while (c < maxCols) {
-          if (c == refCol) l += "\t" + nRefseq
-          else if (c == alleleCol) l += "\t" + nNewAlleles
-          else l += "\t" + rr.colAsString(c)
+          if (c == refCol) l += s"\t$nRefseq"
+          else if (c == alleleCol) l += s"\t$nNewAlleles"
+          else l += s"\t${rr.colAsString(c)}"
           c += 1
         }
-        if (hCols > maxCols) l += "\t" + rr.selectedColumns(colArray)
+        if (hCols > maxCols) l += s"\t${rr.selectedColumns(colArray)}"
         theNewStartPos = nRangeStartPos
       } else {
         theNewStartPos = rr.pos

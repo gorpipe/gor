@@ -77,8 +77,8 @@ case class VennSeg(grCols: List[Int], sumColumns: List[Int], header: String) ext
     if (!(r.chr == sh.oldChr && r.pos == sh.oldPos)) {
       // write last overlap segment
       if (sh.overlapCounter != 0) {
-        if (useGroup) super.process(RowObj(sh.oldChr, sh.oldPos, r.pos + "\t" + groupID + "\t" + sh.overlapCounter))
-        else super.process(RowObj(sh.oldChr, sh.oldPos, r.pos + "\t" + sh.overlapCounter))
+        if (useGroup) super.process(RowObj(sh.oldChr, sh.oldPos, s"${r.pos}\t$groupID\t${sh.overlapCounter}"))
+        else super.process(RowObj(sh.oldChr, sh.oldPos, s"${r.pos}\t${sh.overlapCounter}"))
       }
     }
 

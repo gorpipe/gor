@@ -33,6 +33,7 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.gor.util.StringUtil;
 
@@ -272,7 +273,7 @@ public class NordIterator extends GenomicIteratorBase {
 
             // Get the file path from entry
             String fileName = activeEntry.getFilePath();
-            if (fileName.toUpperCase().endsWith(".NORD")) {
+            if (DataUtil.isNord(fileName)) {
                 fileName = Paths.get(this.nordRoot, fileName).toString();
                 activeIterator = new NordIterator(fileName, useFilter, filterEntriesAsArray, "", ignoreMissingEntries, forceReadOfHeader, nestedIterators);
             } else {

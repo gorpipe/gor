@@ -23,7 +23,6 @@
 package gorsat.Utilities
 
 import java.io.FileNotFoundException
-
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.Iterators.{FastGorSource, MultiFileSource}
 import gorsat.gorsatGorIterator.MapAndListUtilities
@@ -32,135 +31,17 @@ import org.gorpipe.exceptions.{GorDataException, GorResourceException, GorSystem
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.util.Sorting.quickSort
+import scala.util.Using
 
 object IteratorUtilities {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-
-  def sortGorFile(inputFileName: String, outputFileName: String, selCols: String = "all", spaceDelim: Boolean = false, useHeader: Boolean = false, skip: Int, gorRoot: String = ""): Unit = {
-
-    def fileLines(file: java.io.File) = scala.io.Source.fromFile(file, "utf-8", scala.io.Source.DefaultBufSize * 100).getLines() // toList
-
-    var lines = 0
-    var fileNum = 1
-    val batch = 1000000
-    val inputFileSource: scala.Iterator[String] = fileLines(new java.io.File(inputFileName))
-    var inputArray = new Array[Row](batch)
-    var ordFileList: List[String] = List()
-
-    var useCols: List[Int] = Nil
-    var pickCols: List[Int] = Nil
-
-    if (selCols != "all") {
-
-      val cols = selCols.split("[ ,;]")
-
-      cols.foreach(x => {
-        val ss = x.split('-')
-        var sta = 0
-        var sto = 0
-        if (ss.length == 1) {
-          sta = ss(0).toInt
-          sto = sta
-        }
-        if (ss.length == 2) {
-          sta = ss(0).toInt
-          sto = sta
-          if (ss(1).length > 0) sto = ss(1).toInt
-        }
-        for (i <- sta to sto) useCols ::= i
-      })
-    }
-
-    if (selCols != "all") pickCols = useCols.reverse.filter(_ >= 1)
-
-    var linesSkipped = 0
-    while (linesSkipped < skip) {
-      inputFileSource.next()
-      linesSkipped += 1
-    }
-
-    var header: String = null
-    if (useHeader) {
-      if (spaceDelim) header = inputFileSource.next().split(""" +""", -1).mkString("\t") else header = inputFileSource.next()
-    }
-
-    if (useHeader && selCols != "all") {
-      val col = header.split("\t", -1)
-      header = pickCols.map(c => col(c - 1)).mkString("\t")
-    }
-
-    while (inputFileSource.hasNext) {
-      var line: String = null
-      if (spaceDelim) line = inputFileSource.next().split(""" +""", -1).mkString("\t")
-      else line = inputFileSource.next()
-
-      if (selCols != "all") {
-        val col = line.split("\t", -1)
-        line = pickCols.map(c => col(c - 1)).mkString("\t")
-      }
-
-      inputArray(lines) = RowObj(line)
-      lines += 1
-      if (lines == batch) {
-        quickSort(inputArray)
-        val outputFile = outputFileName + "_" + fileNum + ".gorsat.tmp"
-        val fos = new java.io.FileOutputStream(outputFile)
-        val osw = new java.io.OutputStreamWriter(fos)
-        val bout = new java.io.BufferedWriter(osw, 1024 * 1000)
-        inputArray.foreach(x => {
-          val temp = x.toString.split("\t", -1)
-          if (temp.size != 22) logger.debug("Temp size: "+temp.size)
-        })
-        inputArray.foreach(x => bout.write(x.toString + "\n"))
-        bout.close()
-        osw.close()
-        fos.close()
-        fileNum += 1
-        lines = 0
-        inputArray = new Array[Row](batch)
-        ordFileList = outputFile :: ordFileList
-      }
-    }
-    if (lines > 0) {
-      val finalArray = new Array[Row](lines)
-      for (i <- 0 until lines) finalArray(i) = inputArray(i)
-      quickSort(finalArray)
-      val outputFile = outputFileName + "_" + fileNum + ".gorsat.tmp"
-      val os = new java.io.FileOutputStream(outputFile)
-      var bout = new java.io.BufferedWriter(new java.io.OutputStreamWriter(os), 1024 * 1000)
-      finalArray.foreach(x => bout.write(x + "\n"))
-      bout.close()
-      os.close()
-      ordFileList = outputFile :: ordFileList
-    }
-
-    val os = new java.io.FileOutputStream(outputFileName)
-    val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(os), 1024 * 100)
-
-    if (useHeader) out.write(header + "\n")
-
-    val sessionFactory = new GenericSessionFactory()
-    val rowsource = new MultiFileSource(ordFileList, gorRoot, null, sessionFactory.create().getGorContext)
-    rowsource.seek("chr1", 0)
-    while (rowsource.hasNext) {
-      val arow = rowsource.next()
-      out.write(arow + "\n")
-    }
-    out.close()
-    rowsource.close()
-
-    ordFileList.foreach(x => {
-      val f = new java.io.File(x)
-      f.delete
-    })
-
-  }
 
   def getHeader(filename: String, gorRoot: String, context: GorContext): String = {
     val gm: GorMonitor = null
@@ -240,8 +121,7 @@ object IteratorUtilities {
   }
 
   def shouldWrapInNor(s: String): Boolean = {
-    val su: String = s.toUpperCase
-    su.endsWith(".NOR") || su.endsWith(".NORZ") || su.endsWith(".TSV")
+    DataUtil.isNorSource(s)
   }
 
   // todo: Add explicit unit tests

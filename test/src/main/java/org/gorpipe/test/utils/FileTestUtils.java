@@ -23,6 +23,8 @@
 package org.gorpipe.test.utils;
 
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +88,7 @@ public class FileTestUtils {
      */
 
     public static File createLinesFile(File directory, int lines) throws IOException {
-        return FileTestUtils.createTempFile(directory, "lines_" + lines + ".txt", FileTestUtils.getLinesString(lines));
+        return FileTestUtils.createTempFile(directory, DataUtil.toFile("lines_" + lines, DataType.TXT), FileTestUtils.getLinesString(lines));
     }
 
     /**
@@ -98,7 +100,7 @@ public class FileTestUtils {
      */
 
     public static File createDummyGorFile(File directory) throws IOException {
-        return FileTestUtils.createTempFile(directory, "dummy.gor",
+        return FileTestUtils.createTempFile(directory,  DataUtil.toFile("dummy", DataType.GOR),
                 "chrom\tpos\ta\n" +
                         "chr1\t0\tb");
     }
@@ -112,7 +114,7 @@ public class FileTestUtils {
      */
 
     public static File createEmptyFile(File directory) throws IOException {
-        return FileTestUtils.createTempFile(directory, "empty_file.txt", "");
+        return FileTestUtils.createTempFile(directory, DataUtil.toFile("empty_file", DataType.TXT), "");
     }
 
     /**
@@ -124,7 +126,7 @@ public class FileTestUtils {
      */
 
     public static File createGenericSmallGorFile(File directory) throws IOException {
-        return FileTestUtils.createTempFile(directory, "generic.gor",
+        return FileTestUtils.createTempFile(directory, DataUtil.toFile("generic", DataType.GOR),
                 "#Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
                         "chr1\t11868\t14412\tDDX11L1\n" +
                         "chr1\t14362\t29806\tWASH7P\n" +
@@ -149,7 +151,7 @@ public class FileTestUtils {
                 content += String.format("%s\t%s\n", line, source);
             }
         }
-        return FileTestUtils.createTempFile(directory, "generic_bucket.gor", content);
+        return FileTestUtils.createTempFile(directory, DataUtil.toFile("generic_bucket", DataType.GOR), content);
     }
 
     /**
@@ -178,7 +180,7 @@ public class FileTestUtils {
      */
 
     public static File createPNTxtFile(File directory) throws IOException {
-        return FileTestUtils.createTempFile(directory, "pns.txt",
+        return FileTestUtils.createTempFile(directory, DataUtil.toFile("pns", DataType.TXT),
                 "a\n" +
                         "b\n"
         );
@@ -193,7 +195,7 @@ public class FileTestUtils {
      */
 
     public static File createPNTsvFile(File directory) throws IOException {
-        return FileTestUtils.createTempFile(directory, "pns.tsv",
+        return FileTestUtils.createTempFile(directory, DataUtil.toFile("pns", DataType.TSV),
                 "#PN\n" +
                         "a\n" +
                         "b\n"

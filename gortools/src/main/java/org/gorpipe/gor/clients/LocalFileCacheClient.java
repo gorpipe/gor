@@ -33,6 +33,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.FileNature;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +110,7 @@ public class LocalFileCacheClient implements FileCache {
             // If there is no occurance of the fingerprint in the cache file name we need to store a link file to
             // the original file
             if (!cacheFilename.contains(fingerprint)) {
-                File md5File = new File(subFolder, fingerprint + ".md5link");
+                File md5File = new File(subFolder, DataUtil.toFile(fingerprint, DataType.MD5LINK));
                 FileUtils.writeStringToFile(md5File, resultPath, Charset.defaultCharset());
             }
 

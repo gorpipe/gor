@@ -24,9 +24,11 @@ package org.gorpipe.gor.driver;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.nanohttpd.protocols.http.TestFileHttpServer;
@@ -58,10 +60,10 @@ public class UTestGorDriver {
     }
 
     private static void createTempFiles() throws IOException {
-        FileTestUtils.createTempFile(workDir, "relative_link_to_lines_2000.txt.link", "lines_2000.txt");
-        FileTestUtils.createTempFile(workDir, "absolute_link_to_dummy.gor.link", "http://127.0.0.1:46993/dummy.gor");
-        FileTestUtils.createTempFile(workDir, "relative_link_to_subdir.txt.link", "subdir/lines_1000.txt");
-        FileTestUtils.createTempFile(workDir, "link_to_nowhere.link", "http://127.0.0.1:46993/no_such_file.txt");
+        FileTestUtils.createTempFile(workDir, DataUtil.toLinkFile("relative_link_to_lines_2000", DataType.TXT), "lines_2000.txt");
+        FileTestUtils.createTempFile(workDir, DataUtil.toLinkFile("absolute_link_to_dummy", DataType.GOR), "http://127.0.0.1:46993/dummy.gor");
+        FileTestUtils.createTempFile(workDir, DataUtil.toLinkFile("relative_link_to_subdir", DataType.TXT), "subdir/lines_1000.txt");
+        FileTestUtils.createTempFile(workDir, DataUtil.toFile("link_to_nowhere", DataType.LINK), "http://127.0.0.1:46993/no_such_file.txt");
 
         File subdir = Paths.get("../tests/data/subdir").toFile();
         subdir.deleteOnExit();
@@ -73,77 +75,77 @@ public class UTestGorDriver {
 
     @Test
     public void gorDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gor");
+        SourceReference sourceReference = new SourceReference( DataUtil.toFile( "../tests/data/gor/dbsnp_test", DataType.GOR));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void gorzDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gorz");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/gor/dbsnp_test", DataType.GORZ));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void gorgzDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/gor/dbsnp_test.gor.gz");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/gor/dbsnp_test", DataType.GORGZ));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void norDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/nor/simple.nor");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/nor/simple", DataType.NOR));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void norzDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/nor/simple.norz");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/nor/simple", DataType.NORZ));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void vcfDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/test.vcf");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/external/samtools/test", DataType.VCF));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void vcfgzDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/test.vcf.gz");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/external/samtools/test", DataType.VCFGZ));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void bamDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/noindex.bam");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/external/samtools/noindex", DataType.BAM));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void cramDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/external/samtools/cram_query_sorted.cram");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void bgenDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/external/bgen/testfile1_chr1.bgen");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/external/bgen/testfile1_chr1", DataType.BGEN));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
 
     @Test
     public void parquetDataSource() throws IOException {
-        SourceReference sourceReference = new SourceReference("../tests/data/parquet/dbsnp_test.parquet");
+        SourceReference sourceReference = new SourceReference(DataUtil.toFile("../tests/data/parquet/dbsnp_test", DataType.PARQUET));
         GenomicIterator iterator = gorDriver.createIterator(sourceReference);
         Assert.assertNotNull(iterator);
     }
@@ -151,7 +153,7 @@ public class UTestGorDriver {
     @Test
     public void testRelativeLinkFiles() {
         try {
-            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + "/relative_link_to_lines_2000.txt.link"));
+            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile("/relative_link_to_lines_2000", DataType.TXT)));
             Assert.fail("Relative links should not be allowed");
         } catch (GorResourceException e) {
             // Ok
@@ -162,14 +164,14 @@ public class UTestGorDriver {
 
     @Test
     public void testAutoDiscovery() throws IOException {
-        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + "/absolute_link_to_dummy.gor"));
-        Assert.assertEquals("http://127.0.0.1:" + port + "/dummy.gor", source.getName());
+        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toFile("/absolute_link_to_dummy", DataType.GOR)));
+        Assert.assertEquals("http://127.0.0.1:" + port + DataUtil.toFile("/dummy", DataType.GOR), source.getName());
     }
 
     @Test
     public void testRelativeLinkAutoDiscovery() throws IOException {
         try {
-            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + "/relative_link_to_lines_2000.txt"));
+            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toFile("/relative_link_to_lines_2000", DataType.TXT)));
         } catch (GorResourceException e) {
             // Ok
         }
@@ -180,7 +182,7 @@ public class UTestGorDriver {
     @Test
     public void testRelativeSubdir() throws IOException {
         try {
-            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + "/relative_link_to_subdir.txt.link"));
+            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile( "/relative_link_to_subdir", DataType.TXT)));
             Assert.fail("Relative links should not be allowed");
         } catch (GorResourceException e) {
             // Ok
@@ -191,8 +193,8 @@ public class UTestGorDriver {
 
     @Test
     public void testAbsoluteLink() throws IOException {
-        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + "/absolute_link_to_dummy.gor.link"));
-        Assert.assertEquals("http://127.0.0.1:" + port + "/dummy.gor", source.getName());
+        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile("/absolute_link_to_dummy", DataType.GOR)));
+        Assert.assertEquals("http://127.0.0.1:" + port + DataUtil.toFile("/dummy", DataType.GOR), source.getName());
     }
 
     @Ignore("In the process of updating the driver to handle db://")
@@ -205,13 +207,13 @@ public class UTestGorDriver {
 
     @Test
     public void testBrokenLink() throws IOException {
-        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + "/link_to_nowhere.link"));
+        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toFile("/link_to_nowhere", DataType.LINK)));
         Assert.assertFalse("source should not exists", source.exists());
     }
 
     @Test
     public void testIndexedSourceReference() throws IOException {
-        DataSource source = gorDriver.getDataSource(new IndexableSourceReference("../tests/data/gor/genes.gor", "foo", "bar", null, null, null, null));
+        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(DataUtil.toFile("../tests/data/gor/genes", DataType.GOR), "foo", "bar", null, null, null, null));
 
         Assert.assertTrue("source should exists", source.exists());
         Assert.assertTrue(source.getSourceReference() instanceof IndexableSourceReference);
@@ -229,7 +231,7 @@ public class UTestGorDriver {
     public void testIndexedSourceReferenceWithLinkFile() throws IOException {
         // Create link file
         File dataFile = new File("../tests/data/gor/genes.gor");
-        File linkFile = Files.createTempFile("genes", ".gor.link").toFile();
+        File linkFile = Files.createTempFile("genes", DataUtil.toLinkFile("", DataType.GOR)).toFile();
         linkFile.deleteOnExit();
         FileUtils.writeStringToFile(linkFile, dataFile.getAbsolutePath(), Charset.defaultCharset());
 
@@ -244,13 +246,13 @@ public class UTestGorDriver {
     @Test
     public void testIndexedSourceReferenceWithLinkFileAndNoLinkExtension() throws IOException {
         // Create link file
-        File dataFile = new File("../tests/data/gor/genes.gor");
-        File linkFile = Files.createTempFile("genes", ".gor.link").toFile();
+        File dataFile = new File(DataUtil.toFile("../tests/data/gor/genes", DataType.GOR));
+        File linkFile = Files.createTempFile("genes", DataUtil.toLinkFile("", DataType.GOR)).toFile();
         linkFile.deleteOnExit();
         FileUtils.writeStringToFile(linkFile, dataFile.getAbsolutePath(), Charset.defaultCharset());
 
         // Create indexable source references
-        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(linkFile.getAbsolutePath().replace(".link", ""), "foo", "bar", null, null, null, null));
+        DataSource source = gorDriver.getDataSource(new IndexableSourceReference(linkFile.getAbsolutePath().replace(DataType.LINK.suffix, ""), "foo", "bar", null, null, null, null));
         Assert.assertTrue("source should exists", source.exists());
 
         // test that the data source source reference is of the correct type and includes the index and reference file

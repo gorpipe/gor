@@ -123,7 +123,7 @@ object GorQueen {
 
     def initialize(binInfo: BinInfo): Unit = {
       bui = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[BucketInfo]
-      if (bui == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      if (bui == null) throw new GorDataException(s"Non existing bucket info for lookupSignature $lookupSignature")
       maxUsedBuckets = bui.bucketIDMap.size
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
@@ -153,7 +153,7 @@ object GorQueen {
           } else sh = singleColHolder
 
           sh.buckRows(buckNo) = line
-          val offset = if (useLineObject) 0 else r.sa(valCol - 1) + 1
+          val offset = if (useLineObject) 0 else r.getSplitArray()(valCol - 1) + 1
           sh.offsetArray(buckNo) = offset
           if (valSize == -1) {
             splitArray(line, offset, sh.splitArr(buckNo), sepval)
@@ -238,7 +238,7 @@ object GorQueen {
 
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>
-            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + bui.outputTags(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
+            throw new GorDataException(s"Missing values in bucket ${r.toString.split("\t")(buckCol)} in searching for tag ${bui.outputTags(outCol)} no $outCol in output\nin row\n$r\n\n", e)
         }
       }
       // cleanup
@@ -331,8 +331,7 @@ object GorQueen {
             val ai = i*gtSize2+j
             val avgSharing = if (count(ai) > 0) share(ai).toFloat/count(ai) else -1.0f
             if (avgSharing >= minSharing ) {
-              super.process(RowObj("chrA\t0\t" + PNi + '\t' + PNj + '\t' + avgSharing
-                + '\t' + share(ai) + '\t' + count(ai)))
+              super.process(RowObj(s"chrA\t0\t$PNi\t$PNj\t$avgSharing\t${share(ai)}\t${count(ai)}"))
             }
             j += 1
           }
@@ -377,11 +376,11 @@ object GorQueen {
           bucketCounterMap += (b -> BucketCounter())
           bucketCounterMap(b)
       }
-      bucketOrderMap.get("#bu:" + b + "#ta:" + t) match {
+      bucketOrderMap.get(s"#bu:$b" + s"#ta:$t") match {
         case Some(x) => x;
         case None =>
           bc.c += 1
-          bucketOrderMap += (("#bu:" + b + "#ta:" + t) -> bc.c)
+          bucketOrderMap += ((s"#bu:$b" + s"#ta:$t") -> bc.c)
           bc.c
       }
     }
@@ -406,7 +405,7 @@ object GorQueen {
         outputCounter2
     }
 
-    val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2 + "#" + fileName3 + "#" + iteratorCommand3
+    val lookupSignature: String = s"$fileName1#$iteratorCommand1#$fileName2#$iteratorCommand2#$fileName3#$iteratorCommand3"
 
     session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]
@@ -470,8 +469,8 @@ object GorQueen {
         }
       })
 
-      if (tagMap.nonEmpty) throw new GorDataException("There are tags in the second input file which are not defined in the first tag/bucket input, including: " + tagMap.keys.toList.slice(0, 10).mkString(","))
-      if (tagMap2.nonEmpty) throw new GorDataException("There are tags in the third input file which are not defined in the first tag/bucket input, including: " + tagMap2.keys.toList.slice(0, 10).mkString(","))
+      if (tagMap.nonEmpty) throw new GorDataException(s"There are tags in the second input file which are not defined in the first tag/bucket input, including: ${tagMap.keys.toList.slice(0, 10).mkString(",")}")
+      if (tagMap2.nonEmpty) throw new GorDataException(s"There are tags in the third input file which are not defined in the first tag/bucket input, including: ${tagMap2.keys.toList.slice(0, 10).mkString(",")}")
 
       bi.bucketIDMap = bucketIDMap
       bi.outputTags = tags.reverse.toArray

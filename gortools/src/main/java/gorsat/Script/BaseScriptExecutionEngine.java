@@ -9,9 +9,11 @@ import gorsat.process.GorPipeMacros;
 import gorsat.process.GorPrePipe;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -66,7 +68,7 @@ public class BaseScriptExecutionEngine {
         var args = write.validateArguments(split);
         String lastField;
         if (args.length==0) {
-            var writeFilePath = context.getSession().getProjectContext().getFileCache().tempLocation(queryBlock.signature(), ".gord");
+            var writeFilePath = context.getSession().getProjectContext().getFileCache().tempLocation(queryBlock.signature(), DataType.GORD.suffix);
             writeFilePath = PathUtils.relativize(context.getSession().getProjectContext().getProjectRoot(), writeFilePath);
             queryBlock.query_$eq(queryBlock.query() + " " + writeFilePath);
             lastField = writeFilePath;
@@ -306,8 +308,8 @@ public class BaseScriptExecutionEngine {
                             querySignature = StringUtilities.createMD5(cte.query() + fileSignature);
                         }
                         var ctequery = cte.query();
-                        if (!gordictfolder && !hasFork && cte.cacheFile()!=null && cte.cacheFile().endsWith(".gord")) {
-                            var gordResultsPath = cte.cacheFile()+"/"+querySignature+".gorz";
+                        if (!gordictfolder && !hasFork && cte.cacheFile()!=null && DataUtil.isGord(cte.cacheFile())) {
+                            var gordResultsPath = DataUtil.toFile(cte.cacheFile()+"/"+querySignature, DataType.GORZ);
                             executionBatch.createNewCommand(querySignature, ctequery.replace(cte.cacheFile(),gordResultsPath), cte.batchGroupName(), cte.createName(), gordResultsPath);
                         } else {
                             executionBatch.createNewCommand(querySignature, ctequery, cte.batchGroupName(), cte.createName(), cte.cacheFile());

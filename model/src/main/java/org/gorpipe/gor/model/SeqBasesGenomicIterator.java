@@ -24,6 +24,8 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +70,7 @@ class SeqBasesGenomicIterator extends GenomicIteratorBase {
         try {
             chromo = 1;
             chromoName = lookup.idToName(chromo);
-            seqfile = new RandomAccessFile(this.path.resolve("chr1.txt").toFile(), "r");
+            seqfile = new RandomAccessFile(this.path.resolve(DataUtil.toFile("chr1", DataType.TXT)).toFile(), "r");
             assert seqfile.length() <= Integer.MAX_VALUE;
             seqfileLength = (int) seqfile.length();
         } catch (IOException e) {
@@ -90,7 +92,7 @@ class SeqBasesGenomicIterator extends GenomicIteratorBase {
         chromo = lookup.chrToId(chr);
         assert chromo >= 0;
         chromoName = lookup.idToName(chromo);
-        final Path name = path.resolve(chr + ".txt");
+        final Path name = path.resolve(DataUtil.toFile(chr, DataType.TXT));
         try {
             if (seqfile != null) {
                 seqfile.close();
@@ -147,7 +149,7 @@ class SeqBasesGenomicIterator extends GenomicIteratorBase {
                     assert read == BUF_SIZE || read + filePos == seqfileLength;
                     bufFilePos = filePos;
                 } catch (IOException e) {
-                    throw new GorDataException("Error reading " + path + chromoName + ".txt. " + e.getMessage());
+                    throw new GorDataException("Error reading " + DataUtil.toFile(path + chromoName, DataType.TXT) + ". " + e.getMessage());
                 }
             }
 

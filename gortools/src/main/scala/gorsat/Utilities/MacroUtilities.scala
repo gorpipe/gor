@@ -31,9 +31,11 @@ import gorsat.Commands.{CommandParseUtilities, Write}
 import gorsat.Script.{ExecutionBlock, ScriptParsers}
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.FileReader
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.util.PathUtils
+import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Paths}
@@ -390,7 +392,7 @@ object MacroUtilities {
 
   def generateCachepath(context: GorContext, fingerprint: String): String = {
     val fileCache = context.getSession.getProjectContext.getFileCache
-    val cachefile = fileCache.tempLocation(fingerprint, ".gord")
+    val cachefile = fileCache.tempLocation(fingerprint, DataType.GORD.suffix)
     val rootPathStr = context.getSession.getProjectContext.getRoot.split("[ \t]+")(0)
     val rootPath = Paths.get(rootPathStr).normalize()
     val cacheFilePath = Paths.get(cachefile)
@@ -434,8 +436,8 @@ object MacroUtilities {
     val hasWrite = lastCmdLower.startsWith("write ")
     val didx = if(hasWrite) lastCmd.indexOf(" -d ") else 0
     val lidx = if(hasWrite) {
-      if (lastCmdLower.endsWith(".gord")) lastCmdLower.length-5
-      else lastCmdLower.indexOf(".gord/")
+      if (DataUtil.isGord(lastCmdLower)) lastCmdLower.length-5
+      else lastCmdLower.indexOf(DataType.GORD.suffix + "/")
     } else 0
     val hasForkWrite = lastCmdLower.contains("#{")
     val hasGordFolderWrite = didx > 0 || lidx > 0
@@ -448,7 +450,7 @@ object MacroUtilities {
       val k = lastCmd.lastIndexOf(' ',lidx)+1
       lastCmd.substring(k,lidx+5)
     } else null
-    val hasWriteFile = hasWrite & lastCmdLower.endsWith(".gord")
+    val hasWriteFile = hasWrite & DataUtil.isGord(lastCmdLower)
     val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
     if(skipcache) {
       val queryAppend = appendQuery(finalQuery, lastCmd, false)

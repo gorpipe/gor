@@ -5,10 +5,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -357,7 +359,7 @@ public abstract class BaseTable<T> implements Table<T> {
     protected abstract void saveTempMainFile();
 
     protected String getMetaPath() {
-        return getPathUri().toString() + ".meta";
+        return DataUtil.toFile(getPathUri().toString(), DataType.META);
     }
 
     protected String getTempMainFileName() {
@@ -434,7 +436,7 @@ public abstract class BaseTable<T> implements Table<T> {
 
         this.header.loadAndMergeMeta(fileReader, PathUtils.resolve(getFolderPath(), "header")); // For backward compatibility.
         this.header.loadAndMergeMeta(fileReader, getPathUri().toString());
-        this.header.loadAndMergeMeta(fileReader,getPathUri().toString() + ".meta");
+        this.header.loadAndMergeMeta(fileReader, DataUtil.toFile(getPathUri().toString(), DataType.META));
 
         validateFiles =  Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_VALIDATE_FILES_KEY, Boolean.toString(validateFiles)));
         useHistory = Boolean.parseBoolean(getConfigTableProperty(TableHeader.HEADER_USE_HISTORY_KEY, Boolean.toString(useHistory)));

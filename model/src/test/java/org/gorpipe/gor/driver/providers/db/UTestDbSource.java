@@ -144,7 +144,7 @@ public class UTestDbSource {
 
     @Test
     public void testReadDbThroughLinkFiles() throws IOException {
-        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", ".link");
+        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", DataType.LINK.suffix);
         linkPath.toFile().deleteOnExit();
         FileUtils.write(linkPath.toFile(), defaultSourceReference.getUrl() + "\n", (Charset) null);
 
@@ -173,7 +173,7 @@ public class UTestDbSource {
 
     @Test
     public void testDbScope() throws IOException {
-        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", ".link");
+        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", DataType.LINK.suffix);
         linkPath.toFile().deleteOnExit();
         FileUtils.write(linkPath.toFile(), defaultSourceReference.getUrl() + "\n", (Charset) null);
 
@@ -210,7 +210,7 @@ public class UTestDbSource {
 
     @Test
     public void testNoDbScope() throws IOException {
-        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", ".link");
+        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", DataType.LINK.suffix);
         linkPath.toFile().deleteOnExit();
         FileUtils.write(linkPath.toFile(), defaultSourceReference.getUrl() + "\n", (Charset) null);
 
@@ -223,7 +223,7 @@ public class UTestDbSource {
 
     @Test(expected = GorDataException.class)
     public void testInValidbScope() throws IOException {
-        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", ".link");
+        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", DataType.LINK.suffix);
         linkPath.toFile().deleteOnExit();
         FileUtils.write(linkPath.toFile(), defaultSourceReference.getUrl() + "\n", (Charset) null);
         GenomicIterator iterator = GorDriverFactory.fromConfig().createIterator(
@@ -233,7 +233,7 @@ public class UTestDbSource {
 
     @Test
     public void testDuplicateDbScope() throws IOException {
-        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", ".link");
+        Path linkPath = java.nio.file.Files.createTempFile("testLinkFiles_dbsource", DataType.LINK.suffix);
         linkPath.toFile().deleteOnExit();
         FileUtils.write(linkPath.toFile(), defaultSourceReference.getUrl() + "\n", (Charset) null);
 

@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver;
 
 import gorsat.TestUtils;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
@@ -39,8 +40,8 @@ public class UTestPluggableGorDriver {
 
     @Test
     public void testFileSourcesAreClosed() throws IOException, InterruptedException {
-        File gorfile = File.createTempFile("testfile", ".gor");
-        File linkfile = File.createTempFile(gorfile.getAbsolutePath(), ".link");
+        File gorfile = File.createTempFile("testfile", DataType.GOR.suffix);
+        File linkfile = File.createTempFile(gorfile.getAbsolutePath(), DataType.LINK.suffix);
         linkfile.deleteOnExit();
         gorfile.deleteOnExit();
         Files.write(linkfile.toPath(), gorfile.getAbsolutePath().getBytes());

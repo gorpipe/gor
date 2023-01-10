@@ -1,5 +1,7 @@
 package gorsat;
 
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,10 +12,10 @@ import java.nio.file.Paths;
 public class UTestCalcFilePath {
     @Test
     public void testFilePath() throws IOException {
-        var linkpath = Paths.get("test.tsv.link");
+        var linkpath = Paths.get(DataUtil.toLinkFile("test", DataType.TSV));
         try {
             TestUtils.runGorPipe("create xxx = norrows 1; nor [xxx] | calc f filepath([xxx]) | select f | write -noheader "+linkpath);
-            String res = TestUtils.runGorPipe("nor test.tsv.link");
+            String res = TestUtils.runGorPipe("nor " + linkpath);
             Assert.assertEquals("Wrong result from link file", "ChromNOR\tPosNOR\tRowNum\nchrN\t0\t0\n", res);
         } finally {
             Files.deleteIfExists(linkpath);

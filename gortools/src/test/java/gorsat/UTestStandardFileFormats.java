@@ -46,7 +46,7 @@ public class UTestStandardFileFormats {
         for (String line : lines) {
             bw.write(line + "\n");
         }
-        bw.close();
+         bw.close();
         return file.getAbsolutePath();
     }
 

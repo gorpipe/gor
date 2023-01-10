@@ -24,8 +24,6 @@ package gorsat.parser
 
 import java.lang.management.ManagementFactory
 import java.net.InetAddress
-import java.text.SimpleDateFormat
-import java.util.Date
 import com.sun.management.{OperatingSystemMXBean, UnixOperatingSystemMXBean}
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun, lFun, sFun}
@@ -207,7 +205,7 @@ object DiagnosticsFunctions {
 
   def free(): dFun = {
     _ => {
-      osBean.getFreePhysicalMemorySize().toDouble
+      osBean.getFreeMemorySize().toDouble
     }
   }
 
@@ -225,7 +223,7 @@ object DiagnosticsFunctions {
 
   def sysCpuLoad(): dFun = {
     _ => {
-      osBean.getSystemCpuLoad
+      osBean.getCpuLoad
     }
   }
 

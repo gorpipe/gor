@@ -26,7 +26,9 @@ import gorsat.TestUtils;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.tabix.TabixIndex;
 import htsjdk.variant.vcf.VCFCodec;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,13 +46,13 @@ public class UTestVcfTabixGenomicIterator {
     FileSource fs;
     FileSource fi;
     ChromoLookup cl;
-    String ipath = "../tests/data/external/samtools/testTabixIndex.vcf.gz.tbi";
+    String ipath = DataUtil.toFile(DataUtil.toFile( "../tests/data/external/samtools/testTabixIndex", DataType.VCFGZ), DataType.TBI);
 
     @Before
     public void init() throws IOException {
         tabixIndexPath = Paths.get(ipath);
         cl = new DefaultChromoLookup();
-        String path = "../tests/data/external/samtools/testTabixIndex.vcf.gz";
+        String path = DataUtil.toFile( "../tests/data/external/samtools/testTabixIndex", DataType.VCFGZ);
         fs = new FileSource(path, null);
         ti = IndexFactory.createTabixIndex(new File(path), new VCFCodec(), null);
         ti.write(tabixIndexPath);

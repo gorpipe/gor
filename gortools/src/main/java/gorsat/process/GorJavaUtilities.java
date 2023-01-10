@@ -25,6 +25,7 @@ package gorsat.process;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
@@ -34,6 +35,7 @@ import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +63,7 @@ public class GorJavaUtilities {
 
     private static final Logger log = LoggerFactory.getLogger(GorJavaUtilities.class);
 
-    public static final String GORZ_META = ".gorz.meta";
+    public static final String GORZ_META = DataType.GORZ.suffix + DataType.META.suffix;
     public static DecimalFormat fd3 = new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ROOT));
     public static double[] pArray = IntStream.range(0, 128).mapToDouble(qual -> 1.0 - (qual - 33) / 93.0).toArray();
     public static String[] prArray = Arrays.stream(pArray).mapToObj(p -> fd3.format(p)).toArray(String[]::new);
@@ -506,7 +508,7 @@ public class GorJavaUtilities {
 
         String fn = p.getFileName().toString();
         Path g = p.getParent().resolve(fn.substring(0, fn.length() - 5));
-        Path d = p.getParent().resolve(md5 + ".gorz");
+        Path d = p.getParent().resolve(DataUtil.toFile(md5, DataType.GORZ));
         if (!Files.exists(d)) Files.move(g, d);
         else if(Files.exists(g) && !Files.isSameFile(g,d)) Files.delete(g);
     }
@@ -551,7 +553,7 @@ public class GorJavaUtilities {
             if (!cachePath.isAbsolute()) {
                 cachePath = projectContext.getProjectRootPath().resolve(cachePath);
             }
-            if (/*Files.isSymbolicLink(cachePath) ||*/ cacheFile.toLowerCase().endsWith(".link")) {
+            if (Files.isSymbolicLink(cachePath) || DataUtil.isLink(cacheFile)) {
                 try {
                     var ds = fileReader.resolveUrl(cacheFile);
                     var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
@@ -570,7 +572,7 @@ public class GorJavaUtilities {
 
     public static synchronized void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
         try (Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
-            var metapaths = metapathstream.filter(p -> p.endsWith(".meta")).collect(Collectors.toList());
+            var metapaths = metapathstream.filter(p -> DataUtil.isMeta(p)).collect(Collectors.toList());
             var ai = new AtomicInteger();
             var entries = metapaths.parallelStream()
                     .map(p -> GorMeta.createAndLoad(fileReader, p))
@@ -611,7 +613,7 @@ public class GorJavaUtilities {
     public static Optional<String[]> parseDictionaryColumn(String[] dictList, FileReader fileReader) {
         return Arrays.stream(dictList).mapMulti((BiConsumer<String, Consumer<String[]>>) (df, consumer) -> {
             var dflow = df.toLowerCase();
-            if (dflow.endsWith(".gord") || dflow.endsWith(".nord")) {
+            if (DataUtil.isGord(dflow) || DataUtil.isNord(dflow)) {
                 var dt = new DictionaryTable(URI.create(df), fileReader);
                 var cols = dt.getColumns();
                 if (cols!=null) consumer.accept(cols);

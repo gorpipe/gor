@@ -208,7 +208,7 @@ object GorCsvSel {
           } else sh = singleColHolder
 
           sh.buckRows(buckNo) = line
-          val offset = if (useLineObject) 0 else r.sa(valCol - 1) + 1
+          val offset = if (useLineObject) 0 else r.getSplitArray()(valCol - 1) + 1
           sh.offsetArray(buckNo) = offset
           if (valSize == -1) {
             splitArray(line, offset, sh.splitArr(buckNo), sepval)
@@ -325,7 +325,8 @@ object GorCsvSel {
               i += 1
               k = key.indexOf('\t', k + 1)
             }
-            ladd.append('\t' + key)
+            ladd.append('\t')
+            ladd.append(key)
             sa(i) = ladd.length()
             i += 1
           }

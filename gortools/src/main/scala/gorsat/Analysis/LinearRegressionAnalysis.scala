@@ -56,7 +56,7 @@ class LinearRegressionAnalysis(lookUpSignature: String, session: GorSession, val
 
       val baseAndPhenoColumns = baseColumnsAsString + "\t" + ri.phenoNames(idx)
       writeOut(baseAndPhenoColumns, linRegObj)
-    }).seq.foreach(outRows => outRows.foreach(outRow => nextProcessor.process(outRow)))
+    }).foreach(outRows => outRows.foreach(outRow => nextProcessor.process(outRow)))
   }
 
   private def writeOut(baseAndPhenoColumns: String, linRegObj: LinearRegression): Iterable[Row] = {

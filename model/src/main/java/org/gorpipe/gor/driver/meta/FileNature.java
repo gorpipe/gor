@@ -51,5 +51,13 @@ public enum FileNature {
     /**
      * A reference to a meta file
      **/
-    METAINFO
+    METAINFO,
+    /**
+     * A report file
+     **/
+    REPORT,
+    /**
+     * A script file
+     **/
+    SCRIPT
 }

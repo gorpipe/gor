@@ -1,10 +1,12 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.utils.TestUtils;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.driver.TestS3SeekableFile;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,7 +44,7 @@ public abstract class BvlTestSuite {
 
     @Test
     public void testUnknownSourceProvidesFileInfo() throws IOException {
-        var subpath = "bam/not-there.bam";
+        var subpath = DataUtil.toFile("bam/not-there", DataType.BAM);
         String source = getSourcePath(subpath);
 
         try {
@@ -70,7 +72,7 @@ public abstract class BvlTestSuite {
     @Test
     public void testBam() throws IOException {
         for (String name : names) {
-            String source = getSourcePath("bam/" + name + ".bam");
+            String source = getSourcePath(DataUtil.toFile("bam/" + name, DataType.BAM));
             String testFile = "bvl_min/derived/raw_bam_to_gor/" + name + ".bam.gor";
 
             TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile));
@@ -83,7 +85,7 @@ public abstract class BvlTestSuite {
     @Test
     public void testVcfGz() throws IOException {
         for (String name : names) {
-            String source = getSourcePath("vcf/" + name + ".vcf.gz");
+            String source = getSourcePath(DataUtil.toFile("vcf/" + name, DataType.VCFGZ));
             String testFile = "bvl_min/derived/raw_vcf_to_gor/" + name + ".vcf.gz.gor";
 
             TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile));
@@ -96,7 +98,7 @@ public abstract class BvlTestSuite {
     @Test
     public void testVcf() throws IOException {
         for (String name : names) {
-            String source = getSourcePath("derived/raw_vcf/" + name + ".vcf");
+            String source = getSourcePath(DataUtil.toFile("derived/raw_vcf/" + name, DataType.VCF));
             String testFile = "bvl_min/derived/raw_vcf_to_gor/" + name + ".vcf.gz.gor";
 
             TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile));

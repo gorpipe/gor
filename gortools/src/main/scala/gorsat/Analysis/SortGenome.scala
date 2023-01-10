@@ -28,6 +28,7 @@ import gorsat.Iterators.{MultiFileSource, RowArrayIterator}
 import gorsat.Outputs.OutFile
 import gorsat.process.{GenericGorRunner, GenericSessionFactory}
 import org.gorpipe.exceptions.custom.GorWriteQuotaExceededException
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorSession
 
@@ -59,7 +60,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
 
   def sortBuffer(inputArray: Array[Row], length: Int): Unit = {
     if (!alreadySorted) util.Arrays.parallelSort(inputArray, 0, length, (o1: Row, o2: Row) => o1.advancedCompare(o2, sortInfo))
-    val f = java.io.File.createTempFile("gorsort", ".gorz")
+    val f = java.io.File.createTempFile("gorsort", DataType.GORZ.suffix)
     f.deleteOnExit()
     val outputFile = f.getAbsolutePath
 

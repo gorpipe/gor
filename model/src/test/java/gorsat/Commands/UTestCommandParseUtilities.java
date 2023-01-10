@@ -251,4 +251,30 @@ public class UTestCommandParseUtilities {
         Assert.assertEquals(5, javaResult.get(0));
         Assert.assertEquals(8, javaResult.get(3));
     }
+
+    @Test
+    public void testNorSourceParsing() {
+        // Txt file, why is this not treated as nor source?
+        var result = CommandParseUtilities.toNorSource("foo.txt");
+        Assert.assertEquals("foo.txt", result);
+
+        result = CommandParseUtilities.toNorSource("foo");
+        Assert.assertEquals("foo", result);
+
+        // nor file
+        result = CommandParseUtilities.toNorSource("foo.nor");
+        Assert.assertEquals("<(nor foo.nor)", result);
+
+        result = CommandParseUtilities.toNorSource("foo.norz");
+        Assert.assertEquals("<(nor foo.norz)", result);
+
+        result = CommandParseUtilities.toNorSource("foo.tsv");
+        Assert.assertEquals("<(nor foo.tsv)", result);
+
+        result = CommandParseUtilities.toNorSource("<(nor foo.nor)");
+        Assert.assertEquals("<(nor foo.nor)", result);
+
+        result = CommandParseUtilities.toNorSource("foo.nord");
+        Assert.assertEquals("foo.nord", result);
+    }
 }

@@ -230,7 +230,7 @@ object StringFunctions {
 
   def brackets(ex: sFun): sFun = {
     cvp => {
-      '(' + ex(cvp) + ')'
+      s"(${ex(cvp)})"
     }
   }
 
@@ -249,7 +249,7 @@ object StringFunctions {
 
   def squote(ex: sFun): sFun = {
     cvp => {
-      "'" + ex(cvp).replace("'", "\\'") + "'"
+      s"'${ex(cvp).replace("'", "\\'")}'"
     }
   }
 
@@ -266,7 +266,7 @@ object StringFunctions {
 
   def dquote(ex: sFun): sFun = {
     cvp => {
-      "\"" + ex(cvp).replace("\"", "\\\"") + "\""
+      s"\"${ex(cvp).replace("\"", "\\\"")}\""
     }
   }
 

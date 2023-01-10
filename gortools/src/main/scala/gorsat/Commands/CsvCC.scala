@@ -29,6 +29,7 @@ import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 class CsvCC extends CommandInfo("CSVCC",
   CommandArguments("-probunphased -probphased", "-gc -vs -s -u -threshold", 2, 2),
@@ -74,24 +75,17 @@ class CsvCC extends CommandInfo("CSVCC",
 
     if (hasOption(args, "-u") && !(uv == "0" || uv == "3" || uv == "4" || uv == "  ")) throw new GorParsingException("Missing data value must be either 0 (hzr), 3 (unk), 4 (other) or '  ' (double spaces).")
     try {
-      var rightFile1 = iargs(0).trim
-
-      if ((rightFile1.toUpperCase.endsWith(".NORZ") || rightFile1.toUpperCase.endsWith(".TSV") || rightFile1.toUpperCase.endsWith(".NOR")) && !(rightFile1.slice(0, 2) == "<(")) rightFile1 = "<(nor " + rightFile1 + " )"
-
+      var rightFile1 = CommandParseUtilities.toNorSource(iargs(0).trim)
       val inputSource1 = SourceProvider(rightFile1, context, executeNor = executeNor, isNor = true)
       iteratorCommand1 = inputSource1.iteratorCommand
       dsource1 = inputSource1.dynSource.asInstanceOf[DynamicNorSource]
       rightheader1 = inputSource1.header
 
-      var rightFile2 = iargs(1).trim
-      if ((rightFile2.toUpperCase.endsWith(".NORZ") || rightFile2.toUpperCase.endsWith(".TSV") || rightFile2.toUpperCase.endsWith(".NOR")) && !(rightFile2.slice(0, 2) == "<(")) rightFile2 = "<(nor " + rightFile2 + " )"
-
+      var rightFile2 = CommandParseUtilities.toNorSource(iargs(1).trim)
       val inputSource2 = SourceProvider(rightFile2, context, executeNor = executeNor, isNor = true)
       iteratorCommand2 = inputSource2.iteratorCommand
       dsource2 = inputSource2.dynSource.asInstanceOf[DynamicNorSource]
       rightheader2 = inputSource2.header
-
-
 
       if (rightheader1.split("\t").length != 2) {
         throw new GorParsingException(s"buckettagfile must have 2 tab-delimited columns: Tag/PN (distinct), bucketID.\nThe relative position of tag in bucket specifies the csv order.\nCurrent header is: $rightheader1")

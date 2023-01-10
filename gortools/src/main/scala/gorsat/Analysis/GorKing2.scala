@@ -128,7 +128,7 @@ object GorKing {
 
     def initialize(binInfo: BinInfo): Unit = {
       bui = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[BucketInfo]
-      if (bui == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      if (bui == null) throw new GorDataException(s"Non existing bucket info for lookupSignature $lookupSignature")
       maxUsedBuckets = bui.numberOfBuckets
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
@@ -159,7 +159,7 @@ object GorKing {
 
           sh.af = r.colAsDouble(afCol).toFloat
           sh.buckRows(buckNo) = line
-          val offset = if (useLineObject) 0 else r.sa(valCol - 1) + 1
+          val offset = if (useLineObject) 0 else r.getSplitArray()(valCol - 1) + 1
           sh.offsetArray(buckNo) = offset
           if (valSize == -1) {
             splitArray(line, offset, sh.splitArr(buckNo), sepval)
@@ -207,7 +207,7 @@ object GorKing {
 
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>
-            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + bui.getPnNameFromIdx(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
+            throw new GorDataException(s"Missing values in bucket ${r.toString.split("\t")(buckCol)} in searching for tag ${bui.getPnNameFromIdx(outCol)} no $outCol in output\nin row\n$r\n\n", e)
         }
       }
       // cleanup
@@ -345,9 +345,7 @@ object GorKing {
           val phi = 0.5f-XX(ai)/(4.0f*kpq(ai))
           val theta = (Nhet(ai)-2.0f*Nhom(ai))/(NAai(ai)+NAaj(ai))
           if (skip_test || (!t_pi0 || pi0 < pi0thr) && (!t_phi || phi > phithr) && (!t_theta || theta > thetathr) ) {
-            super.process(RowObj("chrA\t0\t" + PNi + '\t' + PNj + '\t' + IBS0(ai)
-              + '\t' + XX(ai) + '\t' + tpq(ai) + '\t' + kpq(ai) + '\t' + Nhet(ai)
-              + '\t' + Nhom(ai) + '\t' + NAai(ai) + '\t' + NAaj(ai) + '\t' + count(ai) + '\t' + pi0 + '\t' + phi + '\t' + theta))
+            super.process(RowObj(s"chrA\t0\t$PNi\t$PNj\t${IBS0(ai)}\t${XX(ai)}\t${tpq(ai)}\t${kpq(ai)}\t${Nhet(ai)}\t${Nhom(ai)}\t${NAai(ai)}\t${NAaj(ai)}\t${count(ai)}\t$pi0\t$phi\t$theta"))
           }
           if (ai % 1000 == 0 && gm != null && gm.isCancelled()) {
             reportWantsNoMore()
@@ -370,9 +368,9 @@ object GorKing {
 
   case class KingAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, buckCol: Int, valCol: Int,
                             grCols: List[Int], afCol : Int, sepVal: String, valSize: Int, uv: String, session: GorSession) extends
-    BinAnalysis(RegularRowHandler(1), BinAggregator(KingFactory(session, fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2, buckCol, valCol, grCols, afCol, sepVal, valSize, uv), 2, 1)) {
+    BinAnalysis(RegularRowHandler(1), BinAggregator(KingFactory(session, s"$fileName1#$iteratorCommand1#$fileName2#$iteratorCommand2", buckCol, valCol, grCols, afCol, sepVal, valSize, uv), 2, 1)) {
 
-    val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
+    val lookupSignature: String = s"$fileName1#$iteratorCommand1#$fileName2#$iteratorCommand2"
 
     session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]

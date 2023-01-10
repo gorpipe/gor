@@ -114,7 +114,7 @@ class PnBucketTable(val buckNameToIdx: Map[String, Int], val buckIdxToName: Arra
     val newPnIdxToName = new Array[String](numberOfPns)
     val newPnIdxToBuckIdx = new Array[Int](pnIdxToBuckIdx.length)
     val newPnIdxToBuckPos = new Array[Int](pnIdxToBuckPos.length)
-    val bucketOffsets = buckIdxToBuckSize.toIterable.take(numberOfBuckets - 1)
+    val bucketOffsets = buckIdxToBuckSize.iterator.take(numberOfBuckets - 1)
       .scanLeft(0)((sum, curr) => sum + curr).toArray
     for ((pn, pnIdx) <- pnToIdx) {
       val bucketIdx = getBucketIdxFromPn(pnIdx)

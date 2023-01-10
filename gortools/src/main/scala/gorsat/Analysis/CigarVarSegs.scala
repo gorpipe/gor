@@ -77,8 +77,8 @@ case class CigarVarSegs(cigarCol: Int, grCols: Array[Int], useRef: Boolean, outp
           while (b < ref.length) {
             val (re, al) = (ref(b).toUpper, alt(b).toUpper)
             if (re != al || outputBases) {
-              if (useGroup) super.process(RowObj(theRow.chr, refpos + b, re + "\t" + al + "\t" + (varPos + b) + "\t" + varQual(varPos + b) + (if (!outputBases) "\t" + id else "\tM") + "\t" + gccolumns))
-              else super.process(RowObj(theRow.chr, refpos + b, re + "\t" + al + "\t" + (varPos + b) + "\t" + varQual(varPos + b) + (if (!outputBases) "\t" + id else "\tM")))
+              if (useGroup) super.process(RowObj(theRow.chr, refpos + b, s"$re\t$al\t${varPos + b}\t${varQual(varPos + b)}\t${(if (!outputBases) id else 'M')}\t$gccolumns"))
+              else super.process(RowObj(theRow.chr, refpos + b, s"$re\t$al\t${varPos + b}\t${varQual(varPos + b)}\t${(if (!outputBases) id else 'M')}"))
             }
             b += 1
           }
@@ -88,18 +88,18 @@ case class CigarVarSegs(cigarCol: Int, grCols: Array[Int], useRef: Boolean, outp
             var b = 0
             while (b < alt.length.max(ref.length)) {
               val (re, al) = (if (b < ref.length) ref(b).toUpper else "", if (b < alt.length) alt(b).toUpper else "")
-              if (useGroup) super.process(RowObj(theRow.chr, refpos + b, re + "\t" + al + "\t" + (varPos + b) + "\t" + varQual(varPos + b) + "\t" + cigarControl + "\t" + gccolumns))
-              else super.process(RowObj(theRow.chr, refpos + b, re + "\t" + al + "\t" + (varPos + b) + "\t" + varQual(varPos + b) + "\t" + cigarControl))
+              if (useGroup) super.process(RowObj(theRow.chr, refpos + b, s"$re\t$al\t${varPos + b}\t${varQual(varPos + b)}\t$cigarControl\t$gccolumns"))
+              else super.process(RowObj(theRow.chr, refpos + b, s"$re\t$al\t${varPos + b}\t${varQual(varPos + b)}\t$cigarControl"))
               b += 1
             }
           } else {
-            if (useGroup) super.process(RowObj(theRow.chr, refpos, ref.toUpperCase + "\t" + alt + "\t" + varPos + "\t" + varQual(varPos) + "\t" + id + "\t" + gccolumns))
-            else super.process(RowObj(theRow.chr, refpos, ref.toUpperCase + "\t" + alt + "\t" + varPos + "\t" + varQual(varPos) + "\t" + id))
+            if (useGroup) super.process(RowObj(theRow.chr, refpos, s"${ref.toUpperCase}\t$alt\t$varPos\t${varQual(varPos)}\t$id\t$gccolumns"))
+            else super.process(RowObj(theRow.chr, refpos, s"${ref.toUpperCase}\t$alt\t$varPos\t${varQual(varPos)}\t$id"))
           }
         }
       } else {
-        if (useGroup) super.process(RowObj(theRow.chr, refpos, alt + "\t" + id + "\t" + gccolumns))
-        else super.process(RowObj(theRow.chr, refpos, alt + "\t" + id))
+        if (useGroup) super.process(RowObj(theRow.chr, refpos, s"$alt\t$id\t$gccolumns"))
+        else super.process(RowObj(theRow.chr, refpos, s"$alt\t$id"))
       }
       ref = ""
       alt = ""

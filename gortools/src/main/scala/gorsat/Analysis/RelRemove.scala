@@ -32,6 +32,7 @@ import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -100,12 +101,13 @@ case class RelRemove(session: GorSession,
       if (repVals(i).exists(x => x == 1.toByte)) {
         var x = allRows(i).colsSlice(0,3)
         var c = 0
+        val sb = new StringBuilder(x.toString)
         while (c < colNum) {
-          if (repVals(i)(c) == 1.toByte) x += "\t" + (if (removeSymbol == "") repSyms(c) else removeSymbol)
-          else x += "\t" + allRows(i).colAsString(3+c).toString
+          if (repVals(i)(c) == 1.toByte) sb.append(s"\t${if (removeSymbol == "") repSyms(c) else removeSymbol}")
+          else sb.append(s"\t${allRows(i).colAsString(3+c)}")
           c += 1
         }
-        super.process(RowObj(x))
+        super.process(RowObj(sb.toString()))
       } else super.process(allRows(i))
       i += 1
     }

@@ -41,7 +41,7 @@ class RegSel extends CommandInfo(
                                  forcedInputHeader: String
    ): CommandParsingResult =
   {
-    val columns = inputArguments(0).split(',')
+    val columns = inputArguments(0).split(',').toSeq
     val source = columnFromHeader(inputArguments(1), forcedInputHeader, executeNor)
     val pattern = replaceSingleQuotes(inputArguments(2))
     val emptyString = replaceSingleQuotes(stringValueOfOptionWithDefault(options,"-e",""))

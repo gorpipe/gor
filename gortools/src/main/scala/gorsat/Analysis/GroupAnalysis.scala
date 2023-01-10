@@ -79,7 +79,7 @@ object GroupAnalysis {
     var groupMap = scala.collection.mutable.HashMap.empty[String, StatHolder]
     val grColsArray: Array[Int] = grCols.toArray
 
-    def formatDouble(d: Double): String = (d formatted "%1.1f").replace(',', '.')
+    def formatDouble(d: Double): String = f"$d%1.1f".replace(',', '.')
 
     def initStatHolder(sh: StatHolder): Unit = {
       var i = 0

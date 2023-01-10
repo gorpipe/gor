@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver.providers.mem;
 
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.util.DataUtil;
 
 public class MemSourceType extends SourceType {
     public static final MemSourceType MEM = new MemSourceType();
@@ -33,6 +34,6 @@ public class MemSourceType extends SourceType {
 
     @Override
     public boolean match(String file) {
-        return file.endsWith(".mem");
+        return DataUtil.isMem(file);
     }
 }

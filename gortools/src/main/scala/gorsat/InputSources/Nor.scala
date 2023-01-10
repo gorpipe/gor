@@ -31,6 +31,7 @@ import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{NordIterator, PipeOptions}
 import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 import java.nio.file.{Files, Path}
 
@@ -82,7 +83,7 @@ object Nor
           }
             throw e
         }
-      } else if (inputUpper.contains(".YML")) {
+      } else if (DataUtil.isYml(inputUpper)) {
         val qr = context.getSession.getSystemContext.getReportBuilder.parse(iargs(0))
         val qra = Array(qr)
         val gorpipe = DynIterator.createGorIterator(context)
@@ -94,7 +95,7 @@ object Nor
         if (gorpipe.getRowSource != null) {
           inputSource = gorpipe.getRowSource
         }
-      } else if (inputUpper.endsWith(".PARQUET")) {
+      } else if (DataUtil.isParquet(inputUpper)) {
         var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
         extraFilterArgs += (if(hasOption(args, "-s")) " " + stringValueOfOption(args, "-s") else "")
 
@@ -110,9 +111,9 @@ object Nor
           val tags = stringValueOfOption(args, "-ff")
           inputSource = new ServerGorSource(inputParams + " -ff " + tags + extraFilterArgs,  context, true)
         } else inputSource = new ServerGorSource(inputParams, context, true)
-      } else if (inputUpper.endsWith(".GOR") ||
-        inputUpper.endsWith(".GORZ") ||
-        (inputUpper.endsWith(".GORD") &&
+      } else if (DataUtil.isGor(inputUpper) ||
+          DataUtil.isGorz(inputUpper) ||
+          (DataUtil.isGord(inputUpper) &&
           !hasOption(args, "-asdict"))) {
 
         var extraFilterArgs: String = if(hasOption(args, "-fs")) " -fs" else ""
@@ -130,14 +131,14 @@ object Nor
           val tags = stringValueOfOption(args, "-ff")
           inputSource = new ServerNorGorSource(inputParams + " -ff " + tags + extraFilterArgs,  context, true)
         } else inputSource = new ServerNorGorSource(inputParams, context, true)
-      } else if (inputUpper.endsWith(".NORD") && !hasOption(args, "-asdict")) {
+      } else if (DataUtil.isNord(inputUpper) && !hasOption(args, "-asdict")) {
         inputSource = createNordIterator(inputParams, args, context)
       } else {
-        if (inputUpper.endsWith(".NORZ")) {
+        if (DataUtil.isNorz(inputUpper)) {
           inputSource = new ServerGorSource(inputParams, context, true)
         } else {
           var inputFile = inputParams
-          if (inputUpper.endsWith(".GORD")) {
+          if (DataUtil.isGord(inputUpper)) {
             var dictPath = Path.of(inputParams)
             val rootPath = context.getSession.getProjectContext.getProjectRootPath
             if (!dictPath.isAbsolute && rootPath != null) {

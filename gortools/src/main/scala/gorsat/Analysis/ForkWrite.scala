@@ -29,9 +29,11 @@ import gorsat.Outputs.OutFile
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
+import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
 
 import java.util.UUID
@@ -77,8 +79,11 @@ case class ForkWrite(forkCol: Int,
       val fn = if(fullFileName.isEmpty) {
         val uuid = UUID.randomUUID().toString
         val ending = folder.substring(folder.lastIndexOf('.'))
-        uuid + (if(ending.equals(".gord")) ".gorz" else ending)
-      } else fullFileName
+        s"$uuid${if(DataUtil.isGord(folder)) DataType.GORZ.suffix else ending}"
+      } else {
+        fullFileName
+      }
+
       val dir = if(folder.endsWith("/")) folder else folder + "/"
 
       if (forkCol >= 0) {
@@ -194,7 +199,7 @@ case class ForkWrite(forkCol: Int,
     if (options.remove) {
       if(forkCol > 0) r.removeColumn(forkCol)
       else {
-        r = RowObj("chrN\t0\t"+r.pos+"\t"+r.otherCols())
+        r = RowObj(s"chrN\t0\t${r.pos}\t${r.otherCols()}")
       }
     }
 
@@ -293,7 +298,11 @@ case class ForkWrite(forkCol: Int,
   }
 
   private def writeLinkFile(linkFile: String, linkFileContent: String) : Unit = {
-    val linkFileToWrite = if (linkFile.endsWith(".link")) linkFile else linkFile+".link"
+    val linkFileToWrite = if (DataUtil.isLink(linkFile))
+      linkFile
+    else
+      DataUtil.toFile(linkFile, DataType.LINK)
+
     // Use non driver file reader as this is exception from the write no links rule, add extra resolve with the
     // server reader to validate (skip link extension as writing links is allow forbidden).
     session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite), true)

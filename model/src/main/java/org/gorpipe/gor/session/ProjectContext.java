@@ -25,8 +25,10 @@ package org.gorpipe.gor.session;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
 import org.gorpipe.client.FileCache;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.reference.ReferenceBuild;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.iterators.RefSeq;
 import org.gorpipe.model.gor.iterators.RefSeqFactory;
 import org.gorpipe.model.gor.iterators.RefSeqFromConfigFactory;
@@ -70,8 +72,8 @@ public class ProjectContext {
 
     public static class Builder {
 
-        private String aliasFile = "gor_aliases.txt";
-        private String configFile = "gor_config.txt";
+        private String aliasFile = DataUtil.toFile( "gor_aliases", DataType.TXT);
+        private String configFile = DataUtil.toFile("gor_config", DataType.TXT);
         private String cacheDir = DEFAULT_CACHE_DIR;
         private String logDirectory;
         private String root = ".";

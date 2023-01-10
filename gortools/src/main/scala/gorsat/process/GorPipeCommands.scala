@@ -62,7 +62,7 @@ object GorPipeCommands {
   }
 
   def getCommandInfoTable: String = {
-    val builder: StringBuilder = StringBuilder.newBuilder
+    val builder: StringBuilder = new StringBuilder()
 
     builder.append("Command\tGOR\tNOR\tVerify\tMemory\tCancel\tMinNumArgs\tMaxNumArgs\tArguments\tValueArguments\n")
     commandMap.toSeq.sortWith(_._1 < _._1).foreach{x => builder.append(x._2.name)

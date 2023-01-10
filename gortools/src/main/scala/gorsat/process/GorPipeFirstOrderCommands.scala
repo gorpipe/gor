@@ -26,7 +26,7 @@ import gorsat.Commands.CommandParseUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import org.gorpipe.gor.model.FileReader
 
-import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.jdk.CollectionConverters.ListHasAsScala
 import scala.language.postfixOps
 
 trait GorPipeFirstOrderCommands {

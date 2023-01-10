@@ -34,6 +34,7 @@ import org.gorpipe.model.gor.iterators.LineIterator
 
 import scala.collection.{JavaConverters, mutable}
 import scala.collection.mutable.ArrayBuffer
+import scala.jdk.javaapi.CollectionConverters
 
 object GorKing2 {
 
@@ -128,7 +129,7 @@ object GorKing2 {
 
     def initialize(binInfo: BinInfo): Unit = {
       bui = session.getCache.getObjectHashMap.get(lookupSignature).asInstanceOf[BucketInfo]
-      if (bui == null) throw new GorDataException("Non existing bucket info for lookupSignature " + lookupSignature)
+      if (bui == null) throw new GorDataException(s"Non existing bucket info for lookupSignature $lookupSignature")
       maxUsedBuckets = bui.numberOfBuckets
       if (useGroup) groupMap = scala.collection.mutable.HashMap.empty[String, ColHolder]
       else initColHolder(singleColHolder)
@@ -159,7 +160,7 @@ object GorKing2 {
 
           sh.af = r.colAsDouble(afCol).toFloat
           sh.buckRows(buckNo) = line
-          val offset = if (useLineObject) 0 else r.sa(valCol - 1) + 1
+          val offset = if (useLineObject) 0 else r.getSplitArray()(valCol - 1) + 1
           sh.offsetArray(buckNo) = offset
           if (valSize == -1) {
             splitArray(line, offset, sh.splitArr(buckNo), sepval)
@@ -206,7 +207,7 @@ object GorKing2 {
 
         } catch {
           case e: java.lang.IndexOutOfBoundsException =>
-            throw new GorDataException("Missing values in bucket " + r.toString.split("\t")(buckCol) + " in searching for tag " + bui.getPnNameFromIdx(outCol) + " no " + outCol + " in output\nin row\n" + r + "\n\n", e)
+            throw new GorDataException(s"Missing values in bucket ${r.toString.split("\t")(buckCol)} in searching for tag ${bui.getPnNameFromIdx(outCol)} no $outCol in output\nin row\n$r\n\n", e)
         }
       }
       // cleanup
@@ -381,9 +382,7 @@ object GorKing2 {
               val phi = 0.5f - XX / (4.0f * kpq)
               val theta = (Nhet - 2.0f * Nhom) / (NAai + NAaj)
               if (skip_test || (!t_pi0 || pi0 < pi0thr) && (!t_phi || phi > phithr) && (!t_theta || theta > thetathr)) {
-                outrows ::= RowObj("chrA\t0\t" + PNi + '\t' + PNj + '\t' + IBS0
-                  + '\t' + XX + '\t' + tpq + '\t' + kpq + '\t' + Nhet
-                  + '\t' + Nhom + '\t' + NAai + '\t' + NAaj + '\t' + count + '\t' + pi0 + '\t' + phi + '\t' + theta)
+                outrows ::= RowObj(s"chrA\t0\t$PNi\t$PNj\t$IBS0\t$XX\t$tpq\t$kpq\t$Nhet\t$Nhom\t$NAai\t$NAaj\t$count\t$pi0\t$phi\t$theta")
 
                 if (outrows.length > 100) {
                   super_process_batch(outrows); outrows = Nil
@@ -415,7 +414,7 @@ object GorKing2 {
           /* val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._2)) */
           val pns1groups = pns1.zipWithIndex.groupBy(_._2 / grsize).map(_._2).map(_.map(_._1))
 
-          val jpns1groups = JavaConverters.seqAsJavaList(pns1groups.toSeq)
+          val jpns1groups = CollectionConverters.asJava(pns1groups.toSeq)
           if (swapped) jpns1groups.parallelStream().forEach(x => process_group(pns2,x,symmetric_PNlists))
           else jpns1groups.parallelStream().forEach(x => process_group(x, pns2,symmetric_PNlists))
 
@@ -427,9 +426,9 @@ object GorKing2 {
 
   case class KingAnalysis(fileName1: String, iteratorCommand1: String, iterator1: LineIterator, fileName2: String, iteratorCommand2: String, iterator2: LineIterator, fileName3: String, iteratorCommand3: String, iterator3: LineIterator, buckCol: Int, valCol: Int,
                             grCols: List[Int], afCol : Int, sepVal: String, valSize: Int, uv: String, session: GorSession) extends
-    BinAnalysis(RegularRowHandler(1), BinAggregator(KingFactory(session, "king2#"+fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2+ "#" + fileName3 + "#" + iteratorCommand3, buckCol, valCol, grCols, afCol, sepVal, valSize, uv), 2, 1)) {
+    BinAnalysis(RegularRowHandler(1), BinAggregator(KingFactory(session, s"king2#$fileName1#$iteratorCommand1#$fileName2#$iteratorCommand2#$fileName3#$iteratorCommand3", buckCol, valCol, grCols, afCol, sepVal, valSize, uv), 2, 1)) {
 
-    val lookupSignature: String = "king2#"+fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2+ "#" + fileName3 + "#" + iteratorCommand3
+    val lookupSignature: String = s"king2#$fileName1#$iteratorCommand1#$fileName2#$iteratorCommand2#$fileName3#$iteratorCommand3"
 
     session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
       var l1 = Array.empty[String]

@@ -203,9 +203,7 @@ object GtLDAnalysis {
         val rr = rSeg.r
         if (lr.chr == rr.chr && lSeg.start - fuzzFactor < rSeg.stop && lSeg.stop + fuzzFactor > rSeg.start) {
             val LDs = LDstatCalc(lr.colAsString(valuesCol).toString, rr.colAsString(valuesCol).toString)
-            nextProcessor.process(RowObj(lr.chr + "\t" + lr.pos + "\t" + lr.selectedColumns(otherCols) + "\t" + ((rr.pos - lr.pos) /* - (if (rr.pos - lr.pos > 0) 1 else 0) */ + "\t"
-              + rr.pos + "\t" + rr.selectedColumns(otherCols)) + "\t"
-              + LDs.g00+"\t"+LDs.g10+"\t"+LDs.g20+"\t"+LDs.g01+"\t"+LDs.g11+"\t"+LDs.g21+"\t"+LDs.g02+"\t"+LDs.g12+"\t"+LDs.g22))
+            nextProcessor.process(RowObj(s"${lr.chr}\t${lr.pos}\t${lr.selectedColumns(otherCols)}\t${(rr.pos - lr.pos)}\t${rr.pos}\t${rr.selectedColumns(otherCols)}\t${LDs.g00}\t${LDs.g10}\t${LDs.g20}\t${LDs.g01}\t${LDs.g11}\t${LDs.g21}\t${LDs.g02}\t${LDs.g12}\t${LDs.g22}"))
 
         }
         if (!((rr.chr == lr.chr && rSeg.stop + fuzzFactor < lSeg.start) || rr.chr < lr.chr)) {
@@ -364,9 +362,7 @@ object GtLDAnalysis {
           if (nextProcessor.wantsNoMore) return
           if (rr.pos - fuzz - 1 < lr.pos && lr.pos <= rr.pos + fuzz && (noEquijoin || rr.selectedColumns(req) == lr.selectedColumns(req))) {
               val LDs = LDstatCalc(lr.colAsString(valuesCol).toString, rr.colAsString(valuesCol).toString)
-              val r = RowObj(lr.chr + "\t" + lr.pos + "\t" + lr.selectedColumns(otherCols) + "\t" + ((rr.pos - lr.pos) /* - (if (rr.pos - lr.pos > 0) 1 else 0) */ + "\t"
-                + rr.pos + "\t" + rr.selectedColumns(otherCols)) + "\t"
-                + LDs.g00+"\t"+LDs.g10+"\t"+LDs.g20+"\t"+LDs.g01+"\t"+LDs.g11+"\t"+LDs.g21+"\t"+LDs.g02+"\t"+LDs.g12+"\t"+LDs.g22)
+              val r = RowObj(s"${lr.chr}\t${lr.pos}\t${lr.selectedColumns(otherCols)}\t${rr.pos - lr.pos}\t${rr.pos}\t${rr.selectedColumns(otherCols)}\t${LDs.g00}\t${LDs.g10}\t${LDs.g20}\t${LDs.g01}\t${LDs.g11}\t${LDs.g21}\t${LDs.g02}\t${LDs.g12}\t${LDs.g22}")
               nextProcessor.process(r)
           }
         }

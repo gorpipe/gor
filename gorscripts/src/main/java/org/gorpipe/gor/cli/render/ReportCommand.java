@@ -28,6 +28,7 @@ import gorsat.Utilities.MacroUtilities;
 import gorsat.process.CLISessionFactory;
 import gorsat.process.PipeOptions;
 import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.util.DataUtil;
 import picocli.CommandLine;
 
 import java.util.Map;
@@ -41,7 +42,7 @@ public class ReportCommand extends RenderOptions implements  Runnable{
 
     @Override
     public void run() {
-        if (input.toUpperCase().contains(".YML")) {
+        if (DataUtil.isYml(input)) {
             PipeOptions options = PipeOptions.parseInputArguments(this.aliasFile != null ? new String[] {this.input,  "-alias", this.aliasFile.toString()} :
                     new String[] {this.input});
             CLISessionFactory sessionFactory = new CLISessionFactory(options, "");

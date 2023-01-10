@@ -56,7 +56,7 @@ class LogisticRegressionAnalysis(lookUpSignature: String, session: GorSession, v
 
       val baseAndPhenoColumns = baseColumnsAsString + "\t" + ri.phenoNames(idx)
       writeOut(baseAndPhenoColumns, logRegObj, converged)
-    }).seq.foreach(outRows => outRows.foreach(outRow => nextProcessor.process(outRow)))
+    }).foreach(outRows => outRows.foreach(outRow => nextProcessor.process(outRow)))
   }
 
   private def writeOut(baseAndPhenoColumns: String, logRegObj: LogisticRegression, converged: Boolean): Iterable[Row] = {

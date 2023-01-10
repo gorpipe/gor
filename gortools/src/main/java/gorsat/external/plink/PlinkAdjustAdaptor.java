@@ -25,6 +25,7 @@ package gorsat.external.plink;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.Row;
 
 import java.io.IOException;
@@ -111,7 +112,7 @@ public class PlinkAdjustAdaptor extends gorsat.Commands.Analysis {
         try {
             Writer writer;
             if( !splitFileMap.containsKey(filename) ) {
-                Path newSplitFile = Files.createTempFile(filename+"_", ".txt");
+                Path newSplitFile = Files.createTempFile(filename+"_", DataType.TXT.suffix);
                 newSplitFile.toFile().deleteOnExit();
                 writer = Files.newBufferedWriter(newSplitFile);
                 writer.write(header);

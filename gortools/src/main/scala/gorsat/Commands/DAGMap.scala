@@ -28,7 +28,9 @@ import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 import scala.collection.mutable.ListBuffer
 
@@ -44,14 +46,7 @@ class DAGMap extends CommandInfo("DAGMAP",
     var rightHeader = ""
     var dsource: DynamicNorSource = null
     try {
-      var rightFile = iargs(0).trim
-      val rightFileUpper = rightFile.toUpperCase
-      val extensionstoWrap = Array(".NORZ", ".NOR", ".TSV")
-      // Read a TSV file via nested quer to handle # in header properly
-      if (extensionstoWrap.exists(x => rightFileUpper.endsWith(x)) && rightFile.slice(0, 2) != "<(") {
-        rightFile = "<(nor " + rightFile + " )"
-      }
-
+      var rightFile = CommandParseUtilities.toNorSource(iargs(0).trim)
       val inputSource = SourceProvider(rightFile, context, executeNor = executeNor, isNor = true)
       iteratorCommand = inputSource.iteratorCommand
       dsource = inputSource.dynSource.asInstanceOf[DynamicNorSource]

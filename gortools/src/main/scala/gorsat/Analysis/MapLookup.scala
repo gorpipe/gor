@@ -69,9 +69,9 @@ case class MapLookup(session: GorSession,
     if (cartesian) {
       val allCols = r.getAllCols
       if (outCols.length == 1) {
-        colMap.entrySet().forEach(y => super.process(RowObj.apply(allCols + "\t" + y.getKey)))
+        colMap.entrySet().forEach(y => super.process(RowObj.apply(s"$allCols\t${y.getKey}")))
       } else {
-        colMap.entrySet().forEach(y => super.process(RowObj.apply(allCols + "\t" + y.getKey + "\t" + y.getValue)))
+        colMap.entrySet().forEach(y => super.process(RowObj.apply(s"$allCols\t${y.getKey}\t${y.getValue}")))
       }
     } else {
       Option(colMap.get(if (caseInsensitive) key.toUpperCase else key)) match {

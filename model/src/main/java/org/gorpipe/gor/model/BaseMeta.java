@@ -4,6 +4,7 @@ package org.gorpipe.gor.model;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -242,8 +243,8 @@ public class BaseMeta {
             if (line.length() > 0) {
                 if (isHeaderLine(line) || (isFirstLine &&
                         // gorz and norz contain headerline that does not befin with #
-                        (metaPathStr.endsWith(".gorz")
-                                || metaPathStr.endsWith(".norz")))) {
+                        (DataUtil.isGorz(metaPathStr)
+                                || DataUtil.isNorz(metaPathStr)))) {
                     parseLine(line);
                 } else {
                     // Done reading the header.

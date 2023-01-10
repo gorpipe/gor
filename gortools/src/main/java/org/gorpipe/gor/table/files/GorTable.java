@@ -1,5 +1,6 @@
 package org.gorpipe.gor.table.files;
 
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ public class GorTable<T extends Row> extends FileTable<T> {
 
     @Override
     protected String getInputTempFileEnding() {
-        return ".gor";
+        return DataType.GOR.suffix;
     }
 
     @Override

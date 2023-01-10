@@ -30,7 +30,7 @@ import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.MapHasAsScala
 
 case class MultiMapLookup(session: GorSession, iteratorCommand: String, iterator: LineIterator, fileName: String, columns: Array[Int], caseInsensitive: Boolean, outCols: Array[Int], missingVal: String, returnMiss: Boolean, cartesian: Boolean) extends Analysis {
   val returnMissing: Boolean = if (returnMiss) true else false
@@ -55,12 +55,12 @@ case class MultiMapLookup(session: GorSession, iteratorCommand: String, iterator
     val allCols = r.getAllCols
     if (cartesian) {
       colMap.asScala.foreach(x => x._2.filter(y => !y.startsWith("#")).foreach(z => {
-        super.process(RowObj.apply(allCols + "\t" + z))
+        super.process(RowObj.apply(s"$allCols\t$z"))
       }))
     } else {
       Option(colMap.get(if (caseInsensitive) key.toUpperCase else key)) match {
-        case Some(x) => x.foreach(y => super.process(RowObj.apply(allCols + "\t" + y)))
-        case None => if (returnMissing) super.process(RowObj.apply(allCols + "\t" + missingVal))
+        case Some(x) => x.foreach(y => super.process(RowObj.apply(s"$allCols\t$y")))
+        case None => if (returnMissing) super.process(RowObj.apply(s"$allCols\t$missingVal"))
       }
     }
   }

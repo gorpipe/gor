@@ -46,7 +46,7 @@ class JessicaGorExecutionEngine(
 {
   val output = ListBuffer[Row]()
 
-  def this(args:Array[String], whitelistedCmdFiles:String, securityContext:String) {
+  def this(args:Array[String], whitelistedCmdFiles:String, securityContext:String) = {
     this(PipeOptions.parseInputArguments(args), whitelistedCmdFiles, securityContext)
   }
 

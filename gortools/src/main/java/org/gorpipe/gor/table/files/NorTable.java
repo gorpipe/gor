@@ -1,6 +1,7 @@
 package org.gorpipe.gor.table.files;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
@@ -34,7 +35,7 @@ public class NorTable<T extends Row> extends FileTable<T> {
 
     @Override
     protected String getInputTempFileEnding() {
-        return ".nor";
+        return DataType.NOR.suffix;
     }
 
     @Override

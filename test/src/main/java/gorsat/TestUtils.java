@@ -29,10 +29,12 @@ import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
 import org.apache.commons.lang.SystemUtils;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,16 +125,16 @@ public class TestUtils {
 
     private static String processQuery(String query, GorSession session) {
         AnalysisUtilities.checkAliasNameReplacement(CommandParseUtilities.quoteSafeSplitAndTrim(query, ';'),
-                AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, "gor_aliases.txt")); //needs a test
+                AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, DataUtil.toFile("gor_aliases", DataType.TXT))); //needs a test
         return MacroUtilities.replaceAllAliases(query,
-                AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, "gor_aliases.txt"));
+                AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, DataUtil.toFile("gor_aliases", DataType.TXT)));
     }
 
 
     public static String getTestFile(String name) {
         String canonicalPath = getCanonicalPath(name);
         if (canonicalPath == null) {
-            canonicalPath = getCanonicalPath("dummy.gor");
+            canonicalPath = getCanonicalPath(DataUtil.toFile("dummy", DataType.GOR));
         }
         return canonicalPath;
     }
@@ -484,11 +486,11 @@ public class TestUtils {
     }
 
     public static File createGorFile(String prefix, String[] lines) {
-        return createFile(prefix, ".gor", lines);
+        return createFile(prefix, DataType.GOR.suffix, lines);
     }
 
     public static File createTsvFile(String prefix, String[] lines) {
-        return createFile(prefix, ".tsv", lines);
+        return createFile(prefix, DataType.TSV.suffix, lines);
     }
 
     private static File createFile(String prefix, String extension, String[] lines) {
@@ -576,7 +578,7 @@ public class TestUtils {
      * @return new table created with the given data.
      */
     public static DictionaryTable createDictionaryWithData(String name, Path rootPath, Map<String, List<String>> data) {
-        Path tablePath = rootPath.resolve(name + ".gord");
+        Path tablePath = rootPath.resolve(DataUtil.toFile(name, DataType.GORD));
         if (Files.exists(tablePath)) {
             throw new GorSystemException("Table already exists:  " + tablePath, null);
         }

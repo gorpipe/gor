@@ -2,13 +2,14 @@ package org.gorpipe.gor.table;
 
 import gorsat.process.CLIGorExecutionEngine;
 import gorsat.process.PipeOptions;
-import org.apache.commons.io.output.NullOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 public class GorPipeUtils {
 
@@ -42,11 +43,11 @@ public class GorPipeUtils {
         options.parseOptions(args);
         CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, securityContext);
 
-        try (PrintStream newPrintStream = new PrintStream(new NullOutputStream())){
+        try (PrintStream newPrintStream = new PrintStream(NULL_OUTPUT_STREAM)){
             System.setOut(newPrintStream);
             engine.execute();
         } catch (Exception e) {
-            log.error("Calling gor cmmand failed.  Command args: {} \"{}\" {} {} {} {} failed", args);
+            log.error("Calling gor command failed.  Command args: {} \"{}\" {} {} {} {} failed", args);
             throw e;
         } finally {
 

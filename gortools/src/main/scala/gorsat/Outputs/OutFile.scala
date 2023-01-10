@@ -35,6 +35,7 @@ import htsjdk.variant.vcf.VCFCodec
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.model.{FileReader, Row}
+import org.gorpipe.gor.util.DataUtil
 
 import java.io.{BufferedOutputStream, File, FileInputStream, FileNotFoundException, FileOutputStream, OutputStream, Writer}
 
@@ -63,7 +64,7 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
   val out: Writer =
     new java.io.OutputStreamWriter(new BufferedOutputStream(gzippedOutputStream, 1024 * 128))
 
-  override def getName(): String = name
+  override def getName: String = name
 
   def setup(): Unit = {
     if (header != null & !skipHeader) {
@@ -129,8 +130,7 @@ object OutFile {
 
   def driver(name: String, fileReader: FileReader, inheader: String, skipHeader: Boolean, options: OutputOptions, schema: Array[String]): Output = {
     val nameUpper = name.toUpperCase
-    val isVCF = nameUpper.endsWith(".VCF") || nameUpper.endsWith(".VCF.GZ") || nameUpper.endsWith(".VCF.BGZ")
-
+    val isVCF = DataUtil.isAnyVcf(name)
     var append = skipHeader
     val header = if(options.prefix.isDefined) {
       val pref = options.prefix.get
@@ -154,11 +154,11 @@ object OutFile {
     }
 
     try {
-      val out = if (nameUpper.endsWith(".GORZ") || nameUpper.endsWith(".NORZ")) {
+      val out = if (DataUtil.isGorz(nameUpper) || DataUtil.isNorz(nameUpper)) {
         new GORzip(name, fileReader, header, skipHeader, append, options, schema)
-      } else if (nameUpper.endsWith(".TSV") || nameUpper.endsWith(".NOR")) {
+      } else if (DataUtil.isTsv(nameUpper) || DataUtil.isNor(nameUpper)) {
         new NorFileOut(name, fileReader, header, skipHeader, append, options.md5, options.md5File)
-      } else if (nameUpper.endsWith(".PARQUET")) {
+      } else if (DataUtil.isParquet(nameUpper)) {
         new GorParquetFileOut(name, header, options.nor)
       } else if (options.nor) {
         new CmdFileOut(name, fileReader, header, skipHeader, append)

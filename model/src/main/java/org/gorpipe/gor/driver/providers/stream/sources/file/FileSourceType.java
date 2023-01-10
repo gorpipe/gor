@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.util.DataUtil;
 
 public class FileSourceType extends SourceType {
     public static final FileSourceType FILE = new FileSourceType();
@@ -34,6 +35,6 @@ public class FileSourceType extends SourceType {
     @Override
     public boolean match(String file) {
         // TODO: Until we get better matching strategy we must exclude mem here.
-        return !file.endsWith(".mem") && super.match(file);
+        return !DataUtil.isMem(file) && super.match(file);
     }
 }

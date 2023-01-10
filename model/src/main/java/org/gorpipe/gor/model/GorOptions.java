@@ -34,6 +34,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.filters.InFilter;
 import org.gorpipe.gor.driver.filters.RowFilter;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.monitor.GorMonitor;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
@@ -45,6 +46,7 @@ import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
@@ -715,8 +717,8 @@ public class GorOptions {
     private void addSourceRef(String physicalFile, String logicalFile, boolean isAcceptedAbsoluteRef, ProjectContext projectContext, String alias,
                               String startChr, int startPos, String stopChr, int stopPos, Set<String> tags, boolean allowBucketAccess, Set<String> alltags, boolean isSilentTagFilter) {
         final String lowerfile = physicalFile.toLowerCase();
-        final boolean isDictionary = lowerfile.endsWith(".gord") && !lowerfile.startsWith("mem:");
-        final boolean isBGenMultiFile = lowerfile.matches(".*#\\{.*\\}.*\\.bgen");
+        final boolean isDictionary = DataUtil.isGord(lowerfile) && !lowerfile.startsWith("mem:");
+        final boolean isBGenMultiFile = lowerfile.matches(DataUtil.toFile(".*#\\{.*\\}.*\\", DataType.BGEN));
 
         // Windows full path hack
         if (physicalFile.length() > 2 && physicalFile.charAt(1) == ':' && Util.isWindowsOS() ) {
@@ -769,7 +771,9 @@ public class GorOptions {
         for (String chr : chromos) {
             final String path = prefix + chr + suffix;
             if (Files.isRegularFile(Paths.get(path))) {
-                this.files.add(new SourceRef(path, indexFileName, referenceFileName, alias, "chr" + chr, 0, "chr" + chr, 1000000000, tags, false, projectContext.securityKey, projectContext.commonRoot));
+                this.files.add(new SourceRef(path, indexFileName, referenceFileName, alias, "chr" + chr,
+                        0, "chr" + chr, 1000000000, tags, false,
+                        projectContext.securityKey, projectContext.commonRoot));
             }
         }
     }

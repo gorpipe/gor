@@ -24,7 +24,9 @@ package gorsat.Commands
 
 import gorsat.Commands.GenomicRange.Range
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.GorCommand
+import org.gorpipe.gor.util.DataUtil
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -738,16 +740,16 @@ object CommandParseUtilities {
         CommandParseUtilities.repeatedQuoteSafeReplace(query, "  ", " ", ml), " |", "|", ml), "| ", "|", ml).trim
   }
 
-  val DEFAULT_EXTENSION: String = System.getProperty("org.gorpipe.gor.query.default_extension", ".gorz")
-  val TXT_EXTENSION: String = ".txt"
-  val TSV_EXTENSION: String = ".tsv"
-  val PARQUET_EXTENSION: String = ".parquet"
-  val GOR_DICTIONARY_EXTENSION: String = ".gord"
+  val DEFAULT_EXTENSION: String = System.getProperty("org.gorpipe.gor.query.default_extension", DataType.GORZ.suffix)
+  val TXT_EXTENSION: String = DataType.TXT.suffix
+  val TSV_EXTENSION: String = DataType.TSV.suffix
+  val PARQUET_EXTENSION: String = DataType.PARQUET.suffix
+  val GOR_DICTIONARY_EXTENSION: String = DataType.GORD.suffix
   val GOR_DICTIONARY: String = "GORDICT"
   val GOR_DICTIONARY_FOLDER: String = "GORDICTFOLDER"
   val GOR_DICTIONARY_PART: String = "GORDICTPART"
   val GOR_DICTIONARY_FOLDER_PART: String = "GORDICTFOLDERPART"
-  val NOR_DICTIONARY_EXTENSION: String = ".nord"
+  val NOR_DICTIONARY_EXTENSION: String = DataType.NORD.suffix
   val NOR_DICTIONARY: String = "NORDICT"
   val NOR_DICTIONARY_PART: String = "NORDICTPART"
 
@@ -1146,4 +1148,9 @@ object CommandParseUtilities {
       ""
     }
   }
+
+  def toNorSource(file: String): String = if (DataUtil.isNorSource(file) && !file.startsWith("<("))
+    "<(nor " + file + ")"
+  else
+    file
 }

@@ -86,7 +86,7 @@ case class MergeGenotypes(refCol: Int, alleleCol: Int, seg: Boolean, header: Str
       if (alleleNum > 1) {
         if (aNewRef != newRef || aNewPos != newStartPos) return (refSeq, startPos, ialleles)
         else {
-          newAlleles += alleleSep + aNewAllele
+          newAlleles += s"${alleleSep}$aNewAllele"
         }
       } else {
         newAlleles = aNewAllele
@@ -113,7 +113,7 @@ case class MergeGenotypes(refCol: Int, alleleCol: Int, seg: Boolean, header: Str
       if (normalize && !(rrRef.length == 1 && alleles.length == 1 || rrRef == alleles) || !normalize) {
         /* modify alleles */
         val (nRefseq, nRangeStartPos, nNewAlleles) = {
-          val lookup = rrRef + "\t" + rr.pos + "\t" + alleles
+          val lookup = s"${rrRef}\t${rr.pos}\t$alleles"
           normVarMap.get(lookup) match {
             case Some(normVar) => normVar
             case None =>
@@ -134,19 +134,19 @@ case class MergeGenotypes(refCol: Int, alleleCol: Int, seg: Boolean, header: Str
               normVar
           }
         }
-        l = rr.colAsString(0) + "\t" + nRangeStartPos
+        l = s"${rr.colAsString(0)}\t$nRangeStartPos"
         var c = 2
         if (seg) {
           l += "\t" + (nRangeStartPos + nRefseq.length)
           c = 3
         }
         while (c < maxCols) {
-          if (c == refCol) l += "\t" + nRefseq
-          else if (c == alleleCol) l += "\t" + nNewAlleles
-          else l += "\t" + rr.colAsString(c)
+          if (c == refCol) l += s"\t${nRefseq}"
+          else if (c == alleleCol) l += s"\t${nNewAlleles}"
+          else l += s"\t${rr.colAsString(c)}"
           c += 1
         }
-        if (hCols > maxCols) l += "\t" + rr.selectedColumns(colArray)
+        if (hCols > maxCols) l += s"\t${rr.selectedColumns(colArray)}"
         theNewStartPos = nRangeStartPos
       } else {
         theNewStartPos = rr.pos

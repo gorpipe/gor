@@ -24,16 +24,15 @@ package gorsat.Utilities
 
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
-
 import gorsat.Commands.{BinaryWrite, CommandInfo, CommandParseUtilities, Write}
 import org.gorpipe.exceptions.GorParsingException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.SetHasAsJava
 
 object Utilities {
 
   def makeTempFile(value: String, cacheDir: String): String = {
-    val hash = Math.abs(value.hashCode) + ""
+    val hash = Math.abs(value.hashCode).toString
     val cacheFile = if (cacheDir != null) {
       Paths.get(cacheDir).resolve(hash)
     } else {

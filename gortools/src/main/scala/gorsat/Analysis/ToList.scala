@@ -42,10 +42,10 @@ case class ToList(groupCols: Int, withCount: Boolean = false) extends Analysis {
       }) // space eliminated for Gisli
 
       val listCols = allCols.toList.tail.foldLeft(allCols.toList.head) (_ + "\t" + _)
-      if (withCount) super.process(r.rowWithAddedColumns(rightRows.size + "\t" + listCols))
+      if (withCount) super.process(r.rowWithAddedColumns(s"${rightRows.size}\t$listCols"))
       else super.process(r.rowWithAddedColumns(listCols))
     } else {
-      if (withCount) super.process(r.rowWithAddedColumns("1\t" + rightRows.head.colsSlice(2 + groupCols, rightRows.head.numCols)))
+      if (withCount) super.process(r.rowWithAddedColumns(s"1\t${rightRows.head.colsSlice(2 + groupCols, rightRows.head.numCols)}"))
       else super.process(r.rowWithAddedColumns(rightRows.head.colsSlice(2 + groupCols, rightRows.head.numCols)))
     }
   }

@@ -31,6 +31,7 @@ import java.util.zip.GZIPInputStream
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
 import org.gorpipe.gor.model.{FileReader, GenomicIteratorBase, QuoteSafeRowBase, Row, RowBase}
 import org.gorpipe.gor.stats.StatsCollector
+import org.gorpipe.gor.util.DataUtil
 
 import scala.collection.mutable
 import scala.io.StdIn
@@ -45,20 +46,22 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   var haveReadHeader: Boolean = false
   var myHeader: String = _
   var myHeaderLength = 0
-  val fileNameTUP = fileName.toUpperCase
-  val useCSV: Boolean = fileNameTUP.endsWith(".CSV") || fileNameTUP.endsWith(".CSV.GZ")
+  val useCSV: Boolean = DataUtil.isAnyCsv(fileName)
   var haveLoadedLines = false
   val filter = (s: String) => !s.startsWith("##")
 
 
   val norRowSource: stream.Stream[String] = if (!readStdin) {
-    if (fileNameTUP.endsWith(".GZ")) {
+    if (DataUtil.isGZip(fileName)) {
       new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.getInputStream(fileName)))).lines()
     } else {
       fileReader.iterateFile(fileName, maxWalkDepth, followLinks, showModificationDate)
     }
   } else throw new GorParsingException("Stdin not supported in NOR context.")
-  val norRowIterator: util.Iterator[String] = if (fileName.endsWith(".meta")) norRowSource.iterator() else norRowSource.filter(filter(_)).iterator()
+  val norRowIterator: util.Iterator[String] = if (DataUtil.isMeta(fileName))
+    norRowSource.iterator()
+  else
+    norRowSource.filter(filter(_)).iterator()
 
   override def hasNext: Boolean = {
     if (!haveReadHeader) {

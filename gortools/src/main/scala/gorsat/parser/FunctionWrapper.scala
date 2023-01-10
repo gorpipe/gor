@@ -25,7 +25,7 @@ package gorsat.parser
 import gorsat.parser.FunctionTypes._
 import org.gorpipe.exceptions.GorParsingException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.ListHasAsScala
 
 /**
   * A FunctionWrapper wraps a function that can be used in expressions

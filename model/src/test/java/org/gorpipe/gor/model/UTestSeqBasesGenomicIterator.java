@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -54,7 +56,7 @@ public class UTestSeqBasesGenomicIterator {
         int id = 1;
         while (id < CHROM_COUNT) {
             final String chr = chromoLookup.idToName(id);
-            String filename = chr + ".txt";
+            String filename = DataUtil.toFile(chr, DataType.TXT);
             final File file = workDir.newFile(filename);
             try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
                 out.write(SEQUENCE.getBytes());

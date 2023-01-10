@@ -92,10 +92,10 @@ object SelfJoinAnalysis {
         for (lr <- lRows.reverse) {
           var overlaps = 0
           for (rr <- rRows.reverse) if (rr.pos - fuzz - 1 < lr.pos && lr.pos <= rr.pos + fuzz && (lreq == Nil || rr.selectedColumns(req) == lr.selectedColumns(req))) {
-            nextProcessor.process(lr.rowWithAddedColumn((rr.pos - lr.pos) - (if (rr.pos - lr.pos > 0) 1 else 0) + "\t" + rr.pos + "\t" + rr.otherCols))
+            nextProcessor.process(lr.rowWithAddedColumn(s"${(rr.pos - lr.pos) - (if (rr.pos - lr.pos > 0) 1 else 0)}\t${rr.pos}\t${rr.otherCols}"))
             overlaps += 1
           }
-          if (overlaps == 0 && missingSEG != "") nextProcessor.process(lr.rowWithAddedColumn(empty + "\t" + missingSEG))
+          if (overlaps == 0 && missingSEG != "") nextProcessor.process(lr.rowWithAddedColumn(s"$empty\t$missingSEG"))
         }
       } else if (lRows.nonEmpty && rRows.nonEmpty) {
         val itLeft = RowListIterator(lRows.reverse)

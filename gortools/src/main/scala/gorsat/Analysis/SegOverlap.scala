@@ -207,7 +207,7 @@ case class SegOverlap(ph: ParameterHolder, inRightSource: GenomicIterator, missi
         }
         else if (nothingFromRight) super.process(lr)
         else if (noDistance) super.process(lr.rowWithAddedColumn(rr.colsSlice(2 + elimCols, rr.numCols)))
-        else super.process(lr.rowWithAddedColumn(distSegSeg(lSeg, rSeg) + "\t" + rr.colsSlice(1, rr.numCols)))
+        else super.process(lr.rowWithAddedColumn(s"${distSegSeg(lSeg, rSeg)}\t${rr.colsSlice(1, rr.numCols)}"))
         ovlaps += 1
       }
       if (!((rr.chr == lr.chr && rSeg.stop + fuzzFactor < lSeg.start) || rr.chr < lr.chr)) {

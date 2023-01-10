@@ -25,9 +25,9 @@ package gorsat.Script
 case class SplitEntry(chrom: String, start: Int, end: Int, tag: String = "") {
   def getRange: String = {
     if (end > 0) {
-      chrom + ":" + start + "-" + end
+      s"$chrom:$start-$end"
     } else {
-      chrom + (if (start > 0) ":" + start + "-" else "")
+      s"$chrom${if (start > 0) ":" + start + "-" else ""}"
     }
 
   }
@@ -37,9 +37,9 @@ case class SplitEntry(chrom: String, start: Int, end: Int, tag: String = "") {
   //       And for nested splits they were 1 off for the end.
   def getFilter: String = {
     if (end > 0) {
-      0.max(start) + " <= #2i and #2i <= " + end
+      s"${0.max(start)} <= #2i and #2i <= $end"
     } else {
-      start + " <= #2i"
+      s"$start <= #2i"
     }
   }
 }

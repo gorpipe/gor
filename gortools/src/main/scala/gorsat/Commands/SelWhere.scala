@@ -51,7 +51,7 @@ class SelWhere extends CommandInfo( "SELWHERE",
         cvp.setCurrentColumn(index + 1)
         calcLambda.evaluateBoolean(cvp)
       }
-    }).map({ case (_, index) => index + 1})
+    }).map({ case (_, index) => index + 1}).toIndexedSeq
     val header = selectedColumns.map(ix => headerColumns(ix - 1)).mkString("\t")
     CommandParsingResult(Select2(selectedColumns:_*), header)
   }

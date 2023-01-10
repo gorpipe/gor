@@ -30,6 +30,7 @@ import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 class PrGtGen extends CommandInfo("PRGTGEN",
   CommandArguments("-combgt", "-pn -pl -gl -gp -gc -prgc -maxseg -e -pabc -pbbc -fpab -fpbb -crc -ld -rd -anc -th -psep -osep -maxit -tol", 2, 3),
@@ -76,11 +77,7 @@ class PrGtGen extends CommandInfo("PRGTGEN",
     var buckTagItCommand = ""
     var buckTagDNS: DynamicNorSource = null
     var buckTagHeader = ""
-    val buckTagFile = {
-      val cand = iargs.head
-      val cl = cand.toUpperCase
-      if ((cl.endsWith(".NORZ") || cl.endsWith(".TSV") || cl.endsWith(".NOR")) && !(cl.slice(0, 2) == "<(")) "<(nor " + cand + " )" else cand
-    }
+    val buckTagFile = CommandParseUtilities.toNorSource(iargs.head.trim)
 
     try {
       val buckTagSource = SourceProvider(buckTagFile, context, executeNor = executeNor, isNor = true)

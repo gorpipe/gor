@@ -2,6 +2,8 @@ package org.gorpipe.s3.shared;
 
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.exceptions.GorResourceException;
@@ -80,7 +82,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "user_data/a.gor";
+        String dataPath = DataUtil.toFile("user_data/a", DataType.GOR);
         try {
             getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
             Assert.fail("No fallback should throw error");
@@ -101,7 +103,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz"; // Exists in shared but not in project.
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_MOTHER_SLC52A2", DataType.VCFGZ), DataType.GORZ); // Exists in shared but not in project.
 
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
@@ -113,7 +115,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_FATHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -129,7 +131,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -146,7 +148,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectSharedSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_MOTHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -162,7 +164,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3RegionSharedSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_MOTHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -178,7 +180,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3GlobalSharedSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_MOTHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -194,7 +196,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectDataFileSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_MOTHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_MOTHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -210,7 +212,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectSharedFileSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_FATHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -226,7 +228,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3RegionSharedFileSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_FATHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -242,7 +244,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3GlobalSharedFileSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        String dataPath = "BVL_FATHER_SLC52A2.vcf.gz.gorz";
+        String dataPath = DataUtil.toFile(DataUtil.toFile("BVL_FATHER_SLC52A2", DataType.VCFGZ), DataType.GORZ);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -256,13 +258,13 @@ public class ITestS3Shared {
     @Test
     public void testReadWithLinkFile() throws IOException {
         Path gorRoot  = workDirPath.resolve("some_project");
-        Path linkFile = gorRoot.resolve("a.gorz.link");
+        Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
-        Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ).getBytes(StandardCharsets.UTF_8));
 
         FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
-        DataSource source = fileReader.resolveUrl("a.gorz");
+        DataSource source = fileReader.resolveUrl(DataUtil.toFile("a", DataType.GORZ));
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -270,7 +272,7 @@ public class ITestS3Shared {
         Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getParentSourceReference().getUrl());
         Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        source = fileReader.resolveUrl("a.gorz.link");
+        source = fileReader.resolveUrl(DataUtil.toLinkFile("a", DataType.GORZ));
 
         Assert.assertNotNull("Source should be resolved", source);
         Assert.assertEquals("S3", source.getSourceType().getName());
@@ -282,15 +284,15 @@ public class ITestS3Shared {
     @Test
     public void testReadWithUnaccessableLinkFile() throws IOException {
         Path gorRoot  = workDirPath.resolve("some_project");
-        Path linkFile = workDirPath.resolve("a.gorz.link");
+        Path linkFile = workDirPath.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
-        Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ).getBytes(StandardCharsets.UTF_8));
 
         FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
 
         try {
-            fileReader.resolveUrl("../a.gorz");
+            fileReader.resolveUrl(DataUtil.toFile("../a", DataType.GORZ));
             Assert.fail("Should not be resolved, link outside project");
         } catch (GorResourceException e) {
             // Expected
@@ -298,7 +300,7 @@ public class ITestS3Shared {
         }
 
         try {
-            DataSource source = fileReader.resolveUrl("../a.gorz.link");
+            DataSource source = fileReader.resolveUrl(DataUtil.toLinkFile("../a", DataType.GORZ));
             Assert.fail("Should not be resolved, link outside project");
         } catch (GorResourceException e) {
             // Expected
@@ -313,7 +315,7 @@ public class ITestS3Shared {
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
 
         try {
-            fileReader.resolveUrl("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz");
+            fileReader.resolveUrl(DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ));
             Assert.fail("Should not be able to read shared link directly");
         } catch (GorResourceException e) {
             // Expected
@@ -325,10 +327,10 @@ public class ITestS3Shared {
     @Ignore("Slow test, ment to be manually run")
     public void testReadServer() throws IOException {
         Path gorRoot  = workDirPath.resolve("some_project");
-        Path linkFile = gorRoot.resolve("a.gorz.link");
+        Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
         //Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
-        Files.write(linkFile, "s3data://project/ref/dbsnp.gorz".getBytes(StandardCharsets.UTF_8));
+        Files.write(linkFile, DataUtil.toFile("s3data://project/ref/dbsnp", DataType.GORZ).getBytes(StandardCharsets.UTF_8));
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
 
         String result = runGorPipeServer("a.gorz | top 1000000 | group genome -count", gorRoot.toString(), securityContext);
@@ -341,7 +343,7 @@ public class ITestS3Shared {
     public void testProjectWriteRootCLI() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "dummy.gor";
+        String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
         runGorPipeCLI("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
@@ -351,14 +353,14 @@ public class ITestS3Shared {
             source.delete();
         }
 
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
     @Test
     public void testProjectWriteUserDataCLI() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "user_data/dummy.gor";
+        String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
         runGorPipeCLI("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
@@ -368,14 +370,14 @@ public class ITestS3Shared {
             source.delete();
         }
 
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
     @Test
     public void testProjectWriteRootServer() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "dummy.gor";
+        String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
         try {
             runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
@@ -389,7 +391,7 @@ public class ITestS3Shared {
     public void testProjectWriteUserDataServer() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "user_data/dummy.gor";
+        String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
         runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
@@ -399,7 +401,7 @@ public class ITestS3Shared {
             source.delete();
         }
 
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
     @Test
@@ -429,7 +431,7 @@ public class ITestS3Shared {
     public void testSharedWriteRootServer() throws IOException {
         String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "dummy.gor";
+        String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
         try {
             runGorPipeServer("gorrow 1,2,3 | write s3region://shared/" + dataPath, gorRoot, securityContext);
@@ -443,7 +445,7 @@ public class ITestS3Shared {
     public void testSharedWriteUserDataServer() throws IOException {
         String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "user_data/dummy.gor";
+        String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
         runGorPipeServer("gorrow 1,2,3 | write s3region://shared/" + dataPath, gorRoot, securityContext);
 
@@ -453,16 +455,16 @@ public class ITestS3Shared {
             source.delete();
         }
 
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
     @Test
     public void testProjecSharedProjecttWriteUserDataServer() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath = "user_data/dummy.gor";
+        String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
-        Assert.assertFalse(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertFalse(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
 
         runGorPipeServer("gorrow 1,2,3 | write s3data://shared-project/" + dataPath, gorRoot, securityContext);
 
@@ -482,7 +484,7 @@ public class ITestS3Shared {
             source.delete();
         }
 
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,

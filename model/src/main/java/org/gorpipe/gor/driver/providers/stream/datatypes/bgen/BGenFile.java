@@ -22,8 +22,10 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bgen;
 
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,8 +48,8 @@ public class BGenFile extends StreamSourceFile {
     public List<String> possibleIndexNames() throws IOException {
         final List<String> result = super.possibleIndexNames();
         final String name = getFileSource().getSourceMetadata().getNamedUrl();
-        if (name.toLowerCase().endsWith(".bgen")) {
-            result.add(name + ".bgi");
+        if (DataUtil.isBgen(name)) {
+            result.add(DataUtil.toFile(name, DataType.BGI));
         }
         return result;
     }

@@ -23,6 +23,7 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -162,7 +163,7 @@ public class UTestGorMapMultimap {
         File dataFile = new File("" + mapJoin.getCanonicalPath() + "");
 
         // Create link file
-        Path linkFile = Files.createTempFile("mapjoin", ".link");
+        Path linkFile = Files.createTempFile("mapjoin", DataType.LINK.suffix);
         PrintWriter writer = new PrintWriter(linkFile.toString());
         writer.println(dataFile.getAbsolutePath());
         writer.close();
@@ -252,7 +253,7 @@ public class UTestGorMapMultimap {
 
     @Test
     public void testMultimapCartesianWithLinkFile() throws IOException {
-        Path linkFilePath = Files.createTempFile("mapjoin", ".link");
+        Path linkFilePath = Files.createTempFile("mapjoin", DataType.LINK.suffix);
         File rf = linkFilePath.toFile();
         rf.deleteOnExit();
         File f = new File("" + mapJoin.getCanonicalPath() + "");

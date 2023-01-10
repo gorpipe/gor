@@ -258,14 +258,14 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
           var suffix = ""
           val variableName = x.toUpperCase
           if(columns.contains(variableName)) {
-            suffix += " " + x + " is a column of type " + typeCharToString(columns(variableName).dataType) + "."
+            suffix += s" $x is a column of type ${typeCharToString(columns(variableName).dataType)}."
           } else {
-            val closest = StringDistance.findClosest(variableName, 3, columnNames)
+            val closest = StringDistance.findClosest(variableName, 3, columnNames.toSeq)
             if(!closest.isEmpty) {
-              suffix = " Did you mean: " + closest + "?"
+              suffix = s" Did you mean: $closest?"
             }
           }
-          Failure("Invalid String variable name: " + x + "." + suffix, in1)
+          Failure(s"Invalid String variable name: $x.$suffix", in1)
       }
       case Failure(msg, next) =>
         Failure(msg, next)
@@ -292,14 +292,14 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
         case None =>
           var suffix = ""
           if(columns.contains(variableName)) {
-            suffix += " " + x + " is a column of type " + typeCharToString(columns(variableName).dataType) + "."
+            suffix += s" $x is a column of type ${typeCharToString(columns(variableName).dataType)}."
           } else {
-            val closest = StringDistance.findClosest(variableName, 3, columnNames)
+            val closest = StringDistance.findClosest(variableName, 3, columnNames.toSeq)
             if(!closest.isEmpty) {
-              suffix = " Did you mean: " + closest + "?"
+              suffix = s" Did you mean: $closest?"
             }
           }
-          Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
+          Failure(s"Invalid Float/Double variable name: $x.$suffix", in1)
       }
       case Failure(msg, next) =>
         Failure(msg, next)
@@ -325,14 +325,14 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
           case None =>
             var suffix = ""
             if(columns.contains(variableName)) {
-              suffix += " " + x + " is a column of type " + typeCharToString(columns(variableName).dataType) + "."
+              suffix += s" $x is a column of type ${typeCharToString(columns(variableName).dataType)}."
             } else {
-              val closest = StringDistance.findClosest(variableName, 3, columnNames)
+              val closest = StringDistance.findClosest(variableName, 3, columnNames.toSeq)
               if(!closest.isEmpty) {
-                suffix = " Did you mean: " + closest + "?"
+                suffix = s" Did you mean: $closest?"
               }
             }
-            Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
+            Failure(s"Invalid Float/Double variable name: $x.$suffix", in1)
         }
       case Failure(msg, next) =>
         Failure(msg, next)
@@ -358,14 +358,14 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
           case None =>
             var suffix = ""
             if(columns.contains(variableName)) {
-              suffix += " " + x + " is a column of type " + typeCharToString(columns(variableName).dataType) + "."
+              suffix += s" $x is a column of type ${typeCharToString(columns(variableName).dataType)}."
             } else {
-              val closest = StringDistance.findClosest(variableName, 3, columnNames)
+              val closest = StringDistance.findClosest(variableName, 3, columnNames.toSeq)
               if(!closest.isEmpty) {
-                suffix = " Did you mean: " + closest + "?"
+                suffix = s" Did you mean: $closest?"
               }
             }
-            Failure("Invalid Float/Double variable name: " + x + "." + suffix, in1)
+            Failure(s"Invalid Float/Double variable name: $x.$suffix", in1)
         }
       case Failure(msg, next) =>
         Failure(msg, next)
@@ -386,7 +386,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
         if (t) {
           Success(x, in1)
         } else {
-          Failure("Invalid integer: " + x, in1)
+          Failure(s"Invalid integer: $x", in1)
         }
       case Failure(msg, next) =>
         Failure(msg, next)
@@ -408,7 +408,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
         if (t) {
           Success(x, in1)
         } else {
-          Failure("Invalid long: " + x, in1)
+          Failure(s"Invalid long: $x", in1)
         }
       case Failure(msg, next) =>
         Failure(msg, next)
@@ -875,7 +875,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
   }
 
   def applyFunction[R](fn: String, sig: String, args: List[TypedExpression]): R = {
-    val mangledName = fn + "_" + sig
+    val mangledName = s"${fn}_$sig"
     val wrapper = functions.lookupWrapper(mangledName)
     wrapper.call[R](this, args)
   }
@@ -925,7 +925,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
                     Failure(msg, next)
                 }
               case Failure(msg, next) =>
-                Failure("not a function:" + msg, next)
+                Failure(s"not a function: $msg", next)
             }
           }
         case Failure(_, next) =>
@@ -1199,7 +1199,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
                   val parseInput = if(i > 0) {
                     val fn = input.substring(0, i).toUpperCase
                     if (pathfunctions.hasFunction(fn)) {
-                      input.substring(0, i + 1) + "'" + input.substring(i + 1, input.length - 1).trim + "')"
+                      s"${input.substring(0, i + 1)}'${input.substring(i + 1, input.length - 1).trim}')"
                     } else input
                   } else input
                   val sr = parseAll(sexpr, parseInput)
@@ -1213,7 +1213,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
                         expressionType = "String"
                         maxLength = next3.offset
                       }
-                      val where = input.substring(0, maxLength) + " <-- "
+                      val where = s"${input.substring(0, maxLength)} <-- "
                       val finalMessage = s"Expression compiled as $expressionType\n$errorMessage\n$input\n$where"
 
                       throw new GorParsingException(finalMessage, input)

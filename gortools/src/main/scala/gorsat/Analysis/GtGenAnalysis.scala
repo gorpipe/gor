@@ -291,7 +291,7 @@ object GtGenAnalysis {
       }
 
       //#######
-      super.process(RowObj(lr.colsSlice(0,bucketCol+1)+"\t"+ lSeg.values.toString().replace('4','3')))
+      super.process(RowObj(s"${lr.colsSlice(0, bucketCol+1)}\t${lSeg.values.toString().replace('4','3')}"))
 
       if ((lr.chr == lastLeftChr && maxLeftStop < leftStop) || lr.chr != lastLeftChr) maxLeftStop = leftStop
       lastLeftChr = lr.chr

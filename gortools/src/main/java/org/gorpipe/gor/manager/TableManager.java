@@ -32,6 +32,7 @@ import org.gorpipe.gor.table.dictionary.TableFilter;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,11 +151,11 @@ public class TableManager {
      * @return the table given by {@code path}.
      */
     public BaseDictionaryTable initTable(String path) {
-        if (path.toLowerCase().endsWith(".gord")) {
+        if (DataUtil.isGord(path)) {
             return new DictionaryTable.Builder<>(URI.create(path)).useHistory(this.useHistory)
                     .fileReader(fileReader).validateFiles(this.validateFiles).build();
         } else {
-            throw new RuntimeException("BaseTable of type " + path.toString() + " are not supported!");
+            throw new RuntimeException("BaseTable of type " + path + " are not supported!");
         }
     }
 
@@ -210,7 +211,7 @@ public class TableManager {
      * @param entries   the entries to delete.
      */
     public void delete(String tableFile, DictionaryEntry... entries) {
-        System.err.println("Deleteing entries: " + entries.length);
+        System.err.println("Deleting entries: " + entries.length);
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.delete(entries);
@@ -225,7 +226,7 @@ public class TableManager {
      * @param entries   the entries to delete.
      */
     public void delete(String tableFile, TableFilter entries) {
-        System.err.println("Deleteing entries2: " + entries);
+        System.err.println("Deleting entries2: " + entries);
         BaseDictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.delete(entries.get());

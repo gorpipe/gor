@@ -29,6 +29,7 @@ import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 class King2 extends CommandInfo("KING2",
   CommandArguments("", "-gc -vs -s -pi0thr -phithr -thetathr", 2),
@@ -91,23 +92,17 @@ class King2 extends CommandInfo("KING2",
     var rightHeader2 = ""
 
     try {
-      var rightFile1 = iargs(0).trim
-      // Read a TSV file via nested quer to handle # in header properly
-      if ((rightFile1.toUpperCase.endsWith(".NORZ") || rightFile1.toUpperCase.endsWith(".TSV") || rightFile1.toUpperCase.endsWith(".NOR")) && !(rightFile1.slice(0, 2) == "<(")) rightFile1 = "<(nor " + rightFile1 + " )"
-
+      var rightFile1 = CommandParseUtilities.toNorSource(iargs(0).trim)
       val inputSource1 = SourceProvider(rightFile1, context, executeNor = executeNor, isNor = true)
       iteratorCommand1 = inputSource1.iteratorCommand
       dsource1 = inputSource1.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader1 = inputSource1.header
 
-      var rightFile2 = iargs(1).trim
-      if ((rightFile2.toUpperCase.endsWith(".NORZ") || rightFile2.toUpperCase.endsWith(".TSV") || rightFile2.toUpperCase.endsWith(".NOR")) && !(rightFile2.slice(0, 2) == "<(")) rightFile2 = "<(nor " + rightFile2 + " )"
-
+      var rightFile2 = CommandParseUtilities.toNorSource(iargs(1).trim)
       val inputSource2 = SourceProvider(rightFile2, context, executeNor = executeNor, isNor = true)
       iteratorCommand2 = inputSource2.iteratorCommand
       dsource2 = inputSource2.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader2 = inputSource2.header
-
 
       if (rightHeader1.split("\t").length != 2) {
         throw new GorParsingException(s"buckettagfile must have 2 tab-delimited columns: Tag/PN (distinct), bucketID.\nThe relative position of tag in bucket specifies the csv order.\nCurrent header is: $rightHeader1")
@@ -116,8 +111,6 @@ class King2 extends CommandInfo("KING2",
       if (rightHeader2.split("\t").length != 2) {
         throw new GorParsingException(s"The tagfile must have two columns with all the PN/tag pairs to test, e.g. (PN1,PN2).\n\\nCurrent header is: $rightHeader2")
       }
-
-
 
       val pipeStep = KingAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, afCol, sepVal, valSize, uv, context.getSession) | KingAggregate(pi0thr,phithr,thetathr,t_pi0,t_phi,t_theta,context.getSession.getSystemContext.getMonitor)
 

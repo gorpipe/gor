@@ -2,9 +2,11 @@ package org.gorpipe.gor.table.files;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.Table;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,7 +218,7 @@ public class DictionaryLinkTable implements Table {
 
         } catch (Exception e) {
             // Does not exist, need to create a dummy one (so we for example can participate in trans).                 
-            return URI.create(String.format("/tmp/dummy_%s.gord", UUID.randomUUID()));
+            return URI.create(DataUtil.toFile(String.format("/tmp/dummy_%s", UUID.randomUUID()), DataType.GORD));
         }
     }
 }

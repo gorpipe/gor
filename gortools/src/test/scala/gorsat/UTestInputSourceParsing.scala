@@ -30,8 +30,10 @@ import Commands.CommandParseUtilities
 import process.{GenericSessionFactory, GorInputSources, GorPipeCommands, PipeInstance}
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{DbSource, GenomicIterator}
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
@@ -80,7 +82,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
     context = factory.create().getGorContext;
 
     // Create a test file
-    patientsPathSNP = Files.createTempFile("patientSNP", ".gor")
+    patientsPathSNP = Files.createTempFile("patientSNP", DataType.GOR.suffix)
     var outputFile: File = patientsPathSNP.toFile
     outputFile.deleteOnExit()
     var outputWriter: PrintWriter = new PrintWriter(outputFile)
@@ -89,7 +91,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
     outputWriter.println("chr1\t1000\t2.0\t2010-10-3")
     outputWriter.close()
 
-    patientsPathSEG = Files.createTempFile("patientSEG", ".gor")
+    patientsPathSEG = Files.createTempFile("patientSEG", DataType.GOR.suffix)
     outputFile = patientsPathSEG.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -99,7 +101,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
     outputWriter.close()
 
     // Create a test file
-    singleColumnsPath = Files.createTempFile("singlecolumns", ".txt")
+    singleColumnsPath = Files.createTempFile("singlecolumns", DataType.TXT.suffix)
     outputFile = singleColumnsPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -107,7 +109,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
     outputWriter.println("d1")
     outputWriter.close()
 
-    twoColumnsPath = Files.createTempFile("twocolumns", ".txt")
+    twoColumnsPath = Files.createTempFile("twocolumns", DataType.TXT.suffix)
     outputFile = twoColumnsPath.toFile
     outputFile.deleteOnExit()
     outputWriter = new PrintWriter(outputFile)
@@ -121,7 +123,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
     DbSource.initInConsoleApp()
 
     var tempDirectory = FileTestUtils.createTempDirectory(this.getClass.getName)
-    var ermGord = FileTestUtils.createTempFile(tempDirectory, "erm.gord",
+    var ermGord = FileTestUtils.createTempFile(tempDirectory, DataUtil.toFile("erm", DataType.GORD),
       "genes.gor\tOTHER\tchr1\t1\tchrZ\t1\tbull")
     ermGordPath = ermGord.getCanonicalPath
   }

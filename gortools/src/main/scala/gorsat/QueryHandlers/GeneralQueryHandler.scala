@@ -36,21 +36,27 @@ import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorOptions, GorParallelQueryHandler}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.TableHeader
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta
 import org.gorpipe.gor.table.util.PathUtils
+import org.gorpipe.gor.util.DataUtil
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConverters._
 import java.util.Optional
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
 
   def getResultsPath(nested: GorContext, newCacheFile: String, resultFileName: String): (Path, String) = {
-    val resultFilePath = if (newCacheFile.endsWith(".gor") && resultFileName.endsWith(".gorz")) resultFileName.substring(0,resultFileName.length-1) else resultFileName
+    val resultFilePath = if (DataUtil.isGor(newCacheFile) && DataUtil.isGorz(resultFileName))
+      resultFileName.substring(0,resultFileName.length-1)
+    else
+      resultFileName
+
     val ending = resultFilePath.lastIndexOf(".")
     var extension = resultFilePath.substring(ending)
     if (PathUtils.isLocal(newCacheFile)) {
@@ -63,8 +69,8 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
       GorJavaUtilities.createSymbolicLink(resPath,cachePath)
       (resPath,extension)
     } else {
-      extension += ".link"
-      val resPath = Path.of(resultFilePath+".link")
+      DataUtil.toFile(extension, DataType.LINK)
+      val resPath = Path.of(DataUtil.toFile(resultFilePath, DataType.LINK))
       Files.writeString(resPath,newCacheFile)
       (resPath,extension)
     }
@@ -245,7 +251,7 @@ object GeneralQueryHandler {
           if(nor) out else CheckOrder() | out
         } else null
         runner.run(theSource, ps)
-        val md5File = oldName + ".md5"
+        val md5File = s"$oldName.md5"
         if (fileReader.exists(md5File)) {
           val md5SumLines = fileReader.readAll(md5File)
 
@@ -288,12 +294,12 @@ object GeneralQueryHandler {
 
       if(oldName!=null && fileReader.exists(oldName) && !oldName.equals(newName)) {
         fileReader.move(oldName, newName)
-        val oldMetaName = oldName + ".meta"
+        val oldMetaName = DataUtil.toFile(oldName, DataType.META)
         if (fileReader.exists(oldMetaName)) {
           val parent = PathUtils.getParent(oldMetaName)
           val name = PathUtils.getFileName(newName)
 
-          fileReader.move(oldMetaName, parent + "/" + name+".meta")
+          fileReader.move(oldMetaName, DataUtil.toFile(s"$parent/$name", DataType.META))
         }
         newName
       } else ""
@@ -312,16 +318,16 @@ object GeneralQueryHandler {
 
   private def writeOutGorDictionaryFolder(fileReader: FileReader, outfolderpath: String, useTheDict: Boolean): Unit = {
     val outpath = if(useTheDict) {
-      if (outfolderpath.endsWith("/")) outfolderpath+GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME else outfolderpath+"/"+GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
+      if (outfolderpath.endsWith("/")) s"$outfolderpath${GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME}" else s"$outfolderpath/${GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME}";
     } else {
       var idx = outfolderpath.lastIndexOf("/")
       if (idx == -1) {
-        outfolderpath+"/"+outfolderpath
+        s"$outfolderpath/$outfolderpath"
       } else if (idx == outfolderpath.length) {
         idx = outfolderpath.lastIndexOf("/", idx-1)
-        outfolderpath+"/"+outfolderpath.substring(idx+1,outfolderpath.length-1)
+        s"$outfolderpath/${outfolderpath.substring(idx+1,outfolderpath.length-1)}"
       } else {
-        outfolderpath+"/"+outfolderpath.substring(idx+1)
+        s"$outfolderpath/${outfolderpath.substring(idx+1)}"
       }
     }
     GorJavaUtilities.writeDictionaryFromMeta(fileReader, outfolderpath, outpath)
@@ -331,7 +337,7 @@ object GeneralQueryHandler {
     val cep = inp.split(':')
     val stasto = if (cep.length > 1) cep(1).split('-') else Array("0", Integer.MAX_VALUE.toString)
     val (c, sp, ep) = (cep(0), stasto(0), if (stasto.length > 1 && stasto(1).nonEmpty) stasto(1) else Integer.MAX_VALUE.toString)
-    prefix + c + "\t" + sp + "\t" + c + "\t" + ep
+    s"$prefix$c\t$sp\t$c\t$ep"
   }
 
   private def getDictList(dictFiles: List[String], chromsrange: List[String], fileReader: FileReader): List[String] = {
@@ -342,8 +348,8 @@ object GeneralQueryHandler {
         val f = x._1
         chrI += 1
         val rf = getRelativeFileLocationForDictionaryFileReferences(f)
-        val prefix = rf + "\t" + chrI + "\t"
-        val metaPath = f+".meta"
+        val prefix = s"$rf\t$chrI\t"
+        val metaPath = DataUtil.toFile(f, DataType.META)
         val opt: Optional[String] = if (fileReader.exists(metaPath)) {
           val meta = GorMeta.createAndLoad(fileReader, metaPath)
           if (meta.getLineCount == -1) {
@@ -365,7 +371,7 @@ object GeneralQueryHandler {
         val f = x._1
         chrI += 1
         val rf = getRelativeFileLocationForDictionaryFileReferences(f)
-        val prefix = rf + "\t" + chrI + "\t"
+        val prefix = s"$rf\t$chrI\t"
         dictRangeFromSeekRange(x._2, prefix)
       })
     }
@@ -376,7 +382,7 @@ object GeneralQueryHandler {
       val f = getRelativeFileLocationForDictionaryFileReferences(x._1)
       val part = x._2
       // file, alias
-      f + "\t" + part
+      s"$f\t$part"
     })
   }
 

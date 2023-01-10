@@ -8,9 +8,11 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.driver.S3SourceProvider;
 
 import java.io.IOException;
@@ -108,7 +110,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     }
 
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
-        source.setProjectLinkFile(source.getRelativePath() + ".link");
+        source.setProjectLinkFile(DataUtil.toFile(source.getRelativePath(), DataType.LINK));
         source.setProjectLinkFileContent(findSharedSourceLinkContent(source));
     }
 

@@ -25,6 +25,7 @@ package org.gorpipe.gor.driver.bgenreader;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.datatypes.bgen.BGenFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIteratorBase;
@@ -63,7 +64,7 @@ public class BGenIterator extends GenomicIteratorBase {
 
     private Path getIndexFilePath(StreamSource indexSource) {
         try (final StreamSourceSeekableFile sssf = new StreamSourceSeekableFile(indexSource)) {
-            final File indexFileLocal = File.createTempFile("bgenidxfile", ".bgen");
+            final File indexFileLocal = File.createTempFile("bgenidxfile", DataType.BGEN.suffix);
             try(final FileOutputStream fos = new FileOutputStream(indexFileLocal)) {
                 final byte[] indexFileBuffer = new byte[32_768];
                 int read;

@@ -22,8 +22,10 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.bam;
 
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -50,10 +52,10 @@ public class BamFile extends StreamSourceFile {
     public List<String> possibleIndexNames() throws IOException {
         List<String> result = super.possibleIndexNames();
         String name = getFileSource().getSourceMetadata().getNamedUrl();
-        if (name.toLowerCase().endsWith(".bam")) {
-            result.add(name + ".bai");
+        if ( DataUtil.isBam(name) ) {
+            result.add( DataUtil.toFile(name, DataType.BAI));
             int endidx = name.length() - 4;
-            result.add(name.substring(0, endidx) + ".bai");
+            result.add(DataUtil.toFile(name.substring(0, endidx), DataType.BAI));
         }
         return result;
     }

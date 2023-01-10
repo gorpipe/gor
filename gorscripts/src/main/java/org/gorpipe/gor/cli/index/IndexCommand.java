@@ -26,8 +26,10 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.GorDriverFactory;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.util.DataUtil;
 import picocli.CommandLine;
 
 import java.io.*;
@@ -131,12 +133,12 @@ public class IndexCommand extends HelpOptions implements Runnable {
     }
 
     private void indexFile(String gorFile) {
-        var gorindex = gorFile + ".gori";
+        var gorindex = DataUtil.toFile(gorFile, DataType.GORI);
         if (indexPath.length()>0) {
             if(indexPath.endsWith("/")) {
-                gorindex = indexPath + Paths.get(gorFile).getFileName().toString() + ".gori";
+                gorindex = DataUtil.toFile(indexPath + Paths.get(gorFile).getFileName().toString(), DataType.GORI);
             } else {
-                gorindex = indexPath + "/" + Paths.get(gorFile).getFileName().toString() + ".gori";
+                gorindex = DataUtil.toFile(indexPath + "/" + Paths.get(gorFile).getFileName().toString(), DataType.GORI);
             }
         }
 

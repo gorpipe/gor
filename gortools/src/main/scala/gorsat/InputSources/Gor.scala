@@ -32,6 +32,7 @@ import gorsat.process.PipeOptions
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.Pipes
 
 import scala.collection.mutable.ListBuffer
@@ -121,7 +122,7 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
           throw e
       }
     } else {
-      if (inputFile.toUpperCase.contains(".YML")) {
+      if (DataUtil.isYml(inputFile)) {
         val qr = context.getSession.getSystemContext.getReportBuilder.parse(iargs(0))
         val qra = Array(qr)
         val gorpipe = DynIterator.createGorIterator(context)

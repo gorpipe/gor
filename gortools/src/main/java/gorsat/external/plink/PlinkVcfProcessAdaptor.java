@@ -23,8 +23,10 @@
 package gorsat.external.plink;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -38,8 +40,6 @@ import java.util.concurrent.ExecutionException;
  * This analysis class collects gor or vcf lines and writes them in batches to a temporary vcf files read by plink2 process
  */
 public class PlinkVcfProcessAdaptor extends PlinkProcessAdaptor {
-
-    final static String VCF_ENDING = ".vcf";
     private FileWriter vcf;
     private String vcfHeader;
 
@@ -66,7 +66,7 @@ public class PlinkVcfProcessAdaptor extends PlinkProcessAdaptor {
         } catch (Exception e) {
             throw new GorSystemException(e);
         }
-        Path vcfPath = Paths.get(vcfFilePath+VCF_ENDING);
+        Path vcfPath = Paths.get(DataUtil.toFile( vcfFilePath, DataType.VCF));
         Path rootPath = session.getProjectContext().getRealProjectRootPath();
         if((vcfPath.isAbsolute() && Files.exists(vcfPath)) || Files.exists(rootPath.resolve(vcfPath))) {
             if (plinkFuture != null) first = plinkFuture.get();
@@ -87,7 +87,7 @@ public class PlinkVcfProcessAdaptor extends PlinkProcessAdaptor {
 
     private void setNewVcfStream() throws IOException {
         this.pfnIdx = (this.pfnIdx + 1) & 1;
-        this.vcf = new FileWriter(getCurrentInputFile() + VCF_ENDING);
+        this.vcf = new FileWriter(DataUtil.toFile(getCurrentInputFile(), DataType.VCF));
         dumpToVcf(vcf, vcfHeader);
     }
 

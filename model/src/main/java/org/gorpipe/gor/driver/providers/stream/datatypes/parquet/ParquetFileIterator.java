@@ -48,6 +48,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
 
 import java.io.IOException;
@@ -167,7 +168,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
     }
 
     private static boolean isParquetDataFile(FileReader fileReader, String path) {
-        return path.endsWith(".parquet")
+        return DataUtil.isParquet(path)
                 && !fileReader.isDirectory(path);
     }
 

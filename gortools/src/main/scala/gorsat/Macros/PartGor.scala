@@ -209,7 +209,7 @@ object PartGor {
     val bucketMap = scala.collection.mutable.HashMap.empty[String, (List[String], Int)]
     val taglist = tags.split(',').map(x => (x, true)).toMap
     // Handling dict with multiple files having same tag combination, e.g. using additional chromosome partitions
-    val dictContents = idictContents.map( x => "\t1\t1\t1\t1\t1\t" + x.split("\t")(6)).distinct.zipWithIndex.map(l => l._2+l._1)
+    val dictContents = idictContents.map( x => s"\t1\t1\t1\t1\t1\t${x.split("\t")(6)}").distinct.zipWithIndex.map(l => s"${l._2}${l._1}")
 
     dictContents.map(x => {
       val tempcols = x.split("\t")

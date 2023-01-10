@@ -59,7 +59,7 @@ case class RegSelAnalysis(pattern: String,
     }
 
     val rowAddition = values.mkString("\t")
-    val rowText = r.getAllCols + "\t" + rowAddition
+    val rowText = s"${r.getAllCols}\t$rowAddition"
     val newRow = RowObj(rowText)
     super.process(newRow)
   }

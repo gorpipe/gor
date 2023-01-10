@@ -23,12 +23,13 @@
 package gorsat.Utilities
 
 import java.nio.file.{Files, Paths}
-
 import gorsat.Commands.CommandParseUtilities
 import gorsat.FreemarkerQueryUtilities
 import org.gorpipe.gor.session.GorSession
+import org.gorpipe.gor.util.DataUtil
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.MapHasAsJava
+
 
 /**
   * Created by sigmar on 16/02/2017.
@@ -92,7 +93,7 @@ object ReportUtilities {
   }
 
   private def getQuery(parameterMap: Map[String, String], commandSplitItem: String, session: GorSession, cacheDir: String): String = {
-    if (commandSplitItem.contains(".yml")) {
+    if (DataUtil.isYml(commandSplitItem)) {
       var index = commandSplitItem.indexOf(':')
       val indexOfParentheses = commandSplitItem.indexOf('(')
       var report: String = null
@@ -141,11 +142,11 @@ object ReportUtilities {
       mapQuery(commandSplitItem, parameterMap, session, cacheDir)
     }
     ).map(p => p.toString.trim)
-    queryList
+    queryList.toIndexedSeq
   }
 
   private def mapQuery(p: String, parameterMap: Map[String, String], session: GorSession, cacheDir: String): String = {
-    if (p.endsWith(".gorq") || p.contains(".yml")) {
+    if (DataUtil.isGorq(p) || DataUtil.isYml(p)) {
       getQuery(parameterMap, p, session, cacheDir)
     } else
       p

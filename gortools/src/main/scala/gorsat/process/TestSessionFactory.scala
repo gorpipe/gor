@@ -29,7 +29,7 @@ import org.gorpipe.gor.session.{GorSession, ProjectContext, SystemContext}
 import org.gorpipe.gor.util.StringUtil
 
 import java.util
-import scala.collection.JavaConverters
+import scala.jdk.javaapi.CollectionConverters
 
 /**
   * Factory method tho create session used for tests
@@ -47,7 +47,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
 
     val session = new GorSession(requestId)
 
-    val allowedWriteLocationList = JavaConverters.seqAsJavaList(allowedWriteLocations)
+    val allowedWriteLocationList = CollectionConverters.asJava(allowedWriteLocations)
 
     val fileReader = createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList);
     val projectContextBuilder = new ProjectContext.Builder()

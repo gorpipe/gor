@@ -13,7 +13,9 @@ package org.gorpipe.gor.model;
 
 import com.nextcode.gor.driver.utils.DatabaseHelper;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.utils.TestUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.collection.extract.Extract;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -70,7 +72,7 @@ public class UTestDriverBackedSecureFileReader {
      */
     @Test
     public void testFileSignature() throws Exception {
-        File f1 = File.createTempFile("test", ".txt");
+        File f1 = File.createTempFile("test", DataType.TXT.suffix);
         DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null, null,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
         final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
@@ -103,17 +105,17 @@ public class UTestDriverBackedSecureFileReader {
         // Setup temporary file structure to test withh
         final Path root = Files.createTempDirectory("symlinktest");
         final Path d1 = Files.createDirectory(Paths.get(root.toString(), "d1"));
-        final String fileName = "testfile.gor";
+        final String fileName = DataUtil.toFile("testfile", DataType.GOR);
         final Path file = Paths.get(d1.toString(), fileName);
-        final String link1name = "testfile1.gor.link";
+        final String link1name = DataUtil.toLinkFile("testfile1", DataType.GOR);
         final Path link1 = Paths.get(d1.toString(), link1name);
-        final String link2name = "testfile2.gor.link";
+        final String link2name = DataUtil.toLinkFile("testfile2", DataType.GOR);
         final Path link2 = Paths.get(root.toString(), link2name);
-        final String link3name = "testfile3.gor.link";
+        final String link3name = DataUtil.toLinkFile("testfile3", DataType.GOR);
         final Path link3 = Paths.get(d1.toString(), link3name);
-        final String link4name = "testfile.gor.link";
+        final String link4name = DataUtil.toLinkFile("testfile4", DataType.GOR);
         final Path link4 = Paths.get(d1.toString(), link4name);
-        final String link5name = "testfile5.gor.link";
+        final String link5name = DataUtil.toLinkFile("testfile5", DataType.GOR);
         final Path link5 = Paths.get(d1.toString(), link5name);
 
 
@@ -153,14 +155,14 @@ public class UTestDriverBackedSecureFileReader {
         //Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content));
 
         // Read form link file.
-        try (Stream<String> r = reader.readFile(link2.toString().replace(".link", ""))) {
+        try (Stream<String> r = reader.readFile(link2.toString().replace(DataType.LINK.suffix, ""))) {
             r.limit(1).collect(Collectors.toList()).get(0);
         }
 
         // Test fallback links, i.e. check files that do not exists, but link file exists, will be found.
         Assert.assertEquals(
                 reader.getFileSignature(link1.toString()),
-                reader.getFileSignature(link1.toString().replace(".link", "")));
+                reader.getFileSignature(link1.toString().replace(DataType.LINK.suffix, "")));
 
         //
         // Test with not allow absolute links.
@@ -192,10 +194,10 @@ public class UTestDriverBackedSecureFileReader {
         // Test fallback link file if absolute paths not allowed.
         Assert.assertEquals(
                 reader.getFileSignature(link5name),
-                reader.getFileSignature(link5name.replace(".link", "")));
+                reader.getFileSignature(link5name.replace(DataType.LINK.suffix, "")));
 
         // Test recursive fallback (uses link4).
-        reader.readAll(link1name.replace(".link", ""));
+        reader.readAll(link1name.replace(DataType.LINK.suffix, ""));
     }
 
     /**
@@ -268,7 +270,7 @@ public class UTestDriverBackedSecureFileReader {
     @Test
     public void testReadMethods() throws Exception {
         // Simple test of reading a file
-        final File f1 = File.createTempFile("test", ".txt");
+        final File f1 = File.createTempFile("test", DataType.TXT.suffix);
         Files.write(f1.toPath(), "somedata".getBytes());
 
 
@@ -370,7 +372,7 @@ public class UTestDriverBackedSecureFileReader {
 
     @Test
     public void testCopy() throws IOException {
-        Path f1 = workDirPath.resolve("test.txt");
+        Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
         Files.write(f1, "somedata".getBytes());
 
         Object[] constants = {};
@@ -379,7 +381,7 @@ public class UTestDriverBackedSecureFileReader {
                         .withAllowAbsolutePath(true)
                         .withWriteLocations(Arrays.asList(new String[]{workDirPath.toString()})).build());
 
-        Path c1 = workDirPath.resolve("copy.txt");
+        Path c1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.TXT));
         reader.copy(f1.toString(), c1.toString());
 
         Assert.assertTrue(Files.exists(f1));
@@ -389,7 +391,7 @@ public class UTestDriverBackedSecureFileReader {
 
     @Test
     public void testMove() throws IOException {
-        Path f1 = workDirPath.resolve("test.txt");
+        Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
         Files.write(f1, "somedata".getBytes());
 
         Object[] constants = {};
@@ -398,12 +400,11 @@ public class UTestDriverBackedSecureFileReader {
                         .withAllowAbsolutePath(true)
                         .withWriteLocations(Arrays.asList(new String[]{workDirPath.toString()})).build());
 
-        Path c1 = workDirPath.resolve("copy.txt");
+        Path c1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.TXT));
         reader.move(f1.toString(), c1.toString());
 
         Assert.assertFalse(Files.exists(f1));
         Assert.assertTrue(Files.exists(c1));
         Assert.assertEquals("somedata", new String(Files.readAllBytes(c1)));
     }
-
 }

@@ -29,6 +29,7 @@ import gorsat.Commands.{Analysis, Output}
 import org.gorpipe.gor.binsearch.{GorIndexType, GorZipLexOutputStream}
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{FileReader, GorMeta, Row}
+import org.gorpipe.gor.util.DataUtil
 
 import java.nio.file.Paths
 
@@ -45,7 +46,7 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
 
   val out = new GorZipLexOutputStream(fileReader.getOutputStream(fileName, append), options.columnCompress, options.md5, if(options.md5File) fileReader.toAbsolutePath(fileName+".md5") else null, if (options.idx != GorIndexType.NONE) fileReader.getOutputStream(fileName + DataType.GORI.suffix) else null, options.idx, options.compressionLevel)
 
-  override def getName(): String = fileName
+  override def getName: String = fileName
 
   override def setup(): Unit = {
     getMeta.initMetaStats(options.cardCol, header, options.infer, options.maxseg)
@@ -65,7 +66,7 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
       getMeta.setMd5(out.getMd5)
     } finally {
       if (options.writeMeta) {
-        val metaout = fileReader.getOutputStream(fileName + ".meta")
+        val metaout = fileReader.getOutputStream(DataUtil.toFile(fileName, DataType.META))
         metaout.write(getMeta.formatHeader().getBytes())
         metaout.close()
       }

@@ -26,6 +26,7 @@ import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
@@ -34,6 +35,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -229,7 +231,7 @@ public class PluggableGorDriver implements GorDriver {
     }
 
     private DataSource tryResolveWithLink(DataSource source) throws IOException {
-        SourceReference fallbackSourceRef = getSourceRef(source, source.getSourceReference().getUrl()+".link", null);
+        SourceReference fallbackSourceRef = getSourceRef(source, DataUtil.toFile( source.getSourceReference().getUrl(), LINK), null);
         DataSource fallbackLinkSource = wrap(resolveDataSource(fallbackSourceRef));
         if (fallbackLinkSource != null && fallbackLinkSource.exists()) {
             source.close();
@@ -264,7 +266,7 @@ public class PluggableGorDriver implements GorDriver {
         Path pparent = parent.getParent();
         if(pparent != null && !pparent.toString().endsWith(":")) {
             Path parentFileName = parent.getFileName();
-            Path lparent = pparent.resolve(parentFileName+".link");
+            Path lparent = pparent.resolve(DataUtil.toFile(parentFileName.toString(), DataType.LINK));
 
             SourceReference sourceRef = getSourceRef(source, fixHttpUrl(lparent.toString()), linkSubPath!=null ? linkSubPath.toString() : null);
             DataSource fallbackLinkSource = getDataSource(sourceRef);

@@ -28,6 +28,7 @@ import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{GorJavaUtilities, ProcessRowSource}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.util.DataUtil
 
 object Cmd {
 
@@ -54,7 +55,7 @@ object Cmd {
       val qr = session.getSystemContext.getReportBuilder.parse(command.substring(0, e))
       command = qr + command.substring(e)
     }
-    else if (command.contains(".yml")) {
+    else if (DataUtil.isYml(command)) {
       val e = command.indexOf(')')
       if (e == -1) command = session.getSystemContext.getReportBuilder.parse(command)
       else command = session.getSystemContext.getReportBuilder.parse(command.substring(0, e + 1)) + command.substring(e + 1)

@@ -23,6 +23,8 @@
 package org.gorpipe.gor.model;
 
 import htsjdk.samtools.SAMSequenceRecord;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -40,7 +42,7 @@ public class SharedChromSeqReferenceSource extends SharedCachedReferenceSource i
     @Override
     protected byte[] loadReference(String name) {
 
-        File referenceFile = new File(referencePath, name + ".txt");
+        File referenceFile = new File(referencePath, DataUtil.toFile(name, DataType.TXT));
 
         if (!referenceFile.exists()) {
             return new byte[0];
@@ -58,7 +60,7 @@ public class SharedChromSeqReferenceSource extends SharedCachedReferenceSource i
     @Override
     public byte[] getReferenceBasesByRegion(SAMSequenceRecord sequenceRecord, int zeroBasedStart, int requestedRegionLength) {
         var name = sequenceRecord.getContig();
-        var path = Path.of(referencePath).resolve(name + ".txt");
+        var path = Path.of(referencePath).resolve(DataUtil.toFile(name, DataType.TXT));
         if (Files.exists(path)) {
             try (var referenceFile = new RandomAccessFile(path.toString(), "r")) {
                 referenceFile.seek(zeroBasedStart);

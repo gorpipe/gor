@@ -29,6 +29,7 @@ import gorsat.Utilities.IteratorUtilities.validHeader
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.util.DataUtil
 
 class King extends CommandInfo("KING",
   CommandArguments("-sym", "-gc -vs -s -pi0thr -phithr -thetathr -maxvars", 3),
@@ -104,26 +105,19 @@ class King extends CommandInfo("KING",
     var rightHeader3 = ""
 
     try {
-      var rightFile1 = iargs(0).trim
-      // Read a TSV file via nested quer to handle # in header properly
-      if ((rightFile1.toUpperCase.endsWith(".NORZ") || rightFile1.toUpperCase.endsWith(".TSV") || rightFile1.toUpperCase.endsWith(".NOR")) && !(rightFile1.slice(0, 2) == "<(")) rightFile1 = "<(nor " + rightFile1 + " )"
-
+      var rightFile1 = CommandParseUtilities.toNorSource(iargs(0).trim)
       val inputSource1 = SourceProvider(rightFile1, context, executeNor = executeNor, isNor = true)
       iteratorCommand1 = inputSource1.iteratorCommand
       dsource1 = inputSource1.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader1 = inputSource1.header
 
-      var rightFile2 = iargs(1).trim
-      if ((rightFile2.toUpperCase.endsWith(".NORZ") || rightFile2.toUpperCase.endsWith(".TSV") || rightFile2.toUpperCase.endsWith(".NOR")) && !(rightFile2.slice(0, 2) == "<(")) rightFile2 = "<(nor " + rightFile2 + " )"
-
+      var rightFile2 = CommandParseUtilities.toNorSource(iargs(1).trim)
       val inputSource2 = SourceProvider(rightFile2, context, executeNor = executeNor, isNor = true)
       iteratorCommand2 = inputSource2.iteratorCommand
       dsource2 = inputSource2.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader2 = inputSource2.header
 
-      var rightFile3 = iargs(2).trim
-      if ((rightFile3.toUpperCase.endsWith(".NORZ") || rightFile3.toUpperCase.endsWith(".TSV") || rightFile3.toUpperCase.endsWith(".NOR")) && !(rightFile3.slice(0, 2) == "<(")) rightFile3 = "<(nor " + rightFile3 + " )"
-
+      var rightFile3 = CommandParseUtilities.toNorSource(iargs(2).trim)
       val inputSource3 = SourceProvider(rightFile3, context, executeNor = executeNor, isNor = true)
       iteratorCommand3 = inputSource3.iteratorCommand
       dsource3 = inputSource3.dynSource.asInstanceOf[DynamicNorSource]

@@ -25,7 +25,9 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.GorOptions;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -68,7 +70,7 @@ public class UTestGorWrite {
         Files.copy(p, tmpdir.resolve("dbsnp.gor"));
         TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -link user_data/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true);
 
-        Assert.assertEquals(tmpdir.resolve("user_data").resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("user_data").resolve("dbsnp3.gor.link")));
+        Assert.assertEquals(tmpdir.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\n", Files.readString(tmpdir.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))));
 
         String linkresult = TestUtils.runGorPipe("gor user_data/dbsnp3.gor | top 1", "-gorroot", tmpdir.toString());
         Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +

@@ -37,6 +37,7 @@ public enum DataType {
     SAM(VARIANTS, ".sam"),
     BAM(VARIANTS, ".bam"),
     BGEN(VARIANTS, ".bgen"),
+    BGI(INDEX, ".bgi"),
     VCF(VARIANTS, ".vcf"),
     GVCF(VARIANTS, ".gvcf"),
     BCF(VARIANTS, ".bcf"),
@@ -49,6 +50,7 @@ public enum DataType {
     GORD(TABLE, ".gord"),
     GORT(TABLE, ".gort"),
     GORP(TABLE, ".gorp"),
+    GORQ(REPORT, ".gorq"),
     LINK(REFERENCE, ".link"),
     LOCAL_LINK(REFERENCE, ".link.local"),
     CRAM(VARIANTS, ".cram"),
@@ -56,12 +58,20 @@ public enum DataType {
     SPEC(VARIANTS, ".spec"),
     NOR(VARIANTS, ".nor"),
     NORZ(VARIANTS, ".norz"),
+    NORD(TABLE, ".nord"),
     CSV(VARIANTS, ".csv"),
+    CSVGZ(VARIANTS, ".csv.gz"),
     TSV(VARIANTS, ".tsv"),
     TXT(VARIANTS, ".txt"),
     META(METAINFO, ".meta"),
     MEM(VARIANTS, ".mem"),
-    MD5LINK(MD5_LINK, ".md5link");
+    MD5LINK(MD5_LINK, ".md5link"),
+    YML(REPORT, ".yml"),
+    R(SCRIPT, ".r"),
+    SH(SCRIPT, ".sh"),
+    PY(SCRIPT, ".py"),
+    FASTA(VARIANTS, ".fasta"),
+    FA(VARIANTS, ".fa");
 
     public final String suffix;
     public final FileNature nature;
@@ -77,13 +87,29 @@ public enum DataType {
      * @return DataType or null if not found
      */
     public static DataType fromFileName(String file) {
-        file = file.toLowerCase();
+        file = file.trim().toLowerCase();
         for (DataType type : values()) {
             if (file.endsWith(type.suffix)) {
                 return type;
             }
         }
         return null;
+    }
+
+    public static boolean isOfType(String file, DataType type) {
+        return file.trim().toLowerCase().endsWith(type.suffix);
+    }
+
+    public static boolean containsType(String file, DataType type) {
+        return file.trim().toLowerCase().contains(type.suffix);
+    }
+
+    public static String[] getWritableFormats() {
+        return new String[] {DataType.GOR.suffix,
+                DataType.GORZ.suffix,
+                DataType.NOR.suffix,
+                DataType.NORZ.suffix
+        };
     }
 
     @Override

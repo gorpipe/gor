@@ -27,6 +27,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -34,6 +35,7 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -489,7 +491,7 @@ public class BucketManager<T extends DictionaryEntry> {
      * @return the table given by path.
      */
     private BaseDictionaryTable initTempTable(String path) {
-        if (path.toString().toLowerCase().endsWith(".gord")) {
+        if (DataUtil.isGord(path)) {
             return new DictionaryTable.Builder<>(path)
                     .useHistory(table.isUseHistory())
                     .sourceColumn(table.getSourceColumn())
@@ -497,7 +499,7 @@ public class BucketManager<T extends DictionaryEntry> {
                     .validateFiles(table.isValidateFiles())
                     .build();
         } else {
-            throw new GorSystemException("BaseTable of type " + path.toString() + " are not supported!", null);
+            throw new GorSystemException("BaseTable of type " + path + " are not supported!", null);
         }
     }
 
@@ -531,8 +533,8 @@ public class BucketManager<T extends DictionaryEntry> {
                 if (force || System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()) {
                     log.debug("Deleting bucket file {}", bucketFile);
                     source.delete();
-                    deleteFileIfExists(source.getFullPath() + ".gori");
-                    deleteFileIfExists(source.getFullPath() + ".meta");
+                    deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.GORI));
+                    deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.META));
                     deleteLinkFileIfExists(bucketFile.toString());
                 }
             }
@@ -552,7 +554,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
     private void deleteLinkFileIfExists(String path) {
         try {
-            String linkFile = path + (path.endsWith(".link") ? "" : ".link");
+            String linkFile = DataUtil.isLink(path) ? path : DataUtil.toFile(path, DataType.LINK);
             DataSource linkSource = table.getFileReader().resolveDataSource(table.getFileReader().createSourceReference(linkFile, false));
             if (linkSource != null && linkSource.exists()) {
                 linkSource.delete();
@@ -660,7 +662,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}",
                         System.currentTimeMillis(), lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
                 if (fileName.startsWith(getBucketFilePrefix(table))
-                        && fileName.endsWith(".gorz")
+                        && DataUtil.isGorz(fileName)
                         && (System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()
                             || force)) {
                     // This bucket file has not been accessed for some time.
@@ -782,7 +784,7 @@ public class BucketManager<T extends DictionaryEntry> {
             int nextToBeAddedIndex = (i - 1) * getBucketSize();
             int nextBucketSize = Math.min(getBucketSize(), lines2bucketize.size() - nextToBeAddedIndex);
             bucketsToCreate.put(
-                    PathUtils.resolve(bucketDir, bucketNamePrefix) + i + ".gorz",
+                    DataUtil.toFile(PathUtils.resolve(bucketDir, bucketNamePrefix) + i, DataType.GORZ),
                     lines2bucketize.subList(nextToBeAddedIndex, nextToBeAddedIndex + nextBucketSize));
         }
         return bucketsToCreate;

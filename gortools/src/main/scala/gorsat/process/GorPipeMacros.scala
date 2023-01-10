@@ -41,7 +41,7 @@ object GorPipeMacros {
   }
 
   def getMacroInfoTable: String = {
-    val builder: StringBuilder = StringBuilder.newBuilder
+    val builder: StringBuilder = new StringBuilder()
 
     builder.append("Command\tMinNumArgs\tMaxNumArgs\tArguments\tValueArguments\n")
     macrosMap.toSeq.sortWith(_._1 < _._1).foreach{ x => builder.append(x._2.name)

@@ -28,6 +28,8 @@ import gorsat.Outputs.{NorStdOut, StdOut}
 import gorsat.Utilities.AnalysisUtilities
 import org.gorpipe.gor.session.{GorRunner, GorSession}
 import org.gorpipe.gor.RequestStats
+import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.util.DataUtil
 
 /**
   * Execution engine for GOR running as command line. This class takes as input the command line options, construct a
@@ -51,7 +53,7 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
   override protected def createIterator(session: GorSession): PipeInstance = {
 
     var queryToExecute = pipeOptions.query
-    val fileAliasMap = AnalysisUtilities.loadAliases(pipeOptions.aliasFile, session, "gor_aliases.txt")
+    val fileAliasMap = AnalysisUtilities.loadAliases(pipeOptions.aliasFile, session, DataUtil.toFile("gor_aliases", DataType.TXT))
 
     AnalysisUtilities.checkAliasNameReplacement(CommandParseUtilities.quoteSafeSplitAndTrim(queryToExecute, ';'), fileAliasMap) //needs a test
     queryToExecute = replaceAllAliases(queryToExecute, fileAliasMap)

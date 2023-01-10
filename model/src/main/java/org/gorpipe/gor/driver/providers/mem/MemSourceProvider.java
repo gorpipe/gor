@@ -31,6 +31,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,7 @@ public class MemSourceProvider implements SourceProvider {
 
     @Override
     public MemSource resolveDataSource(SourceReference sourceReference) {
-        if (!sourceReference.getUrl().toLowerCase().endsWith(".mem")) {
+        if (!DataUtil.isMem(sourceReference.getUrl())) {
             log.debug("Unhandled protocol reference: {}", sourceReference);
             return null;
         }
