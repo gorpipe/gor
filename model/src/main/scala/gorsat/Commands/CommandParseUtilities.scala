@@ -26,7 +26,7 @@ import gorsat.Commands.GenomicRange.Range
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.GorCommand
-import org.gorpipe.gor.util.DataUtil
+import org.gorpipe.gor.util.{DataUtil, StringUtil}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -1126,7 +1126,7 @@ object CommandParseUtilities {
   }
 
   private def cleanupQueryAndSplit(query: String, stepFormat: String): Array[String] = {
-    val fixedQuery = query.replace('\n', ' ').replace('\r', ' ')
+    val fixedQuery = StringUtil.cleanTextContent(query.replace('\n', ' ').replace('\r', ' '))
     val queries = quoteSafeSplitAndTrim(fixedQuery, ';')
 
     var commands = Array.empty[String]

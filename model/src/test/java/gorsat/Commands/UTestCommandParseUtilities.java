@@ -277,4 +277,22 @@ public class UTestCommandParseUtilities {
         result = CommandParseUtilities.toNorSource("foo.nord");
         Assert.assertEquals("foo.nord", result);
     }
+
+    @Test
+    public void testRemoveNonPrintableCharactersInQuery() {
+        var validQuery = "gor foo.gor | calc a 1.0";
+        var query = "gor foo.gor | \u008Ccalc a 1.0\u0092";
+        var cleanedQuery = CommandParseUtilities.cleanupQuery(query);
+
+        Assert.assertEquals(validQuery, cleanedQuery);
+    }
+
+    @Test
+    public void testRemoveIllegalControlCharactersInQuery() {
+        var validQuery = "gor foo.gor | calc a 1.0 | top 10";
+        var query = "gor foo.gor | \u0004calc a 1.0\u001D\n| top 10";
+        var cleanedQuery = CommandParseUtilities.cleanupQuery(query);
+
+        Assert.assertEquals(validQuery, cleanedQuery);
+    }
 }
