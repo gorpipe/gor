@@ -89,7 +89,8 @@ object PipeOptions {
     "-queryhandler",
     "-gorroot",
     "-requestid",
-    "-stats")
+    "-stats",
+    "-color")
 }
 
 /**
@@ -133,6 +134,8 @@ class PipeOptions {
   var requestId:String = _
   // Enable request stats?
   var stats: Boolean = false
+  // Colored output for stdout
+  var color: String = _
 
   def parseOptions(args: Array[String]): Unit = {
     this.aliasFile = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-aliases", null)
@@ -149,6 +152,7 @@ class PipeOptions {
     this.showStackTrace = CommandParseUtilities.hasOption(args, "-stacktrace")
     this.version = CommandParseUtilities.hasOption(args, "-version")
     this.stats = CommandParseUtilities.hasOption(args, "-stats")
+    this.color = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-color", "none")
 
     // Following options should not be part of the documentation
     this.prePipe = CommandParseUtilities.hasOption(args, "-prepipe")

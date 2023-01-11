@@ -25,7 +25,7 @@ public class RowRotatingColorize implements RowColorize {
     }
 
     @Override
-    public String formatHeaderColumn(int index, String value) {
+    public String formatHeaderColumn(int index, String value, String type) {
         var i = index % formatsUnderlined.length;
         return formatsUnderlined[i] + value + RESET;
     }

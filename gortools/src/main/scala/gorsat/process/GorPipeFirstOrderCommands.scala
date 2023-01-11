@@ -44,6 +44,7 @@ trait GorPipeFirstOrderCommands {
         "                      By default the program looks for the file gor_aliases.txt in local directory.\n" +
         " -stdin               The program reads stdin, e.g. if the command does not start with gor ...\n" +
         " -nor                 The program reads the source as a non-ordered file, e.g. tsv file and adds (chr,pos) ...\n" +
+        " -color <coloring>    Color the output either by 'type' or 'rotate'.\n" +
         " -config <file>       Path to configuration file, e.g. build info etc..\n" +
         " -cachedir <path>     Path to a folder for temporary and cache files.\n" +
         " -logdir <path>       Path to a folder for log files.\n" +

@@ -31,11 +31,11 @@ class OutStream(header: String = null, outputStream: OutputStream) extends Outpu
   val out = new java.io.BufferedWriter(new java.io.OutputStreamWriter(outputStream), 1024 * 100)
 
   def setup(): Unit = {
-    if (header != null) out.write(header + "\n")
+    if (header != null) out.write(processHeader(header) + "\n")
   }
 
   def process(r: Row): Unit = {
-    out.write(r.toString)
+    out.write(processRow(r).toString)
     out.write('\n')
   }
 
@@ -43,4 +43,14 @@ class OutStream(header: String = null, outputStream: OutputStream) extends Outpu
     out.flush
     out.close
   }
+
+  protected def processHeader(header: String): String = {
+    header
+  }
+
+  protected def processRow(r: Row): String = {
+    r.toString()
+  }
+
+  def getHeader : String = header
 }

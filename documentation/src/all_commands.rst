@@ -12,7 +12,6 @@
    command/CIGARSEGS
    command/CMD
    command/COLNUM
-   command/COLOREDOUTPUT
    command/COLS2LIST
    command/COLSPLIT
    command/COLTYPE

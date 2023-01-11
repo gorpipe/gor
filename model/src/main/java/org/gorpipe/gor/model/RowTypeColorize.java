@@ -15,6 +15,15 @@ public class RowTypeColorize implements RowColorize {
         }
     };
 
+    private HashMap<String, String> headerFormats = new HashMap() {
+        {
+            put("S", GREEN_UNDERLINED);
+            put("I", CYAN_UNDERLINED);
+            put("D", PURPLE_UNDERLINED);
+            put("L", YELLOW_UNDERLINED);
+        }
+    };
+
     @Override
     public String formatColumn(int index, String value, String type) {
         if (type == null) {
@@ -30,7 +39,16 @@ public class RowTypeColorize implements RowColorize {
     }
 
     @Override
-    public String formatHeaderColumn(int index, String value) {
-        return value;
+    public String formatHeaderColumn(int index, String value, String type) {
+        if (type == null) {
+            return GREEN_UNDERLINED + value + RESET;
+        }
+
+        var t = type.toUpperCase();
+        if (formats.containsKey(t)) {
+            return headerFormats.get(t) + value + RESET;
+        } else {
+            return value;
+        }
     }
 }

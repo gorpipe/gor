@@ -72,6 +72,9 @@ public class QueryCommand extends HelpOptions implements Runnable{
     @CommandLine.Option(names={"-l","--loglevel"}, defaultValue = "warn", description = "Sets the log level to use for the current gor query. Available levels are none, debug, info, warn or error")
     private String logLevel;
 
+    @CommandLine.Option(names={"--color"}, description = "Adds color to output, either 'rotate' for rotating colors or 'type' for type based colors.")
+    private String color = "none";
+
     @CommandLine.Option(defaultValue = "0", names={"-w","--workers"}, description = "Number of workers to execute the current gor query.")
     private int workers = 0;
 
@@ -97,6 +100,7 @@ public class QueryCommand extends HelpOptions implements Runnable{
         commandlineOptions.requestId_$eq(requestId);
         commandlineOptions.showStackTrace_$eq(showStackTrace);
         commandlineOptions.workers_$eq(workers);
+        commandlineOptions.color_$eq(color);
 
         ExceptionUtilities.setShowStackTrace(showStackTrace);
 

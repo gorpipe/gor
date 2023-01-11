@@ -22,14 +22,15 @@
 
 package gorsat.process
 
-import gorsat.Commands.CommandParseUtilities
+import gorsat.Commands.{CommandParseUtilities, Processor, RowHeader}
 import gorsat.Utilities.MacroUtilities.replaceAllAliases
-import gorsat.Outputs.{NorStdOut, StdOut}
+import gorsat.Outputs.{ColorStdOut, NorColorStdOut, NorStdOut, OutStream, StdOut}
 import gorsat.Utilities.AnalysisUtilities
 import org.gorpipe.gor.session.{GorRunner, GorSession}
 import org.gorpipe.gor.RequestStats
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.util.DataUtil
+import org.gorpipe.gor.model.{RowRotatingColorize, RowTypeColorize}
 
 /**
   * Execution engine for GOR running as command line. This class takes as input the command line options, construct a
@@ -61,15 +62,11 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     val iterator = new PipeInstance(session.getGorContext)
     iterator.init(queryToExecute, pipeOptions.stdIn, "", pipeOptions.fileSignature, pipeOptions.virtualFile)
 
-    var header = iterator.getHeader
-    if (containsWriteCommand(pipeOptions.query)) header = null
+    var instance = iterator
+    if (containsWriteCommand(pipeOptions.query)) instance = null
 
-    // Add steps that return the output of the pipe
-    iterator.thePipeStep = if (session.getNorContext || iterator.isNorContext) {
-      iterator.thePipeStep | NorStdOut(header)
-    } else {
-      iterator.thePipeStep | StdOut(header)
-    }
+    iterator.thePipeStep = iterator.thePipeStep |
+      createStdOut(session.getNorContext || iterator.isNorContext, pipeOptions.color, iterator)
 
     iterator
   }
@@ -100,5 +97,27 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     }
 
     containsWrite
+  }
+
+  private def createStdOut(isNor: Boolean, color: String, iterator: PipeInstance): OutStream = {
+    val c = color.toLowerCase()
+
+    if (isNor) {
+      if (c.startsWith("r")) {
+        NorColorStdOut(iterator, new RowRotatingColorize())
+      } else if(c.startsWith("t")) {
+        NorColorStdOut(iterator, new RowTypeColorize())
+      } else {
+        NorStdOut(if (iterator == null) null else iterator.getHeader())
+      }
+    } else {
+      if (c.startsWith("r")) {
+        ColorStdOut(iterator, new RowRotatingColorize())
+      } else if (c.startsWith("t")) {
+        ColorStdOut(iterator, new RowTypeColorize())
+      } else {
+        StdOut(if (iterator == null) null else iterator.getHeader())
+      }
+    }
   }
 }

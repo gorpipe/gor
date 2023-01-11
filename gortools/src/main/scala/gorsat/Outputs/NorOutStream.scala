@@ -28,11 +28,14 @@ import java.io.OutputStream
 
 class NorOutStream(val header: String = null, val outputStream: OutputStream, skipHeader: Boolean = false) extends OutStream(header, outputStream) {
   override def setup(): Unit = {
-    if (header != null & !skipHeader) out.write("#" + header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n")
+    if (header != null & !skipHeader) out.write("#" + processHeader(header))
   }
 
-  override def process(r: Row): Unit = {
-    out.write(r.otherCols)
-    out.write('\n')
+  override protected def processHeader(header: String) : String = {
+    header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n"
+  }
+
+  override protected def processRow(r: Row): String = {
+    r.otherCols()
   }
 }

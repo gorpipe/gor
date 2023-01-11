@@ -20,26 +20,44 @@
  *  END_COPYRIGHT
  */
 
-package gorsat.Analysis
+package gorsat.Outputs
 
-import gorsat.Commands.{Analysis, RowHeader}
+import gorsat.process.PipeInstance
 import org.gorpipe.gor.model.{Row, RowColorize}
-import org.gorpipe.model.gor.RowObj
 
-import scala.io.AnsiColor._
+case class NorColorStdOut(instance: PipeInstance = null, colorFormatter: RowColorize)
+  extends NorOutStream(null, System.out)  {
 
-case class ColoredOutputAnalysis(formatter: RowColorize) extends Analysis {
+  var headerPrinted : Boolean = false
 
-  override def process(r: Row): Unit = {
+  override protected def processRow(r: Row): String = {
+    if (instance == null) return r.toString()
+
     val builder = new StringBuilder()
+    val rowHeader = this.instance.lastStep.rowHeader
 
     for (i <- 2 until r.numCols) {
       val columnValue = r.colAsString(i)
-      var cc = formatter.formatColumn(i, columnValue.toString(), this.rowHeader.columnTypes(i))
+      var cc = colorFormatter.formatColumn(i-2, columnValue.toString(),
+        rowHeader.columnTypes(i))
       builder.append(cc)
       builder.append("\t")
     }
 
-    super.process(RowObj(r.chr, r.pos, builder.toString().stripMargin('\t')))
+    if (!this.headerPrinted) {
+      val headerBuilder = new StringBuilder()
+      for (i <- 2 until r.numCols()) {
+        headerBuilder.append(colorFormatter.formatHeaderColumn(i-2, rowHeader.columnNames(i), rowHeader.columnTypes(i)))
+        headerBuilder.append("\t")
+      }
+      val headerLine = headerBuilder.toString()
+
+      this.headerPrinted = true
+
+      out.write(headerLine.stripMargin('\t'))
+      out.write("\n")
+    }
+
+    builder.toString()
   }
 }

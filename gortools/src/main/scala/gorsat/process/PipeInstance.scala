@@ -815,5 +815,18 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
 
     (pipeStep, header, newInputSource, firstCommand)
   }
+
+  def firstStep : Analysis = {
+    thePipeStep;
+  }
+
+  def lastStep : Analysis = {
+    var step = thePipeStep
+    while(step.pipeTo != null) {
+      step = step.pipeTo
+    }
+
+    step
+  }
 }
 
