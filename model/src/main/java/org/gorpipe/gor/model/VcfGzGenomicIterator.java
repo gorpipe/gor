@@ -39,6 +39,10 @@ import java.util.zip.GZIPInputStream;
  * Simple genomic iterator for zipped vcf files, can not be seeked into
  */
 public class VcfGzGenomicIterator extends GenomicIteratorBase {
+
+    final static int VCF_COLUMN_RENAME_COUNT = 10;
+    final static String VCF_COLUMN_RENAME_NAME = "VALUES";
+
     public BufferedReader reader;
     private StreamSource streamSource;
     final ChromoLookup lookup; // chromosome name lookup service
@@ -104,6 +108,10 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
             throw new GorDataException("Error Initializing Query. Expected to find header line start with a single # in file " + file);
         }
         String[] headerAll = StringUtil.splitToArray(line, 1, '\t');
+
+        if (headerAll.length == VCF_COLUMN_RENAME_COUNT) {
+            headerAll[VCF_COLUMN_RENAME_COUNT-1] = VCF_COLUMN_RENAME_NAME;
+        }
 
         setHeader(String.join("\t",headerAll));
 

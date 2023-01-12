@@ -36,6 +36,9 @@ import java.io.IOException;
 import java.util.Comparator;
 
 public class VcfSeekableIterator extends GenomicIteratorBase {
+
+    final static int VCF_COLUMN_RENAME_COUNT = 10;
+    final static String VCF_COLUMN_RENAME_NAME = "VALUES";
     private static final Logger log = LoggerFactory.getLogger(VcfSeekableIterator.class);
 
     private final SeekableIterator seekableIterator;
@@ -66,7 +69,13 @@ public class VcfSeekableIterator extends GenomicIteratorBase {
 
     @Override
     public String getHeader() {
-        return String.join("\t",this.gh.getColumns());
+        var headerItems = this.gh.getColumns();
+
+        if (headerItems.length == VCF_COLUMN_RENAME_COUNT) {
+            headerItems[VCF_COLUMN_RENAME_COUNT-1] = VCF_COLUMN_RENAME_NAME;
+        }
+
+        return String.join("\t", headerItems);
     }
 
     @Override

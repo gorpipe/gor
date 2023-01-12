@@ -88,10 +88,10 @@ public abstract class BvlTestSuite {
             String source = getSourcePath(DataUtil.toFile("vcf/" + name, DataType.VCFGZ));
             String testFile = "bvl_min/derived/raw_vcf_to_gor/" + name + ".vcf.gz.gor";
 
-            TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile));
+            TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile).replace("\tPN", "\tVALUES").replace("\tNVKUKNN", "\tVALUES"));
 
             ReadResults expectedRange = readTestFileRange(testFile, "chr8", 145579932, 5);
-            assertSeek(source, "chr8", 145579932, expectedRange.lines, expectedRange.result);
+            assertSeek(source, "chr8", 145579932, expectedRange.lines, expectedRange.result.replace("\tPN", "\tVALUES").replace("\tNVKUKNN", "\tVALUES"));
         }
     }
 
@@ -101,7 +101,7 @@ public abstract class BvlTestSuite {
             String source = getSourcePath(DataUtil.toFile("derived/raw_vcf/" + name, DataType.VCF));
             String testFile = "bvl_min/derived/raw_vcf_to_gor/" + name + ".vcf.gz.gor";
 
-            TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile));
+            TestUtils.assertFullGor(securityContext(), source, readTestFile(testFile).replace("\tPN", "\tVALUES").replace("\tNVKUKNN", "\tVALUES"));
         }
     }
 

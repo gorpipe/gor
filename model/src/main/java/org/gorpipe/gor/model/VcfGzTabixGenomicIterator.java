@@ -33,6 +33,9 @@ import org.gorpipe.model.gor.RowObj;
 import java.io.IOException;
 import java.util.*;
 
+import static org.gorpipe.gor.model.VcfGzGenomicIterator.VCF_COLUMN_RENAME_COUNT;
+import static org.gorpipe.gor.model.VcfGzGenomicIterator.VCF_COLUMN_RENAME_NAME;
+
 /**
  * Simple genomic iterator for zipped vcf files with index
  */
@@ -84,6 +87,10 @@ public class VcfGzTabixGenomicIterator extends GenomicIteratorBase {
             throw new GorDataException("Expected to find header line start with a single # in file", fileName);
         }
         String[] header = StringUtil.splitToArray(line, 1, '\t');
+
+        if (header.length == VCF_COLUMN_RENAME_COUNT) {
+            header[VCF_COLUMN_RENAME_COUNT-1] = VCF_COLUMN_RENAME_NAME;
+        }
 
         setHeader(String.join("\t",header));
     }

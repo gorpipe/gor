@@ -113,7 +113,7 @@ public class UTestGorTabix {
             outputStream.close();
 
             String res = TestUtils.runGorPipe("gor -p chr1:10-20 indel.vcf.gz");
-            Assert.assertEquals("Wrong result from vcf tabix","CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("Wrong result from vcf tabix","CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "chr1\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n",res);
         } finally {
             if(Files.exists(p)) Files.delete(p);
@@ -134,13 +134,13 @@ public class UTestGorTabix {
             Files.write(p, vcfgorContent.getBytes());
             TestUtils.runGorPipe("gor vcf.gor | write -prefix '##fileformat=VCFv4.2' gor.vcf.gz");
             String vcfContent = TestUtils.runGorPipe("gor gor.vcf.gz");
-            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "chr1\t9\t.\tAA\tC\t0.0\t.\t.\t.\tpn\n" +
                     "chr2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfContent);
 
             TestUtils.runGorPipe("gor vcf.gor | write -i TABIX -prefix '##fileformat=VCFv4.2' gor.vcf.gz");
             String vcfTabixContent = TestUtils.runGorPipe("gor -p chr2 gor.vcf.gz");
-            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "chr2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfTabixContent);
         } finally {
             if(Files.exists(p)) Files.delete(p);
@@ -223,12 +223,12 @@ public class UTestGorTabix {
             Files.write(p, vcfgorContent.getBytes());
             TestUtils.runGorPipe("gor vcf.gor | write -f CHROM -prefix '##fileformat=VCFv4.2' gor#{fork}.vcf.gz");
             String vcfContent = TestUtils.runGorPipe("gor gorchr1.vcf.gz");
-            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "chr1\t9\t.\tAA\tC\t0.0\t.\t.\t.\tpn\n", vcfContent);
 
             TestUtils.runGorPipe("gor vcf.gor | write -f CHROM -i TABIX -prefix '##fileformat=VCFv4.2' gor#{fork}.vcf.gz");
             String vcfTabixContent = TestUtils.runGorPipe("gor -p chr2 gorchr2.vcf.gz");
-            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "chr2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfTabixContent);
         } finally {
             if(Files.exists(p)) Files.delete(p);
@@ -253,14 +253,14 @@ public class UTestGorTabix {
             Files.write(p, vcfgorContent.getBytes());
             TestUtils.runGorPipe("gor vcf.gor | write gor.vcf.gz");
             String vcfContent = TestUtils.runGorPipe("gor gor.vcf.gz");
-            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "NC1\t9\t.\tAA\tC\t0.0\t.\t.\t.\tpn\n" +
                     "NC2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n" +
                     "NC3\t11\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfContent);
 
             TestUtils.runGorPipe("gor vcf.gor | write -i TABIX -prefix '##fileformat=VCFv4.2' gor.vcf.gz");
             String vcfTabixContent = TestUtils.runGorPipe("gor -p NC2 gor.vcf.gz");
-            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tPN\n" +
+            Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +
                     "NC2\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n", vcfTabixContent);
         } finally {
             if(Files.exists(p)) Files.delete(p);

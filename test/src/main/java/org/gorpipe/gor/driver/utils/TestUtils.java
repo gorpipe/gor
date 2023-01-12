@@ -85,7 +85,9 @@ public class TestUtils {
         addHeader(builder, iterator);
         addLines(builder, iterator, null);
 
-        Assert.assertEquals("Checking full gor on " + source, expectedData, builder.toString());
+        var dataToTest = builder.toString();
+
+        Assert.assertEquals("Checking full gor on " + source, expectedData, dataToTest);
     }
 
     public static void addHeader(StringBuilder builder, GenomicIterator iterator) {
