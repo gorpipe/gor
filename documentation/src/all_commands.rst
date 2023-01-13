@@ -15,6 +15,7 @@
    command/COLS2LIST
    command/COLSPLIT
    command/COLTYPE
+   command/COLUMNREORDER
    command/COLUMNSORT
    command/CREATE
    command/CSVCC

@@ -52,15 +52,20 @@ object Select {
       useCols = pickCols.map( _ - 1 )
     }
 
+    val colNames = forcedInputHeader.split("\t",-1)
+    val colNum = colNames.length
+
     if (hasOption(args,"-sort")) {
-      val colNames = forcedInputHeader.split("\t",-1)
-      val colNum = colNames.length
       if (pickCols.length < 3) pickCols = List(1,2)
       val sortCols = Range(1,colNum+1).toList filterNot (pickColsSet contains)
       pickCols = pickCols ::: sortCols.map(x => (x,colNames(x-1))).sortWith( (x,y) => x._2.toUpperCase < y._2.toUpperCase ).map(x => x._1)
       useCols = pickCols.map( _ - 1 )
+    } else if (hasOption(args, "-append")){
+      if (pickCols.length < 3) pickCols = List(1, 2)
+      val sortCols = Range(1, colNum + 1).toList filterNot (pickColsSet contains)
+      pickCols = pickCols ::: sortCols
+      useCols = pickCols.map(_ - 1)
     }
-
     var combinedHeader: String = null
 
     val hcols = forcedInputHeader.split("\t",-1)
@@ -88,7 +93,7 @@ object Select {
   }
 
   class Select extends CommandInfo("SELECT",
-    CommandArguments("-s -t -sort", "", 1, -1, ignoreIllegalArguments = true),
+    CommandArguments("-s -t -sort -append", "", 1, -1, ignoreIllegalArguments = true),
     CommandOptions(gorCommand = true, norCommand = true))
   {
     override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {

@@ -47,6 +47,9 @@ Commands
    * - :ref:`COLSPLIT`
      - Split the content of a column based on a defined split separator.
      - GOR/NOR
+   * - :ref:`COLUMNREORDER`
+     - Reorder the columns by specifying source column and target column.
+     - GOR/NOR
    * - :ref:`COLUMNSORT`
      - Reorder the columns putting the specified columns at the beginning of the column list.
      - GOR/NOR

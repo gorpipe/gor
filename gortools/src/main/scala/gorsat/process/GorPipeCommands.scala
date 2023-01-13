@@ -196,6 +196,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.PrGtGen)
       addInfo(new gorsat.Commands.SelWhere)
       addInfo(new gorsat.Commands.VerifyVariant)
+      addInfo(new gorsat.Commands.ColumnReorder)
     }
   }
 }
