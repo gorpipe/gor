@@ -55,9 +55,6 @@ class Sort extends CommandInfo("SORT",
       } else {
         window = parseIntWithRangeCheck("binSize", iargs(0), 1)
       }
-      if (window < 100) {
-        window = 100
-      }
     }
 
     val pipeStep = if (useTempfiles) {

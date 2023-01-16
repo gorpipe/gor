@@ -34,44 +34,57 @@ import org.gorpipe.gor.session.GorSession
 
 case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.SortInfo], div: Int = 1) extends Analysis {
   var lines = 0
-  var batch: Int = System.getProperty("gor.sort.batchSize", "2000000").toInt / div
-  var maxBufferSize: Int = batch * 100
+  var batchSize: Int = System.getProperty("gor.sort.batchSize", "2000000").toInt / div
+  var maxBufferSize: Int = batchSize * 100
   var bufferSize = 0
-  var alreadySorted = true
+  private var alreadySorted = true
 
-  var inputArray = new Array[Row](batch)
-  var ordFileList: List[String] = List()
-  var wroteBuffer = false
+  private var inputArray = new Array[Row](batchSize)
+  private var ordFileList: List[String] = List()
+  private var wroteBuffer = false
   // If no quota is set we default to 0 and do not deal with write quotas
-  val writeQuota: Long = System.getProperty("gor.querylimits.writequota.mb", "0").toLong * 1024 * 1024
-  var writeQuotaUsed = 0L
+  private val writeQuota: Long = System.getProperty("gor.querylimits.writequota.mb", "0").toLong * 1024 * 1024
+  private var writeQuotaUsed = 0L
 
   override def isTypeInformationMaintained: Boolean = true
 
   def reinit(): Unit = {
-    inputArray = new Array[Row](batch)
+    resetBuffer()
+
     ordFileList = List()
-    lines = 0
-    bufferSize = 0
-    alreadySorted = true
     wroteBuffer = false
     writeQuotaUsed = 0L
   }
 
-  def sortBuffer(inputArray: Array[Row], length: Int): Unit = {
-    if (!alreadySorted) util.Arrays.parallelSort(inputArray, 0, length, (o1: Row, o2: Row) => o1.advancedCompare(o2, sortInfo))
-    val f = java.io.File.createTempFile("gorsort", DataType.GORZ.suffix)
-    f.deleteOnExit()
-    val outputFile = f.getAbsolutePath
-
+  def resetBuffer(): Unit = {
+    var i = 0
+    while(i < lines) {
+      inputArray(i) = null
+      i += 1
+    }
     lines = 0
     bufferSize = 0
     alreadySorted = true
+  }
+
+  private def flushToDisk(): Unit = {
+    ensureSorted()
+    val outputArray = inputArray.take(lines)
+    resetBuffer()
+
+    val f = java.io.File.createTempFile("gorsort", DataType.GORZ.suffix)
+    f.deleteOnExit()
+    val outputFile = f.getAbsolutePath
     ordFileList = outputFile :: ordFileList
     wroteBuffer = true
+
     val runner = new GenericGorRunner
     val sortFileReader = session.getProjectContext.getSystemFileReader
-    runner.run(RowArrayIterator(inputArray, length), OutFile.driver(outputFile, sortFileReader, header, skipHeader = false, OutputOptions(writeMeta = false)))
+    runner.run(RowArrayIterator(outputArray, outputArray.length), OutFile.driver(outputFile, sortFileReader, header, skipHeader = false, OutputOptions(writeMeta = false)))
+  }
+
+  private def ensureSorted(): Unit = {
+    if (!alreadySorted) util.Arrays.parallelSort(inputArray, 0, lines, (o1: Row, o2: Row) => o1.advancedCompare(o2, sortInfo))
   }
 
   override def process(r: Row): Unit = {
@@ -87,8 +100,8 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     inputArray(lines) = r
     bufferSize += r.getAllCols.length
     lines += 1
-    if (lines == batch || bufferSize > maxBufferSize) {
-      sortBuffer(inputArray, lines)
+    if (lines == batchSize || bufferSize > maxBufferSize) {
+      flushToDisk()
     }
   }
 
@@ -96,8 +109,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     if (wroteBuffer) {
       var rSource: GenomicIterator = null
       try {
-        if (lines > 0) sortBuffer(inputArray, lines)
-        inputArray = null
+        if (lines > 0) flushToDisk()
         val gorString = ordFileList.mkString(" ")
         val sessionFactory = new GenericSessionFactory()
         rSource = new MultiFileSource(gorString.split(' ').toList, null, "", sortInfo, sessionFactory.create().getGorContext)
@@ -124,9 +136,8 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
         })
       }
     } else {
-      if (!alreadySorted) util.Arrays.parallelSort(inputArray, 0, lines, (o1: Row, o2: Row) => o1.advancedCompare(o2, sortInfo))
+      ensureSorted()
       inputArray.take(lines).foreach(r => super.process(r))
-      inputArray = null
     }
   }
 }

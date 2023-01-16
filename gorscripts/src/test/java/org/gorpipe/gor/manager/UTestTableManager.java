@@ -196,7 +196,7 @@ public class UTestTableManager {
         int fileCount = 1000;
         String[] sources = IntStream.range(1, fileCount).mapToObj(i -> String.format("PN%d", i)).toArray(String[]::new);
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
-                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+                name, workDirPath, fileCount, new int[]{1, 2, 3}, 1000, "PN", true, sources);
 
         TableManager man = new TableManager();
         man.setMinBucketSize(20);

@@ -200,4 +200,13 @@ public class UTestSortGenome {
         System.setProperty("java.io.tmpdir", origTmpdir);
         System.setProperty("gor.sort.batchSize", "2000000");
     }
+
+    @Test
+    public void testGorSortWithSelfMerge() {
+        String query = "gor -p chr1 <(../tests/data/gor/dbsnp_test.gorz | sort 100000 | merge <(gor ../tests/data/gor/dbsnp_test.gorz) )| group 1 -gc 3- -count | throwif allcount != 2";
+        TestUtils.runGorPipe(query);
+
+        query = "gor -p chr1 <(../tests/data/gor/dbsnp_test.gorz | sort 1 | merge <(gor ../tests/data/gor/dbsnp_test.gorz) )| group 1 -gc 3- -count | throwif allcount != 2";
+        TestUtils.runGorPipe(query);
+    }
 }
