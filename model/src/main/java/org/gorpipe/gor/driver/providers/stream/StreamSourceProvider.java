@@ -22,14 +22,12 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.SourceProvider;
-import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.driver.meta.FileNature;
-import org.gorpipe.gor.driver.meta.IndexableSourceReference;
-import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.meta.*;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.CachedSourceWrapper;
@@ -38,6 +36,9 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.driver.utils.RetryHandler;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.model.RowBase;
+import org.gorpipe.gor.util.DynamicRowIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,7 +193,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         DataType type = source.getDataType();
         if (type == null) {
             log.warn("Unknown DataType for {}", source.getName());
-            return null;
+            throw new GorResourceException(String.format("Unsupported data type for source", source.getName()), source.getName());
         }
         log.debug("GorDriver: Datatype of {} is {}", source.getName(), type);
 
@@ -256,6 +257,43 @@ public abstract class StreamSourceProvider implements SourceProvider {
         }
 
         return factory.createIterator(file);
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(DataSource source) throws IOException {
+        DataType type = source.getDataType();
+        if (type == null) {
+            log.warn("Unknown DataType for {}", source.getName());
+            throw new GorResourceException(String.format("Unsupported data type for source", source.getName()), source.getName());
+        }
+        log.debug("GorDriver: Datatype of {} is {}", source.getName(), type);
+
+        StreamSourceIteratorFactory factory = dataTypeToFactory.get(source.getDataType());
+        if (factory != null) {
+            StreamSourceFile file = factory.resolveFile((StreamSource) source);
+            file.setIndexSource(findIndexFileFromFileDriver(file, source.getSourceReference()));
+            var factoryMetaIt = factory.createMetaIterator(file);
+            var sourceMetaIt = new SourceMetaIterator();
+            sourceMetaIt.initMeta(source);
+            sourceMetaIt.merge(factoryMetaIt);
+
+            return sourceMetaIt;
+        }
+
+        log.warn("Unsupported datatype {} for source {}, using generic data source.", type, source.getName());
+
+        // No data handlers, we should revert to reading the file directly
+        var sourceMetaIt = new SourceMetaIterator();
+        sourceMetaIt.initMeta(source);
+
+        if (source.getSourceType().getName() == "FILE" && source instanceof StreamSource) {
+            // This is a file source so we can explorer its file properties
+            var fileIt = new FileMetaIterator();
+            fileIt.initMeta(new StreamSourceFile((StreamSource)source));
+            sourceMetaIt.merge(fileIt);
+        }
+
+        return sourceMetaIt;
     }
 
     private StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {

@@ -28,6 +28,8 @@ import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.util.DynamicRowIterator;
 
 import java.io.IOException;
 
@@ -56,6 +58,7 @@ public class DbSourceProvider implements SourceProvider {
         return ((DbSource) source).open();
 
     }
+
 
 
 }

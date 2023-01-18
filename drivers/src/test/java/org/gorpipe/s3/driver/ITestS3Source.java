@@ -113,6 +113,27 @@ public class ITestS3Source extends CommonStreamTests {
         Assert.assertFalse(systemErrRule.getLog().contains("Not all bytes were read from the S3ObjectInputStream"));
     }
 
+    @Test
+    public void testS3Meta() throws IOException {
+        String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
+        var result = TestUtils.runGorPipe("meta s3://nextcode-unittest/s3write/genes.gor", true, securityContext, new String[] {"s3://"});
+
+        Assert.assertFalse(result.isEmpty());
+        Assert.assertTrue(result.contains("source.type\tS3"));
+    }
+
+    @Test
+    public void testS3MetaWithMetafile() throws IOException {
+        String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
+        var result = TestUtils.runGorPipe("meta s3://nextcode-unittest/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
+
+        Assert.assertFalse(result.isEmpty());
+        Assert.assertTrue(result.contains("source.type\tS3"));
+        Assert.assertTrue(result.contains("data.md5"));
+        Assert.assertTrue(result.contains("data.line_count"));
+    }
+
     @Override
     protected SourceReference mkSourceReference(String name) throws IOException {
         return new SourceReferenceBuilder(name).securityContext(DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET)).build();

@@ -28,7 +28,11 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.GorpIterator;
+import org.gorpipe.gor.util.DynamicRowIterator;
+
+import java.io.IOException;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class GorpIteratorFactory implements StreamSourceIteratorFactory {
@@ -41,6 +45,11 @@ public class GorpIteratorFactory implements StreamSourceIteratorFactory {
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) {
         return new GorpIterator(file.getFileSource());
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+        return new DynamicRowIterator();
     }
 
     @Override

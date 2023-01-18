@@ -44,6 +44,7 @@
    command/LIFTOVER
    command/MAP
    command/MERGE
+   command/META
    command/MULTIMAP
    command/NOR
    command/NORCMD

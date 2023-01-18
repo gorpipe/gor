@@ -23,7 +23,7 @@
 package gorsat.process
 
 import gorsat.Commands._
-import gorsat.InputSources.{Cmd, Nor, Sql}
+import gorsat.InputSources.{Cmd, Meta, Nor, Sql}
 
 /**
   * Methods to register and access gor input sources. Input sources need to be registered before use.
@@ -77,6 +77,7 @@ object GorInputSources {
       addInfo(new Sql.Sql)
       addInfo(new Sql.NorSql)
       addInfo(new Sql.GorSql)
+      addInfo(new Meta)
     }
   }
 

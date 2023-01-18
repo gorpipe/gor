@@ -20,16 +20,30 @@
  *  END_COPYRIGHT
  */
 
-package gorsat.Commands
+package gorsat.InputSources
 
-import gorsat.Commands.GenomicRange.Range
-import org.gorpipe.gor.model.{GenomicIterator, GenomicIteratorBase}
+import gorsat.Commands._
+import org.gorpipe.gor.driver.GorDriverFactory
+import org.gorpipe.gor.driver.meta.SourceReference
+import org.gorpipe.gor.session.GorContext
 
-case class InputSourceParsingResult(inputSource: GenomicIterator,
-                                    header:String,
-                                    isNorContext: Boolean,
-                                    genomicRange: Range = null,
-                                    bufferSize:Int = -1,
-                                    noWithin:Boolean = false,
-                                    usedFiles: Array[String] = null,
-                                    mergeSteps: Array[String] = null)
+
+class Meta() extends InputSourceInfo("META", CommandArguments("", "", 1)) {
+
+  override def processArguments(context: GorContext, argString: String, iargs: Array[String],
+                                args: Array[String]): InputSourceParsingResult = {
+
+    val inputData = iargs(0)
+    val factory =  GorDriverFactory.fromConfig()
+
+    val dataSource = factory.getDataSource(new SourceReference(inputData))
+    val it = factory.createMetaIterator(dataSource)
+
+    InputSourceParsingResult(it,
+      null,
+      isNorContext = true,
+    )
+  }
+
+
+}

@@ -25,10 +25,13 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.parquet;
 import com.google.auto.service.AutoService;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.providers.stream.FileMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.util.DynamicRowIterator;
 
 import java.io.IOException;
 
@@ -42,6 +45,13 @@ public class ParquetIteratorFactory implements StreamSourceIteratorFactory {
         } catch (IOException e) {
             throw new GorSystemException(e);
         }
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+        var fileIt = new FileMetaIterator();
+        fileIt.initMeta(file);
+        return fileIt;
     }
 
     @Override

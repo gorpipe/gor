@@ -43,7 +43,7 @@ public class UTestGorExceptions {
     public void testGorResourceExceptionFromContext() {
         GorResourceException ex = ExceptionUtilities.mapGorResourceException("file.txt", "file://file.txt", new FileNotFoundException());
         Assert.assertTrue(ex instanceof GorResourceException);
-        Assert.assertEquals("org.gorpipe.exceptions.GorResourceException: Resource not found for iterator: file.txt\n" +
+        Assert.assertEquals("org.gorpipe.exceptions.GorResourceException: Input source does not exist: file.txt\n" +
                 "URI: file://file.txt\n", ex.toString());
     }
 

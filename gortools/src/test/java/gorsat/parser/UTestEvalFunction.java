@@ -79,7 +79,7 @@ public class UTestEvalFunction {
     public void testEvalFailsWithResourceNotFound_whenProjectRootNotSet() {
         exception.expect(GorDataException.class);
         exception.expectCause(instanceOf(GorResourceException.class));
-        exception.expectMessage("Resource not found for iterator");
+        exception.expectMessage("Input source does not exist: data/gor/genes.gor");
 
         String[] args = new String[]{"gorrow chr1,1,2 | calc x eval('nor data/gor/genes.gor | select gene_end')"};
 

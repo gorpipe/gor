@@ -27,9 +27,14 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.GorzSeekableIterator;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.util.DynamicRowIterator;
+
+import java.io.IOException;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class GorzIteratorFactory implements StreamSourceIteratorFactory {
@@ -41,6 +46,13 @@ public class GorzIteratorFactory implements StreamSourceIteratorFactory {
             indexSource = new StreamSourceSeekableFile(file.getIndexSource());
         }
         return new GorzSeekableIterator(fileSource, indexSource);
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+        var it = new GorMetaIterator();
+        it.initMeta(file);
+        return it;
     }
 
     @Override

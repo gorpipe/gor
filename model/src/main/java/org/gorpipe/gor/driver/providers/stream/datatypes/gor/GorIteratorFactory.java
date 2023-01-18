@@ -30,6 +30,9 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.GorSeekableIterator;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
+
+import java.io.IOException;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class GorIteratorFactory implements StreamSourceIteratorFactory {
@@ -42,6 +45,13 @@ public class GorIteratorFactory implements StreamSourceIteratorFactory {
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) {
         return new GorSeekableIterator(new StreamSourceSeekableFile(file.getFileSource()));
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+        var it = new GorMetaIterator();
+        it.initMeta(file);
+        return it;
     }
 
     @Override

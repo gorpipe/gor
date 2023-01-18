@@ -34,6 +34,7 @@ import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.standalone.GorStandalone;
@@ -131,7 +132,7 @@ public class PluggableGorDriver implements GorDriver {
         log.debug("Create iterator for datasource {}", source);
         if (!source.exists()) {
             log.debug("Source {} reports it does not exist", source);
-            throw new FileNotFoundException(source.getName());
+            throw new GorResourceException(String.format("Input source does not exist: %s", source.getName()), source.getName());
         }
 
         try {
@@ -139,6 +140,23 @@ public class PluggableGorDriver implements GorDriver {
             return sourceTypeToSourceProvider.get(source.getSourceType()).createIterator(source);
         } catch (Exception e) {
             throwWithSourceName(e, source.getName());
+            return null;  // Never gets here
+        }
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(DataSource source) throws IOException {
+        log.debug("Create meta iterator for datasource {}", source);
+        if (!source.exists()) {
+            log.debug("Source {} reports it does not exist", source);
+            throw new GorResourceException(String.format("Input source does not exist: %s", source.getName()), source.getName());
+        }
+
+        try {
+            log.debug("Delegate to source provider {}", source);
+            return sourceTypeToSourceProvider.get(source.getSourceType()).createMetaIterator(source);
+        } catch (Exception e) {
+                throwWithSourceName(e, source.getName());
             return null;  // Never gets here
         }
     }

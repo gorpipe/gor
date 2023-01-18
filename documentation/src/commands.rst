@@ -131,6 +131,9 @@ Commands
    * - :ref:`MAP`
      - Joins together tables using columns other than the chromosome and position data.
      - GOR/NOR
+   * - :ref:`META`
+     - Joins together tables using columns other than the chromosome and position data.
+     - GOR/NOR
    * - :ref:`MERGE`
      - Combines two independent sources into a single genomic-ordered stream.
      - GOR/NOR

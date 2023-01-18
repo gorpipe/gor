@@ -24,10 +24,15 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.bam;
 
 import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.providers.stream.FileMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.util.DynamicRowIterator;
+
+import java.io.IOException;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class BamFileIteratorFactory implements StreamSourceIteratorFactory {
@@ -35,6 +40,13 @@ public class BamFileIteratorFactory implements StreamSourceIteratorFactory {
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) {
         return new BamFileIterator((BamFile) file);
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+        var fileIt = new FileMetaIterator();
+        fileIt.initMeta(file);
+        return fileIt;
     }
 
     @Override

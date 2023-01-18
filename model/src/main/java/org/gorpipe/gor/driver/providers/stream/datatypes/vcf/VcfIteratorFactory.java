@@ -26,11 +26,13 @@ import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.adapters.OffsetStreamSourceSeekableFile;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.providers.stream.FileMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.StringIntKey;
 import org.gorpipe.gor.model.*;
+import org.gorpipe.gor.util.DynamicRowIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -162,6 +164,13 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
         } else {
             return new VcfIndexedFileIterator(file);
         }
+    }
+
+    @Override
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+        var fileIt = new FileMetaIterator();
+        fileIt.initMeta(file);
+        return fileIt;
     }
 
     @Override
