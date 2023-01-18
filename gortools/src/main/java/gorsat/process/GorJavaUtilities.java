@@ -539,10 +539,10 @@ public class GorJavaUtilities {
 
     public synchronized static void createSymbolicLink(Path resultPath, Path cachePath) throws IOException {
         if (!Files.exists(resultPath, LinkOption.NOFOLLOW_LINKS)) {
-            Files.createSymbolicLink(resultPath, cachePath);
+            Files.createSymbolicLink(resultPath, cachePath.toAbsolutePath());
         } else if(Files.isSymbolicLink(resultPath)) {
             Files.delete(resultPath);
-            Files.createSymbolicLink(resultPath, cachePath);
+            Files.createSymbolicLink(resultPath, cachePath.toAbsolutePath());
         }
     }
 
