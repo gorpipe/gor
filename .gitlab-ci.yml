@@ -208,8 +208,11 @@ publish:
   extends:
     - .build_with_cache
     - .on-releasable-or-semver-tag-only
+    - .snapshot-version-from-commit
   stage: publish
-  script: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation
+  script:
+    - echo "$VERSION"
+    - ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -Pversion=${VERSION}
 
 
 # Disable default tasks that should not be triggered.

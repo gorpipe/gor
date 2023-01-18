@@ -27,7 +27,7 @@ plugins {
 // -----------------------------------------------------
 
 description = """GOR Gradle build script"""
-version = new File("${rootDir}/VERSION").text.trim()
+version = hasProperty('version') && version != 'unspecified' ? version : new File("${rootDir}/VERSION").text.trim()
 
 ext {
     getProjectFullName = {
