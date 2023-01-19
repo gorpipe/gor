@@ -208,24 +208,24 @@ spotbugs-sast:
   rules:
     - if: '$SECURITY_SCAN == "true"'
 
-publish-snapshot:
+
+.publish-base:
   extends:
     - .build_with_cache
-    - .on-releasable-branch-only
-    - .snapshot-version-from-commit
   stage: publish
   script:
     - ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -Pversion=${VERSION}
 
+publish-snapshot:
+  extends:
+    - .publish-base
+    - .on-releasable-branch-only
+    - .snapshot-version-from-commit
 
 publish:
   extends:
-    - .build_with_cache
+    - .publish-base
     - .on-semver-tag-only
-  stage: publish
-  script:
-    - ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -Pversion=${VERSION}
-
 
 # Disable default tasks that should not be triggered.
 
