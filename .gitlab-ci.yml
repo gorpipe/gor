@@ -27,23 +27,10 @@ variables:
 
 # Triggers running on branch that should be releasable (by tagging later), must start with v so we don't pick merge requests.
 
-.on-releasable-branch-only:
-  rules:
-    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
-
 .on-releasable-or-release-branch-only:
   rules:
     - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
     - if: $CI_COMMIT_REF_NAME =~ /^release\/v(0|[1-9]\d*)\.(0|[1-9]\d*)$/
-
-.on-releasable-or-semver-tag-only:
-  rules:
-    - if: $CI_COMMIT_REF_NAME == $RELEASABLE_BRANCH
-    - if: $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
-
-.on-semver-tag-only:
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*)(\.([1-9]\d*|[\da-z-]*[a-z-][\da-z-]*))*)?(\+[\da-z-]+(\.[\da-z-]+)*)?$/
 
 
 stages:
@@ -219,13 +206,13 @@ spotbugs-sast:
 publish-snapshot:
   extends:
     - .publish-base
-    - .on-releasable-branch-only
+    - .on-releasable-branch
     - .snapshot-version-from-commit
 
 publish:
   extends:
     - .publish-base
-    - .on-semver-tag-only
+    - .on-semver-tag
 
 # Disable default tasks that should not be triggered.
 
