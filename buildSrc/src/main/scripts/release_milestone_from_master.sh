@@ -77,15 +77,16 @@ fi
 #
 # Update the version
 #
-if [[ "${DRY_RUN}" != "TRUE" ]]; then
-  # Update the version numbers
-  NEW_VERSION="$(buildSrc/src/main/scripts/version.sh ${MILESTONE} feature)-SNAPSHOT"
-  echo ${NEW_VERSION} > VERSION
-  git add VERSION
-
-  # Commit and push to the branch
-  git commit -m "Updated version to ${NEW_VERSION}"
-  git push
-else
-  echo "New snapshot version: $(buildSrc/src/main/scripts/version.sh ${MILESTONE} feature)-SNAPSHOT"
-fi
+# Comment this out for now, we are experimenting with just let the VERSION file refer to latest released version.
+#if [[ "${DRY_RUN}" != "TRUE" ]]; then
+#  # Update the version numbers
+#  NEW_VERSION="$(buildSrc/src/main/scripts/version.sh ${MILESTONE} feature)-SNAPSHOT"
+#  echo ${NEW_VERSION} > VERSION
+#  git add VERSION
+#
+#  # Commit and push to the branch
+#  git commit -m "Updated version to ${NEW_VERSION}"
+#  git push
+#else
+#  echo "New snapshot version: $(buildSrc/src/main/scripts/version.sh ${MILESTONE} feature)-SNAPSHOT"
+#fi
