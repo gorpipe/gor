@@ -24,6 +24,11 @@ The steps are as follows:
 
 Each one is described in more detail below.
 
+Notes on versioning:  
+1. GOR uses semantic versioning, with `<major>.<minor>.<patch>` format.  
+2. We use `-SNAPSHOT` postfix to indicate development version.  
+3. We update the version at the time of release so for example `10.2.3-SNAPSHOT` is a development version on top on released version `10.2.3`.  Next version will be `10.2.4`,`10.3.0` or `11.0.0`
+
 ### Updating the Milestone
 
 After last release there should be milestone created for this release under [>Issues>Milestones](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/milestones).
