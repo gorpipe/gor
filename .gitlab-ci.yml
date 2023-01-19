@@ -24,7 +24,7 @@ variables:
 .snapshot-version-from-commit:
   before_script:
     #- export VERSION="$(cat VERSION)-SNAPSHOT.${CI_COMMIT_SHORT_SHA}"
-    - export VERSION="$(cat VERSION)-SNAPSHOT #-${CI_COMMIT_SHORT_SHA}"
+    - export VERSION="$(cat VERSION)-SNAPSHOT" #-${CI_COMMIT_SHORT_SHA}"
 
 # Triggers running on branch that should be releasable (by tagging later), must start with v so we don't pick merge requests.
 
