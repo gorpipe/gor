@@ -19,9 +19,7 @@ variables:
   RELEASABLE_BRANCH: master                                         # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
 
-# Temporary overwrite of tasks from the auto git.
-
-.snapshot-version-from-commit:
+.publish-snapshot-version-from-commit:
   before_script:
     - export VERSION="$(cat VERSION)-SNAPSHOT"
 
@@ -207,7 +205,7 @@ publish-snapshot:
   extends:
     - .publish-base
     - .on-releasable-branch
-    - .snapshot-version-from-commit
+    - .publish-snapshot-version-from-commit
 
 publish:
   extends:
