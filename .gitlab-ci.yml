@@ -208,14 +208,22 @@ spotbugs-sast:
   rules:
     - if: '$SECURITY_SCAN == "true"'
 
-publish:
+publish-snapshot:
   extends:
     - .build_with_cache
-    - .on-releasable-or-semver-tag-only
+    - .on-releasable-only
     - .snapshot-version-from-commit
   stage: publish
   script:
-    - echo "$VERSION"
+    - ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -Pversion=${VERSION}
+
+
+publish:
+  extends:
+    - .build_with_cache
+    - .on-semver-tag-only
+  stage: publish
+  script:
     - ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -Pversion=${VERSION}
 
 
