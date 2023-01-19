@@ -211,7 +211,7 @@ spotbugs-sast:
 publish-snapshot:
   extends:
     - .build_with_cache
-    - .on-releasable-only
+    - .on-releasable-branch-only
     - .snapshot-version-from-commit
   stage: publish
   script:
