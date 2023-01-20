@@ -24,6 +24,7 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.bam;
 import htsjdk.samtools.*;
 import htsjdk.samtools.SAMRecord.SAMTagAndValue;
 import htsjdk.samtools.util.CloseableIterator;
+import org.apache.commons.lang3.NotImplementedException;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.model.gor.RowObj;
@@ -413,6 +414,11 @@ public class BamIterator extends GenomicIteratorBase {
         @Override
         public String colAsString(int colNum) {
             return reverseStringMap[colNum].apply(record);
+        }
+
+        @Override
+        public boolean colStartsWith(int colNum, CharSequence colStr) {
+            return reverseStringMap[colNum].apply(record).startsWith(colStr.toString());
         }
 
         @Override

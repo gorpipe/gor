@@ -183,6 +183,11 @@ public class ParquetLine extends Row {
     }
 
     @Override
+    public boolean colStartsWith(int colNum, CharSequence colStr) {
+        return colAsString(colNum).startsWith(colStr.toString());
+    }
+
+    @Override
     public String otherCols() {
         StringBuilder sb = new StringBuilder();
         List<Type> fields = group.getType().getFields();

@@ -268,6 +268,12 @@ public class RowBase extends Row implements Serializable {
     }
 
     @Override
+    public boolean colStartsWith(int n, CharSequence colStr) {
+        testColumnIndex(n);
+        return RowObj.colStartsWith(n, colStr,  allCols, splitArray);
+    }
+
+    @Override
     public int colAsInt(int n) {
         testColumnIndex(n);
         return RowObj.colInt(n, allCols, splitArray);

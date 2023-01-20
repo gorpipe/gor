@@ -367,6 +367,13 @@ public class Line extends Row {
     }
 
     @Override
+    public boolean colStartsWith(int col, CharSequence colStr) {
+        if (col == 0) return chr.startsWith(colStr.toString());
+        else if (col == 1) return false;
+        else return cols[col - 2].toString().startsWith(colStr.toString());
+    }
+
+    @Override
     public byte[] colAsBytes(int colNum) {
         if (colNum == 0) return chr.getBytes();
         else if (colNum == 1) return Integer.toString(pos).getBytes();

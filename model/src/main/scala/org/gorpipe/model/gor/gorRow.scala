@@ -82,6 +82,18 @@ object RowObj {
     str.subSequence(start, stop)
   }
 
+  def colStartsWith(n: Int, colStr: CharSequence, str: CharSequence, sa: Array[Int]): Boolean = {
+    val start = if (n == 0) 0 else sa(n - 1) + 1
+    val stop = sa(n)
+    if ((stop - start) < colStr.length()) return false;
+
+    for (i <- 0 until colStr.length()) {
+      if (str.charAt(start + i) != colStr.charAt(i)) return false;
+    }
+
+    true
+  }
+
   def peekAtColumn(n: Int, str: CharSequence, sa: Array[Int]): Char = {
     val start = if (n == 0) 0 else sa(n - 1) + 1
     str.charAt(start)

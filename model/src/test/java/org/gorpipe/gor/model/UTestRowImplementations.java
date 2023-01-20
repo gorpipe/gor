@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.model;
 
-import org.gorpipe.gor.model.Row;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -355,6 +354,16 @@ public abstract class UTestRowImplementations {
         Row r = createRow(TEST_LINE);
         CharSequence result = r.colAsString(4);
         assertEquals("a", result.toString());
+    }
+
+    @Test
+    public void colStartsWith() {
+        Row r = createRow(TEST_LINE);
+        assertTrue(r.colStartsWith(2, "th"));
+        assertFalse(r.colStartsWith(2, "thæælkælkæl"));
+        assertFalse(r.colStartsWith(2, "foo"));
+        // Case
+        assertFalse(r.colStartsWith(2, "Th"));
     }
 
     @Test

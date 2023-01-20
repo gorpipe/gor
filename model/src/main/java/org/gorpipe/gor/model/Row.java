@@ -209,6 +209,13 @@ public abstract class Row implements Comparable<Row>,ColumnValueProvider, Serial
     public abstract CharSequence colAsString(int colNum);
 
     /**
+     * Returns the value of the given column as a string
+     * @param colNum Column index (zero based)
+     * @return Column value as string
+     */
+    public abstract boolean colStartsWith(int colNum, CharSequence colStr);
+
+    /**
      * Returns the value of the column as a byte array.
      */
     public byte[] colAsBytes(int colNum) {
