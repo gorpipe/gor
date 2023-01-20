@@ -193,7 +193,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         DataType type = source.getDataType();
         if (type == null) {
             log.warn("Unknown DataType for {}", source.getName());
-            throw new GorResourceException(String.format("Unsupported data type for source", source.getName()), source.getName());
+            return null;
         }
         log.debug("GorDriver: Datatype of {} is {}", source.getName(), type);
 
@@ -264,7 +264,6 @@ public abstract class StreamSourceProvider implements SourceProvider {
         DataType type = source.getDataType();
         if (type == null) {
             log.warn("Unknown DataType for {}", source.getName());
-            throw new GorResourceException(String.format("Unsupported data type for source", source.getName()), source.getName());
         }
         log.debug("GorDriver: Datatype of {} is {}", source.getName(), type);
 
