@@ -9,7 +9,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PARALLEL &mdash; GOR Open Source v.2.0 documentation</title>
+  <title>INFLATECOLUMN &mdash; GOR Open Source v.2.0 documentation</title>
   
 
   
@@ -142,7 +142,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>PARALLEL</li>
+      <li>INFLATECOLUMN</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -159,38 +159,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="parallel-1">
-<span id="parallel"></span><h1>PARALLEL<a class="headerlink" href="#parallel-1" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#parallel"><span class="std std-ref">PARALLEL</span></a> command, like <a class="reference internal" href="PGOR.html#pgor"><span class="std std-ref">PGOR</span></a>, can be used to run queries in parallel.  Unlike the PGOR command which partitions the query execution along the genomic axis, PARALLEL allows for fully customizable parallelism.</p>
-<p>The current implementation, the query expression must be provided like a nested-query expression with the column replacement operator #{col:[column_name]} to inject values from the input parts source into the newly generated gor query as shown in the examples.</p>
-<p>Like PGOR, PARALLEL cannot appear in a regular nested query.</p>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="inflatecolumn-1">
+<span id="inflatecolumn"></span><h1>INFLATECOLUMN<a class="headerlink" href="#inflatecolumn-1" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#inflatecolumn"><span class="std std-ref">INFLATECOLUMN</span></a> command allows you to select a single column and de-compress its content. Use the <a class="reference internal" href="DEFLATECOLUMN.html#deflatecolumn"><span class="std std-ref">DEFLATECOLUMN</span></a> to compress the column.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> pnlist = <span class="nd">nor</span> pns.tsv;
-<span class="nd">create</span> #tempfile# = parallel -parts [pnlist]  &lt;(<span class="nd">nor</span> #{col:pn_file} | where pn = &#39;#{col:pn}&#39; );
-<span class="nd">nor</span> [#tempfile#]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | INFLATECOLUMN column
 </pre></div>
 </div>
 </section>
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
-<table class="docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-parts</span></code></p></td>
-<td><p>Required option. Input source which contains the split source. Each row in the input parts
-source represents the input for a single split. Columns in the parts input source can be
-referenced with a #{col:[columnname]} operator.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-limit</span> <span class="pre">[number]</span></code></p></td>
-<td><p>Set a maximum number of parallel tasks. Defaults to 1000</p></td>
-</tr>
-</tbody>
-</table>
+<p>The <cite>INFLATECOLUMN</cite> command will de-compress columns starting with the <cite>zip::</cite> keyword at the start of the column indicating the the content is compressed. Trying to de-compress a column that is already de-compressed will return the original column data.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>A full discussion of PARALLEL commands and examples of how to use them can be found in the manual chapter on <a class="reference internal" href="../parallelGOR.html#parallelexamples"><span class="std std-ref">Parallelization in GOR</span></a>.</p>
-<p>See also: <a class="reference internal" href="PGOR.html"><span class="doc">PGOR</span></a></p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | inflatecolumn data
+</pre></div>
+</div>
+<p>Returns a row where the column named <cite>data</cite> is de-compressed if its content is compressed.</p>
 </section>
 </section>
 

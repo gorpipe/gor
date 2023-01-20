@@ -22,6 +22,7 @@
    command/CSVSEL
    command/DAGMAP
    command/DEF
+   command/DEFLATECOLUMN
    command/DISTINCT
    command/DISTLOC
    command/GAVA
@@ -36,6 +37,7 @@
    command/GTLD
    command/GTTRANSPOSE
    command/HIDE
+   command/INFLATECOLUMN
    command/INSET
    command/JOIN
    command/LDANNO

@@ -65,6 +65,9 @@ Commands
    * - :ref:`DAGMAP`
      - Similar to :ref:`MULTIMAP`, but topologically ordering individuals based on their family tree relations.
      - GOR/NOR
+   * - :ref:`DEFLATECOLUMN`
+     - Compresses a column which meets minimum size requirement.
+     - GOR/NOR
    * - :ref:`DISTINCT`
      - Eliminates duplicate rows from the output stream.
      - GOR/NOR
@@ -106,6 +109,9 @@ Commands
      - GOR
    * - :ref:`HIDE`
      - Removes the listed columns from the output stream.
+     - GOR/NOR
+   * - :ref:`INFLATECOLUMN`
+     - De-compresses a column which has been compressed using :ref:`DEFLATECOLUMN`.
      - GOR/NOR
    * - :ref:`INSET`
      - Only passes rows where the column value is found in the specified single-column setfile.

@@ -4,9 +4,9 @@
 
 .. _PARALLEL:
 
-=======================
-PARALLEL (Experimental)
-=======================
+========
+PARALLEL
+========
 The :ref:`PARALLEL` command, like :ref:`PGOR`, can be used to run queries in parallel.  Unlike the PGOR command which partitions the query execution along the genomic axis, PARALLEL allows for fully customizable parallelism.
 
 The current implementation, the query expression must be provided like a nested-query expression with the column replacement operator #{col:[column_name]} to inject values from the input parts source into the newly generated gor query as shown in the examples.
