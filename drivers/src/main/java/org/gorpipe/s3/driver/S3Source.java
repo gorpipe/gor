@@ -58,7 +58,7 @@ public class S3Source implements StreamSource {
     private final String key;
     private final AmazonS3Client client;
     private S3SourceMetadata meta;
-    private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
+    private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
     private Path path;
 
