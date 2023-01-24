@@ -98,13 +98,13 @@ class CsvSel extends CommandInfo("CSVSEL",
     var dsource2: DynamicNorSource = null
     var rightHeader2 = ""
     try {
-      var rightFile1 = CommandParseUtilities.toNorSource(iargs(0).trim)
+      val rightFile1 = CommandParseUtilities.toNorSource(iargs(0).trim)
       val inputSource1 = SourceProvider(rightFile1, context, executeNor = executeNor, isNor = true)
       iteratorCommand1 = inputSource1.iteratorCommand
       dsource1 = inputSource1.dynSource.asInstanceOf[DynamicNorSource]
       rightHeader1 = inputSource1.header
 
-      var rightFile2 = CommandParseUtilities.toNorSource(iargs(1).trim)
+      val rightFile2 = CommandParseUtilities.toNorSource(iargs(1).trim)
       val inputSource2 = SourceProvider(rightFile2, context, executeNor = executeNor, isNor = true)
       iteratorCommand2 = inputSource2.iteratorCommand
       dsource2 = inputSource2.dynSource.asInstanceOf[DynamicNorSource]

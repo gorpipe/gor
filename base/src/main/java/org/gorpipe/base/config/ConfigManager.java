@@ -62,6 +62,7 @@ public class ConfigManager {
     private static final List<Map<?, ?>> globalProperties = new ArrayList<>();
 
     private static final ConcurrentHashMap<String, Config> prefixConfigMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, List<Map<?, ?>>> prefixAllConfigsMap = new ConcurrentHashMap<>();
 
     // TODO: change to support multiple configRootPaths
     // env variable defined
@@ -313,22 +314,29 @@ public class ConfigManager {
      * @return a populated config object.
      */
     public static <T extends Config> T createPrefixConfig(String prefix, Class<? extends T> clazz, Map<?, ?>... configs) {
+
         List<Map<?, ?>> allConfigs = new ArrayList<>();
 
-        // system properties always take precedence
-        allConfigs.add(System.getProperties());
+        if (prefixAllConfigsMap.containsKey(prefix)) {
+            allConfigs =  prefixAllConfigsMap.get(prefix);
+        } else {
+            // system properties always take precedence
+            allConfigs.add(System.getProperties());
 
-        // make the config maps supplied as parameters take precedence over the default ones
-        allConfigs.addAll(Arrays.asList(configs));
+            // make the config maps supplied as parameters take precedence over the default ones
+            allConfigs.addAll(Arrays.asList(configs));
 
-        // Add system envs.
-        allConfigs.add(System.getenv());
+            // Add system envs.
+            allConfigs.add(System.getenv());
 
-        // now add all the defaults
-        allConfigs.addAll(loadDefaultConfigPropertiesForPrefix(prefix));
+            // now add all the defaults
+            allConfigs.addAll(loadDefaultConfigPropertiesForPrefix(prefix));
 
-        // finally add the registered global properties
-        allConfigs.addAll(globalProperties);
+            // finally add the registered global properties
+            allConfigs.addAll(globalProperties);
+
+            prefixAllConfigsMap.put(prefix, allConfigs);
+        }
 
         return createConfig(clazz, allConfigs.toArray(new Map<?, ?>[allConfigs.size()]));
     }
@@ -344,6 +352,7 @@ public class ConfigManager {
      * @return a populated config object.
      */
     public static <T extends Config> T createConfig(Class<? extends T> clazz, Map<?, ?>... configs) {
+        log.info("Creating config for {} including {}", clazz, configs);
         return ConfigFactory.create(clazz, configs);
     }
 
