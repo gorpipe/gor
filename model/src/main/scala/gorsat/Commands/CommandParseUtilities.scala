@@ -35,6 +35,8 @@ import scala.util.control.Exception.allCatch
 
 object CommandParseUtilities {
 
+  val ColumnCutoffValue = 100
+
   def validateCommandArguments(arguments: Array[String], commandArguments: CommandArguments): (Array[String], Array[String]) = {
     validateInputArguments(arguments, commandArguments.options, commandArguments.valueOptions,
       commandArguments.minimumNumberOfArguments, commandArguments.maximumNumberOfArguments,
@@ -391,8 +393,13 @@ object CommandParseUtilities {
         if (tmp != -1) n = tmp + offset
 
         if (n == -1 && !ignoreNonExisting) {
-          val s = columnsArray.zipWithIndex.map(x => (x._2 + 1).toString + ": " + x._1).mkString("\n")
-          throw new GorParsingException(s"Column $columnNumberOrName is not in the following header:" + columnsArray.mkString("\t") + "\n\n" + s)
+          var s = columnsArray.take(ColumnCutoffValue).zipWithIndex.map(x => s"${x._2 + 1}: ${x._1}").mkString("\n")
+
+          if (columnsArray.length > ColumnCutoffValue) {
+            s = s"$s\n(...and ${columnsArray.length - ColumnCutoffValue} more)"
+          }
+
+          throw new GorParsingException(s"Column $columnNumberOrName is not in header" + "\n\n" + s)
         } else {
           col = n + 1
         }
@@ -400,7 +407,12 @@ object CommandParseUtilities {
     if (!ignoreNonExisting && (col < 1 || col > columnsArray.length)) {
       val colNum = col + (if (forNor) -2 else 0)
       val colLen = columnsArray.length
-      val columnsString = columnsArray.mkString("\t")
+      var columnsString = columnsArray.take(ColumnCutoffValue).mkString("\t")
+
+      if (columnsArray.length > ColumnCutoffValue) {
+        columnsString = s"$columnsString\n(...and ${columnsArray.length - ColumnCutoffValue} more)"
+      }
+
       throw new GorParsingException(s"Column number $colNum is not in the following header with $colLen columns: $columnsString")
     }
     col

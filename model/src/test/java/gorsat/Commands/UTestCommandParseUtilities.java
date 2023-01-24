@@ -253,6 +253,44 @@ public class UTestCommandParseUtilities {
     }
 
     @Test
+    public void testHeaderColumnParsingWithColumnIndicesIgnoreMissing() {
+
+        // Test specific columns
+        var result = CommandParseUtilities.columnsFromHeader("a,e,h", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, true);
+        var javaResult = CollectionConverters.asJava(result);
+        Assert.assertEquals(2, result.length());
+        Assert.assertEquals(2, javaResult.get(0));
+        Assert.assertEquals(6, javaResult.get(1));
+    }
+
+    @Test(expected = GorParsingException.class)
+    public void testColumnSelectionWithMissingColumns() {
+
+        // Test specific columns
+        CommandParseUtilities.columnsFromHeader("h", "ChromNOR\tPosNOT\ta\tb\tc\td\te\tf\tg", true, false);
+    }
+
+    @Test
+    public void testColumnSelectionWithMissingColumnsLargeHeader() {
+
+        var headerArray = new String[1000];
+
+        for (int i = 0; i < headerArray.length; i++) {
+            headerArray[i] = "header_" + i;
+        }
+
+        try {
+            // Test specific columns
+            CommandParseUtilities.columnsFromHeader("h", String.join("\t", headerArray), true, false);
+        } catch (GorParsingException pe) {
+            Assert.assertTrue(pe.getMessage().contains("(...and 900 more)"));
+                    return;
+        }
+
+        Assert.assertTrue(false);
+    }
+
+    @Test
     public void testNorSourceParsing() {
         // Txt file, why is this not treated as nor source?
         var result = CommandParseUtilities.toNorSource("foo.txt");
