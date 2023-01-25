@@ -94,7 +94,7 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public OutputStream getOutputStream(boolean append) throws IOException {
+    public OutputStream getOutputStream(boolean append) {
         if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
         invalidateMeta();
         return new S3MultiPartOutputStream(client, bucket, key);
@@ -119,8 +119,8 @@ public class S3Source implements StreamSource {
         try {
             S3Object object = client.getObject(request);
             return object.getObjectContent();
-        } catch(SdkClientException sdkClientException) {
-            throw new IOException("Unable to handle S3 request: " + Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")) + ": " + sourceReference.getUrl(), sdkClientException);
+        } catch (SdkClientException e) {
+            throw mapAndRethrowS3Exceptions(e, Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")) + ": " + sourceReference.getUrl());
         }
     }
 
@@ -154,9 +154,8 @@ public class S3Source implements StreamSource {
         if (meta == null) {
             try {
                 meta = loadMetadata(bucket, key);
-            } catch (ExecutionException | UncheckedExecutionException e) {
-                // Need IOException for the retry handler
-                throw new IOException(e);
+            } catch (Exception e) {
+               throw mapAndRethrowS3Exceptions(e, bucket + "/"+ key);
             }
         }
         return meta;
@@ -174,7 +173,7 @@ public class S3Source implements StreamSource {
 
     @Override
     public boolean exists() throws IOException  {
-        return fileExists() ? true : Files.exists(getPath());
+        return fileExists() || Files.exists(getPath());
     }
 
     @Override
@@ -183,23 +182,43 @@ public class S3Source implements StreamSource {
             // Already in cache, exists
             loadMetadata(bucket, key);
             return true;
-        } catch (AmazonS3Exception e) {
-            return checkFileExistsMetaDataException(e);
-        } catch (ExecutionException | UncheckedExecutionException e) {
-            return checkFileExistsMetaDataException(e.getCause());
-        }
-    }
-
-    private boolean checkFileExistsMetaDataException(Throwable e) throws IOException {
-        if (e instanceof AmazonS3Exception s3exp) {
-            if (s3exp.getStatusCode() == 404 || s3exp.getStatusCode() == 400) {
-                // The meta data check does not handle the existsance of 'folders' correctly, so if we get
-                // 404 and have a folder we need to use Files.exists (with S3 filesystem path) that handles
-                // S3 'folders'.
+        } catch (Exception e) {
+            try {
+                throw mapAndRethrowS3Exceptions(e, bucket + "/" + key);
+            } catch (GorResourceException gre) {
                 return false;
             }
         }
-        throw new IOException("S3 fileExists failed: " + bucket+key, e);
+    }
+
+    /*
+      Map AmazonS3Exception/ExecutionException/InterruptException correctly.  Map to IOException if retry is wanted.
+      Either returns IOException or throws a runtime exception.
+     */
+    protected IOException mapAndRethrowS3Exceptions(Throwable t, String detail)  {
+
+        // Handle execution exceptions.
+        if (t instanceof ExecutionException || t instanceof UncheckedExecutionException) {
+            t = t.getCause();
+        }
+
+        if (t instanceof AmazonS3Exception) {
+            AmazonS3Exception e = (AmazonS3Exception) t;
+            detail = detail != null ? detail : e.getMessage();
+            if (e.getStatusCode() == 404) {
+                throw new GorResourceException(String.format("Resource not found. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
+            } else if (e.getStatusCode() == 400) {
+                throw new GorResourceException(String.format("Bat request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
+            } else {
+                return new IOException(e);
+            }
+        } else if (t instanceof SdkClientException) {
+            return new IOException(detail, t);
+        } else if (t instanceof IOException) {
+            return (IOException) t;
+        } else {
+            return new IOException(t);
+        }
     }
 
     @Override
