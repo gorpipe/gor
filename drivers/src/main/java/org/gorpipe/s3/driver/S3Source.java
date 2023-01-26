@@ -205,10 +205,14 @@ public class S3Source implements StreamSource {
         if (t instanceof AmazonS3Exception) {
             AmazonS3Exception e = (AmazonS3Exception) t;
             detail = detail != null ? detail : e.getMessage();
-            if (e.getStatusCode() == 404) {
-                throw new GorResourceException(String.format("Resource not found. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 400) {
-                throw new GorResourceException(String.format("Bat request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
+            if (e.getStatusCode() == 400) {
+                throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
+            } else if (e.getStatusCode() == 401) {
+                throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
+            } else if (e.getStatusCode() == 403) {
+                throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
+            } else if (e.getStatusCode() == 404) {
+                throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
             } else {
                 return new IOException(e);
             }
