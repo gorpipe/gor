@@ -29,6 +29,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.upplication.s3fs.S3OutputStream;
+import com.upplication.s3fs.util.S3UploadRequest;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -36,6 +38,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -97,7 +100,13 @@ public class S3Source implements StreamSource {
     public OutputStream getOutputStream(boolean append) {
         if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
         invalidateMeta();
-        return new S3MultiPartOutputStream(client, bucket, key);
+
+        // S3OutputStream, uses less resources and is slightly faster than our S3MultiPartOutputStream
+        return new S3OutputStream(client, new S3UploadRequest()
+                .setObjectId(new S3ObjectId(bucket, key))
+                .setChunkSize(1<<23)
+        );
+        //return new S3MultiPartOutputStream(client, bucket, key);
     }
 
     @Override
@@ -173,6 +182,7 @@ public class S3Source implements StreamSource {
 
     @Override
     public boolean exists() throws IOException  {
+        // Files.exists handles directories.
         return fileExists() || Files.exists(getPath());
     }
 
@@ -227,22 +237,22 @@ public class S3Source implements StreamSource {
 
     @Override
     public String createDirectory(FileAttribute<?>... attrs) throws IOException {
-        return Files.createDirectory(getPath()).toUri().toString();
+        return PathUtils.formatUri(Files.createDirectory(getPath()).toUri());
     }
 
     @Override
     public String createDirectories(FileAttribute<?>... attrs) throws IOException {
-        return Files.createDirectories(getPath()).toUri().toString();
+        return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
     }
 
     @Override
     public boolean isDirectory() {
-        return Files.isDirectory(getPath());
+        return key.endsWith("/") || Files.isDirectory(getPath());
     }
 
     @Override
     public void delete() throws IOException {
-        Files.delete(getPath());
+        Files.deleteIfExists(getPath());  // Use if exists for folders (that are not reported existing if empty)
         invalidateMeta();
     }
 
@@ -258,13 +268,12 @@ public class S3Source implements StreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        return Files.list(getPath()).map(p -> p.toUri().toString());
+        return Files.list(getPath()).map(p -> PathUtils.formatUri(p.toUri()));
     }
-
 
     @Override
     public Stream<String> walk() throws IOException {
-        return Files.walk(getPath()).map(p -> p.toUri().toString());
+        return Files.walk(getPath()).map(p -> PathUtils.formatUri(p.toUri()));
     }
 
     @Override

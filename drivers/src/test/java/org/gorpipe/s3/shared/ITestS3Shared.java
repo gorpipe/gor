@@ -3,6 +3,7 @@ package org.gorpipe.s3.shared;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.base.security.Credentials;
@@ -29,9 +30,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.UUID;
 
 import static gorsat.TestUtils.runGorPipeCLI;
 import static gorsat.TestUtils.runGorPipeServer;
+import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 import static org.gorpipe.utils.DriverUtils.createSecurityContext;
 
 @Category(IntegrationTests.class)
@@ -485,6 +488,28 @@ public class ITestS3Shared {
         }
 
         Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
+    }
+
+    @Ignore("Runs too slowly")
+    @Test
+    public void testProjectWriteUserDataServerPgorGord() throws IOException {
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
+        Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
+        String randomId = UUID.randomUUID().toString();
+        String dataPath = DataUtil.toFile("user_data/dummy_" + randomId, DataType.GORD) + "/";
+
+        runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
+
+        String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
+        String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
+        Assert.assertEquals(expected, result);
+
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath + "/" + DEFAULT_FOLDER_DICTIONARY_NAME, DataType.LINK))));
+
+        FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
+        fileReader.deleteDirectory("s3data://project/" + dataPath);
     }
 
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,

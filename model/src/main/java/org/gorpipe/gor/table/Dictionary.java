@@ -32,6 +32,7 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
@@ -133,25 +134,37 @@ public class Dictionary {
         return PathUtils.resolve(commonRoot, path);
     }
 
+    public synchronized static Dictionary getDictionary(DictionaryTable table, boolean useCache) {
+        if (useCache) {
+            return getDictionaryFromCache(table.getPath(), table.getFileReader(), table.getFileReader().getCommonRoot(), table.getId());
+        } else {
+            return processDictionary(table.getPath(), table.getFileReader(), "", table.getFileReader().getCommonRoot(), false);
+        }
+    }
+
     public synchronized static Dictionary getDictionary(String path, FileReader fileReader, String commonRoot, boolean useCache) throws IOException {
         if (useCache) {
             String uniqueID = fileReader.getFileSignature(path);
-            var key = dictCacheKeyFromPathAndRoot(path, commonRoot);
-            if (uniqueID == null || uniqueID.equals("")) {
-                dictCache.invalidate(key);
-                return processDictionary(path, fileReader, uniqueID, commonRoot, true);
-            } else {
-                Dictionary dictFromCache = dictCache.getIfPresent(key);
-                if (dictFromCache == null || !dictFromCache.fileSignature.equals(uniqueID)) {
-                    Dictionary newDict = processDictionary(path, fileReader, uniqueID, commonRoot, true);
-                    dictCache.put(key, newDict);
-                    return newDict;
-                } else {
-                    return dictFromCache;
-                }
-            }
+            return getDictionaryFromCache(path, fileReader, commonRoot, uniqueID);
         } else {
             return processDictionary(path, fileReader, "", commonRoot, false);
+        }
+    }
+
+    private static Dictionary getDictionaryFromCache(String path, FileReader fileReader, String commonRoot, String uniqueID) {
+        var key = dictCacheKeyFromPathAndRoot(path, commonRoot);
+        if (uniqueID == null || uniqueID.equals("")) {
+            dictCache.invalidate(key);
+            return processDictionary(path, fileReader, uniqueID, commonRoot, true);
+        } else {
+            Dictionary dictFromCache = dictCache.getIfPresent(key);
+            if (dictFromCache == null || !dictFromCache.fileSignature.equals(uniqueID)) {
+                Dictionary newDict = processDictionary(path, fileReader, uniqueID, commonRoot, true);
+                dictCache.put(key, newDict);
+                return newDict;
+            } else {
+                return dictFromCache;
+            }
         }
     }
 

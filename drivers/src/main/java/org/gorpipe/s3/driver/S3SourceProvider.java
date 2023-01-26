@@ -43,11 +43,9 @@ import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.utils.RetryHandler;
-import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.FileSystemException;
 import java.util.Set;
 

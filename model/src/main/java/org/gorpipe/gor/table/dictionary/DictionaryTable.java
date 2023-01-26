@@ -24,8 +24,6 @@ package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.jcraft.jsch.IO;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.model.FileReader;
@@ -34,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
@@ -318,19 +315,20 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         if (!fileReader.exists(path)) {
             throw new NoSuchFileException(path);
         }
+        // The dict is lazy loaded so the onnly cost is finding the id.
+        DictionaryTable dict = new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
+
         if (useCache) {
-            SourceMetadata meta = fileReader.resolveUrl(path).getSourceMetadata();
-            String uniqueID = meta.getUniqueId();
+            String uniqueID = dict.getId();
             var key = dictCacheKeyFromPathAndRoot(path, fileReader.getCommonRoot());
             if (uniqueID == null || uniqueID.equals("")) {
                 dictCache.invalidate(key);
-                return new DictionaryTable.Builder<>(path).fileReader(fileReader).id(uniqueID).build();
+                return dict;
             } else {
                 DictionaryTable dictFromCache = dictCache.getIfPresent(key);
                 if (dictFromCache == null || !dictFromCache.getId().equals(uniqueID)) {
-                    DictionaryTable newDict = new DictionaryTable.Builder<>(path).fileReader(fileReader).id(uniqueID).build();
-                    dictCache.put(key, newDict);
-                    return newDict;
+                    dictCache.put(key, dict);
+                    return dict;
                 } else {
                     // Need to reload the meta as it can lye in files outside the gord file.
                     // Not thread safe: dictFromCache.loadMeta();
@@ -338,23 +336,16 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
                 }
             }
         } else {
-            return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
+            return dict;
         }
     }
 
     public synchronized static void updateCache(DictionaryTable table) {
-        String uniqueID = null;
-        try {
-            SourceMetadata meta = table.getFileReader().resolveUrl(table.getPath()).getSourceMetadata();
-            uniqueID = meta.getUniqueId();
-        } catch (IOException e) {
-            throw new GorSystemException(e);
-        }
+        String uniqueID = table.getId();
         var key = dictCacheKeyFromPathAndRoot(table.getPath(), table.getFileReader().getCommonRoot());
         if (uniqueID == null || uniqueID.equals("")) {
             log.warn("Trying to put table with non unique id ({}) into cache", uniqueID);
         } else {
-            table.setId(uniqueID);
             dictCache.put(key, table);
         }
     }

@@ -27,6 +27,7 @@ import gorsat.Script
 import gorsat.Script._
 import gorsat.Utilities.MacroUtilities.getCachePath
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.util.PathUtils
 
 import java.util
 
@@ -59,7 +60,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
 
       var cachePath: String = null
       val theCommand = if(useGordFolders) {
-        cachePath = theCachePath
+        cachePath = PathUtils.markAsFolder(theCachePath)
         if (!cacheFileExists) {
           val noDict = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-gordfolder","dict").equals("nodict")
           val (tcmd, theDeps: util.List[String], partGorCmds: util.LinkedHashMap[String, ExecutionBlock]) = makeGorDict(context, noWithin, createKey, create, replacePattern, theQueryAppend, cachePath, useGordFolders, noDict, hasForkWrite)

@@ -62,9 +62,8 @@ public class PathUtils {
         }
 
         // The uri folder path must end with / for the resolve to work as Path resolve.
-        if (!root.toString().endsWith("/")) {
-            root = URI.create(root+"/");
-        }
+        root = markAsFolder(root);
+
         return normalize(root.resolve(path));
     }
 
@@ -224,6 +223,20 @@ public class PathUtils {
 
     public static String stripTrailingSlash(String path) {
         return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+    }
+
+    public static String markAsFolder(String path) {
+        if (!path.endsWith("/")) {
+            return path + "/";
+        }
+        return path;
+    }
+
+    public static URI markAsFolder(URI path) {
+        if (!path.toString().endsWith("/")) {
+            return URI.create(path + "/");
+        }
+        return path;
     }
 
     public static URI toRealPath(URI uri) {

@@ -22,16 +22,19 @@
 
 package org.gorpipe.gor.model;
 
+import com.google.common.base.Strings;
+import org.apache.commons.io.FilenameUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -97,14 +100,19 @@ public abstract class FileReader {
      * @param dir
      */
     public void deleteDirectory(String dir) throws IOException {
-        for (var f : list(dir).collect(Collectors.toList())) {
-            if (isDirectory(f)) {
-                deleteDirectory(f);
-            } else {
-                delete(f);
+        list(dir).parallel().forEach(f -> {
+            try {
+                if (isDirectory(f)) {
+                    deleteDirectory(f);
+                } else {
+                    delete(f);
+                }
+            } catch (IOException ioe) {
+                throw new GorResourceException("Error deleting " + f, f, ioe);
             }
-        }
-        delete(dir);
+        });
+
+        delete(PathUtils.markAsFolder(dir));
     }
 
     public abstract Stream<String> list(String dir) throws IOException;
@@ -311,4 +319,21 @@ public abstract class FileReader {
     public abstract Object[] getConstants();
 
     public abstract SourceReference createSourceReference(String url, boolean writeable);
+
+    public void writeLinkIfNeeded(String url) throws IOException {
+        if (Strings.isNullOrEmpty(url)) return;
+        DataSource dataSource = resolveUrl(url, true);
+        if (dataSource.forceLink()) {
+            writeLinkfile(dataSource.getProjectLinkFile(), dataSource.getProjectLinkFileContent());
+        }
+    }
+
+    public void writeLinkfile(String linkUrl, String linkContent) throws IOException {
+        // Use non driver file reader as this is exception from the write no links rule, add extra resolve with the
+        // server reader to validate (skip link extension as writing links is allow forbidden).
+        resolveUrl(FilenameUtils.removeExtension(linkUrl), true);
+        try (Writer linkWriter = new OutputStreamWriter(getOutputStream(linkUrl))) {
+            linkWriter.write(linkContent);
+        }
+    }
 }

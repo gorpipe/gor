@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.driver.meta;
 
+import org.gorpipe.gor.table.util.PathUtils;
+
 import static org.gorpipe.gor.driver.meta.FileNature.*;
 
 /**
@@ -89,7 +91,7 @@ public enum DataType {
     public static DataType fromFileName(String file) {
         file = file.trim().toLowerCase();
         for (DataType type : values()) {
-            if (file.endsWith(type.suffix)) {
+            if (PathUtils.stripTrailingSlash(file).endsWith(type.suffix)) {
                 return type;
             }
         }
@@ -97,7 +99,7 @@ public enum DataType {
     }
 
     public static boolean isOfType(String file, DataType type) {
-        return file.trim().toLowerCase().endsWith(type.suffix);
+        return PathUtils.stripTrailingSlash(file.trim()).toLowerCase().endsWith(type.suffix);
     }
 
     public static boolean containsType(String file, DataType type) {

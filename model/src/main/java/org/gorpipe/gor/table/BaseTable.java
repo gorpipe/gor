@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GorOptions;
@@ -86,11 +87,13 @@ public abstract class BaseTable<T> implements Table<T> {
     protected BaseTable(URI uri, FileReader inputFileReader) {
         this.fileReader = inputFileReader != null ? inputFileReader : ProjectContext.DEFAULT_READER;
 
-        var fileName = FilenameUtils.getName(uri.getPath());
+        DataSource source = this.fileReader.resolveUrl(uri.toString());
+        var realUri = URI.create(source.getFullPath());
+        var fileName = PathUtils.getFileName(source.getFullPath());
         this.name = FilenameUtils.removeExtension(fileName);
 
         // Not all datasources support isDirectory (so just check for the dict file)
-        if (safeCheckExists(PathUtils.resolve(uri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString())) {
+        if (safeCheckExists(PathUtils.resolve(realUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString())) {
             // Gord folder passed in.
             this.rootUri = PathUtils.toURIFolder(uri.toString());
             this.path =  PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
@@ -122,10 +125,24 @@ public abstract class BaseTable<T> implements Table<T> {
         return this.name;
     }
 
+    /**
+     * Id for the table based on path and timestamp.
+     * @return
+     */
     public String getId() {
         // Lazy initialization.
         if (this.id == null) {
-            this.id = Util.md5(this.path.toString());
+            if (this.header.getProperty(TableHeader.HEADER_SERIAL_KEY) == null) {
+                loadMeta();
+            }
+            String serial = this.header.getProperty(TableHeader.HEADER_SERIAL_KEY);
+            serial = serial != null ? serial : "";
+            try {
+                this.id = this.fileReader.resolveUrl(path.toString()).getSourceMetadata().getUniqueId() + serial;
+            } catch (IOException e) {
+                // Assuming we could not access the meta.
+                this.id = Util.md5(this.path.toString()) + serial;
+            }
         }
         return this.id;
     }
@@ -434,7 +451,7 @@ public abstract class BaseTable<T> implements Table<T> {
         log.debug("Parsing header for {}", getName());
         this.header.clear();
 
-        this.header.loadAndMergeMeta(fileReader, PathUtils.resolve(getFolderPath(), "header")); // For backward compatibility.
+        //this.header.loadAndMergeMeta(fileReader, PathUtils.resolve(getFolderPath(), "header")); // For backward compatibility.
         this.header.loadAndMergeMeta(fileReader, getPathUri().toString());
         this.header.loadAndMergeMeta(fileReader, DataUtil.toFile(getPathUri().toString(), DataType.META));
 

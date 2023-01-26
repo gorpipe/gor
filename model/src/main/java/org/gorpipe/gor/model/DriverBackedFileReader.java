@@ -53,6 +53,8 @@ import java.util.stream.Stream;
  * Created by villi on 06/01/17.
  */
 public class DriverBackedFileReader extends FileReader {
+
+    private String DEFAULT_COMMON_ROOT = "./";
     private static final Logger log = LoggerFactory.getLogger(DriverBackedFileReader.class);
 
     private final String securityContext;
@@ -66,9 +68,9 @@ public class DriverBackedFileReader extends FileReader {
     public DriverBackedFileReader(String securityContext, String commonRoot, Object[] constants) {
         this.securityContext = securityContext;
         if ((commonRoot == null || commonRoot.length() < 1) && GorStandalone.isStandalone()) {
-            this.commonRoot = GorStandalone.getStandaloneRoot();
+            this.commonRoot = PathUtils.markAsFolder(GorStandalone.getStandaloneRoot());
         } else {
-            this.commonRoot = commonRoot;
+            this.commonRoot = StringUtil.isEmpty(commonRoot) ? DEFAULT_COMMON_ROOT :  PathUtils.markAsFolder(commonRoot);
         }
         this.constants = constants;
     }
@@ -166,7 +168,7 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public boolean isDirectory(String dir) {
-        return resolveUrl(dir).isDirectory();
+        return dir.endsWith("/") || resolveUrl(dir).isDirectory();
     }
 
     @Override
@@ -201,7 +203,7 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public void delete(String file) throws IOException {
-        resolveUrl(file).delete();
+        resolveUrl(file, true).delete();
     }
 
     @Override

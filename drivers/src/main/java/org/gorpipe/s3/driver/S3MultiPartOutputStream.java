@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 public class S3MultiPartOutputStream extends OutputStream {
     private static final Logger log = LoggerFactory.getLogger(S3MultiPartOutputStream.class);
 
-    final static int MAX_CAPACITY = 1<<26;
+    final static int MAX_CAPACITY = 1<<26;  //1<<26 Note:1<<24  5<<20 5MiB is the small allowed size.
     ByteBuffer baos1 = ByteBuffer.allocate(MAX_CAPACITY);
     ByteBuffer baos2 = ByteBuffer.allocate(MAX_CAPACITY);
     ByteBuffer baos = baos1;

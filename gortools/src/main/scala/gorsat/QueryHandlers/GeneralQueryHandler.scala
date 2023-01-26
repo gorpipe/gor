@@ -86,7 +86,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val writeGord = isGord && !noDict
     var cacheRes = newCacheFile
     var resultFileName = runCommand(nested, commandToExecute, if (isGord) newCacheFile else null, useMd5, theTheDict = true)
-    val isCacheDir = fileReader.isDirectory(newCacheFile)
+    val isCacheDir = fileReader.resolveUrl(newCacheFile, true).isDirectory()
     if(fileCache != null && (!isCacheDir || writeGord)) {
         resultFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
         val overheadTime = findOverheadTime(commandToExecute)
@@ -387,7 +387,7 @@ object GeneralQueryHandler {
   }
 
   private def writeOutGorDictionary(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
-    if(fileReader.exists(outfile)) {
+    if(fileReader.isDirectory(outfile)) {
       if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(fileReader, outfile, useTheDict)
     } else {
       val w = commandToExecute.split(' ')

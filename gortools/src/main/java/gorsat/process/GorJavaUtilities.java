@@ -571,7 +571,7 @@ public class GorJavaUtilities {
     }
 
     public static synchronized void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
-        try (Stream<String> metapathstream = fileReader.list(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
+        try (Stream<String> metapathstream = fileReader.walk(outfolderpath); Writer dictionarypathwriter = new OutputStreamWriter(fileReader.getOutputStream(dictionarypath))) {
             var metapaths = metapathstream.filter(p -> DataUtil.isMeta(p)).collect(Collectors.toList());
             var ai = new AtomicInteger();
             var entries = metapaths.parallelStream()
@@ -579,8 +579,8 @@ public class GorJavaUtilities {
                     .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0)
                     .map(meta -> {
                         var p = meta.getMetaPath();
-                        var fulldicturi = URI.create(outfolderpath);
-                        var outfilename = PathUtils.relativize(fulldicturi, p);
+                        // Assume we have all data in the root folder (note relatives does not work here for S3Shared).
+                        var outfilename = PathUtils.getFileName(p);
                         var outfile = FilenameUtils.removeExtension(outfilename);
                         var builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
                         var i = ai.incrementAndGet();
@@ -607,6 +607,8 @@ public class GorJavaUtilities {
                     dictionarypathwriter.write(entry);
                 }
             } else writeDummyHeader(dictionarypathwriter);
+
+            fileReader.writeLinkIfNeeded(dictionarypath);
         }
     }
 

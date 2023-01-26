@@ -2,6 +2,8 @@ package org.gorpipe.s3.driver;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonStreamTests;
+import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import gorsat.TestUtils;
 import org.gorpipe.gor.driver.DataSource;
@@ -14,12 +16,14 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.SystemErrRule;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.UUID;
 
 //@Category(IntegrationTests.class)
 public class ITestS3Source extends CommonStreamTests {
@@ -99,6 +103,29 @@ public class ITestS3Source extends CommonStreamTests {
     @Test
     public void testS3Write() {
         TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gor");
+    }
+
+    @Ignore("Local file, also too large and slow to use always, no clean up")
+    @Test
+    public void testS3WriteLargeFile() {
+        String localPath = "../../testing/data/ref/hg19/dbsnp.gorz";
+        long startTime = System.currentTimeMillis();
+        TestUtils.runGorPipe(String.format("gor %s | top 100000000 | write s3://nextcode-unittest/s3write/large.gorz", localPath));
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("Time: " + duration + "ms");
+    }
+
+    @Ignore("Too slow to always run")
+    @Test
+    public void testS3WritePgorGord() throws IOException {
+        String randomId = UUID.randomUUID().toString();
+        String dict = String.format("s3://nextcode-unittest/s3write/%s-genes.gord", randomId);
+        TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2 | write " + dict);
+        String expected = TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2");
+        String result = TestUtils.runGorPipe("gor " + dict);
+        Assert.assertEquals(expected, result);
+        DriverBackedFileReader fileReader = new DriverBackedFileReader("");
+        fileReader.deleteDirectory(dict);
     }
 
     @Test

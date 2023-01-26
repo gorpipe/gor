@@ -807,8 +807,8 @@ public class GorOptions {
         // TODO: Remove when driver framework supports isDirectory
         fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
 
-        DictionaryTable table = new DictionaryTable(PathUtils.resolve(projectContext.commonRoot, fileName));
-        final Dictionary gord = Dictionary.getDictionary(fileName, session.getProjectContext().getFileReader(), commonRoot, this.useDictionaryCache);
+        DictionaryTable table = DictionaryTable.getTable(fileName, session.getProjectContext().getFileReader());
+        final Dictionary gord = Dictionary.getDictionary(table, this.useDictionaryCache);
 
         isNoLineFilter = isNoLineFilter || !table.getLineFilter();
         this.hasLocalDictonaryFile = hasLocalDictonaryFile || !gord.getValidTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags

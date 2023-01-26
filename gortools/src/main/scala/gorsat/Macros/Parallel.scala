@@ -28,6 +28,7 @@ import gorsat.Utilities.MacroUtilities
 import gorsat.process.{GorInputSources, GorJavaUtilities, GorPipeMacros, SourceProvider}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.util.PathUtils
 
 import java.util
 
@@ -73,7 +74,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val (hasDictFolderWrite, _, hasForkWrite, theCachePath, _) = MacroUtilities.getCachePath(create, context, skipCache)
     val useGordFolders: Boolean = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
     if (useGordFolders) {
-      cachePath = theCachePath
+      cachePath = PathUtils.markAsFolder(theCachePath)
     }
 
 
