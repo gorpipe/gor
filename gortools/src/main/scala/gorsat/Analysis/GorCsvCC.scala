@@ -22,12 +22,12 @@
 
 package gorsat.Analysis
 
+import gorsat.Buckets.{PnBucketParsing, PnBucketTable, PnBucketValidators}
+
 import java.text.{DecimalFormat, DecimalFormatSymbols}
 import java.util.Locale
-
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler}
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorSession

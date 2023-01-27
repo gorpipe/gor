@@ -1,5 +1,6 @@
 package gorsat
 
+import gorsat.Buckets.PnBucketParsing
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner

@@ -22,13 +22,13 @@
 
 package gorsat.Analysis
 
+import gorsat.Buckets.{PnBucketParsing, PnBucketTable}
 import java.lang
 
 import gorsat.Commands.{BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.GenotypeLookupUtilities
 import gorsat.process.GorJavaUtilities.VCFValue
-import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.{Line, Row, RowBase}
 import org.gorpipe.gor.session.GorSession
@@ -476,23 +476,30 @@ object GorCsvSel {
 
     val lookupSignature: String = fileName1 + "#" + iteratorCommand1 + "#" + fileName2 + "#" + iteratorCommand2
 
-    session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _=> {
-        var l1 = Array.empty[String]
-        var l2 = Array.empty[String]
-
+    if (session.getCache.getObjectHashMap.containsKey(lookupSignature)) {
+      if (iterator1 != null) iterator1.close()
+      if (iterator2 != null) iterator2.close()
+    } else {
+      session.getCache.getObjectHashMap.computeIfAbsent(lookupSignature, _ => {
         try {
-          if (iteratorCommand1 != "") l1 = MapAndListUtilities.getStringArray(iteratorCommand1, iterator1, session)
-          else l1 = MapAndListUtilities.getStringArray(fileName1, session)
+          val l1 = if (iteratorCommand1 != "") {
+            MapAndListUtilities.getStringArray(iteratorCommand1, iterator1, session)
+          } else {
+            MapAndListUtilities.getStringArray(fileName1, session)
+          }
 
-          if (iteratorCommand2 != "") l2 = MapAndListUtilities.getStringArray(iteratorCommand2, iterator2, session)
-          else l2 = MapAndListUtilities.getStringArray(fileName2, session)
-        } catch {
-          case e: Exception =>
-            iterator1.close()
-            iterator2.close()
-            throw e
+          val l2 = if (iteratorCommand2 != "") {
+            MapAndListUtilities.getStringArray(iteratorCommand2, iterator2, session)
+          } else {
+            MapAndListUtilities.getStringArray(fileName2, session)
+          }
+
+          PnBucketParsing.parse(l1).filter(l2)
+        } finally {
+            if (iterator1 != null) iterator1.close()
+            if (iterator2 != null) iterator2.close()
         }
-        PnBucketParsing.parse(l1).filter(l2)
-    })
+      })
+    }
   }
 }

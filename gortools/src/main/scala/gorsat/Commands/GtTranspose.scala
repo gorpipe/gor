@@ -1,9 +1,9 @@
 package gorsat.Commands
 
 import gorsat.Analysis.GtTransposeFactory
+import gorsat.Buckets.PnBucketParsing
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
-import gorsat.PnBucketParsing
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.SourceProvider
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}

@@ -24,6 +24,7 @@ package gorsat;
 
 import org.gorpipe.test.GorDictionarySetup;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -351,4 +352,89 @@ public class UTestCSVSEL {
 
         Assert.assertEquals(expct,result);
     }
+
+    @Test
+    public void duplicatePns() {
+        String[] queryLines = {
+            "create x = norrows 100 | replace #1 #1+1 | group -lis -sc #1 | rename #1 values;",
+            "create b = norrows 100 | calc pn 'pn'+str(1+#1) | select pn | calc bucket 'b1';",
+            "gorrows -p chr1:1-2 | calc bucket 'b1' | multimap -cartesian [x] | csvsel -s ',' [b] <(norrows 1 | calc pns 'pn1,pn3,pn10,pn1,pn3' | select pns | split pns)"
+        };
+
+        final String result = TestUtils.runGorPipe(String.join("\n", queryLines));
+
+        Assert.assertTrue(result.length() > 0);
+        Assert.assertTrue(result.contains("chr1\t1\t1,3,10,1,3"));
+    }
+
+    @Test
+    public void duplicatePnsMultipleBuckets() {
+        String[] queryLines = {
+            "create x = norrows 100 | replace #1 #1+1 | group -lis -sc #1 | rename #1 values;",
+            "create b = norrows 100 | calc pn 'pn'+str(1+#1) | calc bucket if (mod(1+#1, 2) == 0,'b1','b2') | select pn,bucket;",
+            "gorrows -p chr1:1-2 | calc bucket 'b1' | multimap -cartesian [x] | csvsel -s ',' [b] <(norrows 1 | calc pns 'pn1,pn3,pn10,pn1,pn3' | select pns | split pns)"
+        };
+
+        final String result = TestUtils.runGorPipe(String.join("\n", queryLines));
+
+        Assert.assertTrue(result.length() > 0);
+        Assert.assertTrue(result.contains("chr1\t1\t3,3,5,3,3"));
+    }
+
+    @Test
+    public void deletedPns() {
+        String[] queryLines = {
+                "def #samples# = 100000;",
+                "def #bucketsize# = 3300;",
+                "create x = norrows #samples# | calc bucket 'b'+str(div(#1,#bucketsize#)) | replace #1 #1+1 | group -gc bucket -lis -sc #1 -len 1000000 | rename #2 values;",
+                "create b = norrows #samples#| calc pn if(rownum=0,'#deleted#pn1','pn'+str(1+#1)) | calc bucket 'b'+str(div(#1,#bucketsize#)) | select pn,bucket ;",
+                "gorrows -p chr1:1-2 | multimap -cartesian [x] | csvsel -s ',' [b] <(norrows 1 | calc pns '#deleted#pn1,pn3,pn10,pn49,pn2,pn3' | select pns | split pns)"
+        };
+
+        final String result = TestUtils.runGorPipe(String.join("\n", queryLines));
+
+        Assert.assertTrue(result.contains("3,10,49,2,3"));
+    }
+
+    @Test
+    public void deletedPns2() {
+        String[] queryLines = {
+                "def #samples# = 100000;",
+                "def #bucketsize# = 3300;",
+                "create x = norrows #samples# | calc bucket 'b'+str(div(#1,#bucketsize#)) | replace #1 #1+1 | group -gc bucket -lis -sc #1 -len 1000000 | rename #2 values;",
+                "create b = norrows #samples#| calc pn if(rownum=0,'#deleted#pn1','pn'+str(1+#1)) | calc bucket 'b'+str(div(#1,#bucketsize#)) | select pn,bucket ;",
+                "gorrows -p chr1:1-2 | multimap -cartesian [x] | csvsel -s ',' [b] <(nor [b] | select pn | top 10) | throwif listsize(values) != 9"
+        };
+
+        TestUtils.runGorPipe(String.join("\n", queryLines));
+    }
+
+    @Test
+    public void largePnsSetWithDeletedPns() {
+        String[] queryLines = {
+                "def #samples# = 100000;",
+                "def #bucketsize# = 3300;",
+                "create x = norrows #samples# | calc bucket 'b'+str(div(#1,#bucketsize#)) | replace #1 #1+1 | group -gc bucket -lis -sc #1 -len 1000000 | rename #2 values;",
+                "create b = norrows #samples#| calc pn if(rownum=0,'#deleted#pn1','pn'+str(1+#1)) | calc bucket 'b'+str(div(#1,#bucketsize#)) | select pn,bucket ;",
+                "gorrows -p chr1:1-2 | multimap -cartesian [x] | | csvsel -s ',' [b] <(nor [b] | select pn ) | throwif listsize(values) != #samples# -1 | replace values listsize(values)"
+        };
+
+        TestUtils.runGorPipe(String.join("\n", queryLines));
+    }
+
+    @Test
+    @Ignore("Gives heap space memory error")
+    public void lagePnsWhichTakesALongTime() {
+        String[] queryLines = {
+                "def #samples# = 100000;",
+                "def #bucketsize# = 3300;",
+                "create x = norrows #samples# | calc bucket 'b'+str(div(#1,#bucketsize#)) | replace #1 #1+1 | group -gc bucket -lis -sc #1 -len 1000000 | rename #2 values;",
+                "create b = norrows #samples#| calc pn if(rownum=0,'#deleted#pn1','pn'+str(1+#1)) | calc bucket 'b'+str(div(#1,#bucketsize#)) | select pn,bucket ;",
+                "gorrows -p chr1:1-1000 | multimap -cartesian [x] | csvsel -s ',' [b] <(nor [b] | select pn ) | replace values listsize(values) | calc t time() | group genome -max -ic t | throwif max_t > 14000"
+        };
+
+        TestUtils.runGorPipe(String.join("\n", queryLines));
+    }
+
+
 }

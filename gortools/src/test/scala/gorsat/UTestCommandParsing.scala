@@ -171,7 +171,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
         val arguments = getArguments(x)
         val command = GorPipeCommands.getInfo(x.command)
 
-        if (command == null) assert(false, "Command " + x.command + " not found!")
+        if (command == null) assert(false, s"Command ${x.command} not found!")
 
         var succeeded = x.testShouldSucceed
 
@@ -204,7 +204,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: BUG") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "BUG"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = true)
@@ -222,7 +222,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: VERIFYORDER") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "VERIFYORDER"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = true)
@@ -233,7 +233,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: VARIANTS") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "VARIANTS"
     val header = defaultHeaderSNP + "\tCIGAR\tQUAL\tSEQ"
@@ -252,7 +252,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: BASES") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "BASES"
     val header = defaultHeaderSNP + "\tCIGAR\tQUAL\tSEQ"
@@ -271,7 +271,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: CMD") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "CMD"
     testsToPerform += TestEntry(commandName, "{foo}", "", testShouldSucceed = true)
@@ -291,7 +291,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: COLNUM") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "COLNUM"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = true)
@@ -303,7 +303,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: COUNTROWS") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "COUNTROWS"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = true)
@@ -315,7 +315,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: DISTINCT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "DISTINCT"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = true)
@@ -327,7 +327,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SEGHIST") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SEGHIST"
     val header ="Chrom\tbpStart\tbpStop\tCount"
@@ -340,7 +340,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: DISTLOC") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "DISTLOC"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = true)
@@ -354,7 +354,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: WRITE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "WRITE"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -375,9 +375,9 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -r -c -m -f 3 -i FULL -t 'foo,bar'", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -r -c -m -f 3 -i FULL -t ''", header, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -t 'foo,bar'", header, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, "foo_#{fork}.txt -tags 'foo,bar'", header, testShouldSucceed = true)
-    testsToPerform += TestEntry(commandName, "foo -prefix bla", header, true)
-    testsToPerform += TestEntry(commandName, "foo -prefix", header, false)
+    testsToPerform += TestEntry(commandName, "foo -tags 'foo,bar'", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "foo -prefix bla", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "foo -prefix", header, testShouldSucceed = false)
 
     // "-r -c -m -i", "-f"
     performTests(testsToPerform)
@@ -392,7 +392,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: ATMAX") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "ATMAX"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -415,7 +415,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: ATMIN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "ATMIN"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -438,7 +438,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: BAMFLAG") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "BAMFLAG"
     val header = defaultHeaderSNP + "\tFlag"
@@ -455,7 +455,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
 
 
   test("Command: BUCKETSPLIT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "BUCKETSPLIT"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -496,10 +496,9 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: CALC") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "CALC"
-    val header = defaultHeaderSNP + "\tFlag"
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, "newCol", defaultHeaderSNP, testShouldSucceed = false)
@@ -517,7 +516,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: COLSPLIT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "COLSPLIT"
     val header = defaultHeaderSNP + "\tc1,c2,c3"
@@ -537,7 +536,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: CSVCC") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "CSVCC"
     val header = defaultHeaderSNP + "\tvalues\tbucket"
@@ -569,7 +568,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: CSVSEL") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "CSVSEL"
     val header = defaultHeaderSNP + "\tvalues\tbucket"
@@ -602,10 +601,9 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: GAVA") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "GAVA"
-    val header = defaultHeaderSNP
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, "100", defaultHeaderSNP, testShouldSucceed = false)
@@ -623,7 +621,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: GRANNO") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "GRANNO"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -655,7 +653,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: GREP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "GREP"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -672,7 +670,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: GROUP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "GROUP"
     val header = defaultHeaderSNP + "\tc1\tc2\tc3"
@@ -712,7 +710,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: IHE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "IHE"
     val header = defaultHeaderSEG + "\tMajorAllele\tSecondAllele\tDepth\tAdepth\tCdepth\tGdepth\tTdepth\t" +
@@ -736,54 +734,54 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: JOIN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "JOIN"
     val header = defaultHeaderSEG + "\tvalue"
 
-    /*testsToPerform += TestEntry(commandName, "", "", false)
-    testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString, defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString + " " + patientsPathSEG.toString, defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -snpseg", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -segsnp", defaultHeaderSEG, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segseg", defaultHeaderSEG, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg", defaultHeaderSEG, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar", defaultHeaderSEG, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -i -r -c -h -xcis", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -i -m -r -c -h -xcis", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -n -r -c -h -xcis", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -n -m -r -c -h -xcis", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ic -c -h -xcis", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ic -ir -c -h -xcis", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ir -c -h -xcis", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ir -ic -c -h -xcis", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -l -t", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -varseg -ref", defaultHeaderSEG, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -varseg", defaultHeaderSEG + "\tREF\tREFERENCE", false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -segvar -ref", defaultHeaderSEG, false)
-    testsToPerform += TestEntry(commandName, patientsPathSEGWithRefReference.toString +  " -segvar", defaultHeaderSEG, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f foo", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f -10", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f 10", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -p", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -p chr1", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -p chrX:0-1000", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -e", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -e _", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -e '_'", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -xl", defaultHeaderSNP, false)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -xl hash -xr value", defaultHeaderSNP + "\thash", true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg -ref value", defaultHeaderSEG + "\tvalue", true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar -ref value", defaultHeaderSEG, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg -refl value", defaultHeaderSEG + "\tvalue", true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar -refl value", header, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg -lstop stop", header, true)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar -rstop value", header, true)
-    testsToPerform += TestEntry(commandName, "<(gor " + patientsPathSNP.toString +  ") -snpsnp", defaultHeaderSNP, true)
-    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -s", defaultHeaderSNP, false)*/
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString, defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString + " " + patientsPathSEG.toString, defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -snpseg", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -segsnp", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segseg", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -i -r -c -xcis", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -i -m -r -c -xcis", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -n -r -c -xcis", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -n -m -r -c -xcis", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ic -c -xcis", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ic -ir -c -xcis", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ir -c -xcis", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -ir -ic -c -xcis", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -l -t", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -varseg -ref", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -varseg", defaultHeaderSEG + "\tREF\tREFERENCE", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -segvar -ref", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSEGWithRefReference.toString +  " -segvar", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f foo", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f -10", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -f 10", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -p", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -p chr1", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -p chrX:0-1000", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -e", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -e _", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -e '_'", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -xl", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -xl hash -xr value", defaultHeaderSNP + "\thash", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg -ref value", defaultHeaderSEG + "\tvalue", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar -ref value", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg -refl value", defaultHeaderSEG + "\tvalue", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar -refl value", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -varseg -lstop stop", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSEG.toString +  " -segvar -rstop value", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "<(gor " + patientsPathSNP.toString +  ") -snpsnp", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -s", defaultHeaderSNP, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -s foo", defaultHeaderSNP, testShouldSucceed = true)
     testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -o", defaultHeaderSNP, testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, patientsPathSNP.toString +  " -snpsnp -o -2", defaultHeaderSNP, testShouldSucceed = false)
@@ -803,7 +801,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
 
   // TODO: Fix this, am unable to have this run successfully
   ignore("Command: LDANNO") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LDANNO"
 
@@ -817,7 +815,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   ignore("Command: LDJOIN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LDJOIN"
 
@@ -828,7 +826,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   ignore("Command: LIFTOVER") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LIFTOVER"
 
@@ -845,7 +843,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: MAP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "MAP"
     val header = defaultHeaderSEG + "\tjoincol"
@@ -870,7 +868,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: INSET") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "INSET"
     val header = defaultHeaderSEG + "\tjoincol"
@@ -895,7 +893,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: MULTIMAP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "MULTIMAP"
     val header = defaultHeaderSEG + "\tjoincol"
@@ -920,7 +918,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: DAGMAP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "DAGMAP"
     val header = defaultHeaderSEG + "\tjoincol"
@@ -948,7 +946,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: MERGE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "MERGE"
     val header = defaultHeaderSEG + "\tjoincol"
@@ -967,7 +965,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: PEDPIVOT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "PEDPIVOT"
     val header = defaultHeaderSEG + "\tvalue\tc1\tc2\tc3"
@@ -988,7 +986,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: PILEUP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "PILEUP"
     val header = defaultHeaderSEG + "\tiSize\tSeq\tFlag\tMapQ\tCigar\tQual\tc1\tc2\tc3"
@@ -1030,7 +1028,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: PIVOT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "PIVOT"
     val header = defaultHeaderSEG + "\tpivotcol\tc1\tc2"
@@ -1052,7 +1050,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: RANK") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "RANK"
     val header = defaultHeaderSEG + "\trankcol\tc1\tc2"
@@ -1087,7 +1085,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: REPLACE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "REPLACE"
     val header = defaultHeaderSEG + "\treplacecol\tgene"
@@ -1103,7 +1101,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SED") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SED"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1121,7 +1119,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SELECT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SELECT"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1138,7 +1136,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: TRYSELECT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "TRYSELECT"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1155,7 +1153,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: HIDE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "HIDE"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1172,7 +1170,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: TRYHIDE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "TRYHIDE"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1189,7 +1187,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: COLUMNSORT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "COLUMNSORT"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1205,7 +1203,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SELFJOIN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SELFJOIN"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1226,7 +1224,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SEQ") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SEQ"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1249,7 +1247,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SPLIT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SPLIT"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1272,7 +1270,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: TEE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "TEE"
 
@@ -1288,7 +1286,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: UNTIL") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "UNTIL"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1301,7 +1299,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: THROWIF") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "THROWIF"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1314,7 +1312,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: VARJOIN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "VARJOIN"
     val header = defaultHeaderSEG + "\tvalue\tdate"
@@ -1379,7 +1377,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: RANGE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "RANGE"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1393,7 +1391,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: IOTEST") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "IOTEST"
 
@@ -1406,7 +1404,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: LEFTWHERE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LEFTWHERE"
     val header = defaultHeaderSNP + "\tnewCol\tfoo\tbar"
@@ -1422,7 +1420,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
 
 
   test("Command: LOG") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LOG"
 
@@ -1445,7 +1443,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: LOGLEVEL") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LOGLEVEL"
 
@@ -1462,7 +1460,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: ROOTLOGLEVEL") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "ROOTLOGLEVEL"
 
@@ -1479,7 +1477,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: VARMERGE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "VARMERGE"
     val header = defaultHeaderSEG + "\tref\tallele"
@@ -1498,7 +1496,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SPAN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SPAN"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1518,7 +1516,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SEGSPAN") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SEGSPAN"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1538,7 +1536,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: ROWNUM") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "ROWNUM"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1552,7 +1550,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SEGPROJ") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SEGPROJ"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1578,7 +1576,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SKIP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SKIP"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1593,7 +1591,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: SORT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "SORT"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1617,7 +1615,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: TOP") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "TOP"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1633,7 +1631,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: FIRST") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "FIRST"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1649,7 +1647,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: UNPIVOT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "UNPIVOT"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1667,7 +1665,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: UPTO") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "UPTO"
     val header = defaultHeaderSEG + "\tc1\tc2\tc3"
@@ -1684,7 +1682,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: VARNORM") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "VARNORM"
     val header = defaultHeaderSEG + "\tref\tallele"
@@ -1705,7 +1703,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: WAIT") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "WAIT"
 
@@ -1719,7 +1717,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: WHERE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "WHERE"
     val header = defaultHeaderSNP + "\tvalue\tdata"
@@ -1734,7 +1732,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: TRYWHERE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "TRYWHERE"
     val header = defaultHeaderSNP + "\tvalue\tdata"
@@ -1749,7 +1747,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: VALIDATECOLUMNS") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "VALIDATECOLUMNS"
     val header = defaultHeaderSNP + "\tvalue\tdata"
@@ -1766,7 +1764,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("Command: REGRESSION") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "REGRESSION"
     val header = "CHROM\tPOS\tREF\tALT\tVALUES"
@@ -1793,88 +1791,122 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
   }
 
   test(s"Command: REGSEL") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "REGSEL"
 
-    testsToPerform += TestEntry("REGSEL", "", "", testShouldSucceed = false)
-    testsToPerform += TestEntry("REGSEL", "dest", "", testShouldSucceed = false)
-    testsToPerform += TestEntry("REGSEL", "dest source", "source", testShouldSucceed = false)
-    testsToPerform += TestEntry("REGSEL", "dest source expr extra", "source", testShouldSucceed = false)
-    testsToPerform += TestEntry("REGSEL", "dest wrong_source expr", "source", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "dest", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "dest source", "source", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "dest source expr extra", "source", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "dest wrong_source expr", "source", testShouldSucceed = false)
 
-    testsToPerform += TestEntry("REGSEL", "dest source expr", "source", testShouldSucceed = true)
-    testsToPerform += TestEntry("REGSEL", "col1,col2,col3 source expr", "source", testShouldSucceed = true)
-    testsToPerform += TestEntry("REGSEL", "col1,col2,col3 source \"x|y\"", "source", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "dest source expr", "source", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "col1,col2,col3 source expr", "source", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "col1,col2,col3 source \"x|y\"", "source", testShouldSucceed = true)
 
     performTests(testsToPerform)
   }
 
   test("Command: BINARYWRITE") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "BINARYWRITE"
 
     val header = "CHROM\tPOS\tREF\tALT\tVALUES"
     val badHeader = "CHROM\tPOS\tREF\tVALUES"
     val anotherBadHeader = "CHROM\tPOS\tALT\tVAlUES"
     val yetAnotherBadHeader = "CHROM\tPOS\tREF\tALT"
 
-    testsToPerform += TestEntry("BINARYWRITE", "", "", testShouldSucceed = false)
-    testsToPerform += TestEntry("BINARYWRITE", "blabla.pgen", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("BINARYWRITE", "blabla.pgen -imp", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("BINARYWRITE", "blabla.pgen -imp -threshold 0.9", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("BINARYWRITE", "blabla.pgen", badHeader, false)
-    testsToPerform += TestEntry("BINARYWRITE", "blabla.pgen", anotherBadHeader, false)
-    testsToPerform += TestEntry("BINARYWRITE", "blabla.pgen", yetAnotherBadHeader, false)
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "blabla.pgen", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "blabla.pgen -imp", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "blabla.pgen -imp -threshold 0.9", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "blabla.pgen", badHeader, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "blabla.pgen", anotherBadHeader, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "blabla.pgen", yetAnotherBadHeader, testShouldSucceed = false)
 
     performTests(testsToPerform)
   }
 
   test("Command: PLINKREGRESSION") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "PLINKREGRESSION"
 
     val header = "CHROM\tPOS\tRSID\tREF\tALT\tVALUES"
     val badHeader = "CHROM\tPOS\tALT\tVALUES"
 
-    testsToPerform += TestEntry("PLINKREGRESSION", "", "", testShouldSucceed = false)
-    testsToPerform += TestEntry("PLINKREGRESSION", "pheno.tsv", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("PLINKREGRESSION", "pheno.tsv", badHeader, testShouldSucceed = false)
-    testsToPerform += TestEntry("PLINKREGRESSION", "pheno.tsv -covar covars.tsv", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("PLINKREGRESSION", "pheno.tsv -covar covars.tsv -imp", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("PLINKREGRESSION", "pheno.tsv -covar covars.tsv -imp -threshold 0.8", header, testShouldSucceed = true)
-    testsToPerform += TestEntry("PLINKREGRESSION", "pheno.tsv -covar covars.tsv -threshold 0.8", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "pheno.tsv", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "pheno.tsv", badHeader, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "pheno.tsv -covar covars.tsv", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "pheno.tsv -covar covars.tsv -imp", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "pheno.tsv -covar covars.tsv -imp -threshold 0.8", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "pheno.tsv -covar covars.tsv -threshold 0.8", header, testShouldSucceed = false)
 
     performTests(testsToPerform)
   }
 
   test("Command: COLS2LIST") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "COLS2LIST"
 
     // No arguments
-    testsToPerform += TestEntry("COLS2LIST", "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
 
     // Simple case
-    testsToPerform += TestEntry("COLS2LIST", "a,b,c collapsed", "a\tb\tc\td\te", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "a,b,c collapsed", "a\tb\tc\td\te", testShouldSucceed = true)
 
     // Keep option
-    testsToPerform += TestEntry("COLS2LIST", "a,b,c collapsed -gc d", "a\tb\tc\td\te", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "a,b,c collapsed -gc d", "a\tb\tc\td\te", testShouldSucceed = true)
 
     // Separator option
-    testsToPerform += TestEntry("COLS2LIST", "a,b,c collapsed -sep ';'", "a\tb\tc\td\te", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "a,b,c collapsed -sep ';'", "a\tb\tc\td\te", testShouldSucceed = true)
 
     // Keep and separator options
-    testsToPerform += TestEntry("COLS2LIST", "a,b,c collapsed -sep ';' -gc d,e", "a\tb\tc\td\te", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "a,b,c collapsed -sep ';' -gc d,e", "a\tb\tc\td\te", testShouldSucceed = true)
 
     // Too many arguments
-    testsToPerform += TestEntry("COLS2LIST", "a,b,c d,e,f collapsed", "a\tb\tc\td\te", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "a,b,c d,e,f collapsed", "a\tb\tc\td\te", testShouldSucceed = false)
 
     performTests(testsToPerform)
   }
 
-  test("Command: Adjust") {
-    var testsToPerform = ListBuffer.empty[TestEntry]
+  test("Command: ADJUST") {
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "ADJUST"
 
     val header = "CHROM\tPOS\tOTHER\tSTAT"
 
-    testsToPerform += TestEntry("ADJUST", "", header, testShouldSucceed = false)
-    testsToPerform += TestEntry("ADJUST", "-gcc -gc 3 -pc 4", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "-gcc -gc 3 -pc 4", header, testShouldSucceed = true)
+
+    performTests(testsToPerform)
+  }
+
+  test("Command: DEFLATECOLUMN") {
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "DEFLATECOLUMN"
+
+    val header = "CHROM\tPOS\tOTHER\tSTAT"
+
+    testsToPerform += TestEntry(commandName, "", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "stat", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "flats", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "stat -m", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "stat -m 1", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "stat -m 1000", header, testShouldSucceed = true)
+
+    performTests(testsToPerform)
+  }
+
+  test("Command: INFLATECOLUMN") {
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    val commandName = "INFLATECOLUMN"
+
+    val header = "CHROM\tPOS\tOTHER\tSTAT"
+
+    testsToPerform += TestEntry(commandName, "", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "stat", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, "flats", header, testShouldSucceed = false)
 
     performTests(testsToPerform)
   }

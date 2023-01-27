@@ -22,10 +22,10 @@
 
 package gorsat.Analysis
 
+import gorsat.Buckets.{PnBucketParsing, PnBucketTable}
 import gorsat.Commands._
 import gorsat.Iterators.ChromBoundedIteratorSource
 import gorsat.gorsatGorIterator.{MapAndListUtilities, MemoryMonitorUtil}
-import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.GorContext
@@ -90,13 +90,14 @@ object GtGenAnalysis {
 
       val PNtag = r.colAsString(PNCol).toString
 
-      pbt.pnToIdx.get(PNtag) match {
-        case Some(idx) =>
+      val idx = pbt.getPnIdx(PNtag)
+
+      if (idx < 0) {
+        if (PNtag != "") throw new GorDataException("No bucket information found for tag value: " + PNtag + "\n")
+      } else {
           val buckID = pbt.getBucketIdxFromPn(idx)
           val buckPos = pbt.getBucketPos(idx)
           sh.buckValueCols(buckID).setCharAt(buckPos, r.colAsString(GtCol).charAt(0)) // Set the GT into the values col
-        case None =>
-          if (PNtag != "") throw new GorDataException("No bucket information found for tag value: " + PNtag + "\n")
       }
     }
 
@@ -261,21 +262,20 @@ object GtGenAnalysis {
 
           var groupKeyRight : Int = -1
 
-          pbt.pnToIdx.get(rr.colAsString(PNcol).toString) match {
-            case Some(idx) => {
-              rSeg.buckPos = pbt.pnIdxToBuckPos(idx)
-              groupKeyRight = pbt.getBucketIdxFromPn(idx)
-              groupMap.get(groupKeyRight) match {
-                case Some(x) => gr = x
-                case None =>
-                  gr = GroupHolder()
-                  groupMap += (groupKeyRight -> gr)
-              }
-              if (lr.chr == rr.chr && lSeg.start < rSeg.stop && lSeg.stop > rSeg.start && (!useGroup || groupKeyLeft == groupKeyRight)) {
-                set_coverage(lSeg, rSeg)
-              }
+          val idx = pbt.getPnIdxSafe(rr.colAsString(PNcol).toString)
+
+          if (idx >= 0) {
+            rSeg.buckPos = pbt.pnIdxToBuckPos(idx)
+            groupKeyRight = pbt.getBucketIdxFromPn(idx)
+            groupMap.get(groupKeyRight) match {
+              case Some(x) => gr = x
+              case None =>
+                gr = GroupHolder()
+                groupMap += (groupKeyRight -> gr)
             }
-            case None => //No match. Do nothing.
+            if (lr.chr == rr.chr && lSeg.start < rSeg.stop && lSeg.stop > rSeg.start && (!useGroup || groupKeyLeft == groupKeyRight)) {
+              set_coverage(lSeg, rSeg)
+            }
           }
 
           lastRightChr = rr.chr

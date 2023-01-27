@@ -85,11 +85,9 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
     val outPutFileName = new File(tmpFolder, "output.gorz").getAbsolutePath
 
     val outFile = Outputs.OutFile(outPutFileName, fileReader, inputFileCont.head, false, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
-    outFile.setup
+    outFile.setup()
     outFile.process(RowObj(inputFileCont(1)))
-    outFile.finish
-
-    val lines = Source.fromFile(outPutFileName).getLines()
+    outFile.finish()
 
     val is = new FileInputStream(outPutFileName)
     val buffer = new Array[Byte](1024)

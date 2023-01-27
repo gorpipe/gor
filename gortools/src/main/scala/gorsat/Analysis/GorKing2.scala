@@ -22,9 +22,9 @@
 
 package gorsat.Analysis
 
+import gorsat.Buckets.{PnBucketParsing, PnBucketTable}
 import gorsat.Commands.{Analysis, BinAggregator, BinAnalysis, BinFactory, BinInfo, BinState, Processor, RegularRowHandler, RowHeader}
 import gorsat.gorsatGorIterator.MapAndListUtilities
-import gorsat.{PnBucketParsing, PnBucketTable}
 import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.{Line, Row}
 import org.gorpipe.gor.monitor.GorMonitor
