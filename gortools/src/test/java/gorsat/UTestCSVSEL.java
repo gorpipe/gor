@@ -436,5 +436,30 @@ public class UTestCSVSEL {
         TestUtils.runGorPipe(String.join("\n", queryLines));
     }
 
+    @Test
+    public void automaticUnzipOfValues() {
+        String[] normalQueryLines = {
+                "def #samples# = 10000;",
+                "def #bucketsize# = 3300;",
+                "create x = norrows #samples# | calc bucket 'b'+str(div(#1,#bucketsize#)) | replace #1 #1+1 | group -gc bucket -lis -sc #1 -len 1000000 | rename #2 values;",
+                "create b = norrows #samples#| calc pn if(rownum=0,'#deleted#pn1','pn'+str(1+#1)) | calc bucket 'b'+str(div(#1,#bucketsize#)) | select pn,bucket ;",
+                "gorrows -p chr1:1-1000 | multimap -cartesian [x] | csvsel -s ',' [b] <(nor [b] | select pn )"
+        };
+
+        String[] inflatedQueryLines = {
+                "def #samples# = 10000;",
+                "def #bucketsize# = 3300;",
+                "create x = norrows #samples# | calc bucket 'b'+str(div(#1,#bucketsize#)) | replace #1 #1+1 | group -gc bucket -lis -sc #1 -len 1000000 | rename #2 values;",
+                "create b = norrows #samples#| calc pn if(rownum=0,'#deleted#pn1','pn'+str(1+#1)) | calc bucket 'b'+str(div(#1,#bucketsize#)) | select pn,bucket ;",
+                "create c = gorrows -p chr1:1-1000 | multimap -cartesian [x] | deflatecolumn values;",
+                "gor [c] | csvsel -s ',' [b] <(nor [b] | select pn )"
+        };
+
+        var normalLines =  TestUtils.runGorPipe(String.join("\n", normalQueryLines));
+        var inflatedLines =  TestUtils.runGorPipe(String.join("\n", inflatedQueryLines));
+
+        Assert.assertEquals(normalLines, inflatedLines);
+    }
+
 
 }

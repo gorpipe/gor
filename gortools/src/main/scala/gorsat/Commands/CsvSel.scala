@@ -23,6 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.GorCsvSel.CsvSelAnalysis
+import gorsat.Analysis.InflateAnalysis
 import gorsat.Buckets.PnBucketTable
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
@@ -150,7 +151,7 @@ class CsvSel extends CommandInfo("CSVSEL",
         outputHeaderBuilder.append("\tvalues")
       }
       val combinedHeader = validHeader(outputHeaderBuilder.toString)
-      CommandParsingResult(pipeStep, combinedHeader)
+      CommandParsingResult( InflateAnalysis(valCol) | pipeStep, combinedHeader)
 
     } catch {
       case e: Exception =>
