@@ -199,6 +199,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.ColumnReorder)
       addInfo(new gorsat.Commands.DeflateColumn)
       addInfo(new gorsat.Commands.InflateColumn)
+      addInfo(new Collect)
     }
   }
 }

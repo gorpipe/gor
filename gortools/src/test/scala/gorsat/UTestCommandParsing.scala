@@ -1910,4 +1910,23 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
 
     performTests(testsToPerform)
   }
+
+  test("Command: COLLECT") {
+    var testsToPerform = ListBuffer.empty[TestEntry]
+
+    val header = "CHROM\tPOS\tOTHER\tSTAT"
+
+    testsToPerform += TestEntry("COLLECT", "", header, testShouldSucceed = false)
+    testsToPerform += TestEntry("COLLECT", "stat", header, testShouldSucceed = false)
+    testsToPerform += TestEntry("COLLECT", "", header, testShouldSucceed = false)
+    testsToPerform += TestEntry("COLLECT", "stat 100", header, testShouldSucceed = false)
+    testsToPerform += TestEntry("COLLECT", "stat 100 -sum", header, testShouldSucceed = true)
+    testsToPerform += TestEntry("COLLECT", "stat 100 -sum -ave -var -std", header, testShouldSucceed = true)
+
+    testsToPerform += TestEntry("COLLECT", "stat 2 -sum -ave -var -std", header, testShouldSucceed = false)
+    testsToPerform += TestEntry("COLLECT", "foo 100 -sum -ave -var -std", header, testShouldSucceed = false)
+    testsToPerform += TestEntry("COLLECT", "stat 100 -med", header, testShouldSucceed = false)
+
+    performTests(testsToPerform)
+  }
 }
