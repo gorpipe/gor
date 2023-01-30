@@ -38,7 +38,7 @@ import gorsat._
 import gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import process.GorJavaUtilities.CmdParams
 import process.GorPipe.brsConfig
-import org.gorpipe.exceptions.{GorParsingException, GorSystemException, GorUserException}
+import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException, GorUserException}
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}
@@ -270,6 +270,10 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
 
     val inputSourceCommand: String = prepareInputSource(argString, gorString, useStdin)
     val inputHeader: String = preparePipeStep(argString, gorString, forcedInputHeader, inputSourceCommand)
+
+    if (inputHeader == null || inputHeader.isEmpty) {
+      throw new GorResourceException("Input source contains no header", theInputSource.getSourceName)
+    }
 
     val types = theInputSource.getTypes
     val rowHeader = if (types!=null) RowHeader(inputHeader, types) else RowHeader(inputHeader)
