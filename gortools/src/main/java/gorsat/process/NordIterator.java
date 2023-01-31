@@ -74,11 +74,7 @@ import java.util.stream.Stream;
  */
 public class NordIterator extends GenomicIteratorBase {
 
-    private final Map<String,String> properties = new HashMap<>();
-    private final boolean useFilter;
-    private final Set<String> filterEntries;
-    private final String[] filterEntriesAsArray;
-    private final String nordFile;
+    private final NordFile nordFile;
     private String sourceColumnName;
     private String projectRoot = "";
     private FileReader fileReader;
@@ -89,7 +85,6 @@ public class NordIterator extends GenomicIteratorBase {
     private GenomicIterator activeIterator;
     private Iterator<NordIteratorEntry> nordEntriesIterator;
     private NordIteratorEntry activeEntry = null;
-    private int headerSize = 0;
     private String nordRoot;
 
     private static final String DEFAULT_SOURCE_COLUMN_NAME = "Source";
@@ -100,33 +95,25 @@ public class NordIterator extends GenomicIteratorBase {
     /**
      * Nor dictionary constructor. Creates an instance of nor dictionary iterator, see class description.
      *
-     * @param nordFile              Nor dictionary file path
-     * @param filterEntries         Array of tags to be inclusively filtered.
+     * @param nordFile              Nor dictionary file object
      * @param sourceColumnName      Name of the ouput source column
      * @param ignoreMissingEntries  Indicates if missing entries should be ignored or not. Not ignoring missing entries
      *                              will throw a parsing exception.
      * @param forceReadOfHeader     Force the read of headers in the source files.
      */
-    public NordIterator(String nordFile,
-                        boolean useFilter,
-                        String[] filterEntries,
+    public NordIterator(NordFile nordFile,
                         String sourceColumnName,
                         boolean ignoreMissingEntries,
                         boolean forceReadOfHeader) {
-        this(nordFile, useFilter, filterEntries, sourceColumnName, ignoreMissingEntries, forceReadOfHeader, new HashSet<>());
+        this(nordFile, sourceColumnName, ignoreMissingEntries, forceReadOfHeader, new HashSet<>());
     }
 
-    private NordIterator(String nordFile,
-                        boolean useFilter,
-                        String[] filterEntries,
+    private NordIterator(NordFile nordFile,
                         String sourceColumnName,
                         boolean ignoreMissingEntries,
                         boolean forceReadOfHeader,
                         Set<String> nestedIterators) {
         this.nordFile = nordFile;
-        this.useFilter = useFilter;
-        this.filterEntriesAsArray = filterEntries;
-        this.filterEntries = new HashSet<>(Arrays.asList(filterEntries));
         this.ignoreMissingEntries = ignoreMissingEntries;
         this.forceReadOfHeader = forceReadOfHeader;
         this.sourceColumnName = sourceColumnName;
@@ -157,7 +144,7 @@ public class NordIterator extends GenomicIteratorBase {
     public Row next() {
         if (activeIterator != null && activeIterator.hasNext()) {
              String extraColumn = "";
-             if (showSourceColumn && addSourceColumn) extraColumn = "\t" + activeEntry.getTag();
+             if (showSourceColumn && addSourceColumn) extraColumn = "\t" + activeEntry.tag();
 
              return RowObj.StoR(activeIterator.next() + extraColumn);
         }
@@ -176,41 +163,24 @@ public class NordIterator extends GenomicIteratorBase {
         this.fileReader = gorSession.getProjectContext().getFileReader();
         this.projectRoot = gorSession.getProjectContext().getRealProjectRoot();
 
-        addToNested(nordFile);
-
-        Path nordPath = Paths.get(this.nordFile);
-
-        // Don't like this, there must be a better way
-        if (nordPath.getParent() == null) {
+        if (nordFile.fileName().getParent() == null) {
             nordRoot = ".";
         } else {
-            nordRoot = nordPath.getParent().toString();
+            nordRoot = nordFile.fileName().getParent().toString();
         }
 
-        try (Stream<String> nordStream = this.fileReader.iterateFile(this.nordFile, 0, false,true)) {
-            List<NordIteratorEntry> nordEntries = nordStream
-                    .peek(this::processProperty)
-                    .filter(x -> !x.startsWith("#"))// Filter out all lines starting with #
-                    .map(NordIteratorEntry::parse) // Convert to dictionary entry
-                    .filter(x -> !useFilter || filterEntries.contains(x.getTag())) // If no filter is set pass everything through or only entries in the filter list
-                    .collect(Collectors.toList());
-            nordEntriesIterator = nordEntries.iterator();
-
-            if (filterEntries.size() > 0 && !ignoreMissingEntries && nordEntries.size() < filterEntries.size()) {
-                throw new GorParsingException("Missing entries in dictionary file: " + getMissingEntries(nordEntries));
-            }
-        } catch (IOException ioe) {
-            throw new GorResourceException("Failed to open nor dictionary file: " + this.nordFile, this.nordFile, ioe);
-        }
+        addToNested(nordFile.fileName().toString());
 
         if (StringUtil.isEmpty(this.sourceColumnName)) {
-            if (properties.containsKey(SOURCE_PROPERTY_NAME)) {
-                this.sourceColumnName = properties.get(SOURCE_PROPERTY_NAME);
+            if (nordFile.properties().containsKey(SOURCE_PROPERTY_NAME)) {
+                this.sourceColumnName = nordFile.properties().get(SOURCE_PROPERTY_NAME);
             } else {
                 showSourceColumn = false;
                 this.sourceColumnName = DEFAULT_SOURCE_COLUMN_NAME;
             }
         }
+
+        nordEntriesIterator = nordFile.entries().iterator();
 
         if(!nordEntriesIterator.hasNext()) {
             getHeaderFromFirstFile();
@@ -234,31 +204,20 @@ public class NordIterator extends GenomicIteratorBase {
     }
 
     private void getHeaderFromFirstFile() {
-        try (Stream<String> stream = this.fileReader.iterateFile(this.nordFile, 0, false, true)) {
-            final Optional<String> first = stream.filter(x -> !x.startsWith("#")).findFirst();
-            if (first.isPresent()) {
-                String fileName = NordIteratorEntry.parse(first.get()).getFilePath();
-                Path entryPath = Paths.get(fileName);
-                if (!entryPath.isAbsolute()) {
-                    fileName = Paths.get(this.nordRoot, fileName).toString();
-                }
-                try (NorInputSource inputSource = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, true)) {
-                    getHeaderFromIterator(inputSource);
-                }
-            }
-        } catch (IOException e) {
-            throw new GorResourceException("Failed to open nor dictionary file: " + this.nordFile, this.nordFile, e);
-        }
-    }
-
-    private void processProperty(String headerEntry) {
-        if (StringUtil.isEmpty(headerEntry) || !headerEntry.startsWith("##"))
+        if (nordFile.firstEntry() == null) {
             return;
+        }
 
-        String[] entries = headerEntry.split("=");
+        var entry = nordFile.firstEntry();
+        var entryPath = Path.of(entry.filePath());
 
-        if (entries.length >= 2) {
-            properties.put(entries[0].substring(2), headerEntry.substring(entries[0].length()+1) );
+        if (!entryPath.isAbsolute()) {
+            entryPath = Paths.get(this.nordRoot, entryPath.toString());
+        }
+
+        try (NorInputSource inputSource = new NorInputSource(entryPath.toString(),
+                this.fileReader, false, this.forceReadOfHeader, 0, false, false, true)) {
+            getHeaderFromIterator(inputSource);
         }
     }
 
@@ -272,24 +231,26 @@ public class NordIterator extends GenomicIteratorBase {
             activeEntry = nordEntriesIterator.next();
 
             // Get the file path from entry
-            String fileName = activeEntry.getFilePath();
+            String fileName = activeEntry.filePath();
+            Path entryPath = Paths.get(fileName);
+
+            if (!entryPath.isAbsolute()) {
+                Path path = Paths.get(this.projectRoot).resolve(this.nordFile.fileName());
+                Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(path.toString(), this.projectRoot);
+                Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile.fileName().toString());
+
+                if (reference.logical != null)
+                    fileName = line.fileRef.logical;
+                else
+                    fileName = Paths.get(this.nordRoot, fileName).toString();
+            }
+
             if (DataUtil.isNord(fileName)) {
-                fileName = Paths.get(this.nordRoot, fileName).toString();
-                activeIterator = new NordIterator(fileName, useFilter, filterEntriesAsArray, "", ignoreMissingEntries, forceReadOfHeader, nestedIterators);
+                var newNordFile = new NordFile();
+                newNordFile.load(this.fileReader, Path.of(fileName), this.nordFile.useFilter(), this.nordFile.filterEntries(),
+                        this.nordFile.ignoreMissing());
+                activeIterator = new NordIterator(newNordFile, "", ignoreMissingEntries, forceReadOfHeader, nestedIterators);
             } else {
-                Path entryPath = Paths.get(fileName);
-
-                if (!entryPath.isAbsolute()) {
-                    Path path = Paths.get(this.projectRoot).resolve(this.nordFile);
-                    Dictionary.FileReference reference = Dictionary.getDictionaryFileParent(path.toString(), this.projectRoot);
-                    Dictionary.DictionaryLine line = Dictionary.parseDictionaryLine(activeEntry.toString(), reference, this.nordFile);
-
-                    if (reference.logical != null)
-                        fileName = line.fileRef.logical;
-                    else
-                        fileName = Paths.get(this.nordRoot, fileName).toString();
-                }
-
                 activeIterator = new NorInputSource(fileName, this.fileReader, false, this.forceReadOfHeader, 0, false, false, true);
             }
             activeIterator.init(gorSession);
@@ -310,18 +271,17 @@ public class NordIterator extends GenomicIteratorBase {
     private void getHeaderFromIterator(GenomicIterator inputSource) {
         String iteratorHeader = inputSource.getHeader();
         if(iteratorHeader.isEmpty()) {
-            throw new GorDataException("Missing header for: " + activeEntry.getTag());
+            throw new GorDataException("Missing header for: " + activeEntry.tag());
         }
         iteratorHeader = addOptionalSourceColumn(iteratorHeader);
         String expectedHeader = getHeader();
 
         if (getHeader().isEmpty()) {
             setHeader(iteratorHeader);
-            headerSize = iteratorHeader.split("\t").length;
         } else if (!iteratorHeader.equalsIgnoreCase(expectedHeader)) {
             String message = String.format("Headers do not match between dictionary files for: %s\n" +
                     "Expected header: %s\n" +
-                    "     Got header: %s", activeEntry.getTag(), expectedHeader, iteratorHeader);
+                    "     Got header: %s", activeEntry.tag(), expectedHeader, iteratorHeader);
             throw new GorDataException(message);
         }
     }
@@ -333,11 +293,5 @@ public class NordIterator extends GenomicIteratorBase {
             this.addSourceColumn = true;
         }
         return iteratorHeader;
-    }
-
-    private String getMissingEntries(List<NordIteratorEntry> nordEntries) {
-        Set<String> missingEntries = new HashSet<>(this.filterEntries);
-        missingEntries.removeAll(nordEntries.stream().map(NordIteratorEntry::getTag).collect(Collectors.toList()));
-        return String.join(",", missingEntries);
     }
 }

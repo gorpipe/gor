@@ -28,7 +28,8 @@ import gorsat.DynIterator
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NoValidateNorInputSource, NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.AnalysisUtilities
-import gorsat.process.{NordIterator, PipeOptions}
+import gorsat.process.{NordFile, NordIterator, PipeOptions}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
@@ -133,6 +134,8 @@ object Nor
         } else inputSource = new ServerNorGorSource(inputParams, context, true)
       } else if (DataUtil.isNord(inputUpper) && !hasOption(args, "-asdict")) {
         inputSource = createNordIterator(inputParams, args, context)
+      } else if (iargs.length > 1){
+        inputSource = createNordIteratorFromList(iargs, args, context)
       } else {
         if (DataUtil.isNorz(inputUpper)) {
           inputSource = new ServerGorSource(inputParams, context, true)
@@ -164,7 +167,7 @@ object Nor
     }
   }
 
-  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -nl -fs -nv", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -nl -fs -nv", "-f -ff -s -d -c", 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -172,7 +175,7 @@ object Nor
     }
   }
 
-  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -nl -fs", "-f -ff -s -d -c", 1, 1), isNorCommand = true) {
+  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -nl -fs", "-f -ff -s -d -c", 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -183,9 +186,24 @@ object Nor
   def createNordIterator(fileName: String, args: Array[String], context: GorContext): GenomicIterator = {
     val hasFileFilter = CommandParseUtilities.hasOption(args, "-ff")
     val hasFilter = CommandParseUtilities.hasOption(args, "-f")
+    val ignoreMissing = hasOption(args, "-fs")
     val tags = AnalysisUtilities.getFilterTags(args, context, doHeader = false).split(',').filter(x => x.nonEmpty)
     val sourceColumnName = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-s", "")
-    val iterator =  new NordIterator(fileName, hasFileFilter | hasFilter, tags, sourceColumnName, hasOption(args, "-fs"), hasOption(args, "-h"))
+    val nordFile = new NordFile()
+    nordFile.load(context.getSession().getProjectContext().getFileReader(),
+      Path.of(fileName), hasFileFilter | hasFilter, tags, ignoreMissing)
+    val iterator =  new NordIterator(nordFile, sourceColumnName, ignoreMissing, hasOption(args, "-h"))
+    iterator.init(context.getSession)
+    iterator
+  }
+
+  def createNordIteratorFromList(fileNames: Array[String], args: Array[String], context: GorContext): GenomicIterator = {
+    val hasFileFilter = CommandParseUtilities.hasOption(args, "-ff")
+    val hasFilter = CommandParseUtilities.hasOption(args, "-f")
+    val ignoreMissing = hasOption(args, "-fs")
+    val sourceColumnName = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-s", "")
+    val nordFile = NordFile.fromList(fileNames)
+    val iterator = new NordIterator(nordFile, sourceColumnName, ignoreMissing, hasOption(args, "-h"))
     iterator.init(context.getSession)
     iterator
   }

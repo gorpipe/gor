@@ -23,6 +23,7 @@
 package gorsat;
 
 import gorsat.process.GenericSessionFactory;
+import gorsat.process.NordFile;
 import gorsat.process.NordIterator;
 import htsjdk.samtools.util.TestUtil;
 import org.apache.commons.io.FileUtils;
@@ -30,6 +31,7 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.test.SlowTests;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
@@ -46,6 +48,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 /**
  * Created by sigmar on 11/05/16.
@@ -165,7 +168,7 @@ public class UTestNorDictionary {
     }
 
 
-    private static String createTestFiles(int numberOfDictionaryFiles,
+    public static String createTestFiles(int numberOfDictionaryFiles,
                                          int numberOfLinesInDictionaryFile,
                                          boolean sourceFileHeader) throws IOException {
 
@@ -177,7 +180,7 @@ public class UTestNorDictionary {
         return testDataGenerator.invoke();
     }
 
-    private static String createTestFiles(int numberOfDictionaryFiles,
+    public static String createTestFiles(int numberOfDictionaryFiles,
                                          int numberOfLinesInDictionaryFile,
                                          boolean sourceFileHeader,
                                          boolean relativePaths,
@@ -203,6 +206,19 @@ public class UTestNorDictionary {
         String path = createTestFiles(numDictFiles, numDictFileLines, true);
 
         int count = TestUtils.runGorPipeCount(String.format("nor %1$s/test.nord", path));
+
+        Assert.assertEquals(numDictFiles * numDictFileLines, count);
+    }
+
+    @Test
+    public void testNordDictionaryWithMultipleInputs() throws IOException {
+        int numDictFiles = 100;
+        int numDictFileLines = 10;
+        String path = createTestFiles(numDictFiles, numDictFileLines, true);
+        var lines = Files.readAllLines(Path.of(path, "test.nord"));
+        var items = lines.stream().skip(1).map(x -> x.split("\t")[0]).collect(Collectors.toList());
+
+        int count = TestUtils.runGorPipeCount(String.format("nor " + String.join( " ", items) , path));
 
         Assert.assertEquals(numDictFiles * numDictFileLines, count);
     }
@@ -563,7 +579,7 @@ public class UTestNorDictionary {
                 "#pheno\tn_cases\nCAT\t500");
         File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
                 "#phento\tsex\nCAT\tfemale");
-        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
                 "a.tsv\tAA\nb.tsv\tBB");
 
         expected.expect(GorDataException.class);
@@ -576,13 +592,16 @@ public class UTestNorDictionary {
                 "#pheno\tn_cases\nCAT\t500");
         File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
                 "#pheno\tn_cases\nCAT\t300");
-        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
                 "a.tsv\tAA\nb.tsv\tBB");
 
-        NordIterator iterator = new NordIterator(fileX.getAbsolutePath(), false, new String[0], "Source", false, false);
+        var nordFile = new NordFile();
+        nordFile.load(ProjectContext.DEFAULT_READER, Path.of(fileX.getAbsolutePath()), false, new String[0], false);
+        NordIterator iterator = new NordIterator(nordFile, "Source", false, false);
         GenericSessionFactory sessionFactory = new GenericSessionFactory();
         iterator.init(sessionFactory.create());
         String header = iterator.getHeader();
+        iterator.close();
         Assert.assertEquals("ChromNOR\tPosNOR\tpheno\tn_cases\tSource", header);
     }
 
@@ -596,15 +615,18 @@ public class UTestNorDictionary {
                 "#pheno\tn_cases\nCAT\t200");
         File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
                 "#pheno\tn_cases\nCAT\t400");
-        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
                 "a.tsv\tAA\nb.tsv\tBB\ny.nord\tCC");
-        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord", "" +
+        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord",
                 "c.tsv\tCC\nd.tsv\tCC");
 
-        NordIterator iterator = new NordIterator(fileX.getAbsolutePath(), false, new String[0], "Source", false, false);
+        var nordFile = new NordFile();
+        nordFile.load(ProjectContext.DEFAULT_READER, Path.of(fileX.getAbsolutePath()), false, new String[0], false);
+        NordIterator iterator = new NordIterator(nordFile, "Source", false, false);
         GenericSessionFactory sessionFactory = new GenericSessionFactory();
         iterator.init(sessionFactory.create());
         String header = iterator.getHeader();
+        iterator.close();
         Assert.assertEquals("ChromNOR\tPosNOR\tpheno\tn_cases\tSource", header);
     }
 
@@ -618,9 +640,9 @@ public class UTestNorDictionary {
                 "#pheno\tn_cases\nCAT\t200");
         File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
                 "#pheno\tn_cases\nCAT\t400");
-        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
                 "a.tsv\tAA\nb.tsv\tBB\ny.nord\tCC");
-        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord", "" +
+        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord",
                 "c.tsv\tCC\nd.tsv\tCC");
 
         String result = TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
@@ -642,12 +664,33 @@ public class UTestNorDictionary {
                 "#pheno\tn_cases\nCAT\t200");
         File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
                 "#pheno\tn_cases\nCAT\t400");
-        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord", "" +
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
                 "a.tsv\tAA\nb.tsv\tBB\ny.nord\tCC");
-        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord", "" +
+        File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord",
                 "c.tsv\tCC\nd.tsv\tCC\nx.nord\tCC");
 
         expected.expect(GorDataException.class);
-        String result = TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+        TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+    }
+
+    @Test
+    public void multipleInputFiles() throws IOException {
+        File fileA = FileTestUtils.createTempFile(workDir.getRoot(), "a.tsv",
+                "#pheno\tn_cases\nCAT\t500");
+        File fileB = FileTestUtils.createTempFile(workDir.getRoot(), "b.tsv",
+                "#pheno\tn_cases\nCAT\t300");
+        File fileC = FileTestUtils.createTempFile(workDir.getRoot(), "c.tsv",
+                "#pheno\tn_cases\nCAT\t200");
+        File fileD = FileTestUtils.createTempFile(workDir.getRoot(), "d.tsv",
+                "#pheno\tn_cases\nCAT\t400");
+        File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
+                "a.tsv\tAA\nb.tsv\tBB\nc.tsv\tCC");
+
+        var result = TestUtils.runGorPipeLines("nor " + fileA.getAbsolutePath() + " " + fileB.getAbsolutePath() + " " + fileC.getAbsolutePath() + " " + fileD.getAbsolutePath());
+        Assert.assertEquals(5, result.length);
+
+        result = TestUtils.runGorPipeLines("nor " + fileA.getAbsolutePath() + " " + fileB.getAbsolutePath() + " " + fileC.getAbsolutePath() + " " + fileD.getAbsolutePath() + " " + fileX.getAbsolutePath());
+        Assert.assertEquals(8, result.length);
+
     }
 }

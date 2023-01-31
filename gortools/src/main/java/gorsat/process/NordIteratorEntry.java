@@ -24,23 +24,7 @@ package gorsat.process;
 
 import org.gorpipe.exceptions.GorDataException;
 
-public class NordIteratorEntry {
-
-    private final String tag;
-    private final String filePath;
-
-    public NordIteratorEntry(String filePath, String tag) {
-        this.tag = tag;
-        this.filePath = filePath;
-    }
-
-    public String getTag() {
-        return this.tag;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
+public record NordIteratorEntry(String filePath, String tag) {
 
     public static NordIteratorEntry parse(String entry) {
         String[] entries = entry.split("\t");
@@ -51,6 +35,7 @@ public class NordIteratorEntry {
 
         return new NordIteratorEntry(entries[0], entries[1]);
     }
+
 
     @Override
     public String toString() {
