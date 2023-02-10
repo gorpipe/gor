@@ -572,10 +572,12 @@ public class GorJavaUtilities {
         FileReader localFileReader = fileReader;
         try (Stream<String> metapathstream = localFileReader.walk(outfolderpath);
              Writer dictionarypathwriter = new OutputStreamWriter(localFileReader.getOutputStream(dictionarypath))) {
-            var metapaths = metapathstream.filter(p -> DataUtil.isMeta(p)).collect(Collectors.toList());
+            var metaList = metapathstream.parallel().filter(p -> DataUtil.isMeta(p)).map(p -> GorMeta.createAndLoad(localFileReader, p)).collect(Collectors.toList());
+            if (metaList.size() > 0) {
+                writeHeader(localFileReader, dictionarypathwriter, metaList.get(0).getColumns(), false);
+            }
             var ai = new AtomicInteger();
-            var entries = metapaths.parallelStream()
-                .map(p -> GorMeta.createAndLoad(localFileReader, p))
+            var entries = metaList.parallelStream()
                 .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0)
                 .map(meta -> {
                     var p = meta.getMetaPath();
@@ -591,13 +593,6 @@ public class GorJavaUtilities {
                         builder.tags(tags.split(","));
                     } else if (meta.containsProperty(GorMeta.HEADER_CARDCOL_KEY)) {
                         builder.tags(meta.getCordColTags());
-                    }
-                    if (i == 1) {
-                        try {
-                            writeHeader(localFileReader, dictionarypathwriter, meta.getColumns(), false);
-                        } catch (IOException e) {
-                            throw new GorSystemException("Unable to write header to dictionary", e);
-                        }
                     }
                     return builder.build().formatEntry();
                 }).collect(Collectors.toList());
