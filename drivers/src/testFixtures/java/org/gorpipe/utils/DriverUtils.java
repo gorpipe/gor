@@ -51,6 +51,20 @@ public class DriverUtils {
         return bundleCreds.addToSecurityContext("");
     }
 
+    public static String createSecurityContext(String service, String lookupKey, Credentials.OwnerType ownerType, String owner, String S3_KEY, String S3_SECRET) {
+        Credentials creds = new Credentials.Builder()
+                .service(service)
+                .lookupKey(lookupKey)
+                .ownerType(ownerType)
+                .ownerId(owner)
+                .set(Credentials.Attr.KEY, S3_KEY)
+                .set(Credentials.Attr.SECRET, S3_SECRET)
+                .set(Credentials.Attr.REGION, "us-west-2")
+                .build();
+        BundledCredentials bundleCreds = new BundledCredentials.Builder().addCredentials(creds).build();
+        return bundleCreds.addToSecurityContext("");
+    }
+
     public static String awsSecurityContext(String key, String secret) throws IOException {
         // Credentials for gor_unittest user in nextcode AWS account
         Credentials cred = new Credentials.Builder().service("s3").lookupKey("nextcode-unittest").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();

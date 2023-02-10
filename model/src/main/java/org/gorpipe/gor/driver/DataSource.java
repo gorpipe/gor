@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver;
 
+import com.jcraft.jsch.IO;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -29,9 +30,11 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
@@ -115,6 +118,10 @@ public interface DataSource extends AutoCloseable {
 
     default void delete() throws IOException {
         throw new GorResourceException("Delete is not implemented", getSourceType().getName());
+    }
+
+    default void deleteDirectory() throws IOException {
+        throw new GorResourceException("DeleteDirectory is not implemented", getSourceType().getName());
     }
 
     default String move(DataSource dest) throws IOException {
@@ -236,4 +243,5 @@ public interface DataSource extends AutoCloseable {
      * @return the source reference
      */
     SourceReference getSourceReference();
+
 }

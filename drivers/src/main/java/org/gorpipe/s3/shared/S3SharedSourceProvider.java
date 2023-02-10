@@ -44,8 +44,13 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         return "shared";
     }
 
+
+    protected String getRelativePath(S3SharedSource source) {
+        return getRelativePath(source.getSourceReference().getParentSourceReference().getUrl());
+    }
+
     protected String getRelativePath(String url) {
-        return url.substring(getSharedUrlPrefix().length());
+        return url.startsWith(getSharedUrlPrefix()) ? url.substring(getSharedUrlPrefix().length()) : url;
     }
 
     /**
@@ -53,22 +58,24 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
      */
     private String getFullS3Url(String bucket, String project, String url) {
         Path relativePath = Path.of(getRelativePath(url));
-        String fileName = relativePath.getFileName().toString();
-        String parentPath = relativePath.getParent() != null ? relativePath.getParent().toString() + "/": "";
-        String fullUrl = String.format("s3://%s/%s/%s%s%s",
+        String fileName = relativePath.getFileName().toString() + (url.endsWith("/") ? "/" : "");
+        String parentPath = relativePath.getParent() != null ? relativePath.getParent() + "/": "";
+        String fullParentUrl = String.format("s3://%s/%s/%s",
                 bucket,
                 getBucketPostfix(project),
-                parentPath,
-                getExtraFolder(url, fileName),
+                parentPath);
+        String fullUrl = String.format("%s%s%s",
+                fullParentUrl,
+                getExtraFolder(fileName),
                 fileName);
         return fullUrl;
     }
 
-    protected String getExtraFolder(String url, String fileName) {
-        int fileNameDotIndex = fileName.indexOf('.');
+    protected String getExtraFolder(String fileName) {
         String extraFolder = "";
-        if (!url.endsWith("/")) {
-            // Only add the extra folder if not folder (ends with /)
+        int fileNameDotIndex = fileName.indexOf('.');
+        if (!fileName.endsWith("/") && fileNameDotIndex > 0 && fileNameDotIndex < fileName.length() - 1) {
+            // Only add the extra folder if not folder (ends with /) and it has actual suffix (first dot is not first or last)
             extraFolder = fileName.substring(0, fileNameDotIndex > 0 ? fileNameDotIndex : fileName.length()) + "/";
         }
         return extraFolder;
@@ -110,15 +117,15 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     }
 
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
-        source.setProjectLinkFile(DataUtil.toFile(source.getRelativePath(), DataType.LINK));
+        source.setProjectLinkFile(DataUtil.toFile(getRelativePath(source), DataType.LINK));
         source.setProjectLinkFileContent(findSharedSourceLinkContent(source));
     }
 
     protected String findSharedSourceLinkContent(S3SharedSource source) {
         if (s3SharedConfig.useHighestTypeInLinks()) {
-            return S3ProjectSharedSourceType.PREFIX + source.getRelativePath();
+            return S3ProjectSharedSourceType.PREFIX + getRelativePath(source);
         } else {
-            return getSharedUrlPrefix() + source.getRelativePath();
+            return getSharedUrlPrefix() + getRelativePath(source);
         }
     }
 
@@ -193,8 +200,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
     private String createErrorMessageForFailure(SourceReference sourceReference, S3SharedSource source) {
         if (source == null) {
-            return String.format("- Found no creds/bucket for '%s' for project %s", sourceReference.url,
-                    sourceReference.commonRoot != null ? Path.of(sourceReference.getCommonRoot()).getFileName() : "Unknown");
+            return String.format("- Found no creds/bucket for '%s'", sourceReference.url);
         } else {
             return String.format("- File '%s' does not exists", sourceReference.url);
         }

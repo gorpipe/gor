@@ -187,6 +187,7 @@ tasks.withType(Test) {
 
     // What parameters should be logged out
     testLogging {
+        outputs.upToDateWhen {false}
         events "failed", "passed", "skipped", "standardError", "standardOut"
         showExceptions = false
         showCauses = false
@@ -198,8 +199,10 @@ tasks.withType(Test) {
             exceptionFormat "full"
         }
 
-        info.events = debug.events
-        info.exceptionFormat = debug.exceptionFormat
+        info {
+            events = debug.events
+            exceptionFormat = debug.exceptionFormat
+        }
 
         afterSuite { desc, result ->
             if (!desc.parent) {

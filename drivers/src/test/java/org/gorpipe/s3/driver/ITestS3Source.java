@@ -115,7 +115,7 @@ public class ITestS3Source extends CommonStreamTests {
         System.out.println("Time: " + duration + "ms");
     }
 
-    @Ignore("Too slow to always run")
+    //@Ignore("Too slow to always run")
     @Test
     public void testS3WritePgorGord() throws IOException {
         String randomId = UUID.randomUUID().toString();

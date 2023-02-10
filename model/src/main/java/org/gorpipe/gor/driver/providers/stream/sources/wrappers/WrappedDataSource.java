@@ -99,6 +99,11 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
+    public void deleteDirectory() throws IOException {
+        wrapped.deleteDirectory();
+    }
+
+    @Override
     public boolean isDirectory() {
         return wrapped.isDirectory();
     }

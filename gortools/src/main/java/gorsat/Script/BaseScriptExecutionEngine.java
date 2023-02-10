@@ -309,8 +309,11 @@ public class BaseScriptExecutionEngine {
                         }
                         var ctequery = cte.query();
                         if (!gordictfolder && !hasFork && cte.cacheFile()!=null && DataUtil.isGord(cte.cacheFile())) {
-                            var gordResultsPath = DataUtil.toFile(cte.cacheFile()+"/"+querySignature, DataType.GORZ);
-                            executionBatch.createNewCommand(querySignature, ctequery.replace(cte.cacheFile(),gordResultsPath), cte.batchGroupName(), cte.createName(), gordResultsPath);
+                            // Handle both with and without trailing slash.
+                            var gordResultsPath = DataUtil.toFile(PathUtils.markAsFolder(cte.cacheFile()) + querySignature, DataType.GORZ);
+                            var replacePattern = PathUtils.stripTrailingSlash(cte.cacheFile()).replace("\\", "\\\\").replace("/", "\\/") + "(\\/)*";
+                            var updatedQuery = ctequery.replaceAll(replacePattern, gordResultsPath);
+                            executionBatch.createNewCommand(querySignature, updatedQuery, cte.batchGroupName(), cte.createName(), gordResultsPath);
                         } else {
                             executionBatch.createNewCommand(querySignature, ctequery, cte.batchGroupName(), cte.createName(), cte.cacheFile());
                         }

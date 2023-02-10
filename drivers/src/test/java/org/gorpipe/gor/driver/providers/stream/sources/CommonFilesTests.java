@@ -43,7 +43,7 @@ public abstract class CommonFilesTests {
             // Get this for http, ignore.
         }
 
-        try (DataSource fs = createSource(getDataName("bam"))) {
+        try (DataSource fs = createSource(getDataName("bam/"))) {
             Assert.assertTrue(fs.exists());
         }
     }
@@ -66,7 +66,7 @@ public abstract class CommonFilesTests {
 
     @Test
     public void testCreateDeleteListEmtpyDirectory() throws IOException {
-        try (DataSource fs = createSource(getDataName("empty_dir"))) {
+        try (DataSource fs = createSource(getDataName("empty_dir/"))) {
             if (fs.exists()) {
                 fs.delete();
             }
@@ -79,7 +79,7 @@ public abstract class CommonFilesTests {
             Assert.assertEquals(0, files.size());
 
         } finally {
-            try (DataSource fs = createSource(getDataName("empty_dir"))) {
+            try (DataSource fs = createSource(getDataName("empty_dir/"))) {
                 if (fs.exists()) {
                     fs.delete();
                 }

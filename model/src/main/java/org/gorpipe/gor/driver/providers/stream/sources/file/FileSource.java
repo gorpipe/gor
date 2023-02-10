@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
+import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -208,6 +209,11 @@ public class FileSource implements StreamSource {
     @Override
     public void delete() throws IOException {
         Files.deleteIfExists(file);
+    }
+
+    @Override
+    public void deleteDirectory() throws IOException {
+        FileUtils.deleteDirectory(file.toFile());
     }
 
     @Override

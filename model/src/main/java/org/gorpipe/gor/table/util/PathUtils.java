@@ -22,12 +22,12 @@
 
 package org.gorpipe.gor.table.util;
 
-import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.util.Util;
+import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -252,13 +252,15 @@ public class PathUtils {
     }
 
     public static String getParent(String path) {
-        var idx = path.lastIndexOf("/");
-        return idx >= 0 ? path.substring(0,idx) : "";
+        String p = stripTrailingSlash(path);
+        var idx = p.lastIndexOf("/");
+        return idx >= 0 ? p.substring(0,idx) : "";
     }
 
     public static String getFileName(String path) {
-        var idx = path.lastIndexOf("/");
-        return path.substring(idx+1);
+        String p = stripTrailingSlash(path);
+        var idx = p.lastIndexOf("/");
+        return p.substring(idx+1);
     }
 
     public static URI getParent(URI uri) {

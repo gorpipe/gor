@@ -490,15 +490,25 @@ public class ITestS3Shared {
         Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
-    @Ignore("Runs too slowly")
+    //@Ignore("Runs too slowly")
     @Test
     public void testProjectWriteUserDataServerPgorGord() throws IOException {
+        testProjectWriteUserDataServerPgorGordHelper(false);
+    }
+
+    //@Ignore("Runs too slowly")
+    @Test
+    public void testProjectWriteUserDataServerPgorGordSlash() throws IOException {
+        testProjectWriteUserDataServerPgorGordHelper(true);
+    }
+
+    private void testProjectWriteUserDataServerPgorGordHelper(boolean useSlash) throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
         Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
         String randomId = UUID.randomUUID().toString();
-        String dataPath = DataUtil.toFile("user_data/dummy_" + randomId, DataType.GORD) + "/";
+        String dataPath = DataUtil.toFile("user_data/dummy_" + randomId, DataType.GORD) + (useSlash ? "/" : "");
 
         runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
 

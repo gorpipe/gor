@@ -99,21 +99,7 @@ public abstract class FileReader {
      * Recursivly delete the given directory.
      * @param dir
      */
-    public void deleteDirectory(String dir) throws IOException {
-        list(dir).parallel().forEach(f -> {
-            try {
-                if (isDirectory(f)) {
-                    deleteDirectory(f);
-                } else {
-                    delete(f);
-                }
-            } catch (IOException ioe) {
-                throw new GorResourceException("Error deleting " + f, f, ioe);
-            }
-        });
-
-        delete(PathUtils.markAsFolder(dir));
-    }
+    public abstract void deleteDirectory(String dir) throws IOException;
 
     public abstract Stream<String> list(String dir) throws IOException;
 
@@ -335,5 +321,13 @@ public abstract class FileReader {
         try (Writer linkWriter = new OutputStreamWriter(getOutputStream(linkUrl))) {
             linkWriter.write(linkContent);
         }
+    }
+
+    /**
+     * Get unsecure version of this file reader, with same paths and security context.
+     */
+    public FileReader unsecure() {
+        // Default implementation just return self.
+        return this;
     }
 }

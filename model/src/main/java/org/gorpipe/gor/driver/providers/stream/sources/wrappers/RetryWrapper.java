@@ -119,6 +119,11 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public void deleteDirectory() throws IOException {
+        retry.tryOp(super::deleteDirectory, requestRetries, null);
+    }
+
+    @Override
     public boolean isDirectory() {
         try {
             return retry.tryOp(super::isDirectory, requestRetries);

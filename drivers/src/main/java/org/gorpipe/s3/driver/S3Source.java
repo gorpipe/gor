@@ -25,11 +25,13 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.upplication.s3fs.S3OutputStream;
+import com.upplication.s3fs.S3Path;
 import com.upplication.s3fs.util.S3UploadRequest;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -44,7 +46,9 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -182,8 +186,15 @@ public class S3Source implements StreamSource {
 
     @Override
     public boolean exists() throws IOException  {
-        // Files.exists handles directories.
+        // This only works for directories if they end with /.  Safer but much slower impl is:
         return fileExists() || Files.exists(getPath());
+        // This only works for directories if they end with /.  Much faster:
+//        if (sourceReference.getUrl().endsWith("/")) {
+//            // Files.exists handles directories.
+//            return Files.exists(getPath());
+//        } else {
+//            return fileExists();
+//        }
     }
 
     @Override
@@ -256,6 +267,49 @@ public class S3Source implements StreamSource {
         invalidateMeta();
     }
 
+    @Override
+    public void deleteDirectory() throws IOException {
+        // Implementation based on S3FileSystemProvider.delete with different logic for deleting the prefix.
+        Preconditions.checkArgument(getPath() instanceof S3Path,
+                "path must be an instance of %s", S3Path.class.getName());
+
+        if (Files.notExists(getPath())){
+            throw new NoSuchFileException("the path: " + getPath() + " not exists");
+        }
+
+        if (!Files.isDirectory(getPath())){
+            throw new NoSuchFileException("the path: " + getPath() + " is not a directory");
+        }
+
+        deleteAllWithPrefix();
+
+        invalidateMeta();
+    }
+
+    private void deleteAllWithPrefix() {
+        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+                .withBucketName(bucket)
+                .withPrefix(key);
+
+        ObjectListing objectListing = getClient().listObjects(listObjectsRequest);
+
+        while (true) {
+            List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
+            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+                keysToDelete.add(new DeleteObjectsRequest.KeyVersion(objectSummary.getKey()));
+            }
+            if (!keysToDelete.isEmpty()) {
+                DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucket).withKeys(keysToDelete);
+                getClient().deleteObjects(deleteObjectsRequest);
+            }
+            if (objectListing.isTruncated()) {
+                objectListing = getClient().listNextBatchOfObjects(objectListing);
+            } else {
+                break;
+            }
+        }
+    }
+
     private void invalidateMeta() {
         meta = null;
         metadataCache.invalidate(bucket + key);
@@ -268,12 +322,19 @@ public class S3Source implements StreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        return Files.list(getPath()).map(p -> PathUtils.formatUri(p.toUri()));
+        return Files.list(getPath()).map(p -> s3SubPathToUriString(p));
     }
 
     @Override
     public Stream<String> walk() throws IOException {
-        return Files.walk(getPath()).map(p -> PathUtils.formatUri(p.toUri()));
+        return Files.walk(getPath()).map(p -> s3SubPathToUriString(p));
+    }
+
+    /**
+     * Convert Path that we now is sub-path of this, to URI.
+     */
+    protected String s3SubPathToUriString(Path p) {
+        return PathUtils.formatUri(p.toUri());
     }
 
     @Override

@@ -147,6 +147,7 @@ public class DriverBackedFileReader extends FileReader {
         try {
             return resolveUrl(file).exists();
         } catch (GorResourceException | IOException gre) {
+            log.warn("Exists:  Resolve got exception.  Assuming file does not exits.", gre);
             return false;
         }
     }
@@ -204,6 +205,12 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public void delete(String file) throws IOException {
         resolveUrl(file, true).delete();
+    }
+
+    @Override
+    public void deleteDirectory(String dir) throws IOException {
+        dir = PathUtils.markAsFolder(dir);
+        resolveUrl(dir, true).deleteDirectory();
     }
 
     @Override

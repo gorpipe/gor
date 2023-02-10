@@ -53,6 +53,8 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
     private static final String RESULT_CACHE_DIR = "cache/result_cache";
     private AccessControlContext accessControlContext;
 
+    private DriverBackedFileReader unsecure;
+
     /**
      * Create reader
      *
@@ -232,5 +234,13 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         for (URI uri : uris) {
             validateServerProjectRelativeURI(uri, commonRoot, allowsAbsolutePaths());
         }
+    }
+
+    @Override
+    public DriverBackedFileReader unsecure() {
+        if (unsecure == null) {
+            unsecure = new DriverBackedFileReader(getSecurityContext(), getCommonRoot(), getConstants());
+        }
+        return unsecure;
     }
 }

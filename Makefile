@@ -26,10 +26,10 @@ test:  ## Run all tests.
 #
 
 publish-local:  ## Publish libraries locally (mavenLocal), then compile services with -PuseMavenLocal
-	./gradlew publishToMavenLocal
+	./gradlew -Pversion=$(CURRENT_VERSION)-SNAPSHOT publishToMavenLocal
 
 publish-maven-central:   ## Publish to maven central
-	./gradlew -PpublishToMavenCentral publish
+	./gradlew -Pversion=$(CURRENT_VERSION)-SNAPSHOT -PpublishToMavenCentral publish
 
 docker-build: build ## Build all docker images
 	docker build .

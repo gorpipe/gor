@@ -26,9 +26,12 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.s3.driver.*;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.nio.file.Path;
 
 /**
  * Represents an object in Amazon S3 (created from S3Shared source reference).
@@ -91,5 +94,32 @@ public class S3SharedSource extends S3Source {
         } else {
             return getRelativePath();
         }
+    }
+
+    @Override
+    protected String s3SubPathToUriString(Path p) {
+        // Need to change the s3 path to s3data path.
+
+        Path subPath = getPath().relativize(p);
+        String uri = PathUtils.resolve(getSourceReference().getParentSourceReference().getUrl(), subPath.toString());
+        String updatedUri = removeExtraFolder(uri);
+        return PathUtils.formatUri(updatedUri.toString());
+    }
+
+    private String removeExtraFolder(String path) {
+        if (!path.toString().endsWith("/")) {
+            String fileName = PathUtils.getFileName(path);
+            int fileNameDotIndex = fileName.indexOf('.');
+            String extraFolderCand = fileName.substring(0, fileNameDotIndex > 0 ? fileNameDotIndex : fileName.length());
+
+            String parentPath = PathUtils.getParent(path);
+            String parentParentPath = PathUtils.getParent(parentPath);
+            if (!Strings.isNullOrEmpty(extraFolderCand) &&
+                    extraFolderCand.equals(PathUtils.getFileName(parentPath)) &&
+                    !Strings.isNullOrEmpty(parentParentPath)) {
+                return PathUtils.resolve(parentParentPath, fileName);
+            }
+        }
+        return path;
     }
 }

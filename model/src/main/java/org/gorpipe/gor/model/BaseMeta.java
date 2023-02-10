@@ -264,12 +264,12 @@ public class BaseMeta {
     }
 
     public void loadAndMergeMeta(FileReader fileReader, String metaPath) {
+        this.metaPathStr = metaPath;
+
         if (metaPath == null || !fileReader.exists(metaPath)) {
             return;
         }
-        this.metaPathStr = metaPath;
-
-        try(var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
+        try (var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
             parseMetaReader(br);
         } catch (IOException ex) {
             throw new GorResourceException(String.format("Error Initializing Query. Can not read file '%s' (%s)", metaPath, ex.getMessage()), metaPath, ex);

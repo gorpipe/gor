@@ -21,16 +21,16 @@ public abstract class S3SharedFileSourceProvider extends S3SharedSourceProvider 
 
 
     @Override
-    protected String getExtraFolder(String url, String fileName) {
+    protected String getExtraFolder(String fileName) {
         return "";
     }
 
     @Override
     protected String findSharedSourceLinkContent(S3SharedSource source) {
         if (s3SharedConfig.useHighestTypeInLinks()) {
-            return S3ProjectSharedFileSourceType.PREFIX + source.getRelativePath();
+            return S3ProjectSharedFileSourceType.PREFIX + getRelativePath(source);
         } else {
-            return getSharedUrlPrefix() + source.getRelativePath();
+            return getSharedUrlPrefix() + getRelativePath(source);
         }
     }
 
