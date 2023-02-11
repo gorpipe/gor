@@ -4,6 +4,7 @@ import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.base.security.Credentials;
@@ -520,6 +521,38 @@ public class ITestS3Shared {
 
         FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
         fileReader.deleteDirectory("s3data://project/" + dataPath);
+    }
+
+    @Ignore("Does not yet work")
+    @Test
+    public void testReadingExistingS3GordFolderWithDirectLinkToFolder() throws IOException {
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
+        Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
+        String dataPath = DataUtil.toFile("user_data/existing", DataType.GORD);
+
+        String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
+
+        Files.writeString(Path.of(gorRoot).resolve("linktest.gord.link"), PathUtils.markAsFolder("s3data://project/" + dataPath));
+        String result = runGorPipeServer("gor linktest.gord.link", gorRoot, securityContext);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Ignore("Does not yet work")
+    @Test
+    public void testReadingExistingS3GordFolderWithDirectLinkToGord() throws IOException {
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
+        Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
+        String dataPath = DataUtil.toFile("user_data/existing", DataType.GORD);
+
+        String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
+
+        Files.writeString(Path.of(gorRoot).resolve("linktest.gord.link"), "s3data://project/" + dataPath + "/thedict.gord");
+        String result = runGorPipeServer("gor linktest.gord.link", gorRoot, securityContext);
+        Assert.assertEquals(expected, result);
     }
 
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,

@@ -13,6 +13,11 @@ public class DataUtil {
         return DataType.isOfType(file, DataType.GORD);
     }
 
+    public static boolean isGordLink(String file) {
+        return DataType.isOfType(file, DataType.LINK)
+                && DataType.isOfType(file.substring(0, file.length() - DataType.LINK.suffix.length()), DataType.GORD);
+    }
+
     public static boolean isGor(String file) {
         return DataType.isOfType(file, DataType.GOR);
     }

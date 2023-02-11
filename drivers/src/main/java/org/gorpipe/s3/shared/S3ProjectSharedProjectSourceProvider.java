@@ -8,6 +8,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 
 import java.util.Set;
@@ -45,7 +46,7 @@ public class S3ProjectSharedProjectSourceProvider extends S3SharedSourceProvider
 
     @Override
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
-        source.setProjectLinkFile(DataUtil.toFile(getRelativePath(source), DataType.LINK));
+        source.setProjectLinkFile(DataUtil.toFile(PathUtils.stripTrailingSlash(getRelativePath(source)), DataType.LINK));
 
         source.setProjectLinkFileContent(String.format("%sprojects/%s/%s",
                 S3ProjectSharedSourceType.PREFIX, project, getRelativePath(source)));
