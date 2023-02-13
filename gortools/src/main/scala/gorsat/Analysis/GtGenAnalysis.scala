@@ -90,7 +90,7 @@ object GtGenAnalysis {
 
       val PNtag = r.colAsString(PNCol).toString
 
-      val idx = pbt.getPnIdx(PNtag)
+      val idx = pbt.getPnIdxSafe(PNtag)
 
       if (idx < 0) {
         if (PNtag != "") throw new GorDataException("No bucket information found for tag value: " + PNtag + "\n")

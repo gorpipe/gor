@@ -92,6 +92,30 @@ public class UTestGtGenAndLd {
     }
 
     @Test
+    public void test_emptyPnInLeftSource() throws IOException {
+        final File tmpDir = Files.createTempDir();
+        final File leftSource = new File(tmpDir, "leftFile.gor");
+        final BufferedWriter leftSourceWriter = new BufferedWriter(new FileWriter(leftSource));
+        leftSourceWriter.write("CHROM\tPOS\tPN\tGT\nchr1\t1\t\t\nchr1\t2\t\t\nchr1\t2\tPN1\t1\nchr1\t2\tPN2\t2\n");
+        leftSourceWriter.close();
+        final File rightSource = new File(tmpDir, "rightFile.gor");
+        final BufferedWriter rightSourceWriter = new BufferedWriter(new FileWriter(rightSource));
+        rightSourceWriter.write("CHROM\tPOS\tEND\tPN\nchr1\t1\t2\tPN1\nchr1\t1\t2\tPN2\n");
+        rightSourceWriter.close();
+        final File tbSource = new File(tmpDir, "tb.tsv");
+        final BufferedWriter tbWriter = new BufferedWriter(new FileWriter(tbSource));
+        tbWriter.write("PN1\tBUCKET1\nPN2\tBUCKET1\n");
+        tbWriter.close();
+        final String query = "gor " + leftSource.getAbsolutePath() + " | gtgen " + tbSource.getAbsolutePath() + " " + rightSource.getAbsolutePath();
+        final String results = TestUtils.runGorPipe(query);
+        final String wanted = "CHROM\tPOS\tBucket\tValues\n" +
+                "chr1\t1\tBUCKET1\t33\n" +
+                "chr1\t2\tBUCKET1\t12\n";
+        Assert.assertEquals(wanted, results);
+        FileUtils.deleteDirectory(tmpDir);
+    }
+
+    @Test
     public void GTLDWithBuckets() {
         String common = "def #pns# = 100000;\n" +
                 "def #p# = 0.3;\n" +
