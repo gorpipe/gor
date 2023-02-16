@@ -30,7 +30,7 @@ import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.s3.driver.*;
 
 import java.net.MalformedURLException;
-import java.net.URI;
+
 import java.nio.file.Path;
 
 /**
@@ -121,5 +121,10 @@ public class S3SharedSource extends S3Source {
             }
         }
         return path;
+    }
+
+    @Override
+    public SourceReference getTopSourceReference() {
+        return getSourceReference().getOriginalSourceReference();
     }
 }

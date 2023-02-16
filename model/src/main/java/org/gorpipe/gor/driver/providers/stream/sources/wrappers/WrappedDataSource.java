@@ -30,6 +30,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
 
@@ -46,6 +47,11 @@ public class WrappedDataSource implements DataSource {
     @Override
     public String getName() {
         return wrapped.getName();
+    }
+
+    @Override
+    public Path getPath() {
+        return wrapped.getPath();
     }
 
     @Override
@@ -170,6 +176,11 @@ public class WrappedDataSource implements DataSource {
     @Override
     public SourceReference getSourceReference() {
         return wrapped.getSourceReference();
+    }
+
+    @Override
+    public SourceReference getTopSourceReference() {
+        return wrapped.getTopSourceReference();
     }
 
     @Override

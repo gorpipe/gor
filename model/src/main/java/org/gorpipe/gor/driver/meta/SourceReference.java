@@ -177,6 +177,19 @@ public class SourceReference {
         return parentSourceReference != null ? parentSourceReference.getOriginalSourceReference() : this;
     }
 
+    /**
+     * Get top level source reference that is not a link.
+     * If this is a link reference then self is returned.
+     */
+    public SourceReference getTopSourceReference() {
+        SourceReference top = this;
+        while (top.getParentSourceReference() != null
+                && !top.getParentSourceReference().getUrl().endsWith(DataType.LINK.suffix)) {
+            top = top.getParentSourceReference();
+        }
+        return top;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

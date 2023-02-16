@@ -510,17 +510,18 @@ public class ITestS3Shared {
         Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
         String randomId = UUID.randomUUID().toString();
         String dataPath = DataUtil.toFile("user_data/dummy_" + randomId, DataType.GORD) + (useSlash ? "/" : "");
+        try {
+            runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
-        runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
+            String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
+            String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
+            Assert.assertEquals(expected, result);
 
-        String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
-        String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
-        Assert.assertEquals(expected, result);
-
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath + "/" + DEFAULT_FOLDER_DICTIONARY_NAME, DataType.LINK))));
-
-        FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
-        fileReader.deleteDirectory("s3data://project/" + dataPath);
+            Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath + "/" + DEFAULT_FOLDER_DICTIONARY_NAME, DataType.LINK))));
+        } finally {
+            FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
+            fileReader.deleteDirectory("s3data://project/" + dataPath);
+        }
     }
 
     @Ignore("Does not yet work")

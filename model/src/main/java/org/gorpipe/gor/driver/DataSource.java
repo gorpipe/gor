@@ -244,4 +244,8 @@ public interface DataSource extends AutoCloseable {
      */
     SourceReference getSourceReference();
 
+    default SourceReference getTopSourceReference() {
+        return getSourceReference().getTopSourceReference();
+    }
+
 }

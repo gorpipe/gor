@@ -7,6 +7,8 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.model.DriverBackedSecureFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.session.ProjectContext;
@@ -85,27 +87,29 @@ public abstract class BaseTable<T> implements Table<T> {
      * @param uri              path to the dictionary file.
      */
     protected BaseTable(URI uri, FileReader inputFileReader) {
-        this.fileReader = inputFileReader != null ? inputFileReader : ProjectContext.DEFAULT_READER;
+        var secureFileReader = inputFileReader != null ? inputFileReader : ProjectContext.DEFAULT_READER;
+        DataSource source = secureFileReader.resolveUrl(uri.toString());
 
-        DataSource source = this.fileReader.resolveUrl(uri.toString());
-        var realUri = URI.create(source.getFullPath());
+        this.fileReader = secureFileReader;
+        var realUri = URI.create(source.getTopSourceReference().getUrl());
+
         var fileName = PathUtils.getFileName(source.getFullPath());
         this.name = FilenameUtils.removeExtension(fileName);
 
-        // Not all datasources support isDirectory (so just check for the dict file)
-        if (safeCheckExists(PathUtils.resolve(realUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString())) {
-            // Gord folder passed in.
-            this.rootUri = PathUtils.toURIFolder(uri.toString());
-            this.path =  PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
-            this.folderPath = rootUri;
-        } else if (GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME.equals(fileName)) {
+        if (GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME.equals(fileName)) {
             // thedict passed in (gord folder content)
-            this.rootUri = normalize(PathUtils.getParent(uri));
+            this.rootUri = normalize(PathUtils.getParent(realUri));
             this.path = PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            this.folderPath = rootUri;
+        } else if (safeCheckExists(PathUtils.resolve(realUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString())) {
+            // Not all datasources support isDirectory (so just check for the dict file)
+            // Gord folder passed in.
+            this.rootUri = PathUtils.toURIFolder(realUri.toString());
+            this.path =  PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
             this.folderPath = rootUri;
         } else {
             // Old school dict.
-            this.rootUri = normalize(PathUtils.getParent(uri));
+            this.rootUri = normalize(PathUtils.getParent(realUri));
             this.path = PathUtils.resolve(rootUri, fileName);
             this.folderPath = PathUtils.toURIFolder(PathUtils.resolve(rootUri, "." + this.name).toString()); // PathUtils.resolve(rootUri, "." + this.name);
         }
