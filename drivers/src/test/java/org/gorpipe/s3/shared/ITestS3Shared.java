@@ -513,11 +513,18 @@ public class ITestS3Shared {
         try {
             runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
 
-            String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
             String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
+            String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
             Assert.assertEquals(expected, result);
 
             Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath + "/" + DEFAULT_FOLDER_DICTIONARY_NAME, DataType.LINK))));
+
+// Not yet supported.
+//            Path linkPath = Path.of(gorRoot).resolve("test.gord.link");
+//            Files.writeString(linkPath, "s3data//project/" + dataPath + "/");
+//            result = runGorPipeServer("gor test.gord.link", gorRoot, securityContext);
+//            Assert.assertEquals(expected, result);
+
         } finally {
             FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
             fileReader.deleteDirectory("s3data://project/" + dataPath);

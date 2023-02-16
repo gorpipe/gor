@@ -25,6 +25,7 @@ package org.gorpipe.s3.shared;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.s3.driver.*;
@@ -125,6 +126,11 @@ public class S3SharedSource extends S3Source {
 
     @Override
     public SourceReference getTopSourceReference() {
-        return getSourceReference().getOriginalSourceReference();
+        // Shared source should be access though links, so find the first link (which should be the direct access link)
+        SourceReference top = getSourceReference();
+        while (top.getParentSourceReference() != null && !top.getUrl().endsWith(DataType.LINK.suffix)) {
+            top = top.getParentSourceReference();
+        }
+        return top;
     }
 }
