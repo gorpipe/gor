@@ -219,13 +219,13 @@ and the lookup value in the columns specified with the -c option.</p>
 <td><p>Perform a <a class="reference internal" href="../glossary.html#term-cartesian-join"><span class="xref std std-term">Cartesian join</span></a>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
-<td><p>Assume the data is ordered for the columns on which the lookup is based.</p></td>
+<td><p>Assume the data is ordered for the columns on which the lookup is based. The order must be alphabetical and
+ascending.</p></td>
 </tr>
 </tbody>
 </table>
 <p>The -ordered flag can reduce the memory usage significantly, especially when the number of lines in the map file is
-high. Note that there are no checks to see if the order is correct - only use this option
-if the input stream and the map file is correctly ordered.</p>
+high.</p>
 </section>
 </section>
 
