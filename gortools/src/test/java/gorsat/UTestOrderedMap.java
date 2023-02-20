@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
@@ -157,12 +158,13 @@ public class UTestOrderedMap {
     @Test
     public void simpleMixedCase() {
         String query = String.format("nor %s | map -c First -ordered %s", leftFile.getAbsoluteFile(), rightFileMixedCase.getAbsoluteFile());
-        String result = TestUtils.runGorPipe(query);
-        String expected = "ChromNOR\tPosNOR\tFirst\tSecond\tThird\tB\tC\n" +
-                "chrN\t0\ta\t1\ta1\tthis is a1\ta1\n" +
-                "chrN\t0\tb\t2\tb2\tthis is also b2\tb2+\n" +
-                "chrN\t0\tb\t2+\tb2+\tthis is also b2\tb2+\n";
-        Assert.assertEquals(expected, result);
+        try {
+            TestUtils.runGorPipe(query);
+            Assert.fail("Should throw exception as not ordered");
+        } catch (GorException ex) {
+            // Expected
+            Assert.assertTrue(ex.getMessage().startsWith("Right source is not ordered"));
+        }
     }
 
     @Test
@@ -281,5 +283,73 @@ public class UTestOrderedMap {
         String query = String.format("nor %s | multimap -c First -n B,C -cartesian -ordered %s", leftFile.getAbsoluteFile(), rightFile.getAbsoluteFile());
         thrown.expect(GorParsingException.class);
         String result = TestUtils.runGorPipe(query);
+    }
+
+    @Test
+    public void testMapWithOrderedNotOrderedLeftSource() throws Exception {
+        String query = "create a = norrows 20 | rownum ;\n" +
+                "create b = norrows 20 | sort -c rownum | calc val = rownum * 10;\n" +
+                "nor [a] | map -c #1 -m x [b] -ordered";
+        try {
+            TestUtils.runGorPipe(query);
+            Assert.fail("Should throw exception as not ordered");
+        } catch (GorException ex) {
+            // Expected
+            Assert.assertTrue(ex.getMessage().startsWith("Left source is not ordered"));
+        }
+    }
+
+    @Test
+    public void testMapWithOrderedNotOrderedRightSource() throws Exception {
+        String query = "create a = norrows 20 | rownum | sort -c rownum;\n" +
+                "create b = norrows 20 | calc val = rownum * 10;\n" +
+                "nor [a] | map -c #1 -m x [b] -ordered";
+        try {
+            TestUtils.runGorPipe(query);
+            Assert.fail("Should throw exception as not ordered");
+        } catch (GorException ex) {
+            // Expected
+            Assert.assertTrue(ex.getMessage().startsWith("Right source is not ordered"));
+        }
+    }
+
+    @Test
+    public void testMapWithOrderedMapOnFirst() throws Exception {
+        String query = "create a = norrows 10 | sort -c rownum;\n" +
+                "create b = norrows 10 | sort -c rownum | calc val = rownum * 10;\n" +
+                "nor [a] | map -c #1 -m x [b] -ordered";
+        String result = TestUtils.runGorPipe(query);
+
+        Assert.assertEquals("ChromNOR\tPosNOR\tRowNum\tval\n" +
+                "chrN\t0\t0\t0\n" +
+                "chrN\t0\t1\t10\n" +
+                "chrN\t0\t2\t20\n" +
+                "chrN\t0\t3\t30\n" +
+                "chrN\t0\t4\t40\n" +
+                "chrN\t0\t5\t50\n" +
+                "chrN\t0\t6\t60\n" +
+                "chrN\t0\t7\t70\n" +
+                "chrN\t0\t8\t80\n" +
+                "chrN\t0\t9\t90\n", result);
+    }
+
+    @Test
+    public void testMapWithOrderedMapOnNonFirst() throws Exception {
+        String query = "create a = norrows 10 | calc newFirst = 'a' | select #2,#1 | sort -c #2;\n" +
+                "create b = norrows 10 | sort -c rownum | calc val = rownum * 10;\n" +
+                "nor [a] | map -c #2 -m x [b] -ordered ";
+        String result = TestUtils.runGorPipe(query);
+
+        Assert.assertEquals("ChromNOR\tPosNOR\tnewFirst\tRowNum\tval\n" +
+                "chrN\t0\ta\t0\t0\n" +
+                "chrN\t0\ta\t1\t10\n" +
+                "chrN\t0\ta\t2\t20\n" +
+                "chrN\t0\ta\t3\t30\n" +
+                "chrN\t0\ta\t4\t40\n" +
+                "chrN\t0\ta\t5\t50\n" +
+                "chrN\t0\ta\t6\t60\n" +
+                "chrN\t0\ta\t7\t70\n" +
+                "chrN\t0\ta\t8\t80\n" +
+                "chrN\t0\ta\t9\t90\n", result);
     }
 }

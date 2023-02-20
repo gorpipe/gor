@@ -24,6 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import gorsat.DynIterator.DynamicNorSource
+import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorSession
 
@@ -44,26 +45,28 @@ case class OrderedMapAnalysis(session: GorSession,
                              ) extends Analysis {
 
   private val singleCol: Boolean = columns.length == 1
+  private var currentKey: String = _
   private var rightKey: String = _
   private var rightValues: Array[Row] = _
   private var rightRow: Row = _
   private var nextRightRow: Row = _
   private val adjustedOutCols: Array[Int] = outCols.map(x => x+2)
+  private val lookupIndices: Array[Int] = Array.range(0, columns.length).map(x => x+2) // The indices into the lookup table are always the first n.
 
   override def setup(): Unit = {
     if (rightSource.hasNext) {
       rightRow = rightSource.next()
-      rightKey = getKeyFromRow(rightRow)
+      rightKey = getKeyFromRightRow(rightRow, rightKey)
     }
   }
 
   override def process(r: Row): Unit = {
-    val key = getKeyFromRow(r)
-    while (rightHasNext && key > rightKey) {
+    currentKey = getKeyFromRow(r, currentKey)
+    while (rightHasNext && currentKey > rightKey) {
       advanceRight()
     }
 
-    if (key.equals(rightKey)) {
+    if (currentKey.equals(rightKey)) {
       if (inSet) {
         if (inSetCol) {
           val x = if (negate) "0" else "1"
@@ -108,7 +111,7 @@ case class OrderedMapAnalysis(session: GorSession,
       buffer.append(nextRightRow)
       if (rightSource.hasNext) {
         nextRightRow = rightSource.next()
-        nextRightKey = getKeyFromRow(nextRightRow)
+        nextRightKey = getKeyFromRightRow(nextRightRow, nextRightKey)
       } else {
         nextRightKey = null
       }
@@ -133,13 +136,37 @@ case class OrderedMapAnalysis(session: GorSession,
     rightValues = Array[Row](collapsed)
   }
 
-  private def getKeyFromRow(r: Row) = {
-    val key = if (singleCol) {
+  private def getKeyFromRow(r: Row, prevKey: String) = {
+    var key = if (singleCol) {
       r.colAsString(columns.head).toString
     } else {
       r.selectedColumns(columns)
     }
-    if (caseInsensitive) key.toUpperCase() else key
+    key = if (caseInsensitive) key.toUpperCase() else key
+    validateKeyOrder(r, key, prevKey, "Left")
+    key
+  }
+
+  private def getKeyFromRightRow(r: Row, prevKey: String) = {
+    var key = if (singleCol) {
+      r.colAsString(2).toString
+    } else {
+      r.selectedColumns(lookupIndices)
+    }
+    key = if (caseInsensitive) key.toUpperCase() else key
+
+    validateKeyOrder(r, key, prevKey, "Right")
+
+    key
+  }
+
+  private def validateKeyOrder(r: Row, key: String, prevKey: String, source: String): Unit = {
+    if (prevKey != null && !prevKey.isEmpty && prevKey > key) {
+      throw new GorDataException(
+        String.format("%s source is not ordered, as required if the -ordered options is used.  " +
+          "Row '%s' is out of order.  Key/Prevkey was '%s'/'%s'.",
+          source, r.toString, key, prevKey));
+    }
   }
 
   private def rightHasNext: Boolean = {
@@ -157,7 +184,7 @@ case class OrderedMapAnalysis(session: GorSession,
     } else {
       rightRow = rightSource.next()
     }
-    rightKey = getKeyFromRow(rightRow)
+    rightKey = getKeyFromRightRow(rightRow, rightKey)
     rightValues = null
   }
 }

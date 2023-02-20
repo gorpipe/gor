@@ -38,7 +38,6 @@ case class MultiMapLookup(session: GorSession, iteratorCommand: String, iterator
   var key: String = _
   var mapVal: String = ""
   var colMap: multiHashMap = _
-  val colArray: Array[Int] = columns
 
   override def setup(): Unit = {
     if (iteratorCommand != "") colMap = MapAndListUtilities.getMultiHashMap(iteratorCommand, iterator,
@@ -50,7 +49,7 @@ case class MultiMapLookup(session: GorSession, iteratorCommand: String, iterator
   override def process(r: Row): Unit = {
 
     if (singleCol) key = r.colAsString(columns.head).toString
-    else key = r.selectedColumns(colArray)
+    else key = r.selectedColumns(columns)
 
     val allCols = r.getAllCols
     if (cartesian) {

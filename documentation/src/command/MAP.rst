@@ -61,10 +61,10 @@ Options
 +-----------------+---------------------------------------------------------------------------------------------------------------+
 | ``-cartesian``  | Perform a :term:`Cartesian join`.                                                                             |
 +-----------------+---------------------------------------------------------------------------------------------------------------+
-| ``-ordered``    | Assume the data is ordered for the columns on which the lookup is based.                                      |
+| ``-ordered``    | Assume the data is ordered for the columns on which the lookup is based. The order must be alphabetical and   |
+|                 | ascending.                                                                                                    |
 +-----------------+---------------------------------------------------------------------------------------------------------------+
 
 The -ordered flag can reduce the memory usage significantly, especially when the number of lines in the map file is
-high. Note that there are no checks to see if the order is correct - only use this option
-if the input stream and the map file is correctly ordered.
+high.
 
