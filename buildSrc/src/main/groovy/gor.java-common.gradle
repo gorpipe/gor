@@ -31,6 +31,9 @@ plugins {
     id "org.owasp.dependencycheck"
     id 'com.github.ben-manes.versions'
     id "com.adarshr.test-logger"
+    id 'jacoco'
+    id 'jacoco-report-aggregation'
+    id "net.razvan.jacoco-to-cobertura"
 }
 
 // -----------------------------------------------------
@@ -66,6 +69,12 @@ repositories {
         authentication {
             header(HttpHeaderAuthentication)
         }
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -214,7 +223,28 @@ tasks.withType(Test) {
             }
         }
     }
+
+    finalizedBy jacocoTestReport // report is always generated after tests run
 }
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+    finalizedBy tasks.named('testCodeCoverageReport', JacocoReport)
+
+    reports {
+        xml.required = true
+    }
+}
+
+testCodeCoverageReport {
+    finalizedBy(tasks.jacocoToCobertura)
+}
+
+jacocoToCobertura {
+    inputFile.set(file("$buildDir/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml"))
+    outputFile.set(file("$buildDir/reports/jacoco/testCodeCoverageReport/cobertura.xml"))
+}
+
 
 // Skips tests if you provide prod project property from command line
 test.onlyIf {! Boolean.getBoolean('skip.tests') }
@@ -257,6 +287,10 @@ task integrationTest(type: Test) {
 
 task generateTestReport(type:Exec) {
     commandLine 'python','tests/scripts/genReport.py'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('testCodeCoverageReport', JacocoReport)
 }
 
 // -----------------------------------------------------

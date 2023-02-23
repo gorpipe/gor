@@ -59,11 +59,14 @@ plugins {
 
     // The following plugins are support plugins that don't effect the build directly.
     id 'nebula.lint'
-    id "com.autonomousapps.dependency-analysis"
     id "com.adarshr.test-logger" apply false
     id "org.owasp.dependencycheck"  apply false
 
     id "com.github.ben-manes.versions" apply false
+
+    // For some reason refreshVersions is not detecting this one.
+    id("net.razvan.jacoco-to-cobertura") version "1.1.2"
+
     // TODO: Add   classpath "gradle.plugin.com.gitlab.stfs.gradle.dependencygraph:gradle-dependency-graph-plugin:latest.release"
 }
 
@@ -79,3 +82,4 @@ gradleLint {
     //criticalRules = ['unused-dependency']
     alwaysRun = false
 }
+

@@ -121,6 +121,10 @@ build_test:
         - "*/*/*/*/*/TEST-*.xml"
         # Seems like ** does not work properly (even though it is used in the Gitlab documentation)
         #- "**/build/test-results/test/**/TEST-*.xml"
+      coverage_report:
+        coverage_format: cobertura
+        # gorscripts is top level and should include everything else.
+        path: gorscripts/build/reports/jacoco/testCodeCoverageReport/cobertura.xml
 
 
 unittest:

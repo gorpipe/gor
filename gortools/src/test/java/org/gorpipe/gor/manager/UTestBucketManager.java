@@ -174,7 +174,7 @@ public class UTestBucketManager {
             table.insert(dataFiles);
             buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
         }
-        // 5 : 50, 2 : 20 : 5 : 10
+        // 5 : 50, 2 : 20, 5 : 10
 
         long bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
 
@@ -194,7 +194,7 @@ public class UTestBucketManager {
         bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.CONSOLIDATE, -1);
         List<String> ml = table.selectAll().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
         bucketCount = table.selectAll().stream().map(l -> l.getBucket()).distinct().count();
-        // 6 : 50, 2 : 20 : 0 : 10
+        // 6 : 50, 2 : 20, 0 : 10
 
         Assert.assertEquals("Wrong number of buckets", 8, bucketCount);
         Assert.assertEquals("Wrong number of buckets created", 1, bucketsCreated);
