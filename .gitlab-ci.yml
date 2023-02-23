@@ -121,10 +121,6 @@ build_test:
         - "*/*/*/*/*/TEST-*.xml"
         # Seems like ** does not work properly (even though it is used in the Gitlab documentation)
         #- "**/build/test-results/test/**/TEST-*.xml"
-      coverage_report:
-        coverage_format: cobertura
-        # gorscripts is top level and should include everything else.
-        path: gorscripts/build/reports/jacoco/testCodeCoverageReport/cobertura.xml
 
 
 unittest:
@@ -140,6 +136,19 @@ slowtest:
 integrationtest:
   extends: .test
   script: ./gradlew --continue integrationTest
+
+
+testcoverage:
+  extends:
+    #- .on-releasable-or-release-branch-only
+    - .test
+  script: ./gradlew --continue jacocoTestReport
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        # gorscripts is top level and should include everything else.
+        path: "gorscripts/build/reports/jacoco/testCodeCoverageReport/cobertura.xml"
 
 
 # This code quality block is needed to work around https://gitlab.com/gitlab-org/gitlab/issues/12274

@@ -224,11 +224,11 @@ tasks.withType(Test) {
         }
     }
 
-    finalizedBy jacocoTestReport // report is always generated after tests run
+    //finalizedBy jacocoTestReport // report is always generated after tests run
 }
 
 jacocoTestReport {
-    dependsOn test // tests are required to run before generating the report
+    dependsOn 'test', 'slowTest', 'integrationTest' // tests are required to run before generating the report
     finalizedBy tasks.named('testCodeCoverageReport', JacocoReport)
 
     reports {
