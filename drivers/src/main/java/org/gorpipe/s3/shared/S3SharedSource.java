@@ -128,7 +128,7 @@ public class S3SharedSource extends S3Source {
     public SourceReference getTopSourceReference() {
         // Shared source should be access though links, so find the first link (which should be the direct access link)
         SourceReference top = getSourceReference();
-        while (top.getParentSourceReference() != null && !top.getUrl().endsWith(DataType.LINK.suffix)) {
+        while (top.getParentSourceReference() != null && !top.getParentSourceReference().getUrl().endsWith(DataType.LINK.suffix)) {
             top = top.getParentSourceReference();
         }
         return top;

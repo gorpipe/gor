@@ -52,6 +52,7 @@ public class SourceReference {
     private boolean isCreatedFromLink = false;
     private Long linkLastModified = null;
     private SourceReference parentSourceReference;
+    private boolean isFallback;
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?
@@ -60,7 +61,7 @@ public class SourceReference {
     // - should the context hash map be stored as a part of this class or should it enter the chain at some other point?
 
     public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup,
-                           String chrSubset, String linkSubPath, boolean writeSource) {
+                           String chrSubset, String linkSubPath, boolean writeSource, boolean isFallback) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
         if (securityContext == null) {
@@ -73,6 +74,12 @@ public class SourceReference {
         this.chrSubset = chrSubset;
         this.linkSubPath = linkSubPath;
         this.writeSource = writeSource;
+        this.isFallback = isFallback;
+    }
+
+    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup,
+                           String chrSubset, String linkSubPath, boolean writeSource) {
+        this(url, securityContext, commonRoot, lookup, chrSubset, linkSubPath, writeSource, true);
     }
 
     /**
@@ -175,6 +182,10 @@ public class SourceReference {
 
     public SourceReference getOriginalSourceReference() {
         return parentSourceReference != null ? parentSourceReference.getOriginalSourceReference() : this;
+    }
+
+    public boolean isFallback() {
+        return isFallback;
     }
 
     /**

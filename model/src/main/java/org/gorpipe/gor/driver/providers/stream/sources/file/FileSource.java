@@ -147,6 +147,11 @@ public class FileSource implements StreamSource {
     }
 
     @Override
+    public Path getPath() {
+        return file;
+    }
+
+    @Override
     public OutputStream getOutputStream(boolean append) throws IOException {
         var parent = file.getParent();
         if (parent != null && !Files.exists(parent)) {

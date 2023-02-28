@@ -49,6 +49,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,14 @@ public class TestUtils {
 
     public static String runGorPipe(String query, boolean server, String securityContext, String[] writeLocations) {
         return runGorPipeWithOptions(query, true, server, securityContext, writeLocations);
+    }
+
+    public static String runGorPipe(String query, String gorroot, boolean server, String securityContext, String[] writeLocations) {
+        return runGorPipeWithOptions(query, gorroot, null, true, server, securityContext, writeLocations);
+    }
+
+    public static String runGorPipe(String query, String gorroot, String cacheDir, boolean server, String securityContext, String[] writeLocations) {
+        return runGorPipeWithOptions(query, gorroot, cacheDir, true, server, securityContext, writeLocations);
     }
 
     public static String runGorPipe(String[] args, String whiteCmdListFile, boolean server, String securityContext) {
@@ -249,7 +258,11 @@ public class TestUtils {
     }
 
     public static String runGorPipeWithOptions(String query, boolean includeHeader, boolean server, String securityContext, String[] writeLocations) {
-        try (PipeInstance pipe = createPipeInstance(server, securityContext, writeLocations)) {
+        return runGorPipeWithOptions(query, ".", null, includeHeader, server, securityContext, writeLocations);
+    }
+
+    public static String runGorPipeWithOptions(String query, String gorroot, String cacheDir, boolean includeHeader, boolean server, String securityContext, String[] writeLocations) {
+        try (PipeInstance pipe = createPipeInstance(server, gorroot, cacheDir, securityContext, writeLocations)) {
             String queryToExecute = processQuery(query, pipe.getSession());
             pipe.init(queryToExecute, null);
             StringBuilder result = new StringBuilder();
@@ -271,6 +284,19 @@ public class TestUtils {
 
     private static PipeInstance createPipeInstance(boolean server, String securityContext, String[] writeLocations) {
         return PipeInstance.createGorIterator(new GorContext(createSession(server, securityContext, writeLocations)));
+    }
+
+    private static PipeInstance createPipeInstance(boolean server, String gorroot, String cacheDir, String securityContext, String[] writeLocations) {
+        List<String> options = new ArrayList<>();
+        if (gorroot != null) {
+            options.add("-gorroot");
+            options.add(gorroot);
+        }
+        if (cacheDir != null) {
+            options.add("-cachedir");
+            options.add(cacheDir);
+        }
+        return PipeInstance.createGorIterator(new GorContext(createSession(options.toArray(String[]::new), null, server, securityContext, writeLocations)));
     }
 
     public static GenomicIterator runGorPipeIterator(String query) {

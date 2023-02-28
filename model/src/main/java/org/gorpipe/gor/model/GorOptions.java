@@ -786,28 +786,11 @@ public class GorOptions {
         return gorDictPath;
     }
 
-    private String resolveFolderFilename(String commonRoot, String fileName) {
-        var gordPath = Paths.get(fileName);
-        var absPath = gordPath.isAbsolute();
-        if (commonRoot!=null&&!absPath) {
-            var root = Paths.get(commonRoot);
-            gordPath = root.resolve(gordPath);
-            if (Files.isDirectory(gordPath)) {
-                gordPath = resolveFolderDict(gordPath);
-                return root.relativize(gordPath).toString();
-            }
-        } else if (Files.isDirectory(gordPath)) {
-            gordPath = resolveFolderDict(gordPath);
-            return gordPath.toString();
-        }
-        return fileName;
-    }
-
     private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        // TODO: Remove when driver framework supports isDirectory
-        fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
+        var source = session.getProjectContext().getFileReader().resolveUrl(fileName);
+        var fullPath = source.getTopSourceReference().getUrl();
 
-        DictionaryTable table = DictionaryTable.getTable(fileName, session.getProjectContext().getFileReader());
+        DictionaryTable table = DictionaryTable.getTable(fullPath, session.getProjectContext().getFileReader());
         final Dictionary gord = Dictionary.getDictionary(table, this.useDictionaryCache);
 
         isNoLineFilter = isNoLineFilter || !table.getLineFilter();
@@ -850,9 +833,10 @@ public class GorOptions {
     }
 
     private void processDictionaryTable(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        // TODO: Remove when driver framework supports isDirectory
-        fileName = resolveFolderFilename(projectContext.commonRoot, fileName);
-        DictionaryTable table = DictionaryTable.getTable(fileName, session.getProjectContext().getFileReader());
+        var source = session.getProjectContext().getFileReader().resolveUrl(fileName);
+        var fullPath = source.getTopSourceReference().getUrl();
+
+        DictionaryTable table = DictionaryTable.getTable(fullPath, session.getProjectContext().getFileReader());
 
         this.isNoLineFilter = isNoLineFilter || !table.getLineFilter();
         this.hasLocalDictonaryFile = hasLocalDictonaryFile || !table.getAllActiveTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags

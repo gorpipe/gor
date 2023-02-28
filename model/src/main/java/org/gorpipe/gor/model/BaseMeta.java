@@ -4,6 +4,7 @@ package org.gorpipe.gor.model;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -266,7 +267,13 @@ public class BaseMeta {
     public void loadAndMergeMeta(FileReader fileReader, String metaPath) {
         this.metaPathStr = metaPath;
 
-        if (metaPath == null || !fileReader.exists(metaPath)) {
+        try {
+            if (metaPath == null || !fileReader.resolveUrl(new SourceReferenceBuilder(metaPath)
+                    .commonRoot(fileReader.getCommonRoot())
+                    .securityContext(fileReader.getSecurityContext()).isFallback(false).build()).exists()) {
+                return;
+            }
+        } catch (GorResourceException | IOException e) {
             return;
         }
         try (var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {

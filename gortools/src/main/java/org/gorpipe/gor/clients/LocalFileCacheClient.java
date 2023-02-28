@@ -51,6 +51,7 @@ public class LocalFileCacheClient implements FileCache {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFileCacheClient.class);
 
+    // Path from project root to cache root.
     private final String rootPath;
     private final boolean useSubFolders;
     private final int subFolderSize;
@@ -187,6 +188,10 @@ public class LocalFileCacheClient implements FileCache {
         } else {
             return currentRoot;
         }
+    }
+
+    private String getProjectRoot() {
+        return fileReader != null && fileReader.getCommonRoot() != null ?fileReader.getCommonRoot() : null;
     }
 
     private Cache<String, String> createCache() {

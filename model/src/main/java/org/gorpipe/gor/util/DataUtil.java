@@ -10,7 +10,7 @@ public class DataUtil {
     }
 
     public static boolean isGord(String file) {
-        return DataType.isOfType(file, DataType.GORD);
+        return DataType.isOfType(file, DataType.GORD) || isGordLink(file);
     }
 
     public static boolean isGordLink(String file) {

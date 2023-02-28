@@ -323,20 +323,16 @@ public class DriverBackedFileReader extends FileReader {
         var source = resolveUrl(file);
 
         if (source.getSourceType() == FileSourceType.FILE) {
-            var path = Paths.get(file);
-            var root = commonRoot != null ? Paths.get(commonRoot) : null;
-            if (root!=null && !path.isAbsolute()) {
-                path = root.resolve(path);
-            }
-            if (Files.isDirectory(path)) {
-                if (!DataUtil.isGord(path.getFileName().toString())) {
-                    return getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
-                } else if (Files.exists(path.resolve(path.getFileName()))) {
-                    source = resolveUrl(file + "/" + path.getFileName());
-                } else if (Files.exists(path.resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
-                    source = resolveUrl(file + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            if (source.isDirectory()) {
+                var root = commonRoot != null ? Paths.get(commonRoot) : null;
+                if (!DataUtil.isGord(source.getFullPath())) {
+                    return getDirectoryStream(maxDepth, followLinks, showModificationDate,source.getPath(), root);
+                } else if (Files.exists(source.getPath().resolve(source.getPath().getFileName()))) {
+                    source = resolveUrl(source.getPath().resolve(source.getPath().getFileName()).toString());
+                } else if (Files.exists(source.getPath().resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
+                    source = resolveUrl(source.getPath().resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString());
                 } else {
-                    return getDirectoryStream(maxDepth, followLinks, showModificationDate, path, root);
+                    return getDirectoryStream(maxDepth, followLinks, showModificationDate, source.getPath(), root);
                 }
             }
         }

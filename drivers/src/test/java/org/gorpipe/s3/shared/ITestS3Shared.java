@@ -15,7 +15,6 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.model.DriverBackedSecureFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -33,8 +32,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 import java.util.UUID;
 
-import static gorsat.TestUtils.runGorPipeCLI;
-import static gorsat.TestUtils.runGorPipeServer;
+import static gorsat.TestUtils.*;
 import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 import static org.gorpipe.utils.DriverUtils.createSecurityContext;
 
@@ -304,7 +302,7 @@ public class ITestS3Shared {
         }
 
         try {
-            DataSource source = fileReader.resolveUrl(DataUtil.toLinkFile("../a", DataType.GORZ));
+            fileReader.resolveUrl(DataUtil.toLinkFile("../a", DataType.GORZ));
             Assert.fail("Should not be resolved, link outside project");
         } catch (GorResourceException e) {
             // Expected
@@ -312,6 +310,7 @@ public class ITestS3Shared {
         }
      }
 
+    @Ignore("Hard to change the owner config for one test.  Ignore until we reenable this feature by default.")
     @Test
     public void testReadDirectly() {
         Path gorRoot  = workDirPath.resolve("some_project");
@@ -334,7 +333,7 @@ public class ITestS3Shared {
         Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
         //Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
-        Files.write(linkFile, DataUtil.toFile("s3data://project/ref/dbsnp", DataType.GORZ).getBytes(StandardCharsets.UTF_8));
+        Files.writeString(linkFile, DataUtil.toFile("s3data://project/ref/dbsnp", DataType.GORZ));
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
 
         String result = runGorPipeServer("a.gorz | top 1000000 | group genome -count", gorRoot.toString(), securityContext);
@@ -519,11 +518,10 @@ public class ITestS3Shared {
 
             Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath + "/" + DEFAULT_FOLDER_DICTIONARY_NAME, DataType.LINK))));
 
-// Not yet supported.
-//            Path linkPath = Path.of(gorRoot).resolve("test.gord.link");
-//            Files.writeString(linkPath, "s3data//project/" + dataPath + "/");
-//            result = runGorPipeServer("gor test.gord.link", gorRoot, securityContext);
-//            Assert.assertEquals(expected, result);
+            Path linkPath = Path.of(gorRoot).resolve("test.gord.link");
+            Files.writeString(linkPath, "s3data://project/" + dataPath + "/");
+            result = runGorPipeServer("gor test.gord.link", gorRoot, securityContext);
+            Assert.assertEquals(expected, result);
 
         } finally {
             FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
@@ -563,14 +561,32 @@ public class ITestS3Shared {
         Assert.assertEquals(expected, result);
     }
 
+    @Test
+    public void testWriteExplicitWrite() throws IOException {
+        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
+        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String dataPath = "user_data/dummy2.gor";
+
+        String result = runGorPipeCLI(String.format("create #x = gorrow chr1,1 | write s3data://shared/%s;\n" +
+                "create #y = gor [#x] | calc x 4;\n" +
+                "gor [#y]\n", dataPath), gorRoot, securityContext);
+
+        Assert.assertEquals("chrom\tpos\tx\n" + "chr1\t1\t4\n", result);
+
+        S3SharedSourceProvider provider = new S3ProjectSharedSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+        try (DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env")) {
+            source.delete();
+        }
+    }
+
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,
                                                  Credentials.OwnerType ownerType, String owner) throws IOException {
         SourceReference sourceReference = new SourceReference.Builder(provider.getSharedUrlPrefix() + relativePath)
                 .commonRoot("projects/some_project")
                 .securityContext(createSecurityContext(provider.getService(), ownerType, owner, S3_KEY, S3_SECRET))
                 .build();
-        DataSource source = provider.resolveDataSource(sourceReference);
-        return source;
+        return provider.resolveDataSource(sourceReference);
     }
 
 

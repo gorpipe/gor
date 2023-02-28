@@ -517,7 +517,8 @@ public class UTestGenomicOrderedRows {
         log.info(data1.toString());
         log.info(link1.toString());
         log.info(linkFolder.getName() + "/" + link1.getName());
-        final String results = TestUtils.runGorPipe(linkFolder.getName() + "/" + link1.getName() + " -r " + commonRoot.toString()).trim();
+        final String results = TestUtils.runGorPipe(linkFolder.getName() + "/" + link1.getName(),
+                commonRoot.toString(), commonRoot.toString(), false, null, null).trim();
         Assert.assertEquals(content, results);
     }
 

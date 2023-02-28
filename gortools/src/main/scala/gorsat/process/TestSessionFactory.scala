@@ -89,10 +89,10 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
         new DriverBackedSecureFileReader(gorRoot, null, securityContext,
           AccessControlContext.builder().withWriteLocations(writeLocations).build())
       } else {
-        new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
+        new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot, null)
       }
     } else {
-      new DriverBackedFileReader(securityContext, if(emptyGorRoot) null else gorRoot, null)
+      new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot, null)
     }
   }
 }
