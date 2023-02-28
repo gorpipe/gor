@@ -139,6 +139,8 @@ integrationtest:
 
 
 testcoverage:
+  rules:
+    - when: never
   extends:
     #- .on-releasable-or-release-branch-only
     - .test
