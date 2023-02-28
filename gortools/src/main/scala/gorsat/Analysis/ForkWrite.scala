@@ -22,7 +22,7 @@
 
 package gorsat.Analysis
 
-import java.nio.file.{Files, Paths, StandardOpenOption}
+import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.zip.Deflater
 import gorsat.Commands.{Analysis, Output, RowHeader}
 import gorsat.Outputs.OutFile
@@ -105,13 +105,19 @@ case class ForkWrite(forkCol: Int,
     var out: Output = _
   }
 
-  def ensureDir(projectContext: ProjectContext, dir: String, parent: Boolean = false): Unit = {
+  def ensureDir(projectContext: ProjectContext, path: String, parent: Boolean = false): Unit = {
     val fileReader = projectContext.getFileReader
-    if (PathUtils.isLocal(dir)) {
-      if (parent) {
-        val parentPath = Paths.get(dir).getParent
-        if (parentPath!=null) fileReader.createDirectories(parentPath.toString)
-      } else fileReader.createDirectories(dir)
+    if (PathUtils.isLocal(path)) {
+      val dir = if (parent) {
+        val parent = Paths.get(path).getParent
+        if (parent != null) parent.toString else null
+      } else {
+        path
+      }
+
+      if (dir != null && !fileReader.exists(dir)) {
+        fileReader.createDirectories(dir)
+      }
     }
   }
 

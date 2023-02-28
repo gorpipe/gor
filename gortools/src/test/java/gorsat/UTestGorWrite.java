@@ -517,6 +517,18 @@ public class UTestGorWrite {
         Assert.assertEquals("S,I,S,I",schema);
     }
 
+    @Test
+    public void testWriteIntoSymlinkedFolder() throws IOException {
+        Path outdir = tmpdir.resolve("out");
+        Path link2outdir = tmpdir.resolve("outlink");
+        Files.createDirectory(outdir);
+        Files.createSymbolicLink(link2outdir, outdir);
+
+        TestUtils.runGorPipe("gorrow chr1,1 | write outlink/b.gor", "-gorroot", tmpdir.toString());
+        Assert.assertEquals("#chrom\tpos\n" +
+                "chr1\t1\n", Files.readString(outdir.resolve("b.gor")));
+    }
+
     static boolean assertIndexFileIsCorrect(final String filePath) throws IOException {
         final String idxFilePath = filePath + ".gori";
 
