@@ -1,9 +1,11 @@
 package org.gorpipe.s3.table;
 
+import gorsat.TestUtils;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.shared.ITestS3Shared;
@@ -26,10 +28,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import static gorsat.TestUtils.runGorPipeServer;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_KEY;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_LOCATION_KEY;
+import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 import static org.gorpipe.utils.DriverUtils.awsSecurityContext;
 
 /**
@@ -105,7 +109,7 @@ public class ITestS3Table {
     }
 
     @Test
-    public void testInsertS3DataBasic() throws IOException {
+    public void testInsertLocalTableS3DataBasic() throws IOException {
         insertIntoTableGordFile();
 
         String[] result = runGorPipeServer("gor " + gordFile.toString(),
@@ -114,7 +118,7 @@ public class ITestS3Table {
     }
     
     @Test
-    public void testBucketizeS3DataLocalBuckets() throws IOException {
+    public void testBucketizeLocalTableS3DataLocalBuckets() throws IOException {
         insertIntoTableGordFile();
 
         DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).validateFiles(false).build();
@@ -135,7 +139,7 @@ public class ITestS3Table {
     }
     
     @Test
-    public void testBucketizeS3DataS3Buckets()  throws IOException {
+    public void testBucketizeLocalTableS3DataS3Buckets()  throws IOException {
         insertIntoTableGordFile();
 
         DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
@@ -166,7 +170,7 @@ public class ITestS3Table {
     }
     
     @Test
-    public void testBucketizeS3DataS3DataBuckets() throws IOException {
+    public void testBucketizeLocalTableS3DataS3DataBuckets() throws IOException {
         insertIntoTableGordFile();
 
         fileReader.createDirectoryIfNotExists("s3data://project/user_data/buckets/");
@@ -200,7 +204,7 @@ public class ITestS3Table {
     }
 
     @Test
-    public void testBucketizeS3DataS3DataBucketsRelative() throws IOException {
+    public void testBucketizeLocalTableS3DataS3DataBucketsRelative() throws IOException {
         insertIntoTableGordFile();
 
         //fileReader.createDirectoryIfNotExists("s3data://project/user_data/buckets/");
@@ -233,6 +237,125 @@ public class ITestS3Table {
             if (buckets != null) {
                 man.deleteBuckets(table, true, buckets.toArray(new String[buckets.size()]));
             }
+        }
+    }
+
+    private String createDictionary(String parentPath, boolean useHistory) throws IOException {
+        String dictPath = parentPath +  "/dict.gord";
+        fileReader.createDirectories(parentPath);
+        DictionaryTable dict = new DictionaryTable.Builder<>(dictPath).useHistory(useHistory).fileReader(fileReader).build();
+
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053043D").build());
+        dict.save();
+
+        return dictPath;
+    }
+
+    private String createDictionaryFolder(String parentPath, boolean useHistory) throws IOException {
+        String dictPath = parentPath +  "/dict.gord/";
+        fileReader.createDirectories(dictPath);
+        DictionaryTable dict = new DictionaryTable.Builder<>(dictPath + DEFAULT_FOLDER_DICTIONARY_NAME).useHistory(useHistory).fileReader(fileReader).build();
+
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053043D").build());
+        dict.save();
+
+        return dictPath;
+    }
+
+    @Test
+    public void testBucketizeS3TableS3DataS3Buckets() throws IOException {
+        String name = "testBucketizeS3TableS3DataS3Buckets";
+        String remoteTestDir = "s3://nextcode-unittest/tmp/" + name + "_" + UUID.randomUUID();
+        String dictPath = createDictionary(remoteTestDir, false);
+
+        try {
+            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).build();
+            Assert.assertEquals(remoteTestDir, table.getRootPath());
+
+            TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
+            man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
+
+            table.reload();
+            Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
+
+            List<String> buckets = table.getBuckets();
+            Assert.assertEquals(1, buckets.size());
+            String bucket = buckets.get(0);
+            Assert.assertTrue(table.getFileReader().exists(PathUtils.resolve(table.getRootPath(), bucket)));
+
+            String res = TestUtils.runGorPipeServer("gor " + dictPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
+            Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
+                    "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\tD3_WGC053023D\n", res);
+        } finally {
+            // Manual cleanup as this is S3.
+            fileReader.deleteDirectory(remoteTestDir);
+        }
+    }
+
+    @Test
+    public void testBucketizeS3TableFolderS3DataS3Bucket() throws IOException {
+        String name = "testBucketizeS3TableFolderS3DataS3Bucket";
+        String remoteTestDir = "s3://nextcode-unittest/tmp/" + name + "_" + UUID.randomUUID();
+        String dictPath = createDictionaryFolder(remoteTestDir, false);
+
+        try {
+            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).build();
+            Assert.assertEquals(dictPath, PathUtils.markAsFolder(table.getRootPath()));
+
+            TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
+            man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
+
+            table.reload();
+            Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
+
+            List<String> buckets = table.getBuckets();
+            Assert.assertEquals(1, buckets.size());
+            String bucket = buckets.get(0);
+            Assert.assertTrue(table.getFileReader().exists(PathUtils.resolve(table.getRootPath(), bucket)));
+
+            String res = TestUtils.runGorPipeServer("gor " + dictPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
+            Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
+                    "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\tD3_WGC053023D\n", res);
+        } finally {
+            // Manual cleanup as this is S3.
+            fileReader.deleteDirectory(remoteTestDir);
+        }
+    }
+
+    @Test
+    public void testBucketizeS3TableFolderS3DataS3BucketUsingLink() throws IOException {
+        String name = "testBucketizeS3TableFolderS3DataS3BucketUsingLink";
+        String remoteTestDir = "s3://nextcode-unittest/tmp/" + name + "_" + UUID.randomUUID();
+        String dictPath = createDictionaryFolder(remoteTestDir, false);
+
+        try {
+            Path linkPath = workDirPath.resolve("local.gord.link");
+            Files.writeString(linkPath, dictPath);
+
+            DictionaryTable table = new DictionaryTable.Builder<>(linkPath).fileReader(fileReader).build();
+            Assert.assertEquals(dictPath, PathUtils.markAsFolder(table.getRootPath()));
+
+            TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
+            man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
+
+            table.reload();
+            Assert.assertEquals("New lines should not be bucketized", 0, table.needsBucketizing().size());
+
+            List<String> buckets = table.getBuckets();
+            Assert.assertEquals(1, buckets.size());
+            String bucket = buckets.get(0);
+            Assert.assertTrue(table.getFileReader().exists(PathUtils.resolve(table.getRootPath(), bucket)));
+
+            String res = TestUtils.runGorPipeServer("gor " + linkPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
+            Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
+                    "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\tD3_WGC053023D\n", res);
+        } finally {
+            // Manual cleanup as this is S3.
+            fileReader.deleteDirectory(remoteTestDir);
         }
     }
 }

@@ -312,10 +312,10 @@ public class Dictionary {
     }
 
     private static FileReference getBucketsPath(final FileReference dictFileParent, String commonRoot) {
-        final boolean isAbsolute = Util.isAbsoluteFilePath(dictFileParent.physical);
+        final boolean isAbsolute = PathUtils.isAbsolutePath(dictFileParent.physical);
         return commonRoot == null || isAbsolute || (dictFileParent.physical + '/').startsWith(commonRoot)
                 ? dictFileParent
-                : new FileReference(dictFileParent.logical, commonRoot + dictFileParent.physical);
+                : new FileReference(dictFileParent.logical, PathUtils.resolve(commonRoot, dictFileParent.physical));
     }
 
     /**
@@ -699,7 +699,7 @@ public class Dictionary {
         while (Files.isSymbolicLink(physicalPath)) { // When dealing with symbolic links to dictionary files, use the path of the link target as parent
             try {
                 Path l = Files.readSymbolicLink(physicalPath);
-                if (!symlinkIsAbsolute && Util.isAbsoluteFilePath(l.toString())) {
+                if (!symlinkIsAbsolute && PathUtils.isAbsolutePath(l.toString())) {
                     // TODO GM: Can we refer isAcceptedAbsoluteRef (assigned from symlinkIsAbsolute) directly from resolved physicalFile
                     symlinkIsAbsolute = true;
                 } else {

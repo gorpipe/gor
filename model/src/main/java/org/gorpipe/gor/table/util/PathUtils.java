@@ -140,7 +140,10 @@ public class PathUtils {
     }
 
     public static boolean isAbsolutePath(String path) {
-        return path.startsWith("/") || path.contains("://") || path.contains("mem:");
+        return (path.length() > 0 && (path.charAt(0) == '/' || path.charAt(0) == '\\'))
+                || path.contains("://")
+                || path.contains("mem:")
+                || (path.length() > 1 && path.charAt(1) == ':');
     }
 
     public static boolean isAbsolutePath(URI path) {
