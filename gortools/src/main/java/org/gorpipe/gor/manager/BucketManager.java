@@ -690,7 +690,7 @@ public class BucketManager<T extends DictionaryEntry> {
      * @param maxBucketCount    Maximum number of buckets to generate on this call (positive integer).
      * @return buckets to be deleted.
      */
-    private Collection<String> findBucketsToDelete(TableLock lock, BucketPackLevel packLevel, int unbucketizedCount, int maxBucketCount) {
+    Collection<String> findBucketsToDelete(TableLock lock, BucketPackLevel packLevel, int unbucketizedCount, int maxBucketCount) {
         lock.assertValid();
 
         // Count active files per bucket
@@ -723,20 +723,19 @@ public class BucketManager<T extends DictionaryEntry> {
             int totalNeededNewBuckets = totalFilesNeeding / getBucketSize();
             int totalNewBuckets = Math.min(totalNeededNewBuckets, maxBucketCount);
 
-            if (totalNewBuckets == totalNeededNewBuckets) {
-                // We are creating all the needed buckets, the last bucket might have some space left in it.  Remove
-                // the smallest existing bucket to fill the new one up.
-                int totalSpaceLeftInNewBuckets = totalNewBuckets * getBucketSize() - unbucketizedCount;
+            // Remove the smallest existing buckets to fill upp the space in the new buckets.
+            int totalSpaceLeftInNewBuckets = totalNewBuckets * getBucketSize() - unbucketizedCount;
 
-                for (Map.Entry<String, Integer> entry : bucketCounts.entrySet().stream()
-                        .filter(e -> e.getValue() < getBucketSize())
-                        .sorted(Map.Entry.comparingByValue()).collect(Collectors.toList())) {
-                    if (totalSpaceLeftInNewBuckets <= 0) {
-                        break;
-                    }
-                    bucketsToDelete.add(entry.getKey());
-                    totalSpaceLeftInNewBuckets -= entry.getValue();
+            for (Map.Entry<String, Integer> entry : bucketCounts.entrySet().stream()
+                    .filter(e -> e.getValue() < getBucketSize())
+                    .sorted(Map.Entry.comparingByValue()).collect(Collectors.toList())) {
+                // We are aggressive to delete to make sure all the new buckets are full, might end up with some
+                // unbucketized entries (which is better than ending up with non full buckets)/.
+                if (totalSpaceLeftInNewBuckets <= 0) {
+                    break;
                 }
+                bucketsToDelete.add(entry.getKey());
+                totalSpaceLeftInNewBuckets -= entry.getValue();
             }
         }
 

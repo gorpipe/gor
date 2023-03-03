@@ -26,6 +26,7 @@ import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
@@ -289,6 +290,46 @@ public class UTestBucketManager {
 
         buckets = table.getBuckets();
         Assert.assertEquals("Only on bucket should be created", 1, buckets.size());
+    }
+
+    @Test
+    public void testFindBucketsToDelete() throws Exception {
+        String name = "testFindBucketsToDelete";
+
+        String dictContent =
+                "pn1.gorz|bucket1.gorz\tpn1\n" +
+                        "pn2.gorz|bucket1.gorz\tpn2\n" +
+                        "pn3.gorz|bucket1.gorz\tpn3\n" +
+                        "pn4.gorz|D|bucket1.gorz\tpn4\n" +
+                        "pn5.gorz|bucket2.gorz\tpn5\n" +
+                        "pn6.gorz|bucket2.gorz\tpn6\n" +
+                        "pn7.gorz|bucket3.gorz\tpn7\n" +
+                        "pn8.gorz|bucket3.gorz\tpn8\n" +
+                        "pn9.gorz|bucket4.gorz\tpn9\n" +
+                        "pn10.gorz|bucket4.gorz\tpn10\n" +
+                        "pn11.gorz\tpn11\n" +
+                        "pn12.gorz\tpn12\n";
+
+        Path dictPath = workDirPath.resolve("dict.gord");
+        Files.writeString(dictPath, dictContent);
+
+        DictionaryTable table = DictionaryTable.getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(2);
+        buc.setBucketSize(4);
+
+        Assert.assertEquals("",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.NO_PACKING, 2, 10).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("bucket2.gorz,bucket3.gorz,bucket4.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 2, 10).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("bucket1.gorz,bucket2.gorz,bucket3.gorz,bucket4.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.FULL_PACKING, 2, 10).stream().sorted().collect(Collectors.joining(",")));
+
+        Assert.assertEquals("bucket2.gorz,bucket3.gorz,bucket4.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 2, 2).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("bucket4.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 2, 1).stream().sorted().collect(Collectors.joining(",")));
     }
 
     @Test
