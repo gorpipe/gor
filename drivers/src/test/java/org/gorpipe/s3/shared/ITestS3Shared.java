@@ -556,7 +556,7 @@ public class ITestS3Shared {
 
         String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
 
-        Files.writeString(Path.of(gorRoot).resolve("linktest.gord.link"), "s3data://project/" + dataPath + "/thedict.gord");
+        Files.writeString(Path.of(gorRoot).resolve("linktest.gord.link"), "s3data://project/" + dataPath + "/" + DEFAULT_FOLDER_DICTIONARY_NAME);
         String result = runGorPipeServer("gor linktest.gord.link", gorRoot, securityContext);
         Assert.assertEquals(expected, result);
     }

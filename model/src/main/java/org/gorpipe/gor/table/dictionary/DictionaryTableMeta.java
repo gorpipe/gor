@@ -36,20 +36,22 @@ public class DictionaryTableMeta extends TableHeader  {
     public static final String HEADER_UNIQUE_TAGS_KEY = "UNIQUE_TAGS";
     public static final String HEADER_BUCKETIZE_KEY = "BUCKETIZE";
     public static final String HEADER_LINE_FILTER_KEY = "LINE_FILTER";    // not(-nf)
-    public static final String[] DEFULT_TABLE_HEADER = new String[] {"filepath","alias"};
-    public static final String[] DEFULT_RANGE_TABLE_HEADER = new String[] {"filepath","alias","startchrom","startpos","endchrom","endpos","tags"};
+    public static final String DEFAULT_SOURCE_COLUMN = "Source";
+    public static final String[] DEFAULT_SHORT_TABLE_HEADER = new String[] {"File", DEFAULT_SOURCE_COLUMN};
+    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", DEFAULT_SOURCE_COLUMN, "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"};
 
     public DictionaryTableMeta() {
         super();
         saveHeaderLine = true;
+        setFileHeader(DEFAULT_TABLE_HEADER);
     }
 
     @Override
     public String getProperty(String key) {
         if (HEADER_SOURCE_COLUMN_KEY.equals(key) && !headerProps.containsKey(HEADER_SOURCE_COLUMN_KEY) && isProperTableHeader()) {
             // Special treatment for source column.  If it is missing from standard probs and the header is good
-            // we retreive it from the standard column heading if it is different from the default.
-            return getFileHeader()[1] == DEFULT_TABLE_HEADER[1] ? BaseDictionaryTable.DEFAULT_SOURCE_COLUMN : getFileHeader()[1];
+            // we retrieve it from the standard column heading if it is different from the default.
+            return DEFAULT_SHORT_TABLE_HEADER[1].equals(getFileHeader()[1]) ? DEFAULT_SOURCE_COLUMN : getFileHeader()[1];
         } else {
             return super.getProperty(key);
         }
@@ -69,7 +71,7 @@ public class DictionaryTableMeta extends TableHeader  {
     @Override
     public void clear() {
         super.clear();
-        setFileHeader(DEFULT_TABLE_HEADER);
+        setFileHeader(DEFAULT_TABLE_HEADER);
     }
 }
 

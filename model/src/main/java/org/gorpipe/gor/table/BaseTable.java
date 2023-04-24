@@ -34,7 +34,7 @@ import static org.gorpipe.gor.table.util.PathUtils.*;
  * Class representing table.
  * Covers:
  * - table meta data, including basic meta data loading.
- * - building blocks/mechanism for updating table (includig support for transactions and two phase commit).
+ * - building blocks/mechanism for updating table (including support for transactions and two phase commit).
  *
  * Does not cover:
  * - Loading of data/entries

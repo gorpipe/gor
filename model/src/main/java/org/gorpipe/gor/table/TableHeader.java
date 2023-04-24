@@ -50,7 +50,7 @@ public class TableHeader extends BaseMeta {
     /**
      * Check if proper table header.
      *
-     * @return true if the table header (heador for the dict filee) is a proper header otherwise false.
+     * @return true if the table header (header for the dict file) is a proper header otherwise false.
      * Header is proper if it has defined at least 2 columns and they are not dummy.
      */
     public boolean isProperTableHeader() {

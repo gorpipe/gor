@@ -38,6 +38,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.gorpipe.gor.table.dictionary.DictionaryTableMeta.DEFAULT_SOURCE_COLUMN;
 import static org.gorpipe.gor.table.util.PathUtils.*;
 
 /**
@@ -52,7 +53,7 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
 
     private static final Logger log = LoggerFactory.getLogger(BaseDictionaryTable.class);
 
-    public static final String DEFAULT_SOURCE_COLUMN = "Source";
+
 
     private String sourceColumn = DEFAULT_SOURCE_COLUMN;     // Name of the files tag column (source column).
 
@@ -398,7 +399,10 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
 
     @Override
     public void reload() {
-        if (header == null) this.header = new DictionaryTableMeta();
+        if (header == null) {
+            this.header = new DictionaryTableMeta();
+        }
+
         if (this.tableEntries == null) this.tableEntries = createTableEntries();
         
         // Loading is split into this method and getRawlines (but we can have update in between) will that affect us?? Do we need lock (and update metadata here)
@@ -449,19 +453,6 @@ public abstract class BaseDictionaryTable<T extends DictionaryEntry> extends Bas
         this.header.setProperty(TableHeader.HEADER_LINE_COUNT_KEY, String.valueOf(tableEntries.size()));
     }
 
-    /**
-     * Initialize the gor dictionary if it does not exists.
-     */
-    @Override
-    public void initialize() {
-        super.initialize();
-
-        // If new set extra basic meta data.
-        if (!fileReader.exists(path.toString())) {
-            // TODO:  Use same columnames as specified in TableHeader.
-            ((TableHeader)this.header).setFileHeader(new String[]{"File", DEFAULT_SOURCE_COLUMN, "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"});
-        }
-    }
 
     /**
      * Add the given entries to the given bucket, done after the bucketization has been done.

@@ -37,7 +37,7 @@ public class BaseMeta {
     public static final String HEADER_COLUMNS_KEY = "COLUMNS";
 
     protected HashMap<String, String> headerProps;
-    String[] fileHeader;                     // Columns of the table it self.
+    String[] fileHeader;                     // Columns of the table itself.
     protected boolean saveHeaderLine = false;
     private String metaPathStr;
 
