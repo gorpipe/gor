@@ -74,7 +74,7 @@ public class SharedFastaReferenceSource extends SharedCachedReferenceSource impl
             var name = sequenceRecord.getContig();
             ReferenceSequence sequence = null;
             try {
-                sequence = rsFile.getSubsequenceAt(name, zeroBasedStart+1, zeroBasedStart+1+requestedRegionLength);
+                sequence = rsFile.getSubsequenceAt(name, zeroBasedStart + 1, zeroBasedStart + requestedRegionLength);
             } catch (final SAMException e) {
                 // the only way to test if rsFile contains the sequence is to try and catch exception.
                 log.warn("Sequence not found: " + name);
