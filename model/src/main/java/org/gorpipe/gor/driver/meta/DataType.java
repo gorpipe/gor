@@ -102,6 +102,14 @@ public enum DataType {
         return PathUtils.stripTrailingSlash(file.trim()).toLowerCase().endsWith(type.suffix);
     }
 
+    private static boolean isLinkToType(String file, DataType type) {
+        return PathUtils.stripTrailingSlash(file.trim()).toLowerCase().endsWith(type.suffix + DataType.LINK.suffix);
+    }
+
+    public static boolean isOfTypeOrLinksToType(String file, DataType type) {
+        return isOfType(file, type) || isLinkToType(file, type);
+    }
+
     public static boolean containsType(String file, DataType type) {
         return file.trim().toLowerCase().contains(type.suffix);
     }
