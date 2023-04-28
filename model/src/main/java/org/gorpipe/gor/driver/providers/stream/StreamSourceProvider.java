@@ -40,8 +40,8 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.driver.utils.RetryHandler;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
-
-import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.model.RowBase;
+import org.gorpipe.gor.util.DynamicRowIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,9 +132,10 @@ public abstract class StreamSourceProvider implements SourceProvider {
         if (path.length() < 10000) {
             path = path.trim();
             // Figure out if relative path. Assume all relative paths have no colon and don't start with /
-            if (!PathUtils.isAbsolutePath(path)) {
-                // Allow relative links:
-                path = PathUtils.resolve(PathUtils.getParent(source.getName()), path);
+            if (!source.getSourceType().isAbsolutePath(path)) {
+                throw new IllegalArgumentException("Link file " + source.getName() + " contains relative path: " + path);
+                // Allow relative links:  Just commented out if we would like to re-enable them.
+                // path = source.getSourceType().resolveRelativePath(source.getName(), path);
             }
             return path;
         } else {

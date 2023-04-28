@@ -145,8 +145,14 @@ public class UTestDriverBackedSecureFileReader {
         Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke2Content));
 
         // Test standard link file (relative path).
-        final String[] linke3Content = reader.readAll(link3.toString());
-        Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content));
+        try {
+            final String[] linke3Content = reader.readAll(link3.toString());
+            Assert.fail("Relative links should not be allowed");
+        } catch (GorResourceException ex) {
+            //ok
+        }
+        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
+        //Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content));
 
         // Read form link file.
         try (Stream<String> r = reader.readFile(link2.toString().replace(DataType.LINK.suffix, ""))) {
@@ -176,8 +182,14 @@ public class UTestDriverBackedSecureFileReader {
         }
 
         // Test standard link file (relative path).
-        final String[] linke3Content2 = reader.readAll(link3name);
-        Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content2));
+        try {
+            final String[] linke3Content2 = reader.readAll(link3name);
+            Assert.fail("Relative links should not be allowed");
+        } catch (GorResourceException ex) {
+            //ok
+        }
+        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
+        // Assert.assertEquals(Arrays.toString(fileContent), Arrays.toString(linke3Content2));
 
         // Test fallback link file if absolute paths not allowed.
         Assert.assertEquals(

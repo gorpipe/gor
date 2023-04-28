@@ -10,27 +10,32 @@ public class DataUtil {
     }
 
     public static boolean isGord(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.GORD);
+        return DataType.isOfType(file, DataType.GORD) || isGordLink(file);
+    }
+
+    public static boolean isGordLink(String file) {
+        return DataType.isOfType(file, DataType.LINK)
+                && DataType.isOfType(file.substring(0, file.length() - DataType.LINK.suffix.length()), DataType.GORD);
     }
 
     public static boolean isGor(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.GOR);
+        return DataType.isOfType(file, DataType.GOR);
     }
 
     public static boolean isGorz(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.GORZ);
+        return DataType.isOfType(file, DataType.GORZ);
     }
 
     public static boolean isNord(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.NORD);
+        return DataType.isOfType(file, DataType.NORD);
     }
 
     public static boolean isNor(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.NOR);
+        return DataType.isOfType(file, DataType.NOR);
     }
 
     public static boolean isNorz(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.NORZ);
+        return DataType.isOfType(file, DataType.NORZ);
     }
 
     public static boolean isNorSource(String file) {
@@ -40,11 +45,11 @@ public class DataUtil {
     }
 
     public static boolean isTxt(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.TXT);
+        return DataType.isOfType(file, DataType.TXT);
     }
 
     public static boolean isTsv(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.TSV);
+        return DataType.isOfType(file, DataType.TSV);
     }
 
     public static boolean isAnyCsv(String file) {
@@ -57,19 +62,19 @@ public class DataUtil {
     }
 
     public static boolean isMeta(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.META);
+        return DataType.isOfType(file, DataType.META);
     }
 
     public static boolean isRScript(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.R);
+        return DataType.isOfType(file, DataType.R);
     }
 
     public static boolean isShellScript(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.SH);
+        return DataType.isOfType(file, DataType.SH);
     }
 
     public static boolean isPythonScript(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.PY);
+        return DataType.isOfType(file, DataType.PY);
     }
 
     public static boolean isYml(String file) {
@@ -81,18 +86,18 @@ public class DataUtil {
     }
 
     public static boolean isParquet(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.PARQUET);
+        return DataType.isOfType(file, DataType.PARQUET);
     }
 
     public static boolean isBam(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.BAM);
+        return DataType.isOfType(file, DataType.BAM);
     }
 
     public static boolean isCram(String file) {
-        return DataType.isOfTypeOrLinksToType(file, DataType.CRAM);
+        return DataType.isOfType(file, DataType.CRAM);
     }
 
-    public static boolean isBgen(String file) { return DataType.isOfTypeOrLinksToType(file, DataType.BGEN); }
+    public static boolean isBgen(String file) { return DataType.isOfType(file, DataType.BGEN); }
 
     public static boolean isAnyVcf(String file) {
         return DataType.isOfType(file, DataType.VCF)

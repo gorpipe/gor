@@ -277,24 +277,6 @@ public class UTestNor {
         Assert.assertFalse(results2.contains(gorRoot));
     }
 
-    @Test
-    public void testNorReadingGorz() {
-        String result = TestUtils.runGorPipe("nor ../tests/data/gor/dbsnp_test.gorz | top 1");
-        Assert.assertEquals("ChromNOR\tPosNOR\tChrom\tPOS\treference\tallele\trsIDs\n" +
-                "chrN\t0\tchr1\t10179\tC\tCC\trs367896724\n", result);
-    }
-    @Test
-    public void testNorReadingGorzWithLink() throws IOException {
-        Path workDir = projectDir.getRoot().toPath();
-        Path gorzFile = Path.of("../tests/data/gor/dbsnp_test.gorz");
-        Path linkFile = workDir.resolve("test.gorz.link");
-        Files.writeString(linkFile, gorzFile.toAbsolutePath().toString());
-
-        String result = TestUtils.runGorPipe(String.format("nor %s | top 1", linkFile.toAbsolutePath()));
-        Assert.assertEquals("ChromNOR\tPosNOR\tChrom\tPOS\treference\tallele\trsIDs\n" +
-                "chrN\t0\tchr1\t10179\tC\tCC\trs367896724\n", result);
-    }
-
     private int getDepthRangeFromIterator(GenomicIterator iterator) {
         int minDepth = Integer.MAX_VALUE;
         int maxDepth = Integer.MIN_VALUE;
