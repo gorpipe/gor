@@ -152,14 +152,8 @@ public class UTestGorDriver {
 
     @Test
     public void testRelativeLinkFiles() {
-        try {
-            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile("/relative_link_to_lines_2000", DataType.TXT)));
-            Assert.fail("Relative links should not be allowed");
-        } catch (GorResourceException e) {
-            // Ok
-        }
-        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
-        // Assert.assertEquals("http://127.0.0.1:"+port+"/lines_2000.txt", source.getName());
+        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile("/relative_link_to_lines_2000", DataType.TXT)));
+        Assert.assertEquals("http://127.0.0.1:"+port+"/lines_2000.txt", source.getName());
     }
 
     @Test
@@ -170,25 +164,14 @@ public class UTestGorDriver {
 
     @Test
     public void testRelativeLinkAutoDiscovery() throws IOException {
-        try {
-            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toFile("/relative_link_to_lines_2000", DataType.TXT)));
-        } catch (GorResourceException e) {
-            // Ok
-        }
-        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
-        // Assert.assertEquals("http://127.0.0.1:"+port+"/lines_2000.txt", source.getName());
+        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toFile("/relative_link_to_lines_2000", DataType.TXT)));
+        Assert.assertEquals("http://127.0.0.1:"+port+"/lines_2000.txt", source.getName());
     }
 
     @Test
     public void testRelativeSubdir() throws IOException {
-        try {
-            DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile( "/relative_link_to_subdir", DataType.TXT)));
-            Assert.fail("Relative links should not be allowed");
-        } catch (GorResourceException e) {
-            // Ok
-        }
-        // Expected result if allow relative links:  Just commented out if we would like to re-enable them.
-        // Assert.assertEquals("http://127.0.0.1:"+port+"/subdir/lines_1000.txt", source.getName());
+        DataSource source = gorDriver.getDataSource(new SourceReference("http://127.0.0.1:" + port + DataUtil.toLinkFile( "/relative_link_to_subdir", DataType.TXT)));
+        Assert.assertEquals("http://127.0.0.1:"+port+"/subdir/lines_1000.txt", source.getName());
     }
 
     @Test
