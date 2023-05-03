@@ -112,10 +112,10 @@ object CalcFunctions {
     try {
       ex1(cvp).toString
     } catch {
-      case e: GorParsingException =>
-        val emessage = e.getMessage
-        if (emessage != null) ex2(cvp).replace("#{e}", emessage)
-        else ex2(cvp)
+      case e: Throwable =>
+        val message = e.getMessage
+        if (message != null) ex2(cvp).replace("#{e}", message)
+        else ex2(cvp).replace("#{e}", e.toString)
     }
   }
 
