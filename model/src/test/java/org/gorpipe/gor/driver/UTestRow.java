@@ -22,9 +22,19 @@
 
 package org.gorpipe.gor.driver;
 
+import gorsat.TestUtils;
+import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 public class UTestRow {
 
@@ -42,5 +52,17 @@ public class UTestRow {
         row = RowObj.StoR("chr1\t117\tcolx\tcolxx\tcolxxx");
         row.removeColumn(4);
         assert row.toString().equals("chr1\t117\tcolx\tcolxx");
+    }
+
+    @Test
+    public void testParsingInfValueAtEndOfLine() throws IOException {
+        File testFile = Files.createTempFile("genes", DataType.TSV.suffix).toFile();
+        testFile.deleteOnExit();
+        FileUtils.writeStringToFile(testFile, "#ID1\tSID1\tID2\tSID2\tNSNP\tHETHET\tIBS0\tKINSHIP\n" +
+                "GD513848301\tGD513848301\tGD504132801\tGD504132801\t417724\t0.192575\t0.0947516\t-inf", Charset.defaultCharset());
+
+        String query = String.format("nor %s | rename id1 PN | rename id2 PN2 | hide sid1,sid2 | where kinship > 0.0441", testFile);
+        TestUtils.runGorPipe(query);
+        // No exception
     }
 }

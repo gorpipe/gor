@@ -116,7 +116,7 @@ object RowObj {
     }
     if (len >= 4) {
       if (str.charAt(start) == '-' && (str.charAt(start + 1) == 'I' || str.charAt(start + 1) == 'i') && (str.charAt(start + 2) == 'N' ||
-        str.charAt(start + 2) == 'n') && (str.charAt(start + 3) == 'F' || str.charAt(start + 4) == 'f')) return Double.NegativeInfinity
+        str.charAt(start + 2) == 'n') && (str.charAt(start + 3) == 'F' || str.charAt(start + 3) == 'f')) return Double.NegativeInfinity
     }
     str.subSequence(start, stop).toString.toDouble
   }
