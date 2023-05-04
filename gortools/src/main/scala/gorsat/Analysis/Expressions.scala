@@ -53,7 +53,7 @@ trait Expressions {
       } catch {
         case e: GorParsingException =>
           val msg = s"Error in step: $cmd $newColumns ${exprSrc.mkString(",")}\n${e.getMessage}"
-          throw new GorDataException(msg, -1, rowHeader.toString, "Null row", e)
+          throw new GorDataException(msg, -1, rowHeader.toString, "All rows.", e)
       }
     })
   }

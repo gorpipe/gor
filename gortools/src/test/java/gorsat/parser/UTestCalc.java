@@ -23,6 +23,7 @@
 package gorsat.parser;
 
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -161,6 +162,51 @@ public class UTestCalc {
         Float[] f = {100.123F, 200.123F};
         String actualConditions = validateAllLogicalOperators(f);
         Assert.assertEquals("Logical operator in the IF() condition is out of bounds for float: ", "[1, 1, 1, 1, 2, 2, 2]", actualConditions);
+    }
+
+    @Test
+    public void testWrongTypeParsingDataErrors() {
+        try {
+            TestUtils.runGorPipe("gorrow 1,1 | calc e chrom + 1");
+            Assert.fail("Should throw exception");
+        } catch (GorDataException ex) {
+            Assert.assertEquals("org.gorpipe.exceptions.GorDataException: Error in step: CALC e chrom + 1\n" +
+                    "Expression compiled as String\n" +
+                    "Invalid String variable name: 1. Did you mean: pos?\n" +
+                    "chrom + 1\n" +
+                    "chrom + 1 <-- \n" +
+                    "Header: chrom\tpos\n" +
+                    "Row: All rows.\n",  ex.toString());
+        } catch (Exception ex) {
+            Assert.fail("Should throw GorDataException");
+        }
+    }
+
+    @Test
+    public void testWrongTypeRunningDataErrors() {
+        try {
+            TestUtils.runGorPipe("gorrows -p chr1:1-10002 | calc v if (pos > 10000, 'ABC', '1') | calc e float(v)");
+            Assert.fail("Should throw exception");
+        } catch (GorDataException ex) {
+            Assert.assertEquals("org.gorpipe.exceptions.GorDataException: Error in step: CALC e float(v)\n" +
+                            "'ABC' is not a valid number\n" +
+                            "Header: chrom\tpos\tv\n" +
+                            "Row: chr1\t10001\tABC\n", ex.toString());
+        } catch (Exception ex) {
+            Assert.fail("Should throw GorDataException");
+        }
+    }
+
+    @Test
+    public void testInvalidArithmaticDataErrors() {
+        String result = TestUtils.runGorPipe("gorrow 1,1 | calc e 1/0");
+        Assert.assertEquals("chrom\tpos\te\n" +
+                "chr1\t1\tInfinity\n", result);
+
+        result = TestUtils.runGorPipe("gorrow 1,1 | calc e log(-1)");
+        Assert.assertEquals("chrom\tpos\te\n" +
+                "chr1\t1\tNaN\n", result);
+
     }
 
     /**
