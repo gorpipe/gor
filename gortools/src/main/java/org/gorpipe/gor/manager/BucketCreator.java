@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Helper class to create bucket files from bucket descriptions.
@@ -44,8 +45,9 @@ public interface BucketCreator<T extends DictionaryEntry> {
      * @param bucketsToCreate map with bucket name to table entries, representing the buckets to be created.
      * @param absBucketDir    absolute path to the bucket dir, where bucket files should be put.  It temp folders are to be used they should
      *                        be created in this dir (for fast file move).
+     * @param callback        callback to be called when a bucket has been created.  The argument is the name of the bucket.
      */
     void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate,
-                                   URI absBucketDir) throws IOException;
+                                   URI absBucketDir, Consumer<String> callback) throws IOException;
 
 }

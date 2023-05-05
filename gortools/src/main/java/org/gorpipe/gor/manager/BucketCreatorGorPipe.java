@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -54,12 +55,19 @@ public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCr
     }
 
     @Override
-    public void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate, URI absBucketDir)
+    public void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate,
+                                          URI absBucketDir, Consumer<String> callback)
             throws IOException {
 
         // Build the gor query (gorpipe)
         String gorPipeCommand = createBucketizeGorCommandForBucketDir(bucketsToCreate, absBucketDir, table);
         GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, workers, table.getProjectPath(), table.getSecurityContext());
+
+        // Call the callback for each bucket created.
+        for (Map.Entry<String, List<T>> b2c : bucketsToCreate.entrySet()) {
+            String bucket = b2c.getKey();
+            callback.accept(bucket);
+        }
     }
 
     private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, URI absBucketDir, BaseDictionaryTable<T> table) {

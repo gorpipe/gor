@@ -194,7 +194,30 @@ public class BucketManager<T extends DictionaryEntry> {
     public void deleteBuckets(String... buckets) {
         deleteBuckets(false, buckets);
     }
-    
+
+    /**
+     * Check if table needs bucketizing (new buckets, full packing or consolidation)
+     * @param packLevel     pack level to consider.
+     * @return true if we should call bucketize for this table.
+     */
+    public boolean needsBucketizing(BucketManager.BucketPackLevel packLevel) {
+        int unbucketizedCount = table.needsBucketizing().size();
+        if (unbucketizedCount >= getMinBucketSize()) {
+            return true;
+        }
+
+        Map<String, Integer> bucketCounts = getBucketCountsMap();
+        int totalFilesNeedingNewBucket = bucketCounts.values().stream().filter(i -> i < getBucketSize()).mapToInt(Integer::intValue).sum();
+        if (packLevel == BucketPackLevel.FULL_PACKING) {
+            return totalFilesNeedingNewBucket > 0;
+        } else if (packLevel == BucketPackLevel.CONSOLIDATE) {
+            return totalFilesNeedingNewBucket + unbucketizedCount > getBucketSize();
+        }
+
+        return false;
+    }
+
+
     /**
      * Delete the given buckets.
      *
@@ -281,7 +304,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 .collect(Collectors.toList());
     }
 
-    private void checkBucketDirExistance(URI bucketDir) {
+    private void checkBucketDirExistence(URI bucketDir) {
         // Create the default bucket dir (if it is to be used and is missing)
         if (!table.getFileReader().exists(bucketDir.toString())) {
             URI fullPathDefaultBucketDir = table.getRootUri().resolve(getDefaultBucketDir().toString());
@@ -416,6 +439,17 @@ public class BucketManager<T extends DictionaryEntry> {
         return newBucketsMap.size();
     }
 
+    /**
+     * Create bucket files using gorpipe.
+     *
+     * NOTE:  We run gorpipe and a temp folder on the same drive as the final destination so the move to that
+     *        destination is fast.
+     *
+     * @param tempTable
+     * @param bucketDir
+     * @param newBucketsMap map with bucket name to table entries, representing the buckets to be created.
+     * @throws IOException
+     */
     private void doBucketizeForBucketDir(BaseDictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap) throws IOException {
         Map<String, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
@@ -423,13 +457,10 @@ public class BucketManager<T extends DictionaryEntry> {
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        createBucketFilesForBucketDir(tempTable, newBucketsMapForBucketDir, getAbsoluteBucketDir(bucketDir));
-
-        // Move files and update dictionary.
-        for (String bucket : newBucketsMapForBucketDir.keySet()) {
-            List<T> bucketEntries = newBucketsMapForBucketDir.get(bucket);
-            updateTableWithNewBucket(table, bucket, bucketEntries);
-        }
+        URI absBucketDir = getAbsoluteBucketDir(bucketDir);
+        checkBucketDirExistence(absBucketDir);
+        bucketCreator.createBucketsForBucketDir(tempTable, newBucketsMapForBucketDir, absBucketDir,
+                bucket -> updateTableWithNewBucket(table, bucket, newBucketsMapForBucketDir.get(bucket)));
     }
 
     private URI getAbsoluteBucketDir(String bucketDir) throws IOException {
@@ -694,11 +725,7 @@ public class BucketManager<T extends DictionaryEntry> {
         lock.assertValid();
 
         // Count active files per bucket
-        Map<String, Integer> bucketCounts = new HashMap<>();
-        table.selectAll().stream().filter(l -> l.hasBucket())
-                .forEach(l -> {
-                    bucketCounts.put(l.getBucket(), bucketCounts.getOrDefault(l.getBucket(), 0) + (!l.isDeleted() ? 1 : 0));
-                });
+        Map<String, Integer> bucketCounts = getBucketCountsMap();
 
         // Handle buckets were all files have beeen deleted.
 
@@ -740,6 +767,15 @@ public class BucketManager<T extends DictionaryEntry> {
         }
 
         return bucketsToDelete;
+    }
+
+    private Map<String, Integer> getBucketCountsMap() {
+        Map<String, Integer> bucketCounts = new HashMap<>();
+        table.selectAll().stream().filter(l -> l.hasBucket())
+                .forEach(l -> {
+                    bucketCounts.put(l.getBucket(), bucketCounts.getOrDefault(l.getBucket(), 0) + (!l.isDeleted() ? 1 : 0));
+                });
+        return bucketCounts;
     }
 
     /**
@@ -789,21 +825,6 @@ public class BucketManager<T extends DictionaryEntry> {
         return bucketsToCreate;
     }
 
-    /**
-     * Create bucket files using gorpipe.
-     *
-     * NOTE:  We run gorpipe and a temp folder on the same drive as the final destination so the move to that
-     *        destination is fast.
-     *
-     * @param table
-     * @param bucketsToCreate map with bucket name to table entries, representing the buckets to be created.
-     * @param absBucketDir
-     * @throws IOException
-     */
-    private void createBucketFilesForBucketDir(BaseDictionaryTable table, Map<String, List<T>> bucketsToCreate, URI absBucketDir) throws IOException {
-        checkBucketDirExistance(absBucketDir);
-        bucketCreator.createBucketsForBucketDir(table, bucketsToCreate, absBucketDir);
-    }
 
     public static final class Builder<T extends DictionaryEntry> {
         private final BaseDictionaryTable<T> table;

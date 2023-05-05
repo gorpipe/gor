@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Test class for basi ctable and entry unit tests.
+ * Test class for base table and entry unit tests.
  * <p>
  * Created by gisli on 14/11/2016.
  */

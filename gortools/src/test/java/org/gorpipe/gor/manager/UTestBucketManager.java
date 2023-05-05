@@ -151,7 +151,7 @@ public class UTestBucketManager {
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
         buc.setBucketSize(50);
-        
+
         // Initial bucketize.
 
         int bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1000);
@@ -330,6 +330,66 @@ public class UTestBucketManager {
                 buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 2, 2).stream().sorted().collect(Collectors.joining(",")));
         Assert.assertEquals("bucket4.gorz",
                 buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 2, 1).stream().sorted().collect(Collectors.joining(",")));
+    }
+
+    @Test
+    public void testFindBucketsToDeleteConsolidateEagernessOne() throws Exception {
+        String dictContent =
+                "pn1.gorz|bucket1.gorz\tpn1\n" +
+                        "pn2.gorz|bucket1.gorz\tpn2\n" +
+                        "pn3.gorz|bucket1.gorz\tpn3\n" +
+                        "pn4.gorz|bucket1.gorz\tpn4\n" +
+                        "pn5.gorz|bucket2.gorz\tpn5\n" +
+                        "pn6.gorz|bucket2.gorz\tpn6\n" +
+                        "pn7.gorz\tpn7\n";
+
+        Path dictPath = workDirPath.resolve("dict.gord");
+        Files.writeString(dictPath, dictContent);
+
+        DictionaryTable table = DictionaryTable.getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(2);
+        buc.setBucketSize(4);
+
+        Assert.assertEquals("",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.NO_PACKING, 1, 10).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 1, 10).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("bucket2.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.FULL_PACKING, 1, 10).stream().sorted().collect(Collectors.joining(",")));
+    }
+
+    @Test
+    public void testFindBucketsToDeleteConsolidateEagernessMany() throws Exception {
+        String dictContent =
+                "pn1.gorz|bucket1.gorz\tpn1\n" +
+                        "pn2.gorz|bucket1.gorz\tpn2\n" +
+                        "pn3.gorz|bucket1.gorz\tpn3\n" +
+                        "pn4.gorz|bucket1.gorz\tpn4\n" +
+                        "pn5.gorz|bucket2.gorz\tpn5\n" +
+                        "pn6.gorz|bucket2.gorz\tpn6\n" +
+                        "pn5.gorz|bucket3.gorz\tpn5\n" +
+                        "pn6.gorz|bucket3.gorz\tpn6\n" +
+                        "pn5.gorz|bucket4.gorz\tpn5\n" +
+                        "pn6.gorz|bucket4.gorz\tpn6\n" +
+                        "pn7.gorz\tpn7\n";
+
+        Path dictPath = workDirPath.resolve("dict.gord");
+        Files.writeString(dictPath, dictContent);
+
+        DictionaryTable table = DictionaryTable.getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(2);
+        buc.setBucketSize(4);
+
+        Assert.assertEquals("",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.NO_PACKING, 1, 10).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("bucket3.gorz,bucket4.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.CONSOLIDATE, 1, 10).stream().sorted().collect(Collectors.joining(",")));
+        Assert.assertEquals("bucket2.gorz,bucket3.gorz,bucket4.gorz",
+                buc.findBucketsToDelete(new NoTableLock(table, ""), BucketManager.BucketPackLevel.FULL_PACKING, 1, 10).stream().sorted().collect(Collectors.joining(",")));
     }
 
     @Test
