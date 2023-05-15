@@ -3,10 +3,9 @@ package org.gorpipe.gor.table.files;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
+import org.gorpipe.gor.table.livecycle.TableBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URI;
 
 /**
  * Table class representing gor file (gor/gorz)
@@ -18,15 +17,15 @@ public class GorTable<T extends Row> extends FileTable<T> {
 
     private static final Logger log = LoggerFactory.getLogger(GorTable.class);
 
-    public GorTable(Builder builder) {
+    public GorTable(TableBuilder builder) {
         super(builder);
     }
 
-    public GorTable(URI uri, FileReader inputFileReader) {
+    public GorTable(String uri, FileReader inputFileReader) {
         super(uri, inputFileReader);
     }
 
-    public GorTable(URI uri) {
+    public GorTable(String uri) {
         this(uri, null);
     }
 
@@ -47,4 +46,6 @@ public class GorTable<T extends Row> extends FileTable<T> {
         return String.format("%s %s %s %s | write %s", getGorCommand(), mainFileString, String.join(" ", insertFiles),
                 getPostProcessing(), outFile);
     }
+
+
 }

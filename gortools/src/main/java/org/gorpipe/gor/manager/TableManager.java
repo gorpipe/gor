@@ -25,9 +25,8 @@ package org.gorpipe.gor.manager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.TableFilter;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
@@ -36,7 +35,6 @@ import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
@@ -71,9 +69,6 @@ public class TableManager {
 
     // Members
 
-    private boolean useHistory = true;
-    private boolean validateFiles = true;
-
     // TODO:  This is passed on to the tables, so ALL the tables must share the same security context so the tm can
     // not be used for different projects.
     private FileReader fileReader;
@@ -102,8 +97,6 @@ public class TableManager {
         if (builder.minBucketSize > 0) {
             setMinBucketSize(builder.minBucketSize);
         }
-        this.useHistory = builder.useHistory;
-        this.validateFiles = builder.validateFiles;
         this.fileReader = builder.fileReader;
     }
 
@@ -150,16 +143,15 @@ public class TableManager {
      * @param path path to the table.
      * @return the table given by {@code path}.
      */
-    public BaseDictionaryTable initTable(String path) {
+    public DictionaryTable initTable(String path) {
         if (DataUtil.isGord(path)) {
-            return new DictionaryTable.Builder<>(URI.create(path)).useHistory(this.useHistory)
-                    .fileReader(fileReader).validateFiles(this.validateFiles).build();
+            return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
         } else {
             throw new RuntimeException("BaseTable of type " + path + " are not supported!");
         }
     }
 
-    public BaseDictionaryTable initTable(Path path) {
+    public DictionaryTable initTable(Path path) {
         return initTable(path.toString());
     }
 
@@ -172,7 +164,7 @@ public class TableManager {
      * @param entries   Files/lines to insert.
      */
     public void insert(String tableFile, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         insert(table, packLevel, workers, entries);
     }
 
@@ -184,7 +176,7 @@ public class TableManager {
      * @param workers   number of workers to use for bucketization (if needed).
      * @param entries   Files/lines to insert.
      */
-    public void insert(BaseDictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
+    public void insert(DictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers, DictionaryEntry... entries) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.insert(entries);
             trans.commit();
@@ -198,7 +190,7 @@ public class TableManager {
      * @param packLevel pack level to use (see BucketPackLevel).
      * @param workers   number of workers to use for bucketization (if needed).
      */
-    public void save(BaseDictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers) {
+    public void save(DictionaryTable table, BucketManager.BucketPackLevel packLevel, int workers) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             trans.commit();
         }
@@ -212,7 +204,7 @@ public class TableManager {
      */
     public void delete(String tableFile, DictionaryEntry... entries) {
         System.err.println("Deleting entries: " + entries.length);
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.delete(entries);
             trans.commit();
@@ -227,7 +219,7 @@ public class TableManager {
      */
     public void delete(String tableFile, TableFilter entries) {
         System.err.println("Deleting entries2: " + entries);
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             table.delete(entries.get());
             trans.commit();
@@ -250,7 +242,7 @@ public class TableManager {
      * @return entries from the table, matching the given criteria.
      */
     public List<? extends DictionaryEntry> select(String tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         return table.filter()
                 .files(files)
                 .aliases(aliases)
@@ -269,14 +261,14 @@ public class TableManager {
      * @return all entries from table as a collection.
      */
     public Collection<? extends DictionaryEntry> selectAll(String tableFile) {
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             return table.selectAll();
         }
     }
 
     public void print(TableFilter lines) {
-        BaseDictionaryTable table = lines.getTable();
+        DictionaryTable table = lines.getTable();
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             for (Object line : lines.get()) {
                 System.out.print(((DictionaryEntry) line).formatEntry());
@@ -294,7 +286,7 @@ public class TableManager {
      * @param bucketDirs     array of directories to bucketize to, ignored if null.  The dirs are absolute or relative to the table dir.
      */
     public void bucketize(String tableFile, BucketManager.BucketPackLevel packLevel, int workers, int maxBucketCount, List<String> bucketDirs) {
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
                 .bucketSize(this.bucketSize)
@@ -312,7 +304,7 @@ public class TableManager {
      * @param force     force clean up (ignore grace periods).
      * @param buckets   list of buckets to be deleted.
      */
-    public void deleteBuckets(BaseDictionaryTable table, boolean force, String... buckets) {
+    public void deleteBuckets(DictionaryTable table, boolean force, String... buckets) {
         BucketManager.newBuilder(table)
                 .lockTimeout(this.lockTimeout)
                 .bucketSize(this.bucketSize)
@@ -329,7 +321,7 @@ public class TableManager {
      * @param buckets   list of buckets to be deleted.
      */
     public void deleteBuckets(String tableFile, String... buckets) {
-        BaseDictionaryTable table = initTable(tableFile);
+        DictionaryTable table = initTable(tableFile);
         deleteBuckets(table, false, buckets);
     }
 
@@ -363,8 +355,6 @@ public class TableManager {
         private Class<? extends TableLock> lockType = null;
         private int minBucketSize = -1;
         private int bucketSize = -1;
-        private boolean useHistory = true;
-        private boolean validateFiles = true;
         private FileReader fileReader;
 
         private Builder() {
@@ -387,16 +377,6 @@ public class TableManager {
 
         public Builder bucketSize(int val) {
             bucketSize = val;
-            return this;
-        }
-
-        public Builder useHistory(boolean val) {
-            useHistory = val;
-            return this;
-        }
-
-        public Builder validateFiles(boolean val) {
-            validateFiles = val;
             return this;
         }
 

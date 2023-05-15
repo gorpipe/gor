@@ -5,12 +5,12 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
+import org.gorpipe.gor.table.livecycle.TableBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 
 /**
  * Table class representing nor file.
@@ -21,15 +21,15 @@ public class NorTable<T extends Row> extends FileTable<T> {
 
     private static final Logger log = LoggerFactory.getLogger(NorTable.class);
 
-    public NorTable(Builder builder) {
+    public NorTable(TableBuilder builder) {
         super(builder);
     }
 
-    public NorTable(URI uri, FileReader inputFileReader) {
+    public NorTable(String uri, FileReader inputFileReader) {
         super(uri, inputFileReader);
     }
 
-    public NorTable(URI uri) {
+    public NorTable(String uri) {
         this(uri, null);
     }
 

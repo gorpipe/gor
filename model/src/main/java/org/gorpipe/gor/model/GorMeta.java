@@ -24,6 +24,10 @@ public class GorMeta extends BaseMeta {
         return meta;
     }
 
+    public GorMeta() {
+        super();
+    }
+
     // TODO:  Should really collect these stats on the stats object and only store reuslts in this object.
 
     String minChr = null;

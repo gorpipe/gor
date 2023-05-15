@@ -23,14 +23,10 @@
 package org.gorpipe.gor.manager;
 
 import org.gorpipe.gor.table.GorPipeUtils;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -39,8 +35,6 @@ import java.util.stream.Collectors;
  * Helper class to create bucket file from bucket description.
  */
 public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCreator<T>  {
-
-    private static final Logger log = LoggerFactory.getLogger(BucketCreatorGorPipe.class);
 
     public static final int DEFAULT_NUMBER_WORKERS = 4;
 
@@ -55,9 +49,8 @@ public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCr
     }
 
     @Override
-    public void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate,
-                                          URI absBucketDir, Consumer<String> callback)
-            throws IOException {
+    public void createBucketsForBucketDir(DictionaryTable table, Map<String, List<T>> bucketsToCreate,
+                                          String absBucketDir, Consumer<String> callback) {
 
         // Build the gor query (gorpipe)
         String gorPipeCommand = createBucketizeGorCommandForBucketDir(bucketsToCreate, absBucketDir, table);
@@ -70,7 +63,7 @@ public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCr
         }
     }
 
-    private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, URI absBucketDir, BaseDictionaryTable<T> table) {
+    private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, String absBucketDir, DictionaryTable table) {
         // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
         // Tag based, does not work if we are adding more files with same alias, why not?.
         StringBuilder sb = new StringBuilder();

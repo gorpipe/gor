@@ -15,7 +15,6 @@ package org.gorpipe.gor.table.dictionary;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.table.util.GenomicRange;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -34,7 +33,7 @@ public class DictionaryRawEntry extends DictionaryEntry {
     protected String[] tags = TableEntry.EMPTY_TAGS_LIST;                       // For performance use string array.
     protected GenomicRange range;
 
-    private DictionaryRawEntry(String rawLine, URI rootUri) {
+    private DictionaryRawEntry(String rawLine, String rootUri) {
         super(null, rootUri, null, null, null, null, false, false);
         this.rawLine = rawLine;
         this.rawColumns = new RowParser(rawLine, '\t', 7, 0);
@@ -53,14 +52,13 @@ public class DictionaryRawEntry extends DictionaryEntry {
     /**
      * Parse entry from dict file.
      * Assumes the entry has been created by us, i.e. paths normalized etc.
-     *
      * NOTE:  invoked through reflection.
      *
      * @param line          the line to parse.
      * @param rootUri       root URI to resolve relative paths.
      * @return new entry from the entryString
      */
-    public static DictionaryRawEntry parseEntry(String line, URI rootUri) {
+    public static DictionaryRawEntry parseEntry(String line, String rootUri) {
         return new DictionaryRawEntry(line, rootUri);
     }
 

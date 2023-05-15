@@ -22,141 +22,276 @@
 
 package org.gorpipe.gor.table.dictionary;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.meta.SourceMetadata;
+import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.table.*;
+import org.gorpipe.gor.table.livecycle.TableBuilder;
+import org.gorpipe.gor.table.livecycle.TableTwoPhaseCommitSupport;
+import org.gorpipe.gor.table.util.TableLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.URI;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 
+import static org.gorpipe.gor.table.util.PathUtils.*;
+
 /**
- * Class representing GOR Dictionary
- * <p>
- * Created by gisli on 23/08/16.
- * <p>
- * Format of the gord dictionary file
- * <p>
- * {@literal [<meta-information lines>]}
- * {@literal [<header line>]}
- * {@literal <data lines>}
- * <p>
- * The format of the meta-information lines is:
- * <p>
- * {@literal [## <key>=<value>]}
- * ...
- * <p>
- * <p>
- * {@literal <key>       Attribute name.  Not case sensitive.}
- * {@literal <value>     Attribute value.}
- * <p>
- * Reserved key values are:
- * <p>
- * fileformat      - Version of the file format.
- * created         - Creation date of the file
- * build           - Reference data build version.
- * columns         - Column definition for the gor files in the dictionary.
- * sourceColumn    - Name of the source column.
- * <p>
- * Format of the header line is:
- * <p>
- * {@literal [# <column name 1>\t<column name 2>\t<column name 3> ...]}
- * <p>
- * <p>
- * Each data line is a tab separated list of columns, described as:
- * <p>
- * {@literal <file>[[|<flags>]|<bucket>][\t<alias>[\t<startchrom>\t<startpos>\t<endchrom>\t<endpos>\t[tags]]]}
- * <p>
- * where:
- * <p>
- * {@literal <file>              Abosolute path or relative (to the location of the dictionary) path to the main data file.}
- * {@literal <flags>             Comma seprated list of flags applicable to the data file.  Available flags:}
- * D - The file is marked as deleted.  This means the file has been deleted and should be
- * ignored when reading from the bucket.
- * {@literal <bucket>            Relative path ot the bucket file <file> belongs to.}
- * {@literal <alias>             Alias for <file>.  The alias specifies "source" value of <file>.  If no tags are specified, <alias> is used}
- * {@literal as tag for <file>.  Can be empty.}
- * {@literal <startchrom>        Filter start chromosome, e.g. chr1.  Can be empty, if all range elements are empty.}
- * {@literal <startpos>          Filter start pos. Can be empty, if all range elements are empty.}
- * {@literal <endchrom>          Filter stop chromosome, e.g. chr3. Can be empty, if all range elements are empty.}
- * {@literal <endpos>            Filter stop pos.  Can be empty, if all range elements are empty.}
- * {@literal <tags>              Comma separated list of tags:  <tagval1>[,<tagval2>...]}
- * <p>
- * <p>
- * Notes:
- * {@literal 1. The <file> + <filter> is a unique key into the file.  Note, this always exact match, i.e. filter that is a subset of another filter}
- * will be treated as different.  This could be improved by banning overlapping filters.
- * {@literal 2. If <tags> are specified then they are used for filtering (but the <alias> is not).  If no <tags> are specified <alias> is used as}
- * tags for filtering.
- * {@literal 3. <file> could be bucket file.}
- * 4. Seems in general alias is used for normal files but tags for the bucket files.
- * <p>
- * <p>
- * NOTE:
- * - HG says, either all the files have alias or none of them.
+ * DictionaryTable.
  */
-public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
+public class DictionaryTable extends DictionaryTableReader implements Table<DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryTable.class);
 
-    public static final boolean useCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+    private TableTwoPhaseCommitSupport<DictionaryEntry> lifeCycleSupport;
 
-    private boolean useEmbeddedHeader = false;  // Should the header be embedded in the table file stored in header file the table data dir.
-
-    private TableAccessOptimizer tableAccessOptimizer;
-
-    public DictionaryTable(URI path) {
-        super(path);
-    }
-
-    public DictionaryTable(URI path, FileReader fileReader) {
+    public DictionaryTable(String path, FileReader fileReader) {
         super(path, fileReader);
-    }
+        lifeCycleSupport = new DictionaryTwoPhaseCommitSupport(this);
 
-    public DictionaryTable(Path path) {
-        super(path.toUri());
+        reload();
     }
 
     public DictionaryTable(String path) {
-        super(URI.create(path));
+        this(path, null);
     }
 
+    public DictionaryTable(Path path) {
+        this(path.toUri().toString(), null);
+    }
+    
     public DictionaryTable(Builder builder) {
-        super(builder);
+        this(builder.path, builder.fileReader);
+
+        if (builder.validateFiles != null) {
+            lifeCycleSupport.setValidateFiles(builder.validateFiles);
+        }
+
+        if (builder.useHistory != null) {
+            lifeCycleSupport.setUseHistory(builder.useHistory);
+        }
+
+        if (builder.id != null) {
+            this.id = builder.id;
+        }
+
+        if (builder.sourceColumn != null) {
+            setSourceColumn(builder.sourceColumn);
+        }
+
+        if (builder.uniqueTags != null) {
+            setUniqueTags(builder.uniqueTags);
+        }
+
         if (builder.useEmbededHeader != null) {
             this.useEmbeddedHeader = builder.useEmbededHeader;
         }
     }
 
     @Override
-    protected ITableEntries<DictionaryEntry> createTableEntries() {
-        return new TableEntries<>(this, DictionaryEntry.class);
-        // Leave this in here for easy try out.
-        //return new TableEntries<>(path, DictionaryRawEntry.class);
+    public void initialize() {
+        lifeCycleSupport.initialize();
     }
 
     @Override
-    public List<DictionaryEntry> getOptimizedLines(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
-        return getTableAccessOptimizer().getOptimizedEntries(tags, allowBucketAccess, isSilentTagFilter);
+    public void setProperty(String key, String value) {
+        lifeCycleSupport.setProperty(key, value);
     }
 
-    private TableAccessOptimizer getTableAccessOptimizer() {
-        if (tableAccessOptimizer == null) {
-            tableAccessOptimizer = new DefaultTableAccessOptimizer(this);
+    @Override
+    public void setColumns(String[] columns) {
+        if (this.tableEntries.size() > 0 && columns.length != this.header.getColumns().length) {
+            throw new GorDataException("Invalid columns - " + String.format("New columns length (%d) does not fit current data column count (%d)",
+                    columns.length, this.header.getColumns().length));
         }
-        return tableAccessOptimizer;
+        lifeCycleSupport.setColumns(columns);
     }
 
     @Override
+    public void setValidateFiles(boolean validateFiles) {
+        lifeCycleSupport.setValidateFiles(validateFiles);
+    }
+
+    @Override
+    public void setUseHistory(boolean useHistory) {
+        lifeCycleSupport.setUseHistory(useHistory);
+    }
+
+    @Override
+    public void commitRequest() throws GorException {
+        lifeCycleSupport.commitRequest();
+    }
+
+    @Override
+    public void commit() {
+        lifeCycleSupport.commit();
+    }
+
+    @Override
+    public void save() {
+        lifeCycleSupport.save();
+    }
+
+    @Override
+    public void delete() {
+        lifeCycleSupport.delete();
+    }
+
+    @Override
+    public void reload() {
+        if (lifeCycleSupport != null) { // Don't call reload if not ready (still constructing).
+            super.reload();
+        }
+    }
+
+    @Override
+    protected void loadMeta() {
+        super.loadMeta();
+        lifeCycleSupport.loadMeta();
+    }
+
+    public void setSourceColumn(String sourceColumn) {
+        header.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, sourceColumn);
+    }
+
+    public void setBucketize(boolean bucketize) {
+        header.setProperty(DictionaryTableMeta.HEADER_BUCKETIZE_KEY, Boolean.toString(bucketize));
+    }
+
+    public void setLineFilter(Boolean lineFilter) {
+        header.setProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, lineFilter.toString());
+    }
+
+    public void setUniqueTags(boolean hasUniqueTags) {
+        header.setProperty(DictionaryTableMeta.HEADER_UNIQUE_TAGS_KEY, Boolean.toString(hasUniqueTags));
+    }
+
+    @Override
+    public void insert(Collection<DictionaryEntry> lines) {
+        int count = 0;
+        for (DictionaryEntry line : lines) {
+            count++;
+            if (count % 1000 == 0) {
+                log.info("Inserting line {} of {}", count, lines.size());
+            }
+            // Validate the new file.
+            if (isValidateFiles()) {
+                validateFile(getContentReal(line));
+            }
+
+            this.tableEntries.insert(line, isHasUniqueTags());
+            lifeCycleSupport.logAfter(TableLog.LogAction.INSERT, "", line.formatEntryNoNewLine());
+        }
+        tableAccessOptimizer = null;
+    }
+
+    @Override
+    public void insert(String... lines) {
+        List<DictionaryEntry> entries = lineStringsToEntries(lines);
+        insert(entries);
+    }
+
+    
+    @Override
+    public void delete(Collection<DictionaryEntry> lines) {
+        for (DictionaryEntry line : lines) {
+            tableEntries.delete(line, true);
+            lifeCycleSupport.logAfter(TableLog.LogAction.DELETE, "", line.formatEntryNoNewLine());
+        }
+        tableAccessOptimizer = null;
+    }
+
+    @Override
+    public void delete(String... lines) {
+        List<DictionaryEntry> entries = lineStringsToEntries(lines);
+        delete(entries);
+    }
+
+    private List<DictionaryEntry> lineStringsToEntries(String[] lines) {
+        List<DictionaryEntry> entries = new ArrayList<>();
+        for (String line : lines) {
+            line = line.stripLeading();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+            entries.add(DictionaryEntry.parseEntry(line, getRootPath(), true));
+        }
+        return entries;
+    }
+
+    /**
+     * Remove the selected files from their bucket.
+     *
+     * @param lines lines to be removed.
+     */
+    public void removeFromBucket(Collection<DictionaryEntry> lines) {
+        try {
+            for (DictionaryEntry line : lines) {
+                DictionaryEntry lineToRemoveFrom = tableEntries.findLine(line);
+                if (lineToRemoveFrom != null) {
+                    String bucket = lineToRemoveFrom.getBucket();
+                    if (lineToRemoveFrom.isDeleted()) {
+                        tableEntries.delete(lineToRemoveFrom, false);
+                        lifeCycleSupport.logAfter(TableLog.LogAction.DELETE, bucket, lineToRemoveFrom.formatEntryNoNewLine());
+                    } else {
+                        lineToRemoveFrom.setBucket("");
+                        lifeCycleSupport.logAfter(TableLog.LogAction.REMOVEFROMBUCKET, bucket, lineToRemoveFrom.formatEntryNoNewLine());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new GorDataException("Entries could not be removed from bucket", e);
+        }
+    }
+
+    /**
+     * Remove the selected files from their bucket.
+     *
+     * @param lines lines to be removed.
+     */
+    @SafeVarargs
+    public final void removeFromBucket(DictionaryEntry... lines) {
+        removeFromBucket(Arrays.asList(lines));
+    }
+
+    /**
+     * Add the given entries to the given bucket, done after the bucketization has been done.
+     *
+     * Note:  We are assuming here that the underlying datafiles are not changed (but can be deleted).
+     *
+     * @param bucket bucket to add to.
+     * @param lines  files to select.
+     */
+    public void addToBucket(String bucket, List<DictionaryEntry> lines) {
+        String bucketLogical = relativize(getRootPath(), bucket);
+        for (DictionaryEntry line : lines) {
+            DictionaryEntry lineToUpdate = tableEntries.findLine(line);
+            if (lineToUpdate != null) {
+                if (lineToUpdate.hasBucket() && !lineToUpdate.getBucket().equals(bucketLogical)) {
+                    throw new GorDataException(String.format("File %s is already in bucket %s and can not be added to bucket %s",
+                            line.getContentRelative(), lineToUpdate.getBucket(), bucketLogical));
+                }
+                lineToUpdate.setBucket(bucketLogical);
+                lifeCycleSupport.logAfter(TableLog.LogAction.ADDTOBUCKET, bucketLogical, line.formatEntryNoNewLine());
+            } else {
+                // No line found, must have been deleted.  To be able to use the bucket we must add a new line.
+                DictionaryEntry newDeletedLine = (DictionaryEntry) TableEntry.copy(line);
+                newDeletedLine.setDeleted(true);
+                newDeletedLine.setBucket(bucketLogical);
+                tableEntries.insert(newDeletedLine, false);
+                lifeCycleSupport.logAfter(TableLog.LogAction.INSERT, bucketLogical, line.formatEntryNoNewLine());
+            }
+        }
+    }
+
+    @SafeVarargs
+    public final void addToBucket(String bucket, DictionaryEntry... lines) {
+        addToBucket(bucket, Arrays.asList(lines));
+    }
+
+    //@Override
     public void insertEntries(Collection<DictionaryEntry> entries) {
         insert(entries);
     }
@@ -166,85 +301,18 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         delete(entries);
     }
 
-    @Override
+    /**
+     * @param data map with alias to files, to be add to the dictionary.  The files must be normalized and either absolute or
+     *             relative to the dictionary root.
+     */
     public void insert(Map<String, List<String>> data) {
         List<DictionaryEntry> lines = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : data.entrySet()) {
             for (String path : entry.getValue()) {
-                lines.add(new DictionaryEntry.Builder<>(path, getRootUri()).alias(entry.getKey()).build());
+                lines.add(new DictionaryEntry.Builder<>(path, getRootPath()).alias(entry.getKey()).build());
             }
         }
         insert(lines);
-    }
-
-    @Override
-    public void insert(Collection<DictionaryEntry> lines) {
-        super.insert(lines);
-        tableAccessOptimizer = null;
-    }
-
-    @Override
-    public void delete(Collection<DictionaryEntry> lines) {
-        super.delete(lines);
-        tableAccessOptimizer = null;
-    }
-
-    @Override
-    protected void saveTempMainFile() {
-        log.debug("Saving {} entries for table {}", tableEntries.size(), getName());
-
-        try {
-            String tempDict = getTempMainFileName();
-            try (BufferedWriter writer = new BufferedWriter(
-                    new OutputStreamWriter(getFileReader().getOutputStream(tempDict)))) {
-                if (useEmbeddedHeader) {
-                    writer.write(this.header.formatHeader());
-                }
-                Iterator<DictionaryEntry> it = tableEntries.iterator();
-                while (it.hasNext()) {
-                    String line = it.next().formatEntryNoNewLine();
-                    writer.write(line);
-                    writer.newLine();
-                }
-            }
-
-            if (!useEmbeddedHeader) {
-                URI tempHeader = URI.create(getTempFileName(getFolderUri().resolve("header").toString()));
-                try (BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(getFileReader().getOutputStream((tempHeader.toString()))))) {
-                    writer.write(this.header.formatHeader());
-                }
-            }
-        } catch (IOException e) {
-            throw new GorSystemException(e);
-        }
-        log.debug("Done saving {} entries for table {}", tableEntries.size(), getName());
-    }
-
-    @Override
-    public void commit() {
-        super.commit();
-        try {
-            if (!useEmbeddedHeader) {
-                updateFromTempFile(getFolderUri().resolve("header").toString(), getTempFileName(getFolderUri().resolve("header").toString()));
-            }
-        } catch (IOException e) {
-            throw new GorSystemException("Could not move header", e);
-        }
-    }
-
-    @Override
-    public void save() {
-        super.save();
-        if (useCache) {
-            updateCache(this);
-        }
-    }
-
-    @Override
-    public void reload() {
-        super.reload();
-        tableAccessOptimizer = null;
     }
 
     public boolean hasDeletedEntries() {
@@ -255,119 +323,35 @@ public class DictionaryTable extends BaseDictionaryTable<DictionaryEntry> {
         return getTableAccessOptimizer().getBucketDeletedFiles(path);
     }
 
-    public abstract static class AbstractBuilder<B extends AbstractBuilder<B>> extends BaseDictionaryTable.Builder<B> {
-        Boolean useEmbededHeader = null;
+    public static class Builder<B extends Builder<B>> extends TableBuilder<B> {
 
-        private AbstractBuilder(URI path) {
-            super(path);
-        }
+        protected String sourceColumn;
+        protected Boolean uniqueTags;
 
-        public B embeddedHeader(boolean val) {
-            this.useEmbededHeader = val;
-            return self();
-        }
-
-        @Override
-        public abstract DictionaryTable build();
-    }
-
-    public static class Builder<B extends Builder<B>> extends AbstractBuilder<B> {
         public Builder(String path) {
-            this(URI.create(path));
+            super(path);
         }
 
         public Builder(Path path) {
-            super(path.toUri());
+            this(path.toString());
         }
 
         public Builder(URI path) {
-            super(path);
+            this(path.toString());
         }
 
-        @Override
+        public B sourceColumn(String sourceColumn) {
+            this.sourceColumn = sourceColumn;
+            return self();
+        }
+
+        public B uniqueTags(boolean val) {
+            this.uniqueTags = val;
+            return self();
+        }
+
         public DictionaryTable build() {
             return new DictionaryTable(this);
         }
     }
-
-    final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
-
-
-    public static DictionaryTable getOrCreateTable(String path, FileReader fileReader) throws IOException {
-        return getOrCreateTable(path, fileReader, useCache);
-    }
-
-    public static DictionaryTable getOrCreateTable(String path, FileReader fileReader, boolean useCache) throws IOException {
-        try {
-            return getTable(path, fileReader, useCache);
-        } catch (NoSuchFileException e) {
-            return new DictionaryTable(URI.create(path), fileReader);
-        }
-    }
-
-    public synchronized static DictionaryTable getTable(String path, FileReader fileReader) throws IOException {
-        return getTable(path, fileReader, useCache);
-    }
-
-    public synchronized static DictionaryTable getTable(String path, FileReader fileReader, boolean useCache) throws IOException {
-        // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
-        //        exception if file does not exists.
-        if (!fileReader.exists(path)) {
-            throw new NoSuchFileException(path);
-        }
-        // The dict is lazy loaded so the onnly cost is finding the id.
-        DictionaryTable dict = new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
-
-        if (useCache) {
-            String uniqueID = dict.getId();
-            var key = dictCacheKeyFromPathAndRoot(path, fileReader.getCommonRoot());
-            if (uniqueID == null || uniqueID.equals("")) {
-                dictCache.invalidate(key);
-                return dict;
-            } else {
-                DictionaryTable dictFromCache = dictCache.getIfPresent(key);
-                if (dictFromCache == null || !dictFromCache.getId().equals(uniqueID)) {
-                    dictCache.put(key, dict);
-                    return dict;
-                } else {
-                    // Need to reload the meta as it can lye in files outside the gord file.
-                    // Not thread safe: dictFromCache.loadMeta();
-                    return dictFromCache;
-                }
-            }
-        } else {
-            return dict;
-        }
-    }
-
-    public synchronized static void updateCache(DictionaryTable table) {
-        String uniqueID = table.getId();
-        var key = dictCacheKeyFromPathAndRoot(table.getPath(), table.getFileReader().getCommonRoot());
-        if (uniqueID == null || uniqueID.equals("")) {
-            log.warn("Trying to put table with non unique id ({}) into cache", uniqueID);
-        } else {
-            dictCache.put(key, table);
-        }
-    }
-
-    private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
-        return PathUtils.resolve(commonRoot, path);
-    }
-
-    // -----------------------------------------------------------------------------------
-    //  Some relics from the old dictionary used by GorOptions.
-    // -----------------------------------------------------------------------------------
-
-    public static Map<Integer, Set<String>> tagmap(String alias) {
-        return alias != null ? tagmap(Collections.singletonList(alias)) : tagmap(Collections.emptyList());
-    }
-
-    private static Map<Integer, Set<String>> tagmap(List<String> t) {
-        final HashMap<Integer, Set<String>> tags = new HashMap<>();
-        if (t != null) {
-            tags.put(3, Collections.unmodifiableSortedSet(new TreeSet<>(t)));
-        }
-        return tags;
-    }
-
 }

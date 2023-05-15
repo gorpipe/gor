@@ -17,7 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTableReader;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
@@ -128,9 +128,9 @@ public class UTestDictionaryTableReads {
         for (int i = 0; i < 81; ++i) tagList1.add("PN" + i);
         for (int i = 19; i < 100; ++i) tagList2.add("PN" + i);
 
-        DictionaryTable dictionary1 = getTable(tmpFile.getPath());
-        DictionaryTable dictionary2 = getTable(tmpFile.getPath());
-        DictionaryTable dictionary3 = getTable(tmpFile.getPath());
+        DictionaryTableReader dictionary1 = getTable(tmpFile.getPath());
+        DictionaryTableReader dictionary2 = getTable(tmpFile.getPath());
+        DictionaryTableReader dictionary3 = getTable(tmpFile.getPath());
 
         // Check the same query results in same file count.
         Assert.assertEquals(tagList1.size(), dictionary1.getOptimizedLines(tagList1, true, false).size());
@@ -157,9 +157,9 @@ public class UTestDictionaryTableReads {
             fileWriter.write("file2.gor\ttagList2\tchr1\t-1\tchrN\t-1\t" + tagList2.stream().collect(Collectors.joining(",")) + "\n");
         }
 
-        DictionaryTable dictionary1 = getTable(tmpFile.getPath());
-        DictionaryTable dictionary2 = getTable(tmpFile.getPath());
-        DictionaryTable dictionary3 = getTable(tmpFile.getPath());
+        DictionaryTableReader dictionary1 = getTable(tmpFile.getPath());
+        DictionaryTableReader dictionary2 = getTable(tmpFile.getPath());
+        DictionaryTableReader dictionary3 = getTable(tmpFile.getPath());
 
         // Check the same query results in same file count.
         Assert.assertEquals(1, dictionary1.getOptimizedLines(tagList1, true, false).size());
@@ -178,8 +178,8 @@ public class UTestDictionaryTableReads {
         tagList.add("tagL");
         tagList.add("tagA");
 
-        DictionaryTable dict1 = getTable(gordFile.getPath());
-        DictionaryTable dict2 = getTable(gordFile.getPath());
+        DictionaryTableReader dict1 = getTable(gordFile.getPath());
+        DictionaryTableReader dict2 = getTable(gordFile.getPath());
 
 
         List<DictionaryEntry> res1 = dict1.getOptimizedLines(tagList, true, false);
@@ -366,7 +366,7 @@ public class UTestDictionaryTableReads {
         dictionaryFileWriter.write("gorfile1.gor\ttag1\n");
         dictionaryFileWriter.close();
 
-        final DictionaryTable dict1 = getTable(dictionaryFile);
+        final DictionaryTableReader dict1 = getTable(dictionaryFile);
         final List<DictionaryEntry> lines1 = dict1.getOptimizedLines(new HashSet<>(Collections.singletonList("tag1")), true, false);
         Assert.assertEquals(1, lines1.size());
 
@@ -377,7 +377,7 @@ public class UTestDictionaryTableReads {
         newDictionaryFileWriter.write("gorfile1.gor\ttag1\ngorfile2.gor\ttag1\n");
         newDictionaryFileWriter.close();
 
-        final DictionaryTable dict2 = getTable(dictionaryFile);
+        final DictionaryTableReader dict2 = getTable(dictionaryFile);
         final List<DictionaryEntry> lines2 = dict2.getOptimizedLines(new HashSet<>(Collections.singletonList("tag1")), true, false);
 
         Assert.assertEquals(2, lines2.size());
@@ -400,8 +400,8 @@ public class UTestDictionaryTableReads {
         Assert.assertTrue(success);
     }
 
-    public static DictionaryTable getTable(String path) throws IOException {
-        return DictionaryTable.getTable(path, ProjectContext.DEFAULT_READER, true);
+    public static DictionaryTableReader getTable(String path) throws IOException {
+        return new DictionaryTableReader(path, ProjectContext.DEFAULT_READER);
     }
 
     @Test
@@ -413,7 +413,7 @@ public class UTestDictionaryTableReads {
         //tagList.addAll(Arrays.asList("tagI", "tagJ", "tagK", "tag1000"));
         tagList.addAll(Arrays.asList("tagI", "tagJ", "tag1000"));
 
-        DictionaryTable dict1 = getTable(gordFile.getPath());
+        DictionaryTableReader dict1 = getTable(gordFile.getPath());
         List<DictionaryEntry> res1 = dict1.getOptimizedLines(tagList, true, false);
 
         String[] res1String = res1.stream().map(DictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);

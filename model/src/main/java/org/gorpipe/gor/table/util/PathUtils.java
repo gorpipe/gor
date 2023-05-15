@@ -120,8 +120,9 @@ public class PathUtils {
         }
 
         String norm = normalize(path);
+        String stripRoot = stripTrailingSlash(root);
         // Need to help path to do this right.
-        return norm.startsWith(root) ? norm.substring(stripTrailingSlash(root).length() + 1) : norm;
+        return norm.startsWith(stripRoot) ? norm.substring(Math.min(stripRoot.length() + 1, norm.length())) : norm;
     }
 
     public static URI relativize(URI root, URI path) {

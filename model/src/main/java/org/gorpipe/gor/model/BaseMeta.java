@@ -13,6 +13,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -36,7 +37,7 @@ public class BaseMeta {
     public static final String HEADER_TAGS_KEY = "TAGS";
     public static final String HEADER_COLUMNS_KEY = "COLUMNS";
 
-    protected HashMap<String, String> headerProps;
+    protected ConcurrentHashMap<String, String> headerProps;
     String[] fileHeader;                     // Columns of the table itself.
     protected boolean saveHeaderLine = false;
     private String metaPathStr;
@@ -45,7 +46,7 @@ public class BaseMeta {
      *
      */
     public BaseMeta() {
-        this.headerProps = new HashMap<>();
+        this.headerProps = new ConcurrentHashMap<>();
         clear();
     }
 
@@ -76,9 +77,16 @@ public class BaseMeta {
      * @param value new value of the property.
      */
     public void setProperty(String key, String value) {
-        if (!headerProps.containsKey(key) || !headerProps.get(key).equals(value)) {
-            headerProps.put(key, value);
-        }
+        headerProps.put(key, value != null ? value : "");
+    }
+
+    /**
+     * Set header properties.
+     *
+     * @param props   map of properites
+     */
+    public void setProperties(Map<String, String> props) {
+        headerProps.putAll(props);
     }
 
     /**
@@ -174,6 +182,7 @@ public class BaseMeta {
     protected void parseMetaLine(String line) {
         String[] lineSplit = line.split("[=:]", 2);
         String propName = StringUtils.strip(lineSplit[0], "\t\n #");
+
         if (propName.equals(HEADER_COLUMNS_KEY)) {
             // Ignore columns that have non standard characters.  These are errors.
             if (StandardCharsets.UTF_8.newEncoder().canEncode(lineSplit[1])) {

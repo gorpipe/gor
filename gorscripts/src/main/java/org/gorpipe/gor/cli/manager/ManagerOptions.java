@@ -34,10 +34,6 @@ public abstract class ManagerOptions extends HelpOptions {
             description = "Maximum time (in seconds) we will wait for acquiring lock an a resource.  Default: 1800 sec.")
     protected int lockTimeout = Math.toIntExact(TableManager.DEFAULT_LOCK_TIMEOUT.getSeconds());
 
-    @CommandLine.Option(names = {"--nohistory"},
-            description = "Don't keep history of gord files in the dictionary folder.  If not set we only keep the last one.  Default: false.")
-    protected boolean nohistory = false;
-
     @CommandLine.Parameters(index = "0",
             arity = "1",
             paramLabel = "DICTIONARY",

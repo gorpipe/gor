@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.manager;
 
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.IntegrationTests;
@@ -128,7 +128,7 @@ public class UTestTableManagerCLI {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFiles[3]}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);
@@ -176,7 +176,7 @@ public class UTestTableManagerCLI {
 
         Path dictFile = workDirPath.resolve(name + ".gord");
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
         String result;
 
         // Single file insert.
@@ -233,27 +233,6 @@ public class UTestTableManagerCLI {
     }
 
     @Test
-    public void testHistoryOptionCLI() throws Exception {
-        String name = "testHistoryOptionCLI";
-
-        // Test History option.
-        String noHistDict = "noHistDict";
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict + ".gord").toString(), new String[]{}, "insert", new String[]{"--alias", "A", testFiles[0]}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-
-        String noHistDict2 = "noHistDict2";
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict2 + ".gord").toString(), new String[]{"--history", "false"}, "insert", new String[]{"--alias", "A", testFiles[0]}, workDirPath.toString(), true);
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-
-        String histDict2 = "histDict2";
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "A", testFiles[0]}, workDirPath.toString(), true);
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "B", testFiles[1]}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-        Assert.assertTrue(Files.list(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count() == 1); // 1 header action log.
-
-    }
-
-    @Test
     public void testFlagTagskeyValueCLI() throws Exception {
         String name = "testFlagTagskeyValueCLI";
         Path dictFile = workDirPath.resolve(name + ".gord");
@@ -265,7 +244,7 @@ public class UTestTableManagerCLI {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         //Verify insert of files
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -312,7 +291,7 @@ public class UTestTableManagerCLI {
         Path dictFile = workDirPath.resolve(name + ".gord");
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         //Check matching list of tags. If the same set of tags can be found it is replaced by the new line of tags.
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", testFiles[0]});
@@ -347,7 +326,7 @@ public class UTestTableManagerCLI {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFiles[3]});
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);

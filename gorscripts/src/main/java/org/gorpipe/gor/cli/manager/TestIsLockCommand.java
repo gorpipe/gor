@@ -23,7 +23,7 @@
 package org.gorpipe.gor.cli.manager;
 
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.TableLock;
 import picocli.CommandLine;
 
@@ -44,8 +44,8 @@ public class TestIsLockCommand extends ManagerOptions implements Runnable{
     @Override
     public void run() {
         Duration lockTimeoutDuration = Duration.ofSeconds(lockTimeout);
-        TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(lockTimeoutDuration).build();
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
+        TableManager tm = TableManager.newBuilder().lockTimeout(lockTimeoutDuration).build();
+        DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableLock lock = TableLock.acquireWrite(tm.getLockType(), table, lockName, Duration.ZERO)) {
             System.out.println(lock.isValid() ? "Unlocked" : "Locked " + lock.reservedTo());

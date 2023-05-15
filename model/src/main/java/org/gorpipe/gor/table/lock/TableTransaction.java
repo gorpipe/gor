@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.table.lock;
 
-import org.gorpipe.gor.table.BaseTable;
+import org.gorpipe.gor.table.livecycle.TableInfoBase;
 import org.gorpipe.gor.table.Table;
 
 import java.time.Duration;
@@ -102,8 +102,8 @@ public class TableTransaction implements AutoCloseable {
         }
 
         if (lock.isValid() && shared == false) {
-            if (table instanceof BaseTable) {
-                ((BaseTable) table).updateNFSFolderMetadata();
+            if (table instanceof TableInfoBase) {
+                ((TableInfoBase) table).updateNFSFolderMetadata();
             }
             if (this.closeHook == null) {
                 this.closeHook = () -> {

@@ -1,12 +1,12 @@
 package org.gorpipe.gor.table.dictionary;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.gorpipe.gor.table.TableInfo;
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +19,8 @@ import java.util.stream.Stream;
 public class TableFilter<T extends DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(TableFilter.class);
-    private final BaseDictionaryTable<T> baseDictionaryTable;
+    private final ITableEntries<DictionaryEntry> tableEntries;
+    private final TableInfo table;
     String[] files;
     String[] aliases;
     String[] tags;
@@ -28,8 +29,9 @@ public class TableFilter<T extends DictionaryEntry> {
     boolean matchAllTags = false;
     boolean includeDeleted = false;
 
-    public TableFilter(BaseDictionaryTable<T> baseDictionaryTable) {
-        this.baseDictionaryTable = baseDictionaryTable;
+    public TableFilter(TableInfo table, ITableEntries<DictionaryEntry> tableEntries) {
+        this.table = table;
+        this.tableEntries = tableEntries;
     }
 
     /**
@@ -39,18 +41,7 @@ public class TableFilter<T extends DictionaryEntry> {
      * @return return new filter on files.
      */
     public TableFilter<T> files(String... val) {
-        this.files = val != null ? Arrays.stream(val).map(f -> PathUtils.formatUri(PathUtils.resolve(baseDictionaryTable.getRootUri(), f))).toArray(String[]::new) : null;
-        return this;
-    }
-
-    /**
-     * Filter for files names (content)
-     *
-     * @param val file names to filter by, absolute or relative to the table.
-     * @return return new filter on files.
-     */
-    public TableFilter<T> files(URI... val) {
-        this.files = val != null ? Arrays.stream(val).map(f -> PathUtils.formatUri(PathUtils.resolve(baseDictionaryTable.getRootUri(), f))).toArray(String[]::new) : null;
+        this.files = val != null ? Arrays.stream(val).map(f -> PathUtils.formatUri(PathUtils.resolve(table.getRootPath(), f))).toArray(String[]::new) : null;
         return this;
     }
 
@@ -72,7 +63,7 @@ public class TableFilter<T extends DictionaryEntry> {
     }
 
     public TableFilter<T> buckets(String... val) {
-        this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(PathUtils.resolve(baseDictionaryTable.getRootUri(), b))).toArray(String[]::new) : null;
+        this.buckets = val != null ? Arrays.stream(val).map(b -> PathUtils.formatUri(PathUtils.resolve(table.getRootPath(), b))).toArray(String[]::new) : null;
         return this;
     }
 
@@ -117,12 +108,12 @@ public class TableFilter<T extends DictionaryEntry> {
     }
 
     private boolean matchFiles(T l) {
-        return files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentReal(getTable().getRootUri())));
+        return files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentReal(getTable().getRootPath())));
     }
 
     private boolean matchBuckets(T l) {
         return buckets == null || (!l.hasBucket() && buckets.length == 0) ||
-                (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal(getTable().getRootUri()))));
+                (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal(getTable().getRootPath()))));
     }
 
     private boolean matchAliases(T l) {
@@ -141,12 +132,13 @@ public class TableFilter<T extends DictionaryEntry> {
 
     public List<T> get() {
         // Set initial candidates for search (this also forces load if not loaded and populates the tagHashToLines index)
-        List<T> lines2Search = baseDictionaryTable.getEntries(ArrayUtils.addAll(aliases, tags));
+        List<T> lines2Search = (List<T>)tableEntries.getEntries(ArrayUtils.addAll(aliases, tags));
         return lines2Search.stream().filter(this::match).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public BaseDictionaryTable<T> getTable() {
-        return baseDictionaryTable;
+    public DictionaryTable getTable() {
+        // TODO: GM
+        return (DictionaryTable) table;
     }
 
 }

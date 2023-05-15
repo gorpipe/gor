@@ -53,7 +53,7 @@ public class BucketizeCommand extends CommandBucketizeOptions implements Runnabl
     @Override
     public void run() {
         TableManager tm = TableManager.newBuilder().minBucketSize(this.minBucketSize).bucketSize(this.bucketSize)
-                .useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout))
+                .lockTimeout(Duration.ofSeconds(lockTimeout))
                 .build();
         tm.bucketize(dictionaryFile.toString(), this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().collect(Collectors.toList()));
     }

@@ -75,7 +75,7 @@ public abstract class TableEntry {
      * @param tags           tags associated with the entry.
      * @param range          range for the entry.
      */
-     TableEntry(String contentLogical, URI rootUri, String alias, String[] tags, GenomicRange range) {
+     TableEntry(String contentLogical, String rootUri, String alias, String[] tags, GenomicRange range) {
         assert rootUri != null;
 
         this.contentRelative = contentLogical;
@@ -121,7 +121,7 @@ public abstract class TableEntry {
         return contentRelative;
     }
 
-    public String getContentReal(URI rootUri) {
+    public String getContentReal(String rootUri) {
         return resolve(rootUri, getContentRelative()).toString();
     }
 
@@ -196,7 +196,7 @@ public abstract class TableEntry {
 
     public abstract static class Builder<B extends Builder> {
         protected String contentLogical;
-        protected URI rootUri;
+        protected String rootUri;
         protected String alias;
         protected List<String> tags = new ArrayList<>();
         protected GenomicRange range;
@@ -208,7 +208,7 @@ public abstract class TableEntry {
          * @param contentLogical entry content, absolute or relative path to the current dir..
          * @param rootUri        root URI for the table entry.
          */
-        public Builder(String contentLogical, URI rootUri) {
+        public Builder(String contentLogical, String rootUri) {
             this.contentLogical = contentLogical;
             this.rootUri = rootUri;
         }

@@ -20,13 +20,14 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.util;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.table.util.TableLog;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,7 +36,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,12 +49,12 @@ public class UTestTableLog {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-    private URI workDirPath;
+    private String workDirPath;
     private FileReader fileReader;
 
     @Before
     public void setupTest() {
-        workDirPath = workDir.getRoot().toURI();
+        workDirPath = workDir.getRoot().getPath();
         fileReader = ProjectContext.DEFAULT_READER;
     }
 
@@ -69,7 +69,7 @@ public class UTestTableLog {
         TableLog tableLog = createSimpleTableLog();
         tableLog.commit(fileReader);
 
-        URI tableLogFilePath = workDirPath.resolve(TableLog.LOG_FILE);
+        String tableLogFilePath = PathUtils.resolve(workDirPath, TableLog.LOG_FILE).toString();
         Assert.assertTrue("Log file was not created", fileReader.exists(PathUtils.formatUri(tableLogFilePath)));
 
         List<String> tableLogLines = Arrays.asList(fileReader.readAll(PathUtils.formatUri(tableLogFilePath)));
@@ -78,13 +78,13 @@ public class UTestTableLog {
 
     @Test (expected = GorSystemException.class)
     public void testTableLogMissingLogDir() {
-        TableLog tableLog = new TableLog(URI.create("/non/existent/path"));
+        TableLog tableLog = new TableLog("/non/existent/path");
         tableLog.commit(fileReader);
     }
 
     @Test (expected = GorSystemException.class)
     public void testTableCanNotSave() throws IOException {
-        File tableLogFilePath = new File(workDirPath.resolve(TableLog.LOG_FILE));
+        File tableLogFilePath = new File(PathUtils.resolve(workDirPath, TableLog.LOG_FILE));
         tableLogFilePath.createNewFile();
         tableLogFilePath.setWritable(false);
 

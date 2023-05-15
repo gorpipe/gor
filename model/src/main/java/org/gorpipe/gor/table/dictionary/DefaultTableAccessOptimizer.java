@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.table.TableInfo;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.collection.IntArray;
 import org.slf4j.Logger;
@@ -24,7 +25,8 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
 
     private static final boolean USE_CACHE = true;
 
-    private final DictionaryTable table;
+    private final ITableEntries<DictionaryEntry> tableEntries;
+    private final TableInfo table;
 
     private final List<Set<String>> bucketTagsList = new ArrayList<>();
     private final List<String> resetBucketNames = new ArrayList<>();
@@ -39,13 +41,14 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
     /**
      *
      */
-    public DefaultTableAccessOptimizer(DictionaryTable table) {
+    public DefaultTableAccessOptimizer(TableInfo table, ITableEntries<DictionaryEntry> tableEntries) {
         this.table = table;
+        this.tableEntries = tableEntries;
     }
 
     @Override
     synchronized public List<DictionaryEntry> getOptimizedEntries(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
-        if (!isStatsUpdated && !table.getEntries().isEmpty()) {
+        if (!isStatsUpdated && !tableEntries.getEntries().isEmpty()) {
             updateStats();
         }
 
@@ -74,8 +77,8 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
 
         if (result.size() == 0) {
             //Must return a dummy line.
-            if (table.tableEntries.getActiveLines().size() > 0) {
-                return List.of(table.tableEntries.getActiveLines().get(0));
+            if (tableEntries.getActiveLines().size() > 0) {
+                return List.of(tableEntries.getActiveLines().get(0));
             } else {
                 return new ArrayList<>();
             }
@@ -97,7 +100,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
     }
 
     private void throwBadTagException(Set<String> badTags) {
-        String message = "Invalid Source Filter for dictionary file: " + table.getPathUri() + ". ";
+        String message = "Invalid Source Filter for dictionary file: " + table.getPath() + ". ";
         if (badTags.contains("")) {
             message += "Empty tag is not allowed";
         } else {
@@ -110,7 +113,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
      *
      */
     private void updateStats() {
-        for (DictionaryEntry entry : table.getEntries()) {
+        for (DictionaryEntry entry : tableEntries.getEntries()) {
             processEntry(entry);
         }
         isStatsUpdated = true;
@@ -154,14 +157,14 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
             newBucketToIdx = new HashMap<>();
             Set<String> goodTags = new HashSet<>();
             for (String tag : tags) {
-                if (table.tableEntries.getAllActiveTags().contains(tag)) {
+                if (tableEntries.getAllActiveTags().contains(tag)) {
                     goodTags.add(tag);
                 } else {
                     badTags.add(tag);
                 }
             }
 
-            for (DictionaryEntry entry : table.getEntries(goodTags.toArray(String[]::new))) {
+            for (DictionaryEntry entry : tableEntries.getEntries(goodTags.toArray(String[]::new))) {
                 if (!entry.isDeleted) {
                     filesToOptimizeTmp.add(entry);
                     final String bucket = entry.getBucket();
@@ -188,9 +191,9 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
             resetBucketNamesArray = localResetBucketNames.toArray(new String[0]);
             bucketTagsArray = localBucketTagsList.toArray(new Set[0]);
         } else {
-            filesToOptimize = new DictionaryEntry[table.tableEntries.getActiveLines().size()];
+            filesToOptimize = new DictionaryEntry[tableEntries.getActiveLines().size()];
             for (int i = 0; i < filesToOptimize.length; i++) {
-                DictionaryEntry entry = table.tableEntries.getActiveLines().get(i);
+                DictionaryEntry entry = tableEntries.getActiveLines().get(i);
                 if (entry.getBucket() == null) numberOfFilesWithoutBucket++;
                 filesToOptimize[i] = entry;
             }
@@ -262,7 +265,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
                 if (log.isTraceEnabled()) {
                     log.trace("Bucket used={}", resetBucketNames[bucketIdx]);
                 }
-                filesToUse.add(new DictionaryEntry(resetBucketNames[bucketIdx], table.getRootUri(), null, bucketTagsArray[bucketIdx].toArray(String[]::new),
+                filesToUse.add(new DictionaryEntry(resetBucketNames[bucketIdx], table.getRootPath(), null, bucketTagsArray[bucketIdx].toArray(String[]::new),
                         null, null, false, true));
                 
                 } else if (bucket == null || include[bucketIdx]) { // all files from this bucket are to be included as they were

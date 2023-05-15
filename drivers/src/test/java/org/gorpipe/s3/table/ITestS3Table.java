@@ -102,9 +102,9 @@ public class ITestS3Table {
         gordFile = workDirPath.resolve("some_project").resolve("dict.gord");
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053043D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
     }
 
@@ -123,7 +123,7 @@ public class ITestS3Table {
 
         DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).validateFiles(false).build();
 
-        TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).validateFiles(false).fileReader(fileReader).build();
+        TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
         man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
 
         table.reload();
@@ -245,9 +245,9 @@ public class ITestS3Table {
         fileReader.createDirectories(parentPath);
         DictionaryTable dict = new DictionaryTable.Builder<>(dictPath).useHistory(useHistory).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053043D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
 
         return dictPath;
@@ -258,9 +258,9 @@ public class ITestS3Table {
         fileReader.createDirectories(dictPath);
         DictionaryTable dict = new DictionaryTable.Builder<>(dictPath + DEFAULT_FOLDER_DICTIONARY_NAME).useHistory(useHistory).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootUri()).alias("D3_WGC053043D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
 
         return dictPath;
@@ -273,7 +273,7 @@ public class ITestS3Table {
         String dictPath = createDictionary(remoteTestDir, false);
 
         try {
-            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).build();
+            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).useHistory(false).build();
             Assert.assertEquals(remoteTestDir, table.getRootPath());
 
             TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
@@ -303,7 +303,7 @@ public class ITestS3Table {
         String dictPath = createDictionaryFolder(remoteTestDir, false);
 
         try {
-            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).build();
+            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).useHistory(false).build();
             Assert.assertEquals(dictPath, PathUtils.markAsFolder(table.getRootPath()));
 
             TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
@@ -336,7 +336,7 @@ public class ITestS3Table {
             Path linkPath = workDirPath.resolve("local.gord.link");
             Files.writeString(linkPath, dictPath);
 
-            DictionaryTable table = new DictionaryTable.Builder<>(linkPath).fileReader(fileReader).build();
+            DictionaryTable table = new DictionaryTable.Builder<>(linkPath).fileReader(fileReader).useHistory(false).build();
             Assert.assertEquals(dictPath, PathUtils.markAsFolder(table.getRootPath()));
 
             TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();

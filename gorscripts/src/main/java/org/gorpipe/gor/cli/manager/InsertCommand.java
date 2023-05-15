@@ -23,16 +23,14 @@
 package org.gorpipe.gor.cli.manager;
 
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import picocli.CommandLine;
 
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,9 +73,9 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
     @Override
     public void run() {
         TableManager tm = TableManager.newBuilder()
-                .useHistory(!nohistory).minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
+                .minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
 
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
+        DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
             if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
@@ -89,8 +87,8 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
             }
 
             table.insert(this.files.stream()
-                    .map(f -> PathUtils.relativize(table.getRootUri(), f))
-                    .map(s -> new DictionaryEntry.Builder<>(s, table.getRootUri())
+                    .map(f -> PathUtils.relativize(table.getRootPath(), f))
+                    .map(s -> new DictionaryEntry.Builder<>(s, table.getRootPath())
                             .range(GenomicRange.parseGenomicRange(this.range))
                             .alias(alias)
                             .tags(this.tags)

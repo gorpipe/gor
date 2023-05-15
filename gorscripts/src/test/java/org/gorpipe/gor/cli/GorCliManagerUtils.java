@@ -25,7 +25,7 @@ package org.gorpipe.gor.cli;
 import org.apache.commons.io.IOUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -57,10 +57,10 @@ public class GorCliManagerUtils {
     public GorCliManagerUtils() {
     }
     
-    public void testBucketDirsHelper(TableManager man, BaseDictionaryTable<DictionaryEntry> table, List<String> bucketDirs, int fileCount) throws IOException {
+    public void testBucketDirsHelper(TableManager man, DictionaryTable table, List<String> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (String bucketDir : bucketDirs) {
-            Path bucketDirFull = Path.of(resolve(table.getRootUri(), bucketDir));
+            Path bucketDirFull = Path.of(resolve(table.getRootPath(), bucketDir));
             if (!Files.exists(bucketDirFull)) {
                 Files.createDirectories(bucketDirFull);
                 bucketDirFull.toFile().deleteOnExit();
@@ -171,7 +171,7 @@ public class GorCliManagerUtils {
         }
     }
 
-    void waitForBucketizeToStart(BaseDictionaryTable<DictionaryEntry> table, Process p) throws InterruptedException, IOException, ExecutionException {
+    void waitForBucketizeToStart(DictionaryTable table, Process p) throws InterruptedException, IOException, ExecutionException {
         long startTime = System.currentTimeMillis();
         while (true) {
             try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {

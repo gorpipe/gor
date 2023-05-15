@@ -26,6 +26,7 @@ import com.google.common.collect.*;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.table.TableInfo;
 import org.gorpipe.gor.table.TableHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,18 +34,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Class that handles the loading caching of and working with table entries.
+ *
+ * Class is thread safe.
  */
 public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T> {
     private static final Logger log = LoggerFactory.getLogger(TableEntries.class);
     private final Class<? extends T> clazzOfT;
 
     private List<T> rawLines;
+
     // For indices we use hashed values.  Insert into the dict is much much faster, and it takes a lot less space.  Getting data takes
     // a little bit longer as you could get small list of values you need to loop through.
     private ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
@@ -53,7 +56,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     List<T> activeLines;
     private Multiset<String> activeTags;
     private int deletedTagsCount = 0;
-    private final BaseDictionaryTable<T> table;
+    private final TableInfo<T> table;
 
     private boolean dataLoaded = false;
     private boolean tagHashLoaded = false;
@@ -64,7 +67,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
      * It is not simple to create objects of type T.  For now we pass in the class so we can do that.
      * Another option would be using google TypeToken, but we had problem getting that working.
      */
-    public TableEntries(BaseDictionaryTable<T> table, Class<? extends T> clazzOfT) {
+    public TableEntries(TableInfo<T> table, Class<? extends T> clazzOfT) {
         this.table = table;
         this.clazzOfT = clazzOfT;
     }
@@ -277,17 +280,18 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
 
         // Relativesing the data is expensive, but because manual editing is common we need to do it if the file has not been
         // saved by table service before.
-        boolean hasNeverBeenSavedProperly = TableHeader.NO_SERIAL.equals(table.getHeader().getProperty(TableHeader.HEADER_SERIAL_KEY, TableHeader.NO_SERIAL));
+        String serial = table.getProperty(TableHeader.HEADER_SERIAL_KEY);
+        boolean hasNeverBeenSavedProperly = serial == null || TableHeader.NO_SERIAL.equals(serial);
         boolean needsRelativize = hasNeverBeenSavedProperly;
 
         try {
             List<T> newRawLines =  new ArrayList<>();
-            if (table.getFileReader().exists(table.getPathUri().toString())) {
-                try (BufferedReader br = table.getFileReader().getReader(table.getPathUri().toString())) {
+            if (table.getFileReader().exists(table.getPath())) {
+                try (BufferedReader br = table.getFileReader().getReader(table.getPath())) {
 
                     Method parseEntryMethod;
                     try {
-                        parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, URI.class, boolean.class);
+                        parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, String.class, boolean.class);
                     } catch (NoSuchMethodException ex) {
                         throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName() + ", no parseEntry method!", ex);
                     }
@@ -296,7 +300,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
                             String line = l;
                             if (!line.isEmpty() && !line.startsWith("#")) {
                                 try {
-                                    return (T) parseEntryMethod.invoke(null, line, table.getRootUri(), needsRelativize);
+                                    return (T) parseEntryMethod.invoke(null, line, table.getRootPath(), needsRelativize);
                                 } catch(IllegalAccessException | InvocationTargetException ex){
                                     throw new GorSystemException("Error Initializing Query, can not create entry of type: "
                                             + clazzOfT.getName() + ", error parsing line: \"" + l + "\"", ex);

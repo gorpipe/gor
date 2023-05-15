@@ -5,6 +5,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.Table;
+import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.DataUtil;
 import org.slf4j.Logger;
@@ -12,20 +13,18 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.URI;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
- * LinkTable consist of a link and the the actual data.
- *
+ * LinkTable consist of a link and the actual data.
+ * <p>
  * The link is used as the a standard table and is named and located like a standard table.  The actual data might be
  * in S3 or a data folder and should normally not be used directly.
- *
+ * <p>
  * The link table is updated by creating new data and then update the link. Using link tables allow us to update data
- * using S3 in simlilar way has is standard practice in NFS (create new temp file and then to an atomic move from the
+ * using S3 in similar way has is standard practice in NFS (create new temp file and then to an atomic move from the
  * temp file to the data file)
  *
  */
@@ -33,17 +32,17 @@ public class DictionaryLinkTable implements Table {
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryLinkTable.class);
 
-    private URI linkUri;            // Path to the link
-    private URI linkedTableURI;     // Content of the link
-    private URI replacementUri;     // new content of the link (before commit)
+    private String linkUri;            // Path to the link
+    private String linkedTableURI;     // Content of the link
+    private String replacementUri;     // new content of the link (before commit)
 
     private DictionaryTable linkedTable;
     private FileReader fileReader;
 
 
-    public DictionaryLinkTable(URI uri, FileReader inputFileReader) {
+    public DictionaryLinkTable(String uri, FileReader inputFileReader) {
         this.linkUri = uri;
-        setFileReader(inputFileReader);
+        this.fileReader = inputFileReader;
         linkedTableURI = readLinkContent(uri, inputFileReader);
         if (linkedTableURI != null) {
             linkedTable = new DictionaryTable(linkedTableURI, fileReader);
@@ -55,7 +54,7 @@ public class DictionaryLinkTable implements Table {
      * Make this link table point to a new external dict.
      * @param uri
      */
-    public void link(URI uri) {
+    public void link(String uri) {
         replacementUri = uri;
     }
 
@@ -66,6 +65,11 @@ public class DictionaryLinkTable implements Table {
     @Override
     public String getName() {
         return null;
+    }
+
+    @Override
+    public String getId() {
+        return linkedTable.getId();
     }
 
     @Override
@@ -154,12 +158,12 @@ public class DictionaryLinkTable implements Table {
         throw new GorSystemException("Can not insert entries into DictionaryLinkTable, use replace(new dict)", null);
     }
 
-    @Override
+    //@Override
     public void commitRequest() {
-        
+
     }
 
-    @Override
+    //@Override
     public void commit() {
         if (replacementUri != null) {
             // TODO:  Update new meta from old meta.
@@ -198,6 +202,16 @@ public class DictionaryLinkTable implements Table {
     }
 
     @Override
+    public String formatHeader() {
+        return linkedTable.formatHeader();
+    }
+
+    @Override
+    public FileReader getFileReader() {
+        return linkedTable.getFileReader();
+    }
+
+    //@Override
     public String getSecurityContext() {
         return linkedTable.getSecurityContext();
     }
@@ -208,17 +222,22 @@ public class DictionaryLinkTable implements Table {
     }
 
     @Override
-    public void setFileReader(FileReader fileReader) {
-        this.fileReader = fileReader;
+    public void setValidateFiles(boolean validateFiles) {
+
     }
 
-    private static URI readLinkContent(URI uri, FileReader fileReader) {
+    @Override
+    public void setUseHistory(boolean useHistory) {
+
+    }
+
+    private static String readLinkContent(String uri, FileReader fileReader) {
         try {
-            return URI.create(fileReader.readLinkContent(uri.toString()));
+            return fileReader.readLinkContent(uri);
 
         } catch (Exception e) {
             // Does not exist, need to create a dummy one (so we for example can participate in trans).                 
-            return URI.create(DataUtil.toFile(String.format("/tmp/dummy_%s", UUID.randomUUID()), DataType.GORD));
+            return DataUtil.toFile(String.format("/tmp/dummy_%s", UUID.randomUUID()), DataType.GORD);
         }
     }
 }

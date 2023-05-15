@@ -24,11 +24,10 @@ package org.gorpipe.gor.manager;
 
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.Dictionary;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.test.GorDictionarySetup;
@@ -89,7 +88,7 @@ public class UTestTableManager {
         Path dictFile = testWorkDir.resolve(name + ".gord");
         
         TableManager man = TableManager.newBuilder().lockTimeout(Duration.ofDays(13)).build();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
     }
@@ -102,11 +101,12 @@ public class UTestTableManager {
         Path testFile2 = Files.createFile(testWorkDir.resolve("basicInsertFile2.gor")).normalize();
 
 
-        TableManager man = TableManager.newBuilder().validateFiles(false).build();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        TableManager man = TableManager.newBuilder().build();
+        DictionaryTable table = man.initTable(dictFile);
+        table.setValidateFiles(false);
 
-        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
+        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).collect(Collectors.joining());
 
@@ -122,24 +122,26 @@ public class UTestTableManager {
         Path testFile2 = workDirPath.toAbsolutePath().relativize(Paths.get(dataFiles.get("B").get(0))).normalize();
 
         // Test History option false.
-        TableManager manNoHist = TableManager.newBuilder().useHistory(false).build();
+        TableManager manNoHist = TableManager.newBuilder().build();
         String noHistDict = "noHistDict";
-        BaseDictionaryTable<DictionaryEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        DictionaryTable table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        table.setUseHistory(false);
         table.save();
-        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
+        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
+        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
+        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(DictionaryTable.HISTORY_DIR_NAME)));
 
         // Test History option true.
-        TableManager manHist = TableManager.newBuilder().useHistory(true).build();
+        TableManager manHist = TableManager.newBuilder().build();
         String histDict = "histDict";
         table = manHist.initTable(workDirPath.resolve(histDict + ".gord"));
+        table.setUseHistory(true);
         table.save();
-        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1, table.getRootUri()).alias("A").build());
-        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2, table.getRootUri()).alias("B").build());
+        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
+        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
         table.reload();
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count()); // 1 action log.
+        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(DictionaryTable.HISTORY_DIR_NAME)));
+        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(DictionaryTable.HISTORY_DIR_NAME)).count()); // 1 action log.
     }
 
     @Test
@@ -512,7 +514,7 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toString()).build();
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         DictionaryTable table1 = TestUtils.createDictionaryWithData(name + 1, workDirPath, new HashMap<>());
@@ -530,7 +532,7 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         man.setBucketSize(1);
@@ -551,7 +553,7 @@ public class UTestTableManager {
 
         TableManager man = new TableManager();
         DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         man.setBucketSize(4);
@@ -573,7 +575,7 @@ public class UTestTableManager {
         TableManager man = new TableManager();
         DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
         dummyTable.setBucketize(true);
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootUri()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         man.setBucketSize(4);
@@ -585,7 +587,7 @@ public class UTestTableManager {
                 
     }
 
-    private void testRepeatedInsertDeleteHelper(TableManager man, DictionaryEntry[] entries, String[] pns, BaseDictionaryTable table, boolean bucketize, BucketManager.BucketPackLevel pack) throws InterruptedException {
+    private void testRepeatedInsertDeleteHelper(TableManager man, DictionaryEntry[] entries, String[] pns, DictionaryTable table, boolean bucketize, BucketManager.BucketPackLevel pack) throws InterruptedException {
         // Turn of the dictionary cache, if the cache is active we need ot wait for 1 second after each insert.
         System.setProperty("gor.dictionary.cache.active", "false");   // The RestoreSystemProperty rule will take care of restore the property.
 
@@ -654,7 +656,7 @@ public class UTestTableManager {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFile4}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);
@@ -710,31 +712,6 @@ public class UTestTableManager {
     }
 
     @Test
-    public void testHistoryOptionCLI() throws Exception {
-        String name = "testHistoryOptionCLI";
-        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
-                name, workDirPath, 2, new int[]{1, 2}, 10, "PN", true, new String[]{"A", "B"});
-        String testFile1 = workDirPath.toAbsolutePath().relativize(Paths.get(dataFiles.get("A").get(0))).normalize().toString();
-        String testFile2 = workDirPath.toAbsolutePath().relativize(Paths.get(dataFiles.get("B").get(0))).normalize().toString();
-
-        // Test History option.
-        String noHistDict = "noHistDict";
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict + ".gord").toString(), new String[]{}, "insert", new String[]{"--alias", "A", testFile1}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + noHistDict).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-
-        String noHistDict2 = "noHistDict2";
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(noHistDict2 + ".gord").toString(), new String[]{"--history", "false"}, "insert", new String[]{"--alias", "A", testFile1}, workDirPath.toString(), true);
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-
-        String histDict2 = "histDict2";
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "A", testFile1}, workDirPath.toString(), true);
-        testTableManagerUtil.executeGorManagerCommand(workDirPath.resolve(histDict2 + ".gord").toString(), new String[]{"--history", "true"}, "insert", new String[]{"--alias", "B", testFile2}, workDirPath.toString(), true);
-        Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)));
-        Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict2).resolve(BaseDictionaryTable.HISTORY_DIR_NAME)).count()); // 1 action.log.
-
-    }
-
-    @Test
     public void testDirectCLI() throws Exception {
         String name = "testDirectCLI";
         int fileCount = 4;
@@ -756,7 +733,7 @@ public class UTestTableManager {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFile4});
 
         TableManager man = new TableManager();
-        BaseDictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
+        DictionaryTable table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);

@@ -27,10 +27,10 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.test.GorDictionarySetup;
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -89,7 +90,7 @@ public class UTestBucketManager {
         Path testWorkDir = workDir.newFolder(name).toPath();
         Path dictFile = testWorkDir.resolve(name + ".gord");
 
-        BaseDictionaryTable<DictionaryEntry> table = createTable(dictFile);
+        DictionaryTable table = createTable(dictFile);
         BucketManager man = BucketManager.newBuilder(table).lockTimeout(Duration.ofDays(13)).build();
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
@@ -97,7 +98,7 @@ public class UTestBucketManager {
 
     @Test
     public void testSettingBucketsize() throws Exception {
-        BaseDictionaryTable<DictionaryEntry> table = createTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        DictionaryTable table = createTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(20);
@@ -313,7 +314,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = DictionaryTable.getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -346,7 +347,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = DictionaryTable.getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -378,7 +379,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = DictionaryTable.getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -406,7 +407,7 @@ public class UTestBucketManager {
             buc.setMinBucketSize(20);
             buc.setBucketSize(100);
 
-            String bucketDir = resolve(table.getRootUri(), buc.pickBucketDir()).toString();
+            String bucketDir = resolve(table.getRootPath(), buc.pickBucketDir()).toString();
 
             Path dictPath = Paths.get(workDir.getRoot().toString(), name + ".gord");
             Assert.assertEquals("Dictionary file not created", dictPath.toString(), table.getPath());
@@ -418,7 +419,7 @@ public class UTestBucketManager {
             buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, 1000);
 
             Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
-            Assert.assertEquals("Not correct number of buckets created", 10, Files.list(Path.of(formatUri(resolve(table.getRootUri(), bucketDir)))).filter(p -> p.toString().endsWith(".gorz")).count());
+            Assert.assertEquals("Not correct number of buckets created", 10, Files.list(Path.of(formatUri(resolve(table.getRootPath(), bucketDir)))).filter(p -> p.toString().endsWith(".gorz")).count());
 
             // Add more - exact bucket size
             dataFiles = GorDictionarySetup.createDataFilesMap(
@@ -769,11 +770,22 @@ public class UTestBucketManager {
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
     }
 
-    private BaseDictionaryTable<DictionaryEntry> createTable(Path path) {
+    private DictionaryTable createTable(Path path) {
         return new DictionaryTable.Builder<>(path).useHistory(true).validateFiles(false).build();
     }
 
-    private void testBucketDirsHelper(BucketManager buc, BaseDictionaryTable<DictionaryEntry> table, List<String> bucketDirs, int fileCount) throws IOException {
+    private DictionaryTable getTable(String path, FileReader fileReader) throws IOException {
+        // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
+        //        exception if file does not exists.
+        if (!fileReader.exists(path)) {
+            throw new NoSuchFileException(path);
+        }
+
+        // The dict is lazy loaded so the onnly cost is finding the id.
+        return new DictionaryTable(path, fileReader);
+    }
+
+    private void testBucketDirsHelper(BucketManager buc, DictionaryTable table, List<String> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (String bucketDir : bucketDirs) {
             Path bucketDirFull = Path.of(resolve(table.getRootPath(), bucketDir));

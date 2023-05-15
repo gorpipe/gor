@@ -41,7 +41,7 @@ public class UTestNorTable {
         String name = "fromempty";
         Path norFile = workDirPath.resolve(name + ".nor");
 
-        NorTable<Row> table = new NorTable<>(norFile.toUri());
+        NorTable<Row> table = new NorTable<>(norFile.toString());
         table.setColumns("A", "B", "C");
         table.save();
 
@@ -53,9 +53,7 @@ public class UTestNorTable {
         String meta = Files.readString(metaFile);
         Assert.assertTrue(meta.contains("## CREATED = "));
         Assert.assertEquals("## SERIAL = 1\n" +
-                        "## USE_HISTORY = true\n" +
                         "## FILE_FORMAT = 1.0\n" +
-                        "## VALIDATE_FILES = true\n" +
                         "## COLUMNS = A,B,C",
                 Arrays.stream(meta.split("\n"))
                         .filter(l -> !l.startsWith("## CREATED"))
@@ -70,7 +68,7 @@ public class UTestNorTable {
         String content = "#A\tB\tC\nd\te\tf\n";
         Files.write(norFile, content.getBytes(StandardCharsets.UTF_8));
 
-        NorTable<Row> table = new NorTable<>(norFile.toUri());
+        NorTable<Row> table = new NorTable<>(norFile.toString());
         table.save();
 
         Assert.assertArrayEquals(new String[]{"A", "B", "C"}, table.getColumns());
@@ -82,8 +80,6 @@ public class UTestNorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 1\n" +
-                "## USE_HISTORY = true\n" +
-                "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = A,B,C\n", meta);
     }
 
@@ -104,7 +100,7 @@ public class UTestNorTable {
                 "## COLUMNS = A,B,C\n";
         Files.write(metaFile, meta.getBytes(StandardCharsets.UTF_8));
 
-        NorTable<Row> table = new NorTable<>(norFile.toUri());
+        NorTable<Row> table = new NorTable<>(norFile.toString());
         table.save();
 
         Assert.assertArrayEquals(new String[]{"A", "B", "C"}, table.getColumns());
@@ -129,7 +125,7 @@ public class UTestNorTable {
         String content = "#A\tB\tC\nd\te\tf\n";
         Files.write(norFile, content.getBytes(StandardCharsets.UTF_8));
 
-        NorTable<Row> table = new NorTable<>(norFile.toUri());
+        NorTable<Row> table = new NorTable<>(norFile.toString());
 
         table.insert("d1\te1\tf1","d2\te2\tf2");;
         table.insert("d3\te3\tf3");
@@ -147,8 +143,6 @@ public class UTestNorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 1\n" +
-                "## USE_HISTORY = true\n" +
-                "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = A,B,C\n", meta);
     }
 
@@ -159,9 +153,9 @@ public class UTestNorTable {
 
         Files.write(workDirPath.resolve("input1.nor"), "#A\tB\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
 
-        NorTable<Row> table = new NorTable<>(norFile.toUri());
+        NorTable<Row> table = new NorTable<>(norFile.toString());
 
-        table.insertEntries(List.of((DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toUri()).alias("A").build()));
+        table.insertEntries(List.of((DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toString()).alias("A").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"A", "B", "ref"}, table.getColumns());
@@ -174,8 +168,6 @@ public class UTestNorTable {
         Assert.assertTrue(Files.exists(metaFile));
 
         Assert.assertEquals("1", table.getProperty("SERIAL"));
-        Assert.assertEquals("true", table.getProperty("USE_HISTORY"));
-        Assert.assertEquals("true", table.getProperty("VALIDATE_FILES"));
         Assert.assertEquals("A,B,ref", table.getProperty("COLUMNS"));
     }
 
@@ -190,10 +182,10 @@ public class UTestNorTable {
 
         Files.write(workDirPath.resolve("input1.nor"), "#A\tB\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
 
-        NorTable<Row> table = new NorTable<>(norFile.toUri());
+        NorTable<Row> table = new NorTable<>(norFile.toString());
 
         table.insertEntries(List.of(
-                (DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toUri()).alias("A").build()));
+                (DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toString()).alias("A").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"A", "B", "ref"}, table.getColumns());
@@ -207,8 +199,6 @@ public class UTestNorTable {
         Assert.assertTrue(Files.exists(metaFile));
 
         Assert.assertEquals("1", table.getProperty("SERIAL"));
-        Assert.assertEquals("true", table.getProperty("USE_HISTORY"));
-        Assert.assertEquals("true", table.getProperty("VALIDATE_FILES"));
         Assert.assertEquals("A,B,ref", table.getProperty("COLUMNS"));
     }
 }

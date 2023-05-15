@@ -2,22 +2,23 @@ package org.gorpipe.gor.table.files;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.gor.model.RowBase;
-import org.gorpipe.gor.table.BaseTable;
-import org.gorpipe.gor.table.GorPipeUtils;
-import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.table.TableLog;
+import org.gorpipe.gor.table.*;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.livecycle.TableInfoBase;
+import org.gorpipe.gor.table.livecycle.TableTwoPhaseCommitSupport;
+import org.gorpipe.gor.table.livecycle.TableBuilder;
+import org.gorpipe.gor.table.util.TableLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,28 +34,102 @@ import java.util.stream.Stream;
  * The internal data is stored in temp files.
  *
  */
-public abstract class FileTable<T extends Row> extends BaseTable<T> {
+public abstract class FileTable<T extends Row> extends TableInfoBase<T> implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(FileTable.class);
 
+    protected TableTwoPhaseCommitSupport support;
+
     protected String tempOutFilePath;
 
-    public FileTable(Builder builder) {
-        super(builder);
+    public FileTable(TableBuilder builder) {
+        this(builder.path, builder.fileReader);
+
+        if (builder.validateFiles != null) {
+            support.setValidateFiles(builder.validateFiles);
+        }
+
+        if (builder.useHistory != null) {
+            support.setUseHistory(builder.useHistory);
+        }
+
+        if (builder.id != null) {
+            this.id = builder.id;
+        }
+    }
+
+    public FileTable(String uri, FileReader inputFileReader) {
+        super(uri, inputFileReader);
         init();
     }
 
-    public FileTable(URI uri, FileReader inputFileReader) {
-        super(uri, inputFileReader);
-        init();
+    @Override
+    public void commitRequest() throws GorException {
+        support.commitRequest();
+    }
+
+    @Override
+    public void commit() {
+        support.commit();
     }
 
     private void init() {
         this.header = new TableHeader();
         if (fileReader.exists(getPath().toString())) {
+            // TODO: We are validating before we read the meta!! Why do we need to validate the file against it self?
             validateFile(getPath().toString());
         }
+        support = new TableTwoPhaseCommitSupport(this) {
+            @Override
+            public void saveTempMainFile() {
+                // Move our temp file to the standard temp file and clean up.
+                // or if these are links update the link file to point to the new temp file.
+                // Clean up (remove old files and temp files)  s
+                log.debug(String.format("Saving temp file (%s)to temp main file (%s) ",  tempOutFilePath, getTempMainFileName()));
+                try {
+                    if (tempOutFilePath != null && getFileReader().exists(tempOutFilePath.toString())) {
+                        updateFromTempFile(tempOutFilePath.toString(), getTempMainFileName());
+                        tempOutFilePath = null;
+                        getFileReader().deleteDirectory(getTransactionFolderPath().toString());
+                    } else if (!getFileReader().exists(getPath().toString())) {
+                        writeToFile(Path.of(getTempMainFileName()), new ArrayList<>());
+                    }
+                } catch (IOException e) {
+                    throw new GorSystemException("Could not save table", e);
+                }
+            }
+        };
         reload();
+    }
+
+    @Override
+    public void setProperty(String key, String value) {
+        support.setProperty(key, value);
+    }
+
+    @Override
+    public void setColumns(String... columns) {
+        support.setColumns(columns);
+    }
+
+    @Override
+    public void setValidateFiles(boolean validateFiles) {
+        support.setValidateFiles(validateFiles);
+    }
+
+    @Override
+    public void setUseHistory(boolean useHistory) {
+        support.setUseHistory(useHistory);
+    }
+
+    @Override
+    public void save() {
+        support.save();
+    }
+
+    @Override
+    public void delete() {
+        support.delete();
     }
 
     @Override
@@ -86,7 +161,7 @@ public abstract class FileTable<T extends Row> extends BaseTable<T> {
         }
         insertFiles(tempInputFile.toString());
 
-        logAfter(TableLog.LogAction.INSERT, "", lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
+        support.logAfter(TableLog.LogAction.INSERT, "", lines.stream().map(l -> l.otherCols()).toArray(String[]::new));
     }
 
     @Override
@@ -182,28 +257,11 @@ public abstract class FileTable<T extends Row> extends BaseTable<T> {
 
     protected abstract String getGorCommand();
 
-    @Override
-    public void saveTempMainFile() {
-        // Move our temp file to the standard temp file and clean up.
-        // or if these are links update the link file to point to the new temp file.
-        // Clean up (remove old files and temp files)  s
-        log.debug(String.format("Saving temp file (%s)to temp main file (%s) ",  tempOutFilePath, getTempMainFileName()));
-        try {
-            if (tempOutFilePath != null && getFileReader().exists(tempOutFilePath.toString())) {
-                updateFromTempFile(tempOutFilePath.toString(), getTempMainFileName());
-                tempOutFilePath = null;
-                getFileReader().deleteDirectory(getTransactionFolderPath().toString());
-            } else if (!getFileReader().exists(getPath().toString())) {
-                writeToFile(Path.of(getTempMainFileName()), new ArrayList<>());
-            }
-        } catch (IOException e) {
-            throw new GorSystemException("Could not save table", e);
-        }
-    }
+
 
     @Override
     public void initialize() {
-        super.initialize();
+        support.initialize();
     }
 
     protected Path getTransactionFolderPath() {
@@ -229,7 +287,8 @@ public abstract class FileTable<T extends Row> extends BaseTable<T> {
     protected abstract String createInsertTempFileCommand(String mainFile, String outFile, String... insertFiles);
 
     protected String getPostProcessing() {
-        String insertPostProcessing = getHeader().getProperty(TableHeader.HEADER_SELECT_TRANSFORM_KEY, "");
+        String insertPostProcessing = getProperty(TableHeader.HEADER_SELECT_TRANSFORM_KEY);
+        insertPostProcessing = insertPostProcessing == null ? "" : insertPostProcessing;
         if (!insertPostProcessing.isEmpty() && !insertPostProcessing.trim().startsWith("|")) {
             insertPostProcessing = "| " + insertPostProcessing;
         }

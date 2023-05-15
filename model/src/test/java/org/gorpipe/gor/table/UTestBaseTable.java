@@ -16,9 +16,8 @@ import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.util.ByteTextBuilder;
 import org.gorpipe.test.SlowTests;
 import org.junit.Assert;
@@ -126,7 +125,7 @@ public class UTestBaseTable {
         dfile.toFile().setLastModified(System.currentTimeMillis() + 10000);
         Path dlink = Files.createSymbolicLink(workDirPath.resolve("dlink.gor"), dfile);
         dlink.toFile().setLastModified(System.currentTimeMillis() + 20000);
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(dlink, dict.getRootUri()).alias("d").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(dlink.toString(), dict.getRootPath()).alias("d").build());
         dict.save();
 
         Assert.assertEquals("LastModfied system link failed", dfile.toFile().lastModified(), dict.getLastModified("d"));
@@ -138,7 +137,7 @@ public class UTestBaseTable {
         Path elink = workDirPath.resolve("e.gor.link");
         Files.write(elink, efile.toString().getBytes());
         elink.toFile().setLastModified(System.currentTimeMillis() + 40000);
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(elink, dict.getRootUri()).alias("dl").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(elink.toString(), dict.getRootPath()).alias("dl").build());
         dict.save();
 
         Assert.assertEquals("LastModfied link file failed", efile.toFile().lastModified(), dict.getLastModified("dl"));
@@ -152,7 +151,7 @@ public class UTestBaseTable {
         Path flink = workDirPath.resolve("f.gor.link");
         Files.write(flink, ffile.toString().getBytes());
         flink.toFile().setLastModified(System.currentTimeMillis() + 60000);
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(Paths.get("f.gor"), dict.getRootUri()).alias("f").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder("f.gor", dict.getRootPath()).alias("f").build());
         dict.save();
 
         Assert.assertEquals("LastModfied missing file (link failover) failed", ffile.toFile().lastModified(), dict.getLastModified("f"));
@@ -562,11 +561,11 @@ public class UTestBaseTable {
         Path abfile = createTestFile(workDirPath.resolve("ab.gor"), 10, "a", "b");
         Path bcfile = createTestFile(workDirPath.resolve("bc.gor"), 10, "b", "c");
 
-        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("a").build());
-        dict.insert(new DictionaryEntry.Builder<>(bfile, dict.getRootUri()).alias("b").build());
-        dict.insert(new DictionaryEntry.Builder<>(cfile, dict.getRootUri()).alias("c").build());
-        dict.insert(new DictionaryEntry.Builder<>(abfile, dict.getRootUri()).alias("ab").build());
-        dict.insert(new DictionaryEntry.Builder<>(bcfile, dict.getRootUri()).alias("bc").build());
+        dict.insert(new DictionaryEntry.Builder<>(afile.toString(), dict.getRootPath()).alias("a").build());
+        dict.insert(new DictionaryEntry.Builder<>(bfile.toString(), dict.getRootPath()).alias("b").build());
+        dict.insert(new DictionaryEntry.Builder<>(cfile.toString(), dict.getRootPath()).alias("c").build());
+        dict.insert(new DictionaryEntry.Builder<>(abfile.toString(), dict.getRootPath()).alias("ab").build());
+        dict.insert(new DictionaryEntry.Builder<>(bcfile.toString(), dict.getRootPath()).alias("bc").build());
         dict.save();
     }
 
@@ -621,43 +620,43 @@ public class UTestBaseTable {
 
         // Relative
         URI path = URI.create("x/y/z.gor");
-        DictionaryEntry entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
+        DictionaryEntry entry = new DictionaryEntry.Builder(path.toString(), dict.getRootPath()).build();
 
-        Assert.assertEquals("Relative path, wrong absolute path", gordFile.getParent().resolve(path.toString()).toString(), entry.getContentReal(dict.getRootUri()));
+        Assert.assertEquals("Relative path, wrong absolute path", gordFile.getParent().resolve(path.toString()).toString(), entry.getContentReal(dict.getRootPath()));
         Assert.assertEquals("Relative path, wrong relative path", "x/y/z.gor", entry.getContentRelative());
 
 
         // Absolute (to subfolder)
         path = URI.create(workDirPath.resolve("a/b/x/y/z.gor").toString());
-        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
+        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootPath()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Absolute path to subfolder, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootUri()));
+        Assert.assertEquals("Absolute path to subfolder, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootPath()));
         Assert.assertEquals("Absolute path to subfolder, wrong relative path", "x/y/z.gor", entry.getContentRelative());
 
         // Absolute path
         Path pathPath = Paths.get("t1.gor").toAbsolutePath();
-        entry = new DictionaryEntry.Builder(pathPath, dict.getRootUri()).build();
+        entry = new DictionaryEntry.Builder(pathPath.toString(), dict.getRootPath()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Absolute path, wrong absolute path", pathPath.toString(), entry.getContentReal(dict.getRootUri()));
+        Assert.assertEquals("Absolute path, wrong absolute path", pathPath.toString(), entry.getContentReal(dict.getRootPath()));
         Assert.assertEquals("Absolute path, wrong relative path", pathPath.toString(), entry.getContentRelative());
 
         // Absolute uri
         path = URI.create(Paths.get(".").toAbsolutePath().normalize().resolve("t2.gor").toString());
-        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
+        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootPath()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Absolute uri, wrong absolute path", path.getPath(), entry.getContentReal(dict.getRootUri()));
+        Assert.assertEquals("Absolute uri, wrong absolute path", path.getPath(), entry.getContentReal(dict.getRootPath()));
         Assert.assertEquals("Absolute uri, wrong relative path", path.getPath(), entry.getContentRelative());
 
 
         // With schmea
         path = URI.create("s3://someaddress/path/x/y?a=b;c=d#xxx");
-        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
+        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootPath()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootUri()));
+        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootPath()));
         Assert.assertEquals("Schema path wrong relative path", path.toString(), entry.getContentRelative());
 
 
@@ -667,10 +666,10 @@ public class UTestBaseTable {
         Path somegor = Files.createFile(tmpDir.resolve("some.gor"));
         Files.createDirectories(workDirPath.resolve("a/b"));
         path = URI.create(Files.createSymbolicLink(workDirPath.resolve("a/b/link_to_some.gor"), somegor).toString());
-        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootUri()).build();
+        entry = new DictionaryEntry.Builder(path.toString(), dict.getRootPath()).build();
         dict.insert(entry);
 
-        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootUri()));
+        Assert.assertEquals("Schema path, wrong absolute path", path.toString(), entry.getContentReal(dict.getRootPath()));
         Assert.assertEquals("Schema path wrong relative path", "link_to_some.gor", entry.getContentRelative());
 
         dict.save();
@@ -698,9 +697,9 @@ public class UTestBaseTable {
 
         // Delete and readd - can confuse the optimzer.
 
-        dict.delete(dict.filter().files(URI.create(afile.toString())).get());
+        dict.delete(dict.filter().files(afile.toString()).get());
         dict.save();
-        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").build());
+        dict.insert(new DictionaryEntry.Builder<>(afile.toString(), dict.getRootPath()).alias("ABC1234").build());
         dict.save();
 
         List<? extends DictionaryEntry> lines = dict.getOptimizedLines(new HashSet<>(Arrays.asList("ABC1234")), false, false);
@@ -746,7 +745,7 @@ public class UTestBaseTable {
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
 
         afile = Files.write(workDirPath.resolve("a.gor"), "chromo\tpos\tdata\n1\t1000\tx\n".getBytes());
-        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").build());
+        dict.insert(new DictionaryEntry.Builder<>(afile.toString(), dict.getRootPath()).alias("ABC1234").build());
 
         Assert.assertTrue(dict.isBucketize());
     }
@@ -758,7 +757,7 @@ public class UTestBaseTable {
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
 
         afile = Files.write(workDirPath.resolve("a.tsv"), "chromo\tpos\tdata\n1\t1000\tx\n".getBytes());
-        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").build());
+        dict.insert(new DictionaryEntry.Builder<>(afile.toString(), dict.getRootPath()).alias("ABC1234").build());
 
         Assert.assertFalse(dict.isBucketize());
     }
@@ -777,9 +776,9 @@ public class UTestBaseTable {
         Files.write(workDirPath.resolve("bucket1.gor"), "chromo\tpos\tdata\ttag\n1\t1000\tx\tABC1234\n1\t1020\tx\tABC3234\n".getBytes());
         Files.write(workDirPath.resolve("bucket2.gor"), "chromo\tpos\tdata\ttag\n1\t1010\ty\tABC2234\n".getBytes());
 
-        dict.insert(new DictionaryEntry.Builder<>(afile, dict.getRootUri()).alias("ABC1234").bucket("bucket1.gor").build());
-        dict.insert(new DictionaryEntry.Builder<>(bfile, dict.getRootUri()).alias("ABC2234").bucket("bucket2.gor").build());
-        dict.insert(new DictionaryEntry.Builder<>(cfile, dict.getRootUri()).alias("ABC3234").bucket("bucket1.gor").build());
+        dict.insert(new DictionaryEntry.Builder<>(afile.toString(), dict.getRootPath()).alias("ABC1234").bucket("bucket1.gor").build());
+        dict.insert(new DictionaryEntry.Builder<>(bfile.toString(), dict.getRootPath()).alias("ABC2234").bucket("bucket2.gor").build());
+        dict.insert(new DictionaryEntry.Builder<>(cfile.toString(), dict.getRootPath()).alias("ABC3234").bucket("bucket1.gor").build());
         dict.save();
     }
 

@@ -28,7 +28,7 @@ import de.tototec.cmdoption.CmdlineParser;
 import de.tototec.cmdoption.handler.AddToCollectionHandler;
 import de.tototec.cmdoption.handler.CmdOptionHandler;
 import org.apache.commons.lang3.ArrayUtils;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.dictionary.TableFilter;
 import org.gorpipe.gor.table.lock.TableTransaction;
@@ -45,7 +45,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -130,7 +129,7 @@ public class TableManagerCLI {
         private boolean help = false;
         @CmdOption(names = {"--lock_timeout"}, args = {"<value>"}, description = "Maximum time (in seconds) we will wait for acquiring lock an a resource.  Default: 1800 sec.")
         private int lockTimeout = Math.toIntExact(TableManager.DEFAULT_LOCK_TIMEOUT.getSeconds());
-        @CmdOption(names = {"--history"}, args = {"<value>"}, description = "Don't keep history of gord files in the dictionary folder.  If not set we only keep the last one.  Default: True.")
+        @CmdOption(names = {"--history"}, args = {"<value>"}, description = "Keep history of commands in an action log file.  Default: True.")
         private boolean history = true;
         @CmdOption(names = {"--validate"}, args = {"<value>"}, description = "Should the header of the input files be validate against the dictionary.  Default: True.")
         protected boolean validateFiles = true;
@@ -164,10 +163,10 @@ public class TableManagerCLI {
 
         public void run(GenericOptions genericOpts) {
             TableManager tm = TableManager.newBuilder()
-                    .useHistory(genericOpts.history).minBucketSize(minBucketSize).bucketSize(bucketSize)
-                    .lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).validateFiles(genericOpts.validateFiles).build();
+                    .minBucketSize(minBucketSize).bucketSize(bucketSize)
+                    .lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
 
-            BaseDictionaryTable table = tm.initTable(genericOpts.table);
+            DictionaryTable table = tm.initTable(genericOpts.table);
             try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
                 if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
                     table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
@@ -177,8 +176,8 @@ public class TableManagerCLI {
                     table.setUniqueTags(tagskey);
                 }
                 table.insert(this.files.stream()
-                        .map(f -> PathUtils.relativize(table.getRootUri(), f))
-                        .map(p -> new DictionaryEntry.Builder<>(p, table.getRootUri())
+                        .map(f -> PathUtils.relativize(table.getRootPath(), f))
+                        .map(p -> new DictionaryEntry.Builder<>(p, table.getRootPath())
                                 .range(GenomicRange.parseGenomicRange(this.range))
                                 .alias(alias)
                                 .tags(this.tags)
@@ -226,9 +225,11 @@ public class TableManagerCLI {
             // Run
 
             TableManager tm = TableManager.newBuilder()
-                    .useHistory(genericOpts.history).minBucketSize(minBucketSize).bucketSize(bucketSize).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
+                    .minBucketSize(minBucketSize)
+                    .bucketSize(bucketSize)
+                    .lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
 
-            BaseDictionaryTable table = tm.initTable(genericOpts.table);
+            DictionaryTable table = tm.initTable(genericOpts.table);
 
             try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
                 if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
@@ -236,7 +237,7 @@ public class TableManagerCLI {
                 }
 
                 table.insert(IntStream.range(0, files.size())
-                        .mapToObj(i -> new DictionaryEntry.Builder<>(PathUtils.relativize(table.getRootUri(), files.get(i)), table.getRootUri())
+                        .mapToObj(i -> new DictionaryEntry.Builder<>(PathUtils.relativize(table.getRootPath(), files.get(i)), table.getRootPath())
                                 .range(GenomicRange.parseGenomicRange(ranges.get(i)))
                                 .alias(aliases.get(i))
                                 .tags(new String[]{tags.get(i)})
@@ -255,9 +256,9 @@ public class TableManagerCLI {
 
         public void run(GenericOptions genericOpts) {
             // We support taking files both as -f option and generic arguments, simply combine those two before running.
-            TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
+            TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
             final TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
-            BaseDictionaryTable table = tm.initTable(genericOpts.table);
+            DictionaryTable table = tm.initTable(genericOpts.table);
             tm.delete(genericOpts.table, lines);
         }
     }
@@ -284,7 +285,7 @@ public class TableManagerCLI {
         public void run(GenericOptions genericOpts) {
             log.trace("Calling command bucketize");
             TableManager tm = TableManager.newBuilder().minBucketSize(this.minBucketSize).bucketSize(this.bucketSize)
-                    .useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout))
+                    .lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout))
                     .build();
             tm.bucketize(genericOpts.table, this.bucketPackLevel, this.workers, this.maxBucketCount, bucketDirs.stream().collect(Collectors.toList()));
         }
@@ -297,7 +298,7 @@ public class TableManagerCLI {
         private List<String> argsBuckets = new ArrayList<>();
 
         public void run(GenericOptions genericOpts) {
-            TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
+            TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
             tm.deleteBuckets(genericOpts.table, argsBuckets.stream().toArray(String[]::new));
         }
     }
@@ -310,7 +311,7 @@ public class TableManagerCLI {
         private List<String> argsFiles = new ArrayList<>();
 
         public void run(GenericOptions genericOpts) {
-            TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
+            TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
             final TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
             tm.print(lines);
         }
@@ -331,8 +332,8 @@ public class TableManagerCLI {
                 long period;
 
                 Duration lockTimeout = Duration.ofSeconds(genericOpts.lockTimeout);
-                TableManager tm = TableManager.newBuilder().useHistory(genericOpts.history).lockTimeout(lockTimeout).build();
-                BaseDictionaryTable table = tm.initTable(genericOpts.table);
+                TableManager tm = TableManager.newBuilder().lockTimeout(lockTimeout).build();
+                DictionaryTable table = tm.initTable(genericOpts.table);
 
 
                 switch (subCommand.toLowerCase()) {
@@ -440,7 +441,7 @@ public class TableManagerCLI {
 
     private static TableFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
         String[] allFiles = ArrayUtils.addAll(args.files.toArray(new String[0]), args.files.toArray(new String[0]));
-        BaseDictionaryTable table = tm.initTable(genericOpts.table);
+        DictionaryTable table = tm.initTable(genericOpts.table);
 
         return table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)

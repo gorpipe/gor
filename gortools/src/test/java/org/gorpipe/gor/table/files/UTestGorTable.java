@@ -1,10 +1,7 @@
 package org.gorpipe.gor.table.files;
 
-import gorsat.TestUtils;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -45,7 +42,7 @@ public class UTestGorTable {
         String name = "fromempty";
         Path gorFile = workDirPath.resolve(name + ".gor");
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
         table.setColumns("chrom", "pos", "ref");
         table.save();
 
@@ -57,9 +54,7 @@ public class UTestGorTable {
         String meta = Files.readString(metaFile);
         Assert.assertTrue(meta.contains("## CREATED = "));
         Assert.assertEquals("## SERIAL = 1\n" +
-                        "## USE_HISTORY = true\n" +
                         "## FILE_FORMAT = 1.0\n" +
-                        "## VALIDATE_FILES = true\n" +
                         "## COLUMNS = chrom,pos,ref",
                 Arrays.stream(meta.split("\n"))
                         .filter(l -> !l.startsWith("## CREATED"))
@@ -75,7 +70,7 @@ public class UTestGorTable {
 
         Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
@@ -87,8 +82,6 @@ public class UTestGorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 1\n" +
-                "## USE_HISTORY = true\n" +
-                "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);
     }
 
@@ -109,7 +102,7 @@ public class UTestGorTable {
                 "## COLUMNS = chrom,pos,ref\n";
         Files.write(metaFile, meta.getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
@@ -134,7 +127,7 @@ public class UTestGorTable {
         String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
         Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insert("chr1\t2\tC","chr1\t3\tG");;
         table.insert("chr1\t4\tT\n");   // With new line.
@@ -152,8 +145,6 @@ public class UTestGorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 1\n" +
-                "## USE_HISTORY = true\n" +
-                "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);
     }
 
@@ -165,7 +156,7 @@ public class UTestGorTable {
         String content = "#chrom\tpos\tref\nchr1\t1\tA\n";
         Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insert("chr1\t2\tC","chr1\t3\tG");;
         table.insert("chr1\t2\tC");
@@ -190,7 +181,7 @@ public class UTestGorTable {
         Files.write(Path.of(gorFile.toString() + ".meta"),
                 "## SELECT_TRANSFORM = sort genome | distinct".getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insert("chr1\t2\tC","chr1\t3\tG");;
         table.insert("chr1\t2\tC");
@@ -212,11 +203,11 @@ public class UTestGorTable {
         Files.write(workDirPath.resolve("input1.gor"), "#chrom\tpos\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
         Files.write(workDirPath.resolve("input2.gor"), "#chrom\tpos\tref\nchr3\t3\tG\n".getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insertEntries(List.of(
-                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toUri()).alias("A").build(),
-                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toUri()).alias("B").build()));
+                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toString()).alias("A").build(),
+                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toString()).alias("B").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
@@ -230,8 +221,6 @@ public class UTestGorTable {
         Assert.assertTrue(Files.exists(metaFile));
 
         Assert.assertEquals("1", table.getProperty("SERIAL"));
-        Assert.assertEquals("true", table.getProperty("USE_HISTORY"));
-        Assert.assertEquals("true", table.getProperty("VALIDATE_FILES"));
         Assert.assertEquals("chrom,pos,ref", table.getProperty("COLUMNS"));
     }
 
@@ -246,11 +235,11 @@ public class UTestGorTable {
         Files.write(workDirPath.resolve("input1.gor"), "#chrom\tpos\tref\nchr2\t2\tT\n".getBytes(StandardCharsets.UTF_8));
         Files.write(workDirPath.resolve("input2.gor"), "#chrom\tpos\tref\nchr3\t3\tG\n".getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insertEntries(List.of(
-                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toUri()).alias("A").build(),
-                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toUri()).alias("B").build()));
+                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toString()).alias("A").build(),
+                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toString()).alias("B").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
@@ -265,8 +254,6 @@ public class UTestGorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 1\n" +
-                "## USE_HISTORY = true\n" +
-                "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);
     }
 
@@ -278,7 +265,7 @@ public class UTestGorTable {
         String content = "#chrom\tpos\tref\nchr1\t1\tA\nchr1\t2\tC\nchr1\t3\tG\n";
         Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.delete("chr1\t2\tC");
         table.save();
@@ -294,8 +281,6 @@ public class UTestGorTable {
         Assert.assertTrue(Files.exists(metaFile));
         String meta = Files.readString(metaFile);
         Assert.assertEquals("## SERIAL = 2\n" +
-                "## USE_HISTORY = true\n" +
-                "## VALIDATE_FILES = true\n" +
                 "## COLUMNS = chrom,pos,ref\n", meta);
     }
 
@@ -307,7 +292,7 @@ public class UTestGorTable {
         String content = "#chrom\tpos\tref\nchr1\t1\tA\nchr1\t2\tC\nchr1\t3\tG\n";
         Files.write(gorFile, content.getBytes(StandardCharsets.UTF_8));
 
-        GorTable<Row> table = new GorTable<>(gorFile.toUri());
+        GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         String streamContent;
         try (Stream<String> stream = table.getLines()) {

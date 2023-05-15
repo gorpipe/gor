@@ -124,6 +124,22 @@ public class TestTableManagerUtil {
         }).start();
     }
 
+    public void executeGorManagerCommandInline(String table, String[] optionsArgs, String command, String[] commandOptionsArgs, String workingDir)
+            throws IOException, InterruptedException, ExecutionException {
+        Process p = startGorManagerCommand(table, optionsArgs, command, commandOptionsArgs, workingDir);
+        List<String> arguments = new ArrayList<String>();
+        if (optionsArgs != null) {
+            arguments.addAll(Arrays.asList(optionsArgs));
+        }
+        arguments.add(table);
+        arguments.add(command);
+        if (commandOptionsArgs != null) {
+            arguments.addAll(Arrays.asList(commandOptionsArgs));
+        }
+
+        TableManagerCLI.main(arguments.toArray(new String[0]));
+    }
+
     public String executeGorManagerCommand(String table, String[] optionsArgs, String command, String[] commandOptionsArgs, String workingDir, boolean sync)
             throws IOException, InterruptedException, ExecutionException {
         Process p = startGorManagerCommand(table, optionsArgs, command, commandOptionsArgs, workingDir);

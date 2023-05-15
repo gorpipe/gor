@@ -22,11 +22,10 @@
 
 package org.gorpipe.gor.manager;
 
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -47,7 +46,7 @@ public interface BucketCreator<T extends DictionaryEntry> {
      *                        be created in this dir (for fast file move).
      * @param callback        callback to be called when a bucket has been created.  The argument is the name of the bucket.
      */
-    void createBucketsForBucketDir(BaseDictionaryTable<T> table, Map<String, List<T>> bucketsToCreate,
-                                   URI absBucketDir, Consumer<String> callback) throws IOException;
+    void createBucketsForBucketDir(DictionaryTable table, Map<String, List<T>> bucketsToCreate,
+                                   String absBucketDir, Consumer<String> callback) throws IOException;
 
 }

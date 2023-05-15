@@ -20,12 +20,10 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.util;
 
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.dictionary.TableEntry;
-import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +31,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -54,8 +51,8 @@ public class TableLog {
         REMOVEFROMBUCKET
     }
 
-    private final URI logDir;  // Location of log files.
-    private final URI logFilePath;
+    private final String logDir;  // Location of log files.
+    private final String logFilePath;
     private final DateTimeFormatter formatter;
     protected List<String> unCommittedActions = Collections.synchronizedList(new ArrayList<>());
 
@@ -63,9 +60,9 @@ public class TableLog {
      * Constructor
      * @param logDir    folder to store the log file.
      */
-    public TableLog(URI logDir) {
+    public TableLog(String logDir) {
         this.logDir = logDir;
-        this.logFilePath = this.logDir.resolve(LOG_FILE);
+        this.logFilePath = PathUtils.resolve(this.logDir, LOG_FILE);
         this.formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     }
 
@@ -89,8 +86,8 @@ public class TableLog {
         if (!fileReader.exists(PathUtils.formatUri(this.logDir)) || !fileReader.isDirectory(PathUtils.formatUri(this.logDir))) {
             throw new GorSystemException(String.format("Log '%s'folder does not exits", this.logDir), null);
         }
-        // TODO:
-        try(Writer destination = new BufferedWriter(
+
+        try (Writer destination = new BufferedWriter(
                 new OutputStreamWriter(fileReader.getOutputStream(PathUtils.formatUri((this.logFilePath)), true)))) {
 
             for (String logLine : unCommittedActions) {
@@ -100,5 +97,9 @@ public class TableLog {
         } catch (IOException e) {
             throw new GorSystemException(String.format("Could not save table log %s", logFilePath), e);
         }
+    }
+
+    public String getLogDir() {
+        return logDir;
     }
 }

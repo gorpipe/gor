@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table;
+package org.gorpipe.gor.table.util;
 
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.junit.Assert;

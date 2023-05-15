@@ -32,7 +32,6 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
@@ -134,7 +133,7 @@ public class Dictionary {
         return PathUtils.resolve(commonRoot, path);
     }
 
-    public synchronized static Dictionary getDictionary(DictionaryTable table, boolean useCache) {
+    public synchronized static Dictionary getDictionary(TableInfo table, boolean useCache) {
         if (useCache) {
             return getDictionaryFromCache(table.getPath(), table.getFileReader(), table.getFileReader().getCommonRoot(), table.getId());
         } else {

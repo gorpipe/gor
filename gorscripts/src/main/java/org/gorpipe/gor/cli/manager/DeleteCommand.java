@@ -24,7 +24,7 @@ package org.gorpipe.gor.cli.manager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import picocli.CommandLine;
 
 import java.time.Duration;
@@ -46,10 +46,10 @@ public class DeleteCommand extends FilterOptions implements Runnable{
     @Override
     public void run() {
         // We support taking files both as -f option and generic arguments, simply combine those two before running.
-        TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
+        TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(lockTimeout)).build();
 
         String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
+        DictionaryTable table = tm.initTable(dictionaryFile.toString());
         tm.delete(dictionaryFile.toString(), table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
                 .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)

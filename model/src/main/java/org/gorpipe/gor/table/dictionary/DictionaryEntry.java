@@ -28,7 +28,6 @@ import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +38,6 @@ import static org.gorpipe.gor.table.util.PathUtils.relativize;
  * Line from gor dictionary (GORD).
  * <p>
  * Created by gisli on 22/08/16.
- *
  * TODO:  Dictinoary entry and SourceRef are almost the samething. DictionaryEntry is basically source ref stored in dict.  Can we combine.  What about SourceReference.
  */
 public class DictionaryEntry extends TableEntry {
@@ -58,7 +56,7 @@ public class DictionaryEntry extends TableEntry {
         this.isDeleted = entry.isDeleted;
     }
 
-    protected DictionaryEntry(String contentLogical, URI rootUri, String alias, String[] tags, GenomicRange range, String bucket, boolean isDeleted, boolean sourceInserted) {
+    protected DictionaryEntry(String contentLogical, String rootUri, String alias, String[] tags, GenomicRange range, String bucket, boolean isDeleted, boolean sourceInserted) {
         super(contentLogical, rootUri, alias, tags, range);
         this.sourceInserted = sourceInserted;
         this.bucketLogical = bucket;
@@ -101,8 +99,8 @@ public class DictionaryEntry extends TableEntry {
      *
      * @return the buckets real path.
      */
-    public String getBucketReal(URI rootUri) {
-        return getBucket() != null ? PathUtils.resolve(rootUri, getBucket()).toString() : null;
+    public String getBucketReal(String rootUri) {
+        return getBucket() != null ? PathUtils.resolve(rootUri, getBucket()) : null;
     }
 
     /**
@@ -131,7 +129,6 @@ public class DictionaryEntry extends TableEntry {
     /**
      * Parse entry from dict file.
      * Assumes the entry has been created by us, i.e. paths normalized etc.
-     *
      * NOTE:  invoked through reflection.
      *
      * @param line          the line to parse.
@@ -139,17 +136,17 @@ public class DictionaryEntry extends TableEntry {
      * @param needsRelativize should we relatives the content (only needed if reading from a outside source)
      * @return new entry from the entryString
      */
-    public static DictionaryEntry parseEntry(String line, URI rootUri, boolean needsRelativize) {
+    public static DictionaryEntry parseEntry(String line, String rootUri, boolean needsRelativize) {
         List<String> columns = StringUtil.split(line);
         return parseEntry(columns, rootUri, needsRelativize);
     }
 
-    public static DictionaryEntry parseEntry(String line, URI rootUri) {
+    public static DictionaryEntry parseEntry(String line, String rootUri) {
         List<String> columns = StringUtil.split(line);
         return parseEntry(columns, rootUri, false);
     }
 
-    public static DictionaryEntry parseEntry(List<String> columns, URI rootUri, boolean needsRelativize) {
+    public static DictionaryEntry parseEntry(List<String> columns, String rootUri, boolean needsRelativize) {
         if (columns.isEmpty()) {
             return null;
         }
@@ -253,12 +250,12 @@ public class DictionaryEntry extends TableEntry {
         protected boolean isDeleted = false;
         private boolean sourceInserted = false;
 
-        public Builder(Path contentLogical, URI rootUri) {
-            this(contentLogical.toString(), rootUri);
+        public Builder(String contentLogical, String rootUri) {
+            super(contentLogical, rootUri);
         }
 
-        public Builder(String contentLogical, URI rootUri) {
-            super(contentLogical, rootUri);
+        public Builder(Path contentLogical, String rootUri) {
+            super(contentLogical.toString(), rootUri);
         }
 
         public Builder<B> bucket(String bucketLogical) {

@@ -62,7 +62,7 @@ public abstract class TableLock implements AutoCloseable {
      * @return new read lock object with the given state.
      */
     public static TableLock acquireRead(Class<? extends TableLock> lockClass, Table table, String name, Duration timeout) {
-        return TableLock.acquire(lockClass, table, name, true, timeout);
+        return acquire(lockClass, table, name, true, timeout);
     }
 
     /**
@@ -75,7 +75,7 @@ public abstract class TableLock implements AutoCloseable {
      * @return new write lock object with the given state.
      */
     public static TableLock acquireWrite(Class<? extends TableLock> lockClass, Table table, String name, Duration timeout) {
-        return TableLock.acquire(lockClass, table, name, false, timeout);
+        return acquire(lockClass, table, name, false, timeout);
     }
 
     /**
@@ -89,7 +89,6 @@ public abstract class TableLock implements AutoCloseable {
      * @return new lock object with the given state.
      */
     private static TableLock acquire(Class<? extends TableLock> lockClass, Table table, String name, boolean shared, Duration timeout) {
-        table.initialize();
         TableLock lock;
         try {
             lock = lockClass.getDeclaredConstructor(new Class[]{Table.class, String.class}).newInstance(table, name);

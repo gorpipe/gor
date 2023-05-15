@@ -608,7 +608,7 @@ public class TestUtils {
         if (Files.exists(tablePath)) {
             throw new GorSystemException("Table already exists:  " + tablePath, null);
         }
-        DictionaryTable table = new DictionaryTable.Builder<>(tablePath.toUri()).useHistory(true).validateFiles(false).build();
+        DictionaryTable table = new DictionaryTable.Builder<>(tablePath.toString()).useHistory(true).validateFiles(false).build();
         table.insert(data);
         table.setBucketize(true);
         table.save();

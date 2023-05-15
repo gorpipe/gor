@@ -2,8 +2,8 @@ package org.gorpipe.gor.manager;
 
 import gorsat.TestUtils;
 import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.gor.table.Table;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.test.IntegrationTests;
@@ -104,13 +104,13 @@ public class ITestTableManager {
 
         TableManager man = TableManager.newBuilder()
                 .fileReader(s3FileReader)
-                .useHistory(false)
                 .lockType(NoTableLock.class)   // For S3 assume no locking.
-                .validateFiles(false)
                 .minBucketSize(2)
                 .build();
 
-        Table table = man.initTable(dictPath);
+        DictionaryTable table = man.initTable(dictPath);
+        table.setUseHistory(false);
+        table.setValidateFiles(false);
 
         System.out.println(String.format("Init table %d ms", (-time + (time = System.currentTimeMillis()))));
 
@@ -192,11 +192,12 @@ public class ITestTableManager {
         String testFolder = PathUtils.resolve(projectRoot, name);
         try {
             String dictPath = createSmallS3Dict(testFolder);
+            new DictionaryTable.Builder<>(dictPath).fileReader(s3FileReader).useHistory(false).build().save();
+
             long time = System.currentTimeMillis();
 
             TableManager man = TableManager.newBuilder()
                     .fileReader(s3FileReader)
-                    .useHistory(false)
                     .lockType(NoTableLock.class)   // For S3 assume no locking.
                     .minBucketSize(2)
                     .build();

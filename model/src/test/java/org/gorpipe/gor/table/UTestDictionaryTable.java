@@ -222,13 +222,13 @@ public class UTestDictionaryTable {
         dict.save();
         
         Assert.assertTrue("BaseTable file was not created", gordFile.exists());
-        Assert.assertTrue("History folder was not created", new File(dict.getFolderPath(), BaseDictionaryTable.HISTORY_DIR_NAME).exists());
+        Assert.assertTrue("History folder was not created", new File(dict.getFolderPath(), DictionaryTable.HISTORY_DIR_NAME).exists());
         Assert.assertEquals("Source column not set correctly", "PNA", dict.getSourceColumn());
 
         dataFileName = genesSmall.getCanonicalPath();
         dict.insert(dataFileName);
         dict.save();
-        Assert.assertEquals("Incorrect number of entries in the history folder", 1, new File(dict.getFolderPath(), BaseDictionaryTable.HISTORY_DIR_NAME).list().length);
+        Assert.assertEquals("Incorrect number of entries in the history folder", 1, new File(dict.getFolderPath(), DictionaryTable.HISTORY_DIR_NAME).list().length);
 
         // Test turn off history.
         String tableNameNoHist = "gortable_create_options_no_hist";
@@ -238,7 +238,7 @@ public class UTestDictionaryTable {
         dictNoHist.insert(dataFileName);
         dictNoHist.save();
         Assert.assertTrue("BaseTable file was not created", gordFileNoHist.exists());
-        Assert.assertTrue("History folder was created", !new File(dictNoHist.getFolderPath(), BaseDictionaryTable.HISTORY_DIR_NAME).exists());
+        Assert.assertTrue("History folder was created", !new File(dictNoHist.getFolderPath(), DictionaryTable.HISTORY_DIR_NAME).exists());
     }
 
     // Test table operations (on unbucketized table).
@@ -281,7 +281,7 @@ public class UTestDictionaryTable {
         };
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
-        dict.insert(Arrays.stream(addFileNames).map(fn -> new DictionaryEntry.Builder(fn, dict.getRootUri()).build()).toArray(DictionaryEntry[]::new));
+        dict.insert(Arrays.stream(addFileNames).map(fn -> new DictionaryEntry.Builder(fn, dict.getRootPath()).build()).toArray(DictionaryEntry[]::new));
         dict.setLineFilter(false);
         dict.save();
         
@@ -296,8 +296,8 @@ public class UTestDictionaryTable {
         Path file = Paths.get("../tests/data/gor/genes.gor").toAbsolutePath();
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(file, dict.getRootUri()).alias("A").build());
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(file, dict.getRootUri()).alias("B").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(file, dict.getRootPath()).alias("A").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(file, dict.getRootPath()).alias("B").build());
         dict.setLineFilter(false);
         dict.save();
         
@@ -311,7 +311,7 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath20.gor"), dict.getRootUri()).range(GenomicRange.parseGenomicRange("chr8")).build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath20.gor"), dict.getRootPath()).range(GenomicRange.parseGenomicRange("chr8")).build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath20.gor").includeDeleted());
         Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t0\tchr8\t2147483647\n", selectRes);
@@ -335,7 +335,7 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath3.gor"), dict.getRootUri()).alias("tagB").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath3.gor"), dict.getRootPath()).alias("tagB").build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath3.gor").includeDeleted());
         Assert.assertEquals("Existing line should just be updated", "filepath3.gor\ttagB\n", selectRes);
@@ -347,7 +347,7 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath5.gor"), dict.getRootUri()).range(GenomicRange.parseGenomicRange("chr1:10000-chr1:20000")).alias("tagF").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath5.gor"), dict.getRootPath()).range(GenomicRange.parseGenomicRange("chr1:10000-chr1:20000")).alias("tagF").build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath5.gor").includeDeleted());
         Assert.assertEquals("Existing line should just be updated", "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n", selectRes);
@@ -360,7 +360,7 @@ public class UTestDictionaryTable {
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
         dict.delete(dict.filter().files("filepath17.gor").includeDeleted().get());
-        dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath17.gor"), dict.getRootUri()).tags(new String[]{"tagB", "tagD"}).build());
+        dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath17.gor"), dict.getRootPath()).tags(new String[]{"tagB", "tagD"}).build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath17.gor").includeDeleted());
         Assert.assertEquals("Existing line should just be updated", "filepath17.gor\t\t\t\t\t\ttagB,tagD\n", selectRes);
@@ -373,7 +373,7 @@ public class UTestDictionaryTable {
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
         dict.delete(dict.filter().files("filepath4.gor").includeDeleted().get());
-        dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath4.gor"), dict.getRootUri()).range(GenomicRange.parseGenomicRange("chr1:10000-chr1:30000")).alias("tagD").build());
+        dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath4.gor"), dict.getRootPath()).range(GenomicRange.parseGenomicRange("chr1:10000-chr1:30000")).alias("tagD").build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath4.gor").includeDeleted());
         Assert.assertEquals("Existing line should just be updated", "filepath4.gor\ttagD\tchr1\t10000\tchr1\t30000\n", selectRes);
@@ -385,7 +385,7 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
 
-        dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath13.gor"), dict.getRootUri()).build());
+        dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath13.gor"), dict.getRootPath()).build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath13.gor").includeDeleted());
         Assert.assertEquals("Bucketized files should not keep their bucket info", "filepath13.gor\nfilepath13.gor|D|bucket2\n", selectRes);
@@ -486,12 +486,12 @@ public class UTestDictionaryTable {
         FileUtils.write(gordFile, gort1, (String) null);
         DictionaryTable dict = new DictionaryTable(gordFile.toPath());
 
-        dict.delete(new DictionaryEntry.Builder("filepath13.gor", dict.getRootUri()).build());
+        dict.delete(new DictionaryEntry.Builder("filepath13.gor", dict.getRootPath()).build());
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath13.gor").includeDeleted());
         Assert.assertEquals("Delete bucketized failed", "filepath13.gor|D|bucket2\n", selectRes);
 
         Files.createFile(tableWorkDir.resolve("filepath14B.gor"));
-        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(Paths.get("filepath14B.gor"), dict.getRootUri()).alias("tagL").build());
+        dict.insert((DictionaryEntry)new DictionaryEntry.Builder(Paths.get("filepath14B.gor"), dict.getRootPath()).alias("tagL").build());
         selectRes = selectStringFilter(dict, dict.filter().tags("tagL").includeDeleted());
         Assert.assertEquals("Insert same tag as deleted failed", "filepath14.gor|D|bucket2\ttagL\nfilepath14B.gor\ttagL\n", selectRes);
     }

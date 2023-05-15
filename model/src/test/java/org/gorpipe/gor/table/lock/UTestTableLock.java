@@ -417,7 +417,7 @@ public class UTestTableLock {
 
     public static void testProcessTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
         String lockName = "ProcessTableLock";
-        BaseDictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve("ProcessTableeLock" + tableLockClass.getSimpleName())).build();
+        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve("ProcessTableeLock" + tableLockClass.getSimpleName())).build();
         table.save();
 
         String storyName = "storyProcess" + tableLockClass.getSimpleName();
@@ -475,7 +475,7 @@ public class UTestTableLock {
 
     public static void testMultiProcessUpdateTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
         String lockName = "MultiProcessUpdateTableLock";
-        BaseDictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
+        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
         table.save();
 
         String storyName = "storyMultiProcess" + tableLockClass.getSimpleName();
@@ -504,7 +504,7 @@ public class UTestTableLock {
 
     public static void testTableLockRenew(Class<? extends TableLock> tableLockClass, Field drlp) throws Exception {
         String lockName = "LockRenew";
-        BaseDictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
+        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
 
         long reserveTime = 4000;
 
@@ -549,7 +549,7 @@ public class UTestTableLock {
     }
 
     public static void testTableLockCrashCleanUp(Class<? extends TableLock> tableLockClass) throws Exception {
-        BaseDictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve("LockCrash" + tableLockClass.getSimpleName())).build();
+        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve("LockCrash" + tableLockClass.getSimpleName())).build();
         table.save();
         String storyName = "storyCrash" + tableLockClass.getSimpleName();
         String dataFileName = "dateCrash" + tableLockClass.getSimpleName();
@@ -603,21 +603,21 @@ public class UTestTableLock {
         return filter.get().stream().map(TableEntry::formatEntry).collect(Collectors.joining());
     }
 
-    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, Runnable runBefore, BaseDictionaryTable table, String name, Duration timeout) {
+    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, Runnable runBefore, DictionaryTable table, String name, Duration timeout) {
         debugReadLock(lockClass, holdDuration, holdDuration.toMillis(), runBefore, table, name, timeout);
     }
 
-    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, BaseDictionaryTable table, String name, Duration timeout) {
+    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, DictionaryTable table, String name, Duration timeout) {
         try (TableTransaction trans = TableTransaction.openReadTransaction(lockClass, table, name, timeout)) {
             debugLockInternal(holdDuration, period, runBefore, null, trans.getLock());
         }
     }
 
-    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, BaseDictionaryTable table, String name, Duration timeout) {
+    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, DictionaryTable table, String name, Duration timeout) {
         debugWriteLock(lockClass, holdDuration, holdDuration.toMillis(), null, null, table, name, timeout);
     }
 
-    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, Runnable runPeriod, BaseDictionaryTable table, String name, Duration timeout) {
+    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, Runnable runPeriod, DictionaryTable table, String name, Duration timeout) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(lockClass, table, name, timeout)) {
             debugLockInternal(holdDuration, period, runBefore, runPeriod, trans.getLock());
             trans.commit();
@@ -642,7 +642,7 @@ public class UTestTableLock {
         }
     }
 
-    private static Process startLockingProcess(Class<? extends TableLock> tableLockClass, String lockType, Duration duration, Duration timeout, BaseDictionaryTable table, String name,
+    private static Process startLockingProcess(Class<? extends TableLock> tableLockClass, String lockType, Duration duration, Duration timeout, DictionaryTable table, String name,
                                                Path workingDir, String id, String storyName, String dataFileName)
             throws IOException {
 
@@ -748,7 +748,7 @@ public class UTestTableLock {
         File storyFile = Paths.get(workDir).resolve(storyName).toFile();
         File dataFile = Paths.get(workDir).resolve(dataFileName).toFile();
         FileUtils.writeStringToFile(storyFile, id + "a", Charset.defaultCharset(), true);
-        BaseDictionaryTable table = new DictionaryTable.Builder<>(Paths.get(tablePath)).build();
+        DictionaryTable table = new DictionaryTable.Builder<>(Paths.get(tablePath)).build();
         if (lockType.equals("WRITE")) {
             // Set this up so we will overwrite any changes made by others while we have the lock.
             debugWriteLock(lockClass, holdDuration, holdDuration.toMillis() + 1,

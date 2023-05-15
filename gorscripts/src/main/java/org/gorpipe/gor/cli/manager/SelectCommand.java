@@ -24,7 +24,7 @@ package org.gorpipe.gor.cli.manager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import picocli.CommandLine;
 
@@ -48,8 +48,8 @@ public class SelectCommand extends FilterOptions implements Runnable{
     @Override
     public void run() {
         String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
-        TableManager tm = TableManager.newBuilder().useHistory(!nohistory).lockTimeout(Duration.ofSeconds(lockTimeout)).build();
-        BaseDictionaryTable table = tm.initTable(dictionaryFile.toString());
+        TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(lockTimeout)).build();
+        DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         final List<? extends DictionaryEntry> lines = table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)

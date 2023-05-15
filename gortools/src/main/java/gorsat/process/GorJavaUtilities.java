@@ -591,7 +591,7 @@ public class GorJavaUtilities {
                     // Assume we have all data in the root folder (note relatives does not work here for S3Shared).
                     var outfilename = PathUtils.getFileName(p);
                     var outfile = FilenameUtils.removeExtension(outfilename);
-                    var builder = new DictionaryEntry.Builder(outfile, URI.create(outfolderpath));
+                    var builder = new DictionaryEntry.Builder(outfile, outfolderpath);
                     var i = ai.incrementAndGet();
                     builder.alias(Integer.toString(i));
                     builder.range(meta.getRange());
@@ -618,7 +618,7 @@ public class GorJavaUtilities {
         return Arrays.stream(dictList).mapMulti((BiConsumer<String, Consumer<String[]>>) (df, consumer) -> {
             var dflow = df.toLowerCase();
             if (DataUtil.isGord(dflow) || DataUtil.isNord(dflow)) {
-                var dt = new DictionaryTable(URI.create(df), fileReader);
+                var dt = new DictionaryTable(df, fileReader);
                 var cols = dt.getColumns();
                 if (cols!=null) consumer.accept(cols);
             } else {

@@ -41,11 +41,9 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.*;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.util.Util;
@@ -790,7 +788,7 @@ public class GorOptions {
         var source = session.getProjectContext().getFileReader().resolveUrl(fileName);
         var fullPath = source.getTopSourceReference().getUrl();
 
-        DictionaryTable table = DictionaryTable.getTable(fullPath, session.getProjectContext().getFileReader());
+        DictionaryTableReader table = DictionaryCache.getTable(fullPath, session.getProjectContext().getFileReader());
         final Dictionary gord = Dictionary.getDictionary(table, this.useDictionaryCache);
 
         isNoLineFilter = isNoLineFilter || !table.getLineFilter();
@@ -836,7 +834,7 @@ public class GorOptions {
         var source = session.getProjectContext().getFileReader().resolveUrl(fileName);
         var fullPath = source.getTopSourceReference().getUrl();
 
-        DictionaryTable table = DictionaryTable.getTable(fullPath, session.getProjectContext().getFileReader());
+        DictionaryTable table = DictionaryCache.getTable(fullPath, session.getProjectContext().getFileReader());
 
         this.isNoLineFilter = isNoLineFilter || !table.getLineFilter();
         this.hasLocalDictonaryFile = hasLocalDictonaryFile || !table.getAllActiveTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags

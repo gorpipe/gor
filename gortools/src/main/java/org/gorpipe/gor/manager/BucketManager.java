@@ -28,10 +28,9 @@ import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.table.dictionary.BaseDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
@@ -40,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.*;
@@ -89,7 +87,7 @@ public class BucketManager<T extends DictionaryEntry> {
     private Class<? extends TableLock> lockType = DEFAULT_LOCK_TYPE;
     private Duration lockTimeout = DEFAULT_LOCK_TIMEOUT;
 
-    private final BaseDictionaryTable<T> table;
+    private final DictionaryTable table;
 
     private int bucketSize;
     private int minBucketSize;
@@ -101,7 +99,7 @@ public class BucketManager<T extends DictionaryEntry> {
     /**
      * Default constructor.
      */
-    public BucketManager(BaseDictionaryTable<T> table) {
+    public BucketManager(DictionaryTable table) {
         this.table = table;
         this.bucketCreator = new BucketCreatorGorPipe<>();
 
@@ -128,7 +126,7 @@ public class BucketManager<T extends DictionaryEntry> {
         }
     }
 
-    public static Builder newBuilder(BaseDictionaryTable table) {
+    public static Builder newBuilder(DictionaryTable table) {
         return new Builder(table);
     }
 
@@ -286,7 +284,7 @@ public class BucketManager<T extends DictionaryEntry> {
             table.setProperty(HEADER_BUCKET_DIRS_KEY, newBucketDirs.stream().map(p -> PathUtils.formatUri(p)).collect(Collectors.joining(",")));
             
             for (String p : newBucketDirs) {
-                this.bucketDirs.add(PathUtils.relativize(table.getRootUri(), p));
+                this.bucketDirs.add(PathUtils.relativize(table.getRootPath(), p));
             }
         } else {
             table.setProperty(HEADER_BUCKET_DIRS_KEY, "");
@@ -304,13 +302,13 @@ public class BucketManager<T extends DictionaryEntry> {
                 .collect(Collectors.toList());
     }
 
-    private void checkBucketDirExistence(URI bucketDir) {
+    private void checkBucketDirExistence(String bucketDir) {
         // Create the default bucket dir (if it is to be used and is missing)
         if (!table.getFileReader().exists(bucketDir.toString())) {
-            URI fullPathDefaultBucketDir = table.getRootUri().resolve(getDefaultBucketDir().toString());
+            String fullPathDefaultBucketDir = PathUtils.resolve(table.getRootPath(), getDefaultBucketDir());
             if (bucketDir.equals(fullPathDefaultBucketDir)) {
                 try {
-                    table.getFileReader().createDirectoryIfNotExists(fullPathDefaultBucketDir.toString());
+                    table.getFileReader().createDirectoryIfNotExists(fullPathDefaultBucketDir);
                 } catch (IOException e) {
                     throw new GorSystemException(String.format("Could not create bucket directory %s", fullPathDefaultBucketDir), e);
                 }
@@ -389,7 +387,7 @@ public class BucketManager<T extends DictionaryEntry> {
         // We do the bucketization by goring the dictionary file, do be safe we create a copy of dictionary so we
         // are not affected by any changes made to it.   This copy is only used by the gor command we use to create
         // the buckets for anything else we use the original table object.
-        BaseDictionaryTable tempTable;
+        DictionaryTable tempTable;
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
 
             // Check if we have enough data to start bucketizing.
@@ -450,41 +448,41 @@ public class BucketManager<T extends DictionaryEntry> {
      * @param newBucketsMap map with bucket name to table entries, representing the buckets to be created.
      * @throws IOException
      */
-    private void doBucketizeForBucketDir(BaseDictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap) throws IOException {
+    private void doBucketizeForBucketDir(DictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap) throws IOException {
         Map<String, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
                         .filter(p -> PathUtils.getParent(p).equals(PathUtils.stripTrailingSlash(bucketDir)))
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files
-        URI absBucketDir = getAbsoluteBucketDir(bucketDir);
+        String absBucketDir = getAbsoluteBucketDir(bucketDir);
         checkBucketDirExistence(absBucketDir);
         bucketCreator.createBucketsForBucketDir(tempTable, newBucketsMapForBucketDir, absBucketDir,
                 bucket -> updateTableWithNewBucket(table, bucket, newBucketsMapForBucketDir.get(bucket)));
     }
 
-    private URI getAbsoluteBucketDir(String bucketDir) throws IOException {
+    private String getAbsoluteBucketDir(String bucketDir) throws IOException {
 
        String bucketDirsLocation = table.getConfigTableProperty(HEADER_BUCKET_DIRS_LOCATION_KEY, "");
 
-        URI absBucketDir;
+        String absBucketDir;
         if (!Strings.isNullOrEmpty(bucketDirsLocation)) {
-            URI tableRoot = PathUtils.relativize(URI.create(table.getFileReader().getCommonRoot()), table.getRootUri());
-            absBucketDir = PathUtils.resolve(URI.create(bucketDirsLocation), PathUtils.resolve(tableRoot, bucketDir).toString());
+            String tableRoot = PathUtils.relativize(table.getFileReader().getCommonRoot(), table.getRootPath());
+            absBucketDir = PathUtils.resolve(bucketDirsLocation, PathUtils.resolve(tableRoot, bucketDir));
         } else {
-            absBucketDir = PathUtils.resolve(table.getRootUri(), bucketDir);
+            absBucketDir = PathUtils.resolve(table.getRootPath(), bucketDir);
         }
 
-        table.getFileReader().createDirectoryIfNotExists(absBucketDir.toString());
+        table.getFileReader().createDirectoryIfNotExists(absBucketDir);
 
         return absBucketDir;
     }
 
-    private void updateTableWithNewBucket(BaseDictionaryTable table, String bucket, List<T> bucketEntries) {
+    private void updateTableWithNewBucket(DictionaryTable table, String bucket, List<T> bucketEntries) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             // Update the lines we bucketized.
-            table.removeFromBucket(bucketEntries);
-            table.addToBucket(bucket, bucketEntries);
+            table.removeFromBucket((List<DictionaryEntry>) bucketEntries);
+            table.addToBucket(bucket, (List<DictionaryEntry>) bucketEntries);
             // TODO: Keep track of added files, use for clean up to guarantee that we are only deleting what we have created.
 
             table.setProperty(HEADER_BUCKET_SIZE_KEY, Integer.toString(this.getBucketSize()));
@@ -493,22 +491,22 @@ public class BucketManager<T extends DictionaryEntry> {
         }
     }
 
-    private BaseDictionaryTable createTempTable(TableLock lock) throws IOException {
+    private DictionaryTable createTempTable(TableLock lock) throws IOException {
         lock.assertValid();
 
         // Create copy of the dictionary (so we are shielded from external changes to the file).  Must in the same dir
         // as the main file for all the relative paths to work.
-        URI tempTablePath;
-        String ext = FilenameUtils.getExtension(table.getPath().toString());
-        tempTablePath = table.getRootUri().resolve(
+        String tempTablePath;
+        String ext = FilenameUtils.getExtension(table.getPath());
+        tempTablePath = PathUtils.resolve(table.getRootPath(),
         getTempTablePrefix()
             + RandomStringUtils.random(8, true, true)
             + (ext.length() > 0 ? "." + ext : ""));
 
         log.trace("Creating temp table {}", tempTablePath);
-        table.getFileReader().copy(table.getPathUri().toString(), tempTablePath.toString());
+        table.getFileReader().copy(table.getPath(), tempTablePath);
 
-        return initTempTable(tempTablePath.toString());
+        return initTempTable(tempTablePath);
     }
 
     String getTempTablePrefix() {
@@ -521,7 +519,7 @@ public class BucketManager<T extends DictionaryEntry> {
      * @param path path to the table.
      * @return the table given by path.
      */
-    private BaseDictionaryTable initTempTable(String path) {
+    private DictionaryTable initTempTable(String path) {
         if (DataUtil.isGord(path)) {
             return new DictionaryTable.Builder<>(path)
                     .useHistory(table.isUseHistory())
@@ -554,8 +552,8 @@ public class BucketManager<T extends DictionaryEntry> {
      */
     private void deleteBucketFiles(boolean force, String... buckets) throws IOException {
         for (String bucket : buckets) {
-            URI bucketFile = PathUtils.resolve(table.getRootUri(), bucket);
-            DataSource source = table.getFileReader().resolveUrl(bucketFile.toString());
+            String bucketFile = PathUtils.resolve(table.getRootPath(), bucket);
+            DataSource source = table.getFileReader().resolveUrl(bucketFile);
 
             if (source.exists()) {
                 long lastAccessTime = source.getSourceMetadata().getLastModified();
@@ -566,7 +564,7 @@ public class BucketManager<T extends DictionaryEntry> {
                     source.delete();
                     deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.GORI));
                     deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.META));
-                    deleteLinkFileIfExists(bucketFile.toString());
+                    deleteLinkFileIfExists(bucketFile);
                 }
             }
         }
@@ -610,12 +608,12 @@ public class BucketManager<T extends DictionaryEntry> {
         }
 
         // If get a valid write lock no temp files should be here, so go ahead and clean ALL the temp files for the table
-        try (Stream<String> candStream = table.getFileReader().list(table.getRootUri().toString())) {
+        try (Stream<String> candStream = table.getFileReader().list(table.getRootPath().toString())) {
             String prefix = getTempTablePrefix();
 
             for (String candTempFile : candStream.collect(Collectors.toList())) {
                 if (candTempFile.contains(prefix)) {
-                    table.getFileReader().resolveUrl(table.getRootUri().resolve(candTempFile).toString()).delete();
+                    table.getFileReader().resolveUrl(PathUtils.resolve(table.getRootPath(), candTempFile)).delete();
                 }
             }
         } catch (IOException ioe) {
@@ -651,7 +649,7 @@ public class BucketManager<T extends DictionaryEntry> {
             allBucketDirs.addAll(table.getBuckets().stream().map(b -> PathUtils.getParent(b)).collect(Collectors.toSet()));
 
             for (String bucketDir : allBucketDirs) {
-                URI fullPathBucketDir = table.getRootUri().resolve(bucketDir);
+                String fullPathBucketDir = PathUtils.resolve(table.getRootPath(), bucketDir);
 
                 if (!table.getFileReader().exists(fullPathBucketDir.toString())) {
                     log.debug("Bucket folder {} never been used, nothing to clean.", fullPathBucketDir);
@@ -679,15 +677,15 @@ public class BucketManager<T extends DictionaryEntry> {
         log.trace("Bucketize - cleanOldBucketFiles - End");
     }
 
-    private List<String> collectBucketsToClean(URI fullPathBucketDir, boolean force) throws IOException {
+    private List<String> collectBucketsToClean(String fullPathBucketDir, boolean force) throws IOException {
         // Collect buckets to be deleted. Note:  We don't need to get table read lock as we have bucket lock so the
         // bucket part of the table will not change in away that will affect us.
         List<String> bucketsToDelete = new ArrayList<>();
         Set<String> usedBuckets = new HashSet<>(table.getBuckets());
-        try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir.toString())) {
+        try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir)) {
             for (String f : pathList.collect(Collectors.toList())) {
                 String fileName = PathUtils.getFileName(f);
-                String bucketFile = PathUtils.relativize(table.getRootUri(), fullPathBucketDir.resolve(f).toString());
+                String bucketFile = PathUtils.relativize(table.getRootPath(), PathUtils.resolve(fullPathBucketDir, f));
                 // !GM last access time.  Setting as 0 for now which basically disables the graceperiod.
                 long lastAccessTime = 0; //Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}",
@@ -707,7 +705,7 @@ public class BucketManager<T extends DictionaryEntry> {
         return bucketsToDelete;
     }
 
-    private String getBucketFilePrefix(BaseDictionaryTable table) {
+    private String getBucketFilePrefix(DictionaryTable table) {
         return table.getName() + "_" + BUCKET_FILE_PREFIX;
     }
 
@@ -792,11 +790,11 @@ public class BucketManager<T extends DictionaryEntry> {
                 ? bucketsToDelete.stream().map(b -> PathUtils.resolve(table.getRootPath(), b)).collect(Collectors.toList())
                 : null;
 
-        List<T> lines2bucketize = table.selectAll().stream()
+        List<T> lines2bucketize = (List<T>) table.selectAll().stream()
                 .filter(l -> !l.hasBucket()
                         || (!l.isDeleted()
                             && relBucketsToDelete != null
-                            && relBucketsToDelete.contains(l.getBucketReal(table.getRootUri()))))
+                            && relBucketsToDelete.contains(l.getBucketReal(table.getRootPath()))))
                 .collect(Collectors.toList());
 
         int bucketCreateCount = (int) Math.ceil((double) lines2bucketize.size() / getBucketSize());
@@ -825,16 +823,15 @@ public class BucketManager<T extends DictionaryEntry> {
         return bucketsToCreate;
     }
 
-
     public static final class Builder<T extends DictionaryEntry> {
-        private final BaseDictionaryTable<T> table;
+        private final DictionaryTable table;
         private Duration lockTimeout = null;
         private Class<? extends TableLock> lockType = null;
         private int minBucketSize = -1;
         private int bucketSize = -1;
         private BucketCreator<T> bucketCreator = null;
 
-        private Builder(BaseDictionaryTable<T> table) {
+        private Builder(DictionaryTable table) {
             this.table = table;
         }
 
