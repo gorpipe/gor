@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class CsaAuth extends GorAuth {
@@ -30,7 +30,7 @@ public class CsaAuth extends GorAuth {
     public GorAuthInfo getGorAuthInfo(String sessionKey) {
         GorAuthInfo gorAuthInfo = gorAuthInfoCache.getIfPresent(sessionKey);
         if (gorAuthInfo == null) {
-            LinkedHashMap<String, Object> appSessionMap;
+            Map<String, Object> appSessionMap;
             List userroles;
 
             try {
@@ -43,8 +43,8 @@ public class CsaAuth extends GorAuth {
 
             int organizationId = getOrganizationId(appSessionMap);
 
-            LinkedHashMap<String, Object> projectMap = getSubMap(appSessionMap, "project");
-            LinkedHashMap<String, Object> userMap = getSubMap(appSessionMap, "user");
+            Map<String, Object> projectMap = getSubMap(appSessionMap, "project");
+            Map<String, Object> userMap = getSubMap(appSessionMap, "user");
 
             String userId = getUserId(userMap);
             String username = getUsername(userMap);
@@ -65,33 +65,33 @@ public class CsaAuth extends GorAuth {
         return gorAuthInfo;
     }
 
-    private int getOrganizationId(LinkedHashMap<String, Object> appSessionMap) {
+    private int getOrganizationId(Map<String, Object> appSessionMap) {
         return (Integer) appSessionMap.get("organization_id");
     }
 
-    private LinkedHashMap<String, Object> getSubMap(LinkedHashMap<String, Object> appSessionMap, String key) {
-        return (LinkedHashMap<String, Object>) appSessionMap.get(key);
+    private Map<String, Object> getSubMap(Map<String, Object> appSessionMap, String key) {
+        return (Map<String, Object>) appSessionMap.get(key);
     }
 
-    private String getUserId(LinkedHashMap<String, Object> userMap) {
+    private String getUserId(Map<String, Object> userMap) {
         String userIdString = (String) userMap.get("key");
         return userIdString.replace("DCUS", "");
     }
 
     private static String getFirstUserRole(List userroles) {
-        return userroles.isEmpty() ? "" : (String) ((LinkedHashMap) userroles.get(0)).get("role");
+        return userroles.isEmpty() ? "" : ((Map<String, String>) userroles.get(0)).get("role");
     }
 
-    private String getUsername(LinkedHashMap<String, Object> userMap) {
+    private String getUsername(Map<String, Object> userMap) {
         return (String) userMap.get("email");
     }
 
 
-    private int getProjectId(LinkedHashMap<String, Object> projectMap) {
+    private int getProjectId(Map<String, Object> projectMap) {
         return (Integer) projectMap.get("id");
     }
 
-    private String getProject(LinkedHashMap<String, Object> projectMap) {
+    private String getProject(Map<String, Object> projectMap) {
         return (String) projectMap.get("key");
     }
 
@@ -107,7 +107,7 @@ public class CsaAuth extends GorAuth {
                 .expireAfterAccess(timeoutInSeconds, TimeUnit.SECONDS).build();
     }
 
-    private void validateAppSession(String sessionKey, LinkedHashMap<String, Object> appSessionMap) {
+    private void validateAppSession(String sessionKey, Map<String, Object> appSessionMap) {
         if (!sessionKey.equals(appSessionMap.get("key"))) {
             throw new GorSystemException("App Session details from CSA API are for a different key than requested for", null);
         }

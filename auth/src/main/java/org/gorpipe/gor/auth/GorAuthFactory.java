@@ -1,5 +1,6 @@
 package org.gorpipe.gor.auth;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
@@ -184,14 +185,14 @@ public class GorAuthFactory {
         if (sessionKey == null || sessionKey.length() == 0 || "NO_SESSION".equals(sessionKey)) {
             policy = SecurityPolicy.PLAIN.toString();
         } else {
-            Map<String, String> sessionMap;
+            Map<String, Object> sessionMap;
 
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                sessionMap = objectMapper.readValue(sessionKey.getBytes(), HashMap.class);
+                sessionMap = objectMapper.readValue(sessionKey.getBytes(), new TypeReference<HashMap<String,Object>>(){});
                 if (sessionMap.containsKey("security-policy")) {
                     // Covers PLATFORM, PLAIN
-                    policy = sessionMap.get("security-policy");
+                    policy = sessionMap.get("security-policy").toString();
                 } else {
                     policy = SecurityPolicy.PLAIN.toString();
                 }

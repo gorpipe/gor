@@ -59,7 +59,7 @@ abstract class CsaBaseService extends HttpJsonServiceClient {
         }
     }
 
-    Map initializeAndRetry(String path) throws IOException {
+    Map<String, Object> initializeAndRetry(String path) throws IOException {
         initializedAuth = false;
         initAuth();
         return jsonGet(path);
