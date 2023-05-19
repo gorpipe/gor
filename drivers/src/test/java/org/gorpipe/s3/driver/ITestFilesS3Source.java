@@ -1,10 +1,6 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonFilesTests;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -21,7 +17,6 @@ public class ITestFilesS3Source extends CommonFilesTests {
 
     private static String S3_KEY;
     private static String S3_SECRET;
-    private static String S3_REGION = "us-west-2";
 
     @Rule
     public final ProvideSystemProperty myPropertyHasMyValue
@@ -68,11 +63,8 @@ public class ITestFilesS3Source extends CommonFilesTests {
                 new SourceReference(name));
     }
 
-    private AmazonS3 newClient() {
-        return AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(S3_KEY, S3_SECRET)))
-                .withRegion(S3_REGION)
-                .build();
+    private S3Client newClient() {
+        return new S3Client(new BasicAWSCredentials(S3_KEY, S3_SECRET));
     }
 
 }

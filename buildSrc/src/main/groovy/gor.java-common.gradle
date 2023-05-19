@@ -164,10 +164,6 @@ dependencies {
     }
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
-}
-
 // -----------------------------------------------------
 // Common tests setup.
 // -----------------------------------------------------
@@ -194,8 +190,8 @@ tasks.withType(Test) {
     }
 
     reports {
-        junitXml.required = true
-        html.required = true
+        junitXml.enabled = true
+        html.enabled = true
     }
 
     // What parameters should be logged out
@@ -267,7 +263,7 @@ task slowTest(type: Test) {
         includeCategories 'org.gorpipe.test.SlowTests'
     }
 
-    reports.html.setOutputLocation(new File("$buildDir/reports/slowTests"))
+    reports.html.setDestination(new File("$buildDir/reports/slowTests"))
 }
 
 task dbTest(type: Test) {
@@ -277,7 +273,7 @@ task dbTest(type: Test) {
         includeCategories 'org.gorpipe.test.DbTests'
     }
 
-    reports.html.setOutputLocation(new File("$buildDir/reports/dbTests"))
+    reports.html.setDestination(new File("$buildDir/reports/dbTests"))
 }
 
 // See: https://github.com/junit-team/junit/wiki/Categories
@@ -286,7 +282,7 @@ task integrationTest(type: Test) {
         includeCategories 'org.gorpipe.test.IntegrationTests'
     }
 
-    reports.html.setOutputLocation(new File("$buildDir/reports/integrationTests"))
+    reports.html.setDestination(new File("$buildDir/reports/integrationTests"))
 }
 
 task generateTestReport(type:Exec) {

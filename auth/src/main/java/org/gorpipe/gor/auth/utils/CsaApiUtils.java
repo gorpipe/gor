@@ -32,7 +32,7 @@ public class CsaApiUtils {
         List<String> userRoles = new ArrayList<>(info.getUserRoles());
 
         if (projectId < 1 && !Strings.isNullOrEmpty(project)) {
-            Map<String, Object> projectMap = getProjectMap(csaApiService, project);
+            Map projectMap = getProjectMap(csaApiService, project);
             projectId = updateProjectId(projectId, projectMap);
             organizationId = updateOrganizationId(projectId, projectMap);
         }
@@ -68,7 +68,7 @@ public class CsaApiUtils {
     }
 
     public static Map<String, Object> getProjectMap(CsaApiService csaApiService, String project) {
-        Map<String, Object> projectMap = null;
+        Map projectMap = null;
         try {
             projectMap = csaApiService != null ? csaApiService.getProject(project) : null;
         } catch (IOException e) {
@@ -78,7 +78,7 @@ public class CsaApiUtils {
     }
 
     private static Map<String, Object> getUserMapByEmail(CsaApiService csaApiService, String userEmail) {
-        Map<String, Object> userMap = null;
+        Map userMap = null;
         try {
             userMap = csaApiService != null ? csaApiService.getUserByEmail(userEmail) : null;
         } catch (IOException e) {
