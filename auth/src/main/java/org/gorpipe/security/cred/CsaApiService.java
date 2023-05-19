@@ -20,19 +20,19 @@ public class CsaApiService extends CsaBaseService {
         super(config, authConfig);
     }
 
-    public LinkedHashMap<String, Object> getAppSession(String id) throws IOException {
+    public Map<String, Object> getAppSession(String id) throws IOException {
         return getApiResource("app_sessions", "app_session", id);
     }
 
-    public LinkedHashMap<String, Object> getProject(String id) throws IOException {
+    public Map<String, Object> getProject(String id) throws IOException {
         return getApiResource("projects", "project", id);
     }
 
-    public LinkedHashMap<String, Object> getOrganization(String id) throws IOException {
+    public Map<String, Object> getOrganization(String id) throws IOException {
         return getApiResource("organizations", "organization", id);
     }
 
-    public LinkedHashMap<String, Object> getUserByEmail(String id) throws IOException {
+    public Map<String, Object> getUserByEmail(String id) throws IOException {
         return getApiResource("users/by_email", "user", id);
     }
 
@@ -42,10 +42,10 @@ public class CsaApiService extends CsaBaseService {
         return (List) result.get("roles");
     }
 
-    private LinkedHashMap<String, Object> getApiResource(String resource, String field, String id) throws IOException {
+    private Map<String, Object> getApiResource(String resource, String field, String id) throws IOException {
         String path = "api/" + resource + "/" + id;
         Map<String, Object> result = getApiResults(path);
-        return (LinkedHashMap<String, Object>) result.get(field);
+        return (Map<String, Object>) result.get(field);
     }
 
     private Map<String, Object> getApiResults(String path) throws IOException {

@@ -29,7 +29,7 @@ ext {
      * Utility method to update script task with info from params and project.
      */
     updateScriptTask = { projectName, scriptName, params, task, project ->
-        task.mainClassName = params.className
+        task.mainClass = params.className
         task.applicationName = scriptName
         task.outputDir = new File(project.buildDir, 'scripts')
         // Ideally we like to set the classpath as this, but as we currently have a lot of dependencies the class path

@@ -23,7 +23,7 @@
 package org.gorpipe.s3.driver;
 
 import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
@@ -63,7 +63,7 @@ public class S3Source implements StreamSource {
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
-    private final AmazonS3Client client;
+    private final AmazonS3 client;
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -74,11 +74,11 @@ public class S3Source implements StreamSource {
      *
      * @param sourceReference contains S3 url of the form s3://bucket/objectpath
      */
-    public S3Source(AmazonS3Client client, SourceReference sourceReference) throws MalformedURLException {
+    public S3Source(AmazonS3 client, SourceReference sourceReference) throws MalformedURLException {
         this(client, sourceReference, S3Url.parse(sourceReference));
     }
 
-    S3Source(AmazonS3Client client, SourceReference sourceReference, S3Url url) {
+    S3Source(AmazonS3 client, SourceReference sourceReference, S3Url url) {
         this.client = client;
         this.sourceReference = sourceReference;
         this.bucket = url.getBucket();
@@ -345,7 +345,7 @@ public class S3Source implements StreamSource {
         return path;
     }
 
-    public static Path getS3Path(String bucket, String key, AmazonS3Client client) {
+    public static Path getS3Path(String bucket, String key, AmazonS3 client) {
         FileSystem s3fs;
         try {
             s3fs = S3ClientFileSystemProvider.getInstance().getFileSystem(client);
@@ -371,7 +371,7 @@ public class S3Source implements StreamSource {
         // No resources to free
     }
 
-    public AmazonS3Client getClient() {
+    public AmazonS3 getClient() {
         return client;
     }
 }
