@@ -84,7 +84,7 @@ public class ConfigUtil {
                 Iterator<String> keysIt = config.getKeys();
                 while (keysIt.hasNext()) {
                     String key = keysIt.next();
-                    String[] valueList = config.getStringArray(key);
+                    List valueList = config.getList(key);
                     System.setProperty(key, String.join(",", valueList));
                 }
             }

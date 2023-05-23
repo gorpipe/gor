@@ -1,7 +1,6 @@
 package org.gorpipe.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -22,7 +21,7 @@ public class JsonUtils {
      */
     public static Map<String, Object> parseJson(CharSequence json) throws IllegalArgumentException {
         try {
-            return new ObjectMapper().readValue(json.toString(), new TypeReference<HashMap<String,Object>>(){});
+            return new ObjectMapper().readValue(json.toString(), HashMap.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot parse json string: " + json, e);
         }

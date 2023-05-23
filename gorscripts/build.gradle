@@ -82,7 +82,7 @@ project(':gorscripts') {
     // so we run them like this.
     task testScala(dependsOn: ['testClasses'], type: JavaExec) {
         systemProperty 'logback.configurationFile', new File("${project.rootDir}/tests/config/logback-test.xml").absolutePath
-        mainClass = 'org.scalatest.tools.Runner'
+        main = 'org.scalatest.tools.Runner'
         args = ['-R', 'build/classes/scala/test', '-o']
 
         classpath = sourceSets.test.runtimeClasspath
@@ -130,6 +130,9 @@ project(':gorscripts') {
         def t = params.containsKey('override') ? tasks.getByName(params.override) : tasks.create(name: scriptName + 'StartScript', type: CreateStartScripts)
         updateScriptTask("GOR", scriptName, params, t, project)
     }
+
+
+    mainClassName = "dummy-not-used"
 
     tasks.distZip.enabled = true
     tasks.distZip.archiveClassifier = "dist"

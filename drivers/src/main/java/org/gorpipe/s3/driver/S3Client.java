@@ -20,21 +20,31 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.base.logging;
+package org.gorpipe.s3.driver;
 
-import ch.qos.logback.classic.PatternLayout;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.services.s3.AmazonS3Client;
 
 /**
- * Created by gisli on 21/02/2017.
+ * Replace AmazonS3Client to make client configuration testable.
+ * <p>
+ * Created by villi on 08/04/17.
  */
+public class S3Client extends AmazonS3Client {
 
-public class ExtendedPatternLayoutEncoder extends PatternLayoutEncoder {
-    @Override
-    public void start() {
-        // put your converter
-        PatternLayout.defaultConverterMap.put("process_id", ProcessIdConverter.class.getName());
-        PatternLayout.defaultConverterMap.put("hostname", HostnameConverter.class.getName());
-        super.start();
+    public S3Client(AWSCredentials defaultAWSCredentialsProviderChain, ClientConfiguration clientconfig) {
+        super(defaultAWSCredentialsProviderChain, clientconfig);
     }
+
+    public S3Client(AWSCredentialsProviderChain chain, ClientConfiguration clientconfig) {
+        super(chain, clientconfig);
+    }
+
+    public S3Client(AWSCredentials creds) {
+        super(creds);
+    }
+
+
 }

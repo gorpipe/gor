@@ -26,10 +26,8 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.*;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import htsjdk.samtools.SamReaderFactory;
@@ -128,7 +126,7 @@ public class S3GenomicIteratorFactory {
                     };
                 } else {
                     gcCredentialsProvider = new AWSCredentialsProviderChain(
-                            new RdaAWSCredentialsProvider(), InstanceProfileCredentialsProvider.getInstance()) {
+                            new RdaAWSCredentialsProvider(), new InstanceProfileCredentialsProvider()) {
                         @Override
                         public AWSCredentials getCredentials() {
                             try {
@@ -177,7 +175,7 @@ public class S3GenomicIteratorFactory {
 
                 gcCredentialsProvider = new AWSCredentialsProviderChain(
                         pcp,
-                        new RdaAWSCredentialsProvider(), InstanceProfileCredentialsProvider.getInstance()) {
+                        new RdaAWSCredentialsProvider(), new InstanceProfileCredentialsProvider()) {
                     @Override
                     public AWSCredentials getCredentials() {
                         try {
@@ -193,11 +191,7 @@ public class S3GenomicIteratorFactory {
                 gcCredentialsProvider.setReuseLastProvider(false);
             }
 
-            s3 = AmazonS3ClientBuilder.standard()
-                    .withCredentials(gcCredentialsProvider)
-                    .withClientConfiguration(clientconfig)
-                    .build();
-
+            s3 = new AmazonS3Client(gcCredentialsProvider, clientconfig);
             if (endpoint != null) {
                 s3.setEndpoint(endpoint);
             }
@@ -267,8 +261,7 @@ public class S3GenomicIteratorFactory {
                         }
                     };
                 } else {
-                    gcCredentialsProvider = new AWSCredentialsProviderChain(rdaCredProvider,
-                            InstanceProfileCredentialsProvider.getInstance()) {
+                    gcCredentialsProvider = new AWSCredentialsProviderChain(rdaCredProvider, new InstanceProfileCredentialsProvider()) {
                         @Override
                         public AWSCredentials getCredentials() {
                             try {
@@ -311,7 +304,7 @@ public class S3GenomicIteratorFactory {
 
                 gcCredentialsProvider = new AWSCredentialsProviderChain(
                         pcp,
-                        rdaCredProvider, InstanceProfileCredentialsProvider.getInstance()) {
+                        rdaCredProvider, new InstanceProfileCredentialsProvider()) {
                     @Override
                     public AWSCredentials getCredentials() {
                         try {
@@ -327,7 +320,7 @@ public class S3GenomicIteratorFactory {
                 gcCredentialsProvider.setReuseLastProvider(false);
             }
 
-            s3 = AmazonS3ClientBuilder.standard().withCredentials(gcCredentialsProvider).withClientConfiguration(clientconfig).build();
+            s3 = new AmazonS3Client(gcCredentialsProvider, clientconfig);
             if (endpoint != null) {
                 s3.setEndpoint(endpoint);
             }
