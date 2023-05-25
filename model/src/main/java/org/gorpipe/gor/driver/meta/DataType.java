@@ -73,7 +73,8 @@ public enum DataType {
     SH(SCRIPT, ".sh"),
     PY(SCRIPT, ".py"),
     FASTA(VARIANTS, ".fasta"),
-    FA(VARIANTS, ".fa");
+    FA(VARIANTS, ".fa"),
+    GZ(COMPRESSED, ".gz");
 
     public final String suffix;
     public final FileNature nature;

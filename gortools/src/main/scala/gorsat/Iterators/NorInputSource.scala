@@ -23,22 +23,18 @@
 package gorsat.Iterators
 
 import gorsat.Commands.CommandParseUtilities
+import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
+import org.gorpipe.gor.model.{FileReader, GenomicIteratorBase, QuoteSafeRowBase, Row}
+import org.gorpipe.gor.util.DataUtil
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.util
 import java.util.stream
 import java.util.zip.GZIPInputStream
-import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
-import org.gorpipe.gor.model.{FileReader, GenomicIteratorBase, QuoteSafeRowBase, Row, RowBase}
-import org.gorpipe.gor.stats.StatsCollector
-import org.gorpipe.gor.util.DataUtil
-
 import scala.collection.mutable
 import scala.io.StdIn
 
 class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends GenomicIteratorBase {
-  private var stats: StatsCollector = _
-  private var statsSenderId = -1
 
   var myHasNext: Boolean = false
   var myNext: String = _
@@ -46,19 +42,22 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   var haveReadHeader: Boolean = false
   var myHeader: String = _
   var myHeaderLength = 0
-  val useCSV: Boolean = DataUtil.isAnyCsv(fileName)
-  var haveLoadedLines = false
-  val filter = (s: String) => !s.startsWith("##")
+  private val useCSV: Boolean = DataUtil.isAnyCsv(fileName)
+  val filter: String => Boolean = (s: String) => !s.startsWith("##")
 
 
-  val norRowSource: stream.Stream[String] = if (!readStdin) {
+  private val norRowSource: stream.Stream[String] = if (!readStdin) {
+    // ToDo: Add support for compressed files in the driver framework.
     if (DataUtil.isGZip(fileName)) {
       new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.getInputStream(fileName)))).lines()
     } else {
       fileReader.iterateFile(fileName, maxWalkDepth, followLinks, showModificationDate)
     }
-  } else throw new GorParsingException("Stdin not supported in NOR context.")
-  val norRowIterator: util.Iterator[String] = if (DataUtil.isMeta(fileName))
+  } else {
+    throw new GorParsingException("Stdin not supported in NOR context.")
+  }
+
+  private val norRowIterator: util.Iterator[String] = if (DataUtil.isMeta(fileName))
     norRowSource.iterator()
   else
     norRowSource.filter(filter(_)).iterator()
@@ -114,7 +113,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     if (norRowSource != null) norRowSource.close()
   }
 
-  def createNewHeader(): String = {
+  private def createNewHeader(): String = {
     val builder = new mutable.StringBuilder()
 
     builder.append("ChromNOR\tPosNOR")

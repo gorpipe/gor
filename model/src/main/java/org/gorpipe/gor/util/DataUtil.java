@@ -48,8 +48,8 @@ public class DataUtil {
     }
 
     public static boolean isAnyCsv(String file) {
-        return DataType.isOfType(file, DataType.CSV)
-                || DataType.isOfType(file, DataType.CSVGZ);
+        return DataType.isOfTypeOrLinksToType(file, DataType.CSV)
+                || DataType.isOfTypeOrLinksToType(file, DataType.CSVGZ);
     }
 
     public static boolean isLink(String file) {
@@ -95,13 +95,13 @@ public class DataUtil {
     public static boolean isBgen(String file) { return DataType.isOfTypeOrLinksToType(file, DataType.BGEN); }
 
     public static boolean isAnyVcf(String file) {
-        return DataType.isOfType(file, DataType.VCF)
-                || DataType.isOfType(file, DataType.VCFGZ)
-                || DataType.isOfType(file, DataType.VCFBGZ);
+        return DataType.isOfTypeOrLinksToType(file, DataType.VCF)
+                || DataType.isOfTypeOrLinksToType(file, DataType.VCFGZ)
+                || DataType.isOfTypeOrLinksToType(file, DataType.VCFBGZ);
     }
 
     public static boolean isGZip(String file) {
-        return file.trim().toLowerCase().endsWith(".gz");
+        return DataType.isOfTypeOrLinksToType(file, DataType.GZ);
     }
 
     public static String toFile(String name, DataType type) {

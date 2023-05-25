@@ -41,35 +41,43 @@ public class UTestDataUtil {
         // Any CSV
         Assert.assertFalse(DataUtil.isAnyCsv("foo.txt"));
         Assert.assertTrue(DataUtil.isAnyCsv("foo.csv"));
+        Assert.assertTrue(DataUtil.isAnyCsv("foo.csv.link"));
         Assert.assertTrue(DataUtil.isAnyCsv("foo.csv.gz"));
 
         // isMem
         Assert.assertFalse(DataUtil.isMem("foo.txt"));
         Assert.assertTrue(DataUtil.isMem("foo.mem"));
+        Assert.assertFalse(DataUtil.isMem("foo.mem.link"));
 
         // isGord
         Assert.assertFalse(DataUtil.isGord("foo.txt"));
         Assert.assertTrue(DataUtil.isGord("foo.gord"));
+        Assert.assertTrue(DataUtil.isGord("foo.gord.link"));
 
         // isGor
         Assert.assertFalse(DataUtil.isGor("foo.txt"));
         Assert.assertTrue(DataUtil.isGor("foo.gor"));
+        Assert.assertTrue(DataUtil.isGor("foo.gor.link"));
 
         // isGorz
         Assert.assertFalse(DataUtil.isGorz("foo.txt"));
         Assert.assertTrue(DataUtil.isGorz("foo.gorz"));
+        Assert.assertTrue(DataUtil.isGorz("foo.gorz.link"));
 
         // isNord
         Assert.assertFalse(DataUtil.isNord("foo.txt"));
         Assert.assertTrue(DataUtil.isNord("foo.nord"));
+        Assert.assertTrue(DataUtil.isNord("foo.nord.link"));
 
         // isNor
         Assert.assertFalse(DataUtil.isNor("foo.txt"));
         Assert.assertTrue(DataUtil.isNor("foo.nor"));
+        Assert.assertTrue(DataUtil.isNor("foo.nor.link"));
 
         // isNorz
         Assert.assertFalse(DataUtil.isNorz("foo.txt"));
         Assert.assertTrue(DataUtil.isNorz("foo.norz"));
+        Assert.assertTrue(DataUtil.isNorz("foo.norz.link"));
 
         // isNorSource
         Assert.assertFalse(DataUtil.isNorSource("foo.txt"));
@@ -77,10 +85,16 @@ public class UTestDataUtil {
         Assert.assertTrue(DataUtil.isNorSource("foo.nor"));
         Assert.assertTrue(DataUtil.isNorSource("foo.norz"));
         Assert.assertTrue(DataUtil.isNorSource("foo.tsv"));
+        Assert.assertFalse(DataUtil.isNorSource("foo.txt.link"));
+        Assert.assertFalse(DataUtil.isNorSource("foo.nord.link"));
+        Assert.assertTrue(DataUtil.isNorSource("foo.nor.link"));
+        Assert.assertTrue(DataUtil.isNorSource("foo.norz.link"));
+        Assert.assertTrue(DataUtil.isNorSource("foo.tsv.link"));
 
         // isTxt
         Assert.assertFalse(DataUtil.isTxt("foo.gor"));
         Assert.assertTrue(DataUtil.isTxt("foo.txt"));
+        Assert.assertTrue(DataUtil.isTxt("foo.txt.link"));
 
         // isLink
         Assert.assertFalse(DataUtil.isLink("foo.txt"));
@@ -90,52 +104,66 @@ public class UTestDataUtil {
         // isMeta
         Assert.assertFalse(DataUtil.isMeta("foo.txt"));
         Assert.assertTrue(DataUtil.isMeta("foo.meta"));
+        Assert.assertTrue(DataUtil.isMeta("foo.meta.link"));
 
         // isR
         Assert.assertFalse(DataUtil.isRScript("foo.txt"));
         Assert.assertTrue(DataUtil.isRScript("foo.R"));
+        Assert.assertTrue(DataUtil.isRScript("foo.R.link"));
 
         // isShellScript
         Assert.assertFalse(DataUtil.isShellScript("foo.txt"));
         Assert.assertTrue(DataUtil.isShellScript("foo.sh"));
+        Assert.assertTrue(DataUtil.isShellScript("foo.sh.link"));
 
         // isPythonScript
         Assert.assertFalse(DataUtil.isPythonScript("foo.txt"));
         Assert.assertTrue(DataUtil.isPythonScript("foo.py"));
+        Assert.assertTrue(DataUtil.isPythonScript("foo.py.link"));
 
         // isYml
         Assert.assertFalse(DataUtil.isYml("foo.txt"));
         Assert.assertTrue(DataUtil.isYml("foo.yml"));
+        Assert.assertTrue(DataUtil.isYml("foo.yml.link"));
 
         // isGorq
         Assert.assertFalse(DataUtil.isGorq("foo.txt"));
         Assert.assertTrue(DataUtil.isGorq("foo.gorq"));
+        Assert.assertTrue(DataUtil.isGorq("foo.gorq.link"));
 
         // isParquet
         Assert.assertFalse(DataUtil.isParquet("foo.txt"));
         Assert.assertTrue(DataUtil.isParquet("foo.parquet"));
+        Assert.assertTrue(DataUtil.isParquet("foo.parquet.link"));
 
         // isBam
         Assert.assertFalse(DataUtil.isBam("foo.txt"));
         Assert.assertTrue(DataUtil.isBam("foo.bam"));
+        Assert.assertTrue(DataUtil.isBam("foo.bam.link"));
 
         // isCram
         Assert.assertFalse(DataUtil.isCram("foo.txt"));
         Assert.assertTrue(DataUtil.isCram("foo.cram"));
+        Assert.assertTrue(DataUtil.isCram("foo.cram.link"));
 
         // isBgen
         Assert.assertFalse(DataUtil.isBgen("foo.txt"));
         Assert.assertTrue(DataUtil.isBgen("foo.bgen"));
+        Assert.assertTrue(DataUtil.isBgen("foo.bgen.link"));
 
         // isAnyVcf
         Assert.assertFalse(DataUtil.isAnyVcf("foo.txt"));
         Assert.assertTrue(DataUtil.isAnyVcf("foo.vcf"));
         Assert.assertTrue(DataUtil.isAnyVcf("foo.vcf.gz"));
         Assert.assertTrue(DataUtil.isAnyVcf("foo.vcf.bgz"));
+        Assert.assertTrue(DataUtil.isAnyVcf("foo.vcf.link"));
+        Assert.assertTrue(DataUtil.isAnyVcf("foo.vcf.gz.link"));
+        Assert.assertTrue(DataUtil.isAnyVcf("foo.vcf.bgz.link"));
 
         // isGz
         Assert.assertFalse(DataUtil.isGZip("foo.txt"));
         Assert.assertTrue(DataUtil.isGZip("foo.cram.gz"));
+        Assert.assertTrue(DataUtil.isGZip("foo.cram.gz.link"));
     }
 
     @Test

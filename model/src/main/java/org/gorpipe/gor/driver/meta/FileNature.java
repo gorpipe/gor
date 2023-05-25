@@ -59,5 +59,9 @@ public enum FileNature {
     /**
      * A script file
      **/
-    SCRIPT
+    SCRIPT,
+    /**
+     * A compressed file
+     **/
+    COMPRESSED
 }
