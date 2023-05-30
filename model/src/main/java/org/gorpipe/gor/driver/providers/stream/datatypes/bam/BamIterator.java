@@ -24,12 +24,11 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.bam;
 import htsjdk.samtools.*;
 import htsjdk.samtools.SAMRecord.SAMTagAndValue;
 import htsjdk.samtools.util.CloseableIterator;
-import org.apache.commons.lang3.NotImplementedException;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.model.*;
-import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.gor.util.ByteTextBuilder;
 import org.gorpipe.gor.util.Util;
+import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -325,7 +324,7 @@ public class BamIterator extends GenomicIteratorBase {
                             if (i != 0) {
                                 tb.append((byte) ',');
                             }
-                            tb.append(a[i]);
+                            tb.append(Integer.toString(a[i]));
                         }
                     } else if (tagval.value instanceof short[]) {
                         short[] a = (short[]) tagval.value;
@@ -333,7 +332,7 @@ public class BamIterator extends GenomicIteratorBase {
                             if (i != 0) {
                                 tb.append((byte) ',');
                             }
-                            tb.append(a[i]);
+                            tb.append(Short.toString(a[i]));
                         }
                     } else if (tagval.value instanceof float[]) {
                         float[] a = (float[]) tagval.value;
@@ -341,7 +340,7 @@ public class BamIterator extends GenomicIteratorBase {
                             if (i != 0) {
                                 tb.append((byte) ',');
                             }
-                            tb.append(a[i]);
+                            tb.append(Float.toString(a[i]));
                         }
                     } else if (tagval.value instanceof byte[]) {
                         byte[] a = (byte[]) tagval.value;
@@ -349,7 +348,7 @@ public class BamIterator extends GenomicIteratorBase {
                             if (i != 0) {
                                 tb.append((byte) ',');
                             }
-                            tb.append(a[i]);
+                            tb.append(Byte.toString(a[i]));
                         }
                     } else {
                         tb.append(tagval.value.toString());

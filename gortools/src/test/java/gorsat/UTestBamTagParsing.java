@@ -53,4 +53,13 @@ public class UTestBamTagParsing {
         int count = TestUtils.runGorPipeCount(args);
         Assert.assertEquals("Incorrect group size", 1, count);
     }
+
+    @Test
+    public void testBAMWithMethylationTags() {
+        String gorCmd = "gor ../tests/data/external/samtools/methylation_tags.bam | top 1";
+        String[] args = new String[]{gorCmd};
+
+        var data = TestUtils.runGorPipe(args);
+        Assert.assertTrue("We dont get an exception and have an ML tag", data.contains("ML=["));
+    }
 }
