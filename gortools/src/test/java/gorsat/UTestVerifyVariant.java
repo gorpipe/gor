@@ -28,7 +28,6 @@ import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -37,9 +36,6 @@ import java.io.IOException;
 public class UTestVerifyVariant {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void badRef() throws IOException {
@@ -54,8 +50,7 @@ public class UTestVerifyVariant {
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
         final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
 
-        thrown.expect(GorDataException.class);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
@@ -88,8 +83,7 @@ public class UTestVerifyVariant {
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
         final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
 
-        thrown.expect(GorDataException.class);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
@@ -99,9 +93,7 @@ public class UTestVerifyVariant {
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
         final String query = String.format("gor %s | verifyvariant", file.getAbsolutePath());
-
-        thrown.expect(GorParsingException.class);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test

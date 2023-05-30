@@ -33,8 +33,8 @@ public class ExtendedPatternLayoutEncoder extends PatternLayoutEncoder {
     @Override
     public void start() {
         // put your converter
-        PatternLayout.defaultConverterMap.put("process_id", ProcessIdConverter.class.getName());
-        PatternLayout.defaultConverterMap.put("hostname", HostnameConverter.class.getName());
+        PatternLayout.DEFAULT_CONVERTER_MAP.put("process_id", ProcessIdConverter.class.getName());
+        PatternLayout.DEFAULT_CONVERTER_MAP.put("hostname", HostnameConverter.class.getName());
         super.start();
     }
 }

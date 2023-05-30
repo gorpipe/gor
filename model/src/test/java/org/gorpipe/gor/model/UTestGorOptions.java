@@ -23,8 +23,6 @@
 package org.gorpipe.gor.model;
 
 import gorsat.TestUtils;
-import org.gorpipe.gor.model.GorOptions;
-import org.gorpipe.gor.model.SourceRef;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -210,10 +208,10 @@ public class UTestGorOptions {
 
     @Test
     public void testGorrowChrPrefix() {
-        String[] prefSuf = {"create p = ",""," gor [p];",""}; List res = new ArrayList();
+        String[] prefSuf = {"create p = ",""," gor [p];",""}; List<String> res = new ArrayList<>();
         for (int i=0;i<2;i++) { String[] arg = new String[]{prefSuf[i]+"gorrow 8,145584264,145584264 | calc Reference 'T' | calc Call 'C' | rename #2 Pos;"+prefSuf[i+2]};
             res.add(TestUtils.runGorPipe(arg)); }
-        Assert.assertTrue(res.toArray()[0].toString().split("\n")[1].equals(res.toArray()[1].toString().split("\n")[1]));
+        Assert.assertEquals(true, res.toArray()[0].toString().split("\n")[1].equals(res.toArray()[1].toString().split("\n")[1]));
     }
 
 }

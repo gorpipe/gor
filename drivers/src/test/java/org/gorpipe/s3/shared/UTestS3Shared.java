@@ -20,9 +20,6 @@ import java.io.IOException;
 public class UTestS3Shared {
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Rule
     public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     @Rule

@@ -13,7 +13,7 @@ project(':auth') {
         implementation("me.dinowernli:java-grpc-prometheus:_") { exclude group: 'io.grpc', module: 'grpc-all' } // Note: transitively adds grpc-all:1.0.0
         implementation 'ch.qos.logback:logback-classic:_'
         implementation "org.aeonbits.owner:owner:_"
-        implementation 'org.glassfish:javax.json:_'
+
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation("net.logstash.logback:logstash-logback-encoder:_")
         implementation "javax.annotation:javax.annotation-api:_"
@@ -21,12 +21,15 @@ project(':auth') {
         implementation 'com.google.http-client:google-http-client:_'
         implementation "com.squareup.retrofit2:retrofit:_"
         implementation "com.squareup.retrofit2:converter-jackson:_"
-
+        implementation 'jakarta.json:jakarta.json-api:_'
 
         testImplementation project(':test')
         testImplementation "org.mockito:mockito-core:_"
         testImplementation "org.mockito:mockito-inline:_"
         testImplementation "commons-lang:commons-lang:_"
         testImplementation "com.github.stefanbirkner:system-rules:_"
+
+        testImplementation 'io.smallrye:smallrye-jwt:_'
+        testRuntimeOnly 'org.eclipse.parsson:parsson:_' // For JWT parsing
     }
 }

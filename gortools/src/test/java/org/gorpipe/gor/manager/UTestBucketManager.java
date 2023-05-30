@@ -634,7 +634,7 @@ public class UTestBucketManager {
                 Assert.assertTrue("Bucket does not exists", Files.exists(Path.of(PathUtils.resolve(table.getRootPath(), bucket))));
             }
 
-            List<String> bucketDirs = new ArrayList();
+            List<String> bucketDirs = new ArrayList<>();
 
             // Single directory
 

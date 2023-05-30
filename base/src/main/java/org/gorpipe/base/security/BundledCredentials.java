@@ -22,6 +22,7 @@
 
 package org.gorpipe.base.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -221,7 +222,7 @@ public class BundledCredentials implements CredentialsProvider {
 
     private static Map<String, Object> parseJson(CharSequence json) throws IllegalArgumentException {
         try {
-            return new ObjectMapper().readValue(json.toString(), HashMap.class);
+            return new ObjectMapper().readValue(json.toString(), new TypeReference<HashMap<String, Object>>(){});
         } catch (IOException e) {
             throw new IllegalArgumentException("Cannot parse json string: " + json, e);
         }

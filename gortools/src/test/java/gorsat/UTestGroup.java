@@ -27,7 +27,6 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -47,9 +46,6 @@ public class UTestGroup {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -405,8 +401,7 @@ public class UTestGroup {
 
         final File file = FileTestUtils.createTempFile(workDir.getRoot(), "test.gor", contents);
         final String query = String.format("gor %s | group chrom -sc Data -lis -len 25 -notruncate", file.getAbsolutePath());
-        thrown.expect(GorDataException.class);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test

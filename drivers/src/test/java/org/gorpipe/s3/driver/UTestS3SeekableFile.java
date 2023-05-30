@@ -3,9 +3,10 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.binsearch.SeekableIterator;
 import org.gorpipe.gor.binsearch.StringIntKey;
@@ -103,7 +104,11 @@ public class UTestS3SeekableFile {
         cc.setProtocol(Protocol.HTTP);
         cc.setConnectionTimeout(120 * 1000);
         cc.setMaxErrorRetry(15);
-        final AmazonS3 s3Client = new AmazonS3Client(myCredentials, cc);
+        final AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(myCredentials))
+                .withClientConfiguration(cc)
+                .build();
+
         /*
          * TODO: Use SeekableFile adapter from new gordriver before reactivating these test.
          */

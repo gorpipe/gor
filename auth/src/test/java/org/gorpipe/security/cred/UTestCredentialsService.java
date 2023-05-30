@@ -1,5 +1,6 @@
 package org.gorpipe.security.cred;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
@@ -35,11 +36,11 @@ public class UTestCredentialsService {
     @Test
     public void testGetCredentialsGorAuth() throws IOException {
         String credJson = "{\"default_credentials\":[],\"credentials\":[{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"csa-test-data\",\"credential_attributes\":{\"key\":\"key\",\"secret\":\"qwertySecret\"},\"owner_type\":\"System\",\"user_default\":false},{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"nextcode-qc-data\",\"credential_attributes\":{\"key\":\"qwerty\",\"secret\":\"qwertySecert\"},\"owner_type\":\"System\",\"user_default\":false}]}";
-        Map<String, Object> credMap = new ObjectMapper().readValue(credJson, Map.class);
+        Map<String, Object> credMap = new ObjectMapper().readValue(credJson, new TypeReference<HashMap<String,Object>>(){});
 
         CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
-                Map overrides = new HashMap<String, String>();
+                Map<String, String> overrides = new HashMap<>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
                 overrides.put(CsaAuthConfiguration.USER_KEY, "credUser");
                 overrides.put(CsaAuthConfiguration.PASSWORD_KEY, "credPass");
@@ -63,12 +64,12 @@ public class UTestCredentialsService {
     @Test
     public void testGetCredentialsAppSession() throws IOException {
         String credJson = "{\"default_credentials\":[],\"credentials\":[{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"csa-test-data\",\"credential_attributes\":{\"key\":\"key\",\"secret\":\"qwertySecret\"},\"owner_type\":\"System\",\"user_default\":false},{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"nextcode-qc-data\",\"credential_attributes\":{\"key\":\"qwerty\",\"secret\":\"qwertySecert\"},\"owner_type\":\"System\",\"user_default\":false}]}";
-        Map<String, Object> credMap = new ObjectMapper().readValue(credJson, Map.class);
+        Map<String, Object> credMap = new ObjectMapper().readValue(credJson, new TypeReference<HashMap<String,Object>>(){});
 
 
         CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
-                Map overrides = new HashMap<String, String>();
+                Map<String, String> overrides = new HashMap<>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
                 CsaAuthConfiguration config = ConfigManager.createConfig(CsaAuthConfiguration.class, overrides);
                 return config;
@@ -97,11 +98,11 @@ public class UTestCredentialsService {
     @Test
     public void testGetCredentialsGorAuthRetrySucceed() throws IOException {
         String credJson = "{\"default_credentials\":[],\"credentials\":[{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"csa-test-data\",\"credential_attributes\":{\"key\":\"key\",\"secret\":\"qwertySecret\"},\"owner_type\":\"System\",\"user_default\":false},{\"expires\":null,\"owner_id\":null,\"service\":\"s3\",\"lookup_key\":\"nextcode-qc-data\",\"credential_attributes\":{\"key\":\"qwerty\",\"secret\":\"qwertySecert\"},\"owner_type\":\"System\",\"user_default\":false}]}";
-        Map<String, Object> credMap = new ObjectMapper().readValue(credJson, Map.class);
+        Map<String, Object> credMap = new ObjectMapper().readValue(credJson, new TypeReference<HashMap<String,Object>>(){});
 
         CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
-                Map overrides = new HashMap<String, String>();
+                Map<String, String> overrides = new HashMap<>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
                 overrides.put(CsaAuthConfiguration.USER_KEY, "credUser");
                 overrides.put(CsaAuthConfiguration.PASSWORD_KEY, "credPass");
@@ -126,7 +127,7 @@ public class UTestCredentialsService {
     public void testGetCredentialsUnauthorized() throws IOException {
         CsaSecurityModule csaSecurityModule = new CsaSecurityModule() {
             public CsaAuthConfiguration config() {
-                Map overrides = new HashMap<String, String>();
+                Map<String, String> overrides = new HashMap<>();
                 overrides.put(CsaAuthConfiguration.ENDPOINT_KEY, "dummyServer");
                 overrides.put(CsaAuthConfiguration.USER_KEY, "credUser");
                 overrides.put(CsaAuthConfiguration.PASSWORD_KEY, "credPass");

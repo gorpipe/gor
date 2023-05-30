@@ -13,9 +13,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -27,9 +25,6 @@ import java.util.Map;
  * Created by gisli on 02/03/15.
  */
 public class UTestDbSource {
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     private final static SourceReference defaultSourceReference = new SourceReferenceBuilder("db://rda:v_variant_annotations").securityContext("dbscope=project_id#int#10004|||extrastuff=other").build();
 
@@ -123,10 +118,9 @@ public class UTestDbSource {
         ds = createSource("db://rda:rda.v_variant_annotations", "");
         Assert.assertTrue(ds.exists());
         ds.close();
-        exception.expect(GorResourceException.class);
-        ds = createSource("db://rda:no_such_file", "");
-        exception.expectMessage("Invalid db table name");
-        ds.close();
+
+        Assert.assertThrows("Invalid db table name", GorResourceException.class,
+                () -> createSource("db://rda:no_such_file", "")); ;
     }
 
     @Test

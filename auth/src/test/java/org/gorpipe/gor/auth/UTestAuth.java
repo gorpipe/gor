@@ -4,27 +4,32 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.jwt.auth.principal.DefaultJWTParser;
+import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.ParseException;
+import io.smallrye.jwt.util.KeyUtils;
+import jakarta.json.JsonString;
+import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.gorpipe.gor.auth.utils.OAuthHandler;
 import org.gorpipe.security.cred.CsaApiService;
 import org.apache.commons.lang.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.junit.Assert;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
 import java.util.*;
 
+import static org.gorpipe.gor.auth.GorAuth.REALM_ACCESS;
+import static org.gorpipe.gor.auth.GorAuth.ROLES;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 public class UTestAuth {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     private final static String accessToken = "eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiIxZjM5YjgyOC0zN2ZiLTQ0NTQtODBmNC0yYTYxMTJkYTVjZjEiLCJleHAiOjE1MjkyMjc0MjUsIm5iZiI6MCwiaWF0IjoxNTI2NjM1NDI1LCJpc3MiOiJodHRwOi8vZWMyLTM0LTI0NS04Ni0yMzcuZXUtd2VzdC0xLmNvbXB1dGUuYW1hem9uYXdzLmNvbTo0NDMvYXV0aC9yZWFsbXMvbWFzdGVyIiwiYXVkIjoic2Vjb25kYXJ5LXBpcGVsaW5lIiwic3ViIjoiZWRlOTQ2ZjYtMGI4MS00MmQ4LTgyYjctMTE1MWEzNWZmYWI5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic2Vjb25kYXJ5LXBpcGVsaW5lIiwic2Vzc2lvbl9zdGF0ZSI6ImVlNDA2NTJiLWI0NjEtNDU1MS05OTcwLTgwODk3ODdlMmI2YiIsImNsaWVudF9zZXNzaW9uIjoiZTIxNDhkOTYtZmYzYi00YmU0LWI0ZWMtODYwNmU4YjhkZmM4IiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHA6Ly9sb2NhbGhvc3QiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50Iiwidmlldy1wcm9maWxlIl19fSwibmFtZSI6IlNlcnZpY2UgVXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6InBpcGVsaW5lcy1zZXJ2aWNlLXVzZXIiLCJnaXZlbl9uYW1lIjoiU2VydmljZSIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoicGlwZWxpbmVzLXNlcnZpY2UtdXNlckB3dXhpbmV4dGNvZGUuY29tIn0.bczar3EiSajnu5EO9UySh4wdSRmZd42FXhHKonTzC9qTWZecFZ13UHTUqTu9RHqpxpoJk1VhvNLmZ_2CW_wouYj2GNHs7RyfpZgXt9ERTTQDi3nMcu05ATzpFg6sQhHTO5ylkvUITk8nPX5iwjXfWvB80LFQXydXXegvxRqFi7xBvX0MRvBKT7ez6mcgSofxibDELLqwAShJGyzeMGwcSXE_XhJJ-vC8sxDSmcSniafCIx0idsLepNLRDQbiiBHFnG0D8Rdl7xBRor-b5IMsUCxftznB4dxNjaog-j8s0nidSn-u4PaHmVwAPyMwP2ukRLzk6td-vfSoK-DQSR-UuQ";
     private final static String expiredAccessToken = "eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiI3MmY2OGIwNi1mZjQ5LTQxYjQtOWY2Zi1hY2RlODMwMGUyZmEiLCJleHAiOjE1MjI3NjIxNjMsIm5iZiI6MCwiaWF0IjoxNTIyNzYyMTAzLCJpc3MiOiJodHRwOi8vZWMyLTM0LTI0NS04Ni0yMzcuZXUtd2VzdC0xLmNvbXB1dGUuYW1hem9uYXdzLmNvbTo0NDMvYXV0aC9yZWFsbXMvcGxhdGZvcm0tc2VydmljZXMiLCJhdWQiOiJuZXh0Y29kZS1jbGkiLCJzdWIiOiJlMmFjZGZlNi0zZjFiLTRmY2MtOThhNC1kYmYzOGMxMzcwOTEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJuZXh0Y29kZS1jbGkiLCJzZXNzaW9uX3N0YXRlIjoiZTljMDdhZDMtNTcwMi00ODU3LTllODgtMGY0OTk3MmVhYWJiIiwiY2xpZW50X3Nlc3Npb24iOiIwYjA2MGI2ZS0zZDQ1LTQ4MGUtYTBhMC03ZjU1ZDkwNjA1ZTkiLCJhbGxvd2VkLW9yaWdpbnMiOltdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJ2aWV3LXByb2ZpbGUiXX19LCJuYW1lIjoiRmphbGFyIFNpZ3Vyw7BhcnNvbiIsInByZWZlcnJlZF91c2VybmFtZSI6ImZqYWxhckB3dXhpbmV4dGNvZGUuY29tIiwiZ2l2ZW5fbmFtZSI6IkZqYWxhciIsImZhbWlseV9uYW1lIjoiU2lndXLDsGFyc29uIiwiZW1haWwiOiJmamFsYXJAd3V4aW5leHRjb2RlLmNvbSJ9.EVomyNZ35V6kT0EO2TaYRJAa3qrwLkxQ9BMUuuj-02wYUzuqiWdoQRZ6WAFOmRd5lsEE6zQBCuY9_07UHy0nzJ9IQlCQWsD0D-J84qWfgD-_y1DD-DRoOV9RdVY_0exBLeR8LOVs8lQczHCQVrV-RIbmdN7CZmrpYh2yU-hLS9B3UBhC1b1OSDWcHP53130qx4W3C5Ed8-sHR4_pfXLqBnbQssBxYc5qm1yuDJ2M3-VvfHNdersYHa1bXkPEAk8TAML4ey3WqHCDVOu6HKlEOjls2ptjx_7FkkfpOrTKsSWysJ6sBMnUsTcljzSs8EPb98qcN_OuOWtwfKJgN59J9A";
     private final static String publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoeTOsEOSR99RaY3TIVA/6oQUQZCsshOZXi7pJkfQcNZwxkTdTu35cwt3FaPILTbnq4gGXqPDYM0uZrD5vztghJQv6FGQAvqfPVmuzYIp+3TVtwY06165rz6BzwlCZp/KbFMSKP0/JBA21P5BD6i5SowLLbzyTO0hGbgGAq7eNAiBpYWZFc8MlSseULsAIkCC6PKBaV5HWS5iL8LPQbLDjWmlXmyU5YfPZZoa/ADCPT+iXyD5PdIwEDfWxHzAxVPHSs5bfN6baJiYDSKTQEFWfEq5jIzxi8GSK7eiiQ2ZwBaav7Djq3ByrRONCgoyBrN+GzpdfnX4l6cp57IUOLpryQIDAQAB";
@@ -73,10 +78,34 @@ public class UTestAuth {
     }
 
     @Test
-    public void testDecoding() {
+    public void testDecodingWithDecodedJWT() {
         OAuthHandler oAuthOHandler = new OAuthHandler(publicKey);
         DecodedJWT jwt = oAuthOHandler.decodeToken(accessToken);
+
         Assert.assertEquals(username, jwt.getClaim(userKey).asString());
+        Assert.assertEquals("RS256", jwt.getAlgorithm());
+        Assert.assertEquals("RS256", jwt.getHeaderClaim("alg").asString());
+        Assert.assertArrayEquals(new String[]{"offline_access","uma_authorization"},
+                ((List<String>)jwt.getClaim(REALM_ACCESS).asMap().get("roles"))
+                        .stream().toArray());
+    }
+
+    @Test
+    public void testDecodingWithJsonWebToken() throws ParseException, GeneralSecurityException {
+        PublicKey pk = KeyUtils.decodePublicKey(publicKey);
+        JWTAuthContextInfo ci = new JWTAuthContextInfo(pk,
+                "http://ec2-34-245-86-237.eu-west-1.compute.amazonaws.com:443/auth/realms/master");
+        ci.setClockSkew(Integer.MAX_VALUE); // As the token is expired, we need to set the clock skew to a high value.
+
+        // Create a new JWT of type JsonWebToken from member variable accessToken using factory.
+        JsonWebToken jwt = new DefaultJWTParser(ci).parse(accessToken);
+
+        // Test all known properties.
+        Assert.assertEquals(username, jwt.getName());
+        Assert.assertEquals(username, jwt.getClaim(Claims.preferred_username));
+        Assert.assertArrayEquals(new String[]{"offline_access","uma_authorization"},
+                ((Map<String, List<JsonString>>) jwt.getClaim(REALM_ACCESS)).get(ROLES)
+                        .stream().map(js -> js.getString()).toArray());
     }
 
     /**
@@ -721,20 +750,20 @@ public class UTestAuth {
 
         }, null, null);
 
-        List<String> noQueryRoles = new ArrayList();
+        List<String> noQueryRoles = new ArrayList<>();
         noQueryRoles.add("offline_access");
         noQueryRoles.add("prj:test-proj:researcher");
         noQueryRoles.add("prj:test-proj:file:read");
         noQueryRoles.add("prj:*:file:read");
 
-        List<String>  queryRoles = new ArrayList();
+        List<String>  queryRoles = new ArrayList<>();
         queryRoles.add("offline_access");
         queryRoles.add("prj:test-proj:researcher");
         queryRoles.add("prj:project1:query");
         queryRoles.add("prj:project1:file:write:user_data");
         queryRoles.add("prj:*:file:read");
 
-        List<String>  queryProjectRoles = new ArrayList();
+        List<String>  queryProjectRoles = new ArrayList<>();
         queryProjectRoles.add("offline_access");
         queryProjectRoles.add("prj:test-proj:researcher");
         queryProjectRoles.add("prj:*:query");
@@ -788,22 +817,22 @@ public class UTestAuth {
             }
         }, null, new OAuthHandler(publicKey));
 
-        List<String> noReadRoles = new ArrayList();
+        List<String> noReadRoles = new ArrayList<>();
         noReadRoles.add("offline_access");
         noReadRoles.add("prj:test-proj:researcher");
         noReadRoles.add("prj:test-proj:file:read");
 
-        List<String> readRoles = new ArrayList();
+        List<String> readRoles = new ArrayList<>();
         readRoles.add("offline_access");
         readRoles.add("prj:test-proj:researcher");
         readRoles.add("prj:project1:file:read");
 
-        List<String> readInAllProjectsRoles = new ArrayList();
+        List<String> readInAllProjectsRoles = new ArrayList<>();
         readInAllProjectsRoles.add("offline_access");
         readInAllProjectsRoles.add("prj:test-proj:researcher");
         readInAllProjectsRoles.add("prj:*:file:read");
 
-        List<String> allRolesInProject = new ArrayList();
+        List<String> allRolesInProject = new ArrayList<>();
         allRolesInProject.add("offline_access");
         allRolesInProject.add("prj:test-proj:researcher");
         allRolesInProject.add("prj:project1:*");
@@ -1022,11 +1051,11 @@ public class UTestAuth {
     @Test
     public void testUpdateGorAuthInfo() throws IOException {
         CsaApiService csaApiService = mock(CsaApiService.class);
-        Map projectMap = new LinkedHashMap<String, Object>();
+        Map<String, Object> projectMap = new LinkedHashMap<>();
         projectMap.put("id", 5);
         doReturn(projectMap).when(csaApiService).getProject("project1");
 
-        Map userMap = new LinkedHashMap<String, Object>();
+        Map<String, Object> userMap = new LinkedHashMap<>();
         userMap.put("id", 10);
         doReturn(userMap).when(csaApiService).getUserByEmail("user@email.com");
 
@@ -1121,7 +1150,7 @@ public class UTestAuth {
         doReturn(Calendar.getInstance().getTime()).when(jwt).getExpiresAt();
         doReturn("dummy@dummies.com").when(claim).asString();
 
-        Map rolesMap = new LinkedHashMap();
+        Map<String, Object> rolesMap = new LinkedHashMap<>();
         List<String> rolesList = new ArrayList<>();
         rolesList.add("offline_access");
         rolesList.add("prj:test-proj:researcher");

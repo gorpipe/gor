@@ -46,9 +46,6 @@ public class ITestS3Shared {
     public TemporaryFolder workDir = new TemporaryFolder();
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Rule
     public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     @Rule

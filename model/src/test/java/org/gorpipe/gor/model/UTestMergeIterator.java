@@ -26,7 +26,6 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.test.GorDictionarySetup;
 import org.junit.*;
-import org.junit.rules.ExpectedException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -38,8 +37,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class UTestMergeIterator {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private static int READ_TEST_DICT_NUM_FILES = 100;
     private static int READ_TEST_DICT_LINES_PER_TAG = 10;
@@ -160,8 +157,7 @@ public class UTestMergeIterator {
         GorOptions options = GorOptions.createGorOptions("1.mem 2.mem 3.mem 4.mem ../tests/data/gor/dbsnp_test.gor");
         List<GenomicIterator> genomicIterators = options.getIterators();
 
-        thrown.expect(GorDataException.class);
-        new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null);
+        Assert.assertThrows(GorDataException.class, () -> new MergeIterator(genomicIterators, options.insertSource, options.sourceColName, null));
     }
 
     @Test
@@ -321,17 +317,17 @@ public class UTestMergeIterator {
     }
 
     @Test
-    public void readingFromDictionaryWithFilterOnTagsTaglistWithEmptyTagAtEnd() throws IOException {
-        thrown.expect(GorDataException.class);
-        thrown.expectMessage("Empty tag is not allowed");
-        GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,PN3,"));
+    public void readingFromDictionaryWithFilterOnTagsTaglistWithEmptyTagAtEnd() {
+        Assert.assertThrows("Empty tag is not allowed", GorDataException.class, () -> {
+            GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,PN3,"));
+        });
     }
 
     @Test
     public void readingFromDictionaryWithFilterOnTagsTaglistWithEmptyTagInMiddle() throws IOException {
-        thrown.expect(GorDataException.class);
-        thrown.expectMessage("Empty tag is not allowed");
-        GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,,PN3"));
+        Assert.assertThrows("Empty tag is not allowed", GorDataException.class, () -> {
+            GorOptions options = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dictForReadTest.dictionary, "PN1,,PN3"));
+        });
     }
 
     @Test

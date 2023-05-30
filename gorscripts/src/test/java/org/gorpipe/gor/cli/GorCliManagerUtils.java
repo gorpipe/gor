@@ -68,7 +68,7 @@ public class GorCliManagerUtils {
         }
         List<String> buckets = table.filter().get().stream().map(l -> l.getBucket()).filter(p -> p != null).distinct().collect(Collectors.toList());
         man.deleteBuckets(table.getPath(), buckets.toArray(new String[buckets.size()]));
-        BucketManager buc = new BucketManager(table);
+        BucketManager<DictionaryEntry> buc = new BucketManager<>(table);
 
         buc.setBucketDirs(bucketDirs);
         int bucketsCreated = buc.bucketize(BucketManager.BucketPackLevel.NO_PACKING, -1);
@@ -77,7 +77,7 @@ public class GorCliManagerUtils {
         buckets = table.filter().get().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
         List<String> createdBucketFolders = buckets.stream().map(p -> PathUtils.getParent(p)).distinct().collect(Collectors.toList());
         Assert.assertEquals("Incorrect number of bucket folders", bucketDirs.size(), createdBucketFolders.size());
-        Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet(bucketDirs), new TreeSet(createdBucketFolders));
+        Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet<>(bucketDirs), new TreeSet<>(createdBucketFolders));
         for (String bucket : buckets) {
             Assert.assertTrue("Bucket does not exists", Files.exists(Path.of(table.getRootPath()).resolve(bucket)));
         }

@@ -21,12 +21,9 @@
  */
 package org.gorpipe.gor.util;
 
-import org.gorpipe.gor.util.ByteTextBuilder;
 import org.junit.Assert;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.Locale;
 import java.util.Random;
@@ -39,9 +36,6 @@ import java.util.Random;
 public class UTestByteTextBuilder {
 
     private static final double DELTA = 1e-8;
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     /**
      * Test like comparison with the text builder
@@ -352,9 +346,8 @@ public class UTestByteTextBuilder {
     @Test
     public void byteAtThrowsWhenOutOfBounds() {
         final ByteTextBuilder b = new ByteTextBuilder("bingo");
-
-        thrown.expect(IndexOutOfBoundsException.class);
-        final byte b1 = b.byteAt(42);
+        Assert.assertThrows(IndexOutOfBoundsException.class, () -> b.byteAt(-1));
+        Assert.assertThrows(IndexOutOfBoundsException.class, () -> b.byteAt(5));
     }
 
     /**

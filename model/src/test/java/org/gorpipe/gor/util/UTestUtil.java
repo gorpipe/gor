@@ -22,11 +22,8 @@
 
 package org.gorpipe.gor.util;
 
-import org.gorpipe.gor.util.Util;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.postgresql.util.PSQLException;
 import org.postgresql.util.PSQLState;
 
@@ -36,9 +33,6 @@ import java.io.InputStream;
 import java.sql.SQLException;
 
 public class UTestUtil {
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void isWindowsOS() {
         boolean isWin = Util.isWindowsOS();
@@ -84,11 +78,12 @@ public class UTestUtil {
     }
 
     @Test
-    public void convert() throws Throwable {
-        final PSQLException exception = new PSQLException("test", PSQLState.CONNECTION_DOES_NOT_EXIST);
-        final Throwable converted = Util.convert(exception);
-        expectedException.expect(SQLException.class);
-        throw converted;
+    public void convert() {
+        Assert.assertThrows(SQLException.class, () -> {
+            final PSQLException exception = new PSQLException("test", PSQLState.CONNECTION_DOES_NOT_EXIST);
+            final Throwable converted = Util.convert(exception);
+            throw converted;
+        });
     }
 
     @Test

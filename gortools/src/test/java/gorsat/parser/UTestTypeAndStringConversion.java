@@ -25,13 +25,9 @@ package gorsat.parser;
 import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class UTestTypeAndStringConversion {
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void testStr() {
@@ -69,38 +65,32 @@ public class UTestTypeAndStringConversion {
 
     @Test
     public void castToLongWhenFloatTooLarge() {
-        exception.expect(GorDataException.class);
-        TestUtils.assertCalculated("long(3e300)", "");
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.assertCalculated("long(3e300)", ""));
     }
 
     @Test
     public void castToLongWhenNegativeFloatTooLarge() {
-        exception.expect(GorDataException.class);
-        TestUtils.assertCalculated("long(-3e300)", "");
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.assertCalculated("long(-3e300)", ""));
     }
 
     @Test
     public void castToIntWhenLongTooLarge() {
-        exception.expect(GorDataException.class);
-        TestUtils.assertCalculated("int(1234567890123456789)", "");
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.assertCalculated("int(1234567890123456789)", ""));
     }
 
     @Test
     public void castToIntWhenNegativeLongTooLarge() {
-        exception.expect(GorDataException.class);
-        TestUtils.assertCalculated("int(-1234567890123456789)", "");
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.assertCalculated("int(-1234567890123456789)", ""));
     }
 
     @Test
     public void castToIntWhenFloatTooLarge() {
-        exception.expect(GorDataException.class);
-        TestUtils.assertCalculated("int(3e300)", "");
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.assertCalculated("int(3e300)", ""));
     }
 
     @Test
     public void castToIntWhenNegativeFloatTooLarge() {
-        exception.expect(GorDataException.class);
-        TestUtils.assertCalculated("int(-3e300)", "");
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.assertCalculated("int(-3e300)", ""));
     }
 
     @Test

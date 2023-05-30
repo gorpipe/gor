@@ -648,7 +648,7 @@ public class NanoHTTPD {
     /**
      * Hashtable mapping (String)FILENAME_EXTENSION -> (String)MIME_TYPE
      */
-    private static final Hashtable theMimeTypes = new Hashtable();
+    private static final Hashtable<String, String> theMimeTypes = new Hashtable<>();
 
     static {
         StringTokenizer st = new StringTokenizer("htm    text/html " + "html   text/html "

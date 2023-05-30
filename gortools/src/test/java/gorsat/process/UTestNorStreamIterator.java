@@ -23,9 +23,8 @@
 package gorsat.process;
 
 import org.gorpipe.exceptions.GorSystemException;
-import org.junit.Rule;
+import org.junit.Assert;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -33,19 +32,12 @@ import java.util.stream.Stream;
 import static org.junit.Assert.*;
 
 public class UTestNorStreamIterator {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void shouldThrowWithEmptyStreamDueToHeaders(){
-        expectedException.expect(GorSystemException.class);
-        expectedException.expectMessage("Unable to initialize iterator from stream.");
-
-        Supplier<Stream<String>> emptyStreamSupplier = () -> Stream.of();
-        NorStreamIterator iterator = new NorStreamIterator(emptyStreamSupplier);
-        //we expect this to fail in constructor as is, if we get passed constructor we need to fail the test
-        fail("Expected to get exception in constructor!");
+        Assert.assertThrows("Unable to initialize iterator from stream.", GorSystemException.class, () -> {
+            Supplier<Stream<String>> emptyStreamSupplier = () -> Stream.of();
+            NorStreamIterator iterator = new NorStreamIterator(emptyStreamSupplier);
+        });
     }
 
     @Test

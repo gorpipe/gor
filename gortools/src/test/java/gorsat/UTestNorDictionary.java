@@ -25,7 +25,6 @@ package gorsat;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.NordFile;
 import gorsat.process.NordIterator;
-import htsjdk.samtools.util.TestUtil;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
@@ -39,7 +38,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -59,9 +57,6 @@ public class UTestNorDictionary {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     @Before
     public void setUp() throws Exception {
@@ -236,9 +231,8 @@ public class UTestNorDictionary {
                 .createNorDictTestDataGenerator();
         String path = testDataGenerator.invoke();
 
-        expected.expect(GorDataException.class);
         final String query = String.format("nor %1$s/test.nord", path);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
@@ -254,9 +248,8 @@ public class UTestNorDictionary {
                 .createNorDictTestDataGenerator();
         String path = testDataGenerator.invoke();
 
-        expected.expect(GorDataException.class);
         final String query = String.format("nor %1$s/test.nord", path);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
@@ -308,10 +301,7 @@ public class UTestNorDictionary {
                 .createNorDictTestDataGenerator();
         String path = testDataGenerator.invoke();
 
-        expected.expect(GorResourceException.class);
-        int count = TestUtils.runGorPipeCount(String.format("nor %1$s/test.nord", path));
-
-        Assert.assertEquals((numDictFiles-1) * numDictFileLines, count);
+        Assert.assertThrows(GorResourceException.class, () -> TestUtils.runGorPipe(String.format("nor %1$s/test.nord", path)));
     }
 
     @Test
@@ -582,8 +572,7 @@ public class UTestNorDictionary {
         File fileX = FileTestUtils.createTempFile(workDir.getRoot(), "x.nord",
                 "a.tsv\tAA\nb.tsv\tBB");
 
-        expected.expect(GorDataException.class);
-        TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe("nor " + fileX.getAbsolutePath()));
     }
 
     @Test
@@ -669,8 +658,7 @@ public class UTestNorDictionary {
         File fileY = FileTestUtils.createTempFile(workDir.getRoot(), "y.nord",
                 "c.tsv\tCC\nd.tsv\tCC\nx.nord\tCC");
 
-        expected.expect(GorDataException.class);
-        TestUtils.runGorPipe("nor " + fileX.getAbsolutePath());
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe("nor " + fileX.getAbsolutePath()));
     }
 
     @Test

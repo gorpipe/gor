@@ -579,7 +579,7 @@ public class UTestGenomicOrderedRows {
     }
 
     private static Set<String> asQueryTags(String... values) {
-        return new LinkedHashSet(Arrays.asList(values));
+        return new LinkedHashSet<>(Arrays.asList(values));
     }
 
 

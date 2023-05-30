@@ -22,14 +22,12 @@
 
 package gorsat;
 
-import gorsat.process.GorJavaUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -38,9 +36,6 @@ import java.io.IOException;
 public class UTestDynamicGorNorSource {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     public static final String DATA = "#data\n" +
             "1_10\n" +
@@ -79,8 +74,7 @@ public class UTestDynamicGorNorSource {
     public void invalidGorNestedNor() throws IOException {
         File tempFile = FileTestUtils.createTempFile(workDir.getRoot(), "data.txt", DATA);
         String query = "gor <(nor " + tempFile.getAbsolutePath() + ")";
-        thrown.expect(GorDataException.class);
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test

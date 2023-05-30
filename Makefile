@@ -21,6 +21,9 @@ build: ## Create local installation.
 test:  ## Run all tests.
 	./gradlew test slowTest integrationTest
 
+compile-all-with-warnings:  ## Compile code and tests.
+	./gradlew --rerun-tasks --console=plain --warning-mode all clean compileJava compileTestJava
+
 #
 # Local testing
 #

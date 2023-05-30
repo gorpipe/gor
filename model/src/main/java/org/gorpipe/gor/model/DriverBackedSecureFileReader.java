@@ -88,7 +88,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         return super.getDictionarySignature(dictionary, tags);
     }
 
-    //@Override
+    @Override
     Stream<String> directDbUrl(String resolvedUrl) {
         throw new GorSystemException("Direct queries on db urls not allowed on server. Trying to open " + resolvedUrl, null);
     }

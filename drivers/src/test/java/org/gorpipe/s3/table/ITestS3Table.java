@@ -59,9 +59,6 @@ public class ITestS3Table {
     private Path workDirPath;
 
     @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Rule
     public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     @Rule

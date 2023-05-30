@@ -26,7 +26,6 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -43,9 +42,6 @@ public class UTestOrderedMap {
 
     @ClassRule
     public static TemporaryFolder workDir = new TemporaryFolder();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @BeforeClass
     public static void setupTest() throws IOException {
@@ -274,15 +270,13 @@ public class UTestOrderedMap {
     @Test
     public void cartesian() {
         String query = String.format("nor %s | map -c First -n B,C -cartesian -ordered %s", leftFile.getAbsoluteFile(), rightFile.getAbsoluteFile());
-        thrown.expect(GorParsingException.class);
-        String result = TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
     public void cartesianMulti() {
         String query = String.format("nor %s | multimap -c First -n B,C -cartesian -ordered %s", leftFile.getAbsoluteFile(), rightFile.getAbsoluteFile());
-        thrown.expect(GorParsingException.class);
-        String result = TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test

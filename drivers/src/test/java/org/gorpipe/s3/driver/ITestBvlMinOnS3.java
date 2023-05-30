@@ -1,7 +1,10 @@
 package org.gorpipe.s3.driver;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenResult;
 import org.gorpipe.gor.driver.providers.stream.datatypes.BvlTestSuite;
@@ -16,7 +19,6 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
-import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
 
@@ -155,7 +157,10 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     public void testWithTemporaryCredentials() throws IOException {
         // Issue temporary credentials, that will be used to access files later on.
         BasicAWSCredentials stsCapableCredentials = new BasicAWSCredentials(S3_KEY, S3_SECRET);
-        AWSSecurityTokenServiceClient stsClient = new AWSSecurityTokenServiceClient(stsCapableCredentials);
+        AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(stsCapableCredentials))
+                .withRegion(Regions.EU_WEST_1)
+                .build();
 
         GetSessionTokenRequest getSessionTokenRequest = new GetSessionTokenRequest();
         getSessionTokenRequest.setDurationSeconds(7200);

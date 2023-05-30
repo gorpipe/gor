@@ -777,7 +777,7 @@ public class UTestDictionaryTable {
         FileUtils.writeStringToFile(gordFile, "./file1.gor\tpn1\n", Charset.defaultCharset());
         Assert.assertEquals("./file1.gor\tpn1\n", FileUtils.readFileToString(gordFile, Charset.defaultCharset()));
 
-        List<String> files = new ArrayList();
+        List<String> files = new ArrayList<>();
         List<String> tags = new ArrayList<>();
         files.add("file1.gor");
         tags.add("pn1");

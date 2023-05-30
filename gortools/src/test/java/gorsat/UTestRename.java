@@ -24,17 +24,12 @@ package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
 public class UTestRename {
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
     @Test
     public void testSimpleRename() {
         String query = "gorrow chr1,1,1 | calc Foo_0001 0 | rename Foo_0001 Bar_CAR | top 0";
@@ -58,9 +53,8 @@ public class UTestRename {
 
     @Test
     public void testSimpleRenameWhereColumnIsNotFound() {
-        exception.expect(GorParsingException.class);
         String query = "gorrow chr1,1,1 | calc Foo_0001 0 | rename Foo_0002 Bar_CAR | top 0";
-        TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
@@ -133,15 +127,13 @@ public class UTestRename {
 
     @Test
     public void renameWithInvalidRegexBinding() {
-        exception.expect(GorParsingException.class);
         String query = "gorrow chr1,1 | calc A_Foo_1 0 | calc B_Bar_2 1 | rename (.*)_Foo_(.*) Bar_#{1}_#{3} | top 0";
-        String result = TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
     }
 
     @Test
     public void renameStrictWithNoMatch() {
-        exception.expect(GorParsingException.class);
         String query = "gorrow chr1,1 | calc A_Foo_1 0 | calc B_Bar_2 1 | rename -s C_Foo_(.*) Bar_#{1} | top 0";
-        String result = TestUtils.runGorPipe(query);
+        Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
     }
 }

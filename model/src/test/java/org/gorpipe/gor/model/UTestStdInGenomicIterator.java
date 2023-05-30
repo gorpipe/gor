@@ -46,9 +46,6 @@ public class UTestStdInGenomicIterator {
             "chr1\t2\t2\t22\n" +
             "chr1\t2\t3\t222";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Before
     public void setUp() throws IOException {
         stdin = System.in;
@@ -135,11 +132,12 @@ public class UTestStdInGenomicIterator {
     }
 
     @Test
-    public void seek_ShouldThrowError() throws IOException {
-        try(GenomicIterator iterator = getIterator(defaultContents)) {
-            expectedException.expect(RuntimeException.class);
-            iterator.seek("chr1", 1);
-        }
+    public void seek_ShouldThrowError() {
+        Assert.assertThrows(RuntimeException.class, () -> {
+            try(GenomicIterator iterator = getIterator(defaultContents)) {
+                iterator.seek("chr1", 1);
+            }
+        });
     }
 
     private GenomicIterator getIterator(String contents) throws IOException {

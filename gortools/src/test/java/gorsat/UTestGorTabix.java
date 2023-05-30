@@ -94,23 +94,25 @@ public class UTestGorTabix {
             bos.write("chr1\t9\t.\tAA\tC\t0.0\t.\t.\t.\tpn\n".getBytes());
             bos.write("chr1\t10\t.\tA\tC\t0.0\t.\t.\t.\tpn\n".getBytes());
             bos.close();
+
             TabixIndexCreator tbi = new TabixIndexCreator(TabixFormat.VCF);
             BlockCompressedInputStream inputStream = new BlockCompressedInputStream(Files.newInputStream(p));
             LittleEndianOutputStream outputStream = new LittleEndianOutputStream(new BlockCompressedOutputStream(pi.toFile()));
 
             VCFCodec codec = new VCFCodec();
-            AsciiLineReader lineReader = new AsciiLineReader(inputStream);
-            AsciiLineReaderIterator iterator = new AsciiLineReaderIterator(lineReader);
-            codec.readActualHeader(iterator);
-            while (iterator.hasNext()) {
-                final long position = iterator.getPosition();
-                VariantContext currentContext = codec.decode(iterator.next());
-                tbi.addFeature(currentContext, position);
+            AsciiLineReader lineReader = AsciiLineReader.from(inputStream);
+            try (AsciiLineReaderIterator iterator = new AsciiLineReaderIterator(lineReader)) {
+                codec.readActualHeader(iterator);
+                while (iterator.hasNext()) {
+                    final long position = iterator.getPosition();
+                    VariantContext currentContext = codec.decode(iterator.next());
+                    tbi.addFeature(currentContext, position);
+                }
+
+                Index index = tbi.finalizeIndex(iterator.getPosition());
+                index.write(outputStream);
+                outputStream.close();
             }
-            iterator.close();
-            Index index = tbi.finalizeIndex(iterator.getPosition());
-            index.write(outputStream);
-            outputStream.close();
 
             String res = TestUtils.runGorPipe("gor -p chr1:10-20 indel.vcf.gz");
             Assert.assertEquals("Wrong result from vcf tabix","CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n" +

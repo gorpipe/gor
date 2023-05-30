@@ -23,17 +23,13 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.File;
 
 public class UTestVerifyColType {
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
     @Test
     public void chromPosOnly() {
         String[] lines = {
@@ -81,8 +77,7 @@ public class UTestVerifyColType {
                 "chr1\t1\t1\t2",
                 "chr2\t23\t2\t4"};
 
-        exception.expect(GorDataException.class);
-        assertQuery(lines, expected, "gor %s | calc x 'bingo' | setcoltype x i | verifycoltype");
+        Assert.assertThrows(GorDataException.class, () -> assertQuery(lines, expected, "gor %s | calc x 'bingo' | setcoltype x i | verifycoltype"));
     }
 
     @Test
@@ -97,8 +92,7 @@ public class UTestVerifyColType {
                 "chr1\t1\t1\t2",
                 "chr2\t23\t2\t4"};
 
-        exception.expect(GorDataException.class);
-        assertQuery(lines, expected, "gor %s | calc x 'bingo' | setcoltype x l | verifycoltype");
+        Assert.assertThrows(GorDataException.class, () -> assertQuery(lines, expected, "gor %s | calc x 'bingo' | setcoltype x l | verifycoltype"));
     }
 
     @Test
@@ -113,8 +107,7 @@ public class UTestVerifyColType {
                 "chr1\t1\t1\t2",
                 "chr2\t23\t2\t4"};
 
-        exception.expect(GorDataException.class);
-        assertQuery(lines, expected, "gor %s | calc x 'bingo' | setcoltype x d | verifycoltype");
+        Assert.assertThrows(GorParsingException.class, () -> assertQuery(lines, expected, "gor %s | calc x 'bingo' | setcoltype x f | verifycoltype"));
     }
 
     private void assertQuery(String[] lines, String[] expected, String formatString) {

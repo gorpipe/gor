@@ -1,5 +1,6 @@
 package org.gorpipe.gor.auth;
 
+import jakarta.json.JsonString;
 import org.gorpipe.gor.auth.utils.PlatformGorAuthCache;
 import org.gorpipe.security.cred.CsaApiService;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -7,7 +8,6 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.JsonString;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

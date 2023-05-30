@@ -331,24 +331,22 @@ public final class ExceptionUtilities {
             // Asssume we have json.
             try {
                 JSONObject obj = (JSONObject) parser.parse(error);
-                if (obj.containsKey(ERROR_TYPE)) {
-                    String errorType = (String) obj.get(ERROR_TYPE);
+                String errorType = obj.containsKey(ERROR_TYPE) ? (String) obj.get(ERROR_TYPE) : "";
 
-                    if (errorType.startsWith("GorParsingException")) {
-                        exception = createGorParsingExceptionFromJSON(obj);
-                    } else if (errorType.startsWith("GorDataException")) {
-                        exception = createGorDataExceptionFromJSON(obj);
-                    } else if (errorType.startsWith("GorResourceException")) {
-                        exception = createGorResourceException(obj);
-                    } else {
-                        exception = createGorSystemException(obj);
-                    }
+                if (errorType.startsWith("GorParsingException")) {
+                    exception = createGorParsingExceptionFromJSON(obj);
+                } else if (errorType.startsWith("GorDataException")) {
+                    exception = createGorDataExceptionFromJSON(obj);
+                } else if (errorType.startsWith("GorResourceException")) {
+                    exception = createGorResourceException(obj);
+                } else {
+                    exception = createGorSystemException(obj);
+                }
 
-                    exception.requestID = getStringValue(obj, REQUEST_ID, "");
+                exception.requestID = getStringValue(obj, REQUEST_ID, "");
 
-                    if (obj.containsKey(STACK_TRACE)) {
-                        setStackTrace(exception, obj);
-                    }
+                if (obj.containsKey(STACK_TRACE)) {
+                    setStackTrace(exception, obj);
                 }
             } catch (Exception e) {
                 exception = new GorSystemException("Got error: '" + error + "'\n" +

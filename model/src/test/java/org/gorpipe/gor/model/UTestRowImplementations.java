@@ -22,10 +22,9 @@
 
 package org.gorpipe.gor.model;
 
+import org.junit.Assert;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
@@ -36,9 +35,6 @@ public abstract class UTestRowImplementations {
     private static final String TEST_LINE_DOUBLE = "chr1\t1\tthis\tis\t3.14\ttest";
     private static final String TEST_LINE_EMPTY_COLUMN = "chr1\t1\tthis\tis\t\ttest";
     private static final String TEST_LINE_EMPTY_LAST_COLUMN = "chr1\t1\tthis\tis\ta\t";
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     public abstract Row createRow(CharSequence input);
 
@@ -62,9 +58,7 @@ public abstract class UTestRowImplementations {
 
     @Test
     public void posWhenPosIsInvalid() {
-        exception.expect(NumberFormatException.class);
-        Row r = createRow("chr1\tx");
-        assertEquals(0, r.pos);
+        Assert.assertThrows(NumberFormatException.class, () -> createRow("chr1\tx"));
     }
 
     @Test
@@ -217,19 +211,13 @@ public abstract class UTestRowImplementations {
     @Test
     public void testColAsIntWhenColumnIsNotANumber() {
         Row r = createRow(TEST_LINE);
-
-        exception.expect(java.lang.NumberFormatException.class);
-
-        r.colAsInt(4);
+        Assert.assertThrows(NumberFormatException.class, () -> r.colAsInt(4));
     }
 
     @Test
     public void testColAsIntWhenColumnIsNotAnIntNumber() {
         Row r = createRow(TEST_LINE_DOUBLE);
-
-        exception.expect(java.lang.NumberFormatException.class);
-
-        r.colAsInt(4);
+        Assert.assertThrows(NumberFormatException.class, () -> r.colAsInt(4));
     }
 
     @Test
@@ -265,10 +253,7 @@ public abstract class UTestRowImplementations {
     @Test
     public void testColAsDoubleWhenColumnIsNotANumber() {
         Row r = createRow(TEST_LINE);
-
-        exception.expect(java.lang.NumberFormatException.class);
-
-        r.colAsDouble(4);
+        Assert.assertThrows(NumberFormatException.class, () -> r.colAsDouble(4));
     }
 
     @Test
@@ -303,19 +288,13 @@ public abstract class UTestRowImplementations {
     @Test
     public void testColAsLongWhenColumnIsNotANumber() {
         Row r = createRow(TEST_LINE);
-
-        exception.expect(java.lang.NumberFormatException.class);
-
-        r.colAsLong(4);
+        Assert.assertThrows(NumberFormatException.class, () -> r.colAsLong(4));
     }
 
     @Test
     public void testColAsLongWhenColumnIsNotAnIntNumber() {
         Row r = createRow(TEST_LINE_DOUBLE);
-
-        exception.expect(java.lang.NumberFormatException.class);
-
-        r.colAsLong(4);
+        Assert.assertThrows(NumberFormatException.class, () -> r.colAsLong(4));
     }
 
     @Test
