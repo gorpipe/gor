@@ -35,7 +35,7 @@ After last release there should be milestone created for this release under [>Is
 
 Review all merge requests since the last release and make sure that they along with their underlying issues are tagged with the milestone for the upcoming release.
 
-Also, review all issues with merge requests that have been merged and make sure that they are tagged with the appropriate milestone.
+Also, review all issues with merge requests that have been merged and make sure that they are tagged with the appropriate milestone ([Closed issues without milestone](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/issues/?sort=created_date&state=closed&milestone_title=None&first_page_size=20))
 
 ### Reviewing Operations Dashboard
 
@@ -43,7 +43,7 @@ Before creating a GOR release, make sure that there are no issues in the Operati
 
 ### Creating a Release
 When creating the actual release we can either release directly from master (now preferred) or create release branch and release from there.
-Using a relese branch (with dependency locks) is preferred only if we expect that we will be creating patches on very old releases.
+Using a release branch (with dependency locks) is preferred only if we expect that we will be creating patches on very old releases.
 
 
 #### Create Release Directly from Master - Now Preferred
@@ -79,7 +79,7 @@ After updating the release branch, open a shell within in the folder where the G
 1. `make update-release-version BRANCH_VERSION=1.1 NEW_VERSION=1.1.1`
 2. Open a browser and [create a tag on the release branch](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/tags), put the release notes in the Release Notes field.  Alternatively we can tag using  `make release-from-release BRANCH_VERSION=1.1`.
 
-#### Closing Out Milestone
+#### Closing Out Milestone - Older
 
 If creating the release was successful, update the milestone by adding a description, setting Due Date to today and press the "Close milestone" button. Then create a new milestone for the next release.
 
@@ -98,7 +98,7 @@ The release branch and tag for the release should automatically be mirrored to t
 - Attach file `gor-scripts-1.1.0-dist.zip` by dragging it to the "Attach binaries" box
 - After uplading the binaries is complete, press the "Publish release" button
 
-Make sure to update the release version as approriate.
+Make sure to update the release version as appropriate.
 
 ### Create a Release of GOR Services
 
