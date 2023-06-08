@@ -39,7 +39,7 @@ public abstract class TableInfoBase<T> implements TableInfo<T> {
 
     private static final Logger log = LoggerFactory.getLogger(TableInfoBase.class);
 
-    protected static final boolean FORCE_SAME_COLUMN_NAMES = false;
+    protected static final boolean FORCE_SAME_COLUMN_NAMES = Boolean.parseBoolean(System.getProperty("gor.table.validate.columnNames", "true"));
     public static final String HISTORY_DIR_NAME = "history";
 
     private final String path;        // Path to the table (currently absolute instead of real for compatibility with older code).
