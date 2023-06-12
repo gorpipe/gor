@@ -56,6 +56,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.gorpipe.gor.manager.BucketManager.BUCKET_FILE_PREFIX;
 import static org.gorpipe.gor.table.util.PathUtils.formatUri;
 import static org.gorpipe.gor.table.util.PathUtils.resolve;
 
@@ -541,7 +542,7 @@ public class UTestBucketManager {
         String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
 
-        String bucketFileName = name + "_bucketfile_Bucket0.gor";
+        String bucketFileName = name + "_" + BUCKET_FILE_PREFIX + "_0.gor";
         Path relativeBucketDirPath = Path.of("." + name + "/buckets");
         Path bucketDirPath = workDirPath.resolve(relativeBucketDirPath);
         Files.writeString(bucketDirPath.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
@@ -577,7 +578,7 @@ public class UTestBucketManager {
         Files.createDirectory(linkFolder);
         Path relativeBucketDirPath = Path.of("." + name + "/buckets");
         Path bucketDirPath = workDirPath.resolve(relativeBucketDirPath);
-        String bucketFileName = name + "_bucketfile_Bucket0.gor";
+        String bucketFileName = name + "_" + BUCKET_FILE_PREFIX + "_0.gor";
 
         Files.move(bucketDirPath.resolve(bucketFileName), linkFolder.resolve(bucketFileName));
         Files.writeString(linkFolder.resolve(bucketFileName + DataType.META.suffix), "## Dummy meta");
@@ -598,6 +599,44 @@ public class UTestBucketManager {
         Assert.assertFalse("Meta should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.META.suffix)));
         Assert.assertFalse("gori should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.GORI.suffix)));
     }
+
+    @Test
+    public void testCleaningOfActiveLinkedBuckets() throws Exception {
+        String name = "testCleaningOfActiveLinkedBuckets";
+
+        // Setup small table and move one bucket to be linked, adding meta and gori files.
+
+        int fileCount = 10;
+        GorDictionarySetup dictionarySetup = new GorDictionarySetup(workDirPath, name, fileCount, 5, new int[]{1, 2, 3}, 10, false);
+        DictionaryTable table = new DictionaryTable(dictionarySetup.dictionary);
+
+        String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
+
+        Path linkFolder = workDirPath.resolve("linkfolder");
+        Files.createDirectory(linkFolder);
+        Path relativeBucketDirPath = Path.of("." + name + "/buckets");
+        Path bucketDirPath = workDirPath.resolve(relativeBucketDirPath);
+        String bucketFileName = name + "_" + BUCKET_FILE_PREFIX + "_0.gor";
+
+        Files.move(bucketDirPath.resolve(bucketFileName), linkFolder.resolve(bucketFileName));
+        Files.writeString(bucketDirPath.resolve(bucketFileName + DataType.LINK.suffix), linkFolder.resolve(bucketFileName).toString());
+
+        // Do clean the linked bucket.
+
+        BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
+        bucketManager.gracePeriodForDeletingBuckets = Duration.ofMillis(0);
+        try (TableLock bucketizeLock = TableLock.acquireWrite(NoTableLock.class, table, "bucketize", Duration.ofMillis(1000))) {
+            bucketManager.cleanOldBucketFiles(bucketizeLock, false);
+        }
+
+        buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have 2 bucket", 2, buckets.length);
+
+        Assert.assertTrue("Link should not be deleted", Files.exists(bucketDirPath.resolve(bucketFileName + DataType.LINK.suffix)));
+        Assert.assertTrue("Bucket should not be deleted", Files.exists(linkFolder.resolve(bucketFileName)));
+    }
+
 
     @Test
     public void testBucketFolders() throws Exception {

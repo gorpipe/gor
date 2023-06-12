@@ -61,7 +61,7 @@ public class BucketManager<T extends DictionaryEntry> {
     public static final int DEFAULT_BUCKET_SIZE = 100;
     public static final int DEFAULT_MAX_BUCKET_COUNT = 3;
     public static final BucketPackLevel DEFAULT_BUCKET_PACK_LEVEL = BucketPackLevel.CONSOLIDATE;
-    static final String BUCKET_FILE_PREFIX = "bucket"; // Use to identify which files are bucket files.
+    public static final String BUCKET_FILE_PREFIX = "bucket"; // Use to identify which files are bucket files.
 
     public static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofMinutes(30);
     public static final Duration BUCKET_CLEANUP_INTERVAL = Duration.ofMinutes(30);
@@ -535,11 +535,11 @@ public class BucketManager<T extends DictionaryEntry> {
     private void deleteBuckets(TableLock lock, boolean force, String... buckets) throws IOException {
         lock.assertValid();
 
-        // Delete bucket files.
-        deleteBucketFiles(force, buckets);
-
         // Remove the files from the bucket.
         table.removeFromBucket(table.filter().buckets(buckets).includeDeleted().get());
+
+        // Delete bucket files.
+        deleteBucketFiles(force, buckets);
     }
 
     /**
@@ -691,11 +691,11 @@ public class BucketManager<T extends DictionaryEntry> {
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}",
                         System.currentTimeMillis(), lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
                 if (fileName.startsWith(getBucketFilePrefix(table))
-                        && DataUtil.isGorz(fileName)
+                        && (DataUtil.isGorz(fileName) || DataUtil.isGor(fileName))
                         && (System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()
                             || force)) {
                     // This bucket file has not been accessed for some time.
-                    if (!usedBuckets.contains(bucketFile)) {
+                    if (!containsBucketFile(bucketFile, usedBuckets)) {
                         // This bucket is not used in the table so mark it for deletion.
                         bucketsToDelete.add(bucketFile);
                     }
@@ -703,6 +703,22 @@ public class BucketManager<T extends DictionaryEntry> {
             }
         }
         return bucketsToDelete;
+    }
+
+    // Checks if the bucketFile is in the set of used buckets.  If it is then it is not safe to delete.
+    // Matching is done by name but the matching must handle optional '.link' suffix.
+    private boolean containsBucketFile(String bucketFile, Set<String> usedBuckets) {
+
+        if (usedBuckets.contains(bucketFile)) {
+            return true;
+        }
+        if (bucketFile.endsWith(".link")) {
+            String bucketFileNoLink = bucketFile.substring(0, bucketFile.length() - 5);
+            if (usedBuckets.contains(bucketFileNoLink)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getBucketFilePrefix(DictionaryTable table) {

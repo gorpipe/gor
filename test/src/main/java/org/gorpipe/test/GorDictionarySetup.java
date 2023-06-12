@@ -37,6 +37,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import static org.gorpipe.gor.manager.BucketManager.BUCKET_FILE_PREFIX;
+
 /**
  * Helper class to create Gor dictionary (with data files and bucket files).
  * <p>
@@ -196,7 +198,7 @@ public class GorDictionarySetup {
         Files.createDirectories(bucketDir);
 
         for (int i = 0; i < this.bucketFiles.length; i++) {
-            this.bucketFiles[i] = bucketRelPath.resolve(name + "_bucketfile_Bucket" + i + DataType.GOR.suffix);
+            this.bucketFiles[i] = bucketRelPath.resolve(name + "_" + BUCKET_FILE_PREFIX + "_" + i + DataType.GOR.suffix);
             this.bucketFiles[i].toFile().deleteOnExit();
         }
 
@@ -258,7 +260,7 @@ public class GorDictionarySetup {
 
         // Create dictionary file.
 
-        this.dictionary = Files.createTempFile(root, name + "_dictionary_", DataType.GORD.suffix);
+        this.dictionary = root.resolve(name + DataType.GORD.suffix);
         this.dictionary.toFile().deleteOnExit();
         try (PrintWriter out = new PrintWriter(this.dictionary.toFile())) {
             for (String dataFile : this.dataFiles) {
