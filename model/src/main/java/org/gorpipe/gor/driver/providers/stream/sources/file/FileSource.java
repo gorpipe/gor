@@ -223,28 +223,23 @@ public class FileSource implements StreamSource {
 
     @Override
     public Stream<String> list() throws IOException {
-        var fileList = Files.list(file);
-        if (!PathUtils.isAbsolutePath(sourceReference.getUrl())) {
-            var commonRoot = sourceReference.getCommonRoot();
-            if (commonRoot != null) {
-                var root = Path.of(sourceReference.getCommonRoot());
-                return fileList.map(root::relativize).map(Path::toString);
-            }
-        }
-        return fileList.map(Path::toString);
+        return mapPathToRelative(Files.list(file));
     }
 
     @Override
     public Stream<String> walk() throws IOException {
-        var fileList = Files.walk(file);
+        return mapPathToRelative(Files.walk(file));
+    }
+
+    private Stream<String> mapPathToRelative(Stream<Path> pathStream) {
         if (!PathUtils.isAbsolutePath(sourceReference.getUrl())) {
             var commonRoot = sourceReference.getCommonRoot();
             if (commonRoot != null) {
                 var root = Path.of(sourceReference.getCommonRoot());
-                return fileList.map(root::relativize).map(Path::toString);
+                return pathStream.map(root::relativize).map(Path::toString);
             }
         }
-        return fileList.map(Path::toString);
+        return pathStream.map(Path::toString);
     }
 
     @Override

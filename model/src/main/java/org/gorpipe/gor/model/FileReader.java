@@ -101,6 +101,15 @@ public abstract class FileReader {
      */
     public abstract void deleteDirectory(String dir) throws IOException;
 
+    /**
+     * Lists the contents of a directory.
+     *
+     * The elements of the stream are Strings that are obtained as if by resolving the name of the directory entry against dir.
+     *
+     * @param dir the directory to list
+     * @return the contents of the directory.
+     * @throws IOException
+     */
     public abstract Stream<String> list(String dir) throws IOException;
 
     public abstract Stream<String> walk(String dir) throws IOException;

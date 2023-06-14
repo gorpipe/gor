@@ -31,11 +31,11 @@ public abstract class CommandBucketizeOptions extends ManagerOptions {
 
     @CommandLine.Option(names = {"--min_bucket_size"},
             description = "Minimum number of files in a bucket.  Can never be larger than the bucket size.  Default: " + BucketManager.DEFAULT_MIN_BUCKET_SIZE)
-    protected int minBucketSize = BucketManager.DEFAULT_MIN_BUCKET_SIZE;
+    protected int minBucketSize = -1;
 
     @CommandLine.Option(names = {"--bucket_size"},
             description = "Preferred number of files in a bucket (effective maximum).  Default: " + BucketManager.DEFAULT_BUCKET_SIZE)
-    protected int bucketSize = BucketManager.DEFAULT_BUCKET_SIZE;
+    protected int bucketSize = -1;
 
     @CommandLine.Option(names = {"-w", "--workers"},
             description = "Number of workers/threads to use.  Default: " + BucketCreatorGorPipe.DEFAULT_NUMBER_WORKERS)

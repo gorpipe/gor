@@ -613,7 +613,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
             for (String candTempFile : candStream.collect(Collectors.toList())) {
                 if (candTempFile.contains(prefix)) {
-                    table.getFileReader().resolveUrl(PathUtils.resolve(table.getRootPath(), candTempFile)).delete();
+                    table.getFileReader().resolveUrl(candTempFile).delete();
                 }
             }
         } catch (IOException ioe) {
@@ -649,13 +649,13 @@ public class BucketManager<T extends DictionaryEntry> {
             allBucketDirs.addAll(table.getBuckets().stream().map(b -> PathUtils.getParent(b)).collect(Collectors.toSet()));
 
             for (String bucketDir : allBucketDirs) {
-                String fullPathBucketDir = PathUtils.resolve(table.getRootPath(), bucketDir);
+                String projectPathBucketDir = PathUtils.resolve(table.getRootPath(), bucketDir);
 
-                if (!table.getFileReader().exists(fullPathBucketDir.toString())) {
-                    log.debug("Bucket folder {} never been used, nothing to clean.", fullPathBucketDir);
+                if (!table.getFileReader().exists(projectPathBucketDir.toString())) {
+                    log.debug("Bucket folder {} never been used, nothing to clean.", projectPathBucketDir);
                     continue;
                 }
-                List<String> bucketsToClean = collectBucketsToClean(fullPathBucketDir, force);
+                List<String> bucketsToClean = collectBucketsToClean(projectPathBucketDir, force);
                 if (bucketsToClean.size() > 0) {
                     bucketsToCleanMap.put(bucketDir, bucketsToClean);
                 }
@@ -677,15 +677,15 @@ public class BucketManager<T extends DictionaryEntry> {
         log.trace("Bucketize - cleanOldBucketFiles - End");
     }
 
-    private List<String> collectBucketsToClean(String fullPathBucketDir, boolean force) throws IOException {
+    private List<String> collectBucketsToClean(String projectPathBucketDir, boolean force) throws IOException {
         // Collect buckets to be deleted. Note:  We don't need to get table read lock as we have bucket lock so the
         // bucket part of the table will not change in away that will affect us.
         List<String> bucketsToDelete = new ArrayList<>();
         Set<String> usedBuckets = new HashSet<>(table.getBuckets());
-        try (Stream<String> pathList = table.getFileReader().list(fullPathBucketDir)) {
+        try (Stream<String> pathList = table.getFileReader().list(projectPathBucketDir)) {
             for (String f : pathList.collect(Collectors.toList())) {
                 String fileName = PathUtils.getFileName(f);
-                String bucketFile = PathUtils.relativize(table.getRootPath(), PathUtils.resolve(fullPathBucketDir, f));
+                String bucketFile = PathUtils.relativize(table.getRootPath(), f);
                 // !GM last access time.  Setting as 0 for now which basically disables the graceperiod.
                 long lastAccessTime = 0; //Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}",

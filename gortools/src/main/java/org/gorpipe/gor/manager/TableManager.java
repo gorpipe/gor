@@ -77,8 +77,8 @@ public class TableManager {
 
     // TODO:  Store these as part of the table?  And persist in table props.   Can also be stored here as default for new
     //       tabales but the bucketization should use hte one from the table.
-    private int minBucketSize = BucketManager.DEFAULT_MIN_BUCKET_SIZE;
-    private int bucketSize = BucketManager.DEFAULT_BUCKET_SIZE;
+    private int minBucketSize = -1;
+    private int bucketSize = -1;
 
     /**
      * Default constructor.
