@@ -274,7 +274,7 @@ public class S3Source implements StreamSource {
                 "path must be an instance of %s", S3Path.class.getName());
 
         if (Files.notExists(getPath())){
-            throw new NoSuchFileException("the path: " + getPath() + " not exists");
+            return;
         }
 
         if (!Files.isDirectory(getPath())){

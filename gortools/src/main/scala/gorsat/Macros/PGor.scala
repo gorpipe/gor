@@ -28,7 +28,6 @@ import gorsat.Script._
 import gorsat.Utilities.MacroUtilities.getCachePath
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.util.PathUtils
-
 import java.util
 
 /***
@@ -95,6 +94,11 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
     val gorReplacement = if( noWithin ) "gor -nowithin -p " else "gor -p "
     val partitionKey = "[" + theKey + "_" + replacePattern + "]"
     val newQuery = gorReplacement + replacePattern + queryAppend
+
+    if (useGordFolder && cachePath != null && cachePath.length > 1) {
+      context.getSession.getProjectContext.getSystemFileReader.deleteDirectory(cachePath)
+    }
+
     partitionedGorCommands.put(partitionKey,Script.ExecutionBlock(partitionKey, newQuery, create.signature,
       create.dependencies, create.batchGroupName, cachePath, hasForkWrite = hasForkWrite))
 
@@ -105,7 +109,11 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
       theDependencies.add(0, parKey);
     })
 
-    val gordict = (if (useGordFolder) "gordictfolder" else "gordict") + (if(noDict) " -nodict" else "")
+    var gordict = if (useGordFolder) CommandParseUtilities.GOR_DICTIONARY_FOLDER else CommandParseUtilities.GOR_DICTIONARY
+    if (noDict) {
+      gordict += " -nodict"
+    }
+
     val cmd = splitManager.chromosomeSplits.keys.foldLeft(gordict)((x, y) => x + " [" + theKey + "_" + y + "] " +
       splitManager.chromosomeSplits(y).getRange)
     (cmd, theDependencies, partitionedGorCommands)

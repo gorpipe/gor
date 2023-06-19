@@ -75,6 +75,9 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val useGordFolders: Boolean = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
     if (useGordFolders) {
       cachePath = PathUtils.markAsFolder(theCachePath)
+      if (cachePath != null && cachePath.length > 1) {
+        context.getSession.getProjectContext.getSystemFileReader.deleteDirectory(cachePath)
+      }
     }
 
 

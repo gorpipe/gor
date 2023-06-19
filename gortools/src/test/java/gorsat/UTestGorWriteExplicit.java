@@ -8,17 +8,17 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 
-public class UTestGorDictionaryFolder {
-    static final String WRONG_RESULT = "Wrong results in write folder";
+
+public class UTestGorWriteExplicit {
+    public static final String WRONG_RESULT = "Wrong results in write folder";
     static final String GROUP_CHROM_COUNT = " | group chrom -count";
 
-    static String GENE_PGOR_TOP1 = "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
+    public static String GENE_PGOR_TOP1 = "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
             "chr1\t11868\t14412\tDDX11L1\n" +
             "chr1\t142553292\t142559170\tAL583842.1\n" +
             "chr10\t60000\t60544\tRP11-631M21.1\n" +
@@ -57,7 +57,7 @@ public class UTestGorDictionaryFolder {
             "chrX\t170409\t172712\tLINC00108\n" +
             "chrX\t61998719\t61999796\tRP11-3D23.1\n" +
             "chrY\t2654895\t2655740\tSRY\n";
-    static String GENE_GROUP_CHROM_TOP1 = "Chrom\tbpStart\tbpStop\tallCount\n" +
+    public static String GENE_GROUP_CHROM_TOP1 = "Chrom\tbpStart\tbpStop\tallCount\n" +
             "chr1\t0\t250000000\t2\n" +
             "chr10\t0\t150000000\t2\n" +
             "chr11\t0\t150000000\t2\n" +
@@ -84,7 +84,7 @@ public class UTestGorDictionaryFolder {
             "chrX\t0\t200000000\t2\n" +
             "chrY\t0\t100000000\t1\n";
 
-    static String GENE_GROUP_CHROM = "Chrom\tbpStart\tbpStop\tallCount\n" +
+    public static String GENE_GROUP_CHROM = "Chrom\tbpStart\tbpStop\tallCount\n" +
             "chr1\t0\t250000000\t4747\n" +
             "chr10\t0\t150000000\t2011\n" +
             "chr11\t0\t150000000\t2982\n" +
@@ -135,6 +135,7 @@ public class UTestGorDictionaryFolder {
         Assert.assertEquals(WRONG_RESULT, "Chrom\tgene_start\tgene_end\tGene_Symbol\n" +
                 "chr1\t11868\t14412\tDDX11L1\n" , results);
     }
+
 
     @Test
     public void testCreateWrite() {
@@ -232,12 +233,6 @@ public class UTestGorDictionaryFolder {
         Assert.assertEquals("Wrong results in dictionary",
                 "1\tchrM\t576\tchrM\t15955\tJ,M",
                 last.substring(last.indexOf('\t')+1));
-    }
-
-    @Test
-    public void testPgorWriteEmptyOutput() {
-        int count = TestUtils.runGorPipeCount("pgor genes.gor | top 1 | write test.gord", workDirPath.toAbsolutePath().toString());
-        Assert.assertEquals("Pgor with write should return empty result", 0, count);
     }
 
     @Test

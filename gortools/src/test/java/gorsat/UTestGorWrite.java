@@ -451,17 +451,6 @@ public class UTestGorWrite {
     }
 
     @Test
-    public void testWriteIntoGordFolder() throws IOException {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("test.gord").resolve("my.gor");
-        Files.createDirectory(outputPath.getParent());
-
-        String query = String.format("gorrow 1,2,3 | write %s", outputPath);
-        String result = TestUtils.runGorPipe(query);
-        Assert.assertEquals("#chrom\tbpStart\tbpStop\nchr1\t2\t3\n", Files.readString(outputPath));
-        Assert.assertFalse(Files.exists(outputPath.getParent().resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)));
-    }
-
-    @Test
     @Ignore("Stop using write as result file indicator")
     public void testForkWriteSubfolderWithCreate() {
         final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
