@@ -20,25 +20,21 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.simple;
+package org.gorpipe.gor.driver.providers.rows.sources.sql;
 
 import org.gorpipe.gor.driver.meta.SourceType;
 
-public class SimpleSourceType extends SourceType {
-    public static final SimpleSourceType SIMPLE = new SimpleSourceType();
+public class LegacyDbSourceType extends SourceType {
+    public static final LegacyDbSourceType DB = new LegacyDbSourceType();
+    public static final String ProtocolName = "//db:";
 
-    private SimpleSourceType() {
-        super("SIMPLE", true, "//db:");
-    }
-
-    @Override
-    public boolean match(String file) {
-        return file.startsWith("//db:");
+    private LegacyDbSourceType() {
+        super("DB Legacy", true, ProtocolName);
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof SimpleSourceType;
+        return obj instanceof LegacyDbSourceType;
     }
 
 }

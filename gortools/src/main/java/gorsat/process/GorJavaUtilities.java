@@ -28,7 +28,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
-import org.gorpipe.gor.driver.providers.db.DbScope;
+import org.gorpipe.gor.driver.providers.rows.sources.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URI;
 import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -311,7 +310,7 @@ public class GorJavaUtilities {
     }
 
     public static GenomicIterator getDbIteratorSource(String sqlQuery, boolean gortable, final String source, boolean scoping) {
-        Supplier<Stream<String>> streamSupplier = () -> DbSource.getDBLinkStream("//db:" + sqlQuery, new Object[]{}, source);
+        Supplier<Stream<String>> streamSupplier = () -> DbConnection.getDBLinkStream( sqlQuery, new Object[]{}, source);
         gorsat.Iterators.IteratorSource its;
         its = gortable ? new GorStreamIterator(streamSupplier, scoping) : new NorStreamIterator(streamSupplier);
         return new gorsat.Iterators.SingleIteratorSource(its, "dbit");

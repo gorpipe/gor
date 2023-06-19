@@ -32,6 +32,8 @@ import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
+import org.gorpipe.gor.driver.providers.rows.sources.db.DbSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
@@ -46,8 +48,10 @@ import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
-import java.util.ArrayList;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Created by villi on 06/01/17.
@@ -233,31 +237,6 @@ public class DriverBackedFileReader extends FileReader {
     @Override
     public String readHeaderLine(String file) throws IOException {
         final DataSource source = resolveUrl(file);
-        String url = PathUtils.fixFileSchema(source.getName());
-        if (url.startsWith("//db:")) {
-            final int idxSelect = url.indexOf("select ");
-            final int idxFrom = url.indexOf(" from ");
-            if (idxSelect < 0 || idxFrom < 0) { // Must find columns
-                return null;
-            }
-            final ArrayList<String> fields = StringUtil.split(url, idxSelect + 7, idxFrom, ',');
-            final StringBuilder header = new StringBuilder(200);
-            for (String f : fields) {
-                if (header.length() > 0) {
-                    header.append('\t');
-                } else {
-                    header.append('#');
-                }
-                final int idxAs = f.indexOf(" as ");
-                if (idxAs > 0) {
-                    header.append(f.substring(idxAs + 4).trim());
-                } else {
-                    final int idxPoint = f.indexOf('.');
-                    header.append(f.substring(idxPoint > 0 ? idxPoint + 1 : 0).trim());
-                }
-            }
-            return header.toString();
-        }
 
         try(var it = GorDriverFactory.fromConfig().createIterator(source)) {
             if (it!=null) {
@@ -386,20 +365,28 @@ public class DriverBackedFileReader extends FileReader {
         }
     }
 
-    Stream<String> directDbUrl(String resolvedUrl) throws IOException {
-        return DbSource.getDBLinkStream("//db:select * from " + resolvedUrl.substring(resolvedUrl.indexOf(':', 5) + 1), constants);
+    Stream<String> directDbUrl(String resolvedUrl) {
+        return DbConnection.getDBLinkStream("sql://select * from " + resolvedUrl.substring(resolvedUrl.indexOf(':', 5) + 1), constants);
     }
 
     private Stream<String> readAndClose(DataSource source) throws IOException {
-        String resolvedUrl = PathUtils.fixFileSchema(source.getName());
+        String resolvedUrl = PathUtils.fixDbSchema(PathUtils.fixFileSchema(source.getName()));
 
-        if (resolvedUrl.startsWith("//db:")) {
-            source.close();
-            return DbSource.getDBLinkStream(resolvedUrl, constants);
-        } else if (source instanceof org.gorpipe.gor.driver.providers.db.DbSource) {
-            source.close();
-            return directDbUrl(resolvedUrl);
+        if (source instanceof RowIteratorSource rowSource) {
+            var iterator = rowSource.open();
+
+            var header = iterator.getHeader();
+            var dataStream = StreamSupport.stream(
+                            Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED), false)
+                    .map(Row::toString).onClose(iterator::close);
+
+            if (header != null) {
+                return Stream.concat(Stream.of(header), dataStream);
+            } else {
+                return dataStream;
+            }
         }
+
 
         BufferedReader br = readSource(source, resolvedUrl);
         Stream<String> lineStream = br.lines();

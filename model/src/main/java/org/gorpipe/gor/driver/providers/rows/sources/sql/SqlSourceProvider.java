@@ -20,29 +20,28 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.simple;
+package org.gorpipe.gor.driver.providers.rows.sources.sql;
 
 import com.google.auto.service.AutoService;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
+import org.gorpipe.gor.driver.providers.rows.RowIteratorSourceProvider;
 import org.gorpipe.gor.model.GenomicIterator;
 
+import java.io.IOException;
+
 @AutoService(SourceProvider.class)
-public class SimpleSourceProvider implements SourceProvider {
-
-    public SimpleSourceProvider() {}
-
+public class SqlSourceProvider extends RowIteratorSourceProvider {
     @Override
     public DataSource resolveDataSource(SourceReference sourceReference) {
-        return new SimpleSource(sourceReference);
+        return new SqlSource(sourceReference);
     }
 
     @Override
     public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{SimpleSourceType.SIMPLE};
+        return new SourceType[]{SqlSourceType.SQL, LegacyDbSourceType.DB};
     }
 
     @Override
@@ -51,7 +50,7 @@ public class SimpleSourceProvider implements SourceProvider {
     }
 
     @Override
-    public GenomicIterator createIterator(DataSource source) {
-        throw new GorSystemException("SimpleSource does not support gor iterator", null);
+    public GenomicIterator createIterator(DataSource source) throws IOException {
+        return ((SqlSource)source).open();
     }
 }

@@ -29,7 +29,7 @@ package gorsat.process
 import gorsat._
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
-import org.gorpipe.gor.model.DbSource
+import org.gorpipe.gor.model.DbConnection
 import org.gorpipe.gor.servers.GorConfig
 import org.gorpipe.gor.session.ProjectContext
 import org.gorpipe.logging.GorLogbackUtil
@@ -78,7 +78,7 @@ object GorPipe extends GorPipeFirstOrderCommands {
     ConfigUtil.loadConfig("gor")
 
     // Initialize database connections
-    DbSource.initInConsoleApp()
+    DbConnection.initInConsoleApp()
 
 
     var exitCode = 0

@@ -22,9 +22,11 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.util.db.ConnectionPool;
 import org.gorpipe.util.Pair;
 
+import java.net.URI;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -55,12 +57,9 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
      * @param pool
      */
     public DbNorIterator(String content, Object[] constants, ConnectionPool pool) {
-        // Assume content is on the form //db:query.
-        // TODO: Add checking here on content starting with //db:
-        String sql = content.substring(5);
 
         // Replace scoping variables.
-        Pair<String, Object[]> sqlWithParams = replaceConstants(sql, constants);
+        Pair<String, Object[]> sqlWithParams = replaceConstants(content, constants);
 
         // Get db connection.
         try {

@@ -24,7 +24,7 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.providers.db.DbScope;
+import org.gorpipe.gor.driver.providers.rows.sources.db.DbScope;
 import org.gorpipe.gor.util.IntHashMap;
 import org.gorpipe.model.gor.RowObj;
 import org.slf4j.Logger;
@@ -64,7 +64,7 @@ public class DbGenomicIterator extends GenomicIteratorBase {
         this.seekInitialized = false;
         this.securityContext = securityContext;
 
-        final DbSource dbSource = DbSource.lookup(databaseSource);
+        final DbConnection dbSource = DbConnection.lookup(databaseSource);
         if (dbSource == null) {
             throw new GorSystemException("Unknown Database Source: " + databaseSource + " is not a registered source.", null);
         }

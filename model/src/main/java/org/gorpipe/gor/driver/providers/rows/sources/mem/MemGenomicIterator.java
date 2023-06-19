@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.mem;
+package org.gorpipe.gor.driver.providers.rows.sources.mem;
 
 import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.model.GenomicIteratorBase;

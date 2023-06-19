@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.model;
 
-import org.gorpipe.gor.model.*;
 import org.gorpipe.test.DbTests;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -41,7 +40,7 @@ public class UTestDbGenomicIterator {
 
     @BeforeClass
     public static void initDb() throws IOException, ClassNotFoundException {
-        DbSource.initInConsoleApp();
+        DbConnection.initInConsoleApp();
     }
 
     @Test

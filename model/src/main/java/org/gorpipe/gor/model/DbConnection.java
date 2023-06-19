@@ -56,8 +56,8 @@ import java.util.stream.StreamSupport;
  *
  * @version $Id$
  */
-public class DbSource {
-    private static final Logger log = LoggerFactory.getLogger(DbSource.class);
+public class DbConnection {
+    private static final Logger log = LoggerFactory.getLogger(DbConnection.class);
     public static final String DEFAULT_DBSOURCE = "rda";
 
     /**
@@ -81,8 +81,8 @@ public class DbSource {
      */
     private ConnectionPool pool = null; // Connection pool to use, if available
 
-    private static final ConcurrentHashMap<String, DbSource> mapSources = new ConcurrentHashMap<>();
-    private static GetPassword<DbSource> pwdCallback = null;
+    private static final ConcurrentHashMap<String, DbConnection> mapSources = new ConcurrentHashMap<>();
+    private static GetPassword<DbConnection> pwdCallback = null;
 
     /**
      * Get a password property
@@ -105,7 +105,7 @@ public class DbSource {
      * @param user The user to login as
      * @param pwd  The password for the user
      */
-    public DbSource(String name, String url, String user, String pwd) {
+    public DbConnection(String name, String url, String user, String pwd) {
         this.name = name;
         this.url = url;
         this.user = user;
@@ -200,8 +200,7 @@ public class DbSource {
                     dbm.getTables(null, schema.isEmpty() ? null : schema.toLowerCase(), table.toLowerCase(), types).next();
 
         } catch (Exception e) {
-            if (e instanceof UndeclaredThrowableException) {
-                UndeclaredThrowableException ue = (UndeclaredThrowableException) e;
+            if (e instanceof UndeclaredThrowableException ue) {
                 if (ue.getUndeclaredThrowable().getCause() instanceof SQLSyntaxErrorException) {
                     return false;
                 }
@@ -216,7 +215,7 @@ public class DbSource {
      * @param source The name of the source
      * @return The DbSource object
      */
-    public static DbSource lookup(String source) {
+    public static DbConnection lookup(String source) {
         return mapSources.get(source);
     }
 
@@ -225,7 +224,7 @@ public class DbSource {
      *
      * @param callback
      */
-    public static void setPasswordCallback(GetPassword<DbSource> callback) {
+    public static void setPasswordCallback(GetPassword<DbConnection> callback) {
         pwdCallback = callback;
     }
 
@@ -293,7 +292,7 @@ public class DbSource {
 
     private static void installDbSourceFromParts(String[] parts) throws ClassNotFoundException {
         Class.forName(parts[1]); // Just load the driver once and for all
-        final DbSource source = new DbSource(parts[0], parts[2], parts[3], parts.length > 4 ? parts[4] : null);
+        final DbConnection source = new DbConnection(parts[0], parts[2], parts[3], parts.length > 4 ? parts[4] : null);
         install(source);
     }
 
@@ -301,7 +300,7 @@ public class DbSource {
      * Remove and disconnect all data sources previously loaded with initializeDbSources
      */
     public static void clearDbSources() {
-        for (DbSource src : mapSources.values()) {
+        for (DbConnection src : mapSources.values()) {
             try {
                 src.pool.close();
             } catch (SQLException e) {
@@ -316,10 +315,10 @@ public class DbSource {
     /**
      * @param source The source to install as available
      */
-    public static void install(final DbSource source) {
+    public static void install(final DbConnection source) {
         log.info("Installing DbSource with name {}, url {} and user {}", source.name, source.url, source.user);
         if (mapSources.containsKey(source.name)) {
-            DbSource existingSource = mapSources.get(source.name);
+            DbConnection existingSource = mapSources.get(source.name);
             log.warn("Installing over an existing source with name {}, url {} and user {}",
                     existingSource.name, existingSource.url, existingSource.user);
         }
@@ -353,7 +352,7 @@ public class DbSource {
     public static void initInServer() throws ClassNotFoundException, IOException {
         final String credpath = System.getProperty("gor.db.credentials");
         if (credpath != null) {
-            DbSource.initializeDbSources(credpath);
+            DbConnection.initializeDbSources(credpath);
         }
     }
 
@@ -378,7 +377,7 @@ public class DbSource {
      */
     @SuppressWarnings("squid:S2095") //resource should not be closed since it being closed by the return object
     public static Stream<String> getDBLinkStream(String content, Object[] constants, String source) {
-        final DbSource dbsource = DbSource.lookup(nullSafeSource(source));
+        final DbConnection dbsource = DbConnection.lookup(nullSafeSource(source));
         if (dbsource == null) {
             throw new GorResourceException("Error: Did not find database source named "+ nullSafeSource(source) +". ", content);
         }

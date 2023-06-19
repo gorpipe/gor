@@ -31,7 +31,7 @@ import process.{GenericSessionFactory, GorInputSources, GorPipeCommands, PipeIns
 import org.apache.commons.io.FileUtils
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException, GorUserException}
 import org.gorpipe.gor.driver.meta.DataType
-import org.gorpipe.gor.model.{DbSource, GenomicIterator}
+import org.gorpipe.gor.model.{DbConnection, GenomicIterator}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.test.utils.FileTestUtils
@@ -120,7 +120,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
     Class.forName("org.apache.derby.jdbc.EmbeddedDriver")
     val paths = createTestDataBase_Derby
     System.setProperty("gor.db.credentials", paths(2))
-    DbSource.initInConsoleApp()
+    DbConnection.initInConsoleApp()
 
     var tempDirectory = FileTestUtils.createTempDirectory(this.getClass.getName)
     var ermGord = FileTestUtils.createTempFile(tempDirectory, DataUtil.toFile("erm", DataType.GORD),

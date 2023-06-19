@@ -20,20 +20,21 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.db;
+package org.gorpipe.gor.driver.providers.rows.sources.sql;
 
 import org.gorpipe.gor.driver.meta.SourceType;
 
-public class DbSourceType extends SourceType {
-    public static final DbSourceType DB = new DbSourceType();
+public class SqlSourceType extends SourceType {
+    public static final SqlSourceType SQL = new SqlSourceType();
+    public final static String ProtocolName = "sql:";
 
-    private DbSourceType() {
-        super("DB", true, "db:");
+    private SqlSourceType() {
+        super("SQL", true, ProtocolName);
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof DbSourceType;
+        return obj instanceof SqlSourceType;
     }
 
 }

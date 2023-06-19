@@ -688,7 +688,10 @@ object CommandParseUtilities {
 
   def replaceSingleQuotes(x: String): String = {
     if (x != null) {
-      if (x.startsWith("'") && x.endsWith("'") && x.length > 1 || x.startsWith("\"") && x.endsWith("\"") && x.length > 1) return x.slice(1, x.length - 1)
+      if (x.startsWith("'") && x.endsWith("'") && x.length > 1
+        || x.startsWith("\"") && x.endsWith("\"") && x.length > 1
+        || x.startsWith("{") && x.endsWith("}") && x.length > 1
+      ) return x.slice(1, x.length - 1)
     }
 
     x

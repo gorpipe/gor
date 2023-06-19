@@ -22,12 +22,11 @@
 
 package org.gorpipe.gor.driver.providers.mem;
 
+import org.gorpipe.gor.driver.providers.rows.sources.mem.MemGenomicIterator;
 import org.gorpipe.gor.model.DefaultChromoLookup;
 import org.gorpipe.gor.model.Row;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class UTestMemGenomicIterator {
     @Test

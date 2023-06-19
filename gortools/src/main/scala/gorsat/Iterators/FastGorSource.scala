@@ -48,8 +48,6 @@ class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, exe
     case _:Exception => throw new GorParsingException("Failed to parse seek position: " + args.mkString(","), "-seek", chrpos)
   }
   var headerLength: Int = 0
-  private var maxDist: Int = 100000000 //The maximum distance for streaming.
-  private var check = 1000 //When streaming, after check many iterations we check whether we have been spending to much time streaming.
   private val pathToTime = if (context != null && context.getSession != null && inOptions != "") context.getSession.getCache.getSeekTimes else null
   private val usingCache = inOptions != "" && pathToTime != null
   private var estSeekTime: Long = -1

@@ -20,49 +20,31 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.mem;
+package org.gorpipe.gor.driver.providers.rows.sources.db;
 
 import com.google.auto.service.AutoService;
 import org.gorpipe.gor.driver.DataSource;
-import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
-import org.gorpipe.gor.driver.providers.stream.FileCache;
-import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.rows.RowIteratorSourceProvider;
 import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.GenomicIteratorBase;
-import org.gorpipe.gor.util.DataUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Set;
 
 @AutoService(SourceProvider.class)
-public class MemSourceProvider implements SourceProvider {
+public class DbSourceProvider extends RowIteratorSourceProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(MemSourceProvider.class);
+    public DbSourceProvider() {}
 
-
-    public MemSourceProvider() {}
-
-    public MemSourceProvider(GorDriverConfig config, FileCache cache,
-                             Set<StreamSourceIteratorFactory> initialFactories) {
+    @Override
+    public DataSource resolveDataSource(SourceReference sourceReference) {
+        return new DbSource(sourceReference);
     }
 
     @Override
     public SourceType[] getSupportedSourceTypes() {
-        return new SourceType[]{MemSourceType.MEM};
-    }
-
-    @Override
-    public MemSource resolveDataSource(SourceReference sourceReference) {
-        if (!DataUtil.isMem(sourceReference.getUrl())) {
-            log.debug("Unhandled protocol reference: {}", sourceReference);
-            return null;
-        }
-        return new MemSource(sourceReference);
+        return new SourceType[]{DbSourceType.DB};
     }
 
     @Override
@@ -71,8 +53,11 @@ public class MemSourceProvider implements SourceProvider {
     }
 
     @Override
-    public GenomicIterator createIterator(DataSource source) {
-        return new MemGenomicIterator(source.getSourceReference().getLookup(), 4000);
+    public GenomicIterator createIterator(DataSource source) throws IOException {
+        return ((DbSource) source).open();
+
     }
+
+
 
 }

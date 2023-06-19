@@ -154,6 +154,7 @@ object Nor
           inputSource = if (noValidation) {
             new NoValidateNorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
           } else {
+            inputFile = CommandParseUtilities.replaceSingleQuotes(inputFile)
             new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
           }
         }

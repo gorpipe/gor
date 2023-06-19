@@ -27,6 +27,9 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.driver.providers.rows.sources.sql.LegacyDbSourceType;
+import org.gorpipe.gor.driver.providers.rows.sources.sql.SqlSourceType;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
@@ -288,20 +291,12 @@ public class PathUtils {
         return uri;
     }
 
-    public static URI fixFileSchemaUseFile(URI uri) {
-        if ("file".equals(uri.getScheme())) {
-            String uriStr = uri.toString();
-            // If we have ssp we know it has the right format (file:////<path>), other wise it is just file:/<path>
-            if (uriStr.startsWith("file:///")) {
-                return uri;
-            } else {
-                return URI.create("file://" + uriStr.substring(5));
-            }
-        } else if (uri.getScheme() == null && uri.getPath().startsWith("/")) {
-            return URI.create("file://" + uri.toASCIIString());
-        } else {
-            return uri;
+    public static String fixDbSchema(String uri) {
+        if (LegacyDbSourceType.DB.match(uri)) {
+            return uri.replace(LegacyDbSourceType.ProtocolName, SqlSourceType.ProtocolName + "//");
         }
+
+        return uri;
     }
 
     public static String convertSlashes(String path) {
@@ -313,7 +308,8 @@ public class PathUtils {
     }
 
     public static boolean isLocal(String path) {
-        return (!path.contains(":/") && !path.startsWith("//db:")) || path.startsWith("file");
+        path = fixDbSchema(path);
+        return !path.contains(":/") || path.startsWith("file");
     }
 
     public static long getLastModifiedTime(String fileName, String securityContext, String commonRoot) throws IOException {
@@ -332,14 +328,6 @@ public class PathUtils {
         return Path.of("").toAbsolutePath().toString();
     }
 
-    public static boolean isLinkFile(String path) {
-        return path.endsWith(DataType.LINK.suffix);
-    }
-
-    public static boolean isGordLinkFile(String path) {
-        return path.endsWith(  DataType.GORD.suffix + DataType.LINK.suffix);
-    }
-
     /**
      * Get the final link content for local links.
      * NOTE:  This method does only support reading links from disk, in many cases we should rather use the
@@ -350,7 +338,7 @@ public class PathUtils {
      * @throws IOException thrown if the link file can not be read.
      */
     public static String readLocalLinkContent(String root, String path) throws IOException {
-        return PathUtils.isLinkFile(path) && root != null
+        return DataUtil.isLink(path) && root != null
                 ? readLocalLinkContent(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
                 : path;
     }
@@ -359,7 +347,7 @@ public class PathUtils {
      * Gords are not handled by the driver framework (yet), and hence we must manually resolve the links to gords.
      */
     public static String readLocalLinkContentForGord(String root, String path) throws IOException {
-        return PathUtils.isGordLinkFile(path) && root != null
+        return DataUtil.isGord(path) && root != null
                 ? readLocalLinkContentForGord(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
                 : path;
     }

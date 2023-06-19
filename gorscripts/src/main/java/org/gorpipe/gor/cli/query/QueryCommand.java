@@ -29,7 +29,7 @@ import gorsat.process.PipeOptions;
 import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.cli.HelpOptions;
-import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.util.ConfigUtil;
 import org.slf4j.Logger;
@@ -115,7 +115,7 @@ public class QueryCommand extends HelpOptions implements Runnable{
             ConfigUtil.loadConfig("gor");
 
             // Initialize database connections
-            DbSource.initInConsoleApp();
+            DbConnection.initInConsoleApp();
 
             GorExecutionEngine executionEngine = new CLIGorExecutionEngine(commandlineOptions, null, null);
             executionEngine.execute();

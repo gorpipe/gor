@@ -54,7 +54,8 @@ public class GorStandalone {
     }
 
     public static boolean isURL(String leafPath) {
-        return leafPath.matches("^[A-Za-z0-9]+://.*$") || leafPath.startsWith("//db:");
+        assert(!leafPath.startsWith("//db:"));
+        return leafPath.matches("^[A-Za-z0-9]+://.*$");
     }
 
     public static String getRootPrefixed(String leafPath) {

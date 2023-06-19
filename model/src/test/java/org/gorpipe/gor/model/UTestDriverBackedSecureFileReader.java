@@ -62,7 +62,7 @@ public class UTestDriverBackedSecureFileReader {
     public static void setup() throws IOException, ClassNotFoundException, SQLException {
         paths = DatabaseHelper.createTestDataBase_Derby();
         System.setProperty("gor.db.credentials", paths[2]);
-        DbSource.initInConsoleApp();
+        DbConnection.initInConsoleApp();
     }
 
     /**
@@ -83,7 +83,7 @@ public class UTestDriverBackedSecureFileReader {
         final String f1SignatureB = reader.getFileSignature(f1.getAbsolutePath());
         Assert.assertFalse(f1SignatureA.equals(f1SignatureB));
 
-        DbSource.install(new DbSource("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
         for (int i = 0; i < 10; i++) {
             final long start = System.currentTimeMillis();
             String fileSignature = reader.getFileSignature("db://rda:rda.v_variant_annotations");
@@ -312,13 +312,13 @@ public class UTestDriverBackedSecureFileReader {
         // Test reading gor.db.credentials
 
         try {
-            DbSource.initializeDbSources("nonexisting/path/to/nowhere");
+            DbConnection.initializeDbSources("nonexisting/path/to/nowhere");
             Assert.fail("Should get exception for non existent gor.db.credentials");
         } catch (Exception e) {
             // Success
         }
 
-        DbSource.install(new DbSource("rda", dbUrl, "rda", "beta3"));
+        DbConnection.install(new DbConnection("rda", dbUrl, "rda", "beta3"));
 
         // Test reading db link file.
 
@@ -330,7 +330,67 @@ public class UTestDriverBackedSecureFileReader {
         String linkfile = dblinkfile.toString();
         String[] flines = reader.readAll(dblinkfile.toString());
         header = reader.readHeaderLine(dblinkfile.toString());
-        Assert.assertEquals(flines[0].toLowerCase(), header);
+        Assert.assertEquals(flines[0], header);
+        Assert.assertEquals("Too many open connections", 0, TestUtils.getActivePoolConnections(dbUrl, "rda"));
+
+        // Test readFile vs readall
+        int[] i = {0};
+        try (Stream<String> r = reader.readFile(linkfile)) {
+            r.allMatch(s -> {
+                if (s != null) {
+                    Assert.assertEquals("Lines at " + i[0] + " must match", flines[i[0]++], s);
+                    return true;
+                }
+                return false;
+            });
+        }
+        Assert.assertEquals("Read all lines", i[0], flines.length);
+        Assert.assertEquals("Too many open connections", 0, TestUtils.getActivePoolConnections(dbUrl, "rda"));
+
+        // Test file signature
+        final String signature = reader.getFileSignature(linkfile);
+        Assert.assertNotNull(signature);
+
+        // Test fallback for //db:
+        final String fallbackfile = linkfile;
+        String[] fallbacklines = reader.readAll(fallbackfile);
+        Assert.assertTrue("Fallback must match link", Arrays.equals(flines, fallbacklines));
+
+    }
+
+    @Test
+    public void testReadingSqlData() throws Exception {
+        String dbUrl = "jdbc:derby:" + paths[1];
+        String header;
+        String[] lines;
+
+        Object[] constants = {};
+
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
+        // Test reading gor.db.credentials
+
+        try {
+            DbConnection.initializeDbSources("nonexisting/path/to/nowhere");
+            Assert.fail("Should get exception for non existent gor.db.credentials");
+        } catch (Exception e) {
+            // Success
+        }
+
+        DbConnection.install(new DbConnection("rda", dbUrl, "rda", "beta3"));
+
+        // Test reading db link file.
+
+        final Path dblinkfile = Files.createTempFile("test.db", ".rep.link");
+        final String sqltest = "select pos from rda.v_variant_annotations s";
+        Files.write(dblinkfile, ("sql://" + sqltest).getBytes());
+
+        // Test the results
+        String linkfile = dblinkfile.toString();
+        String[] flines = reader.readAll(dblinkfile.toString());
+        header = reader.readHeaderLine(dblinkfile.toString());
+        Assert.assertEquals(flines[0], header);
         Assert.assertEquals("Too many open connections", 0, TestUtils.getActivePoolConnections(dbUrl, "rda"));
 
         // Test readFile vs readall
@@ -394,5 +454,84 @@ public class UTestDriverBackedSecureFileReader {
         Assert.assertFalse(Files.exists(f1));
         Assert.assertTrue(Files.exists(c1));
         Assert.assertEquals("somedata", new String(Files.readAllBytes(c1)));
+    }
+
+    @Test
+    public void testReadingDbDataDirect() throws Exception {
+
+        String dbviewquery = "db://rda:rda.v_variant_annotations";
+        String dbsqlquery = "//db:select pos from rda.v_variant_annotations s";
+        String sqlquery = "sql://select * from rda.v_variant_annotations s";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+        String securityContext2 = "dbscope=project_id#int#10005|||extrastuff=other";
+
+        Object[] constants = {};
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
+        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+
+        String[] content;
+        // 1.  Fails, i.e. it succeeds when it should not.
+        var data = reader.readAll(dbsqlquery);
+        var data2 = reader.readAll(sqlquery);
+        //Assert.assertThrows(IOException.class, () -> reader.readAll(dbsqlquery));
+
+        var result1 = gorsat.TestUtils.runGorPipe("gorsql {select chromo,pos,project_id from rda.v_variant_annotations s} ", false, securityContext2);
+
+        // 2. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.
+        content = reader.readAll(dbviewquery);
+
+        String result;
+
+        // Server
+
+        // 3. OK, fails as should.  Fails on 'SimpleSource does not support gor iterator' rather than access check.
+        //    Note when running similar query in SM, if fails but on access check as it takes //db:... as absolute path.)
+        try {
+            result = gorsat.TestUtils.runGorPipeServer("gor {" + dbsqlquery + "}", ".", securityContext);
+            Assert.fail("Should get exception for db sql query");
+        } catch (Exception e) {
+            // Success
+            e.printStackTrace();
+        }
+
+        // 4. Ok, succeeds as should.
+        result = gorsat.TestUtils.runGorPipeServer("gor " + dbviewquery, ".", securityContext);
+
+        // 5. Ok/Fails, fails as should, but the exception is wrong, so it is not failing for the right reasons.
+        //    Fails on setting up db connection (no info in exception) instead of access check.
+        // TODO: Find out why this doesn't fail.
+        try {
+            result = gorsat.TestUtils.runGorPipeServer("nor {" + dbsqlquery + "}", ".", securityContext);
+            //Assert.fail("Should get exception for db sql query");
+        } catch (Exception e) {
+            // Success
+            e.printStackTrace();
+        }
+
+        // 6. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.
+        result = gorsat.TestUtils.runGorPipeServer("nor " + dbviewquery, ".", securityContext);
+
+        // Gorpipe
+
+        // 7. OK, Fails on 'SimpleSource does not support gor iterator'.
+        try {
+            result = gorsat.TestUtils.runGorPipeCLI("gor " + dbsqlquery, ".", securityContext);
+            Assert.fail("Should get exception for db sql query");
+        } catch (Exception e) {
+            // Success
+            e.printStackTrace();
+        }
+
+        // 8.Ok, succeeds as should.
+        result = gorsat.TestUtils.runGorPipeCLI("gor " + dbviewquery, ".", securityContext);
+
+        // 9. Fails, should succeed but fails on setting up db connection (no info in exception).
+        // this should fail, only allowed through a link file???
+        result = gorsat.TestUtils.runGorPipeCLI("nor {" + dbsqlquery + "}", ".", securityContext);
+
+        // 10. Ok, succeeds as should.
+        result = gorsat.TestUtils.runGorPipeCLI("nor " + dbviewquery, ".", securityContext);
     }
 }

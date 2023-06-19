@@ -20,21 +20,21 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.db;
+package org.gorpipe.gor.driver.providers.rows.sources.db;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
-import org.gorpipe.gor.driver.providers.gorserver.GorSource;
+import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
+import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.DbGenomicIterator;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -44,18 +44,16 @@ import java.util.List;
  * <p>
  * Created by gisli on 26/02/16.
  */
-public class DbSource implements GorSource {
+public class DbSource extends RowIteratorSource {
     private static final Logger log = LoggerFactory.getLogger(DbSource.class);
-
-    private final SourceReference sourceReference;
 
     private final String databaseSource;
     private String chrColName = "chromo";
     private String posColName = "pos";
-    private String tableName;
+    private final String tableName;
 
     public DbSource(SourceReference sourceReference) {
-        this.sourceReference = sourceReference;
+        super(sourceReference);
 
         // Validate the url.
         URI parsedUri;
@@ -93,11 +91,10 @@ public class DbSource implements GorSource {
     }
 
     @Override
-    public GenomicIterator open() throws IOException {
+    public GenomicIterator open() {
         return this.open(null);
     }
 
-    @Override
     public GenomicIterator open(String filter) {
         List<DbScope> dbScopes = DbScope.parse(this.sourceReference.getSecurityContext());
 
@@ -106,7 +103,6 @@ public class DbSource implements GorSource {
     }
 
 
-    @Override
     public boolean supportsFiltering() {
         return false;
     }
@@ -129,7 +125,7 @@ public class DbSource implements GorSource {
     @Override
     public boolean exists() {
         if (tableName != null) {
-            final org.gorpipe.gor.model.DbSource dbsource = org.gorpipe.gor.model.DbSource.lookup(databaseSource);
+            final DbConnection dbsource = DbConnection.lookup(databaseSource);
             if (dbsource == null) {
                 log.warn("Database not found: {}", databaseSource);
                 return false;
@@ -154,7 +150,7 @@ public class DbSource implements GorSource {
     public SourceMetadata getSourceMetadata() {
         long timestamp = System.currentTimeMillis();
         if (tableName != null) {
-            final org.gorpipe.gor.model.DbSource dbsource = org.gorpipe.gor.model.DbSource.lookup(databaseSource);
+            final DbConnection dbsource = DbConnection.lookup(databaseSource);
             if (dbsource != null) {
                 timestamp = dbsource.queryDefaultTableChange(tableName);
             }
@@ -165,5 +161,10 @@ public class DbSource implements GorSource {
     @Override
     public SourceReference getSourceReference() {
         return sourceReference;
+    }
+
+    @Override
+    public boolean isDirect() {
+        return false;
     }
 }

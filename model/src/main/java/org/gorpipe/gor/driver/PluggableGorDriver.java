@@ -304,14 +304,6 @@ public class PluggableGorDriver implements GorDriver {
         SourceReference sourceReference = source.getSourceReference();
         String linkSubPath = sourceReference.getLinkSubPath();
         String linkText = sourceTypeToSourceProvider.get(source.getSourceType()).readLink(source);
-        if (GorStandalone.isStandalone() && !linkText.startsWith("//db:")) {
-            String prefix = "";
-            if (linkText.startsWith("file://")) {
-                prefix = "file://";
-                linkText = linkText.substring(prefix.length());
-            }
-            linkText = prefix + (PathUtils.isLocal(linkText) ? GorStandalone.getRootPrefixed(linkText) : linkText);
-        }
         return linkSubPath != null ? linkText + linkSubPath : linkText;
     }
 

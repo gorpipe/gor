@@ -24,7 +24,7 @@ package gorsat;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.gor.model.DbSource;
+import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -70,11 +70,12 @@ public class UTestProcessSource {
         Assert.assertTrue("SQL should not be allowed to run in server mode", correctError);
     }
 
-    @Ignore("needs connection to a database")
+    //@Ignore("needs connection to a database")
     @Test
+    @Ignore("Missing credentials file")
     public void testSqlSource() throws IOException, ClassNotFoundException {
         System.setProperty("gor.db.credentials", "../tests/config/gor.db.credentials");
-        DbSource.initInConsoleApp();
+        DbConnection.initInConsoleApp();
 
         String gorcmd = "sql -n {select * from users | where contains(email,'hakon')}";
         Assert.assertEquals(2, TestUtils.runGorPipeCount(gorcmd));
@@ -84,7 +85,7 @@ public class UTestProcessSource {
     @Test
     public void testNestedSqlSource() throws IOException, ClassNotFoundException {
         System.setProperty("gor.db.credentials", "../tests/config/gor.db.credentials");
-        DbSource.initInConsoleApp();
+        DbConnection.initInConsoleApp();
 
         String gorcmd = "nor <(sql {select * from users})";
         Assert.assertEquals(127, TestUtils.runGorPipeCount(gorcmd));
@@ -94,7 +95,7 @@ public class UTestProcessSource {
     @Test
     public void testNestedSqlGORSource() throws IOException, ClassNotFoundException {
         System.setProperty("gor.db.credentials", "../tests/config/gor.db.credentials");
-        DbSource.initInConsoleApp();
+        DbConnection.initInConsoleApp();
 
         String gorcmd = "sql -p chr8 {select chromo,pos,ref,alt,PN from v_variant_annotations #(S:where CHROMO='chr') order by chromo,pos}";
         Assert.assertEquals(9, TestUtils.runGorPipeCount(gorcmd));

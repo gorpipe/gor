@@ -20,36 +20,32 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.mem;
+package org.gorpipe.gor.driver.providers.rows.sources.mem;
 
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
-import org.gorpipe.gor.driver.providers.gorserver.GorSource;
+import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.util.Util;
-
-import java.io.IOException;
 
 /**
  * Represents a data source accessed through file system.
  * <p>
  * Created by villi on 22/08/15.
  */
-public class MemSource implements GorSource {
-
-    private final SourceReference sourceReference;
+public class MemSource extends RowIteratorSource {
 
     /**
      * Name of file.  This should be the full path to the file.
      */
     public MemSource(SourceReference sourceReference) {
-        this.sourceReference = sourceReference;
+        super(sourceReference);
     }
 
     @Override
-    public GenomicIterator open() throws IOException {
+    public GenomicIterator open() {
         return open(null);
     }
 

@@ -10,6 +10,9 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.driver.providers.rows.sources.db.DbSource;
+import org.gorpipe.gor.driver.providers.rows.sources.db.DbSourceType;
+import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -40,7 +43,7 @@ public class UTestDbSource {
     public static void setup() throws IOException, ClassNotFoundException, SQLException {
         String[] paths = DatabaseHelper.createTestDataBase_Derby();
         System.setProperty("gor.db.credentials", paths[2]);
-        org.gorpipe.gor.model.DbSource.initInConsoleApp();
+        DbConnection.initInConsoleApp();
     }
 
     @Test

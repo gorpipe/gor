@@ -28,7 +28,7 @@ import gorsat.process.PipeOptions
 import javax.swing.SwingUtilities
 import org.gorpipe.base.config.ConfigManager
 import org.gorpipe.exceptions.ExceptionUtilities
-import org.gorpipe.gor.model.DbSource
+import org.gorpipe.gor.model.DbConnection
 import org.gorpipe.gor.servers.GorConfig
 import org.gorpipe.logging.GorLogbackUtil
 import org.gorpipe.util.ConfigUtil
@@ -59,7 +59,7 @@ object Jessica extends App {
   ConfigUtil.loadConfig("jessica")
 
   // Initialize database connections
-  DbSource.initInConsoleApp()
+  DbConnection.initInConsoleApp()
 
   SwingUtilities.invokeLater(() => {
     val jessicaRunner = new JessicaRunner

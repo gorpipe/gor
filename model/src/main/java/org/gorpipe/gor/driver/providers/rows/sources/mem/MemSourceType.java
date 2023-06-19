@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.mem;
+package org.gorpipe.gor.driver.providers.rows.sources.mem;
 
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.util.DataUtil;

@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.driver.providers.db;
+package org.gorpipe.gor.driver.providers.rows.sources.db;
 
 import com.google.common.base.Strings;
 import org.gorpipe.exceptions.GorSystemException;
