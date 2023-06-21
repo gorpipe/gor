@@ -32,14 +32,12 @@ import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.StreamWrappedGenomicIterator;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-
 public class SqlSource extends RowIteratorSource {
     private static final Logger log = LoggerFactory.getLogger(SqlSource.class);
+    private SqlInfo sqlInfo;
 
     public SqlSource(SourceReference sourceReference) {
         super(sourceReference);
@@ -52,17 +50,20 @@ public class SqlSource extends RowIteratorSource {
 
     @Override
     public GenomicIterator open() {
-        String resolvedUrl = PathUtils.fixDbSchema(sourceReference.getUrl());
+        var sql = getSqlfromSource();
+        sqlInfo = getInfoFromSql(sql);
 
-        if (!SqlSourceType.SQL.match(resolvedUrl)) {
-            throw new GorResourceException("SQLSource: content must start with a valid sql source type", resolvedUrl);
+        String header = null;
+
+        if (sqlInfo.hasHeader()) {
+            header = "#" + String.join("\t", sqlInfo.columns());
         }
 
-        var sql = resolvedUrl.substring(6);
-
-        var dataStream = DbConnection.getDBLinkStream(sql, new Object[]{}, null);
-        return new StreamWrappedGenomicIterator(dataStream, getHeaderfromQuery(resolvedUrl), true, true);
+        var dataStream = DbConnection.getDBLinkStream(sql, new Object[]{}, sqlInfo.database());
+        return new StreamWrappedGenomicIterator(dataStream, header, true, true);
     }
+
+
 
     @Override
     public GenomicIterator open(String filter) {
@@ -107,12 +108,18 @@ public class SqlSource extends RowIteratorSource {
     @Override
     public SourceMetadata getSourceMetadata() {
         long timestamp = System.currentTimeMillis();
-        /*if (tableName != null) {
-            final DbConnection dbsource = DbConnection.lookup(databaseSource);
+
+        if (sqlInfo == null) {
+            var sql = getSqlfromSource();
+            sqlInfo = getInfoFromSql(sql);
+        }
+
+        if (sqlInfo.table().length() > 0 && sqlInfo.database().length() > 0) {
+            final DbConnection dbsource = DbConnection.lookup(sqlInfo.database());
             if (dbsource != null) {
-                timestamp = dbsource.queryDefaultTableChange(tableName);
+                timestamp = dbsource.queryDefaultTableChange(sqlInfo.table());
             }
-        }*/
+        }
         return new SourceMetadata(this, sourceReference.getUrl(), timestamp, null, false);
     }
 
@@ -121,28 +128,27 @@ public class SqlSource extends RowIteratorSource {
         return sourceReference;
     }
 
-    private String getHeaderfromQuery(String url) {
-        final int idxSelect = url.indexOf("select ");
-        final int idxFrom = url.indexOf(" from ");
-        if (idxSelect < 0 || idxFrom < 0) { // Must find columns
-            return null;
+    private String getSqlfromSource() {
+        String resolvedUrl = PathUtils.fixDbSchema(sourceReference.getUrl());
+
+        if (!SqlSourceType.SQL.match(resolvedUrl)) {
+            throw new GorResourceException("SQLSource: content must start with a valid sql source type", resolvedUrl);
         }
-        final ArrayList<String> fields = StringUtil.split(url, idxSelect + 7, idxFrom, ',');
-        final StringBuilder header = new StringBuilder(200);
-        for (String f : fields) {
-            if (header.length() > 0) {
-                header.append('\t');
-            } else {
-                header.append('#');
-            }
-            final int idxAs = f.indexOf(" as ");
-            if (idxAs > 0) {
-                header.append(f.substring(idxAs + 4).trim());
-            } else {
-                final int idxPoint = f.indexOf('.');
-                header.append(f.substring(idxPoint > 0 ? idxPoint + 1 : 0).trim());
-            }
+
+        return resolvedUrl.substring(6);
+    }
+
+    private SqlInfo getInfoFromSql(String sql) {
+        sqlInfo = SqlInfo.parse(sql);
+
+        if (sqlInfo.columns().length == 0) {
+            throw new GorResourceException("SQLSource: no columns specified", sql);
         }
-        return header.toString();
+
+        if (sqlInfo.table().length() == 0) {
+            throw new GorResourceException("SQLSource: no table specified", sql);
+        }
+
+        return sqlInfo;
     }
 }

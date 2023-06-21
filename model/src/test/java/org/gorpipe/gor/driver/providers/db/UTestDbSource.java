@@ -41,7 +41,7 @@ public class UTestDbSource {
 
     @BeforeClass
     public static void setup() throws IOException, ClassNotFoundException, SQLException {
-        String[] paths = DatabaseHelper.createTestDataBase_Derby();
+        String[] paths = DatabaseHelper.createRdaDatabase();
         System.setProperty("gor.db.credentials", paths[2]);
         DbConnection.initInConsoleApp();
     }

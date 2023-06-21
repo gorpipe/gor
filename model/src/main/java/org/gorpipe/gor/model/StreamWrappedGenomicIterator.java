@@ -57,6 +57,9 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
 
     @Override
     public String getHeader() {
+        if (header != null) {
+            return header;
+        }
         readHeader();
         return header;
     }
@@ -108,6 +111,10 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
     }
 
     private String formatHeader(String header) {
+        if (header == null) {
+            return null;
+        }
+
         if (header.startsWith("#")) {
             header = header.substring(1);
         }

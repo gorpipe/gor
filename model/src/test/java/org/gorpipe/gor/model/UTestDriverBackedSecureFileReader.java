@@ -60,7 +60,7 @@ public class UTestDriverBackedSecureFileReader {
 
     @BeforeClass
     public static void setup() throws IOException, ClassNotFoundException, SQLException {
-        paths = DatabaseHelper.createTestDataBase_Derby();
+        paths = DatabaseHelper.createRdaDatabase();
         System.setProperty("gor.db.credentials", paths[2]);
         DbConnection.initInConsoleApp();
     }
@@ -533,5 +533,29 @@ public class UTestDriverBackedSecureFileReader {
 
         // 10. Ok, succeeds as should.
         result = gorsat.TestUtils.runGorPipeCLI("nor " + dbviewquery, ".", securityContext);
+    }
+
+    @Test
+    public void testReadingDbDataDirectMultipleSources() throws Exception {
+        String sqlqueryRda = "sql://select * from rda.v_variant_annotations";
+        String sqlqueryAvas = "sql://select * from avas.v_variant_annotations";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        Object[] constants = {};
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
+        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+
+        // Create avas database
+        var avasPaths = DatabaseHelper.createAvasDatabase();
+        DbConnection.install(new DbConnection("avas", "jdbc:derby:" + avasPaths[1], "avas", "beta3"));
+
+        // 1.  Fails, i.e. it succeeds when it should not.
+        var dataRda = reader.readAll(sqlqueryRda);
+        var dataAvas = reader.readAll(sqlqueryAvas);
+
+        Assert.assertTrue(dataRda[1].contains("rda1"));
+        Assert.assertTrue(dataAvas[1].contains("avas1"));
     }
 }
