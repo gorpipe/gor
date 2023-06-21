@@ -13,7 +13,7 @@ public class UTestSQLInfo {
         assert sqlInfo.columns().length == 1;
         assert sqlInfo.columns()[0].equals("*");
         assert sqlInfo.table().equals("table");
-        assert sqlInfo.database().equals("");
+        assert sqlInfo.database() == null;
     }
 
     @Test
@@ -26,7 +26,7 @@ public class UTestSQLInfo {
         assert sqlInfo.columns()[2].equals("c");
         assert sqlInfo.columns()[3].equals("d");
         assert sqlInfo.table().equals("table");
-        assert sqlInfo.database().equals("");
+        assert sqlInfo.database() == null;
     }
 
     @Test
@@ -38,16 +38,16 @@ public class UTestSQLInfo {
         assert sqlInfo.columns()[1].equals("foo");
         assert sqlInfo.columns()[2].equals("c");
         assert sqlInfo.table().equals("table");
-        assert sqlInfo.database().equals("");
+        assert sqlInfo.database() == null;
     }
 
     @Test
     public void parseTableAndDatabaseSQLStatement() {
-        var sql = "select * from db.table";
+        var sql = "db:select * from foo.table";
         var sqlInfo = SqlInfo.parse(sql);
         assert sqlInfo.columns().length == 1;
         assert sqlInfo.columns()[0].equals("*");
-        assert sqlInfo.table().equals("table");
+        assert sqlInfo.table().equals("foo.table");
         assert sqlInfo.database().equals("db");
     }
 

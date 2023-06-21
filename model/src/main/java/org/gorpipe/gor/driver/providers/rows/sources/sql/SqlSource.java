@@ -59,7 +59,7 @@ public class SqlSource extends RowIteratorSource {
             header = "#" + String.join("\t", sqlInfo.columns());
         }
 
-        var dataStream = DbConnection.getDBLinkStream(sql, new Object[]{}, sqlInfo.database());
+        var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), new Object[]{}, sqlInfo.database());
         return new StreamWrappedGenomicIterator(dataStream, header, true, true);
     }
 
@@ -114,10 +114,17 @@ public class SqlSource extends RowIteratorSource {
             sqlInfo = getInfoFromSql(sql);
         }
 
-        if (sqlInfo.table().length() > 0 && sqlInfo.database().length() > 0) {
-            final DbConnection dbsource = DbConnection.lookup(sqlInfo.database());
+        var table = sqlInfo.table();
+        var database = sqlInfo.database();
+
+        if (database == null) {
+            database = DbConnection.DEFAULT_DBSOURCE;
+        }
+
+        if (table.length() > 0 && database.length() > 0) {
+            final DbConnection dbsource = DbConnection.lookup(database);
             if (dbsource != null) {
-                timestamp = dbsource.queryDefaultTableChange(sqlInfo.table());
+                timestamp = dbsource.queryDefaultTableChange(table);
             }
         }
         return new SourceMetadata(this, sourceReference.getUrl(), timestamp, null, false);

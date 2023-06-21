@@ -5,7 +5,7 @@ import org.gorpipe.gor.util.StringUtil;
 
 import java.util.ArrayList;
 
-public record SqlInfo(String[] columns, String table, String database) {
+public record SqlInfo(String[] columns, String table, String database, String statement) {
 
     private static final String SELECT = "select ";
     private static final String FROM = " from ";
@@ -16,6 +16,16 @@ public record SqlInfo(String[] columns, String table, String database) {
     }
 
     public static SqlInfo parse(String sql) {
+
+        String databaseName = null;
+
+        final int databaseIdx = sql.indexOf(":");
+
+        if (databaseIdx > 0) {
+            databaseName = sql.substring(0, databaseIdx);
+            sql = sql.substring(databaseIdx + 1);
+        }
+
         sql = sql.toLowerCase();
         final int idxSelect = sql.indexOf(SELECT);
         final int idxFrom = sql.indexOf(FROM);
@@ -36,18 +46,8 @@ public record SqlInfo(String[] columns, String table, String database) {
             }
         }
 
-        var fromStatement = sql.substring(idxFrom + FROM.length()).trim();
-        var idxDatabase = fromStatement.indexOf('.');
-        var databaseName = "";
-        var tableName = "";
+        var tableName = sql.substring(idxFrom + FROM.length()).trim();
 
-        if (idxDatabase < 0) {
-            tableName = fromStatement;
-        } else {
-            databaseName = fromStatement.substring(0, idxDatabase);
-            tableName = fromStatement.substring(idxDatabase + 1);
-        }
-
-        return new SqlInfo(columns.toArray(String[]::new), tableName, databaseName);
+        return new SqlInfo(columns.toArray(String[]::new), tableName, databaseName, sql);
     }
 }

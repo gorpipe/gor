@@ -538,7 +538,7 @@ public class UTestDriverBackedSecureFileReader {
     @Test
     public void testReadingDbDataDirectMultipleSources() throws Exception {
         String sqlqueryRda = "sql://select * from rda.v_variant_annotations";
-        String sqlqueryAvas = "sql://select * from avas.v_variant_annotations";
+        String sqlqueryAvas = "sql://avas:select * from avas.v_variant_annotations";
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
 
         Object[] constants = {};
