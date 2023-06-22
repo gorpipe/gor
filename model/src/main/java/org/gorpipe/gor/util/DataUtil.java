@@ -5,6 +5,8 @@ import org.gorpipe.gor.driver.meta.DataType;
 
 public class DataUtil {
 
+    public static final String TEMPTEMPFILE = "temptempfile";
+
     public static boolean isMem(String file) {
         return DataType.isOfType(file, DataType.MEM);
     }
@@ -116,10 +118,13 @@ public class DataUtil {
         var type = DataType.fromFileName(file);
 
         if (type != null) {
-            return file.replace(type.suffix, "temptempfile" + type.suffix);
+            return file.replace(type.suffix, TEMPTEMPFILE + type.suffix);
         }
 
         throw new GorDataException(String.format("Data type does not exist for file: %s", file));
+    }
 
+    public static boolean isTempTempFile(String file) {
+        return file.contains(TEMPTEMPFILE);
     }
 }

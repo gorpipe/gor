@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.client.FileCache;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.FileNature;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
@@ -83,7 +84,15 @@ public class LocalFileCacheClient implements FileCache {
         try {
             // Note we do not touch the file here when it is already cached. As the local cache only survives a
             // single run.
-            return cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint));
+            var filename = cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint));
+
+            if (DataUtil.isTempTempFile(filename)) {
+                // this is housekeeping we should not be finding temp files in the cache
+                fileReader.delete(filename);
+                return null;
+            }
+
+            return filename;
         } catch (Exception ex) {
             /* Do nothing */
         }

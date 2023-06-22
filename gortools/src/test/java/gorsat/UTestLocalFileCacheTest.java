@@ -179,4 +179,25 @@ public class UTestLocalFileCacheTest {
         Assert.assertNotNull(baseFilesList);
         Assert.assertEquals("Only one directory",2, baseFilesList.length);
     }
+
+    @Test
+    public void testLookupOfTempTempFilebasedOnFingerPrint() throws IOException {
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString(), true, 5);
+        client.store(workDir.newFile("test1.gor").toPath(),"fin01gerprint1", ".gor", 0);
+        client.store(workDir.newFile("test2temptempfile.gor").toPath(),"fin02gerprint2", ".gor", 0);
+        client.store(workDir.newFile("test3.gor").toPath(),"fin03gerprint3", ".gor", 0);
+
+        // Should get 0 files, 3 directory
+        String[] baseFilesList = workDir.getRoot().list();
+        Assert.assertNotNull(baseFilesList);
+        Assert.assertEquals("Only one directory",3, baseFilesList.length);
+
+        // Should get null when accessing fin02gerprint2
+        var fin02 = client.lookupFile("fin02gerprint2");
+        Assert.assertNull(fin02);
+
+        // Test that the file no longer exists
+        var fin02File = new File(workDir.getRoot(), "fin02gerprint2");
+        Assert.assertFalse(fin02File.exists());
+    }
 }
