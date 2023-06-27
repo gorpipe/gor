@@ -71,7 +71,7 @@ public class TableModelIterator extends GenomicIteratorBase {
             }
 
             @Override
-            public ChromoCache getChromCache() {
+            public ChromoCache getChromoCache() {
                 return chrcache;
             }
         };

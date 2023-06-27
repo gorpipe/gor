@@ -64,7 +64,7 @@ public class DefaultChromoLookup implements ChromoLookup {
     }
 
     @Override
-    public ChromoCache getChromCache() {
+    public ChromoCache getChromoCache() {
         return lookupCache;
     }
 }

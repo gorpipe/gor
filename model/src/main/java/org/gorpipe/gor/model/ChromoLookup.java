@@ -81,7 +81,7 @@ public interface ChromoLookup {
     /**
      * @return current chromosome cache
      */
-    ChromoCache getChromCache();
+    ChromoCache getChromoCache();
 
 
 }

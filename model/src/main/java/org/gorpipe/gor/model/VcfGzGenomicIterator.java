@@ -96,7 +96,7 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
                     int lc = line.indexOf(',', c + length.length());
                     String val = line.substring(c + length.length(), Math.min(l, lc == -1 ? line.length() : lc));
                     int ival = Integer.parseInt(val);
-                    lookup.getChromCache().setLen(key, ival);
+                    lookup.getChromoCache().setLen(key, ival);
                 }
             }
         }

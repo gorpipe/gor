@@ -577,7 +577,7 @@ public class ProcessRowSource extends ProcessSource {
             }
 
             @Override
-            public ChromoCache getChromCache() {
+            public ChromoCache getChromoCache() {
                 return lookupCache;
             }
         };

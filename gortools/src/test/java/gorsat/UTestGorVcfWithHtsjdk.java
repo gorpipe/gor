@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.junit.AfterClass;
@@ -151,7 +152,7 @@ public class UTestGorVcfWithHtsjdk {
 
     @Test
     public void testNoHeaderVcf() {
-        doTest("gor", "../tests/data/external/samtools/noheader.vcf", 100, 5);
+        Assert.assertThrows("gor", GorResourceException.class, () -> TestUtils.runGorPipe("gor ../tests/data/external/samtools/noheader.vcf"));
     }
 
     @Test
