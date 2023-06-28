@@ -75,9 +75,23 @@ public class ITestS3Shared {
     public void setupTest() {
         workDirPath = workDir.getRoot().toPath();
     }
-    
+
     @Test
     public void testFallBackThrough() throws IOException {
+        S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
+
+        String dataPath = DataUtil.toFile("user_data/a", DataType.GOR);
+        DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
+        Assert.assertTrue(source != null);
+        Assert.assertTrue(!source.exists());
+        Assert.assertEquals("s3data://project/" + dataPath, source.getSourceReference().getOriginalSourceReference().getUrl());
+        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/a/a.gor", source.getSourceReference().getUrl());
+    }
+
+    @Test
+    @Ignore
+    public void testFallBackThroughWithException() throws IOException {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 

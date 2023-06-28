@@ -43,6 +43,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
@@ -187,14 +188,23 @@ public class S3Source implements StreamSource {
     @Override
     public boolean exists() throws IOException  {
         // This only works for directories if they end with /.  Safer but much slower impl is:
-        return fileExists() || Files.exists(getPath());
-        // This only works for directories if they end with /.  Much faster:
-//        if (sourceReference.getUrl().endsWith("/")) {
-//            // Files.exists handles directories.
-//            return Files.exists(getPath());
-//        } else {
-//            return fileExists();
-//        }
+        try {
+            return fileExists() || Files.exists(getPath());
+            // This only works for directories if they end with /.  Much faster:
+//          if (sourceReference.getUrl().endsWith("/")) {
+//              // Files.exists handles directories.
+//              return Files.exists(getPath());
+//          } else {
+//               return fileExists();
+//          }
+        } catch (AmazonS3Exception s3Exception) {
+            if (s3Exception.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+                return false;
+            } else {
+                throw s3Exception;
+            }
+        }
+
     }
 
     @Override
@@ -226,13 +236,13 @@ public class S3Source implements StreamSource {
         if (t instanceof AmazonS3Exception) {
             AmazonS3Exception e = (AmazonS3Exception) t;
             detail = detail != null ? detail : e.getMessage();
-            if (e.getStatusCode() == 400) {
+            if (e.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST) {
                 throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 401) {
+            } else if (e.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 403) {
+            } else if (e.getStatusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
                 throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 404) {
+            } else if (e.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
                 throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
             } else {
                 return new IOException(e);

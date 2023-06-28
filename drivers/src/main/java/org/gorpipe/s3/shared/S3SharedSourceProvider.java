@@ -94,23 +94,21 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
         Credentials sharedCreds = getS3DataCredentials(getService(), sourceReference.getSecurityContext());
 
-        if (sharedCreds != null) {
-            if (sourceReference.getCommonRoot() == null || sourceReference.getCommonRoot().isEmpty()) {
-                throw new GorSystemException("S3 shared resources need to have project root set (that ends with the project name)", null);
-            }
-
-            String project = Path.of(sourceReference.getCommonRoot()).getFileName().toString();
-            String bucket = sharedCreds.getLookupKey();
-            String s3SecurityContext = createS3SecurityContext(sharedCreds);
-            String relativePath = getRelativePath(sourceReference.getUrl());
-
-            SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
-
-            AmazonS3Client client = getClient(s3SecurityContext, bucket);
-            source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
-
-            updateSharedSourceLink(source, project);
+        if (sourceReference.getCommonRoot() == null || sourceReference.getCommonRoot().isEmpty()) {
+            throw new GorSystemException("S3 shared resources need to have project root set (that ends with the project name)", null);
         }
+
+        String project = Path.of(sourceReference.getCommonRoot()).getFileName().toString();
+        String bucket = sharedCreds != null ? sharedCreds.getLookupKey() : "unkown";
+        String s3SecurityContext = sharedCreds != null ? createS3SecurityContext(sharedCreds) : "";
+        String relativePath = getRelativePath(sourceReference.getUrl());
+
+        SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
+
+        AmazonS3Client client = getClient(s3SecurityContext, bucket);
+        source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
+
+        updateSharedSourceLink(source, project);
 
         source = handleFallback(sourceReference, source);
 
@@ -185,7 +183,8 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
         if (fallbackSourceReference != null) {
             try {
-                return (S3SharedSource) PluggableGorDriver.instance().resolveDataSource(fallbackSourceReference);
+                S3SharedSource fallbackSource = (S3SharedSource) PluggableGorDriver.instance().resolveDataSource(fallbackSourceReference);
+                source = fallbackSource.exists() ? fallbackSource : source;
             } catch (GorResourceException e) {
                 throw new GorResourceException(
                         String.format("%s\n%s", e.getMessage(), createErrorMessageForFailure(sourceReference, source)),
@@ -193,10 +192,8 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
             }
         }
 
-        throw new GorResourceException(
-                String.format("Resource could not be resolved and has no working fallback.\n%s",
-                        createErrorMessageForFailure(sourceReference, source)),
-                sourceReference.url);
+        // No fallback found.  Return original source.
+        return source;
     }
 
     private String createErrorMessageForFailure(SourceReference sourceReference, S3SharedSource source) {
