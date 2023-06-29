@@ -2,6 +2,8 @@
 
 For developers of GOR, people who want to contribute to the GOR codebase or documentation, or people who want to install from source and make local changes to their copy of GOR.
 
+For this to work you'll need to have merge rights to master otherwise te push from release script will fail.
+
 ## Reporting an Issue
 TBD
 
@@ -29,6 +31,10 @@ Notes on versioning:
 2. We use `-SNAPSHOT` postfix to indicate development version.  
 3. We update the version at the time of release so for example `10.2.3-SNAPSHOT` is a development version on top on released version `10.2.3`.  Next version will be `10.2.4`,`10.3.0` or `11.0.0`
 
+### Reviewing Operations Dashboard
+
+Before creating a GOR release, make sure that there are no issues in the Operations Dashboards related to GOR: https://gitlab.com/-/operations
+
 ### Updating the Milestone
 
 After last release there should be milestone created for this release under [>Issues>Milestones](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/milestones).
@@ -37,14 +43,11 @@ Review all merge requests since the last release and make sure that they along w
 
 Also, review all issues with merge requests that have been merged and make sure that they are tagged with the appropriate milestone ([Closed issues without milestone](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/issues/?sort=created_date&state=closed&milestone_title=None&first_page_size=20))
 
-### Reviewing Operations Dashboard
-
-Before creating a GOR release, make sure that there are no issues in the Operations Dashboards related to GOR: https://gitlab.com/-/operations
+Make sure that the issues are bulked edited and make sure that the status is Closed, tagged with **Status:Done** and milestone set to the current milestone. After saving goto the milestone and make sure that all issues are tagged with either **Feature Request** or **Bug**. If not then edit the issue to include the correct tag as this is reflected in the release notes.
 
 ### Creating a Release
 When creating the actual release we can either release directly from master (now preferred) or create release branch and release from there.
 Using a release branch (with dependency locks) is preferred only if we expect that we will be creating patches on very old releases.
-
 
 #### Create Release Directly from Master - Now Preferred
 
@@ -52,7 +55,13 @@ Make sure have an open milestone with all the issues, then call:
 
 `make release-milestone-from-master MILESTONE=1.1.1`
 
-this will update the version, create release notes, create the relase by tagging, and close the milestone.
+this will update the version, create release notes, create the release by tagging, and close the milestone.
+
+In case of an error you need to roll back the release.
+  1. Goto the [tags](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/tags) and remove the tag with the current version
+  2. Goto the [milestone](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/milestones?sort=due_date_desc&state=closed) and reopen the curent milestone.
+  3. Fix any issue related to error
+  4. Rerun the make script
      
 This can also be done manually.
 
@@ -102,5 +111,5 @@ Make sure to update the release version as appropriate.
 
 ### Create a Release of GOR Services
 
-To update our customer environments, we will need to create a new release of GOR Services including this GOR release. That process is documented in the GOR Services repo.
+To update our customer environments, we will need to create a new release of GOR Services including this GOR release. That process is documented in the [GOR Services repo](https://gitlab.com/wuxi-nextcode/wxnc-gor/gor-services/-/blob/master/CONTRIBUTING.md).
 
