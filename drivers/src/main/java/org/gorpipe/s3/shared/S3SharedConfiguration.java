@@ -32,12 +32,7 @@ public interface S3SharedConfiguration extends S3Configuration {
     @DefaultValue("true")
     boolean useFallback();
 
-    @Documentation("Should S3 shared resources only be accessible using links on server")
-    @Key("GOR_S3_SHARED_ONLY_ACCESS_WITH_LINKS_ON_SERVER")
-    @DefaultValue("false")
-    boolean onlyAccessWithLinksOnServer();
-
-    @Documentation("Should S3 shared resources always use highest level (s3datat://shared) i links")
+    @Documentation("Should S3 shared resources always use highest level (s3data://shared) i links")
     @Key("GOR_S3_SHARED_USE_HIGHEST_TYPE_IN_LINKS")
     @DefaultValue("true")
     boolean useHighestTypeInLinks();

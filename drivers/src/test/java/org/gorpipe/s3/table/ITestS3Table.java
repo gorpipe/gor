@@ -153,7 +153,7 @@ public class ITestS3Table {
 
             buckets = table.getBuckets();
             String bucket = buckets.get(0);
-            Assert.assertTrue(table.getFileReader().exists(bucket));
+            Assert.assertTrue(fileReader.exists(bucket));
 
             String[] bucketResult = runGorPipeServer("gor " +bucket,
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
@@ -186,7 +186,7 @@ public class ITestS3Table {
 
             buckets = table.getBuckets();
             String bucket = buckets.get(0);
-            Assert.assertTrue(table.getFileReader().exists(bucket));
+            Assert.assertTrue(fileReader.exists(bucket));
 
             String[] bucketResult = runGorPipeServer("gor "
                             + workDirPath.resolve("some_project").resolve(bucket.substring("s3data://project/".length())).toString(),
@@ -220,7 +220,7 @@ public class ITestS3Table {
 
             buckets = table.getBuckets();
             String bucket = buckets.get(0);
-            Assert.assertTrue(table.getFileReader().exists(bucket));
+            Assert.assertTrue(fileReader.exists(bucket));
 
             String localBucketFile = PathUtils.resolve(table.getRootPath(), DataUtil.toFile( bucket, DataType.LINK));
 
@@ -282,7 +282,7 @@ public class ITestS3Table {
             List<String> buckets = table.getBuckets();
             Assert.assertEquals(1, buckets.size());
             String bucket = buckets.get(0);
-            Assert.assertTrue(table.getFileReader().exists(PathUtils.resolve(table.getRootPath(), bucket)));
+            Assert.assertTrue(fileReader.exists(PathUtils.resolve(table.getRootPath(), bucket)));
 
             String res = TestUtils.runGorPipeServer("gor " + dictPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
             Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
@@ -312,7 +312,7 @@ public class ITestS3Table {
             List<String> buckets = table.getBuckets();
             Assert.assertEquals(1, buckets.size());
             String bucket = buckets.get(0);
-            Assert.assertTrue(table.getFileReader().exists(PathUtils.resolve(table.getRootPath(), bucket)));
+            Assert.assertTrue(fileReader.exists(PathUtils.resolve(table.getRootPath(), bucket)));
 
             String res = TestUtils.runGorPipeServer("gor " + dictPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
             Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
@@ -345,7 +345,7 @@ public class ITestS3Table {
             List<String> buckets = table.getBuckets();
             Assert.assertEquals(1, buckets.size());
             String bucket = buckets.get(0);
-            Assert.assertTrue(table.getFileReader().exists(PathUtils.resolve(table.getRootPath(), bucket)));
+            Assert.assertTrue(fileReader.exists(PathUtils.resolve(table.getRootPath(), bucket)));
 
             String res = TestUtils.runGorPipeServer("gor " + linkPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
             Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +

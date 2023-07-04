@@ -116,7 +116,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     }
 
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
-        source.setProjectLinkFile(DataUtil.toFile(getRelativePath(source), DataType.LINK));
+        source.setProjectLinkFile(DataUtil.toFile(PathUtils.stripTrailingSlash(getRelativePath(source)), DataType.LINK));
         source.setProjectLinkFileContent(findSharedSourceLinkContent(source));
     }
 

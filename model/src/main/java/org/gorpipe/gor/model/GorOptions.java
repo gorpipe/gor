@@ -785,10 +785,7 @@ public class GorOptions {
     }
 
     private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        var source = session.getProjectContext().getFileReader().resolveUrl(fileName);
-        var fullPath = source.getTopSourceReference().getUrl();
-
-        DictionaryTableReader table = DictionaryCache.getTable(fullPath, session.getProjectContext().getFileReader());
+        DictionaryTableReader table = DictionaryCache.getTable(fileName, session.getProjectContext().getFileReader());
         final Dictionary gord = Dictionary.getDictionary(table, this.useDictionaryCache);
 
         isNoLineFilter = isNoLineFilter || !table.getLineFilter();
@@ -831,10 +828,7 @@ public class GorOptions {
     }
 
     private void processDictionaryTable(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        var source = session.getProjectContext().getFileReader().resolveUrl(fileName);
-        var fullPath = source.getTopSourceReference().getUrl();
-
-        DictionaryTable table = DictionaryCache.getTable(fullPath, session.getProjectContext().getFileReader());
+        DictionaryTable table = DictionaryCache.getTable(fileName, session.getProjectContext().getFileReader());
 
         this.isNoLineFilter = isNoLineFilter || !table.getLineFilter();
         this.hasLocalDictonaryFile = hasLocalDictonaryFile || !table.getAllActiveTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags

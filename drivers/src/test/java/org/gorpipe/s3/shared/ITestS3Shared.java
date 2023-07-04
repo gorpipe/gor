@@ -321,24 +321,8 @@ public class ITestS3Shared {
         }
      }
 
-    @Ignore("Hard to change the owner config for one test.  Ignore until we reenable this feature by default.")
     @Test
-    public void testReadDirectly() {
-        Path gorRoot  = workDirPath.resolve("some_project");
-        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
-                createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
-
-        try {
-            fileReader.resolveUrl(DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ));
-            Assert.fail("Should not be able to read shared link directly");
-        } catch (GorResourceException e) {
-            // Expected
-            Assert.assertEquals("S3 shared resources can only be accessed using links.", e.getMessage());
-        }
-    }
-
-    @Test
-    @Ignore("Slow test, ment to be manually run")
+    @Ignore("Slow test, meant to be manually run")
     public void testReadServer() throws IOException {
         Path gorRoot  = workDirPath.resolve("some_project");
         Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));

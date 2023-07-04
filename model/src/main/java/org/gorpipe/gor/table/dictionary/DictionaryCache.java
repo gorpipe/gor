@@ -42,12 +42,12 @@ public class DictionaryCache {
         if (!fileReader.exists(path)) {
             throw new NoSuchFileException(path);
         }
-        // The dict is lazy loaded so the onnly cost is finding the id.
+        // The dict is lazy loaded so the only cost is finding the id.
         DictionaryTable dict = new DictionaryTable(path, fileReader);
 
         if (useCache) {
             String uniqueID = dict.getId();
-            var key = dictCacheKeyFromPathAndRoot(path, fileReader.getCommonRoot());
+            var key = dictCacheKeyFromPathAndRoot(path, fileReader);
             if (Strings.isNullOrEmpty(uniqueID)) {
                 dictCache.invalidate(key);
                 return dict;
@@ -67,7 +67,7 @@ public class DictionaryCache {
 
     public synchronized static void updateCache(DictionaryTable table) {
         String uniqueID = table.getId();
-        var key = dictCacheKeyFromPathAndRoot(table.getPath(), table.getFileReader().getCommonRoot());
+        var key = dictCacheKeyFromPathAndRoot(table.getPath(), table.getFileReader());
         if (uniqueID == null || uniqueID.equals("")) {
             log.warn("Trying to put table with non unique id ({}) into cache", uniqueID);
         } else {
@@ -75,7 +75,7 @@ public class DictionaryCache {
         }
     }
 
-    private static String dictCacheKeyFromPathAndRoot(String path, String commonRoot) {
-        return PathUtils.resolve(commonRoot, path);
+    private static String dictCacheKeyFromPathAndRoot(String path, FileReader fileReader) {
+        return fileReader.resolveUrl(path).getFullPath();
     }
 }
