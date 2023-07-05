@@ -36,8 +36,11 @@ import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 public class SqlSource extends RowIteratorSource {
     private static final String PROJECT_ID = "project_id";
+    private static final String ORGANIZATION_ID = "organization_id";
     private static final Logger log = LoggerFactory.getLogger(SqlSource.class);
     private SqlInfo sqlInfo;
 
@@ -64,12 +67,15 @@ public class SqlSource extends RowIteratorSource {
         Object[] constants = new Object[]{};
         var scopes = DbScope.parse(sourceReference.securityContext);
         if (!scopes.isEmpty()) {
+            ArrayList<Object> constantsList = new ArrayList<>();
             for (var s : scopes) {
-                if (s.getColumn().toLowerCase().equals(PROJECT_ID)) {
-                    constants = new Object[]{s.getValue()};
-                    break;
+                if (s.getColumn().equalsIgnoreCase(PROJECT_ID)) {
+                    constantsList.add(s.getValue());
+                } else if (s.getColumn().equalsIgnoreCase(ORGANIZATION_ID)) {
+                    constantsList.add(s.getValue());
                 }
             }
+            constants = constantsList.toArray();
         }
 
         var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());

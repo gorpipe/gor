@@ -12,6 +12,7 @@
 package org.gorpipe.gor.model;
 
 import com.nextcode.gor.driver.utils.DatabaseHelper;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.utils.TestUtils;
@@ -464,10 +465,13 @@ public class UTestDriverBackedSecureFileReader {
         String sqlquery = "sql://select * from rda.v_variant_annotations s";
         String sqlqueryWithScope = "sql://select * from rda.v_variant_annotations where project_id = #{project-id}";
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
-        String securityContext2 = "dbscope=project_id#int#10005|||extrastuff=other";
+        String securityContext2 = "dbscope=project_id#int#10005,organization_id#int#1|||extrastuff=other";
 
         Object[] constants = {};
         DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
+        DriverBackedSecureFileReader reader2 = new DriverBackedSecureFileReader(".", constants, securityContext2,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
@@ -485,10 +489,9 @@ public class UTestDriverBackedSecureFileReader {
         Assert.assertTrue(data3[1].contains("10004"));
         Assert.assertTrue(data3[5].contains("10004"));
 
-        var result1 = gorsat.TestUtils.runGorPipe("gorsql {select chromo,pos,project_id from rda.v_variant_annotations s} ", false, securityContext2);
-
         // 2. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.
-        content = reader.readAll(dbviewquery);
+        data = reader.readAll(dbviewquery);
+
 
         String result;
 
@@ -565,5 +568,23 @@ public class UTestDriverBackedSecureFileReader {
 
         Assert.assertTrue(dataRda[1].contains("rda1"));
         Assert.assertTrue(dataAvas[1].contains("avas1"));
+    }
+
+    @Test
+    public void testReadingDbDataWithProjectAndOrgScope() throws Exception {
+        String sqlqueryWithScopeAndOrg = "sql://select * from rda.v_variant_annotations where project_id = #{project-id} and organization_id = #{organization-id}";
+        String securityContext = "dbscope=project_id#int#10005,organization_id#int#1|||extrastuff=other";
+
+        Object[] constants = {};
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
+        var paths = DatabaseHelper.createRdaDatabaseWithOrg();
+        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+
+
+        var data = reader.readAll(sqlqueryWithScopeAndOrg);
+
+        Assert.assertTrue(data.length == 4);
     }
 }
