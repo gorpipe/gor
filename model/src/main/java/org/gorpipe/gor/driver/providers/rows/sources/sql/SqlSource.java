@@ -28,6 +28,7 @@ import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
+import org.gorpipe.gor.driver.providers.rows.sources.db.DbScope;
 import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.StreamWrappedGenomicIterator;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SqlSource extends RowIteratorSource {
+    private static final String PROJECT_ID = "project_id";
     private static final Logger log = LoggerFactory.getLogger(SqlSource.class);
     private SqlInfo sqlInfo;
 
@@ -59,7 +61,18 @@ public class SqlSource extends RowIteratorSource {
             header = "#" + String.join("\t", sqlInfo.columns());
         }
 
-        var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), new Object[]{}, sqlInfo.database());
+        Object[] constants = new Object[]{};
+        var scopes = DbScope.parse(sourceReference.securityContext);
+        if (!scopes.isEmpty()) {
+            for (var s : scopes) {
+                if (s.getColumn().toLowerCase().equals(PROJECT_ID)) {
+                    constants = new Object[]{s.getValue()};
+                    break;
+                }
+            }
+        }
+
+        var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
         return new StreamWrappedGenomicIterator(dataStream, header, true, true);
     }
 

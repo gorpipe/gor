@@ -33,7 +33,6 @@ import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
-import org.gorpipe.gor.driver.providers.rows.sources.db.DbSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;

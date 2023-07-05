@@ -462,6 +462,7 @@ public class UTestDriverBackedSecureFileReader {
         String dbviewquery = "db://rda:rda.v_variant_annotations";
         String dbsqlquery = "//db:select pos from rda.v_variant_annotations s";
         String sqlquery = "sql://select * from rda.v_variant_annotations s";
+        String sqlqueryWithScope = "sql://select * from rda.v_variant_annotations where project_id = #{project-id}";
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
         String securityContext2 = "dbscope=project_id#int#10005|||extrastuff=other";
 
@@ -474,8 +475,15 @@ public class UTestDriverBackedSecureFileReader {
         String[] content;
         // 1.  Fails, i.e. it succeeds when it should not.
         var data = reader.readAll(dbsqlquery);
+        Assert.assertEquals(11, data.length);
         var data2 = reader.readAll(sqlquery);
-        //Assert.assertThrows(IOException.class, () -> reader.readAll(dbsqlquery));
+        Assert.assertEquals(11, data2.length);
+        Assert.assertTrue(data2[1].contains("10004"));
+        Assert.assertTrue(data2[10].contains("10005"));
+        var data3 = reader.readAll(sqlqueryWithScope);
+        Assert.assertEquals(6, data3.length);
+        Assert.assertTrue(data3[1].contains("10004"));
+        Assert.assertTrue(data3[5].contains("10004"));
 
         var result1 = gorsat.TestUtils.runGorPipe("gorsql {select chromo,pos,project_id from rda.v_variant_annotations s} ", false, securityContext2);
 

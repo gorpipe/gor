@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public record SqlInfo(String[] columns, String table, String database, String statement) {
 
     private static final String SELECT = "select ";
-    private static final String FROM = " from ";
+    private static final String FROM = "from ";
     private static final String AS = " as ";
 
     public boolean hasHeader() {
@@ -26,7 +26,7 @@ public record SqlInfo(String[] columns, String table, String database, String st
             sql = sql.substring(databaseIdx + 1);
         }
 
-        sql = sql.toLowerCase();
+        sql = sql.toLowerCase().replace("\n", " ").replace("\r", " ");
         final int idxSelect = sql.indexOf(SELECT);
         final int idxFrom = sql.indexOf(FROM);
 

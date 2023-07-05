@@ -295,7 +295,7 @@ public class GorJavaUtilities {
 
     }
 
-    static String projectIdReplacement(String securityContext, String myCommand) {
+    public static String projectIdReplacement(String securityContext, String myCommand) {
         if (securityContext != null) {
             List<DbScope> dbScopes = DbScope.parse(securityContext);
             Integer projectIdValue = null;
