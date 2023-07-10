@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.gor.auth.AuthorizationAction;
 import org.gorpipe.gor.auth.GorAuthRoleMatcher;
 import org.gorpipe.gor.auth.SecurityPolicy;
@@ -124,6 +125,8 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
 
     @Override
     public void validateAccess(final DataSource dataSource) {
+        dataSource.validateAccess();
+
         if (dataSource.getSourceReference().isWriteSource()) {
             validateWriteAccess(dataSource);
         } else {
@@ -169,7 +172,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         if (!GorAuthRoleMatcher.hasRolebasedAccess(accessControlContext.getAuthInfo(), relativeSource,
                 AuthorizationAction.WRITE_LINK)) {
             if (DataUtil.isLink(validationPath)) {
-                throw new GorResourceException("Writing link files is not allowed", null);
+                throw new GorSecurityException("Writing link files is not allowed", null);
             }
         }
     }
@@ -187,7 +190,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         }
         String message = String.format("Invalid File Path: File path not within folders allowed! Path given: %s. " +
                 "Write locations are %s", fileName, Arrays.toString(writeLocations.toArray()));
-        throw new GorResourceException(message, fileName);
+        throw new GorSecurityException(message, null);
     }
 
     public void validateServerFileNames(String... filenames) {
@@ -206,7 +209,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
             filePath = PathUtils.relativize(realProjectRoot, filePath);
             if (filePath.isAbsolute() || !filePath.normalize().equals(filePath)) {
                 String message = String.format("Invalid File Path: File paths must be within project scope! Path given: %s, Project root is: %s", filename, projectRoot);
-                throw new GorResourceException(message, filename);
+                throw new GorSecurityException(message, null);
             }
         }
     }

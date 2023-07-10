@@ -25,6 +25,7 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.util.DataUtil;
@@ -81,12 +82,9 @@ public class UTestGorWrite {
     public void testWritePathWithUnAuthorizedServerLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, tmpdir.resolve("dbsnp.gor"));
-        try {
-            TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true);
-            Assert.fail("Should not allow generating link file");
-        } catch (GorResourceException e) {
-            Assert.assertTrue(e.getMessage().contains("/tmp/dbsnp3.gor"));
-        }
+
+        Assert.assertThrows( "Writing link to un-writable project location, throws exception",GorSecurityException.class, () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true));
+
     }
 
     @Test(expected = Exception.class)

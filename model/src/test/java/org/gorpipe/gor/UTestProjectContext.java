@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor;
 
-import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.AccessControlContext;
 import org.gorpipe.gor.model.DriverBackedSecureFileReader;
@@ -63,11 +63,11 @@ public class UTestProjectContext {
 
         Path sharedFilePath =  sharedDirPath.resolve("shared1.gor");
 
-        Files.write(sharedFilePath, "#chrom\tpos\tref\nchr1\t1\tA\n".getBytes(StandardCharsets.UTF_8));
+        Files.writeString(sharedFilePath, "#chrom\tpos\tref\nchr1\t1\tA\n");
 
-        Files.write(projectDirPath.resolve("user_data/shared2.gor"), "#chrom\tpos\tref\nchr1\t1\tB\n".getBytes(StandardCharsets.UTF_8));
-        Files.write(projectDirPath.resolve("test.gor"), "#chrom\tpos\tref\nchr1\t1\tC\n".getBytes(StandardCharsets.UTF_8));
-        Files.write(projectDirPath.resolve("user_data/test.gor"), "#chrom\tpos\tref\nchr1\t1\tD\n".getBytes(StandardCharsets.UTF_8));
+        Files.writeString(projectDirPath.resolve("user_data/shared2.gor"), "#chrom\tpos\tref\nchr1\t1\tB\n");
+        Files.writeString(projectDirPath.resolve("test.gor"), "#chrom\tpos\tref\nchr1\t1\tC\n");
+        Files.writeString(projectDirPath.resolve("user_data/test.gor"), "#chrom\tpos\tref\nchr1\t1\tD\n");
 
         createProjectToSharedSymbolicLink("shared1_symboliclink.gor", "shared1.gor");
         createProjectToSharedGorLink("shared1_gorlink.gor.link", "shared1.gor");
@@ -75,12 +75,12 @@ public class UTestProjectContext {
         createProjectToSharedSymbolicLink("user_data/shared1_symboliclink.gor", "shared1.gor");
         createProjectToSharedGorLink("user_data/shared1_gorlink.gor.link", "shared1.gor");
 
-        Files.write(projectDirPath.resolve("absolutelink.gor.link"), "/some/absolute/gorfile.gorz".getBytes(StandardCharsets.UTF_8));
-        Files.write(projectDirPath.resolve("s3link.gor.link"), "s3://nextcode-unittest/csa_test_data/data_sets/gor_driver_testfiles/dummy.gor".getBytes(StandardCharsets.UTF_8));
-        Files.write(projectDirPath.resolve("dblink.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}".getBytes(StandardCharsets.UTF_8));
+        Files.writeString(projectDirPath.resolve("absolutelink.gor.link"), "/some/absolute/gorfile.gorz");
+        Files.writeString(projectDirPath.resolve("s3link.gor.link"), "s3://nextcode-unittest/csa_test_data/data_sets/gor_driver_testfiles/dummy.gor");
+        Files.writeString(projectDirPath.resolve("dblink.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}");
 
-        Files.write(sharedDirPath.resolve("unaccessiable.gor.link"), "/some/absolute/gorfile.gorz".getBytes(StandardCharsets.UTF_8));
-        Files.write(sharedDirPath.resolve("unaccessiable.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}".getBytes(StandardCharsets.UTF_8));
+        Files.writeString(sharedDirPath.resolve("unaccessiable.gor.link"), "/some/absolute/gorfile.gorz");
+        Files.writeString(sharedDirPath.resolve("unaccessiable.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}");
 
     }
 
@@ -113,15 +113,14 @@ public class UTestProjectContext {
         validateAccessAndRead("test.gor");
     }
 
-
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isReadNotAllowedValidPath() {
-        validateAccessAndRead("../test.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateAccessAndRead("../test.gor"));
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isReadAllowedAbsolutePath() {
-        validateAccessAndRead("/test.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateAccessAndRead("/test.gor"));
     }
 
     @Test
@@ -171,23 +170,23 @@ public class UTestProjectContext {
         fileReader.resolveUrl("dblink.rep", false);
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isReadAllowedFromUnaccessibleGorLink() {
         // Should not be able to access, links with absolute paths (what ever they point to)
-        fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.gor.link").toString(), false);
+        Assert.assertThrows(GorSecurityException.class, () -> fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.gor.link").toString(), false));
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isReadAllowedFromUnaccessibleDbLink() {
         // Should not be able to access, links with absolute paths (what ever they point to)
-        fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.rep.link").toString(), false);
+        Assert.assertThrows(GorSecurityException.class, () -> fileReader.resolveUrl(sharedDir.getRoot().toPath().resolve("unaccessiable.rep.link").toString(), false));
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isReadAllowedFromUnaccessibleGorLinkRelativePath() {
         // Should not be able to access, links with relative paths outside project root (what ever they point to)
         Path releativePath = projectDir.getRoot().toPath().relativize(sharedDir.getRoot().toPath());
-        fileReader.resolveUrl(releativePath.resolve("unaccessiable.gor.link").toString(), false);
+        Assert.assertThrows(GorSecurityException.class, () -> fileReader.resolveUrl(releativePath.resolve("unaccessiable.gor.link").toString(), false));
     }
 
     // Write
@@ -199,12 +198,11 @@ public class UTestProjectContext {
         } catch (Exception e) {
             throw new GorSystemException("Failed", e);
         }
-
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteAllowedEmpty() {
-        validateWriteAccess("");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess(""));
     }
 
     @Test
@@ -212,19 +210,19 @@ public class UTestProjectContext {
         validateWriteAccess("user_data/test.gor");
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteNotAllowedValidPath() {
-        validateWriteAccess("user_data1/test.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("user_data1/test.gor"));
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteAllowedAbsolutePath() {
-        validateWriteAccess("/user_data/test.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("/user_data/test.gor"));
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteAllowedWithDots() {
-        validateWriteAccess("user_data/../test.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("user_data/../test.gor"));
     }
 
     @Test
@@ -232,14 +230,14 @@ public class UTestProjectContext {
         validateWriteAccess("user_data/folder/../test.gor");
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteAllowedWhenPrefixMatches() {
-        validateWriteAccess("user_data2/folder/../test.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("user_data2/folder/../test.gor"));
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteAllowedSharedSymbolicLink() {
-        validateWriteAccess("shared1_symboliclink.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("shared1_symboliclink.gor"));
     }
 
     @Test
@@ -247,9 +245,9 @@ public class UTestProjectContext {
         validateWriteAccess("user_data/shared1_symboliclink.gor");
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteAllowedSharedGorLink() {
-        validateWriteAccess("shared1_gorlink.gor");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("shared1_gorlink.gor"));
     }
 
     @Test
@@ -257,9 +255,9 @@ public class UTestProjectContext {
         validateWriteAccess("user_data/shared1_gorlink.gor");
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void isWriteCreateGorLink() {
-        validateWriteAccess("user_data/custom.gor.link");
+        Assert.assertThrows(GorSecurityException.class, () -> validateWriteAccess("user_data/custom.gor.link"));
     }
 
 

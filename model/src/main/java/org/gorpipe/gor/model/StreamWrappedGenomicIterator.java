@@ -97,7 +97,7 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
     @Override
     public Row next() {
         readHeader();
-        return new RowBase( isNor ? "ChrN\t0\t" + iterator.next() : iterator.next());
+        return new RowBase(iterator.next(), true);
     }
 
     private void readHeader() {
@@ -118,6 +118,6 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
         if (header.startsWith("#")) {
             header = header.substring(1);
         }
-        return isNor ? "#Chrom\tPos\t" + header : header;
+        return header;
     }
 }

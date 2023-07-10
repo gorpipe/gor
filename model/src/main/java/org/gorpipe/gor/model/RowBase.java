@@ -59,6 +59,18 @@ public class RowBase extends Row implements Serializable {
         this(input, countColumns(input));
     }
 
+    public RowBase(CharSequence input, boolean nor) {
+        allCols = input;
+        splitArray = createSplitArray(allCols, countColumns(input));
+        if (nor) {
+            chr = "ChrN";
+            pos = 0;
+        } else {
+            chr = colAsString(0).toString();
+            pos = colAsInt(1);
+        }
+    }
+
     public static Row getProgressRow(String chr, int pos) {
         final Row toReturn = new RowBase(chr + "\t" + pos + "\tprogress");
         toReturn.isProgress = true;

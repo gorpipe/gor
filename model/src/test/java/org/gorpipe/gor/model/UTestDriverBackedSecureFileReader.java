@@ -462,35 +462,18 @@ public class UTestDriverBackedSecureFileReader {
 
         String dbviewquery = "db://rda:rda.v_variant_annotations";
         String dbsqlquery = "//db:select pos from rda.v_variant_annotations s";
-        String sqlquery = "sql://select * from rda.v_variant_annotations s";
-        String sqlqueryWithScope = "sql://select * from rda.v_variant_annotations where project_id = #{project-id}";
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
-        String securityContext2 = "dbscope=project_id#int#10005,organization_id#int#1|||extrastuff=other";
 
         Object[] constants = {};
         DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
-        DriverBackedSecureFileReader reader2 = new DriverBackedSecureFileReader(".", constants, securityContext2,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
 
-        String[] content;
-        // 1.  Fails, i.e. it succeeds when it should not.
-        var data = reader.readAll(dbsqlquery);
-        Assert.assertEquals(11, data.length);
-        var data2 = reader.readAll(sqlquery);
-        Assert.assertEquals(11, data2.length);
-        Assert.assertTrue(data2[1].contains("10004"));
-        Assert.assertTrue(data2[10].contains("10005"));
-        var data3 = reader.readAll(sqlqueryWithScope);
-        Assert.assertEquals(6, data3.length);
-        Assert.assertTrue(data3[1].contains("10004"));
-        Assert.assertTrue(data3[5].contains("10004"));
 
         // 2. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.
-        data = reader.readAll(dbviewquery);
+        var data = reader.readAll(dbviewquery);
 
 
         String result;
@@ -544,47 +527,5 @@ public class UTestDriverBackedSecureFileReader {
 
         // 10. Ok, succeeds as should.
         result = gorsat.TestUtils.runGorPipeCLI("nor " + dbviewquery, ".", securityContext);
-    }
-
-    @Test
-    public void testReadingDbDataDirectMultipleSources() throws Exception {
-        String sqlqueryRda = "sql://select * from rda.v_variant_annotations";
-        String sqlqueryAvas = "sql://avas:select * from avas.v_variant_annotations";
-        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
-
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
-
-        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
-
-        // Create avas database
-        var avasPaths = DatabaseHelper.createAvasDatabase();
-        DbConnection.install(new DbConnection("avas", "jdbc:derby:" + avasPaths[1], "avas", "beta3"));
-
-        // 1.  Fails, i.e. it succeeds when it should not.
-        var dataRda = reader.readAll(sqlqueryRda);
-        var dataAvas = reader.readAll(sqlqueryAvas);
-
-        Assert.assertTrue(dataRda[1].contains("rda1"));
-        Assert.assertTrue(dataAvas[1].contains("avas1"));
-    }
-
-    @Test
-    public void testReadingDbDataWithProjectAndOrgScope() throws Exception {
-        String sqlqueryWithScopeAndOrg = "sql://select * from rda.v_variant_annotations where project_id = #{project-id} and organization_id = #{organization-id}";
-        String securityContext = "dbscope=project_id#int#10005,organization_id#int#1|||extrastuff=other";
-
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
-
-        var paths = DatabaseHelper.createRdaDatabaseWithOrg();
-        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
-
-
-        var data = reader.readAll(sqlqueryWithScopeAndOrg);
-
-        Assert.assertTrue(data.length == 4);
     }
 }

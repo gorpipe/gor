@@ -56,10 +56,25 @@ public final class ExceptionUtilities {
             return gorDataExceptionToString((GorDataException) exception);
         } else if (exception instanceof GorSystemException) {
             return gorSystemExceptionToString((GorSystemException) exception);
+        } else if (exception instanceof GorSecurityException) {
+            return gorSecurityExceptionToString((GorSecurityException) exception);
         } else {
             // Unsupported exception, aka not a GorException
             return "An error has occurred.\n" + exception.getMessage();
         }
+    }
+
+    private static String gorSecurityExceptionToString(GorSecurityException exception) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("==== Security Error ====\n");
+        builder.append(exception.getMessage());
+        printCommandSource(exception, builder);
+        printRequestId(exception, builder);
+        printStackTrace(exception, builder);
+        printEndMessage(builder);
+        builder.append("\n");
+
+        return builder.toString();
     }
 
     private static String gorParsingExceptionToString(GorParsingException exception) {

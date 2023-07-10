@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver.providers.rows.sources.sql;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -133,17 +134,17 @@ public class SqlSource extends RowIteratorSource {
             sqlInfo = getInfoFromSql(sql);
         }
 
-        var table = sqlInfo.table();
+        var tables = sqlInfo.tables();
         var database = sqlInfo.database();
 
         if (database == null) {
             database = DbConnection.DEFAULT_DBSOURCE;
         }
 
-        if (table.length() > 0 && database.length() > 0) {
+        if (tables.length > 0 && tables[0].length() > 0 && database.length() > 0) {
             final DbConnection dbsource = DbConnection.lookup(database);
             if (dbsource != null) {
-                timestamp = dbsource.queryDefaultTableChange(table);
+                timestamp = dbsource.queryDefaultTableChange(tables[0]);
             }
         }
         return new SourceMetadata(this, sourceReference.getUrl(), timestamp, null, false);
@@ -155,13 +156,22 @@ public class SqlSource extends RowIteratorSource {
     }
 
     private String getSqlfromSource() {
-        String resolvedUrl = PathUtils.fixDbSchema(sourceReference.getUrl());
+        String resolvedUrl = PathUtils.fixDbSchema(sourceReference.getUrl().replace("\n", " ").replace("\r", " "));
 
         if (!SqlSourceType.SQL.match(resolvedUrl)) {
             throw new GorResourceException("SQLSource: content must start with a valid sql source type", resolvedUrl);
         }
 
         return resolvedUrl.substring(6);
+    }
+
+    @Override
+    public void validateAccess() {
+        var ref = this.sourceReference;
+
+        if (!ref.isCreatedFromLink()) {
+            throw new GorSecurityException("SQLSource: source must be created from a link: " + ref.getUrl(), null);
+        }
     }
 
     private SqlInfo getInfoFromSql(String sql) {
@@ -171,7 +181,7 @@ public class SqlSource extends RowIteratorSource {
             throw new GorResourceException("SQLSource: no columns specified", sql);
         }
 
-        if (sqlInfo.table().length() == 0) {
+        if (sqlInfo.tables().length == 0) {
             throw new GorResourceException("SQLSource: no table specified", sql);
         }
 

@@ -5,10 +5,11 @@ import org.gorpipe.gor.util.StringUtil;
 
 import java.util.ArrayList;
 
-public record SqlInfo(String[] columns, String table, String database, String statement) {
+public record SqlInfo(String[] columns, String[] tables, String database, String statement) {
 
     private static final String SELECT = "select ";
     private static final String FROM = "from ";
+    private static final String WHERE = "where ";
     private static final String AS = " as ";
 
     public boolean hasHeader() {
@@ -29,6 +30,11 @@ public record SqlInfo(String[] columns, String table, String database, String st
         sql = sql.toLowerCase().replace("\n", " ").replace("\r", " ");
         final int idxSelect = sql.indexOf(SELECT);
         final int idxFrom = sql.indexOf(FROM);
+        int idxWhere = sql.indexOf(WHERE);
+
+        if (idxWhere < 0) {
+            idxWhere = sql.length();
+        }
 
         if (idxSelect < 0 || idxFrom < 0) { // Must find columns
             throw new GorResourceException("Invalid sql query, must include SELECT and FROM", sql);
@@ -46,8 +52,14 @@ public record SqlInfo(String[] columns, String table, String database, String st
             }
         }
 
-        var tableName = sql.substring(idxFrom + FROM.length()).trim();
+        var tables = sql.substring(idxFrom + FROM.length(), idxWhere).trim().split(" ");
+        var tableNames = new ArrayList<String>();
+        for (String t : tables) {
+            if (!t.isBlank()) {
+                tableNames.add(t.trim());
+            }
+        }
 
-        return new SqlInfo(columns.toArray(String[]::new), tableName, databaseName, sql);
+        return new SqlInfo(columns.toArray(String[]::new), tableNames.toArray(String[]::new), databaseName, sql);
     }
 }

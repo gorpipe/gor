@@ -1,6 +1,7 @@
 package org.gorpipe.s3.shared;
 
 import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
@@ -304,21 +305,11 @@ public class ITestS3Shared {
         FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
 
-        try {
-            fileReader.resolveUrl(DataUtil.toFile("../a", DataType.GORZ));
-            Assert.fail("Should not be resolved, link outside project");
-        } catch (GorResourceException e) {
-            // Expected
-            Assert.assertTrue(e.getMessage().contains("File paths must be within project scope"));
-        }
+        var e1 = Assert.assertThrows("Should not be resolved, link outside project", GorSecurityException.class, () -> fileReader.resolveUrl(DataUtil.toFile("../a", DataType.GORZ)));
+        Assert.assertTrue(e1.getMessage().contains("File paths must be within project scope"));
 
-        try {
-            fileReader.resolveUrl(DataUtil.toLinkFile("../a", DataType.GORZ));
-            Assert.fail("Should not be resolved, link outside project");
-        } catch (GorResourceException e) {
-            // Expected
-            Assert.assertTrue(e.getMessage().contains("File paths must be within project scope"));
-        }
+        var e2 = Assert.assertThrows("Should not be resolved, link outside project", GorSecurityException.class, () -> fileReader.resolveUrl(DataUtil.toLinkFile("../a", DataType.GORZ)));
+        Assert.assertTrue(e2.getMessage().contains("File paths must be within project scope"));
      }
 
     @Test
@@ -372,17 +363,13 @@ public class ITestS3Shared {
     }
 
     @Test
-    public void testProjectWriteRootServer() throws IOException {
+    public void testProjectWriteRootServer() {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
-        try {
-            runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
-            Assert.fail("Server context should not allow write to root");
-        } catch (GorResourceException gre) {
-            Assert.assertTrue(gre.getMessage().contains("File path not within folders allowed"));
-        }
+        var e = Assert.assertThrows("Server context should not allow write to root", GorSecurityException.class, () -> runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext));
+        Assert.assertTrue(e.getMessage().contains("File path not within folders allowed"));
     }
 
     @Test
@@ -426,17 +413,14 @@ public class ITestS3Shared {
     }
 
     @Test
-    public void testSharedWriteRootServer() throws IOException {
+    public void testSharedWriteRootServer() {
         String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
-        try {
-            runGorPipeServer("gorrow 1,2,3 | write s3region://shared/" + dataPath, gorRoot, securityContext);
-            Assert.fail("Server context should not allow write to root");
-        } catch (GorResourceException gre) {
-            Assert.assertTrue(gre.getMessage().contains("File path not within folders allowed"));
-        }
+
+        var e = Assert.assertThrows("Server context should not allow write to root", GorSecurityException.class, () -> runGorPipeServer("gorrow 1,2,3 | write s3region://shared/" + dataPath, gorRoot, securityContext));
+        Assert.assertTrue(e.getMessage().contains("File path not within folders allowed"));
     }
 
     @Test
