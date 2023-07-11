@@ -19,7 +19,7 @@ public class UTestDriverBackedFileReader {
 
     @Before
     public void init() {
-        driverBackedFileReader = new DriverBackedFileReader("", temporaryFolder.getRoot().getAbsolutePath(), null);
+        driverBackedFileReader = new DriverBackedFileReader("", temporaryFolder.getRoot().getAbsolutePath());
     }
 
     @Test

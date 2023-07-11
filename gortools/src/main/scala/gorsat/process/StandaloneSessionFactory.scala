@@ -48,7 +48,7 @@ class StandaloneSessionFactory(aliasFile:String, configFile:String, projectName:
     val requestId = UUID.randomUUID().toString
     val session = new GorSession(requestId)
 
-    val fileReader = new DriverBackedFileReader(null, GorStandalone.getStandaloneRoot, null);
+    val fileReader = new DriverBackedFileReader(null, GorStandalone.getStandaloneRoot);
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
         .setCacheDir(CACHE_DIR_NAME)

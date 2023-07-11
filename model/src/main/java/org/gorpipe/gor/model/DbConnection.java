@@ -42,6 +42,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -361,22 +362,11 @@ public class DbConnection {
      *
      * @param content
      * @param constants
-     * @return Stream tsv formatted lines with header first and data lines following.
-     */
-    public static Stream<String> getDBLinkStream(String content, Object[] constants) {
-        return getDBLinkStream(content, constants, DEFAULT_DBSOURCE);
-    }
-
-    /**
-     * Wrap a DbNorIterator into Stream as a proper source to db source link files out into the gor system.
-     *
-     * @param content
-     * @param constants
      * @param source
      * @return Stream tsv formatted lines with header first and data lines following.
      */
     @SuppressWarnings("squid:S2095") //resource should not be closed since it being closed by the return object
-    public static Stream<String> getDBLinkStream(String content, Object[] constants, String source) {
+    public static Stream<String> getDBLinkStream(String content, Map<String, Object> constants, String source) {
         final DbConnection dbsource = DbConnection.lookup(nullSafeSource(source));
         if (dbsource == null) {
             throw new GorResourceException("Error: Did not find database source named "+ nullSafeSource(source) +". ", content);

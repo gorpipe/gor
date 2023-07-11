@@ -96,7 +96,7 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
   }
 
   private def createFileReader(gorRoot: String): DriverBackedFileReader = {
-    new DriverBackedFileReader(securityContext, gorRoot, null)
+    new DriverBackedFileReader(securityContext, gorRoot)
   }
 
   private def createQueryHandler(queryHandlerName: String, session: GorSession): GorParallelQueryHandler = {

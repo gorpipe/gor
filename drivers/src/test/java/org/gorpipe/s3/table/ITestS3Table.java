@@ -91,7 +91,7 @@ public class ITestS3Table {
         BundledCredentials bundleCreds = b.build();
         String securityContext = bundleCreds.addToSecurityContext(null);
 
-        fileReader = new DriverBackedFileReader(securityContext, workDirPath.resolve("some_project").toString(), new Object[]{});
+        fileReader = new DriverBackedFileReader(securityContext, workDirPath.resolve("some_project").toString());
 
     }
 

@@ -67,7 +67,7 @@ public class GorShellSessionFactory extends GorSessionFactory {
 
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
 
-        var fileReader = new DriverBackedFileReader("", this.root, null);
+        var fileReader = new DriverBackedFileReader("", this.root);
         FileCache fileCache;
         if(fileCacheEnabled) {
             fileCache = new LocalFileCacheClient(fileReader, this.cacheDir);

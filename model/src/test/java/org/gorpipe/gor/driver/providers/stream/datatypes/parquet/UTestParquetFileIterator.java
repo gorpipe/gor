@@ -50,7 +50,7 @@ public class UTestParquetFileIterator {
     public void setup() {
         gorSession = new GorSession("dummy");
         norSession = new GorSession("dummy");
-        DriverBackedFileReader fileReader = new DriverBackedFileReader("", Path.of(".").toAbsolutePath().toString(), new Object[] {});
+        DriverBackedFileReader fileReader = new DriverBackedFileReader("", Path.of(".").toAbsolutePath().toString());
         ProjectContext projectContext = new ProjectContext.Builder().setFileReader(fileReader).build();
         SystemContext systemContext = new SystemContext.Builder().build();
         gorSession.init(projectContext, systemContext, null);

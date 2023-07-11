@@ -85,7 +85,7 @@ public class ITestTableManager {
         Files.createDirectory(workDirPath.resolve("some_project"));
 
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
-        s3FileReader = new DriverBackedFileReader(securityContext, projectRoot, new Object[]{});
+        s3FileReader = new DriverBackedFileReader(securityContext, projectRoot);
     }
 
     @Test

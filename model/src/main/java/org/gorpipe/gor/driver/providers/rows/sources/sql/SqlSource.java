@@ -38,11 +38,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SqlSource extends RowIteratorSource {
     private static final String PROJECT_ID = "project_id";
+    private static final String DB_PROJECT_ID = "project-id";
     private static final String ORGANIZATION_ID = "organization_id";
-    private static final Logger log = LoggerFactory.getLogger(SqlSource.class);
+    private static final String DB_ORGANIZATION_ID = "organization-id";
+
     private SqlInfo sqlInfo;
 
     public SqlSource(SourceReference sourceReference) {
@@ -65,18 +68,16 @@ public class SqlSource extends RowIteratorSource {
             header = "#" + String.join("\t", sqlInfo.columns());
         }
 
-        Object[] constants = new Object[]{};
+        var constants = new HashMap<String, Object>();
         var scopes = DbScope.parse(sourceReference.securityContext);
         if (!scopes.isEmpty()) {
-            ArrayList<Object> constantsList = new ArrayList<>();
             for (var s : scopes) {
                 if (s.getColumn().equalsIgnoreCase(PROJECT_ID)) {
-                    constantsList.add(s.getValue());
+                    constants.put(DB_PROJECT_ID, s.getValue());
                 } else if (s.getColumn().equalsIgnoreCase(ORGANIZATION_ID)) {
-                    constantsList.add(s.getValue());
+                    constants.put(DB_ORGANIZATION_ID, s.getValue());
                 }
             }
-            constants = constantsList.toArray();
         }
 
         var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());

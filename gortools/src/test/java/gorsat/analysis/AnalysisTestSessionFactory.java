@@ -51,7 +51,7 @@ public class AnalysisTestSessionFactory extends GorSessionFactory {
 
         String root = "";
         String configFile = "";
-        var fileReader = new DriverBackedFileReader("", root, null);
+        var fileReader = new DriverBackedFileReader("", root);
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
         projectContextBuilder
                 .setRoot(root)

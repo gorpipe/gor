@@ -23,13 +23,14 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.util.db.ConnectionPool;
+import org.gorpipe.gor.util.SqlReplacer;
 import org.gorpipe.util.Pair;
+import org.gorpipe.util.db.ConnectionPool;
 
-import java.net.URI;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -56,7 +57,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
      * @param constants
      * @param pool
      */
-    public DbNorIterator(String content, Object[] constants, ConnectionPool pool) {
+    public DbNorIterator(String content, Map<String, Object> constants, ConnectionPool pool) {
 
         // Replace scoping variables.
         Pair<String, Object[]> sqlWithParams = replaceConstants(content, constants);
@@ -108,31 +109,21 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
      * @return
      */
     // TODO: Clean up this code.
-    private static Pair<String, Object[]> replaceConstants(final String sql, final Object[] constants) {
-        final ArrayList<Object> values = new ArrayList<>();
-        final StringBuilder sb = new StringBuilder(sql);
-        if (constants != null && constants.length > 0) {
-            int idx = sb.indexOf("#{");    // Find and replace all #{...} variables that are defined
-            while (idx >= 0) {
-                final int start = idx + 2; // The start of the variable name
-                for (int i = 0; i < VARS.length; i++) {
-                    final int end = start + VARS[i].length();
-                    if (end + 1 <= sb.length()) {
-                        if (VARS[i].equals(sb.substring(start, end)) && sb.charAt(end) == '}') {
-                            // Found a variable, must replace sql text with ? and add value to value list
-                            if (i >= constants.length) {
-                                throw new RuntimeException("Unexpected variable with index " + i);
-                            }
-                            values.add(constants[i]);
-                            sb.replace(start - 2, end + 1, "?");
-                            break;
-                        }
-                    }
+    private static Pair<String, Object[]> replaceConstants(final String sql, final Map<String, Object> constants) {
+        var replacements = SqlReplacer.replacementList(sql);
+        var newSql = SqlReplacer.replaceWithSqlParameter(sql);
+        var usedConstants = new ArrayList<>();
+
+        if (constants != null) {
+            for (var key : replacements) {
+                if (!constants.containsKey(key)) {
+                    throw new GorResourceException("Unexpected constant in sql query: " + key, null);
                 }
-                idx = sb.indexOf("#{", idx);
+                usedConstants.add(constants.get(key));
             }
         }
-        return new Pair<>(sb.toString(), values.toArray());
+
+        return new Pair<>(newSql, usedConstants.toArray());
     }
 
 

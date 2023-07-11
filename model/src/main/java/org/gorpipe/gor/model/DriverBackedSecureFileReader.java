@@ -60,13 +60,12 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
      * Create reader
      *
      * @param commonRoot            resolved session root
-     * @param constants             the session constants available for file reader
      * @param securityContext       access keys used by the driver
      * @param accessControlContext  access control context
      */
-    public DriverBackedSecureFileReader(String commonRoot, Object[] constants,
+    public DriverBackedSecureFileReader(String commonRoot,
                                         String securityContext, AccessControlContext accessControlContext) {
-        super(securityContext, commonRoot, constants);
+        super(securityContext, commonRoot);
 
         this.accessControlContext = accessControlContext != null ? accessControlContext : AccessControlContext.builder().build();
 
@@ -87,11 +86,6 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
             return Util.md5(dictionary);
         }
         return super.getDictionarySignature(dictionary, tags);
-    }
-
-    @Override
-    Stream<String> directDbUrl(String resolvedUrl) {
-        throw new GorSystemException("Direct queries on db urls not allowed on server. Trying to open " + resolvedUrl, null);
     }
 
     @Override
@@ -242,7 +236,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
     @Override
     public DriverBackedFileReader unsecure() {
         if (unsecure == null) {
-            unsecure = new DriverBackedFileReader(getSecurityContext(), getCommonRoot(), getConstants());
+            unsecure = new DriverBackedFileReader(getSecurityContext(), getCommonRoot());
         }
         return unsecure;
     }

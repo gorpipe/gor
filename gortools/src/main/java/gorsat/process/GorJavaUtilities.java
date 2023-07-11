@@ -310,7 +310,7 @@ public class GorJavaUtilities {
     }
 
     public static GenomicIterator getDbIteratorSource(String sqlQuery, boolean gortable, final String source, boolean scoping) {
-        Supplier<Stream<String>> streamSupplier = () -> DbConnection.getDBLinkStream( sqlQuery, new Object[]{}, source);
+        Supplier<Stream<String>> streamSupplier = () -> DbConnection.getDBLinkStream( sqlQuery, Map.of(), source);
         gorsat.Iterators.IteratorSource its;
         its = gortable ? new GorStreamIterator(streamSupplier, scoping) : new NorStreamIterator(streamSupplier);
         return new gorsat.Iterators.SingleIteratorSource(its, "dbit");

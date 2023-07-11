@@ -1,39 +1,38 @@
 package org.gorpipe.s3.shared;
 
 import org.gorpipe.base.config.ConfigManager;
-import org.gorpipe.exceptions.GorSecurityException;
-import org.gorpipe.gor.driver.GorDriverConfig;
-import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.util.DataUtil;
-import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.DriverBackedSecureFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
+import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.test.IntegrationTests;
+import org.gorpipe.utils.DriverUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.UUID;
 
-import static gorsat.TestUtils.*;
+import static gorsat.TestUtils.runGorPipeCLI;
+import static gorsat.TestUtils.runGorPipeServer;
 import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 import static org.gorpipe.utils.DriverUtils.createSecurityContext;
 
@@ -84,8 +83,8 @@ public class ITestS3Shared {
 
         String dataPath = DataUtil.toFile("user_data/a", DataType.GOR);
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
-        Assert.assertTrue(source != null);
-        Assert.assertTrue(!source.exists());
+        Assert.assertNotNull(source);
+        Assert.assertFalse(source.exists());
         Assert.assertEquals("s3data://project/" + dataPath, source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/a/a.gor", source.getSourceReference().getUrl());
     }
@@ -274,9 +273,9 @@ public class ITestS3Shared {
         Path gorRoot  = workDirPath.resolve("some_project");
         Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
-        Files.write(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ).getBytes(StandardCharsets.UTF_8));
+        Files.writeString(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ));
 
-        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
+        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(),
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
         DataSource source = fileReader.resolveUrl(DataUtil.toFile("a", DataType.GORZ));
 
@@ -300,9 +299,9 @@ public class ITestS3Shared {
         Path gorRoot  = workDirPath.resolve("some_project");
         Path linkFile = workDirPath.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
-        Files.write(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ).getBytes(StandardCharsets.UTF_8));
+        Files.writeString(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ));
 
-        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(), null,
+        FileReader fileReader = new DriverBackedSecureFileReader(gorRoot.toString(),
                 createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET), null);
 
         var e1 = Assert.assertThrows("Should not be resolved, link outside project", GorSecurityException.class, () -> fileReader.resolveUrl(DataUtil.toFile("../a", DataType.GORZ)));
@@ -503,7 +502,7 @@ public class ITestS3Shared {
             Assert.assertEquals(expected, result);
 
         } finally {
-            FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot, null);
+            FileReader fileReader = new DriverBackedFileReader(securityContext, gorRoot);
             fileReader.deleteDirectory("s3data://project/" + dataPath);
         }
     }

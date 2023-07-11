@@ -50,7 +50,7 @@ public class UTestProjectContext {
         ArrayList<String> locations = new ArrayList<>();
         locations.add("user_data");
         locations.add("studies");
-        fileReader = new DriverBackedSecureFileReader(projectDir.getRoot().getCanonicalPath(), null, "",
+        fileReader = new DriverBackedSecureFileReader(projectDir.getRoot().getCanonicalPath(), "",
                 AccessControlContext.builder().withWriteLocations(locations).build());
 
         File userDataDir = new File(fileReader.getCommonRoot() + "/user_data");

@@ -61,30 +61,24 @@ public class DriverBackedFileReader extends FileReader {
     private static final Logger log = LoggerFactory.getLogger(DriverBackedFileReader.class);
 
     private final String securityContext;
-    private final Object[] constants;
     protected final String commonRoot;
 
     public DriverBackedFileReader(String securityContext) {
-        this(securityContext, null, new Object[]{});
+        this(securityContext, null);
     }
 
-    public DriverBackedFileReader(String securityContext, String commonRoot, Object[] constants) {
+    public DriverBackedFileReader(String securityContext, String commonRoot) {
         this.securityContext = securityContext;
         if ((commonRoot == null || commonRoot.length() < 1) && GorStandalone.isStandalone()) {
             this.commonRoot = PathUtils.markAsFolder(GorStandalone.getStandaloneRoot());
         } else {
             this.commonRoot = StringUtil.isEmpty(commonRoot) ? DEFAULT_COMMON_ROOT :  PathUtils.markAsFolder(commonRoot);
         }
-        this.constants = constants;
     }
 
     @Override
     public String getCommonRoot() {
         return commonRoot;
-    }
-
-    public Object[] getConstants() {
-        return constants;
     }
 
     @Override
@@ -362,10 +356,6 @@ public class DriverBackedFileReader extends FileReader {
             super.close();
             source.close();
         }
-    }
-
-    Stream<String> directDbUrl(String resolvedUrl) {
-        return DbConnection.getDBLinkStream("sql://select * from " + resolvedUrl.substring(resolvedUrl.indexOf(':', 5) + 1), constants);
     }
 
     private Stream<String> readAndClose(DataSource source) throws IOException {

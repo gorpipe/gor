@@ -31,10 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -74,7 +71,7 @@ public class UTestDriverBackedSecureFileReader {
     @Test
     public void testFileSignature() throws Exception {
         File f1 = File.createTempFile("test", DataType.TXT.suffix);
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null, null,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
         final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
         Assert.assertEquals(f1SignatureA, reader.getFileSignature(f1.getAbsolutePath()));
@@ -82,7 +79,7 @@ public class UTestDriverBackedSecureFileReader {
         Files.write(f1.toPath(), "somedata".getBytes());
         f1.setLastModified(System.currentTimeMillis() + 10000);
         final String f1SignatureB = reader.getFileSignature(f1.getAbsolutePath());
-        Assert.assertFalse(f1SignatureA.equals(f1SignatureB));
+        Assert.assertNotEquals(f1SignatureA, f1SignatureB);
 
         DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
         for (int i = 0; i < 10; i++) {
@@ -99,10 +96,6 @@ public class UTestDriverBackedSecureFileReader {
      */
     @Test
     public void testLinkFiles() throws Exception {
-
-        final Object[] constants = {};
-
-
         // Setup temporary file structure to test withh
         final Path root = Files.createTempDirectory("symlinktest");
         final Path d1 = Files.createDirectory(Paths.get(root.toString(), "d1"));
@@ -132,7 +125,7 @@ public class UTestDriverBackedSecureFileReader {
         // Test with allow absolute links.
         //
 
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(d1.toString() + "/", constants,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(d1 + "/",
                 null, AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         final String[] fileContent = reader.readAll(file.toString());
@@ -151,7 +144,7 @@ public class UTestDriverBackedSecureFileReader {
 
         // Read form link file.
         try (Stream<String> r = reader.readFile(link2.toString().replace(DataType.LINK.suffix, ""))) {
-            r.limit(1).collect(Collectors.toList()).get(0);
+            r.limit(1).toList().get(0);
         }
 
         // Test fallback links, i.e. check files that do not exists, but link file exists, will be found.
@@ -163,7 +156,7 @@ public class UTestDriverBackedSecureFileReader {
         // Test with not allow absolute links.
         //
 
-        reader = new DriverBackedSecureFileReader(d1 + "/", constants, null, null);
+        reader = new DriverBackedSecureFileReader(d1 + "/", null, null);
 
         // Test standard link file (absolute path in link).
         final String[] linke1Content2 = reader.readAll(link1name);
@@ -196,8 +189,7 @@ public class UTestDriverBackedSecureFileReader {
      */
     @Test
     public void testSymbolicLinks() throws Exception {
-        final Object[] constants = {};
-        final DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+        final DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Setup temporary file structure to test with
@@ -262,10 +254,7 @@ public class UTestDriverBackedSecureFileReader {
         final File f1 = File.createTempFile("test", DataType.TXT.suffix);
         Files.write(f1.toPath(), "somedata".getBytes());
 
-
-        Object[] constants = {};
-
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Test read standard file
@@ -303,11 +292,8 @@ public class UTestDriverBackedSecureFileReader {
     public void testReadingDbData() throws Exception {
         String dbUrl = "jdbc:derby:" + paths[1];
         String header;
-        String[] lines;
 
-        Object[] constants = {};
-
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Test reading gor.db.credentials
@@ -353,9 +339,8 @@ public class UTestDriverBackedSecureFileReader {
         Assert.assertNotNull(signature);
 
         // Test fallback for //db:
-        final String fallbackfile = linkfile;
-        String[] fallbacklines = reader.readAll(fallbackfile);
-        Assert.assertTrue("Fallback must match link", Arrays.equals(flines, fallbacklines));
+        String[] fallbacklines = reader.readAll(linkfile);
+        Assert.assertArrayEquals("Fallback must match link", flines, fallbacklines);
 
     }
 
@@ -363,11 +348,8 @@ public class UTestDriverBackedSecureFileReader {
     public void testReadingSqlData() throws Exception {
         String dbUrl = "jdbc:derby:" + paths[1];
         String header;
-        String[] lines;
 
-        Object[] constants = {};
-
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Test reading gor.db.credentials
@@ -413,9 +395,8 @@ public class UTestDriverBackedSecureFileReader {
         Assert.assertNotNull(signature);
 
         // Test fallback for //db:
-        final String fallbackfile = linkfile;
-        String[] fallbacklines = reader.readAll(fallbackfile);
-        Assert.assertTrue("Fallback must match link", Arrays.equals(flines, fallbacklines));
+        String[] fallbacklines = reader.readAll(linkfile);
+        Assert.assertArrayEquals("Fallback must match link", flines, fallbacklines);
 
     }
 
@@ -424,11 +405,10 @@ public class UTestDriverBackedSecureFileReader {
         Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
         Files.write(f1, "somedata".getBytes());
 
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder()
                         .withAllowAbsolutePath(true)
-                        .withWriteLocations(Arrays.asList(new String[]{workDirPath.toString()})).build());
+                        .withWriteLocations(List.of(workDirPath.toString())).build());
 
         Path c1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.TXT));
         reader.copy(f1.toString(), c1.toString());
@@ -443,11 +423,10 @@ public class UTestDriverBackedSecureFileReader {
         Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
         Files.write(f1, "somedata".getBytes());
 
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", constants, null,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
                 AccessControlContext.builder()
                         .withAllowAbsolutePath(true)
-                        .withWriteLocations(Arrays.asList(new String[]{workDirPath.toString()})).build());
+                        .withWriteLocations(List.of(workDirPath.toString())).build());
 
         Path c1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.TXT));
         reader.move(f1.toString(), c1.toString());
@@ -465,7 +444,7 @@ public class UTestDriverBackedSecureFileReader {
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
 
         Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
 
@@ -474,7 +453,6 @@ public class UTestDriverBackedSecureFileReader {
 
         // 2. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.
         var data = reader.readAll(dbviewquery);
-
 
         String result;
 

@@ -86,13 +86,13 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     val emptyGorRoot = StringUtil.isEmpty(gorRoot)
     if (!emptyGorRoot || !StringUtil.isEmpty(securityContext)) {
       if(server) {
-        new DriverBackedSecureFileReader(gorRoot, null, securityContext,
+        new DriverBackedSecureFileReader(gorRoot, securityContext,
           AccessControlContext.builder().withWriteLocations(writeLocations).build())
       } else {
-        new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot, null)
+        new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot)
       }
     } else {
-      new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot, null)
+      new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot)
     }
   }
 }

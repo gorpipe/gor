@@ -59,7 +59,7 @@ public class UTestNor {
     public void setUp() throws IOException {
         projectContext = new ProjectContext.Builder()
                 .setRoot(projectDir.getRoot().getCanonicalPath())
-                .setFileReader(new DriverBackedFileReader(null, ".", null))
+                .setFileReader(new DriverBackedFileReader(null, "."))
                 .build();
         createSymbolicLink();
     }

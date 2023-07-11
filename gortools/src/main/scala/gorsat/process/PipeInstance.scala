@@ -205,7 +205,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
 
   def createFileReader(gorRoot: String): FileReader = {
     if (!StringUtil.isEmpty(gorRoot)) {
-      new DriverBackedFileReader(null, gorRoot, null)
+      new DriverBackedFileReader(null, gorRoot)
     } else {
       ProjectContext.DEFAULT_READER
     }

@@ -61,7 +61,7 @@ public class GenericSessionFactory extends GorSessionFactory {
 
         GorSession session = new GorSession(requestId);
 
-        var fileReader = new DriverBackedFileReader("", this.root, null);
+        var fileReader = new DriverBackedFileReader("", this.root);
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
         projectContextBuilder
                 .setRoot(this.root)

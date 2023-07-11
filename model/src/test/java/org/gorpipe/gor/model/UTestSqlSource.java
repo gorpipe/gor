@@ -1,6 +1,7 @@
 package org.gorpipe.gor.model;
 
 import com.nextcode.gor.driver.utils.DatabaseHelper;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -36,8 +37,7 @@ public class UTestSqlSource {
 
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
 
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(workDir.getRoot().getAbsolutePath(), constants, securityContext,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(workDir.getRoot().getAbsolutePath(), securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         var data = reader.readAll("sqlquery.sql.link");
@@ -52,8 +52,7 @@ public class UTestSqlSource {
 
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
 
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(workDir.getRoot().getAbsolutePath(), constants, securityContext,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(workDir.getRoot().getAbsolutePath(), securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         Assert.assertThrows(GorSecurityException.class, () -> reader.readAll(query));
@@ -71,8 +70,7 @@ public class UTestSqlSource {
         var linkFile2 = workDir.newFile("query2.link");
         Files.writeString(linkFile2.toPath(), sqlqueryAvas);
 
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
@@ -97,8 +95,7 @@ public class UTestSqlSource {
         var linkFile = workDir.newFile("query.link");
         Files.writeString(linkFile.toPath(), sqlqueryWithScopeAndOrg);
 
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         var paths = DatabaseHelper.createRdaDatabaseWithOrg();
@@ -107,7 +104,7 @@ public class UTestSqlSource {
 
         var data = reader.readAll(linkFile.getAbsolutePath());
 
-        Assert.assertTrue(data.length == 4);
+        Assert.assertEquals(4, data.length);
     }
 
     @Test
@@ -120,12 +117,28 @@ public class UTestSqlSource {
         Files.writeString(linkFile.toPath(), sqlqueryWithScope);
 
         // Test reading the link file
-        Object[] constants = {};
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", constants, securityContext,
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         var data = reader.readAll(linkFile.getAbsolutePath());
         Assert.assertEquals(6, data.length);
+    }
+
+    @Test
+    public void testReadingSqlDataWithInvalidReplacement_Secured() throws IOException {
+        String sqlqueryWithScope = "//db:select * from rda.v_variant_annotations variant_annotations\nwhere variant_annotations.project_id = #{projects-id}\norder by chromo, pos desc\n";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        // Write link file
+        var linkFile = workDir.newFile("query.link");
+        Files.writeString(linkFile.toPath(), sqlqueryWithScope);
+
+        // Test reading the link file
+        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
+                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
+        var e = Assert.assertThrows(GorResourceException.class, () -> reader.readAll(linkFile.getAbsolutePath()));
+        Assert.assertTrue(e.getMessage().contains("sql query: projects-id"));
     }
 
     @Test
@@ -138,8 +151,7 @@ public class UTestSqlSource {
         Files.writeString(linkFile.toPath(), sqlqueryWithScope);
 
         // Test reading the link file
-        Object[] constants = {};
-        var reader = new DriverBackedFileReader(securityContext, ".", constants);
+        var reader = new DriverBackedFileReader(securityContext, ".");
 
         var data = reader.readAll(linkFile.getAbsolutePath());
         Assert.assertEquals(6, data.length);
@@ -151,8 +163,7 @@ public class UTestSqlSource {
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
 
         // Test reading the link file
-        Object[] constants = {};
-        var reader = new DriverBackedFileReader(securityContext, ".", constants);
+        var reader = new DriverBackedFileReader(securityContext, ".");
 
         var data = reader.readAll(sqlqueryWithScope);
         Assert.assertEquals(6, data.length);

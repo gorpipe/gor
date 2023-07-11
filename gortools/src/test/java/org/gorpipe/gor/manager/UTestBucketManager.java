@@ -315,7 +315,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -348,7 +348,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -380,7 +380,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString(), new Object[0]));
+        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);

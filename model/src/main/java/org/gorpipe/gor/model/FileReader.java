@@ -311,8 +311,6 @@ public abstract class FileReader {
 
     public abstract String getCommonRoot();
 
-    public abstract Object[] getConstants();
-
     public abstract SourceReference createSourceReference(String url, boolean writeable);
 
     public void writeLinkIfNeeded(String url) throws IOException {

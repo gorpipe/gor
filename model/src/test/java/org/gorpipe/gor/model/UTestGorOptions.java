@@ -149,7 +149,7 @@ public class UTestGorOptions {
 
     private void checkValidResults(String args, String root, boolean insertSource,
                                    String sourceColName, SourceRef... files) {
-        var fileReader = new DriverBackedFileReader("", root, new Object[0]) {
+        var fileReader = new DriverBackedFileReader("", root) {
             @Override
             public boolean allowsAbsolutePaths() {
                 return false;
