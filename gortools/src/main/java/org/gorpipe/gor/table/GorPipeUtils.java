@@ -9,7 +9,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.io.output.NullOutputStream.INSTANCE;
+import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 public class GorPipeUtils {
 
@@ -43,7 +43,7 @@ public class GorPipeUtils {
         options.parseOptions(args);
         CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, securityContext);
 
-        try (PrintStream newPrintStream = new PrintStream(INSTANCE)){
+        try (PrintStream newPrintStream = new PrintStream(NULL_OUTPUT_STREAM)){
             System.setOut(newPrintStream);
             engine.execute();
         } catch (Exception e) {
