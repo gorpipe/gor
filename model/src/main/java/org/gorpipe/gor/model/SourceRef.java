@@ -418,25 +418,4 @@ public class SourceRef {
             throw ExceptionUtilities.mapGorResourceException(fileNotFoundexception.getMessage(), file, fileNotFoundexception);
         }
     }
-
-    public static int findVcfChrNamingSystem(byte[] buf, int cur, int read, final InputStream instream) throws IOException {
-        // Find next line and check the value in the first column (i.e. the assumed chromosome column)
-        while (read != 0) {
-            while (cur < read) {
-                if (buf[cur++] == '\n') {
-                    if (cur > read) { // Need more data prior to find first letter of first column
-                        read = instream.read(buf);
-                        cur = 0;
-                    }
-                    return (cur >= read || buf[cur] == 'c' || buf[cur] == 'C') ? 0 : 1; // if chromosome starts with c assume it is gor naming system and order, else hg naming system and order
-                }
-            }
-
-            // Need more data prior to finding the end of line
-            read = instream.read(buf);
-            cur = 0;
-        }
-
-        return 0; // Empty file which we treat as gor naming system
-    }
 }

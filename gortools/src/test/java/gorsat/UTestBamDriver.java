@@ -23,6 +23,7 @@
 package gorsat;
 
 import org.gorpipe.test.utils.FileTestUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,5 +63,12 @@ public class UTestBamDriver {
     @Test
     public void testBamWithMinusPOnDictionary3() throws IOException {
         TestUtils.assertTwoGorpipeResults("gor -p chr1 ../tests/data/external/samtools/serialization_test.bam | top 1 | validatecolumns 0", "gor ../tests/data/external/samtools/serialization_test.bam  | top 1");
+    }
+
+    @Test
+    public void testBamMeta() {
+        var result = TestUtils.runGorPipe("META ../tests/data/external/samtools/index_test.bam");
+        Assert.assertTrue(result.contains("BAM\t@"));
+
     }
 }

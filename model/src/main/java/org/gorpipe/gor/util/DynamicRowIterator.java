@@ -16,8 +16,8 @@ public class DynamicRowIterator extends GenomicIteratorBase {
         rows.add(row);
     }
 
-    public void addRow(String name, String value) {
-        rows.add(new RowBase("chrN\t0\t" + name + "\t" + value));
+    public void addRow(String source, String name, String value) {
+        rows.add(new RowBase("chrN\t0\t" +source + "\t" + name + "\t" + value));
     }
 
     @Override
@@ -43,4 +43,6 @@ public class DynamicRowIterator extends GenomicIteratorBase {
             rows.add(iterator.next());
         }
     }
+
+
 }

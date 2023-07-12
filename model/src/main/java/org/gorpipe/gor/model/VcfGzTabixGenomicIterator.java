@@ -81,6 +81,7 @@ public class VcfGzTabixGenomicIterator extends GenomicIteratorBase {
     private void findHeader() throws IOException {
         String line;
         while ((line = reader.readLine()) != null && line.startsWith("##")) {
+            addAdditionalInfo(line);
             // Read all extra header lines
         }
         if (line == null || !line.startsWith("#")) {

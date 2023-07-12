@@ -102,6 +102,9 @@ public class BamIterator extends GenomicIteratorBase {
             // If there is no header, assume lexicographic order of chromosomes with chr prefix
             chrnamesystem = 2;
         } else {
+            // Store additional information
+            for (var entry : txtHeader) { addAdditionalInfo(entry); }
+
             // Allow first line to be either @HD line or start directly with @SQ
             for (int i = txtHeader[0].startsWith("@HD") ? 1 : 0; i < txtHeader.length; i++) {
                 if (txtHeader[i].startsWith("@SQ\tSN:")) {

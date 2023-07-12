@@ -43,4 +43,18 @@ public class UTestVcfHeader {
 
         Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNA00001\tNA00002\tNA00003\n", results[0]);
     }
+
+    @Test
+    public void testVcfMeta() {
+        var result = TestUtils.runGorPipe("META ../tests/data/external/samtools/testTabixIndex.vcf");
+        Assert.assertTrue(result.contains("VCF\t"));
+
+    }
+
+    @Test
+    public void testVcfGzMeta() {
+        var result = TestUtils.runGorPipe("META ../tests/data/external/samtools/testTabixIndex.vcf.gz");
+        Assert.assertTrue(result.contains("VCF\t"));
+
+    }
 }

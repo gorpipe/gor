@@ -27,6 +27,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.FileMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.stream.datatypes.vcf.VcfFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
@@ -37,6 +38,8 @@ import java.io.IOException;
 @AutoService(StreamSourceIteratorFactory.class)
 public class BamFileIteratorFactory implements StreamSourceIteratorFactory {
 
+    final static String BAM_SOURCE = "BAM";
+
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) {
         return new BamFileIterator((BamFile) file);
@@ -46,6 +49,20 @@ public class BamFileIteratorFactory implements StreamSourceIteratorFactory {
     public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
         var fileIt = new FileMetaIterator();
         fileIt.initMeta(file);
+
+        // Load the bam header and add it to the meta iterator
+        try (var it = createIterator(file)) {
+            var additonalInfo = it.getAdditionalInfo();
+
+            for (var info : additonalInfo) {
+                var infoRow = info.split("\t", 2);
+
+                if (infoRow.length == 2) {
+                    fileIt.addRow(BAM_SOURCE,  infoRow[0], infoRow[1].replace("\t", ","));
+                }
+            }
+        }
+
         return fileIt;
     }
 

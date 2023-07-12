@@ -33,6 +33,8 @@ import org.gorpipe.model.gor.RowObj;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -80,6 +82,7 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
         String contig = "##contig=<ID=";
         String length = "length=";
         while ((line = reader.readLine()) != null && line.startsWith("##")) {
+            addAdditionalInfo(line);
             if (line.startsWith(contig)) {
                 if (chrNameSystem == null) {
                     if (line.substring(contig.length()).startsWith("chr")) {

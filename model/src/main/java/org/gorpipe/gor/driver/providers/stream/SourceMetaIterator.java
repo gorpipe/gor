@@ -9,27 +9,28 @@ import java.nio.file.Path;
 
 public class SourceMetaIterator extends DynamicRowIterator {
 
-    final static String SOURCE_NAME = "source.name";
-    final static String SOURCE_PATH = "source.path";
-    final static String SOURCE_DATA_TYPE = "source.data.type";
-    final static String SOURCE_TYPE = "source.type";
-    final static String SOURCE_PROTOCOLS = "source.protocols";
-    final static String SOURCE_REMOTE = "source.remote";
-    final static String SOURCE_SUPPORTED = "source.supported";
-    final static String SOURCE_MODIFIED = "source.modified";
-    final static String SOURCE_ID = "source.id";
-    final static String HEADER = "ChrN\tPosN\tname\tvalue";
+    final static String SOURCE = "SOURCE";
+    final static String SOURCE_NAME = "NAME";
+    final static String SOURCE_PATH = "PATH";
+    final static String SOURCE_DATA_TYPE = "DATA_TYPE";
+    final static String SOURCE_TYPE = "TYPE";
+    final static String SOURCE_PROTOCOLS = "PROTOCOLS";
+    final static String SOURCE_REMOTE = "REMOTE";
+    final static String SOURCE_SUPPORTED = "SUPPORTED";
+    final static String SOURCE_MODIFIED = "MODIFIED";
+    final static String SOURCE_ID = "ID";
+    final static String HEADER = "ChrN\tPosN\tsource\tname\tvalue";
 
     public void initMeta(DataSource source) throws IOException {
         setHeader(HEADER);
-        addRow(SOURCE_NAME, source.getName());
-        addRow(SOURCE_PATH, source.getFullPath());
-        addRow(SOURCE_DATA_TYPE, source.getDataType().name());
-        addRow(SOURCE_TYPE, source.getSourceType().getName());
-        addRow(SOURCE_PROTOCOLS, String.join(",", source.getSourceType().getProtocols()));
-        addRow(SOURCE_REMOTE, String.valueOf(source.getSourceType().isRemote()));
-        addRow(SOURCE_SUPPORTED, String.valueOf(source.getSourceType().isSupported()));
-        addRow(SOURCE_MODIFIED, String.valueOf(source.getSourceMetadata().getLastModified()));
-        addRow(SOURCE_ID, source.getSourceMetadata().getUniqueId());
+        addRow(SOURCE, SOURCE_NAME, source.getName());
+        addRow(SOURCE, SOURCE_PATH, source.getFullPath());
+        addRow(SOURCE, SOURCE_DATA_TYPE, source.getDataType().name());
+        addRow(SOURCE, SOURCE_TYPE, source.getSourceType().getName());
+        addRow(SOURCE, SOURCE_PROTOCOLS, String.join(",", source.getSourceType().getProtocols()));
+        addRow(SOURCE, SOURCE_REMOTE, String.valueOf(source.getSourceType().isRemote()));
+        addRow(SOURCE, SOURCE_SUPPORTED, String.valueOf(source.getSourceType().isSupported()));
+        addRow(SOURCE, SOURCE_MODIFIED, String.valueOf(source.getSourceMetadata().getLastModified()));
+        addRow(SOURCE, SOURCE_ID, source.getSourceMetadata().getUniqueId());
     }
 }

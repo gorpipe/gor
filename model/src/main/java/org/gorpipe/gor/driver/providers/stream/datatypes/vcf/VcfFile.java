@@ -46,6 +46,7 @@ public class VcfFile extends StreamSourceFile {
     }
 
     static final String[] chromosomes = new String[]{"M", "MT", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "XY", "Y"};
+    public static final String VCF_HEADER_TOKEN = "##";
 
     /**
      * Find the gor data offset in a .vcf file
@@ -78,7 +79,7 @@ public class VcfFile extends StreamSourceFile {
                     default:
                         if (state == 2) {
                             // This is the offset into .vcf file that corresponds to the start of gor compatible data in the file
-                            int chrNamingSystem = SourceRef.findVcfChrNamingSystem(buf, i + 1, read, instream);
+                            int chrNamingSystem = findVcfChrNamingSystem(buf, i + 1, read, instream);
                             ret = new int[]{pos + i, chrNamingSystem};
                         }
                         state = 0;
@@ -104,7 +105,7 @@ public class VcfFile extends StreamSourceFile {
             BufferedReader br = new BufferedReader(isr);
 
             final Set<String> chrset = new HashSet(Arrays.asList(chromosomes));
-            br.lines().peek(new Consumer<String>() {
+            br.lines().peek(new Consumer<>() {
                 int counter = 0;
 
                 @Override
@@ -131,5 +132,45 @@ public class VcfFile extends StreamSourceFile {
                 dataScheme.setId2order(chr2id.get(cont), c++);
             }
         }
+    }
+
+    public static int findVcfChrNamingSystem(byte[] buf, int cur, int read, final InputStream instream) throws IOException {
+        // Find next line and check the value in the first column (i.e. the assumed chromosome column)
+        while (read != 0) {
+            while (cur < read) {
+                if (buf[cur++] == '\n') {
+                    if (cur > read) { // Need more data prior to find first letter of first column
+                        read = instream.read(buf);
+                        cur = 0;
+                    }
+                    return (cur >= read || buf[cur] == 'c' || buf[cur] == 'C') ? 0 : 1; // if chromosome starts with c assume it is gor naming system and order, else hg naming system and order
+                }
+            }
+
+            // Need more data prior to finding the end of line
+            read = instream.read(buf);
+            cur = 0;
+        }
+
+        return 0; // Empty file which we treat as gor naming system
+    }
+
+    public static List<String> loadVcfHeader(InputStream input) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        List<String> header = new ArrayList<>();
+
+        while(reader.ready()) {
+            var line = reader.readLine();
+
+            if (line.isEmpty()) continue;
+
+            if (!line.startsWith(VCF_HEADER_TOKEN)) {
+                break;
+            } else {
+                header.add(line);
+            }
+        }
+
+        return header;
     }
 }

@@ -170,8 +170,6 @@ public class CramIterator extends BamIterator {
             return;
         }
 
-        String buildPath = session.getProjectContext().getReferenceBuild().getBuildPath();
-
         cramReferencePath = session.getProjectContext().getReferenceBuild().getCramReferencePath();
 
         if (cramFile != null) {

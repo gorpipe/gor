@@ -10,24 +10,21 @@ import java.util.stream.Stream;
 public class StreamWrappedGenomicIterator implements GenomicIterator {
     private String header;
     private String[] types;
-
-    private boolean isNor;
     private boolean isFirstLine = true;
     private final boolean hasHeader;
     private final Stream<String> data;
     private final Iterator<String> iterator;
 
-    public StreamWrappedGenomicIterator(Stream<String> data, String header, boolean isNor, boolean hasHeader) {
+    public StreamWrappedGenomicIterator(Stream<String> data, String header, boolean hasHeader) {
         this.data = data;
         this.iterator = data.iterator();
-        this.isNor = isNor;
         this.hasHeader = hasHeader;
         this.header =  formatHeader(header);
     }
 
     @Override
     public void init(GorSession session) {
-        this.isNor = session.getNorContext();
+        // not needed
     }
 
     @Override
@@ -62,6 +59,11 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
         }
         readHeader();
         return header;
+    }
+
+    @Override
+    public String[] getAdditionalInfo() {
+        return new String[0];
     }
 
     @Override

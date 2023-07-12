@@ -81,7 +81,7 @@ public class SqlSource extends RowIteratorSource {
         }
 
         var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
-        return new StreamWrappedGenomicIterator(dataStream, header, true, true);
+        return new StreamWrappedGenomicIterator(dataStream, header, true);
     }
 
 

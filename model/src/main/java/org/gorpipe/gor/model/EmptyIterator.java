@@ -47,6 +47,11 @@ public class EmptyIterator implements GenomicIterator {
     }
 
     @Override
+    public String[] getAdditionalInfo() {
+        return new String[0];
+    }
+
+    @Override
     public void setHeader(String header) {
         this.header = header;
     }

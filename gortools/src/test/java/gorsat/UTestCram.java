@@ -179,5 +179,10 @@ public class UTestCram {
         }
     }
 
+    @Test
+    public void testCramMeta() {
+        var result = TestUtils.runGorPipe("META ../tests/data/external/samtools/cram_query_sorted.cram");
+        Assert.assertTrue(result.contains("BAM\t@"));
 
+    }
 }

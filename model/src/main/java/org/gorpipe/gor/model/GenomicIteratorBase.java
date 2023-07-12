@@ -26,6 +26,8 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.stats.StatsCollector;
 import org.gorpipe.model.gor.Pipes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -51,6 +53,8 @@ public abstract class GenomicIteratorBase implements GenomicIterator {
     private int statsSenderId = -1;
     protected String statsSenderName = "";
     protected String statsSenderAnnotation = "";
+
+    protected List<String> additionalInfo = new ArrayList<>();
 
     public void initStats(GorContext context, String sender, String annotation) {
         if (context != null) {
@@ -127,6 +131,15 @@ public abstract class GenomicIteratorBase implements GenomicIterator {
     @Override
     public String getHeader() {
         return header;
+    }
+
+    @Override
+    public String[] getAdditionalInfo() {
+        return additionalInfo.toArray(new String[0]);
+    }
+
+    public void addAdditionalInfo(String info) {
+        additionalInfo.add(info);
     }
 
     @Override

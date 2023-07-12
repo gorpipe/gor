@@ -23,19 +23,24 @@
 package org.gorpipe.gor.driver.providers.stream.datatypes.cram;
 
 import com.google.auto.service.AutoService;
+import org.gorpipe.gor.driver.adapters.SamtoolsAdapter;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.FileMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
+import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamFileIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.util.DynamicRowIterator;
 
 import java.io.IOException;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class CramFileIteratorFactory implements StreamSourceIteratorFactory {
+
+    final static String CRAM_SOURCE = "BAM";
 
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) throws IOException {
@@ -46,6 +51,22 @@ public class CramFileIteratorFactory implements StreamSourceIteratorFactory {
     public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
         var fileIt = new FileMetaIterator();
         fileIt.initMeta(file);
+
+        // Load the bam header and add it to the meta iterator
+        try (var it = createIterator(file)) {
+            ((CramFileIterator) it).init(file.getFileSource().getSourceReference().getLookup(), SamtoolsAdapter.createReader(file.getFileSource(),
+                    file.getIndexSource()), true);
+            var additonalInfo = it.getAdditionalInfo();
+
+            for (var info : additonalInfo) {
+                var infoRow = info.split("\t", 2);
+
+                if (infoRow.length == 2) {
+                    fileIt.addRow(CRAM_SOURCE, infoRow[0], infoRow[1].replace("\t", ","));
+                }
+            }
+        }
+
         return fileIt;
     }
 

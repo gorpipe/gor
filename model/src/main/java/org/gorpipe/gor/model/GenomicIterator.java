@@ -62,6 +62,11 @@ public interface GenomicIterator extends Iterator<Row>, RowSourceStats, AutoClos
     String getHeader();
 
     /**
+     * Get additional information about the data
+     */
+    String[] getAdditionalInfo();
+
+    /**
      * Set the header
      * @param header A tab-separated string of column names
      */

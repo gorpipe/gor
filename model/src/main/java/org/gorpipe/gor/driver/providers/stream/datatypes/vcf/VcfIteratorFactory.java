@@ -33,24 +33,50 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.StringIntKey;
 import org.gorpipe.gor.model.*;
+import org.gorpipe.gor.util.DynamicRowIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 @AutoService(StreamSourceIteratorFactory.class)
 public class VcfIteratorFactory implements StreamSourceIteratorFactory {
 
+    final static String VCF_SOURCE = "VCF";
+
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) throws IOException {
+        boolean compressed = isCompressed(file);
+        return createIteratorInternal(file, compressed, false);
+    }
+
+    private static boolean isCompressed(StreamSourceFile file) throws IOException {
         boolean compressed = file.getFileSource().getDataType() == DataType.VCFGZ
                 || file.getFileSource().getDataType() == DataType.GVCFGZ
                 || file.getFileSource().getDataType() == DataType.VCFBGZ;
+        return compressed;
+    }
+
+    private static GenomicIteratorBase createIteratorInternal(StreamSourceFile file, boolean compressed, boolean metaOnly) throws IOException {
         if (file.getIndexSource() == null || !file.getIndexSource().exists()) {
             // Use the same iterator for as the non-seekable .vcf.gz files as for .vcf files if ignore order is requested
             if (compressed) {
                 return new VcfFileIterator(file, file.getFileSource().getSourceReference().getLookup(), compressed);
             } else {
+                if (metaOnly) {
+
+                    try (var inputSource = file.getFileSource().open()) {
+                        var infos = VcfFile.loadVcfHeader(inputSource);
+                        var it = new DynamicRowIterator();
+                        for (var info : infos) { it.addAdditionalInfo(info); }
+                        return it;
+                    } catch (IOException e) {
+                        throw new GorResourceException("Failed to open file " + file.getFileSource().getPath(), file.getFileSource().getPath().toString());
+                    }
+                }
+
                 try (InputStream instream = file.getFileSource().open()) {
 
                     ContigDataScheme dataScheme = new VcfContigDataScheme();
@@ -82,6 +108,22 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
     public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
         var fileIt = new FileMetaIterator();
         fileIt.initMeta(file);
+
+        boolean compressed = isCompressed(file);
+
+        // Load the vcf header and add it to the meta iterator
+        try (var it = createIteratorInternal(file, compressed, true)) {
+            var additonalInfo = it.getAdditionalInfo();
+
+            for (var info : additonalInfo) {
+                if (info.startsWith(VcfFile.VCF_HEADER_TOKEN)) {
+                    var infoRow = info.substring(2).split("=", 2);
+                    if (infoRow.length == 2)
+                        fileIt.addRow(VCF_SOURCE,  infoRow[0], infoRow[1]);
+                }
+            }
+        }
+
         return fileIt;
     }
 

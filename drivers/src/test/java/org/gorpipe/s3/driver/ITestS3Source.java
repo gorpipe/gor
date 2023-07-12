@@ -153,7 +153,7 @@ public class ITestS3Source extends CommonStreamTests {
         var result = TestUtils.runGorPipe("meta s3://nextcode-unittest/s3write/genes.gor", true, securityContext, new String[] {"s3://"});
 
         Assert.assertFalse(result.isEmpty());
-        Assert.assertTrue(result.contains("source.type\tS3"));
+        Assert.assertTrue(result.contains("SOURCE\tTYPE\tS3"));
     }
 
     @Test
@@ -163,9 +163,9 @@ public class ITestS3Source extends CommonStreamTests {
         var result = TestUtils.runGorPipe("meta s3://nextcode-unittest/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
 
         Assert.assertFalse(result.isEmpty());
-        Assert.assertTrue(result.contains("source.type\tS3"));
-        Assert.assertTrue(result.contains("data.md5"));
-        Assert.assertTrue(result.contains("data.line_count"));
+        Assert.assertTrue(result.contains("SOURCE\tTYPE\tS3"));
+        Assert.assertTrue(result.contains("GOR\tMD5"));
+        Assert.assertTrue(result.contains("GOR\tLINE_COUNT"));
     }
 
     @Override

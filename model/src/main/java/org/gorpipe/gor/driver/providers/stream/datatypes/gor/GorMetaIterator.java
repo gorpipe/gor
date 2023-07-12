@@ -13,7 +13,7 @@ import java.nio.file.Path;
 
 public class GorMetaIterator extends DynamicRowIterator {
 
-    final static String DATA_PREFIX = "data.";
+    final static String GOR_SOURCE = "GOR";
 
     public void initMeta(StreamSourceFile file) throws IOException {
         var fileIt = new FileMetaIterator();
@@ -22,7 +22,7 @@ public class GorMetaIterator extends DynamicRowIterator {
 
         var gorMeta = GorMeta.createAndLoad(Path.of(DataUtil.toFile(file.getName(), DataType.META)));
         for (String k : gorMeta.getPropertyKeys()) {
-            addRow(DATA_PREFIX + k.toLowerCase(), gorMeta.getProperty(k, ""));
+            addRow(GOR_SOURCE, k, gorMeta.getProperty(k, ""));
         }
     }
 }
