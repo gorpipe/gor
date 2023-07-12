@@ -33,6 +33,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -145,7 +146,7 @@ public class PluggableGorDriver implements GorDriver {
     }
 
     @Override
-    public GenomicIteratorBase createMetaIterator(DataSource source) throws IOException {
+    public GenomicIteratorBase createMetaIterator(DataSource source, FileReader reader) throws IOException {
         log.debug("Create meta iterator for datasource {}", source);
         if (!source.exists()) {
             log.debug("Source {} reports it does not exist", source);
@@ -154,7 +155,7 @@ public class PluggableGorDriver implements GorDriver {
 
         try {
             log.debug("Delegate to source provider {}", source);
-            return sourceTypeToSourceProvider.get(source.getSourceType()).createMetaIterator(source);
+            return sourceTypeToSourceProvider.get(source.getSourceType()).createMetaIterator(source, reader);
         } catch (Exception e) {
                 throwWithSourceName(e, source.getName());
             return null;  // Never gets here

@@ -33,6 +33,7 @@ import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.datatypes.tabix.TabixIndexedFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.binsearch.GorSeekableIterator;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.util.DynamicRowIterator;
@@ -57,9 +58,9 @@ public class GorGzIteratorFactory implements StreamSourceIteratorFactory {
     }
 
     @Override
-    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file, FileReader reader) throws IOException {
         var it = new GorMetaIterator();
-        it.initMeta(file);
+        it.initMeta(file, reader);
         return it;
     }
 

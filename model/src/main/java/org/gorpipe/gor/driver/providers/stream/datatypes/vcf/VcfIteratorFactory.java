@@ -105,7 +105,7 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
     }
 
     @Override
-    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file, FileReader reader) throws IOException {
         var fileIt = new FileMetaIterator();
         fileIt.initMeta(file);
 

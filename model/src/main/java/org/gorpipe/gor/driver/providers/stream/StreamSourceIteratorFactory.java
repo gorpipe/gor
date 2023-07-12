@@ -24,6 +24,7 @@ package org.gorpipe.gor.driver.providers.stream;
 
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 
@@ -32,7 +33,7 @@ import java.io.IOException;
 public interface StreamSourceIteratorFactory {
     GenomicIterator createIterator(StreamSourceFile file) throws IOException;
 
-    GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException;
+    GenomicIteratorBase createMetaIterator(StreamSourceFile file, FileReader reader) throws IOException;
 
     DataType[] getSupportedDataTypes();
 

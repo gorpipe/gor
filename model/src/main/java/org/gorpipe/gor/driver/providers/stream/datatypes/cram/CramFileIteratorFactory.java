@@ -30,6 +30,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamFileIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.session.GorSession;
@@ -48,7 +49,7 @@ public class CramFileIteratorFactory implements StreamSourceIteratorFactory {
     }
 
     @Override
-    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file, FileReader reader) throws IOException {
         var fileIt = new FileMetaIterator();
         fileIt.initMeta(file);
 

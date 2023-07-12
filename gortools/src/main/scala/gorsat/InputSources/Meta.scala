@@ -24,7 +24,7 @@ package gorsat.InputSources
 
 import gorsat.Commands._
 import org.gorpipe.gor.driver.GorDriverFactory
-import org.gorpipe.gor.driver.meta.SourceReference
+import org.gorpipe.gor.driver.meta.{SourceReference, SourceReferenceBuilder}
 import org.gorpipe.gor.session.GorContext
 
 
@@ -34,10 +34,14 @@ class Meta() extends InputSourceInfo("META", CommandArguments("", "", 1)) {
                                 args: Array[String]): InputSourceParsingResult = {
 
     val inputData = iargs(0)
-    val factory =  GorDriverFactory.fromConfig()
+    val reader = context.getSession.getProjectContext.getFileReader
 
-    val dataSource = factory.getDataSource(new SourceReference(inputData))
-    val it = factory.createMetaIterator(dataSource)
+    val dataSource = reader.resolveUrl(new SourceReferenceBuilder(inputData)
+      .commonRoot(reader.getCommonRoot())
+      .securityContext(reader.getSecurityContext()).isFallback(false).build())
+
+    val factory =GorDriverFactory.fromConfig()
+    val it = factory.createMetaIterator(dataSource, reader)
 
     InputSourceParsingResult(it,
       null,

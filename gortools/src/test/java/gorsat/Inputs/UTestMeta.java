@@ -129,4 +129,43 @@ public class UTestMeta {
         Assert.assertTrue(results.contains("FILE\tREFERENCE"));
         Assert.assertTrue(results.contains("FILE\tINDEX"));
     }
+
+    @Test
+    public void metaForGorOnServer() throws IOException {
+        var newFile = workDir.newFile("test.gorz");
+        TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write " + newFile.getAbsolutePath());
+
+        var results = TestUtils.runGorPipe("meta test.gorz", workDir.getRoot().getPath(), true, "");
+
+        Assert.assertTrue( results.contains("ChrN\tPosN\tsource\tname\tvalue\n"));
+        Assert.assertTrue(results.contains("SOURCE\tNAME"));
+        Assert.assertTrue(results.contains("SOURCE\tPATH"));
+        Assert.assertTrue(results.contains("SOURCE\tDATA_TYPE"));
+        Assert.assertTrue(results.contains("SOURCE\tTYPE"));
+        Assert.assertTrue(results.contains("SOURCE\tPROTOCOLS"));
+        Assert.assertTrue(results.contains("SOURCE\tREMOTE"));
+        Assert.assertTrue(results.contains("SOURCE\tSUPPORTED"));
+        Assert.assertTrue(results.contains("SOURCE\tMODIFIED"));
+        Assert.assertTrue(results.contains("SOURCE\tID"));
+        Assert.assertTrue(results.contains("FILE\tPATH"));
+        Assert.assertTrue(results.contains("FILE\tNAME"));
+        Assert.assertTrue(results.contains("FILE\tTYPE"));
+        Assert.assertTrue(results.contains("FILE\tSUFFIX"));
+        Assert.assertTrue(results.contains("FILE\tSIZE"));
+        Assert.assertTrue(results.contains("FILE\tMODIFIED"));
+        Assert.assertTrue(results.contains("FILE\tMODIFIED_UTC"));
+        Assert.assertTrue(results.contains("FILE\tID"));
+        Assert.assertTrue(results.contains("FILE\tSUPPORTS_INDEX"));
+        Assert.assertTrue(results.contains("FILE\tSUPPORTS_REFERENCE"));
+        Assert.assertTrue(results.contains("FILE\tREFERENCE"));
+        Assert.assertTrue(results.contains("FILE\tINDEX"));
+        Assert.assertTrue(results.contains("GOR\tRANGE"));
+        Assert.assertTrue(results.contains("GOR\tSERIAL"));
+        Assert.assertTrue(results.contains("GOR\tLINE_COUNT"));
+        Assert.assertTrue(results.contains("GOR\tSCHEMA"));
+        Assert.assertTrue(results.contains("GOR\tQUERY"));
+        Assert.assertTrue(results.contains("GOR\tMD5"));
+        Assert.assertTrue(results.contains("GOR\tTAGS"));
+        Assert.assertTrue(results.contains("GOR\tCOLUMNS"));
+    }
 }

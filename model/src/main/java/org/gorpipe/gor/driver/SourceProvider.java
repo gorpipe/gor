@@ -26,10 +26,12 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.util.DynamicRowIterator;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -75,7 +77,7 @@ public interface SourceProvider {
     /**
      * Create a meta iterator from a source.
      */
-    default GenomicIteratorBase createMetaIterator(DataSource source) throws IOException {
+    default GenomicIteratorBase createMetaIterator(DataSource source, FileReader reader) throws IOException {
         return new DynamicRowIterator();
     };
 }

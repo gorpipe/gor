@@ -27,6 +27,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.GorpIterator;
@@ -48,7 +49,7 @@ public class GorpIteratorFactory implements StreamSourceIteratorFactory {
     }
 
     @Override
-    public GenomicIteratorBase createMetaIterator(StreamSourceFile file) throws IOException {
+    public GenomicIteratorBase createMetaIterator(StreamSourceFile file, FileReader reader) throws IOException {
         return new DynamicRowIterator();
     }
 

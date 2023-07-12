@@ -38,6 +38,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWra
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 
@@ -283,7 +284,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
     }
 
     @Override
-    public GenomicIteratorBase createMetaIterator(DataSource source) throws IOException {
+    public GenomicIteratorBase createMetaIterator(DataSource source, FileReader reader) throws IOException {
         DataType type = source.getDataType();
         if (type == null) {
             log.warn("Unknown DataType for {}", source.getName());
@@ -294,7 +295,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         if (factory != null) {
             StreamSourceFile file = factory.resolveFile((StreamSource) source);
             file.setIndexSource(findIndexFileFromFileDriver(file, source.getSourceReference()));
-            var factoryMetaIt = factory.createMetaIterator(file);
+            var factoryMetaIt = factory.createMetaIterator(file, reader);
             var sourceMetaIt = new SourceMetaIterator();
             sourceMetaIt.initMeta(source);
             sourceMetaIt.merge(factoryMetaIt);
