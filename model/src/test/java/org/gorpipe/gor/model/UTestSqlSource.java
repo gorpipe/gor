@@ -1,6 +1,7 @@
 package org.gorpipe.gor.model;
 
 import com.nextcode.gor.driver.utils.DatabaseHelper;
+import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.junit.Assert;
@@ -167,5 +168,28 @@ public class UTestSqlSource {
 
         var data = reader.readAll(sqlqueryWithScope);
         Assert.assertEquals(6, data.length);
+    }
+
+    @Test
+    public void testThatCorrectHeaderIsShown() {
+        String query = "nor 'sql://select * from variant_annotations where project_id = #{project-id}'";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        var result = TestUtils.runGorPipe(query, false, securityContext);
+
+        Assert.assertFalse(result.startsWith("#ChromNOR\tPosNOR\t"));
+        Assert.assertTrue(result.startsWith("ChromNOR\tPosNOR\t"));
+    }
+
+    @Test
+    public void testReadingWithMacroreplacement() throws IOException {
+        // Create whitelist file
+        var whitelistFile = workDir.newFile("whitelist.txt");
+        Files.writeString(whitelistFile.toPath(), "variant_annotations -c [sql select * from v_variant_annotations where project_id = '#{projectid}' #(F:and pn in (filter)) order by Chromo,Pos]");
+
+        String query = "variant_annotations -f 'GDX_12000001_10'";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        TestUtils.runGorPipeCountWithWhitelist(query, whitelistFile.toPath(), securityContext);
     }
 }

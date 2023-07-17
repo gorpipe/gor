@@ -456,9 +456,7 @@ public class ProcessRowSource extends ProcessSource {
             if (filter == null) {
                 int fPos = cmd.indexOf("#(F:");
                 if (fPos != -1) {
-                    int fEnd = CommandParseUtilities.quoteSafeIndexOf(cmd, ")", true, fPos+1);
-                    if( fEnd == -1 ) fEnd = cmd.length();
-                    cmd = cmd.substring(0, fPos) + cmd.substring(Math.min(cmd.length(),fEnd+1));
+                    cmd = "";
                 }
             } else {
                 int fPos = cmd.indexOf("#(F:");

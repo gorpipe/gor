@@ -39,8 +39,6 @@ import java.util.Map;
  */
 public class DbNorIterator implements Iterator<String>, AutoCloseable {
 
-    private static final String[] VARS = {"project-id", "organization-id"};
-
     private Connection conn = null;
     private PreparedStatement stmt = null;
     private ResultSet rs = null;

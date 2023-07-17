@@ -2,7 +2,6 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
-import org.gorpipe.model.gor.RowObj;
 
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -19,7 +18,7 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
         this.data = data;
         this.iterator = data.iterator();
         this.hasHeader = hasHeader;
-        this.header =  formatHeader(header);
+        this.header =  header;
     }
 
     @Override
@@ -107,19 +106,7 @@ public class StreamWrappedGenomicIterator implements GenomicIterator {
             isFirstLine = false;
             if (hasHeader) {
                 header = iterator.next();
-                header = formatHeader(header);
             }
         }
-    }
-
-    private String formatHeader(String header) {
-        if (header == null) {
-            return null;
-        }
-
-        if (header.startsWith("#")) {
-            header = header.substring(1);
-        }
-        return header;
     }
 }

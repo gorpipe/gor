@@ -361,11 +361,15 @@ public class TestUtils {
     }
 
     public static int runGorPipeCountWithWhitelist(String query, Path whiteCmdListFile) {
+        return runGorPipeCountWithWhitelist(query, whiteCmdListFile, null);
+    }
+
+    public static int runGorPipeCountWithWhitelist(String query, Path whiteCmdListFile, String securityContext) {
         String[] args = {query};
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        try (PipeInstance pipe = new PipeInstance(createSession(args, whiteCmdListFile.toAbsolutePath().toString(), false).getGorContext())) {
+        try (PipeInstance pipe = new PipeInstance(createSession(args, whiteCmdListFile.toAbsolutePath().toString(), false, securityContext).getGorContext())) {
             String queryToExecute = processQuery(options.query(), pipe.getSession());
             pipe.init(queryToExecute, false, "");
             int count = 0;
@@ -557,10 +561,14 @@ public class TestUtils {
     }
 
     public static GorSession createSession(String[] args, String whiteListFile, boolean server, String[] writeLocations) {
+        return createSession(args, whiteListFile, server, writeLocations, null);
+    }
+
+    public static GorSession createSession(String[] args, String whiteListFile, boolean server, String[] writeLocations, String securityContext) {
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
 
-        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, null, writeLocations);
+        TestSessionFactory factory = new TestSessionFactory(options, whiteListFile, server, securityContext, writeLocations);
         return factory.create();
     }
 
