@@ -180,7 +180,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
      * @param e SQLException to rethrow
      */
     protected void rethrow(Exception e) {
-        throw new RuntimeException(e.getMessage());
+        throw new RuntimeException(e.getMessage(), e);
     }
 
     @Override

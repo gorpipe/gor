@@ -24,11 +24,14 @@ package org.gorpipe.util.db;
 
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.prometheus.PrometheusMetricsTrackerFactory;
+import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -117,20 +120,28 @@ public class Db {
             Connection c = null;
             long startTime = System.currentTimeMillis();
             long endTime = startTime + retryTimeout;
-            while (System.currentTimeMillis() < endTime && c == null) {
-                try {
-                    Connection connection = ds.getConnection();
-                    ConnectionProxy proxy = new ConnectionProxy(connection, poolKey, connectionMap);
-                    c = proxy.getProxy(Connection.class, connection);
-                } catch (SQLException e) {
-                    log.error("SQLException in DB.getConnection()", e);
-                    System.gc();
+            long RETRY_PERIOD_MS = 500;
+            try {
+                while (System.currentTimeMillis() < endTime && c == null) {
                     try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ie) {
-                        // Fashionably ignore.
+                        Connection connection = ds.getConnection();
+                        ConnectionProxy proxy = new ConnectionProxy(connection, poolKey, connectionMap);
+                        c = proxy.getProxy(Connection.class, connection);
+                    } catch (SQLTransientException e) {
+                        log.warn(String.format("Error getting connection for %s and user %s, retrying in %d ms",
+                                ds.getJdbcUrl(), ds.getUsername(), RETRY_PERIOD_MS), e);
+                        Thread.sleep(RETRY_PERIOD_MS);
+                    } catch (SQLException e) {
+                        throw new GorSystemException(String.format("Could not get connection for %s and user %s",
+                                ds.getJdbcUrl(), ds.getUsername()), e);
                     }
                 }
+                if (c == null) {
+                    throw new GorSystemException(String.format("Timeout in %d ms getting connection for %s and user %s",
+                            retryTimeout, ds.getJdbcUrl(), ds.getUsername()) , null);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
             return c;
         }
