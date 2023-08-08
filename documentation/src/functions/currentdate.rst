@@ -1,8 +1,8 @@
 .. _currentdate:
 
-=======
+===========
 CURRENTDATE
-=======
+===========
 
 The **CURRENTDATE** function returns the current date and time in the given format, or ‘yyyy-MM-dd HH:mm:ss’ if
 no format is given.
@@ -26,6 +26,7 @@ The following example adds a column ``x`` with the current date and time.
 
 Date Format
 ===========
+
 You can use the following symbols in your formatting pattern:
 
 +--+--------------------------------------------------------------------------------------+

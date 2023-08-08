@@ -7,7 +7,7 @@
 =======
 GORROWS
 =======
-**GORROWS** is a :term:`source command<source commands>` that generates a number of genomic ordered rows based on the input parameters.
+**GORROWS** is a :term:`Source commands` that generates a number of genomic ordered rows based on the input parameters.
 
 To use GORROWS, you define the chromosome, start position and stop position to generate genomic ordered rows where first row has position equal to the start position and the last row has position equal to the stop position.
 

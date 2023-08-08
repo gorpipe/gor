@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor #dbsnp# | WHERE len(reference) > 4 OR len(allele) > 4 | REPLACE reference len(reference) | REPLACE allele len(allele) | TOP 6

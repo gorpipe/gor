@@ -18,6 +18,7 @@ Tutorials
    variantData
    materializedViews
    parallelGOR
+   notebooks
 
 What is GOR?
 ============
@@ -62,7 +63,7 @@ Reference Data
 ==============
 There are a wide variety of source of data that are used and the best way to get familiar with the WuXi NextCODE reference data package is to explore it for yourself. Try viewing existing queries and report builders to see what reference sources are commonly used.
 
-An installation of the Sequence Miner tool (:ref:`see above<sequenceMiner>`) will make a set of reference data available to you along with any studies that you have access to. To make the examples in this manual easier to follow, we will be using this reference data in each of the examples. Although the data is stored as a physical GOR file, each of these sets of reference data can be thought of as tables in the GOR database and in this document they are referred to as such.
+An installation of the Sequence Miner tool will make a set of reference data available to you along with any studies that you have access to. To make the examples in this manual easier to follow, we will be using this reference data in each of the examples. Although the data is stored as a physical GOR file, each of these sets of reference data can be thought of as tables in the GOR database and in this document they are referred to as such.
 
 Reference Data used in example queries are introduced in the table below:
 

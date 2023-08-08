@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #exons# for MC1R
    :widths: 5  5  5  10 10
    :header-rows: 1

@@ -29,6 +29,7 @@ Usage
 =====
 
 .. code-block:: gor
+
     gor ... | KING tagbucketrelation tag-list1 tag-list2  [-gc cols] [-sym] [(-s sep | -vs valuesize)] [-maxvars num_variants]
 
 Options
@@ -115,6 +116,7 @@ Examples
     The above query example shows how the parameters pi0 and phi (or theta) can be used in a relationship classifier.
 
 .. code-block:: gor
+
     Below is a query that compares the different commands using simulated data for testing purposes:
 
     def #r# = rename #1 PN | replace #1 'PN'+#1;

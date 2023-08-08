@@ -2,11 +2,12 @@
 
    <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span>
 
-.. _VARGROUP:
+.. _GTTRANSPOSE:
 
 ===========
 GTTRANSPOSE
 ===========
+
 The incoming stream are variants stored in horizontal manner. The command takes in a sources containing
 tag/bucket relations, list of pns and a list of markers. The optional headers in the tag/bucket file and
 the pns file should start with '#'. The marker file must contain a header.
@@ -30,7 +31,7 @@ Options
 =======
 
 +-------------------+---------------------------------------------------------------------------+
-| ``-vs w           | The number of characters used to store the genotypes, in case they are in |
+| ``-vs w``         | The number of characters used to store the genotypes, in case they are in |
 |                   | fixed width format.                                                       |
 +-------------------+---------------------------------------------------------------------------+
 | ``-sep separator``| The separator used to separate the genotypes in the incoming stream, in   |

@@ -54,7 +54,7 @@ object TypeConversionFunctions {
     functions.register("LONG", getSignatureInt2Long(int2Long), int2Long _)
     functions.register("FORM", getSignatureDoubleIntInt2String(form), form _)
     functions.register("EFORM", getSignatureDoubleIntInt2String(eform), eform _)
-    functions.register("GFORM", getSignatureDoubleIntInt2String(eform), gform _)
+    functions.register("GFORM", getSignatureDoubleIntInt2String(gform), gform _)
     functions.register("ISINT", getSignatureString2Boolean(isInt), isInt _)
     functions.register("ISLONG", getSignatureString2Boolean(isLong), isLong _)
     functions.register("ISFLOAT", getSignatureString2Boolean(isFloat), isFloat _)

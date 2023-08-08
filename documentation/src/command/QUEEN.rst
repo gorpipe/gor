@@ -2,25 +2,26 @@
 
    <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span>
 
-.. _KING:
+.. _QUEEN:
 
-====
-KING
-====
-The **KING** command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
+=====
+QUEEN
+=====
+
+The **QUEEN** command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
 Bioinformatics, Vol. 26 no. 22 2010, pages 2867–2873).
 
-The left-input stream is of the same type as for **CSVSEL**, i.e. it must contain the columns ``values`` and ``bucket``.
+The left-input stream is of the same type as for :ref:**CSVSEL**, i.e. it must contain the columns ``values`` and ``bucket``.
 The tag-bucket relation is used to define how the values for different tags are stored in the value column in each bucket.
 The tag selections specify which tags are selected and the calculation is carried out for each tag (PN) in the first
 tag list against each tag in the second tag list, for every variant in the left-input stream.  The left-input stream
 must include a column with the allele frequency, named AF.  Such column is most easily added to the horizontal genotype
-variant format with a **VARJOIN**.
+variant format with a :ref:**VARJOIN**.
 
 The output is a row for each tag-pair, using columns named PN1 and PN2.  Since the output is an aggregate over the genome
 is also includes dummy columns for Chrom and Pos with the values "ChrA" and 0, respectively.  The important columns are
 however PN1, PN2, IBS0, XX, tpq, kpq, Nhet, Nhom, NAai, NAaj, count, pi0, phi, and theta.  See the code examples
-and the KING paper for further details related to the **KING** command.
+and the KING paper for further details related to the :ref:**KING** command.
 
 
 Usage
@@ -28,7 +29,7 @@ Usage
 
 .. code-block:: gor
 
-    gor ... | KING tagbucketrelation tagselection1 tagselection2  [-gc cols] [(-s sep | -vs charsize)]
+    gor ... | QUEEN tagbucketrelation tagselection1 tagselection2  [-gc cols] [(-s sep | -vs charsize)]
 
 Options
 =======

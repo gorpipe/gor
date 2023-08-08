@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor #dbsnp# | GROUP chrom -count

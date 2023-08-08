@@ -1,4 +1,4 @@
-.. _cols2list:
+.. _cols2listf:
 
 =========
 COLS2LIST

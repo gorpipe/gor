@@ -7,7 +7,8 @@
 =============
 DEFLATECOLUMN
 =============
-The :ref:`DEFLATECOLUMN` command allows you to select a single column and compress its content if it meets the minimum size defined by the ``-m``option. Use the :ref:`INFLATECOLUMN` to de-compress the column.
+
+The :ref:`DEFLATECOLUMN` command allows you to select a single column and compress its content if it meets the minimum size defined by the ``-m`` option. Use the :ref:`INFLATECOLUMN` to de-compress the column.
 
 Usage
 =====

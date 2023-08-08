@@ -18,10 +18,10 @@ Usage
 
 We need to first set the case and control lists, the disease model (regular, dominant, or recessive),
 and other parameters. Then the procedure is as follows:
-    * Before processing a feature, call initializeGroup() to clear the counts.
-    * Iterate through the data for the feature and for each variant found for some subject, add the call counts using addFeature().
-    * Calculate the p-value (and a few other values) using calculateValues().
-    * Repeat the process for the next feature.
+* Before processing a feature, call initializeGroup() to clear the counts.
+* Iterate through the data for the feature and for each variant found for some subject, add the call counts using addFeature().
+* Calculate the p-value (and a few other values) using calculateValues().
+* Repeat the process for the next feature.
 
 .. code-block:: gor
 

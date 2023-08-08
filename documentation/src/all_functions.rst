@@ -1,8 +1,13 @@
+:orphan:
+
+.. _functions:
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    functions/adddays
+   functions/addmonths
+   functions/addyears
    functions/abs
    functions/arccosine
    functions/arcsine
@@ -12,15 +17,24 @@
    functions/brackets
    functions/ceil
    functions/chisquare
-   functions/cols2list
+   functions/cols2listf
    functions/cols2listmap
    functions/contains
+   functions/containscount
    functions/containsany
    functions/cosine
+   functions/currentdate
+   functions/date
    functions/daydiff
+   functions/dayofmonth
+   functions/dayofweek
+   functions/dayofyear
    functions/decode
    functions/div
+   functions/dquote
+   functions/dunquote
    functions/eform
+   functions/exp
    functions/float
    functions/floor
    functions/form
@@ -42,20 +56,26 @@
    functions/listhascount
    functions/listlast
    functions/listmap
+   functions/listnth
    functions/listreverse
    functions/listsecond
    functions/listsortasc
    functions/listtail
    functions/listzip
+   functions/log
    functions/lower
+   functions/ln
    functions/max
    functions/md5
    functions/mid
    functions/min
    functions/mod
+   functions/month
+   functions/monthdiff
    functions/posof
    functions/pow
    functions/pval
+   functions/random
    functions/regsel
    functions/replace
    functions/revcompl
@@ -70,9 +90,11 @@
    functions/sqrt
    functions/str
    functions/substr
+   functions/sunquote
    functions/tangent
    functions/trim
    functions/unbracket
    functions/upper
    functions/vcfformattag
+   functions/year
    functions/yeardiff

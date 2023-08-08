@@ -107,6 +107,9 @@ Commands
    * - :ref:`GTLD`
      - Calculate linkage disequilibrium between genotypes in different locations.
      - GOR
+   * - :ref:`GTTRANSPOSE`
+     - Generates one column named PNs and either one another column named VALUES, containing the genotypes of the pn by marker in the order defined by the marker source.
+     - GOR
    * - :ref:`HIDE`
      - Removes the listed columns from the output stream.
      - GOR/NOR
@@ -137,8 +140,8 @@ Commands
    * - :ref:`MAP`
      - Joins together tables using columns other than the chromosome and position data.
      - GOR/NOR
-   * - :ref:`META`
-     - Joins together tables using columns other than the chromosome and position data.
+   * - :ref:`METAINFO`
+     - Allows querying of meta data associated with a data source.
      - GOR/NOR
    * - :ref:`MERGE`
      - Combines two independent sources into a single genomic-ordered stream.
@@ -176,6 +179,9 @@ Commands
    * - :ref:`PIVOT`
      - Extracts information from large row-based data sets and maps the data into horizontal columns.
      - GOR/NOR
+   * - :ref:`QUEEN`
+     - Calculates relationship statistics from a stream of horizontal genotypes.
+     - GOR
    * - :ref:`PREFIX`
      - Adds a specified prefix to the listed columns.
      - GOR/NOR

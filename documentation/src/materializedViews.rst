@@ -99,7 +99,7 @@ Again, the fact that the :ref:`SORT` command has a very efficient sliding window
 
 Table Functions
 ===============
-In certain case, for example when testing report builder modules, it may be necessary to access .yml files from the command line using :ref:`gorpipe`. In this case you can use the following syntax:
+In certain case, for example when testing report builder modules, it may be necessary to access .yml files from the command line using **gorpipe**. In this case you can use the following syntax:
 
 .. code-block:: gor
 

@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor -p chr21 #wgsVars# -f C416TO_INDEX | SELECT 1-4

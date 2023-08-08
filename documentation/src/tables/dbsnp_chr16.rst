@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #dbsnp# for chr16
    :widths: 5  10 5  5  15
    :header-rows: 1

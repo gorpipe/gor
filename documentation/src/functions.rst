@@ -46,6 +46,9 @@ Certain functions in GOR can be used to return a Boolean result (i.e. 0 for fals
    * - ``CONTAINSANY(str,lit-list) : bool``
      - Returns true if the string contains any of the string literals in the list. Not case-sensitive. Same as :ref:`contains`.
      - :ref:`contains`
+   * - ``CONTAINSCOUNT(str,lit-list) : int``
+     - Returns the number of elements in the comma separated list that are in the lit-list.
+     - :ref:`containscount`
    * - ``CSCONTAINS(str,lit-list) : bool``
      - Case-sensitive version of :ref:`CONTAINS`.
      - :ref:`contains`
@@ -209,13 +212,13 @@ Algebraic Functions
      - :ref:`abs`
    * - ``LOG(num) : float``
      - 10-based logarithm.
-     - :ref:`log10`
+     - :ref:`logf`
    * - ``LN(num) : float``
      - Natural logarithm.
-     - :ref:`natural_log`
+     - :ref:`lnf`
    * - ``EXP(num) : float``
-     - The exponent, e.g. exp(x) = e^x.
-     - :ref:`exponential`
+     - The natural exponent, e.g. exp(x) = e^x.
+     - :ref:`exp`
    * - ``RANDOM() : num``
      - A random floating point number.
      - :ref:`random`
@@ -429,7 +432,7 @@ Click on "More info" for any of the functions below to get more information abou
      - :ref:`fsvmap`
    * - ``COLS2LIST(str[,sep]) : str``
      - Collapse values from multiple columns into a single list, with an optional separator argument.
-     - :ref:`cols2list`
+     - :ref:`cols2listf`
    * - ``COLS2LISTMAP(str,str[,sep]) : str``
      - Collapse values from multiple columns into a single list with an expression applied, with optional separator argument
      - :ref:`cols2listmap`

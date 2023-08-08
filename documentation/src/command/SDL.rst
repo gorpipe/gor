@@ -7,6 +7,7 @@
 ===
 SDL
 ===
+
 The SDL command allows you to run arbitrary SDL commands against an SDL server (the server here being defined by the content of a file called gor.sdl.credentials in the config directory).
 
 SDL statements need to be encapsulated between curly brackets, e.g. sdl {sdl_statement}.

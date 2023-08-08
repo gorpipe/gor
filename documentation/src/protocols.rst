@@ -1,3 +1,5 @@
+:orphan:
+
 GOR Protocol support
 ====================
 The GOR engine has an extensible protocol support that supports querying data from files stored in local and remote storage.

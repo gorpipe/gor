@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #dbsnp# (with a calculated column showing the reference length)
    :widths: 5  10 5  5  15 5
    :header-rows: 1

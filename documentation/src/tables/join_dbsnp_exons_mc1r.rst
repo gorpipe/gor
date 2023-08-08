@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor -p chr16:89978525-89978550 #dbsnp# | JOIN -snpseg #exons# | WHERE gene_symbol = 'MC1R' | SELECT 1-10
