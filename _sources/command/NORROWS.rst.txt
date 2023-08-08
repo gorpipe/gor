@@ -8,7 +8,7 @@
 NORROWS
 =======
 
-**NORROWS** is a :term:`source command<source commands>` that generates a number of rows based on the input parameters.
+**NORROWS** is a :term:`Source commands` that generates a number of rows based on the input parameters.
 
 To use NORROWS, you specify the number of rows to generate.
 It is useful when you need to perform a calculation and you want to test the calculation out on multiple rows before applying the calculation as a pipe step in a larger query with an actual source.

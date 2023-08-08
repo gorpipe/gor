@@ -1,8 +1,8 @@
 .. _monthdiff:
 
-=======
+=========
 MONTHDIFF
-=======
+=========
 
 The **MONTHDIFF** function calculates the difference, in months, between two given dates.
 

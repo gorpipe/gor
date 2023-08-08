@@ -9,7 +9,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>KING &mdash; GOR Open Source v.2.0 documentation</title>
+  <title>QUEEN &mdash; GOR Open Source v.2.0 documentation</title>
   
 
   
@@ -142,7 +142,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>KING</li>
+      <li>QUEEN</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -159,23 +159,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="king-1">
-<span id="king"></span><h1>KING<a class="headerlink" href="#king-1" title="Permalink to this headline">¶</a></h1>
-<p>The <strong>KING</strong> command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="queen-1">
+<span id="queen"></span><h1>QUEEN<a class="headerlink" href="#queen-1" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>QUEEN</strong> command is used to calculate parameters that can be used in the KING algorithm (see Ani Manichaikul et.al.
 Bioinformatics, Vol. 26 no. 22 2010, pages 2867–2873).</p>
-<p>The left-input stream is of the same type as for <strong>CSVSEL</strong>, i.e. it must contain the columns <code class="docutils literal notranslate"><span class="pre">values</span></code> and <code class="docutils literal notranslate"><span class="pre">bucket</span></code>.
+<p>The left-input stream is of the same type as for :ref:<strong>CSVSEL</strong>, i.e. it must contain the columns <code class="docutils literal notranslate"><span class="pre">values</span></code> and <code class="docutils literal notranslate"><span class="pre">bucket</span></code>.
 The tag-bucket relation is used to define how the values for different tags are stored in the value column in each bucket.
 The tag selections specify which tags are selected and the calculation is carried out for each tag (PN) in the first
 tag list against each tag in the second tag list, for every variant in the left-input stream.  The left-input stream
 must include a column with the allele frequency, named AF.  Such column is most easily added to the horizontal genotype
-variant format with a <strong>VARJOIN</strong>.</p>
+variant format with a :ref:<strong>VARJOIN</strong>.</p>
 <p>The output is a row for each tag-pair, using columns named PN1 and PN2.  Since the output is an aggregate over the genome
 is also includes dummy columns for Chrom and Pos with the values “ChrA” and 0, respectively.  The important columns are
 however PN1, PN2, IBS0, XX, tpq, kpq, Nhet, Nhom, NAai, NAaj, count, pi0, phi, and theta.  See the code examples
-and the KING paper for further details related to the <strong>KING</strong> command.</p>
+and the KING paper for further details related to the :ref:<strong>KING</strong> command.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING tagbucketrelation tagselection1 tagselection2  [-<span class="no">gc</span> cols] [(-s sep | -vs charsize)]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | QUEEN tagbucketrelation tagselection1 tagselection2  [-<span class="no">gc</span> cols] [(-s sep | -vs charsize)]
 </pre></div>
 </div>
 </section>
@@ -307,7 +307,7 @@ the output-pairs are filtered to avoid storing symmetric pairs.
 </div>
 <section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="KING2.html#king2"><span class="std std-ref">KING2</span></a> <a class="reference internal" href="#king"><span class="std std-ref">KING</span></a> <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
+<p><a class="reference internal" href="KING2.html#king2"><span class="std std-ref">KING2</span></a> <a class="reference internal" href="KING.html#king"><span class="std std-ref">KING</span></a> <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
 </section>
 </section>
 </section>

@@ -176,6 +176,9 @@ and the KING paper for further details related to the <strong>KING</strong> comm
 <p>See also the KING2 and QUEEN commands.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | KING tagbucketrelation tag-list1 tag-list2  [-<span class="no">gc</span> cols] [-sym] [(-s sep | -vs valuesize)] [-maxvars num_variants]
+</pre></div>
+</div>
 </section>
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
@@ -266,9 +269,82 @@ The query that uses the KING command is MUCH faster when the <span class="na">PN
 The above query example shows how the parameters pi0 and phi (or theta) can be used in a relationship classifier.
 </pre></div>
 </div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>Below is a query that compares the different commands using simulated data for testing purposes:
+
+<span class="nd">def</span> #r# = rename #1 <span class="na">PN</span> | replace #1 &#39;<span class="na">PN</span>&#39;+#1;
+<span class="nd">def</span> #n# = 10;
+<span class="nd">def</span> #bucksize# = 17;
+
+<span class="nd">create</span> #bucket# = norrows #n# | #r# | rownum | calc bucket &#39;b&#39;+<span class="k">str</span>(1+div(rownum, #bucksize# )) | hide rownum;
+<span class="nd">create</span> #dummybuck# = norrows #n# | #r# | calc bucket &#39;b1&#39;;
+<span class="nd">create</span> #pns# = norrows #n# | #r#;
+<span class="nd">create</span> #pns1# = <span class="nd">nor</span> [#pns#];
+<span class="nd">create</span> #pns2# = <span class="nd">nor</span> [#pns#];
+
+<span class="nd">create</span> #rel# = <span class="nd">nor</span> [#pns1#] | multimap -cartesian [#pns2#] | rename <span class="na">PN</span> id1 | rename PNx id2 | select id1,id2;
+
+<span class="nd">create</span> #values# = norrows 1000 | rename #1 i | multimap -cartesian &lt;(norrows #n# | rename #1 j) | calc gt if(random()&lt;0.5,&#39;1&#39;,&#39;0&#39;) /*  mod(i+j,2) */ | group -<span class="no">gc</span> i -lis -sc gt -s &#39;&#39;
+| rename #2 values;
+
+<span class="nd">create</span> #vars# = gorrows -<span class="no">p</span> chr1:1-1000 | select 1-2 | calc ref &#39;C&#39; | calc <span class="na">alt</span> &#39;A&#39; | calc af random() | map -c <span class="na">pos</span> [#values#] | calc bucket &#39;b1&#39;
+| csvsel -tag <span class="na">PN</span> -<span class="no">gc</span> ref,<span class="na">alt</span>,af -vs 1 [#dummybuck#] [#pns#] | map -c pn [#bucket#] | rename value gt | gtgen -<span class="no">gc</span> ref,<span class="na">alt</span>,af [#bucket#] &lt;(gorrows -<span class="no">p</span> chr1:1-2 | group chrom
+| calc pn &#39;&#39; | top 0);
+
+<span class="nd">create</span> #queen# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | distloc 100000 | queen [#bucket#] [#pns1#] [#pns2#] -vs 1 -minSharing -10) | select pn1-  | signature -timeres 100;
+
+<span class="nd">create</span> #king2# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | distloc 100000 | king2 -<span class="no">gc</span> af [#bucket#] &lt;(<span class="nd">nor</span> [#pns1#] | multimap -cartesian [#pns2#] ) -vs 1 ) | select pn1- | signature -timeres 11 | calc t time();
+
+<span class="nd">create</span> #king# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | distloc 100000 | king -<span class="no">gc</span> af -maxvars 110000 [#bucket#] [#pns1#] &lt;(<span class="nd">nor</span> [#pns2#] | top 1) -vs 1 ) | select pn1- | signature -timeres 11 | calc t time();
+
+<span class="nd">create</span> #kingSym# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | distloc 100001 | king -<span class="no">gc</span> af -maxvars 110001 -sym [#bucket#] [#pns1#] [#pns2#]  -vs 1 ) | select pn1- | signature -timeres 11 | calc t time();
+
+<span class="nd">create</span> #kingJoin# = <span class="nd">nor</span> &lt;(<span class="nd">gor</span> [#vars#] | distloc 1000
+| calc tpq 2*af*af*(1.0-af)*(1.0-af)
+| calc kpq 2.0*af*(1-af)
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,tpq,kpq -vs 1 -u 3 -tag <span class="na">PN</span> [#bucket#] [#pns1#]
+| where value != &#39;3&#39;
+| multimap -c pn &lt;(<span class="nd">nor</span> [#rel#] | select id1,id2)
+| varjoin -norm -r -xl id2 -xr pn &lt;(<span class="nd">gor</span> [#vars#]
+  | csvsel -<span class="no">gc</span> ref,<span class="na">alt</span> -vs 1 -u 3 -tag <span class="na">PN</span> [#bucket#] [#pns2#]
+  | where value != &#39;3&#39;)
+| calc values = <span class="k">str</span>(value)+<span class="k">str</span>(valuex)
+| calc IBS0 if(values=&#39;02&#39; or values = &#39;20&#39;,1,0)
+| calc XX if(values=&#39;01&#39; or values = &#39;10&#39; or values = &#39;21&#39; or values = &#39;12&#39;,1,if(values=&#39;02&#39; or values = &#39;20&#39;,4,0))
+| calc Nhet if(values = &#39;11&#39;,1,0)
+| calc Nhom if(values = &#39;02&#39; or values = &#39;20&#39;,1,0)
+| calc NAai if(left(values,1)=&#39;1&#39;,1,0)
+| calc NAaj if(right(values,1)=&#39;1&#39;,1,0)
+| group genome -<span class="no">gc</span> pn,pnx -sum -fc IBS0,XX,tpq,kpq,Nhet,Nhom,NAai,NAaj -<span class="no">count</span>
+| rename allcount <span class="no">count</span>
+| rename pn pn1 | rename pnx pn2
+| rename sum_(.*pq) #{1}
+| replace sum_* <span class="k">int</span>(<span class="k">float</span>(#rc))
+| rename sum_(.*) #{1})
+| select pn1-
+| calc pi0 IBS0/<span class="k">float</span>(tpq)
+| calc phi 0.5-<span class="k">float</span>(XX)/<span class="k">float</span>(4.0*kpq)
+| calc theta (Nhet-2.0*Nhom)/(NAai+NAaj)
+| calc t time();
+;
+
+<span class="nd">nor</span> [#king2#] | calc file &#39;king2&#39;
+| merge &lt;(<span class="nd">nor</span> [#king#] | calc file &#39;king&#39;)
+| merge &lt;(<span class="nd">nor</span> [#kingSym#] | calc file &#39;kingSym&#39;)
+| merge &lt;(<span class="nd">nor</span> [#kingJoin#] | calc file &#39;kingJoin&#39;)
+| calc sortcol if(pn1&gt;pn2,pn2+&#39;,&#39;+pn1,pn1+&#39;,&#39;+pn2)
+| sort -c sortcol,file
+| hide sortcol
+| replace tpq form(tpq,4,3)
+| replace kpq form(kpq,4,3)
+| replace phi form(phi,4,3)
+| replace theta form(theta,4,3)
+| rename t time()
+| top 100
+</pre></div>
+</div>
 <section id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="KING2.html#king2"><span class="std std-ref">KING2</span></a> <span class="xref std std-ref">QUEEN</span> <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
+<p><a class="reference internal" href="KING2.html#king2"><span class="std std-ref">KING2</span></a> <a class="reference internal" href="QUEEN.html#queen"><span class="std std-ref">QUEEN</span></a> <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
 </section>
 </section>
 </section>

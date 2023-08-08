@@ -171,15 +171,11 @@ too much computing time on uninteresting features.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>We need to first set the case and control lists, the disease model (regular, dominant, or recessive),
-and other parameters. Then the procedure is as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Before processing a feature, call initializeGroup() to clear the counts.</p></li>
-<li><p>Iterate through the data for the feature and for each variant found for some subject, add the call counts using addFeature().</p></li>
-<li><p>Calculate the p-value (and a few other values) using calculateValues().</p></li>
-<li><p>Repeat the process for the next feature.</p></li>
-</ul>
-</div></blockquote>
+and other parameters. Then the procedure is as follows:
+* Before processing a feature, call initializeGroup() to clear the counts.
+* Iterate through the data for the feature and for each variant found for some subject, add the call counts using addFeature().
+* Calculate the p-value (and a few other values) using calculateValues().
+* Repeat the process for the next feature.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GAVA</span> maxiterations -casefile &lt;filename&gt; -ctrlfile &lt;filename&gt; [ attributes ]
 </pre></div>
 </div>

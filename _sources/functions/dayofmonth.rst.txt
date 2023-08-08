@@ -1,8 +1,8 @@
 .. _dayofmonth:
 
-=======
+==========
 DAYOFMONTH
-=======
+==========
 
 The **DAYOFMONTH** function returns the day of month of the given date, as an int from 1-31.
 

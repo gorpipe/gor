@@ -1,8 +1,8 @@
 .. _addmonths:
 
-=======
+=========
 ADDMONTHS
-=======
+=========
 
 The **ADDMONTHS** function calculates the date that is some months after the given date.
 

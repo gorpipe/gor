@@ -78,7 +78,7 @@ Reserved Metacharacters
 Note that some characters are reserved in the nor file and will be automatically replaced if used in the data rows:
 
 +-----------------------------+
-|   Reserved Metacharacters   |
+| Reserved Metacharacters     |
 +-----------------------------+
-|         .\/*+-'$;,          |
+| .\/*+-'$;,                  |
 +-----------------------------+

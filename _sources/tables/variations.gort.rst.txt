@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: variations.gort
    :widths: 15  5
    :header-rows: 1

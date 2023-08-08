@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Using GOR in Notebooks &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Commands" href="commands.html" />
+    <link rel="prev" title="Parallelization in GOR" href="parallelGOR.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="gor-logo-home">
+        <a href="index.html">
+            <img src="_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">Documentation</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="introduction.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="basicGORqueries.html">GOR and NOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="filteringStreams.html">Filtering Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="columnModifications.html">Column Modifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="groupingAndAggregation.html">Grouping and Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestedStreams.html">Nested Streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="joiningTables.html">Joining Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mapMultimap.html">Map and Multimap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pivoting.html">Pivoting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sequenceReads.html">Sequence Reads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using GOR in Notebooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#notebook-examples">Notebook Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#what-is-gor">What is GOR?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#writing-gor-queries">Writing GOR queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#reference-data">Reference Data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="introduction.html">Tutorials</a> &raquo;</li>
+        
+      <li>Using GOR in Notebooks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="using-gor-in-notebooks">
+<span id="notebooks"></span><h1>Using GOR in Notebooks<a class="headerlink" href="#using-gor-in-notebooks" title="Permalink to this headline">¶</a></h1>
+<p>GOR can be combined with python, R or SPARK through Jupyter notebooks using our  relevant SDKs. This allows the user to efficiently query genomic data while reading desired information into data frames opening the door to the advanced plotting and analysis tools of R or Python.</p>
+<p>To create a new notebook select the <strong>Notebooks</strong> options from the current platform. You will be taken to a jupyter hub server page where you can create a new notebook from scratch or copy one of the built-in template notebooks from the GOR/ folder to your user directory.</p>
+<section id="notebook-examples">
+<h2>Notebook Examples<a class="headerlink" href="#notebook-examples" title="Permalink to this headline">¶</a></h2>
+<p>Below are examples of notebooks using GOR.</p>
+<table class="docutils align-default" id="table-1">
+<caption><span class="caption-text">Notebooks using GOR</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Notebook</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/AF_VEP_join.html#notebooks-1"><span class="std std-ref">AF VEP Join</span></a></p></td>
+<td><p>Joining variant allele frequency information with variant effect prediction information</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/Extract_Variants.html#notebooks-2"><span class="std std-ref">Extract Variants</span></a></p></td>
+<td><p>Demonstrate the basic commands to extract variants from a genotype freeze</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/Gnomad.html#notebooks-3"><span class="std std-ref">Gnomad</span></a></p></td>
+<td><p>Here we will show how we can take very large VCF files from the Genome Aggregation Database and convert them to GOR tables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/gor_helper_demo.html#notebooks-4"><span class="std std-ref">GOR Helper Demo</span></a></p></td>
+<td><p>Demonstration of how to use the Gor helper in notebooks.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GWAS_Comparison.html#notebooks-5"><span class="std std-ref">GWAS Comparison</span></a></p></td>
+<td><p>Demonstrate functionality to compare different GWAS runs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GWAS_vs_Finngen.html#notebooks-6"><span class="std std-ref">GWAS vs. Finngen</span></a></p></td>
+<td><p>Comparison of Plink GWAS with Finngen results in Analysis Catalog structure</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/HPO.html#notebooks-7"><span class="std std-ref">HPO</span></a></p></td>
+<td><p>Working with the HPO direct acyclic graph (DAG)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/HPO_Phecode.html#notebooks-8"><span class="std std-ref">HPO Phecode</span></a></p></td>
+<td><p>HPO phenotypes and Phecode-like catalog</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/HPO_Phewas.html#notebooks-9"><span class="std std-ref">HPO Phewas</span></a></p></td>
+<td><p>HPO Phewas based on a Phecode-like catalog</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/ICD_longitudinal.html#notebooks-10"><span class="std std-ref">ICD Longitudinal</span></a></p></td>
+<td><p>Longitudinal phenotype analysis</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/Joins.html#notebooks-11"><span class="std std-ref">Joins</span></a></p></td>
+<td><p>Genome JOINS</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/LD.html#notebooks-12"><span class="std std-ref">LD</span></a></p></td>
+<td><p>Linkage disequilibrium</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/ParallelQueries_PARALLEL.html#notebooks-13"><span class="std std-ref">Parallel Queries: PARALLEL</span></a></p></td>
+<td><p>Parallel GORpipe queries with PARALLEL</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/ParallelQueries_PARTGOR.html#notebooks-14"><span class="std std-ref">Parallel Queries: PARTGOR</span></a></p></td>
+<td><p>Parallel GORpipe queries with PARTGOR</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/ParallelQueries_PGOR.html#notebooks-15"><span class="std std-ref">Parallel Queries: PGOR</span></a></p></td>
+<td><p>Parallel GORpipe queries with PGOR</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="commands.html" class="btn btn-neutral float-right" title="Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="parallelGOR.html" class="btn btn-neutral float-left" title="Parallelization in GOR" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor -p chr21 #VEP# | WHERE Max_Impact = 'HIGH' | SELECT 1-7

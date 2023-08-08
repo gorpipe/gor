@@ -235,15 +235,19 @@
 <td><p>Returns true if the string contains any of the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
 <td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINS(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONTAINSCOUNT(str,lit-list)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<td><p>Returns the number of elements in the comma separated list that are in the lit-list.</p></td>
+<td><p><a class="reference internal" href="functions/containscount.html#containscount"><span class="std std-ref">CONTAINSCOUNT</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINS(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
 <td><p>Case-sensitive version of <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
 <td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINSALL(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINSALL(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
 <td><p>Returns true if the string contains all the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
 <td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINSANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CSCONTAINSANY(str,lit-list)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
 <td><p>Returns true if the string contains any of the string literals in the list. Not case-sensitive. Same as <a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a>.</p></td>
 <td><p><a class="reference internal" href="functions/contains.html#contains"><span class="std std-ref">CONTAINS, CONTAINSALL</span></a></p></td>
 </tr>
@@ -380,11 +384,11 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EFORM(num,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Format a number, specifying the space and decimals (C-style %x.ye format style).</p></td>
-<td><p><span class="xref std std-ref">eform</span></p></td>
+<td><p><a class="reference internal" href="functions/eform.html#eform"><span class="std std-ref">EFORM</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GFORM(num,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Format a number, specifying the space and decimals (C-style %x.yg format style).</p></td>
-<td><p><span class="xref std std-ref">gform</span></p></td>
+<td><p><a class="reference internal" href="functions/gform.html#gform"><span class="std std-ref">GFORM</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REGSEL(str,str-const)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Extract a single substring based on regular expression binding pattern, e.g. with single brackets.</p></td>
@@ -459,19 +463,19 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LOG(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
 <td><p>10-based logarithm.</p></td>
-<td><p><span class="xref std std-ref">log10</span></p></td>
+<td><p><a class="reference internal" href="functions/log.html#logf"><span class="std std-ref">LOG</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LN(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
 <td><p>Natural logarithm.</p></td>
-<td><p><span class="xref std std-ref">natural_log</span></p></td>
+<td><p><a class="reference internal" href="functions/ln.html#lnf"><span class="std std-ref">LN</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EXP(num)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
-<td><p>The exponent, e.g. exp(x) = e^x.</p></td>
-<td><p><span class="xref std std-ref">exponential</span></p></td>
+<td><p>The natural exponent, e.g. exp(x) = e^x.</p></td>
+<td><p><a class="reference internal" href="functions/exp.html#exp"><span class="std std-ref">EXP</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RANDOM()</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
 <td><p>A random floating point number.</p></td>
-<td><p><span class="xref std std-ref">random</span></p></td>
+<td><p><a class="reference internal" href="functions/random.html#random"><span class="std std-ref">RANDOM</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SEGDIST(x,y,a,b)</span> <span class="pre">:</span> <span class="pre">num</span></code></p></td>
 <td><p>The distance between two segments. Returns 0 if segments overlap.</p></td>
@@ -553,7 +557,7 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHISQUARE(float,float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p></td>
 <td><p>Chi-square</p></td>
-<td><p><span class="xref std std-ref">chisquare</span></p></td>
+<td><p><a class="reference internal" href="functions/chisquare.html#chisquare"><span class="std std-ref">CHISQUARE</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CHISQUARECOMPL(float,float)</span></code></p></td>
 <td><p>Chi-square complement.  Same as CHI2.</p></td>
@@ -636,7 +640,7 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTFIRST(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Retrieves the first element (i.e. the head) in a comma-separated list, with an optional separator argument.</p></td>
-<td><p><a class="reference internal" href="functions/listnth.html#listfirst"><span class="std std-ref">listnth</span></a></p></td>
+<td><p><a class="reference internal" href="functions/listfirst.html#listfirst"><span class="std std-ref">listfirst</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTSECOND(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Second element in a comma separated list, with an optional separator argument.</p></td>
@@ -644,7 +648,7 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LISTNTH(str,int[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Nth element in a comma separated list, with an optional separator argument.</p></td>
-<td><p><span class="xref std std-ref">listnth</span></p></td>
+<td><p><a class="reference internal" href="functions/listnth.html#listnth"><span class="std std-ref">listnth</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LISTLAST(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Last element in a comma separated list, with an optional separator argument.</p></td>
@@ -752,7 +756,7 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LIST(str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Collapse values from multiple columns into a single list, with an optional separator argument.</p></td>
-<td><p><a class="reference internal" href="functions/cols2list.html#cols2list"><span class="std std-ref">COLS2LIST</span></a></p></td>
+<td><p><a class="reference internal" href="functions/cols2listf.html#cols2listf"><span class="std std-ref">COLS2LIST</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(str,str[,sep])</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Collapse values from multiple columns into a single list with an expression applied, with optional separator argument</p></td>

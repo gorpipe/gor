@@ -184,6 +184,82 @@ the ones we are calling now.</p>
 </section>
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns other than (chrom,pos)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-prgc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns for prior input other than (chrom,pos)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-pn</span> <span class="pre">pnColName</span></code></p></td>
+<td><p>Override the default PN colunm name used to represent the tag value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-maxseg</span> <span class="pre">bpsize</span></code></p></td>
+<td><p>The maximum span size of the coverage segments.  Defaults to 10000 (10kb).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">error</span> <span class="pre">rate</span></code></p></td>
+<td><p>The error rate of the reads.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-fpab</span> <span class="pre">prior</span></code></p></td>
+<td><p>The prior assumed to have been used when prob likelihoods (PL) are used.  Use 0.33 for flat prior.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-fpbb</span> <span class="pre">prior</span></code></p></td>
+<td><p>The prior for the alternative homozygot.  Use fpab = fpbb = 0.333 for flat prior.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-maxit</span> <span class="pre">mi</span></code></p></td>
+<td><p>The maximum number of iterations. Default value is 20.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tol</span> <span class="pre">tolerance</span></code></p></td>
+<td><p>The tolerance. Default value is 1e-5.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-gp</span> <span class="pre">col</span></code></p></td>
+<td><p>The GP col (from i)). Is looked up by name if not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-pl</span> <span class="pre">col</span></code></p></td>
+<td><p>The PL col (from i)). Is looked up by name if not given.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-gl</span> <span class="pre">col</span></code></p></td>
+<td><p>The GL col (from i)). Is looked up by name if not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-pabc</span> <span class="pre">col</span></code></p></td>
+<td><p>The probability for heterozygot genotype pAB=2pq</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-pbbc</span> <span class="pre">col</span></code></p></td>
+<td><p>The probability for homozygot alt, pBB = pAltAlt, equal to Af*Af if variant in HWE</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-anc</span> <span class="pre">col</span></code></p></td>
+<td><p>The allele number column in the prior source. Is looked up by name if not given.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-cc</span> <span class="pre">col</span></code></p></td>
+<td><p>The call copies column from ii) Looked up by name if not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-crc</span> <span class="pre">col</span></code></p></td>
+<td><p>The call ratio column from iii) Looked up by name if not given.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ld</span> <span class="pre">col</span></code></p></td>
+<td><p>The depth column from the incoming source in ii). Looked up by name if not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rd</span> <span class="pre">col</span></code></p></td>
+<td><p>The depth column from the prior source. Lookup up by name if not given.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-th</span> <span class="pre">threshold</span></code></p></td>
+<td><p>The threshold to use, if the genotypes should be written out as discrete genotypes. Giving the
+threshold indicates that the hard calls should be written out.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-psep</span> <span class="pre">separator</span></code></p></td>
+<td><p>The separator in the probability triplet. Default value is ‘;’. Must be a single character.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-osep</span> <span class="pre">separator</span></code></p></td>
+<td><p>The separator to separate the genotypes, in case the triplets should we written out.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-combgt</span></code></p></td>
+<td><p>Try to combine the het and alt-hom probabilities if no genotype exceeds threshold.  The genotype
+corresponding to the one with larger probability is used, i.e. het or hom-alt.  This is to save
+genotypes that are between het/hom-alt state from being called unknown.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>

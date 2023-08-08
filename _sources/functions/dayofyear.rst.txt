@@ -1,8 +1,8 @@
 .. _dayofyear:
 
-=======
+=========
 DAYOFYEAR
-=======
+=========
 
 The **DAYOFYEAR** function returns the day of year of the given date, as an int from 1-365 (or 366 for leap years).
 

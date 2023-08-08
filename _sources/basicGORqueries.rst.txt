@@ -2,7 +2,7 @@
 GOR and NOR
 ===========
 
-The :ref:`GOR` command is the primary :term:`source command<source commands>` in the GOR query language (along with the :ref:`NOR` command).
+The :ref:`GOR` command is the primary :term:`Source commands` in the GOR query language (along with the :ref:`NOR` command).
 
 .. _genomicOrder:
 

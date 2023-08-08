@@ -1,8 +1,8 @@
-.. _listfirst:
+.. _listnth:
 
-=========
+=======
 listnth
-=========
+=======
 
 The **listnth** function retrieves the nth item from a list of items. The list is assumed to be comma-separated, but an optional second parameter can specify a different separator. The list can be explicitly stated or it can be a reference to a column (either by name of the column or by its position in the input stream).
 

@@ -1,3 +1,5 @@
+:orphan:
+
 Glossary
 ========
 .. Glossary::
@@ -60,7 +62,7 @@ Glossary
    Phred scale
       The Phred scale or "Phred Quality Score" is a unit of measurement for base quality. See also: :term:`base-quality`.
 
-   pipe steps
+   Pipe steps
       Commands in a GOR query that manipulate the data that are returned by a source command.
 
    proband
@@ -69,7 +71,7 @@ Glossary
    Sequence Miner
       A GUI tool that enables deep data mining and custom queries on top of raw genetic data as well as derived data.
 
-   source commands
+   Source commands
       Commands in the GOR query language that start GOR queries and generate some data to work with.
 
    stream

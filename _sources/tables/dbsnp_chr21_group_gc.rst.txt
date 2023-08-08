@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor -p chr21 #dbsnp# | WHERE len(reference)=1 AND len(allele)=1

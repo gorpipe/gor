@@ -1,16 +1,23 @@
+:orphan:
+
 .. toctree::
    :maxdepth: 1
    :hidden:
 
+   command/ADJUST
+   command/ANNO
    command/ATMAX
    command/ATMIN
    command/BAMFLAG
    command/BASES
+   command/BINARYWRITE
    command/BUG
    command/BUCKETSPLIT
    command/CALC
+   command/CALCIFMISSING
    command/CIGARSEGS
    command/CMD
+   command/COLLECT
    command/COLNUM
    command/COLS2LIST
    command/COLSPLIT
@@ -40,6 +47,8 @@
    command/INFLATECOLUMN
    command/INSET
    command/JOIN
+   command/KING
+   command/KING2
    command/LDANNO
    command/LEFTJOIN
    command/LEFTWHERE
@@ -56,16 +65,21 @@
    command/PARTGOR
    command/PEDPIVOT
    command/PGOR
+   command/PLINKREGRESSION
    command/PILEUP
    command/PIPESTEPS
    command/PIVOT
+   command/PRGTGEN
+   command/QUEEN
    command/PREFIX
    command/RANK
    command/REGRESSION
    command/REGSEL
+   command/RELREMOVE
    command/RENAME
    command/REPLACE
    command/ROWNUM
+   command/SDL
    command/SED
    command/SEGHIST
    command/SEGPROJ

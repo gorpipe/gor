@@ -160,8 +160,8 @@
            <div itemprop="articleBody">
             
   <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="meta">
-<h1>META<a class="headerlink" href="#meta" title="Permalink to this headline">¶</a></h1>
-<p><strong>META</strong> is a <a class="reference internal" href="../glossary.html#term-source-commands"><span class="xref std std-term">source command</span></a> that displays all meta information associated with a given input source.</p>
+<span id="metainfo"></span><h1>META<a class="headerlink" href="#meta" title="Permalink to this headline">¶</a></h1>
+<p><strong>META</strong> is a <a class="reference internal" href="../glossary.html#term-source-commands"><span class="xref std std-term">Source commands</span></a> that displays all meta information associated with a given input source.</p>
 <p>To use META, you specify the input source to explore and the META input source will return source, name and value of all meta properties associated with the given input source.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
@@ -175,31 +175,101 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>META samples.bam
 </pre></div>
 </div>
-<p>Output:</p>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>#source name    value
-</pre></div>
-</div>
-<p>SOURCE  NAME    &lt;path&gt;/samples.bam
-SOURCE  PATH    &lt;path&gt;/samples.bam
-SOURCE  DATA_TYPE       BAM
-SOURCE  TYPE    FILE
-SOURCE  PROTOCOLS
-SOURCE  REMOTE  false
-SOURCE  SUPPORDED       true
-SOURCE  MODIFIED        1673530583578
-SOURCE  ID      3F1D72574FE3B8DA60FDFBA7E0BCDFE0
-FILE    PATH    &lt;path&gt;/BVL_FATHER_SLC52A2.bam
-FILE    NAME    BVL_FATHER_SLC52A2.bam
-FILE    TYPE    BAM
-FILE    SUFFIX  .bam
-FILE    SIZE    171379
-FILE    MODIFIED        1673530583578
-FILE    MODIFIED_UTC    Jan 12, 2023, 1:36:23 PM
-FILE    ID      3F1D72574FE3B8DA60FDFBA7E0BCDFE0
-FILE    SUPPORTS_INDEX  true
-FILE    INDEX   &lt;path&gt;&gt;/samples.bam.bai
-FILE    SUPPORTS_REFERENCE      false
-FILE    REFERENCE</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Source</p></td>
+<td><p>Name</p></td>
+<td><p>Value</p></td>
+</tr>
+<tr class="row-even"><td><p>SOURCE</p></td>
+<td><p>NAME</p></td>
+<td><p>&lt;path&gt;/samples.bam</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOURCE</p></td>
+<td><p>PATH</p></td>
+<td><p>&lt;path&gt;/samples.bam</p></td>
+</tr>
+<tr class="row-even"><td><p>SOURCE</p></td>
+<td><p>DATA_TYPE</p></td>
+<td><p>BAM</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOURCE</p></td>
+<td><p>TYPE</p></td>
+<td><p>FILE</p></td>
+</tr>
+<tr class="row-even"><td><p>SOURCE</p></td>
+<td><p>PROTOCOLS</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>SOURCE</p></td>
+<td><p>REMOTE</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-even"><td><p>SOURCE</p></td>
+<td><p>SUPPORTED</p></td>
+<td><p>true</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOURCE</p></td>
+<td><p>MODIFIED</p></td>
+<td><p>1673530583578</p></td>
+</tr>
+<tr class="row-even"><td><p>SOURCE</p></td>
+<td><p>ID</p></td>
+<td><p>3F1D72574FE3B8DA60FDFBA7E0BCDFE0</p></td>
+</tr>
+<tr class="row-odd"><td><p>FILE</p></td>
+<td><p>PATH</p></td>
+<td><p>&lt;path&gt;/BVL_FATHER_SLC52A2.bam</p></td>
+</tr>
+<tr class="row-even"><td><p>FILE</p></td>
+<td><p>NAME</p></td>
+<td><p>BVL_FATHER_SLC52A2.bam</p></td>
+</tr>
+<tr class="row-odd"><td><p>FILE</p></td>
+<td><p>TYPE</p></td>
+<td><p>BAM</p></td>
+</tr>
+<tr class="row-even"><td><p>FILE</p></td>
+<td><p>SUFFIX</p></td>
+<td><p>.bam</p></td>
+</tr>
+<tr class="row-odd"><td><p>FILE</p></td>
+<td><p>SIZE</p></td>
+<td><p>171379</p></td>
+</tr>
+<tr class="row-even"><td><p>FILE</p></td>
+<td><p>MODIFIED</p></td>
+<td><p>1673530583578</p></td>
+</tr>
+<tr class="row-odd"><td><p>FILE</p></td>
+<td><p>MODIFIED_UTC</p></td>
+<td><p>Jan 12, 2023, 1:36:23 PM</p></td>
+</tr>
+<tr class="row-even"><td><p>FILE</p></td>
+<td><p>ID</p></td>
+<td><p>3F1D72574FE3B8DA60FDFBA7E0BCDFE0</p></td>
+</tr>
+<tr class="row-odd"><td><p>FILE</p></td>
+<td><p>SUPPORTS_INDEX</p></td>
+<td><p>true</p></td>
+</tr>
+<tr class="row-even"><td><p>FILE</p></td>
+<td><p>INDEX</p></td>
+<td><p>&lt;path&gt;&gt;/samples.bam.bai</p></td>
+</tr>
+<tr class="row-odd"><td><p>FILE</p></td>
+<td><p>SUPPORTS_REFERENCE</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-even"><td><p>FILE</p></td>
+<td><p>REFERENCE</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 

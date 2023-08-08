@@ -120,6 +120,7 @@
 <li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks.html">Using GOR in Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#what-is-gor">What is GOR?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#writing-gor-queries">Writing GOR queries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#reference-data">Reference Data</a></li>
@@ -315,7 +316,7 @@ They must however be followed by the letters bp, e.g. not( pos &gt; 123,345,789b
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) &gt; 4 OR len(<span class="na">allele</span>) &gt; 4 | <span class="nb">TOP</span> 6
 </pre></div>
 </div>
-<p>In the above example, we are using the <strong>LEN</strong> function, which calculates the length of a string, to filter out any results from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table that do not have reference or allele base lengths longer than 4 bases. You can find more information on different formulas in GOR queries <span class="xref std std-ref">here</span>. More information on the <strong>CALC</strong> command can be found <a class="reference internal" href="columnModifications.html#addingcalccolumns"><span class="std std-ref">here</span></a></p>
+<p>In the above example, we are using the <strong>LEN</strong> function, which calculates the length of a string, to filter out any results from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table that do not have reference or allele base lengths longer than 4 bases. You can find more information on different formulas in GOR queries <a class="reference internal" href="all_functions.html#functions"><span class="std std-ref">here</span></a>. More information on the <strong>CALC</strong> command can be found <a class="reference internal" href="columnModifications.html#addingcalccolumns"><span class="std std-ref">here</span></a></p>
 </section>
 <section id="using-select-to-choose-columns">
 <h2>Using SELECT to choose columns<a class="headerlink" href="#using-select-to-choose-columns" title="Permalink to this headline">¶</a></h2>

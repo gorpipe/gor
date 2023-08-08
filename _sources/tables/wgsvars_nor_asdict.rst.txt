@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #wgsVars# Dictionary Table
    :widths: 5  5
    :header-rows: 1

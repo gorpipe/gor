@@ -1,8 +1,8 @@
 .. _addyears:
 
-=======
+========
 ADDYEARS
-=======
+========
 
 The **ADDYEARS** function calculates the date that is some years after the given date.
 

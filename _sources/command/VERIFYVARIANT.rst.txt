@@ -4,9 +4,10 @@
 
 .. _VERIFYVARIANT:
 
-===========
+=============
 VERIFYVARIANT
-===========
+=============
+
 The :ref:`VERIFYVARIANT` command ensures that the reference column (REF or REFERENCE) corresponds to the reference from
 the configured build. It also verifies that the alt column (ALT, CALL or ALLELE) does not exceed a maximum length.
 

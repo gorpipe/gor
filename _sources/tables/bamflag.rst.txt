@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: The Flag Column as expanded by BAMFLAG
    :widths: 3  6 5  6  15
    :header-rows: 1

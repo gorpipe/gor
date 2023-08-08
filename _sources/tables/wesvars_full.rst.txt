@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #wesVars#
    :widths: 5  5  5  5  5  5  5  5  15  5  15  5
    :header-rows: 1

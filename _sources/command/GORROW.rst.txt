@@ -7,7 +7,7 @@
 ======
 GORROW
 ======
-**GORROW** is a :term:`source command<source commands>` that returns a single row of data based on the input parameters.
+**GORROW** is a :term:`Source commands` that returns a single row of data based on the input parameters.
 
 To use GORROW, you define the chromosome, start position and end position. This command is a tool similar to the SQL command ``SELECT * FROM DUAL`` when working with Oracle database. It is useful when you need to perform a calculation and you want to test the calculation out on a single row before applying the calculation as a pipe step in a larger query with an actual source.
 

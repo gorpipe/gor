@@ -1,3 +1,5 @@
+:orphan:
+
 .. code-block:: gor
 
    gor -p chr21 #dbsnp# | JOIN -snpseg #exons#

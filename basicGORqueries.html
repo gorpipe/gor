@@ -117,6 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="variantData.html">Variation Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="materializedViews.html">Materialized Views</a></li>
 <li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks.html">Using GOR in Notebooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#what-is-gor">What is GOR?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#writing-gor-queries">Writing GOR queries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="introduction.html#reference-data">Reference Data</a></li>
@@ -191,7 +192,7 @@
             
   <section id="gor-and-nor">
 <h1>GOR and NOR<a class="headerlink" href="#gor-and-nor" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command is the primary <a class="reference internal" href="glossary.html#term-source-commands"><span class="xref std std-term">source command</span></a> in the GOR query language (along with the <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> command).</p>
+<p>The <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command is the primary <a class="reference internal" href="glossary.html#term-source-commands"><span class="xref std std-term">Source commands</span></a> in the GOR query language (along with the <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> command).</p>
 <section id="genomic-order">
 <span id="genomicorder"></span><h2>Genomic Order<a class="headerlink" href="#genomic-order" title="Permalink to this headline">¶</a></h2>
 <p>There are two main types of relations that can be used in the GOR Query Language: <a class="reference internal" href="glossary.html#term-genomic-ordered-data"><span class="xref std std-term">genomic-ordered</span></a> and <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">non-ordered</span></a>. Genomic-ordered relations have the chromosome and position in the first two columns.  They should be sorted in order of the chromosome (1 through to 22, followed by X and Y - and in some cases “M”, for mitochrondrial DNA) and then, within each chromosome, numerically on the position.</p>

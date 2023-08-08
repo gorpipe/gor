@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #wesVars# with 6 columns selected
    :widths: 5  5  5  5  5  5
    :header-rows: 1

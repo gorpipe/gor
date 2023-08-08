@@ -1,3 +1,5 @@
+:orphan:
+
 .. list-table:: #dbsnp# (showing different Indel examples)
    :widths: 5  10 5  5  15
    :header-rows: 1
