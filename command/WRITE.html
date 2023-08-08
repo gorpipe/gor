@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -241,6 +241,31 @@ outputs meta data.</p></td>
 </pre></div>
 </div>
 <p>The query above will write the contents of multiPIDfile.gor into as many files as there are distinct PIDs in the file. In this example a list of PIDs is supplied and the write command will create an empty file for each of the tags listed.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> fileA.gor | write s3data://project/user_data/fileB.gorz.
+</pre></div>
+</div>
+<p>The query above will write the contents of <code class="docutils literal notranslate"><span class="pre">fileA.gor</span></code> into S3 project folder.  In addition it will create a link to the S3 file in the project folder under <code class="docutils literal notranslate"><span class="pre">user_data/fileB.gorz.link</span></code>.</p>
+<p>There are 4 different S3 project and shared folders that can be written to:</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Project</p></td>
+<td><p>s3data://project/&lt;path to data&gt;</p></td>
+<td><p>Current project S3 folder.</p></td>
+</tr>
+<tr class="row-even"><td><p>Shared</p></td>
+<td><p>s3data://shared/&lt;path to data&gt;</p></td>
+<td><p>S3 folder shared between all projects.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Region</p></td>
+<td><p>s3region://shared/&lt;path to data&gt;</p></td>
+<td><p>S3 region shared folder.</p></td>
+</tr>
+<tr class="row-even"><td><p>Global</p></td>
+<td><p>s3global://shared/&lt;path to data&gt;</p></td>
+<td><p>S3 global shared folder.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 

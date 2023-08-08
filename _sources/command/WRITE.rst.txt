@@ -83,3 +83,21 @@ The query above will write the contents of multiPIDfile.gor into as many files a
     gor multiPIDfile.gor | write data_#{fork}.gor -f PID -r -t 'PN001,PN002,PN003'
 
 The query above will write the contents of multiPIDfile.gor into as many files as there are distinct PIDs in the file. In this example a list of PIDs is supplied and the write command will create an empty file for each of the tags listed.
+
+.. code-block:: gor
+
+    gor fileA.gor | write s3data://project/user_data/fileB.gorz.
+
+The query above will write the contents of ``fileA.gor`` into S3 project folder.  In addition it will create a link to the S3 file in the project folder under ``user_data/fileB.gorz.link``.
+
+There are 4 different S3 project and shared folders that can be written to:
+
++----------+----------------------------------+-----------------------------------------+
+| Project  | s3data://project/<path to data>  | Current project S3 folder.              |
++----------+----------------------------------+-----------------------------------------+
+| Shared   | s3data://shared/<path to data>   | S3 folder shared between all projects.  |
++----------+----------------------------------+-----------------------------------------+
+| Region   | s3region://shared/<path to data> | S3 region shared folder.                |
++----------+----------------------------------+-----------------------------------------+
+| Global   | s3global://shared/<path to data> | S3 global shared folder.                |
++----------+----------------------------------+-----------------------------------------+

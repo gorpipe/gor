@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -162,7 +162,7 @@
   <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="meta">
 <h1>META<a class="headerlink" href="#meta" title="Permalink to this headline">¶</a></h1>
 <p><strong>META</strong> is a <a class="reference internal" href="../glossary.html#term-source-commands"><span class="xref std std-term">source command</span></a> that displays all meta information associated with a given input source.</p>
-<p>To use META, you specify the input source to explore and the META input source will return name and value of all meta properties associated with the given input source.</p>
+<p>To use META, you specify the input source to explore and the META input source will return source, name and value of all meta properties associated with the given input source.</p>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>META &lt;input_source&gt;
@@ -176,30 +176,30 @@
 </pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>#name   value
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>#source name    value
 </pre></div>
 </div>
-<p>source.name     &lt;path&gt;/samples.bam
-source.path     &lt;path&gt;/samples.bam
-source.data.type        BAM
-source.type     FILE
-source.protocols
-source.remote   false
-source.supported        true
-source.modified 1673530583578
-source.id       3F1D72574FE3B8DA60FDFBA7E0BCDFE0
-file.path       &lt;path&gt;/BVL_FATHER_SLC52A2.bam
-file.name       BVL_FATHER_SLC52A2.bam
-file.type       BAM
-file.suffix     .bam
-file.size       171379
-file.modified   1673530583578
-file.modified.utc       Jan 12, 2023, 1:36:23 PM
-file.id 3F1D72574FE3B8DA60FDFBA7E0BCDFE0
-file.supports.index     true
-file.index      &lt;path&gt;&gt;/samples.bam.bai
-file.supports.reference false
-file.reference</p>
+<p>SOURCE  NAME    &lt;path&gt;/samples.bam
+SOURCE  PATH    &lt;path&gt;/samples.bam
+SOURCE  DATA_TYPE       BAM
+SOURCE  TYPE    FILE
+SOURCE  PROTOCOLS
+SOURCE  REMOTE  false
+SOURCE  SUPPORDED       true
+SOURCE  MODIFIED        1673530583578
+SOURCE  ID      3F1D72574FE3B8DA60FDFBA7E0BCDFE0
+FILE    PATH    &lt;path&gt;/BVL_FATHER_SLC52A2.bam
+FILE    NAME    BVL_FATHER_SLC52A2.bam
+FILE    TYPE    BAM
+FILE    SUFFIX  .bam
+FILE    SIZE    171379
+FILE    MODIFIED        1673530583578
+FILE    MODIFIED_UTC    Jan 12, 2023, 1:36:23 PM
+FILE    ID      3F1D72574FE3B8DA60FDFBA7E0BCDFE0
+FILE    SUPPORTS_INDEX  true
+FILE    INDEX   &lt;path&gt;&gt;/samples.bam.bai
+FILE    SUPPORTS_REFERENCE      false
+FILE    REFERENCE</p>
 </section>
 </section>
 
