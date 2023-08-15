@@ -210,7 +210,7 @@ public class ITestTableManager {
             System.out.println(String.format("Read top 10 with gor %d ms", (-time + (time = System.currentTimeMillis()))));
 
             Assert.assertTrue(Arrays.stream(s3FileReader.readAll(dictPath)).filter(l -> !l.startsWith("#")).collect(Collectors.joining("\n"))
-                    .startsWith("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz|.testdict/buckets/testdict_bucket_"));
+                    .startsWith("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz|.testdict/b/b_"));
             System.out.println(String.format("Read all lines %d ms", (-time + (time = System.currentTimeMillis()))));
 
         } finally {

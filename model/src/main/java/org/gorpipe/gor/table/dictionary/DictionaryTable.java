@@ -315,14 +315,6 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
         insert(lines);
     }
 
-    public boolean hasDeletedEntries() {
-        return this.tableEntries.hasDeletedTags();
-    }
-
-    public Collection<String> getBucketDeletedFiles(String path) {
-        return getTableAccessOptimizer().getBucketDeletedFiles(path);
-    }
-
     public static class Builder<B extends Builder<B>> extends TableBuilder<B> {
 
         protected String sourceColumn;

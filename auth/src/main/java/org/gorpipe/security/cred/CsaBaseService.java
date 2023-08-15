@@ -53,7 +53,7 @@ abstract class CsaBaseService extends HttpJsonServiceClient {
                     }
                 }
             } else {
-                throw new GorSystemException("No configuration - CSA Credentialservice not active", null);
+                log.warn("CSA Credentialservice not active");
             }
             initializedAuth = true;
         }

@@ -75,7 +75,7 @@ public interface ITableEntries<T extends DictionaryEntry> {
      *
      * Get active lines.
      */
-    List<T> getActiveLines();
+    Iterator<T> getActiveEntries();
     /**
      * Check if the data has been loaded.
      * @return {@code True} if the data has been loaded, {@code False} otherwise.
@@ -92,13 +92,19 @@ public interface ITableEntries<T extends DictionaryEntry> {
     /**
      * Check if thera are any deleted tags.
      */
-    boolean hasDeletedTags();
+    boolean hasDeletedEntries();
 
     /**
      * Get number of entries.
      * @return  number of entries.
      */
     int size();
+
+    /**
+     * Get number of inactive entries.
+     * @return number of inactive entries
+     */
+    int getActiveLinesCount();
 
     /**
      * Find the entry matching the {@code entry}.

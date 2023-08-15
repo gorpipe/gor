@@ -73,16 +73,13 @@ public class DictionaryEntry extends TableEntry {
      */
     @Override
     public String getKey() {
-        if (key == null) {
-            String newKey = super.getKey();
-            // We keep deleted entries around for the the bucket (to know what to exclude).
-            // So for each deleted entry we need to add the bucket to the key.
-            if (isDeleted()) {
-                newKey += getBucket();
-            }
-            key = newKey;
+        // We keep deleted entries around for the the bucket (to know what to exclude).
+        // So for each deleted entry we need to add the bucket to the key.
+        if (isDeleted()) {
+            return super.getKey() + getBucket();
+        } else {
+            return super.getKey();
         }
-        return key;
     }
 
     /**
@@ -110,7 +107,6 @@ public class DictionaryEntry extends TableEntry {
      */
     protected void setBucket(String bucket) {
         this.bucketLogical = bucket;
-        this.key = null;
     }
 
     public boolean hasBucket() {
@@ -123,7 +119,6 @@ public class DictionaryEntry extends TableEntry {
 
     public void setDeleted(boolean deleted) {
         this.isDeleted = deleted;
-        this.key = null;
     }
 
     /**
@@ -224,13 +219,9 @@ public class DictionaryEntry extends TableEntry {
         if (!(o instanceof DictionaryEntry)) return false;
         if (!super.equals(o)) return false;
         DictionaryEntry that = (DictionaryEntry) o;
-        return Objects.equals(bucketLogical, that.bucketLogical) &&
-                Objects.equals(isDeleted, that.isDeleted) && Objects.equals(sourceInserted, that.sourceInserted);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), sourceInserted, bucketLogical, isDeleted);
+        // We only include the bucket if the entry is deleted (do keep track of delete entries).
+        return this.isDeleted == that.isDeleted
+                && (this.isDeleted ? Objects.equals(this.bucketLogical, that.bucketLogical) : true);
     }
 
     @Override

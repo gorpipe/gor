@@ -28,6 +28,7 @@ import org.apache.parquet.Strings;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -61,7 +62,8 @@ public class BucketManager<T extends DictionaryEntry> {
     public static final int DEFAULT_BUCKET_SIZE = 100;
     public static final int DEFAULT_MAX_BUCKET_COUNT = 3;
     public static final BucketPackLevel DEFAULT_BUCKET_PACK_LEVEL = BucketPackLevel.CONSOLIDATE;
-    public static final String BUCKET_FILE_PREFIX = "bucket"; // Use to identify which files are bucket files.
+    private static final String DEFAULT_BUCKET_FOLDER = "b";
+    public static final String BUCKET_FILE_PREFIX = "b_"; // Use to identify which files are bucket files.
 
     public static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofMinutes(30);
     public static final Duration BUCKET_CLEANUP_INTERVAL = Duration.ofMinutes(30);
@@ -257,7 +259,7 @@ public class BucketManager<T extends DictionaryEntry> {
     }
 
     protected String getDefaultBucketDir() {
-        return "." + table.getName() + "/buckets";
+        return String.format(".%s/%s",table.getName(), DEFAULT_BUCKET_FOLDER);
     }
 
     public Duration getLockTimeout() {
@@ -690,7 +692,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 long lastAccessTime = 0; //Files.readAttributes(bucketFile, BasicFileAttributes.class).lastAccessTime().toMillis();
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}",
                         System.currentTimeMillis(), lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
-                if (fileName.startsWith(getBucketFilePrefix(table))
+                if (Arrays.stream(getBucketFilePrefixesToClean(table)).anyMatch(p -> fileName.startsWith(p))
                         && (DataUtil.isGorz(fileName) || DataUtil.isGor(fileName))
                         && (System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()
                             || force)) {
@@ -721,8 +723,11 @@ public class BucketManager<T extends DictionaryEntry> {
         return false;
     }
 
-    private String getBucketFilePrefix(DictionaryTable table) {
-        return table.getName() + "_" + BUCKET_FILE_PREFIX;
+    private String[] getBucketFilePrefixesToClean(DictionaryTable table) {
+        return new String[] {
+                BUCKET_FILE_PREFIX,
+                table.getName() + "_" + "bucket"  // Old bucket file prefix
+        };
     }
 
     /**
@@ -820,10 +825,10 @@ public class BucketManager<T extends DictionaryEntry> {
         }
 
         String bucketNamePrefix =
-                String.format("%s_%s_%s_",
-                        getBucketFilePrefix(table),
-                        new SimpleDateFormat("yyyy_MMdd_HHmmss").format(new Date()),
-                        RandomStringUtils.random(8, true, true));
+                String.format("%s%s_%s_",
+                        BUCKET_FILE_PREFIX,
+                        table.getProperty(TableHeader.HEADER_SERIAL_KEY),
+                        RandomStringUtils.random(4, true, true));
 
 
         Map<String, List<T>> bucketsToCreate = new HashMap<>();
@@ -832,8 +837,12 @@ public class BucketManager<T extends DictionaryEntry> {
             String bucketDir = pickBucketDir();
             int nextToBeAddedIndex = (i - 1) * getBucketSize();
             int nextBucketSize = Math.min(getBucketSize(), lines2bucketize.size() - nextToBeAddedIndex);
+            String bucketFileName = DataUtil.toFile(PathUtils.resolve(bucketDir, bucketNamePrefix) + i, DataType.GORZ);
+            if (table.getFileReader().exists(bucketFileName)) {
+                throw new GorSystemException(String.format("Bucket file %s already exists!", bucketFileName), null);
+            }
             bucketsToCreate.put(
-                    DataUtil.toFile(PathUtils.resolve(bucketDir, bucketNamePrefix) + i, DataType.GORZ),
+                    bucketFileName,
                     lines2bucketize.subList(nextToBeAddedIndex, nextToBeAddedIndex + nextBucketSize));
         }
         return bucketsToCreate;

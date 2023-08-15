@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,15 +53,12 @@ public abstract class TableEntry {
     private final String[] tags;                       // For performance use string array.
     private final GenomicRange range;
 
-    protected String key;                     // Unique key for the entry.
-
     // Copy constructor.
     TableEntry(TableEntry entry) {
         this.contentRelative = entry.contentRelative;
         this.alias = entry.alias;
         this.tags = entry.getTags();
         this.range = entry.getRange();
-        this.key = entry.getKey();
     }
 
     /**
@@ -89,17 +85,7 @@ public abstract class TableEntry {
      * NOTE: If they fields used to generate the key are changed then the entries must be deleted and reinserted.
      */
     public String getKey() {
-        if (key == null) {
-            String newKey = this.getContentRelative();
-            newKey += String.join(",", getFilterTags());
-
-            if (getRange() != GenomicRange.EMPTY_RANGE) {
-                newKey += getRange().toString();
-            }
-
-            key = newKey;
-        }
-        return key;
+        return this.contentRelative + ":" + alias;
     }
 
     /**
@@ -108,7 +94,7 @@ public abstract class TableEntry {
      * @return non-unique hash code.
      */
     public int getSearchHash() {
-        return getContentRelative().hashCode();
+        return contentRelative.hashCode();
     }
     
     public String formatEntry() {
@@ -122,7 +108,7 @@ public abstract class TableEntry {
     }
 
     public String getContentReal(String rootUri) {
-        return resolve(rootUri, getContentRelative()).toString();
+        return resolve(rootUri, getContentRelative());
     }
 
     public String getContent() {
@@ -145,13 +131,15 @@ public abstract class TableEntry {
      * Correctly combine tags and the alias for filtering (in most cases should be used rather than getTags or getAlias)
      */
     public String[] getFilterTags() {
+        String[] filterTags;
         if (tags != null && tags.length > 0) {
-            return tags;
+            filterTags = tags;
         } else if (alias != null) {
-            return new String[]{alias};
+            filterTags = new String[]{alias};
         } else {
-            return EMPTY_TAGS_LIST;
+            filterTags = EMPTY_TAGS_LIST;
         }
+        return filterTags;
     }
 
 
@@ -190,8 +178,7 @@ public abstract class TableEntry {
         return "contentRelative='" + contentRelative + '\'' +
                 ", alias='" + alias + '\'' +
                 ", tags=" + Arrays.toString(tags) +
-                ", range=" + range +
-                ", key='" + key + '\'';
+                ", range=" + range + '\'';
     }
 
     public abstract static class Builder<B extends Builder> {

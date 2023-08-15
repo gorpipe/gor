@@ -333,7 +333,7 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
 
     
     public boolean hasDeletedEntries() {
-        return this.tableEntries.hasDeletedTags();
+        return this.tableEntries.hasDeletedEntries();
     }
 
     public Collection<String> getBucketDeletedFiles(String path) {

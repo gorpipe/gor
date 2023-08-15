@@ -53,9 +53,8 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     private ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
     private ListMultimap<Integer, T> contentHashToLines;
 
-    List<T> activeLines;
     private Multiset<String> activeTags;
-    private int deletedTagsCount = 0;
+    private int deletedEntriesCount = 0;
     private final TableInfo<T> table;
 
     private boolean dataLoaded = false;
@@ -139,13 +138,11 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     @Override
     public List<T> getEntries(String... aliasesAndTags) {
         List<T> lines2Search = getEntries();
-        if (!tagHashLoaded) {
-            updateTagMap();
-        }
+        updateTagMap();
         if (tagHashToLines != null && aliasesAndTags != null) {
             // If we have tags and tag map to lines we use that to get a better list of lines to search..
             lines2Search = Arrays.stream(aliasesAndTags).flatMap(t -> tagHashToLines.get(t.hashCode()).stream())
-                    .sorted(Comparator.comparing(TableEntry::getKey)).distinct()
+                    .sorted(Comparator.comparing(T::getKey)).distinct()
                     .collect(Collectors.toList());
         }
         return lines2Search;
@@ -157,11 +154,32 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     }
 
     @Override
-    public List<T> getActiveLines() {
+    public Iterator<T> getActiveEntries() {
         if (!dataLoaded) {
             loadLinesAndUpdateIndices();
         }
-        return activeLines;
+        return new Iterator<T>() {
+
+            int nextIndex = 0;
+            int returnedCount = 0;
+            @Override
+            public boolean hasNext() {
+                return returnedCount < rawLines.size() - deletedEntriesCount;
+            }
+
+            @Override
+            public T next() {
+                while (hasNext() && rawLines.get(nextIndex).isDeleted()) {
+                    nextIndex++;
+                }
+                if (hasNext()) {
+                    returnedCount++;
+                    return rawLines.get(nextIndex++);
+                } else {
+                    return null;
+                }
+            }
+        };
     }
 
     @Override
@@ -178,8 +196,8 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
     }
 
     @Override
-    public boolean hasDeletedTags() {
-        return deletedTagsCount > 0;
+    public boolean hasDeletedEntries() {
+        return deletedEntriesCount > 0;
     }
 
     @Override
@@ -187,9 +205,15 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
         return getEntries().size();
     }
 
+    @Override
+    public int getActiveLinesCount() {
+        int size = getEntries().size();
+        return size - deletedEntriesCount;
+    }
+
+
     private void updateContentMap() {
         contentHashToLines = ArrayListMultimap.create(rawLines.size(), 1);
-        activeLines = new ArrayList<>(rawLines.size());
         activeTags = HashMultiset.create();
 
         for (T entry : rawLines) {
@@ -212,12 +236,11 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
         }
 
         if (!entry.isDeleted()) {
-            activeLines.add(entry);
             if (activeTags != null) {
                 activeTags.addAll(Arrays.asList(entry.getFilterTags()));
             }
         } else {
-            deletedTagsCount++;
+            deletedEntriesCount++;
         }
     }
 
@@ -234,12 +257,11 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
             contentHashToLines.remove(entry.getSearchHash(), entry);
         }
         if (!entry.isDeleted()) {
-            activeLines.remove(entry);
             if (activeTags != null) {
                 Multisets.removeOccurrences(activeTags, Arrays.asList(entry.getFilterTags()));
             }
         } else {
-            deletedTagsCount--;
+            deletedEntriesCount--;
         }
     }
 
@@ -253,9 +275,8 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
 
     private void clearContentMap() {
         contentHashToLines = null;
-        activeLines = null;
         activeTags = null;
-        deletedTagsCount = 0;
+        deletedEntriesCount = 0;
     }
 
     private void clearTagMap() {
@@ -325,27 +346,21 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
         // Using contentHashMap
         List<T> allLines = getEntries();
         List<T> lines2Search = contentHashToLines != null ? contentHashToLines.get(line.getSearchHash()) : allLines;
-        String lineKey = line.getKey();
-        for (T l : lines2Search) {
-            if (lineKey.equals(l.getKey())) {
-                return l;
-            }
-        }
 
-        return null;
+        return lines2Search != null ? lines2Search.stream().filter(l -> l.equals(line)).findFirst().orElse(null) : null;
     }
 
     private T findLineWithTag(T line) {
+        String[] linekey = line.getFilterTags();
+
         // Using contentHashMap
         List<T> lines2Search = getEntries();
         if (tagHashToLines != null) {
             lines2Search = new ArrayList<>();
-            for (String tag : line.getFilterTags()) {
+            for (String tag : linekey) {
                 lines2Search.addAll(tagHashToLines.get(tag.hashCode()));
             }
         }
-
-        String[] linekey = line.getFilterTags();
         T match = null;
         for (T l : lines2Search) {
             if (Arrays.equals(linekey, l.getFilterTags())) {

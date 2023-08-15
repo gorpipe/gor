@@ -77,8 +77,9 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
 
         if (result.size() == 0) {
             //Must return a dummy line.
-            if (tableEntries.getActiveLines().size() > 0) {
-                return List.of(tableEntries.getActiveLines().get(0));
+            Iterator<DictionaryEntry> iterator = tableEntries.getActiveEntries();
+            if (iterator.hasNext()) {
+                return List.of(tableEntries.getActiveEntries().next());
             } else {
                 return new ArrayList<>();
             }
@@ -191,11 +192,12 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
             resetBucketNamesArray = localResetBucketNames.toArray(new String[0]);
             bucketTagsArray = localBucketTagsList.toArray(new Set[0]);
         } else {
-            filesToOptimize = new DictionaryEntry[tableEntries.getActiveLines().size()];
-            for (int i = 0; i < filesToOptimize.length; i++) {
-                DictionaryEntry entry = tableEntries.getActiveLines().get(i);
+            filesToOptimize = new DictionaryEntry[tableEntries.getActiveLinesCount()];
+            int i = 0;
+            for (Iterator<DictionaryEntry> iterator = tableEntries.getActiveEntries(); iterator.hasNext(); ) {
+                DictionaryEntry entry = iterator.next();
                 if (entry.getBucket() == null) numberOfFilesWithoutBucket++;
-                filesToOptimize[i] = entry;
+                filesToOptimize[i++] = entry;
             }
             bucketUsedCountsArray = this.bucketActiveCount.toArray();
             bucketTotalCountArray = this.bucketTotalCount.toArray();
