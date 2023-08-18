@@ -82,7 +82,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
         val candidateCacheFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
         val resultLinkPath = getResultsLinkPath(nested, writeLocationPath, candidateCacheFileName)
         val overheadTime = findOverheadTime(commandToExecute)
-        val md5 = if (useMd5) loadMd5(resultLinkPath._1) else null
+        val md5 = if (useMd5) loadMd5(resultLinkPath._1) else ""
         cacheRes = fileCache.store(resultLinkPath._1, commandSignature, resultLinkPath._2, overheadTime + System.currentTimeMillis - startTime, md5)
     }
     cacheRes
@@ -97,7 +97,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     if (fileCache != null) {
       val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
       val overheadTime = findOverheadTime(commandToExecute)
-      val md5 = if (useMd5) loadMd5(Paths.get(resultFileName)) else null
+      val md5 = if (useMd5) loadMd5(Paths.get(resultFileName)) else ""
       cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime, md5)
     }
     cacheFile
@@ -105,7 +105,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
 
   def loadMd5(file : Path): String = {
     val md5Path = Path.of(file + ".md5")
-    if (Files.exists(md5Path)) Files.readAllLines(md5Path).get(0)  else null
+    if (Files.exists(md5Path)) Files.readAllLines(md5Path).get(0)  else ""
   }
 
 
