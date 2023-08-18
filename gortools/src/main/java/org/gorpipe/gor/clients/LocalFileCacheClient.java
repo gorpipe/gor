@@ -35,6 +35,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,8 +102,21 @@ public class LocalFileCacheClient implements FileCache {
     }
 
     @Override
-    public String store(Path from, String fingerprint, String ext, long cost) {
-        return storeWithSpecificCacheFilename(from, fingerprint, from.getFileName().toString(), cost);
+    public String store(Path from, String fingerprint, String ext, long cost, String md5) {
+        return storeWithSpecificCacheFilename(from, fingerprint, inferCachefileName(from, fingerprint, null, md5), cost);
+    }
+
+    private String inferCachefileName(Path from, String fingerprint, String ext, String md5) {
+        if (!Strings.isNullOrEmpty(ext)) {
+            ext = ext.charAt(0) == '.' ? ext : "." + ext;
+            if (md5 != null) {
+                return md5 + "_md5" + ext;
+            } else {
+                return fingerprint + ext;
+            }
+        } else {
+            return from.getFileName().toString();
+        }
     }
 
     @Override

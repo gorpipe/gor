@@ -51,9 +51,10 @@ public interface FileCache extends AutoCloseable {
      * @param fingerprint File/Query fingerprint
      * @param ext         File extension (should include .)
      * @param cost        Measure of cost - can be ms of cpu time needed to recreate the file, download size, etc. Used for WTK.
+     * @param md5         MD5 checksum of the file - optional.
      * @return New file path
      */
-    String store(Path from, String fingerprint, String ext, long cost);
+    String store(Path from, String fingerprint, String ext, long cost, String md5);
 
     String storeWithSpecificCacheFilename(Path path, String fingerprint, String cacheFilename, long cost);
 

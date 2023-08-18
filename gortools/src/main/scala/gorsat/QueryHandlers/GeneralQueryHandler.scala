@@ -82,7 +82,8 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
         val candidateCacheFileName = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
         val resultLinkPath = getResultsLinkPath(nested, writeLocationPath, candidateCacheFileName)
         val overheadTime = findOverheadTime(commandToExecute)
-        cacheRes = fileCache.store(resultLinkPath._1, commandSignature, resultLinkPath._2, overheadTime + System.currentTimeMillis - startTime)
+        val md5 = if (useMd5) loadMd5(resultLinkPath._1) else null
+        cacheRes = fileCache.store(resultLinkPath._1, commandSignature, resultLinkPath._2, overheadTime + System.currentTimeMillis - startTime, md5)
     }
     cacheRes
   }
@@ -96,10 +97,17 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     if (fileCache != null) {
       val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
       val overheadTime = findOverheadTime(commandToExecute)
-      cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime)
+      val md5 = if (useMd5) loadMd5(Paths.get(resultFileName)) else null
+      cacheFile = fileCache.store(Paths.get(resultFileName), commandSignature, extension, overheadTime + System.currentTimeMillis - startTime, md5)
     }
     cacheFile
   }
+
+  def loadMd5(file : Path): String = {
+    val md5Path = Path.of(file + ".md5")
+    if (Files.exists(md5Path)) Files.readAllLines(md5Path).get(0)  else null
+  }
+
 
   def isDictionaryFolderMacro(cmdUpper : String): Boolean = {
     cmdUpper.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART) || cmdUpper.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER)
