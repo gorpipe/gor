@@ -53,4 +53,42 @@ public class UTestCSVCC {
         int count = TestUtils.runGorPipeCount(args);
         Assert.assertEquals(0, count);
     }
+
+    @Test
+    public void automaticUnzipOfValues() {
+        String[] normalQueryLines = {
+                "create #dummy# = gorrow chr1,1,2 | signature -timeres 1 | calc x '0,1,2,3,4,5,6,7,8,9' | calc y x | calc z x | split x | split y | split z | calc rownum int(x)+10*int(y)+100*int(z) | sort 1 -c rownum:n;",
+                "create #pnbuck# = nor [#dummy#] | select rownum | calc bucket 'bucket'+str(1+div(rownum,100)) | rename rownum PN | select PN,bucket | top 352 | sort -c bucket,pn;",
+                "create #pheno# = nor [#pnbuck#] | select #1 | where random() < 0.5 | calc pheno if(random()<0.8,'A1,A2','C1,C2') | split pheno;",
+                "create #gt# = gorrow chr1,1,2 | calc x '1,2,3' | split x | select chrom,x | calc ref 'G' | calc alt 'A'  | select 1-4 | distinct | top 100 | multimap -cartesian -h [#pnbuck#] | calc gt mod(pn,3);",
+                "create #allvars# = gor [#gt#] | select 1-4 | distinct;",
+                "create #hor# = gor [#gt#] | sort 1 -c #3,#4,bucket,PN",
+                "| group 1 -gc #3,#4,bucket -lis -sc gt | rename lis_gt values;",
+                "gor [#hor#] | csvcc  -gc #3,#4 [#pnbuck#] [#pheno#] | calc method 'csvcc' ",
+                "| merge <(gor [#allvars#] | multimap -cartesian -h [#pnbuck#] | join -snpsnp -l -e 0 -xl #3,#4,pn -xr #3,#4,pn [#gt#] ",
+                "| multimap -c PN -h [#pheno#] | group 1 -gc #3,#4,pheno,gt -count ",
+                "| rename pheno CC | rename allcount GTcount | calc method 'regular' ) ",
+                "| group 1 -gc 3-method[-1] -dis -set -sc method | where gtcount != 0 | where dis_method != 2 "
+        };
+
+        String[] inflatedQueryLines = {
+                "create #dummy# = gorrow chr1,1,2 | signature -timeres 1 | calc x '0,1,2,3,4,5,6,7,8,9' | calc y x | calc z x | split x | split y | split z | calc rownum int(x)+10*int(y)+100*int(z) | sort 1 -c rownum:n;",
+                "create #pnbuck# = nor [#dummy#] | select rownum | calc bucket 'bucket'+str(1+div(rownum,100)) | rename rownum PN | select PN,bucket | top 352 | sort -c bucket,pn;",
+                "create #pheno# = nor [#pnbuck#] | select #1 | where random() < 0.5 | calc pheno if(random()<0.8,'A1,A2','C1,C2') | split pheno;",
+                "create #gt# = gorrow chr1,1,2 | calc x '1,2,3' | split x | select chrom,x | calc ref 'G' | calc alt 'A'  | select 1-4 | distinct | top 100 | multimap -cartesian -h [#pnbuck#] | calc gt mod(pn,3);",
+                "create #allvars# = gor [#gt#] | select 1-4 | distinct;",
+                "create #hor# = gor [#gt#] | sort 1 -c #3,#4,bucket,PN",
+                "| group 1 -gc #3,#4,bucket -lis -sc gt | rename lis_gt values | deflatecolumn values;",
+                "gor [#hor#] | csvcc  -gc #3,#4 [#pnbuck#] [#pheno#] | calc method 'csvcc' ",
+                "| merge <(gor [#allvars#] | multimap -cartesian -h [#pnbuck#] | join -snpsnp -l -e 0 -xl #3,#4,pn -xr #3,#4,pn [#gt#] ",
+                "| multimap -c PN -h [#pheno#] | group 1 -gc #3,#4,pheno,gt -count ",
+                "| rename pheno CC | rename allcount GTcount | calc method 'regular' ) ",
+                "| group 1 -gc 3-method[-1] -dis -set -sc method | where gtcount != 0 | where dis_method != 2 "
+        };
+
+        var normalLines =  TestUtils.runGorPipe(String.join("\n", normalQueryLines));
+        var inflatedLines =  TestUtils.runGorPipe(String.join("\n", inflatedQueryLines));
+
+        Assert.assertEquals(normalLines, inflatedLines);
+    }
 }

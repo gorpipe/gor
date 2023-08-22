@@ -23,6 +23,7 @@
 package gorsat.Commands
 
 import gorsat.Analysis.GorCsvCC.CsvCCAnalysis
+import gorsat.Analysis.InflateAnalysis
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.DynIterator.DynamicNorSource
 import gorsat.Utilities.IteratorUtilities.validHeader
@@ -106,7 +107,7 @@ class CsvCC extends CommandInfo("CSVCC",
       }
 
       val combinedHeader = validHeader(outputHeader)
-      val pipeStep: Analysis = CsvCCAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, sepVal, valSize, uv, use_phase, use_prob, use_threshold, p_threshold, context.getSession)
+      val pipeStep: Analysis = InflateAnalysis(valCol) |  CsvCCAnalysis(rightFile1, iteratorCommand1, dsource1, rightFile2, iteratorCommand2, dsource2, buckCol, valCol, gcCols, sepVal, valSize, uv, use_phase, use_prob, use_threshold, p_threshold, context.getSession)
 
       CommandParsingResult(pipeStep, combinedHeader)
     } catch {
