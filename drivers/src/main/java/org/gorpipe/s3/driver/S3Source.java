@@ -188,23 +188,15 @@ public class S3Source implements StreamSource {
     @Override
     public boolean exists() throws IOException  {
         // This only works for directories if they end with /.  Safer but much slower impl is:
-        try {
-            return fileExists() || Files.exists(getPath());
-            // This only works for directories if they end with /.  Much faster:
-//          if (sourceReference.getUrl().endsWith("/")) {
-//              // Files.exists handles directories.
-//              return Files.exists(getPath());
-//          } else {
-//               return fileExists();
-//          }
-        } catch (AmazonS3Exception s3Exception) {
-            if (s3Exception.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
-                return false;
-            } else {
-                throw s3Exception;
-            }
-        }
 
+        return fileExists() || Files.exists(getPath());
+//      This only works for directories if they end with /.  Much faster:
+//      if (sourceReference.getUrl().endsWith("/")) {
+//          // Files.exists handles directories.
+//          return Files.exists(getPath());
+//      } else {
+//          return fileExists();
+//      }
     }
 
     @Override
@@ -214,12 +206,26 @@ public class S3Source implements StreamSource {
             loadMetadata(bucket, key);
             return true;
         } catch (Exception e) {
-            try {
-                throw mapAndRethrowS3Exceptions(e, bucket + "/" + key);
-            } catch (GorResourceException gre) {
+            if (isNotFoundException(e)) {
                 return false;
+            } else {
+                throw mapAndRethrowS3Exceptions(e, bucket + "/" + key);
             }
         }
+    }
+
+    private boolean isNotFoundException(Exception e) {
+        Throwable ex = e;
+
+        if (e instanceof ExecutionException || e instanceof UncheckedExecutionException) {
+            ex = e.getCause();
+        }
+
+        if (ex instanceof AmazonS3Exception s3e) {
+            return s3e.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND;
+        }
+
+        return false;
     }
 
     /*

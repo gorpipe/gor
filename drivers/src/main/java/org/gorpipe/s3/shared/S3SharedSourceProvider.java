@@ -90,17 +90,21 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     @Override
     public S3SharedSource resolveDataSource(SourceReference sourceReference)
             throws IOException  {
-        S3SharedSource source = null;
-
-        Credentials sharedCreds = getS3DataCredentials(getService(), sourceReference.getSecurityContext());
-
         if (sourceReference.getCommonRoot() == null || sourceReference.getCommonRoot().isEmpty()) {
             throw new GorSystemException("S3 shared resources need to have project root set (that ends with the project name)", null);
         }
 
+        S3SharedSource source = null;
+
+        Credentials sharedCreds = getS3DataCredentials(getService(), sourceReference.getSecurityContext());
+
+        if (sharedCreds == null) {
+            return source;
+        }
+
         String project = Path.of(sourceReference.getCommonRoot()).getFileName().toString();
-        String bucket = sharedCreds != null ? sharedCreds.getLookupKey() : "unkown";
-        String s3SecurityContext = sharedCreds != null ? createS3SecurityContext(sharedCreds) : "";
+        String bucket = sharedCreds.getLookupKey();
+        String s3SecurityContext = createS3SecurityContext(sharedCreds);
         String relativePath = getRelativePath(sourceReference.getUrl());
 
         SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
@@ -184,15 +188,14 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         if (fallbackSourceReference != null) {
             try {
                 S3SharedSource fallbackSource = (S3SharedSource) PluggableGorDriver.instance().resolveDataSource(fallbackSourceReference);
-                source = fallbackSource.exists() ? fallbackSource : source;
+                source = fallbackSource != null && fallbackSource.exists() ? fallbackSource : source;
             } catch (GorResourceException e) {
                 throw new GorResourceException(
                         String.format("%s\n%s", e.getMessage(), createErrorMessageForFailure(sourceReference, source)),
-                        sourceReference.url);
+                        sourceReference.url, e);
             }
         }
 
-        // No fallback found.  Return original source.
         return source;
     }
 
