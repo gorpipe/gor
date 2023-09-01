@@ -211,24 +211,19 @@ public class UTestVirtualFileManager {
 
         final String baseQuery = "gor [foo] | join [  bar]";
 
-        String query = manager.replaceVirtualFiles(baseQuery);
-        Assert.assertEquals(baseQuery, query);
-
         manager.updateCreatedFile("foo", "foo_file.txt");
-        query = manager.replaceVirtualFiles(baseQuery);
-        Assert.assertEquals("gor foo_file.txt | join [  bar]", query);
-
         manager.updateCreatedFile("bar", "bar_file.txt");
-        query = manager.replaceVirtualFiles(baseQuery);
+
+        String query = manager.replaceVirtualFiles(baseQuery);
         Assert.assertEquals("gor foo_file.txt | join bar_file.txt", query);
 
         final String baseQuery2 = "gor [foo] | join [yyy ] | join <(gor [xxx])";
-        query = manager.replaceVirtualFiles(baseQuery2);
-        Assert.assertEquals("gor foo_file.txt | join [yyy ] | join <(gor [xxx])", query);
 
         manager.updateCreatedFile("[ xxx  ]", "xxx_file.foo");
+        manager.updateCreatedFile("[yyy]", "yyy_file.foo");
+
         query = manager.replaceVirtualFiles(baseQuery2);
-        Assert.assertEquals("gor foo_file.txt | join [yyy ] | join <(gor xxx_file.foo)", query);
+        Assert.assertEquals("gor foo_file.txt | join yyy_file.foo | join <(gor xxx_file.foo)", query);
     }
 
     @Test
@@ -240,13 +235,9 @@ public class UTestVirtualFileManager {
         final String baseQuery = "gor [foo] [  bar] | join [  foo] | join <(gor [bar])";
 
         manager.updateCreatedFile("foo", "foo_file.txt");
-
-        String query = manager.replaceVirtualFiles(baseQuery);
-        Assert.assertEquals("gor foo_file.txt [  bar] | join foo_file.txt | join <(gor [bar])", query);
-
         manager.updateCreatedFile("bar", "bar_file.txt");
 
-        query = manager.replaceVirtualFiles(baseQuery);
+        String query = manager.replaceVirtualFiles(baseQuery);
         Assert.assertEquals("gor foo_file.txt bar_file.txt | join foo_file.txt | join <(gor bar_file.txt)", query);
     }
 
@@ -282,11 +273,13 @@ public class UTestVirtualFileManager {
         Assert.assertEquals("[grid:foo]", entries[1].name);
 
         manager.updateCreatedFile("[file:/tmp/foo.txt]", "file1.txt");
-        String newQuery = manager.replaceVirtualFiles(query);
-        Assert.assertEquals("create xxx = gorrows -p chr1:10-1000 | top 100 | join [grid:foo];create yyy = gor [xxx] | join file1.txt;gor [yyy]", newQuery);
 
         manager.updateCreatedFile("[grid:foo]", "file2.txt");
-        newQuery = manager.replaceVirtualFiles(query);
-        Assert.assertEquals("create xxx = gorrows -p chr1:10-1000 | top 100 | join file2.txt;create yyy = gor [xxx] | join file1.txt;gor [yyy]", newQuery);
+
+        manager.updateCreatedFile("xxx", "result1.gorz");
+        manager.updateCreatedFile("yyy", "result2.gorz");
+
+        String newQuery = manager.replaceVirtualFiles(query);
+        Assert.assertEquals("create xxx = gorrows -p chr1:10-1000 | top 100 | join file2.txt;create yyy = gor result1.gorz | join file1.txt;gor result2.gorz", newQuery);
     }
 }

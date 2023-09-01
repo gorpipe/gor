@@ -26,11 +26,11 @@ import gorsat.Commands.CommandParseUtilities
 import gorsat.Commands.CommandParseUtilities.{cleanupQuery, cleanupQueryAndSplit, quoteSafeSplit}
 import gorsat.Utilities.MacroUtilities._
 import gorsat.Script.ScriptExecutionEngine.ExecutionBlocks
-import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
+import gorsat.gorsatGorIterator.MapAndListUtilities.{exists, singleHashMap}
 import gorsat.Utilities.{AnalysisUtilities, MacroUtilities, StringUtilities}
 import gorsat.process.{GorJavaUtilities, GorPipeMacros, GorPrePipe, PipeInstance}
 import gorsat.DynIterator
-import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
+import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.GorScriptAnalyzer
 import org.gorpipe.gor.model.GorParallelQueryHandler
@@ -281,11 +281,17 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     if (executionCommands != null && !executionCommands.isEmpty) {
       val activeQueryHandler = if (CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) localQueryHandler else queryHandler
 
-      val cacheFiles = activeQueryHandler.executeBatch(executionCommands.map(x => x.signature),
+      val cacheFiles = activeQueryHandler.executeBatch(
+        executionCommands.map(x => x.signature),
         executionCommands.map(x => x.query),
         executionCommands.map(x => x.createName),
         executionCommands.map(x => x.cacheFile),
         context.getSession.getSystemContext.getMonitor).toList
+
+      if (executionCommands.length != cacheFiles.length) {
+        throw new GorSystemException(String.format("Number of cache/result files (%d) does not match number of queries (%d)",
+          cacheFiles.length, executionCommands.length), null)
+      }
 
       executionCommands.map(x => x.createName).zip(cacheFiles).foreach(x => {
         virtualFileManager.add(x._1)

@@ -551,24 +551,18 @@ public class GorJavaUtilities {
      *        and we might not have access to data (to check timestamps) in the FileCache.
      */
     public static String verifyLinkFileLastModified(ProjectContext projectContext, String cacheFile) {
-        if (cacheFile!=null && cacheFile.toLowerCase().endsWith(".link")) {
-            var fileReader = projectContext.getFileReader();
-            var cachePath = Paths.get(cacheFile);
-            if (!cachePath.isAbsolute()) {
-                cachePath = projectContext.getProjectRootPath().resolve(cachePath);
-            }
-            if (Files.isSymbolicLink(cachePath) || DataUtil.isLink(cacheFile)) {
-                try {
-                    var ds = fileReader.resolveUrl(cacheFile);
-                    var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
-                    var lastModified = ds.getSourceMetadata().getLastModified();
-                    if (linkLastModified != null && lastModified > linkLastModified) {
-                        Files.delete(cachePath);
-                        cacheFile = null;
-                    }
-                } catch (IOException e) {
-                    // Ignore
+        if (cacheFile != null && DataUtil.isLink(cacheFile)) {
+            try {
+                var ds = projectContext.getFileReader().resolveUrl(cacheFile);
+                var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
+                var lastModified = ds.getSourceMetadata().getLastModified();
+                if (linkLastModified != null && lastModified > linkLastModified) {
+                    // Delete the link file (from the cache).
+                    Files.delete(Paths.get(cacheFile));
+                    cacheFile = null;
                 }
+            } catch (IOException e) {
+                // Ignore
             }
         }
         return cacheFile;

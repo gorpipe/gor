@@ -394,6 +394,7 @@ object GeneralQueryHandler {
       var chromsrange: List[String] = Nil
       var i = 1
       while (i < w.length - 1) {
+        validateFile(w(i), outfile)
         dictFiles ::= w(i)
         chromsrange ::= w(i + 1)
         i += 2
@@ -412,12 +413,23 @@ object GeneralQueryHandler {
     outfile
   }
 
+  private def validateFile(name: String, outfile: String): Unit = {
+    if (isVirtualRelation(name)) {
+      throw new GorSystemException(String.format("Dictionary command for %s contains virtual relation %s at exec time", outfile, name), null)
+    }
+  }
+
+  private def isVirtualRelation(name: String): Boolean = {
+    name.startsWith("[") && name.endsWith("]")
+  }
+
   def writeOutNorDictionaryPart(commandToExecute: String, fileReader: FileReader, outfile: String): String = {
     val w = commandToExecute.split(' ')
     var dictFiles: List[String] = Nil
     var partitions: List[String] = Nil
     var i = 1
     while (i < w.length - 1) {
+      validateFile(w(i), outfile)
       dictFiles ::= w(i)
       partitions ::= w(i + 1)
       i += 2
@@ -441,6 +453,7 @@ object GeneralQueryHandler {
       var partitions: List[String] = Nil
       var i = 1
       while (i < w.length - 1) {
+        validateFile(w(i), outfile)
         dictFiles ::= w(i)
         partitions ::= w(i + 1)
         i += 2

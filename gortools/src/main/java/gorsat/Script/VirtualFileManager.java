@@ -3,6 +3,7 @@ package gorsat.Script;
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.Utilities.MacroUtilities;
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,9 +61,12 @@ public class VirtualFileManager {
 
     public void updateCreatedFile(String name, String fileName) {
         var x = get(name);
-        if (x!=null) {
-            if (fileName != null && !fileName.isEmpty()) x.fileName = fileName;
-            else throw new GorParsingException("Supplied virtual file name is empty: $fileName, for file entry: $name");
+        if (x != null) {
+            if (fileName != null && !fileName.isEmpty()) {
+                x.fileName = fileName;
+            } else {
+                throw new GorParsingException("Supplied virtual file name is empty: $fileName, for file entry: $name");
+            }
         } else {
             throw new GorParsingException("Unable to locate virtual file entry $name for file: $fileName");
         }
@@ -77,12 +81,12 @@ public class VirtualFileManager {
             var name = MacroUtilities.getVirtualFileGroupName(virtualFile);
 
             var x = virtualFileMap.get(name);
-            if (x!=null) {
-                if (x.fileName != null) {
-                    outStr = CommandParseUtilities.quoteSafeReplace(outStr, virtualFile, x.fileName);
-                }
+            if (x != null && x.fileName != null) {
+                outStr = CommandParseUtilities.quoteSafeReplace(outStr, virtualFile, x.fileName);
             } else {
-                VirtualFileManager.log.warn("There was no reference to create statement '{}' in replaceVirtualFiles", virtualFileList);
+                var msg = String.format("There was no reference to create statement '%s' in replaceVirtualFiles %s", name, virtualFileList);
+                VirtualFileManager.log.warn(msg);
+                throw new GorSystemException(msg, null);
             }
         }
 
