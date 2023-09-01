@@ -79,9 +79,34 @@ public class SharedFastaReferenceSource extends SharedCachedReferenceSource impl
                 // the only way to test if rsFile contains the sequence is to try and catch exception.
                 log.warn("Sequence not found: " + name);
             }
-            if (sequence != null)
-                return sequence.getBases();
+            if (sequence != null) {
+                var bases = sequence.getBases();
+                toUpperCase(bases);
+                return bases;
+            }
         }
         return new byte[0];
     }
+
+    private static final byte UPPER_CASE_OFFSET = 'A' - 'a';
+
+    public static byte toUpperCase(final byte b) {
+        if (b < 'a' || b > 'z') {
+            return b;
+        }
+        return (byte) (b + UPPER_CASE_OFFSET);
+    }
+
+    /**
+     * Converts in place all lower case letters to upper case in the byte array provided.
+     */
+    public static void toUpperCase(final byte[] bytes) {
+        final int length = bytes.length;
+        for (int i = 0; i < length; ++i) {
+            if (bytes[i] >= 'a' && bytes[i] <= 'z') {
+                bytes[i] = (byte) (bytes[i] + UPPER_CASE_OFFSET);
+            }
+        }
+    }
+
 }
