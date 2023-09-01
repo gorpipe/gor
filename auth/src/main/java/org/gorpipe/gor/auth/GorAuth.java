@@ -85,7 +85,7 @@ public abstract class GorAuth implements AutoCloseable {
             log.warn("Csa Api Service was null, therefore not updating gor auth info");
             return info;
         } else if (!config.updateAuthInfoPolicy().equals(SecurityPolicy.CSA.name())) {
-            log.warn("Update auth info policy was not CSA, therefore not updating gor auth info");
+            log.debug("Update auth info policy was not CSA, therefore not updating gor auth info");
             return info;
         } else {
             try {

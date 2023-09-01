@@ -46,7 +46,7 @@ public class GorSessionCacheManager {
     private static Cache<String, GorSessionCache> createCache() {
         DurationConverter converter = new DurationConverter();
         RemovalListener<String, GorSessionCache> removalNotifier;
-        removalNotifier = notification -> log.info("Removing from gor session cache, key: {}, cause: {}.  Remaining entries: {}",
+        removalNotifier = notification -> log.debug("Removing from gor session cache, key: {}, cause: {}.  Remaining entries: {}",
                 notification.getKey(), notification.getCause(), gorCache.size());
 
         CacheBuilder builder =  CacheBuilder.newBuilder()

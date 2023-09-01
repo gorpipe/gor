@@ -20,22 +20,32 @@ public class AuditLogging {
         
     }
 
-    public static void logAudit(Logger auditLog, String message, String context, String action, GorAuthInfo gorAuthInfo) {
+    public static void logAuditDebug(Logger auditLog, String message, String context, String action, GorAuthInfo gorAuthInfo) {
+        auditLog.debug(message, getContextObjects(context, action, gorAuthInfo));
+    }
 
+    public static void logAudit(Logger auditLog, String message, String context, String action, GorAuthInfo gorAuthInfo) {
+        auditLog.info(message, getContextObjects(context, action, gorAuthInfo));
+    }
+
+    private static Object[] getContextObjects(String context, String action, GorAuthInfo gorAuthInfo) {
+        Object[] args;
         if (gorAuthInfo == null) {
-            auditLog.info(message,
+            args = new Object[]{
                     valueFun.apply(new Object[]{"context", context}),
                     valueFun.apply(new Object[]{"action", action}),
-                    valueFun.apply(new Object[]{"auth_status", "UNAUTHENTICATED"}));
+                    valueFun.apply(new Object[]{"auth_status", "UNAUTHENTICATED"})
+            };
         } else {
-            auditLog.info(message,
+            args = new Object[]{
                     valueFun.apply(new Object[]{"context", context}),
                     valueFun.apply(new Object[]{"action", action}),
                     valueFun.apply(new Object[]{"username", gorAuthInfo.getUsername()}),
                     valueFun.apply(new Object[]{"project", gorAuthInfo.getProject()}),
                     valueFun.apply(new Object[]{"sessionId", gorAuthInfo.hashCode()}),
                     valueFun.apply(new Object[]{"auth_status", "OK"})
-            );
+            };
         }
+        return args;
     }
 }

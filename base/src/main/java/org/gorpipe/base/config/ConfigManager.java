@@ -352,7 +352,7 @@ public class ConfigManager {
      * @return a populated config object.
      */
     public static <T extends Config> T createConfig(Class<? extends T> clazz, Map<?, ?>... configs) {
-        log.info("Creating config for {} including {}", clazz, configs);
+        log.debug("Creating config for {} including {}", clazz, configs);
         return ConfigFactory.create(clazz, configs);
     }
 
