@@ -132,7 +132,7 @@ public class S3Source implements StreamSource {
     private InputStream openRequest(GetObjectRequest request) throws IOException {
         try {
             S3Object object = client.getObject(request);
-            return object.getObjectContent();
+            return new AbortingInputStream(object.getObjectContent(), request);
         } catch (SdkClientException e) {
             throw mapAndRethrowS3Exceptions(e, Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")) + ": " + sourceReference.getUrl());
         }

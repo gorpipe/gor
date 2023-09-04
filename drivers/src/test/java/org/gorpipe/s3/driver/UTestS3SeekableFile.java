@@ -7,19 +7,20 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import gorsat.TestUtils;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.binsearch.SeekableIterator;
 import org.gorpipe.gor.binsearch.StringIntKey;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.Random;
@@ -32,66 +33,79 @@ public class UTestS3SeekableFile {
 
     static private final Logger log = LoggerFactory.getLogger(UTestS3SeekableFile.class);
 
-    private static String S3_KEY_3;
-    private static String S3_SECRET_3;
+    private static String S3_KEY;
+    private static String S3_SECRET;
+    private static String S3_REGION = "us-west-2";
+
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
+    @Rule
+    public final ProvideSystemProperty s3AcessKey
+            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
+
+    @Rule
+    public final ProvideSystemProperty s3Secret
+            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+
+    String gorzFileName = "s3://nextcode-unittest/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gorz";
+    String gorFileName = "s3://nextcode-unittest/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gor";
 
     @BeforeClass
     public static void setUpClass() throws Exception {
         Properties props = DriverUtils.getDriverProperties();
-        S3_KEY_3 = props.getProperty("S3_KEY_3");
-        S3_SECRET_3 = props.getProperty("S3_SECRET_3");
-
-        System.setProperty("gor.s3.access.key", S3_KEY_3);
-        System.setProperty("gor.s3.secret.key", S3_SECRET_3);
+        S3_KEY = props.getProperty("S3_KEY");
+        S3_SECRET = props.getProperty("S3_SECRET");
     }
 
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
 
-    @Ignore("Fails on linux")
+    //@Ignore("Fails on linux")
     @Test
     public void testBasicGor() throws Exception {
-        File result = File.createTempFile("TestS3SeekableFile", ".gor");
-        result.deleteOnExit();
-
-        String query = "s3://gor-speed-uswest/test.gor -p 1:1000000-1001000 | write " + result.getCanonicalPath();
+        String query = gorFileName + " -p chr2:1000000-1001000";
         long startTime = System.currentTimeMillis();
-        TestS3SeekableFile.runGorPipe(query);
+        String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
         log.info("Basic query on gor file executed in {} ms", System.currentTimeMillis() - startTime);
-        Assert.assertEquals(
-                "chr1\t1000805\t1000897\tHWI-ST302:221:C0KVJACXX:5:1210:5521:20914\t147\t60\t93M\t\t1\t1000733\t-165\tAGCGGGAAGGCCAGGCAGGGCTTCTGGGTGGAGTTCAAGGTGCATCCTGACCGCTGTCACCTTCAGACTCTGTCCCCTGGGGCTGGGGCAAGT\t>=9ADDCCDDDEEEDEDDDCCACBBDCACDDB@@@BACBABBC@@AAA@?A;AA@?@A?AA?@@A@?A?A@>@@AA@@???AA@@??A@<>=>\tBD=PNMLOOPQQQOPOPPPOLOPNKMOMLNIMLLMKJMKLMMHMNLLKNNLMMLMONHMMHMNMJMNKMNLLNHMKKKNNLKLOPONMMQQOMNLL PG=MarkDuplicates RG=13403.mo.1 BI=SPNMMNQSSTPSRRQSRNQSQLPRNMPLMINONKOONPOKPOLOLOQNOOLMQPJNNINMNJNPMOLNNPJNKLLNPLKKPRQMMMQQQOPNN NM=0 MQ=60 AS=93 XS=0 RB=hg19",
-                getLine(result, 7));
+        Assert.assertEquals("chr2\t1000142\tG\tC\trs567366174", result.split("\n")[6]);
     }
 
-    @Ignore("Fails on linux")
+    //@Ignore("Fails on linux")
     @Test
     public void testBasicGorz() throws Exception {
-        File result = File.createTempFile("TestS3SeekableFile", ".gor");
-        result.deleteOnExit();
-
-        String query = "s3://gor-speed-uswest/test.gorz -p 1:1000000-1001000 | write " + result.getCanonicalPath();
+        String query = gorzFileName +  " -p chr2:1000000-1001000";
         long startTime = System.currentTimeMillis();
-        TestS3SeekableFile.runGorPipe(query);
+        String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
         log.info("Basic query on gorz file executed in {} ms", System.currentTimeMillis() - startTime);
-        Assert.assertEquals(
-                "chr1\t1000805\t1000897\tHWI-ST302:221:C0KVJACXX:5:1210:5521:20914\t147\t60\t93M\t\t1\t1000733\t-165\tAGCGGGAAGGCCAGGCAGGGCTTCTGGGTGGAGTTCAAGGTGCATCCTGACCGCTGTCACCTTCAGACTCTGTCCCCTGGGGCTGGGGCAAGT\t>=9ADDCCDDDEEEDEDDDCCACBBDCACDDB@@@BACBABBC@@AAA@?A;AA@?@A?AA?@@A@?A?A@>@@AA@@???AA@@??A@<>=>\tBD=PNMLOOPQQQOPOPPPOLOPNKMOMLNIMLLMKJMKLMMHMNLLKNNLMMLMONHMMHMNMJMNKMNLLNHMKKKNNLKLOPONMMQQOMNLL PG=MarkDuplicates RG=13403.mo.1 BI=SPNMMNQSSTPSRRQSRNQSQLPRNMPLMINONKOONPOKPOLOLOQNOOLMQPJNNINMNJNPMOLNNPJNKLLNPLKKPRQMMMQQQOPNN NM=0 MQ=60 AS=93 XS=0 RB=hg19",
-                getLine(result, 7));
+        Assert.assertEquals("chr2\t1000142\tG\tC\trs567366174", result.split("\n")[6]);
     }
 
-    @Ignore("Fails on linux")
+    @Test
+    public void testBasicSeekStream() throws Exception {
+        String query = "gor " + gorzFileName +  " -p chr2:1000000- | top 100000 | group chrom -count";
+        long startTime = System.currentTimeMillis();
+        String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
+        log.info("Basic seek/stream on gorz file executed in {} ms", System.currentTimeMillis() - startTime);
+        Assert.assertEquals("chr2\t0\t250000000\t100000", result.split("\n")[1]);
+    }
+
+    //@Ignore("Fails on linux")
     @Test
     public void testBasicBam() throws Exception {
-        File result = File.createTempFile("TestS3SeekableFile", ".gor");
-        result.deleteOnExit();
-
-        String query = "s3://gor-speed-uswest/chunk.bam -p 1:1000000-1001000 | write " + result.getCanonicalPath();
+        String query = "s3://nextcode-unittest/csa_test_data/data_sets/bvl_min/bam/BVL_FATHER_SLC52A2.bam -p chr8:1285160-";
         long startTime = System.currentTimeMillis();
-        TestS3SeekableFile.runGorPipe(query);
+        String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
         log.info("Basic query on bam file executed in {} ms", System.currentTimeMillis() - startTime);
         Assert.assertEquals(
-                "chr1\t1000805\t1000897\tHWI-ST302:221:C0KVJACXX:5:1210:5521:20914\t147\t60\t93M\t\t1\t1000733\t-165\tAGCGGGAAGGCCAGGCAGGGCTTCTGGGTGGAGTTCAAGGTGCATCCTGACCGCTGTCACCTTCAGACTCTGTCCCCTGGGGCTGGGGCAAGT\t>=9ADDCCDDDEEEDEDDDCCACBBDCACDDB@@@BACBABBC@@AAA@?A;AA@?@A?AA?@@A@?A?A@>@@AA@@???AA@@??A@<>=>\tBD=PNMLOOPQQQOPOPPPOLOPNKMOMLNIMLLMKJMKLMMHMNLLKNNLMMLMONHMMHMNMJMNKMNLLNHMKKKNNLKLOPONMMQQOMNLL PG=MarkDuplicates RG=13403.mo.1 BI=SPNMMNQSSTPSRRQSRNQSQLPRNMPLMINONKOONPOKPOLOLOQNOOLMQPJNNINMNJNPMOLNNPJNKLLNPLKKPRQMMMQQQOPNN NM=0 MQ=60 AS=93 XS=0 RB=hg19",
-                getLine(result, 7));
+                "chr8	1285160	1285260	WPHISEQ02:158:D0E1CACXX:6:2205:21405:138412	163	29	101M	92A8	8	1285333	282	AGGAGCAGAGGCAATGAGTCTCTAGAATAGTCATTGGTGATCAGTACATAGTAACCAGTAATGACAGTGTGTGACATGATGAGAAGATAGAGTGGAGGAGG	@@@DFFDEFHHGA:C>ABEHHHG9FA<AFECGDGIIFJICHBGCG??BFGGIHGHIGHJGIJIGIGEHGIJJGGIIIEEHCA=)7;37;B3@.;(.55(,3	X0=1 X1=0 RG=111129_HiSeq02_0158_BD0E1CACXX.s_6.012 XG=0 AM=29 NM=1 SM=29 XM=1 XO=0 MQ=29 XT=U RB=hs37d5",
+                result.split("\n")[1]);
     }
 
     @Ignore("Must update to new gordriver")
@@ -130,26 +144,6 @@ public class UTestS3SeekableFile {
             }
         } finally {
             file.close();
-        }
-    }
-
-    /**
-     * Helper method to get specific lin from file.
-     *
-     * @param file
-     * @param lineNum
-     * @return
-     * @throws IOException
-     */
-    private String getLine(File file, int lineNum) throws IOException {
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(file));
-            for (int i = 0; i < lineNum - 1; i++)
-                br.readLine();
-            return br.readLine();
-        } finally {
-            if (br != null) br.close();
         }
     }
 
