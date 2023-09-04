@@ -10,12 +10,13 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class VirtualFileManager {
     private static final Logger log = LoggerFactory.getLogger(VirtualFileManager.class);
-    private final Map<String,VirtualFileEntry> virtualFileMap = new LinkedHashMap<>();
+    private final Map<String,VirtualFileEntry> virtualFileMap = new ConcurrentHashMap<>();
     // Note: "(?!//)" is a hack and should not really be there, but we need it as we have the case where 1) the VR name
     //       includes an alias 2) that alias maps to a url.
     private final Pattern externalVirtualSearchPattern = Pattern.compile("\\[.+?:(?!//).+?]");
