@@ -28,6 +28,7 @@ package org.gorpipe.test;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.util.DataUtil;
 
 import java.io.*;
@@ -193,12 +194,12 @@ public class GorDictionarySetup {
         this.dataFiles = data.values().stream().flatMap(Collection::stream).toArray(String[]::new);
 
         // Bucketize
-        Path bucketRelPath = Path.of("." + name +"/buckets");
+        Path bucketRelPath = Path.of("." + name +"/" + BucketManager.DEFAULT_BUCKET_FOLDER);
         Path bucketDir = root.resolve(bucketRelPath);
         Files.createDirectories(bucketDir);
 
         for (int i = 0; i < this.bucketFiles.length; i++) {
-            this.bucketFiles[i] = bucketRelPath.resolve(name + "_" + BUCKET_FILE_PREFIX + "_" + i + DataType.GOR.suffix);
+            this.bucketFiles[i] = bucketRelPath.resolve( BUCKET_FILE_PREFIX + name + "_" + i + DataType.GOR.suffix);
             this.bucketFiles[i].toFile().deleteOnExit();
         }
 

@@ -62,7 +62,7 @@ public class BucketManager<T extends DictionaryEntry> {
     public static final int DEFAULT_BUCKET_SIZE = 100;
     public static final int DEFAULT_MAX_BUCKET_COUNT = 3;
     public static final BucketPackLevel DEFAULT_BUCKET_PACK_LEVEL = BucketPackLevel.CONSOLIDATE;
-    private static final String DEFAULT_BUCKET_FOLDER = "b";
+    public static final String DEFAULT_BUCKET_FOLDER = "b";
     public static final String BUCKET_FILE_PREFIX = "b_"; // Use to identify which files are bucket files.
 
     public static final Duration DEFAULT_LOCK_TIMEOUT = Duration.ofMinutes(30);
@@ -96,6 +96,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
     private BucketCreator<T> bucketCreator;
 
+    // TOOD:  Does not really work as we create a new BucketManager for each time we bucketize..
     private long lastCleanupTimeMillis = 0;
 
     /**
@@ -562,7 +563,7 @@ public class BucketManager<T extends DictionaryEntry> {
                 log.trace("Checking bucket file CTM {} LAT {} GPFDB {}", System.currentTimeMillis(),
                         lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
                 if (force || System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()) {
-                    log.debug("Deleting bucket file {}", bucketFile);
+                    log.info("Deleting bucket file {}", bucketFile);
                     source.delete();
                     deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.GORI));
                     deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.META));
@@ -668,12 +669,9 @@ public class BucketManager<T extends DictionaryEntry> {
         for (String bucketDir : bucketsToCleanMap.keySet()) {
             log.trace("Bucketize - cleanOldBucketFiles - clean {}", bucketDir);
             List<String> bucketsToClean = bucketsToCleanMap.get(bucketDir);
-            // Perform the deletion., safest to use the deleteBuckets table methods.
-            //deleteBucketFiles(force, bucketsToClean.toArray(new Path[bucketsToClean.size()]));
+            // Perform the deletion.
+            //deleteBucketFiles(force, bucketsToClean.toArray(new String[bucketsToClean.size()]));
             deleteBuckets(force, bucketsToClean.toArray(new String[0]));
-            for (String bucket : bucketsToClean) {
-                log.warn("Bucket '{}' removed as it is not used", bucket);
-            }
         }
 
         log.trace("Bucketize - cleanOldBucketFiles - End");
