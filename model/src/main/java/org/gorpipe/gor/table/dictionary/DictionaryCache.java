@@ -3,13 +3,13 @@ package org.gorpipe.gor.table.dictionary;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.time.Duration;
 
 public class DictionaryCache {
 
@@ -17,7 +17,9 @@ public class DictionaryCache {
 
     public static final boolean useCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
 
-    final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
+    final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder()
+            .maximumSize(500).expireAfterAccess(Duration.ofHours(12L))
+            .build();   //A map from dictionaries to the cache objects.
 
 
     public static DictionaryTable getOrCreateTable(String path, FileReader fileReader) throws IOException {

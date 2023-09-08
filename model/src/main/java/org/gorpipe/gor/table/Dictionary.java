@@ -43,6 +43,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -110,7 +111,9 @@ import java.util.stream.Stream;
  */
 public class Dictionary {
     private static final Logger log = LoggerFactory.getLogger(Dictionary.class);
-    final private static Cache<String, Dictionary> dictCache = CacheBuilder.newBuilder().maximumSize(1000).build();   //A map from dictionaries to the cache objects.
+    final private static Cache<String, Dictionary> dictCache = CacheBuilder.newBuilder()
+            .maximumSize(500).expireAfterAccess(Duration.ofHours(12L))
+            .build();   //A map from dictionaries to the cache objects.
 
 
     public final boolean isDictionaryWithBuckets; // source col from dictionary files can be hiden if no buckets and no -f filters
