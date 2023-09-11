@@ -523,7 +523,6 @@ public class GorJavaUtilities {
     private static void writeHeader(FileReader fileReader, Writer dictionarypath, String[] columns, boolean lineFilter) throws IOException {
         var tableheader = new DictionaryTableMeta();
 
-
         if (columns != null) {
             tableheader.setColumns(columns);
         }

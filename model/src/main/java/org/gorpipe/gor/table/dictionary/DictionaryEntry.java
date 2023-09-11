@@ -210,7 +210,11 @@ public class DictionaryEntry extends TableEntry {
             sb.append(String.join(",", getTags()));
         }
 
-        return sb.toString().trim();
+        String line = sb.toString();
+        if (line.endsWith("\t\t\t\t")) {
+            line = line.trim();
+        }
+        return line;
     }
 
     @Override

@@ -498,6 +498,9 @@ public class UTestGorWriteExplicit {
         var results = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());
         Assert.assertTrue(Files.walk(cachePath).filter(p -> p.toString().endsWith(".gord")).allMatch(p -> p.endsWith(".link")));
         Assert.assertEquals(WRONG_RESULT, GENE_GROUP_CHROM_TOP1, results);
+
+        String[] result = TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")).split("\n");
+        Assert.assertEquals("Header should be same lenght as lines", result[0].split("\t", -1).length, result[1].split("\t", -1).length);
     }
 
     @Test
@@ -534,5 +537,8 @@ public class UTestGorWriteExplicit {
         Assert.assertEquals("Nor-ing the folder with -asdict should be the same as noring the dict",
                 TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord").resolve(DEFAULT_FOLDER_DICTIONARY_NAME)),
                 TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")));
+
+        String[] result = TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")).split("\n");
+        Assert.assertEquals("Header should be same lenght as lines", result[0].split("\t", -1).length, result[1].split("\t", -1).length);
     }
 }

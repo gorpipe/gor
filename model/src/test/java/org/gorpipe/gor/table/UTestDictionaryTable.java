@@ -70,8 +70,8 @@ public class UTestDictionaryTable {
                 "filepath2.gor\ttagA\n" +
                 "filepath3.gor\ttagB\n" +
                 "filepath4.gor\t\tchr1\t10000\tchr1\t30000\ttagD,tagE\n" +
-                "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n" +
-                "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\n" +
+                "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n" +
+                "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\t\n" +
                 "filepath7.gor\t\tchr3\t10000\tchr4\t10000\ttagF1,tagF2\n" +
                 "filepath8.gor\ttagA\n" +
                 "filepath9.gor|bucket1\ttagG\n" +
@@ -311,7 +311,7 @@ public class UTestDictionaryTable {
         dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath20.gor"), dict.getRootPath()).range(GenomicRange.parseGenomicRange("chr8")).build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath20.gor").includeDeleted());
-        Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t0\tchr8\t2147483647\n", selectRes);
+        Assert.assertEquals("Line with partial range inserted incorrectly", "filepath20.gor\t\tchr8\t0\tchr8\t2147483647\t\n", selectRes);
     }
 
     @Test
@@ -347,7 +347,7 @@ public class UTestDictionaryTable {
         dict.insert((DictionaryEntry)new DictionaryEntry.Builder<>(Paths.get("filepath5.gor"), dict.getRootPath()).range(GenomicRange.parseGenomicRange("chr1:10000-chr1:20000")).alias("tagF").build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath5.gor").includeDeleted());
-        Assert.assertEquals("Existing line should just be updated", "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n", selectRes);
+        Assert.assertEquals("Existing line should just be updated", "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n", selectRes);
     }
 
     @Test
@@ -373,7 +373,7 @@ public class UTestDictionaryTable {
         dict.insert(new DictionaryEntry.Builder<>(Paths.get("filepath4.gor"), dict.getRootPath()).range(GenomicRange.parseGenomicRange("chr1:10000-chr1:30000")).alias("tagD").build());
         dict.save();
         String selectRes = selectStringFilter(dict, dict.filter().files("filepath4.gor").includeDeleted());
-        Assert.assertEquals("Existing line should just be updated", "filepath4.gor\ttagD\tchr1\t10000\tchr1\t30000\n", selectRes);
+        Assert.assertEquals("Existing line should just be updated", "filepath4.gor\ttagD\tchr1\t10000\tchr1\t30000\t\n", selectRes);
     }
 
     @Test
@@ -512,8 +512,8 @@ public class UTestDictionaryTable {
         String selectRes = selectStringFilter(dict, dict.filter().tags("tagA", "tagF"));
         Assert.assertEquals("Select failed",
                 "filepath2.gor\ttagA\n" +
-                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n" +
-                        "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\n" +
+                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n" +
+                        "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\t\n" +
                         "filepath8.gor\ttagA\n", selectRes);
 
         selectRes = selectStringFilter(dict, dict.filter().tags("tagD", "tagF2"));
@@ -539,8 +539,8 @@ public class UTestDictionaryTable {
         String selectRes = selectStringFilter(dict, dict.filter().tags("tagA", "tagF"));
         Assert.assertEquals("Select failed",
                 "filepath2.gor\ttagA\n" +
-                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n" +
-                        "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\n" +
+                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n" +
+                        "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\t\n" +
                         "filepath8.gor\ttagA\n", selectRes);
     }
 
@@ -567,11 +567,11 @@ public class UTestDictionaryTable {
 
         String selectRes = selectStringFilter(dict, dict.filter().chrRange("chr1:10000-chr1:20000"));
         Assert.assertEquals("Select range with gor format failed",
-                "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n", selectRes);
+                "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n", selectRes);
 
         selectRes = selectStringFilter(dict, dict.filter().chrRange("chr1:10000-20000"));
         Assert.assertEquals("Select range with spaces failed",
-                "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n", selectRes);
+                "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n", selectRes);
     }
 
     @Test
@@ -584,7 +584,7 @@ public class UTestDictionaryTable {
         Assert.assertEquals("Select failed",
                 "filepath16.gor\ttagD\n" +
                         "filepath4.gor\t\tchr1\t10000\tchr1\t30000\ttagD,tagE\n" +
-                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n"
+                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n"
                 , selectRes);
     }
 
@@ -595,7 +595,7 @@ public class UTestDictionaryTable {
         DictionaryTable dict = new DictionaryTable(gordFile.toPath());
 
         String selectRes = selectStringFilter(dict, dict.filter().tags("tagF").chrRange("chr1:10000-chr1:20000"));
-        Assert.assertEquals("Select failed", "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n", selectRes);
+        Assert.assertEquals("Select failed", "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n", selectRes);
     }
 
     @Test
@@ -610,8 +610,8 @@ public class UTestDictionaryTable {
                         "filepath2.gor\ttagA\n" +
                         "filepath3.gor\ttagB\n" +
                         "filepath4.gor\t\tchr1\t10000\tchr1\t30000\ttagD,tagE\n" +
-                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\n" +
-                        "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\n" +
+                        "filepath5.gor\ttagF\tchr1\t10000\tchr1\t20000\t\n" +
+                        "filepath6.gor\ttagF\tchr1\t30000\tchr2\t10000\t\n" +
                         "filepath7.gor\t\tchr3\t10000\tchr4\t10000\ttagF1,tagF2\n" +
                         "filepath8.gor\ttagA\n" +
                         "filepath16.gor\ttagD\n" +
