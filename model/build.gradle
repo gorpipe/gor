@@ -37,6 +37,7 @@ project(':model') {
         annotationProcessor 'com.google.auto.service:auto-service:_'
         
         implementation 'com.google.auto.service:auto-service:_'
+        implementation 'com.github.ben-manes.caffeine:caffeine:_'
         implementation "org.apache.commons:commons-lang3:_"
         implementation "org.aeonbits.owner:owner:_"
         implementation "com.github.samtools:htsjdk:_"

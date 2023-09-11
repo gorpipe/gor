@@ -43,6 +43,8 @@ import java.util.List;
 public class TableLog {
     private static final Logger log = LoggerFactory.getLogger(TableLog.class);
 
+    private int version = 1;
+
     public static final String LOG_FILE = "action.log";
     public enum LogAction {
         INSERT,
@@ -71,8 +73,8 @@ public class TableLog {
      * @param action    action performed
      * @param argument  action argument (can be null if all info is in the entry object)
      */
-    public void logAfter(LogAction action, String argument, String line) {
-        String logLine = String.format("%s\t%s\t%s", LocalDateTime.now().format(formatter), action.toString(), argument);
+    public void logAfter(String tableVersion, LogAction action, String argument, String line) {
+        String logLine = String.format("%s\t%d\t%s\t%s\t%s", LocalDateTime.now().format(formatter), version, tableVersion, action.toString(), argument);
         logLine += String.format("\t%s", line);
         logLine += "\n";
         unCommittedActions.add(logLine);

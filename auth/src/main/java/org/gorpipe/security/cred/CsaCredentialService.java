@@ -1,8 +1,8 @@
 package org.gorpipe.security.cred;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.api.client.util.Strings;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.ExecutionError;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.gor.auth.AuthConfig;
@@ -40,7 +40,7 @@ public class CsaCredentialService extends CsaBaseService {
         super(config, authConfig);
         this.parser = parser;
         this.appSessionUtility = appSessionUtility;
-        credentialsCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(1, TimeUnit.MINUTES).build();
+        credentialsCache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
     }
 
     public BundledCredentials getCredentials(GorAuthInfo gorAuthInfo) {
@@ -60,8 +60,14 @@ public class CsaCredentialService extends CsaBaseService {
             key = projectName + ":" + userName;
         }
         try {
-            return credentialsCache.get(key, () -> getCredentialsBundle(projectName, userId));
-        } catch (UncheckedExecutionException | ExecutionException | ExecutionError e ) {
+            return credentialsCache.get(key, (k) -> {
+                try {
+                    return getCredentialsBundle(projectName, userId);
+                } catch (IOException e) {
+                    throw new UncheckedExecutionException(e);
+                }
+            });
+        } catch (UncheckedExecutionException | ExecutionError e ) {
             throw new GorSystemException("Error getting credentials for user: " + userName + " in project: " + projectName, e.getCause());
         }
     }

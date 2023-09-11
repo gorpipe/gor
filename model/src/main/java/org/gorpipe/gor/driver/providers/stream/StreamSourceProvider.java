@@ -22,10 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -59,7 +58,9 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
-    private static final Cache<DataSource, String> linkCache = CacheBuilder.newBuilder().maximumSize(10000).concurrencyLevel(4).expireAfterWrite(2, TimeUnit.HOURS).build();
+    private static final Cache<DataSource, String> linkCache = Caffeine.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(2, TimeUnit.HOURS).build();
 
     private final Map<DataType, StreamSourceIteratorFactory> dataTypeToFactory = new HashMap<>();
     private FileCache cache;
@@ -113,8 +114,14 @@ public abstract class StreamSourceProvider implements SourceProvider {
     public String readLink(DataSource source) throws IOException {
         if (USE_LINK_CACHE) {
             try {
-                return linkCache.get(source, () -> readLinkContent(source));
-            } catch (ExecutionException | UncheckedExecutionException e) {
+                return linkCache.get(source, (k) -> {
+                    try {
+                        return readLinkContent(k);
+                    } catch (IOException e) {
+                        throw new UncheckedExecutionException(e);
+                    }
+                });
+            } catch (UncheckedExecutionException e) {
                 if (e.getCause() instanceof IOException) {
                     throw (IOException) e.getCause();
                 }

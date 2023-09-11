@@ -95,23 +95,23 @@ public class UTestTableLog {
     private TableLog createSimpleTableLog() {
         TableLog tableLog = new TableLog(workDirPath);
 
-        tableLog.logAfter(TableLog.LogAction.INSERT, "ARG1",
+        tableLog.logAfter("1", TableLog.LogAction.INSERT, "ARG1",
                 new DictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build().formatEntryNoNewLine());
-        tableLog.logAfter(TableLog.LogAction.ADDTOBUCKET, "BUCKET1",
+        tableLog.logAfter("1", TableLog.LogAction.ADDTOBUCKET, "BUCKET1",
                 new DictionaryEntry.Builder("dummy2.gor", workDirPath).bucket("BUCKET1").alias("A2").build().formatEntryNoNewLine());
-        tableLog.logAfter(TableLog.LogAction.REMOVEFROMBUCKET, "BUCKET2",
+        tableLog.logAfter("1", TableLog.LogAction.REMOVEFROMBUCKET, "BUCKET2",
                 new DictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build().formatEntryNoNewLine());
-        tableLog.logAfter(TableLog.LogAction.DELETE, "ARG2",
+        tableLog.logAfter("1", TableLog.LogAction.DELETE, "ARG2",
                 new DictionaryEntry.Builder("dummy4.gor", workDirPath).alias("A4").build().formatEntryNoNewLine());
         return tableLog;
     }
 
     private void validateSimple(List<String> tableLogLines) {
         Assert.assertEquals(4, tableLogLines.size());
-        Assert.assertEquals("INSERT\tARG1\tdummy1.gor\tA1\n", tableLogLines.get(0).split("\t", 2)[1]);
-        Assert.assertEquals("ADDTOBUCKET\tBUCKET1\tdummy2.gor|BUCKET1\tA2\n", tableLogLines.get(1).split("\t", 2)[1]);
-        Assert.assertEquals("REMOVEFROMBUCKET\tBUCKET2\tdummy3.gor\tA3\n", tableLogLines.get(2).split("\t", 2)[1]);
-        Assert.assertEquals("DELETE\tARG2\tdummy4.gor\tA4\n", tableLogLines.get(3).split("\t", 2)[1]);
+        Assert.assertEquals("1\t1\tINSERT\tARG1\tdummy1.gor\tA1\n", tableLogLines.get(0).split("\t", 2)[1]);
+        Assert.assertEquals("1\t1\tADDTOBUCKET\tBUCKET1\tdummy2.gor|BUCKET1\tA2\n", tableLogLines.get(1).split("\t", 2)[1]);
+        Assert.assertEquals("1\t1\tREMOVEFROMBUCKET\tBUCKET2\tdummy3.gor\tA3\n", tableLogLines.get(2).split("\t", 2)[1]);
+        Assert.assertEquals("1\t1\tDELETE\tARG2\tdummy4.gor\tA4\n", tableLogLines.get(3).split("\t", 2)[1]);
     }
     
 }

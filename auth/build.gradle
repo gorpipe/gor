@@ -22,6 +22,7 @@ project(':auth') {
         implementation "com.squareup.retrofit2:retrofit:_"
         implementation "com.squareup.retrofit2:converter-jackson:_"
         implementation 'jakarta.json:jakarta.json-api:_'
+        implementation 'com.github.ben-manes.caffeine:caffeine:_'
 
         testImplementation project(':test')
         testImplementation "org.mockito:mockito-core:_"

@@ -29,10 +29,7 @@ import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.util.GenomicRange;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -846,6 +843,28 @@ public class UTestDictionaryTable {
                         "chr1\t1\tA\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t101808\tA\n" +
                         "chr1\t1\tB\tLineData for the chromosome and position line 1 1\tThis line should be long enough for this test purpose\t22871\tB\n",
                 TestUtils.runGorPipeServer(dictFile.toString() + " | top 2" , tableWorkDir.toString(), ""));
+    }
+
+    @Ignore
+    @Test
+    public void testWorkingCorruptDict() throws Exception {
+        // Add two file.
+        File gordFile = new File(tableWorkDir.toFile(), "testWorkingCorruptDict.gord");
+
+        //Path file = Paths.get("../tests/data/gor/genes.gor").toAbsolutePath();
+        Files.writeString(gordFile.toPath(), "" +
+                "wes/GDX_2374452.wes.seg.goodcov_4.gorz|.goodcov_4.wes.gord.buckets/b_21963_BfpV_1.gorz\tGDX_2374452\n" +
+                "wes/GDX_2374452.wes.seg.goodcov_4.gorz\tGDX_2374452\n");
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+        dict.setLineFilter(false);
+        dict.save();
+
+        Assert.assertEquals("Both entries should be fetched", 2, dict.filter().aliases("GDX_2374452").get().size());
+
+        dict.delete(dict.filter().files("wes/GDX_2374452.wes.seg.goodcov_4.gorz").get());
+        dict.save();
+
+        Assert.assertEquals("File be deleted", 0, dict.filter().aliases("GDX_2374452").get().size());
     }
 
     @SafeVarargs

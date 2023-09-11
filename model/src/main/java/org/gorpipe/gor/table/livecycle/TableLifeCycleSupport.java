@@ -129,7 +129,7 @@ public abstract class TableLifeCycleSupport<T>  implements TableLifeCycle<T> {
     public void logAfter(TableLog.LogAction action, String argument, String... lines) {
         if (table.isUseHistory()) {
             for (String line : lines) {
-                tableLog.logAfter(action, argument, line);
+                tableLog.logAfter(table.header.getProperty(TableHeader.HEADER_SERIAL_KEY), action, argument, line);
             }
         }
     }

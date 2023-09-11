@@ -1,8 +1,8 @@
 package org.gorpipe.gor.auth;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.security.cred.CsaApiService;
 import org.slf4j.Logger;
@@ -98,12 +98,11 @@ public class CsaAuth extends GorAuth {
     private Cache<String, GorAuthInfo> createGorAuthCacheCache(long timeoutInSeconds) {
 
         RemovalListener<String, GorAuthInfo> removalNotifier;
-        removalNotifier = notification -> {
-            notification.getValue();
-            log.debug("Removing gor auth info from cache, key: {}, cause: {}", notification.getKey(), notification.getCause());
+        removalNotifier = (k,v,c) -> {
+            log.debug("Removing gor auth info from cache, key: {}, cause: {}", k, c);
         };
 
-        return CacheBuilder.newBuilder().removalListener(removalNotifier)
+        return Caffeine.newBuilder().removalListener(removalNotifier)
                 .expireAfterAccess(timeoutInSeconds, TimeUnit.SECONDS).build();
     }
 

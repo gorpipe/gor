@@ -22,9 +22,9 @@
 
 package org.gorpipe.gor.table;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Strings;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
@@ -111,8 +111,9 @@ import java.util.stream.Stream;
  */
 public class Dictionary {
     private static final Logger log = LoggerFactory.getLogger(Dictionary.class);
-    final private static Cache<String, Dictionary> dictCache = CacheBuilder.newBuilder()
+    final private static Cache<String, Dictionary> dictCache = Caffeine.newBuilder()
             .maximumSize(500).expireAfterAccess(Duration.ofHours(12L))
+            .softValues()
             .build();   //A map from dictionaries to the cache objects.
 
 

@@ -1,7 +1,7 @@
 package org.gorpipe.gor.table.dictionary;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
@@ -17,8 +17,9 @@ public class DictionaryCache {
 
     public static final boolean useCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
 
-    final private static Cache<String, DictionaryTable> dictCache = CacheBuilder.newBuilder()
+    final private static Cache<String, DictionaryTable> dictCache = Caffeine.newBuilder()
             .maximumSize(500).expireAfterAccess(Duration.ofHours(12L))
+            .softValues()
             .build();   //A map from dictionaries to the cache objects.
 
 
