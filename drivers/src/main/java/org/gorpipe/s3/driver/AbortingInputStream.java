@@ -1,9 +1,7 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.annotation.SdkProtectedApi;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import org.apache.http.client.methods.HttpRequestBase;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -23,7 +23,6 @@
 package org.gorpipe.azure.driver;
 
 import com.google.auto.service.AutoService;
-import com.microsoft.azure.storage.StorageException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -52,15 +51,8 @@ public class AzureSourceProvider extends StreamSourceProvider {
     }
 
     @Override
-    public AzureBlobSource resolveDataSource(SourceReference sourceReference)
-            throws IOException {
-        try {
-            return new AzureBlobSource(sourceReference);
-        } catch (InvalidKeyException | URISyntaxException e) {
-            throw new RuntimeException("Unable to create Azure blob source", e);
-        } catch (StorageException e) {
-            throw new IOException("Unable to create Azure blob source", e);
-        }
+    public AzureBlobSource resolveDataSource(SourceReference sourceReference) {
+        return new AzureBlobSource(sourceReference);
     }
 
 }

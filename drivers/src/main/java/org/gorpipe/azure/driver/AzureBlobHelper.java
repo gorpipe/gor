@@ -22,11 +22,9 @@
 
 package org.gorpipe.azure.driver;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobClientBuilder;
+import org.gorpipe.exceptions.GorSystemException;
 
 /**
  * S3 helper
@@ -34,10 +32,12 @@ import java.security.InvalidKeyException;
  */
 public class AzureBlobHelper {
     public static final String AZUREPREFIX = "az://";
-    private static CloudBlobClient azure;
+    private static BlobClient azure;
 
-    public static CloudBlobClient getAzure() throws URISyntaxException, InvalidKeyException {
-        if (azure == null) {
+
+
+
+    public static BlobClient getAzure(String bucket, String path) {
             String name = System.getProperty("gor.azure.account.name");
             String key = System.getProperty("gor.azure.account.key");
 
@@ -46,13 +46,16 @@ public class AzureBlobHelper {
                 key = System.getenv("AZURE_STORAGE_ACCESS_KEY");
             }
 
-            String storageConnectionString = "DefaultEndpointsProtocol=http;" + "AccountName=" + name + ";AccountKey=" + key;
-            CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString);
+            if (name == null) {
+                throw new GorSystemException("No azure account name specified", null);
+            }
 
-            azure = account.createCloudBlobClient();
-        }
+            return new BlobClientBuilder()
+                    .connectionString("DefaultEndpointsProtocol=https;AccountName=" + name + ";AccountKey=" + key + ";EndpointSuffix=core.windows.net")
+                    .containerName(bucket)
+                    .blobName(path)
+                    .buildClient();
 
-        return azure;
     }
 
     public static String[] parseUrl(String url) {

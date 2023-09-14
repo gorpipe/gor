@@ -38,8 +38,10 @@ project(':drivers') {
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "com.google.cloud:google-cloud-storage:_"
         implementation "com.amazonaws:aws-java-sdk-s3:_"
-        implementation "com.microsoft.azure:azure-storage:_"
+        implementation 'com.azure:azure-storage-blob:_'
         implementation 'io.nextflow:nxf-s3fs:_' // Add com.upplication.s3fs
+        implementation 'org.apache.commons:commons-lang3:_'
+
 
         testFixturesImplementation project(':base')
         testFixturesImplementation project(':model')

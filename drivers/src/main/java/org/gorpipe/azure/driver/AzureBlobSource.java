@@ -22,12 +22,13 @@
 
 package org.gorpipe.azure.driver;
 
-import com.microsoft.azure.storage.*;
-import com.microsoft.azure.storage.blob.*;
-import com.microsoft.azure.storage.core.BaseRequest;
-import com.microsoft.azure.storage.core.StorageRequest;
-import com.microsoft.azure.storage.core.UriQueryBuilder;
-import com.microsoft.azure.storage.core.Utility;
+import java.net.HttpURLConnection;
+
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.models.BlobRange;
+import com.azure.storage.blob.models.BlobStorageException;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -36,11 +37,11 @@ import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 
 /**
@@ -51,21 +52,19 @@ public class AzureBlobSource implements StreamSource {
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
-    CloudBlockBlob cb;
-    OperationContext opContext;
-    BlobRequestOptions options;
+
+    private BlobClient client = null;
 
     /**
      * Create source
      *
      * @param sourceReference azure url of the form az://bucket/objectpath
      */
-    public AzureBlobSource(SourceReference sourceReference) throws InvalidKeyException, StorageException, URISyntaxException {
+    public AzureBlobSource(SourceReference sourceReference) {
         this.sourceReference = sourceReference;
         String[] parsed = AzureBlobHelper.parseUrl(this.sourceReference.getUrl());
         bucket = parsed[0];
         key = parsed[1];
-        init();
     }
 
     /**
@@ -74,44 +73,11 @@ public class AzureBlobSource implements StreamSource {
      * @param bucket azure bucket name
      * @param key    Object key (path)
      */
-    public AzureBlobSource(String bucket, String key, String subset) throws InvalidKeyException, StorageException, URISyntaxException {
+    public AzureBlobSource(String bucket, String key, String subset) {
         this.bucket = bucket;
         this.key = key;
         this.sourceReference = new SourceReferenceBuilder(AzureBlobHelper.makeUrl(bucket, key))
                 .chrSubset(subset).build();
-        init();
-    }
-
-    private void init() throws URISyntaxException, InvalidKeyException, StorageException {
-        CloudBlobClient bcli = AzureBlobHelper.getAzure();
-        CloudBlobContainer container = bcli.getContainerReference(bucket);
-        cb = container.getBlockBlobReference(key);
-        cb.downloadAttributes();
-
-        opContext = new OperationContext();
-        opContext.initialize();
-        options = new BlobRequestOptions();
-
-        CloudBlobClient blobServiceClient = cb.getServiceClient();
-        BlobRequestOptions clientOptions = blobServiceClient.getDefaultRequestOptions();
-        BlobType blobtype = cb.getProperties().getBlobType();
-        options.setRetryPolicyFactory(clientOptions.getRetryPolicyFactory());
-        options.setLocationMode(clientOptions.getLocationMode());
-        options.setTimeoutIntervalInMs(clientOptions.getTimeoutIntervalInMs());
-        options.setMaximumExecutionTimeInMs(clientOptions.getMaximumExecutionTimeInMs());
-        //options.setOperationExpiryTimeInMs(new Date().getTime() + modifiedOptions.getMaximumExecutionTimeInMs());
-        options.setConcurrentRequestCount(clientOptions.getConcurrentRequestCount());
-        options.setSingleBlobPutThresholdInBytes(clientOptions.getSingleBlobPutThresholdInBytes());
-        options.setUseTransactionalContentMD5(clientOptions.getUseTransactionalContentMD5());
-        options.setStoreBlobContentMD5(clientOptions.getStoreBlobContentMD5());
-        options.setDisableContentMD5Validation(clientOptions.getDisableContentMD5Validation());
-        options.setRetryPolicyFactory(new RetryExponentialRetry());
-        options.setLocationMode(LocationMode.PRIMARY_ONLY);
-        options.setConcurrentRequestCount(1);
-        options.setSingleBlobPutThresholdInBytes(32 * Constants.MB);
-        options.setUseTransactionalContentMD5(false);
-        options.setStoreBlobContentMD5(blobtype == BlobType.BLOCK_BLOB);
-        options.setDisableContentMD5Validation(false);
     }
 
     @Override
@@ -129,60 +95,67 @@ public class AzureBlobSource implements StreamSource {
         return open(RequestRange.fromFirstLength(start, minLength));
     }
 
-    private static void addSnapshot(final UriQueryBuilder builder, final String snapshotVersion)
-            throws StorageException {
-        if (snapshotVersion != null) {
-            builder.add(Constants.QueryConstants.SNAPSHOT, snapshotVersion);
-        }
-    }
-
-    public static HttpURLConnection getBlob(final URI uri, final BlobRequestOptions blobOptions,
-                                            final OperationContext opContext, final AccessCondition accessCondition, final String snapshotVersion,
-                                            final Long offset, final Long count, boolean requestRangeContentMD5) throws IOException,
-            URISyntaxException, StorageException {
-        if (offset != null && requestRangeContentMD5) {
-            Utility.assertNotNull("count", count);
-            Utility.assertInBounds("count", count, 1, Constants.MAX_BLOCK_SIZE);
-        }
-
-        final UriQueryBuilder builder = new UriQueryBuilder();
-        addSnapshot(builder, snapshotVersion);
-        final HttpURLConnection request = BaseRequest.createURLConnection(uri, blobOptions, builder, opContext);
-        request.setRequestMethod(Constants.HTTP_GET);
-
-        if (accessCondition != null) {
-            accessCondition.applyConditionToRequest(request);
-        }
-
-        if (offset != null) {
-            long rangeStart = offset;
-            long rangeEnd;
-            if (count != null) {
-                rangeEnd = offset + count - 1;
-                request.setRequestProperty(Constants.HeaderConstants.STORAGE_RANGE_HEADER, String.format(
-                        Utility.LOCALE_US, Constants.HeaderConstants.RANGE_HEADER_FORMAT, rangeStart, rangeEnd));
-            } else {
-                request.setRequestProperty(Constants.HeaderConstants.STORAGE_RANGE_HEADER, String.format(
-                        Utility.LOCALE_US, Constants.HeaderConstants.BEGIN_RANGE_HEADER_FORMAT, rangeStart));
-            }
-        }
-
-        if (offset != null && requestRangeContentMD5) {
-            request.setRequestProperty(Constants.HeaderConstants.RANGE_GET_CONTENT_MD5, Constants.TRUE);
-        }
-
-        return request;
-    }
-
     private InputStream open(RequestRange range) throws IOException {
+        if (range!=null) {
+            range = range.limitTo(getSourceMetadata().getLength());
+            if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+
+        }
+
         try {
-            HttpURLConnection urlc = getBlob(cb.getUri(), options, opContext, null, null, range == null ? null : range.getFirst(), range == null ? null : range.getLast() - range.getFirst() + 1, false);
-            StorageRequest.signBlobQueueAndFileRequest(urlc, cb.getServiceClient(), -1L, null);
-            return urlc.getInputStream();
-        } catch (StorageException e) {
-            throw new IOException("Unable to open inputstream on Azure url " + sourceReference.getUrl(), e);
-        } catch (URISyntaxException | InvalidKeyException e) {
-            throw new RuntimeException("Unable to open inputstream on Azure url " + sourceReference.getUrl(), e);
+            var client = createClient();
+            if (range == null) {
+                return client.openInputStream();
+            } else {
+                return client.openInputStream(
+                        new BlobRange(range.getFirst(), range.getLast() - range.getFirst() + 1),
+                        null);
+            }
+        } catch (Throwable t){
+            handleExceptions(t);
+        }
+
+        return null;
+    }
+
+    private void handleExceptions(Throwable t) throws IOException {
+        var url = sourceReference.getUrl();
+        if (t instanceof BlobStorageException bse) {
+            handleBlobStorageException(bse);
+        } else if (t instanceof URISyntaxException) {
+            throw new GorResourceException("Invalid azure url: " + url, url, t);
+        } else if (t instanceof InvalidKeyException) {
+            throw new GorSystemException("Invalid azure key for url: " + url, t);
+        } else if (t.getCause() instanceof IllegalArgumentException) {
+            throw new GorSystemException("Invalid autorization key: " + url, t.getCause());
+        } else if (t.getCause() instanceof UnknownHostException) {
+            throw new GorSystemException("Unknown host: " + url, t.getCause());
+        }
+        else {
+            throw new IOException("Error reading file: " + url, t);
+        }
+    }
+
+    private void handleBlobStorageException(BlobStorageException t) throws IOException {
+        var url = sourceReference.getUrl();
+        if (t.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST) {
+            throw new GorResourceException(
+                    String.format("Bad request for resource. Detail: %s. Original message: %s", url, t.getMessage()),
+                    url, t);
+        } else if (t.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            throw new GorResourceException(
+                    String.format("Unauthorized. Detail: %s. Original message: %s", url, t.getMessage()),
+                    url, t);
+        } else if (t.getStatusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+            throw new GorResourceException(
+                    String.format("Access Denied. Detail: %s. Original message: %s", url, t.getMessage()),
+                    url, t);
+        } else if (t.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+            throw new GorResourceException(
+                    String.format("Not Found. Detail: %s. Original message: %s", url, t.getMessage()),
+                    url, t);
+        } else {
+            throw new IOException(t);
         }
     }
 
@@ -192,10 +165,20 @@ public class AzureBlobSource implements StreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
-        long length = cb.getProperties().getLength();
-        long lastModified = cb.getProperties().getLastModified().getTime();
-        return new StreamSourceMetadata(this, getName(), lastModified, length, cb.getProperties().getEtag(), false);
+    public StreamSourceMetadata getSourceMetadata() throws IOException{
+        try {
+            var client = createClient();
+            var props = client.getProperties();
+            long length = props.getBlobSize();
+            long lastModified = props.getLastModified().toEpochSecond();
+            var tag = props.getETag();
+
+            return new StreamSourceMetadata(this, getName(), lastModified, length, tag, false);
+        } catch (Throwable t) {
+            handleExceptions(t);
+        }
+
+        return null;
     }
 
     @Override
@@ -208,10 +191,19 @@ public class AzureBlobSource implements StreamSource {
         return DataType.fromFileName(key);
     }
 
-    // TODO: Check for Azure key existence.
     @Override
     public boolean exists() {
+        try {
+            createClient();
+        } catch (Throwable t) {
+            return false;
+        }
         return true;
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return false;
     }
 
     @Override
@@ -222,5 +214,13 @@ public class AzureBlobSource implements StreamSource {
     @Override
     public void close() throws IOException {
         // No resources to free
+    }
+
+    private BlobClient createClient() {
+        if (client == null) {
+            client = AzureBlobHelper.getAzure(bucket, key);
+        }
+
+        return client;
     }
 }
