@@ -526,8 +526,8 @@ public class RowBase extends Row implements Serializable {
     }
 
     void testColumnIndex(int n) {
-        if (n < 0 ||  n >= numCols()) {
-            throw new GorDataException("Column " + n + " does not exist", n, toString());
+        if (n < 0 ||  n >= numCols() || splitArray[n] > allCols.length()) {
+            throw new GorDataException("Column " + n + " does not exist", n, "", toString());
         }
     }
 

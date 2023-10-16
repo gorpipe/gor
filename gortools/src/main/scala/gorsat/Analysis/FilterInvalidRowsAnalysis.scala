@@ -28,7 +28,7 @@ import org.gorpipe.gor.model.Row
 case class FilterInvalidRowsAnalysis(headerCount:Int) extends Analysis {
 
   override def process(r: Row): Unit = {
-    if (headerCount != r.numCols()) {
+    if (r.numCols() != headerCount || r.getSplitArray()(r.numCols() - 1) > r.getAllCols().length) {
       return
     }
     super.process(r)
