@@ -32,6 +32,7 @@
    command/DEFLATECOLUMN
    command/DISTINCT
    command/DISTLOC
+   command/FILTERINVALIDROWS
    command/GAVA
    command/GOR
    command/GORCMD
