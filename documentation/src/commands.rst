@@ -74,6 +74,9 @@ Commands
    * - :ref:`DISTLOC`
      - Similar to :ref:`TOP`, but counting distinct loci instead of individual rows.
      - GOR
+   * - :ref:`FILTERINVALIDROWS`
+     - Filters out invalid rows, e.g. rows missing columns.
+     - GOR/NOR
    * - :ref:`GAVA`
      - Command for working with Gene Association
      - GOR

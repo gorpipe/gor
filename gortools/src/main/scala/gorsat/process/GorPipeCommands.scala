@@ -200,6 +200,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.DeflateColumn)
       addInfo(new gorsat.Commands.InflateColumn)
       addInfo(new Collect)
+      addInfo(new gorsat.Commands.FilterInvalidRows)
     }
   }
 }
