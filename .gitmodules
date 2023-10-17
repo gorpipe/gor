@@ -1,3 +1,3 @@
 [submodule "tests/data"]
 	path = tests/data
-	url = ../gor-test-data
+	url = https://github.com/gorpipe/gor-test-data.git
