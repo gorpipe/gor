@@ -49,7 +49,7 @@ public class UIntegrationTestGorpipe {
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
 
-        String path = "s3://nextcode-unittest/csa_test_data/data_sets/gor_driver_testfiles/test_vcf_genome_count.vcf.gz";
+        String path = "s3://gdb-unit-test-data/csa_test_data/data_sets/gor_driver_testfiles/test_vcf_genome_count.vcf.gz";
         String query = String.format("gor %s | group genome -count", path);
 
         try (GenomicIterator iterator = TestUtils.runGorPipeIterator(query)) {

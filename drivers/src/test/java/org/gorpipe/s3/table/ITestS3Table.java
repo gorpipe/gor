@@ -46,6 +46,13 @@ public class ITestS3Table {
     private static String S3_SECRET;
     private DriverBackedFileReader fileReader;
 
+    private static final String S3_FILE_1 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gor";
+    //private static final String S3_FILE_1 = "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/derived/raw_vcf_to_gor/BVL_FATHER_SLC52A2.vcf.gz.gorz";
+    private static final String S3_FILE_2 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gor";
+    //private static final String S3_FILE_2 = "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/derived/raw_vcf_to_gor/BVL_INDEX_SLC52A2.vcf.gz.gorz";
+    private static final String S3_FILE_3 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gor";
+    //private static final String S3_FILE_3 = "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/derived/raw_vcf_to_gor/BVL_MOTHER_SLC52A2.vcf.gz.gorz";
+
     // NOTE: Providing system props for classes does usually not work if the prop is ready in static context.
     @Rule
     public final ProvideSystemProperty awsAccessKeyId = new ProvideSystemProperty("aws.accessKeyId", "");
@@ -99,9 +106,9 @@ public class ITestS3Table {
         gordFile = workDirPath.resolve("some_project").resolve("dict.gord");
         DictionaryTable dict = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053043D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
     }
 
@@ -111,7 +118,7 @@ public class ITestS3Table {
 
         String[] result = runGorPipeServer("gor " + gordFile.toString(),
                 workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
-        Assert.assertEquals("Did not retreive the correct data", 759,  result.length);
+        Assert.assertEquals("Did not retreive the correct data", 58,  result.length);
     }
     
     @Test
@@ -132,7 +139,7 @@ public class ITestS3Table {
 
        String[] bucketResult = runGorPipeServer("gor " + bucketFullPath.toString(),
                 workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
-        Assert.assertEquals("Did not retrieve the correct data", 759,  bucketResult.length);
+        Assert.assertEquals("Did not retrieve the correct data", 58,  bucketResult.length);
     }
     
     @Test
@@ -140,7 +147,7 @@ public class ITestS3Table {
         insertIntoTableGordFile();
 
         DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
-        table.setProperty(HEADER_BUCKET_DIRS_KEY, "s3://nextcode-unittest/tmp/buckets/");
+        table.setProperty(HEADER_BUCKET_DIRS_KEY, "s3://gdb-unit-test-data/tmp/buckets/");
         table.save();
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
 
@@ -157,7 +164,7 @@ public class ITestS3Table {
 
             String[] bucketResult = runGorPipeServer("gor " +bucket,
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
-            Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
+            Assert.assertEquals("Did not retrieve the correct data", 58, bucketResult.length);
         } finally {
             // Manual cleanup as this is S3.
             if (buckets != null) {
@@ -191,7 +198,7 @@ public class ITestS3Table {
             String[] bucketResult = runGorPipeServer("gor "
                             + workDirPath.resolve("some_project").resolve(bucket.substring("s3data://project/".length())).toString(),
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
-            Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
+            Assert.assertEquals("Did not retrieve the correct data", 58, bucketResult.length);
         } finally {
             // Manual cleanup as this is S3.
             if (buckets != null) {
@@ -228,7 +235,7 @@ public class ITestS3Table {
 
             String[] bucketResult = runGorPipeServer("gor " + localBucketFile,
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");
-            Assert.assertEquals("Did not retrieve the correct data", 759, bucketResult.length);
+            Assert.assertEquals("Did not retrieve the correct data", 58, bucketResult.length);
         } finally {
             // Manual cleanup as this is S3.
             if (buckets != null) {
@@ -242,9 +249,9 @@ public class ITestS3Table {
         fileReader.createDirectories(parentPath);
         DictionaryTable dict = new DictionaryTable.Builder<>(dictPath).useHistory(useHistory).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053043D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
 
         return dictPath;
@@ -255,9 +262,9 @@ public class ITestS3Table {
         fileReader.createDirectories(dictPath);
         DictionaryTable dict = new DictionaryTable.Builder<>(dictPath + DEFAULT_FOLDER_DICTIONARY_NAME).useHistory(useHistory).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053033D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gorz", dict.getRootPath()).alias("D3_WGC053043D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
 
         return dictPath;
@@ -266,7 +273,7 @@ public class ITestS3Table {
     @Test
     public void testBucketizeS3TableS3DataS3Buckets() throws IOException {
         String name = "testBucketizeS3TableS3DataS3Buckets";
-        String remoteTestDir = "s3://nextcode-unittest/tmp/" + name + "_" + UUID.randomUUID();
+        String remoteTestDir = "s3://gdb-unit-test-data/tmp/" + name + "_" + UUID.randomUUID();
         String dictPath = createDictionary(remoteTestDir, false);
 
         try {
@@ -285,8 +292,11 @@ public class ITestS3Table {
             Assert.assertTrue(fileReader.exists(PathUtils.resolve(table.getRootPath(), bucket)));
 
             String res = TestUtils.runGorPipeServer("gor " + dictPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
-            Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
-                    "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\tD3_WGC053023D\n", res);
+
+            var expectedResult ="CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART\tSource\n" +
+                    "chr8\t145577824\trs880701\tC\tG\t200.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=1.236;DB;DP=18;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.706;QD=11.15;ReadPosRankSum=0.795\tGT:AD:DP:GQ:PL\t0/1:9,9:18:99:229,0,206\tD3_WGC053023D\n";
+
+            Assert.assertEquals(expectedResult, res);
         } finally {
             // Manual cleanup as this is S3.
             fileReader.deleteDirectory(remoteTestDir);
@@ -296,7 +306,7 @@ public class ITestS3Table {
     @Test
     public void testBucketizeS3TableFolderS3DataS3Bucket() throws IOException {
         String name = "testBucketizeS3TableFolderS3DataS3Bucket";
-        String remoteTestDir = "s3://nextcode-unittest/tmp/" + name + "_" + UUID.randomUUID();
+        String remoteTestDir = "s3://gdb-unit-test-data/tmp/" + name + "_" + UUID.randomUUID();
         String dictPath = createDictionaryFolder(remoteTestDir, false);
 
         try {
@@ -315,8 +325,9 @@ public class ITestS3Table {
             Assert.assertTrue(fileReader.exists(PathUtils.resolve(table.getRootPath(), bucket)));
 
             String res = TestUtils.runGorPipeServer("gor " + dictPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
-            Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
-                    "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\tD3_WGC053023D\n", res);
+            var expectedValue = "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART\tSource\n" +
+                    "chr8\t145577824\trs880701\tC\tG\t200.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=1.236;DB;DP=18;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.706;QD=11.15;ReadPosRankSum=0.795\tGT:AD:DP:GQ:PL\t0/1:9,9:18:99:229,0,206\tD3_WGC053023D\n";
+            Assert.assertEquals(expectedValue, res);
         } finally {
             // Manual cleanup as this is S3.
             fileReader.deleteDirectory(remoteTestDir);
@@ -326,7 +337,7 @@ public class ITestS3Table {
     @Test
     public void testBucketizeS3TableFolderS3DataS3BucketUsingLink() throws IOException {
         String name = "testBucketizeS3TableFolderS3DataS3BucketUsingLink";
-        String remoteTestDir = "s3://nextcode-unittest/tmp/" + name + "_" + UUID.randomUUID();
+        String remoteTestDir = "s3://gdb-unit-test-data/tmp/" + name + "_" + UUID.randomUUID();
         String dictPath = createDictionaryFolder(remoteTestDir, false);
 
         try {
@@ -348,8 +359,11 @@ public class ITestS3Table {
             Assert.assertTrue(fileReader.exists(PathUtils.resolve(table.getRootPath(), bucket)));
 
             String res = TestUtils.runGorPipeServer("gor " + linkPath + " | top 1", workDirPath.toString(), fileReader.getSecurityContext());
-            Assert.assertEquals("CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
-                    "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\tD3_WGC053023D\n", res);
+
+            var expectedValue = "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART\tSource\n" +
+                    "chr8\t145577824\trs880701\tC\tG\t200.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=1.236;DB;DP=18;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.706;QD=11.15;ReadPosRankSum=0.795\tGT:AD:DP:GQ:PL\t0/1:9,9:18:99:229,0,206\tD3_WGC053023D\n";
+
+            Assert.assertEquals(expectedValue, res);
         } finally {
             // Manual cleanup as this is S3.
             fileReader.deleteDirectory(remoteTestDir);

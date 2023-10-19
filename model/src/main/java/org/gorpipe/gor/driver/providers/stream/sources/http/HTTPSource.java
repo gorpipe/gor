@@ -143,6 +143,7 @@ public class HTTPSource implements StreamSource {
 
     @Override
     public StreamSourceMetadata getSourceMetadata() throws IOException {
+
         if (sourceMetadata == null && exists == null) {
             HttpURLConnection urlc = createBaseUrlConnection();
             log.debug("Reading source metadata from {} using HEAD", url);
@@ -150,6 +151,17 @@ public class HTTPSource implements StreamSource {
                 urlc.setRequestMethod("HEAD");
                 urlc.connect();
                 int responseCode = urlc.getResponseCode();
+
+                if (responseCode != HttpURLConnection.HTTP_OK)
+                {
+                    // Try using get instead of head
+                    urlc.disconnect();
+                    urlc = createBaseUrlConnection();
+                    urlc.setRequestMethod("GET");
+                    urlc.connect();
+                    responseCode = urlc.getResponseCode();
+                }
+
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     // If the response is "HTTP_OK" the exists is set to true and source metadata is returned
                     exists = true;
@@ -204,7 +216,7 @@ public class HTTPSource implements StreamSource {
 
     @Override
     public DataType getDataType() {
-        return DataType.fromFileName(url.getFile());
+        return DataType.fromFileName(url.getPath());
     }
 
     @Override

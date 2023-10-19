@@ -21,7 +21,7 @@ public class ITestFilesS3Source extends CommonFilesTests {
 
     private static String S3_KEY;
     private static String S3_SECRET;
-    private static String S3_REGION = "us-west-2";
+    private static String S3_REGION = "eu-west-1";
 
     @Rule
     public final ProvideSystemProperty myPropertyHasMyValue
@@ -58,7 +58,7 @@ public class ITestFilesS3Source extends CommonFilesTests {
 
     @Override
     protected String getDataName(String name) {
-        return "s3://nextcode-unittest/csa_test_data/data_sets/bvl_min_gor/" + name;
+        return "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/" + name;
     }
 
     @Override

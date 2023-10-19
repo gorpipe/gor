@@ -86,7 +86,7 @@ public class ITestS3Shared {
         Assert.assertNotNull(source);
         Assert.assertFalse(source.exists());
         Assert.assertEquals("s3data://project/" + dataPath, source.getSourceReference().getOriginalSourceReference().getUrl());
-        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/a/a.gor", source.getSourceReference().getUrl());
+        Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/user_data/a/a.gor", source.getSourceReference().getUrl());
     }
 
     @Test
@@ -120,7 +120,7 @@ public class ITestS3Shared {
 
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getSourceReference().getUrl());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getSourceReference().getUrl());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/BVL_FATHER_SLC52A2/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/BVL_FATHER_SLC52A2/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
@@ -148,7 +148,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNVKUKNN", iterator.getHeader());
@@ -165,7 +165,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
@@ -181,7 +181,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
@@ -197,7 +197,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
@@ -213,7 +213,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.Project, "some_project");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
@@ -229,7 +229,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
@@ -245,7 +245,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
@@ -261,7 +261,7 @@ public class ITestS3Shared {
         DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env");
 
         Assert.assertEquals("S3", source.getSourceType().getName());
-        Assert.assertEquals("s3://nextcode-unittest/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
@@ -283,7 +283,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("a.gorz", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getParentSourceReference().getUrl());
-        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
         source = fileReader.resolveUrl(DataUtil.toLinkFile("a", DataType.GORZ));
 
@@ -291,7 +291,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("a.gorz.link", source.getSourceReference().getOriginalSourceReference().getUrl());
         Assert.assertEquals("s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getSourceReference().getParentSourceReference().getUrl());
-        Assert.assertEquals("s3://nextcode-unittest/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
+        Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
     }
 
     @Test

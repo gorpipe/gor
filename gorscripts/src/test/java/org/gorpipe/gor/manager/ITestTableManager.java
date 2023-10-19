@@ -31,23 +31,22 @@ public class ITestTableManager {
     private static String S3_SECRET;
     private DriverBackedFileReader s3FileReader;
 
-    private String file1 = "s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz";
-    private String file2 = "s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053025D.wgs.genotypes.gorz";
+    private final String file1 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gor";
+    private final String file2 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053025D.wgs.genotypes.gor";
 
+    private static final String EXPECTED_FIRST_10 = "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART\tSource\n" +
+            "chr8\t145577824\trs880701\tC\tG\t200.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=1.236;DB;DP=18;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.706;QD=11.15;ReadPosRankSum=0.795\tGT:AD:DP:GQ:PL\t0/1:9,9:18:99:229,0,206\ta1\n" +
+            "chr8\t145577824\trs880701\tC\tG\t200.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=1.236;DB;DP=18;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.706;QD=11.15;ReadPosRankSum=0.795\tGT:AD:DP:GQ:PL\t0/1:9,9:18:99:229,0,206\ta2\n" +
+            "chr8\t145577829\trs880702\tA\tC\t132.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=-2.507;DB;DP=20;Dels=0.00;FS=1.740;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.532;QD=6.64;ReadPosRankSum=1.292\tGT:AD:DP:GQ:PL\t0/1:11,9:20:99:161,0,305\ta1\n" +
+            "chr8\t145577829\trs880702\tA\tC\t132.77\t.\tAC=1;AF=0.500;AN=2;BaseQRankSum=-2.507;DB;DP=20;Dels=0.00;FS=1.740;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=0.532;QD=6.64;ReadPosRankSum=1.292\tGT:AD:DP:GQ:PL\t0/1:11,9:20:99:161,0,305\ta2\n" +
+            "chr8\t145577999\trs2272664\tT\tA\t12.05\tLowQual\tAC=1;AF=0.500;AN=2;BaseQRankSum=-1.067;DB;DP=8;Dels=0.00;FS=0.000;HaplotypeScore=0.8667;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=1.067;QD=1.51;ReadPosRankSum=-1.067\tGT:AD:DP:GQ:PL\t0/1:6,2:8:40:40,0,168\ta1\n" +
+            "chr8\t145577999\trs2272664\tT\tA\t12.05\tLowQual\tAC=1;AF=0.500;AN=2;BaseQRankSum=-1.067;DB;DP=8;Dels=0.00;FS=0.000;HaplotypeScore=0.8667;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=1.067;QD=1.51;ReadPosRankSum=-1.067\tGT:AD:DP:GQ:PL\t0/1:6,2:8:40:40,0,168\ta2\n" +
+            "chr8\t145578296\trs2272663\tA\tG\t24.78\tLowQual\tAC=1;AF=0.500;AN=2;BaseQRankSum=-1.754;DB;DP=7;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=1.754;QD=3.54;ReadPosRankSum=-0.550\tGT:AD:DP:GQ:PL\t0/1:4,3:7:53:53,0,108\ta1\n" +
+            "chr8\t145578296\trs2272663\tA\tG\t24.78\tLowQual\tAC=1;AF=0.500;AN=2;BaseQRankSum=-1.754;DB;DP=7;Dels=0.00;FS=0.000;HaplotypeScore=0.0000;MLEAC=1;MLEAF=0.500;MQ=60.00;MQ0=0;MQRankSum=1.754;QD=3.54;ReadPosRankSum=-0.550\tGT:AD:DP:GQ:PL\t0/1:4,3:7:53:53,0,108\ta2\n" +
+            "chr8\t145579931\trs200026961\tC\tG\t27.77\tLowQual\tAC=1;AF=0.500;AN=2;BaseQRankSum=-3.473;DB;DP=31;Dels=0.00;FS=0.000;HaplotypeScore=1.8218;MLEAC=1;MLEAF=0.500;MQ=48.52;MQ0=0;MQRankSum=-3.520;QD=0.90;ReadPosRankSum=-2.150\tGT:AD:DP:GQ:PL\t0/1:24,7:31:56:56,0,656\ta1\n" +
+            "chr8\t145579931\trs200026961\tC\tG\t27.77\tLowQual\tAC=1;AF=0.500;AN=2;BaseQRankSum=-3.473;DB;DP=31;Dels=0.00;FS=0.000;HaplotypeScore=1.8218;MLEAC=1;MLEAF=0.500;MQ=48.52;MQ0=0;MQRankSum=-3.520;QD=0.90;ReadPosRankSum=-2.150\tGT:AD:DP:GQ:PL\t0/1:24,7:31:56:56,0,656\ta2\n";
 
-    private static String expectedFirst10 = "CHROM\tPOS\tReference\tCall\tCallCopies\tCallRatio\tDepth\tGL_Call\tFILTER\tFS\tformatZip\tSource\n" +
-            "chr1\t10403\tACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC\tA\t1\t0.471\t17\t277\tPASS\t5.315\tAlt=A:GT=0/1,AD=9,8,DP=17,GQ=99,PL=277,0,318\ta1\n" +
-            "chr1\t10616\tCCGCCGTTGCAAAGGCGCGCCG\tC\t2\t1.000\t3\t9\tPASS\t0.0\tAlt=C:GT=1/1,AD=0,3,DP=3,GQ=9,PL=136,9,0\ta2\n" +
-            "chr1\t12783\tG\tA\t1\t0.783\t46\t119\tPASS\t0.0\tAlt=A:GT=0/1,AD=10,36,DP=46,GQ=99,PL=949,0,119\ta1\n" +
-            "chr1\t12783\tG\tA\t1\t0.787\t61\t99\tPASS\t0.0\tAlt=A:GT=0/1,AD=13,48,DP=61,GQ=99,PL=1263,0,99\ta2\n" +
-            "chr1\t13012\tG\tA\t1\t0.132\t68\t73\tPASS\t1.729\tAlt=A:GT=0/1,AD=59,9,DP=68,GQ=73,PL=73,0,1590\ta1\n" +
-            "chr1\t13079\tC\tG\t1\t0.188\t85\t210\tPASS\t0.0\tAlt=G:GT=0/1,AD=69,16,DP=85,GQ=99,PL=210,0,1671\ta1\n" +
-            "chr1\t13079\tC\tG\t1\t0.107\t122\t134\tPASS\t11.555\tAlt=G:GT=0/1,AD=109,13,DP=122,GQ=99,PL=134,0,2718\ta2\n" +
-            "chr1\t13110\tG\tA\t1\t0.215\t93\t321\tPASS\t16.887\tAlt=A:GT=0/1,AD=73,20,DP=93,GQ=99,PL=321,0,3052\ta2\n" +
-            "chr1\t13116\tT\tG\t1\t0.652\t46\t582\tPASS\t8.14\tAlt=G:GT=0/1,AD=16,30,DP=46,GQ=99,PGT=0|1,PID=13116_T_G,PL=1200,0,582\ta1\n" +
-            "chr1\t13116\tT\tG\t1\t0.674\t86\t1420\tPASS\t26.618\tAlt=G:GT=0/1,AD=28,58,DP=86,GQ=99,PGT=0|1,PID=13116_T_G,PL=2333,0,1420\ta2\n";
-
-    private static String projectRoot = "s3://nextcode-unittest/tmp/some_project";
+    private static final String projectRoot = "s3://gdb-unit-test-data/tmp/some_project";
 
     // NOTE: Providing system props for classes does usually not work if the prop is ready in static context.
     @Rule
@@ -132,7 +131,7 @@ public class ITestTableManager {
             Assert.assertEquals(2, entries.size());
 
             String content = TestUtils.runGorPipeServer("gor " + dictPath + " | top 10", projectRoot, s3FileReader.getSecurityContext());
-            Assert.assertEquals(expectedFirst10, content);
+            Assert.assertEquals(EXPECTED_FIRST_10, content);
             System.out.println(String.format("Read top 10 with gor %d ms", (-time + (time = System.currentTimeMillis()))));
         } finally {
             try {
@@ -152,7 +151,7 @@ public class ITestTableManager {
             long time = System.currentTimeMillis();
 
             String content = TestUtils.runGorPipeServer("gor " + dictPath + " | top 10", projectRoot, s3FileReader.getSecurityContext());
-            Assert.assertEquals(expectedFirst10, content);
+            Assert.assertEquals(EXPECTED_FIRST_10, content);
             System.out.println(String.format("Read top 10 with local gor link %d ms", (-time + (time = System.currentTimeMillis()))));
         } finally {
             try {
@@ -175,7 +174,7 @@ public class ITestTableManager {
             Files.writeString(linkPath, dictPath);
 
             String content = TestUtils.runGorPipeServer("gor " + workDirPath.resolve("some_project").resolve("dictlink.gord") + " | top 10", workDirPath.resolve("some_project").toString(), s3FileReader.getSecurityContext());
-            Assert.assertEquals(expectedFirst10, content);
+            Assert.assertEquals(EXPECTED_FIRST_10, content);
             System.out.println(String.format("Read top 10 with local gor link %d ms", (-time + (time = System.currentTimeMillis()))));
         } finally {
             try {
@@ -206,11 +205,11 @@ public class ITestTableManager {
             System.out.println(String.format("Buckettize %d ms", (-time + (time = System.currentTimeMillis()))));
 
             String content = TestUtils.runGorPipeServer("gor " + dictPath + " | top 10", projectRoot, s3FileReader.getSecurityContext());
-            Assert.assertEquals(expectedFirst10, content);
+            Assert.assertEquals(EXPECTED_FIRST_10, content);
             System.out.println(String.format("Read top 10 with gor %d ms", (-time + (time = System.currentTimeMillis()))));
 
             Assert.assertTrue(Arrays.stream(s3FileReader.readAll(dictPath)).filter(l -> !l.startsWith("#")).collect(Collectors.joining("\n"))
-                    .startsWith("s3://nextcode-unittest/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gorz|.testdict/b/b_"));
+                    .startsWith("s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gor|.testdict/b/b_"));
             System.out.println(String.format("Read all lines %d ms", (-time + (time = System.currentTimeMillis()))));
 
         } finally {

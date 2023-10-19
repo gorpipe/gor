@@ -40,12 +40,12 @@ public class DriverUtils {
     public static String createSecurityContext(String service, Credentials.OwnerType ownerType, String owner, String S3_KEY, String S3_SECRET) {
         Credentials creds = new Credentials.Builder()
                 .service(service)
-                .lookupKey("nextcode-unittest")
+                .lookupKey("gdb-unit-test-data")
                 .ownerType(ownerType)
                 .ownerId(owner)
                 .set(Credentials.Attr.KEY, S3_KEY)
                 .set(Credentials.Attr.SECRET, S3_SECRET)
-                .set(Credentials.Attr.REGION, "us-west-2")
+                .set(Credentials.Attr.REGION, "eu-west-1")
                 .build();
         BundledCredentials bundleCreds = new BundledCredentials.Builder().addCredentials(creds).build();
         return bundleCreds.addToSecurityContext("");
@@ -59,7 +59,7 @@ public class DriverUtils {
                 .ownerId(owner)
                 .set(Credentials.Attr.KEY, S3_KEY)
                 .set(Credentials.Attr.SECRET, S3_SECRET)
-                .set(Credentials.Attr.REGION, "us-west-2")
+                .set(Credentials.Attr.REGION, "eu-west-1")
                 .build();
         BundledCredentials bundleCreds = new BundledCredentials.Builder().addCredentials(creds).build();
         return bundleCreds.addToSecurityContext("");
@@ -67,7 +67,7 @@ public class DriverUtils {
 
     public static String awsSecurityContext(String key, String secret) throws IOException {
         // Credentials for gor_unittest user in nextcode AWS account
-        Credentials cred = new Credentials.Builder().service("s3").lookupKey("nextcode-unittest").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();
+        Credentials cred = new Credentials.Builder().service("s3").lookupKey("gdb-unit-test-data").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();
         Credentials bogus = new Credentials.Builder().service("s3").lookupKey("bla").set(Credentials.Attr.KEY, "DummyKey").set(Credentials.Attr.SECRET, "DummySecret").build();
         BundledCredentials creds = new BundledCredentials.Builder().addCredentials(bogus, cred).build();
         return creds.addToSecurityContext(null);

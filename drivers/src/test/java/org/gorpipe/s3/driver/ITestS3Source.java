@@ -33,7 +33,7 @@ public class ITestS3Source extends CommonStreamTests {
 
     private static String S3_KEY;
     private static String S3_SECRET;
-    private static String S3_REGION = "us-west-2";
+    private static String S3_REGION = "eu-west-1";
 
     @Rule
     public final ProvideSystemProperty myPropertyHasMyValue
@@ -57,7 +57,7 @@ public class ITestS3Source extends CommonStreamTests {
 
     @Override
     protected String getDataName(String name) {
-        return "s3://nextcode-unittest/csa_test_data/data_sets/gor_driver_testfiles/" + name;
+        return "s3://gdb-unit-test-data/csa_test_data/data_sets/gor_driver_testfiles/" + name;
     }
 
     @Override
@@ -109,7 +109,7 @@ public class ITestS3Source extends CommonStreamTests {
 
     @Test
     public void testS3Write() {
-        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gor");
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gor");
     }
 
     @Ignore("Local file, also too large and slow to use always, no clean up")
@@ -117,7 +117,7 @@ public class ITestS3Source extends CommonStreamTests {
     public void testS3WriteLargeFile() {
         String localPath = "../../testing/data/ref/hg19/dbsnp.gorz";
         long startTime = System.currentTimeMillis();
-        TestUtils.runGorPipe(String.format("gor %s | top 100000000 | write s3://nextcode-unittest/s3write/large.gorz", localPath));
+        TestUtils.runGorPipe(String.format("gor %s | top 100000000 | write s3://gdb-unit-test-data/s3write/large.gorz", localPath));
         long duration = System.currentTimeMillis() - startTime;
         System.out.println("Time: " + duration + "ms");
     }
@@ -126,7 +126,7 @@ public class ITestS3Source extends CommonStreamTests {
     @Test
     public void testS3WritePgorGord() throws IOException {
         String randomId = UUID.randomUUID().toString();
-        String dict = String.format("s3://nextcode-unittest/s3write/%s-genes.gord", randomId);
+        String dict = String.format("s3://gdb-unit-test-data/s3write/%s-genes.gord", randomId);
         TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2 | write " + dict);
         String expected = TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2");
         String result = TestUtils.runGorPipe("gor " + dict);
@@ -138,14 +138,14 @@ public class ITestS3Source extends CommonStreamTests {
     @Test
     public void testS3WriteServerMode() throws IOException {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
-        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gor",
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gor",
                 true, securityContext, new String[] {"s3://"});
     }
 
     @Test
     public void testS3NotAllBytesEx() throws IOException {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
-        TestUtils.runGorPipe("gor  s3://nextcode-unittest/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gorz -p chr2 | top 1000000 | group genome -count",
+        TestUtils.runGorPipe("gor  s3://gdb-unit-test-data/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gorz -p chr2 | top 1000000 | group genome -count",
                 true, securityContext, null);
         Assert.assertFalse(systemErrRule.getLog().contains("Not all bytes were read from the S3ObjectInputStream"));
     }
@@ -153,7 +153,7 @@ public class ITestS3Source extends CommonStreamTests {
     @Test
     public void testS3Meta() throws IOException {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
-        var result = TestUtils.runGorPipe("meta s3://nextcode-unittest/s3write/genes.gor", true, securityContext, new String[] {"s3://"});
+        var result = TestUtils.runGorPipe("meta s3://gdb-unit-test-data/s3write/genes.gor", true, securityContext, new String[] {"s3://"});
 
         Assert.assertFalse(result.isEmpty());
         Assert.assertTrue(result.contains("SOURCE\tTYPE\tS3"));
@@ -162,8 +162,8 @@ public class ITestS3Source extends CommonStreamTests {
     @Test
     public void testS3MetaWithMetafile() throws IOException {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
-        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://nextcode-unittest/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
-        var result = TestUtils.runGorPipe("meta s3://nextcode-unittest/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
+        var result = TestUtils.runGorPipe("meta s3://gdb-unit-test-data/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
 
         Assert.assertFalse(result.isEmpty());
         Assert.assertTrue(result.contains("SOURCE\tTYPE\tS3"));
@@ -178,6 +178,6 @@ public class ITestS3Source extends CommonStreamTests {
 
     @Override
     protected long expectedTimeStamp(String s) {
-        return newClient().getObjectMetadata("nextcode-unittest", "csa_test_data/data_sets/gor_driver_testfiles/" + s).getLastModified().getTime();
+        return newClient().getObjectMetadata("gdb-unit-test-data", "csa_test_data/data_sets/gor_driver_testfiles/" + s).getLastModified().getTime();
     }
 }

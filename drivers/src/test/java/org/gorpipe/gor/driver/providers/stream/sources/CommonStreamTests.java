@@ -40,7 +40,7 @@ public abstract class CommonStreamTests {
         return null;
     }
 
-    protected String DUMMY_FILE_STRING = "chrom\tpos\ta\nchr1\t0\tb\n";
+    protected String DUMMY_FILE_STRING = "chrom\tpos\ta\nchr1\t0\tb";
 
     @Test
     public void testMetadataOnEmpty() throws IOException {

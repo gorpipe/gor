@@ -35,7 +35,7 @@ public class UTestS3SeekableFile {
 
     private static String S3_KEY;
     private static String S3_SECRET;
-    private static String S3_REGION = "us-west-2";
+    private static String S3_REGION = "eu-west-1";
 
 
     @Rule
@@ -53,8 +53,8 @@ public class UTestS3SeekableFile {
             = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
 
 
-    String gorzFileName = "s3://nextcode-unittest/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gorz";
-    String gorFileName = "s3://nextcode-unittest/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gor";
+    String gorzFileName = "s3://gdb-unit-test-data/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gorz";
+    String gorFileName = "s3://gdb-unit-test-data/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gor";
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -70,11 +70,11 @@ public class UTestS3SeekableFile {
     //@Ignore("Fails on linux")
     @Test
     public void testBasicGor() throws Exception {
-        String query = gorFileName + " -p chr2:1000000-1001000";
+        String query = gorzFileName + " -p chr2:1000000-1001000";
         long startTime = System.currentTimeMillis();
         String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
         log.info("Basic query on gor file executed in {} ms", System.currentTimeMillis() - startTime);
-        Assert.assertEquals("chr2\t1000142\tG\tC\trs567366174", result.split("\n")[6]);
+        Assert.assertEquals("chr2\t1000029\tG\tA\trs6728916", result.split("\n")[6]);
     }
 
     //@Ignore("Fails on linux")
@@ -84,7 +84,7 @@ public class UTestS3SeekableFile {
         long startTime = System.currentTimeMillis();
         String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
         log.info("Basic query on gorz file executed in {} ms", System.currentTimeMillis() - startTime);
-        Assert.assertEquals("chr2\t1000142\tG\tC\trs567366174", result.split("\n")[6]);
+        Assert.assertEquals("chr2\t1000029\tG\tA\trs6728916", result.split("\n")[6]);
     }
 
     @Test
@@ -99,13 +99,13 @@ public class UTestS3SeekableFile {
     //@Ignore("Fails on linux")
     @Test
     public void testBasicBam() throws Exception {
-        String query = "s3://nextcode-unittest/csa_test_data/data_sets/bvl_min/bam/BVL_FATHER_SLC52A2.bam -p chr8:1285160-";
+        String query = "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/bam/BVL_FATHER_SLC52A2.bam -p chr8:1285160-";
         long startTime = System.currentTimeMillis();
         String result = TestUtils.runGorPipe(query, true, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET), null);
         log.info("Basic query on bam file executed in {} ms", System.currentTimeMillis() - startTime);
-        Assert.assertEquals(
-                "chr8	1285160	1285260	WPHISEQ02:158:D0E1CACXX:6:2205:21405:138412	163	29	101M	92A8	8	1285333	282	AGGAGCAGAGGCAATGAGTCTCTAGAATAGTCATTGGTGATCAGTACATAGTAACCAGTAATGACAGTGTGTGACATGATGAGAAGATAGAGTGGAGGAGG	@@@DFFDEFHHGA:C>ABEHHHG9FA<AFECGDGIIFJICHBGCG??BFGGIHGHIGHJGIJIGIGEHGIJJGGIIIEEHCA=)7;37;B3@.;(.55(,3	X0=1 X1=0 RG=111129_HiSeq02_0158_BD0E1CACXX.s_6.012 XG=0 AM=29 NM=1 SM=29 XM=1 XO=0 MQ=29 XT=U RB=hs37d5",
-                result.split("\n")[1]);
+
+        var expectedResult = "chr8\t145577706\t145577806\tWPHISEQ05:140:D0DCYACXX:5:1204:10190:126486\t99\t60\t101M\t101\t8\t145577847\t242\tGTGTGGTTCAGCACCAGGCGGCGCCGCGGCAGCGACGAGATCACGAGCCACAGGCCCACGCCCACGCCGTACACGAGGAAGACCCAGGTCTCTTGCTTCTG\t@@@DDFDDHHHGHGGHGIIHHBHIHIHHFDBDBDBDDDDDDDDDDDDDDDDDDDDDDDBD;@BDDDBDD;BDDDD@BDDDBDCDB<A@4>CCDCDCCDDD@\tX0=1 X1=0 RG=111116_HiSeq05_0140_BD0DCYACXX.s_5.005 XG=0 AM=37 NM=0 SM=37 XM=0 XO=0 MQ=60 XT=U RB=hs37d5";
+        Assert.assertEquals(expectedResult, result.split("\n")[1]);
     }
 
     @Ignore("Must update to new gordriver")

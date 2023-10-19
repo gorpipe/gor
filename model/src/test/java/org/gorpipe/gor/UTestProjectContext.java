@@ -76,7 +76,7 @@ public class UTestProjectContext {
         createProjectToSharedGorLink("user_data/shared1_gorlink.gor.link", "shared1.gor");
 
         Files.writeString(projectDirPath.resolve("absolutelink.gor.link"), "/some/absolute/gorfile.gorz");
-        Files.writeString(projectDirPath.resolve("s3link.gor.link"), "s3://nextcode-unittest/csa_test_data/data_sets/gor_driver_testfiles/dummy.gor");
+        Files.writeString(projectDirPath.resolve("s3link.gor.link"), "s3://gdb-unit-test-data/csa_test_data/data_sets/gor_driver_testfiles/dummy.gor");
         Files.writeString(projectDirPath.resolve("dblink.rep.link"), "//db:select * from rda.v_all_rep all_rep where all_rep.project_id = #{project-id}");
 
         Files.writeString(sharedDirPath.resolve("unaccessiable.gor.link"), "/some/absolute/gorfile.gorz");
