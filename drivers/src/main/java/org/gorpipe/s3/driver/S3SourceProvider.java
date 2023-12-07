@@ -25,7 +25,6 @@ package org.gorpipe.s3.driver;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.*;
 import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -123,20 +122,23 @@ public class S3SourceProvider extends StreamSourceProvider {
             AmazonS3 amazonS3 = builder.build();
             return (AmazonS3Client) amazonS3;
         } else {
-            AWSCredentials awsCredentials;
+            AWSCredentialsProvider awsCredentialsProvider = null;
 
-            if (cred.containsKey(Credentials.Attr.SESSION_TOKEN)) {
-                log.debug("Creating temporary session credentials for {}", cred.getLookupKey());
-                awsCredentials = new BasicSessionCredentials(
-                        cred.get(Credentials.Attr.KEY),
-                        cred.get(Credentials.Attr.SECRET),
-                        cred.get(Credentials.Attr.SESSION_TOKEN)
-                );
+            var awsKey = cred.getOrDefault(Credentials.Attr.KEY, "");
+            var awsSecret = cred.getOrDefault(Credentials.Attr.SECRET, "");
+            var sessionToken = cred.getOrDefault(Credentials.Attr.SESSION_TOKEN, "");
+
+            if (!awsKey.isEmpty() && !awsSecret.isEmpty()) {
+                if (!sessionToken.isEmpty()) {
+                    awsCredentialsProvider = new AWSStaticCredentialsProvider(new BasicSessionCredentials(
+                            awsKey,
+                            awsSecret,
+                            sessionToken));
+                } else {
+                    awsCredentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsKey, awsSecret));
+                }
             } else {
-                awsCredentials = new BasicAWSCredentials(
-                        cred.get(Credentials.Attr.KEY),
-                        cred.get(Credentials.Attr.SECRET)
-                );
+                awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
             }
 
             String regionStr = cred.get(Credentials.Attr.REGION);
@@ -144,7 +146,7 @@ public class S3SourceProvider extends StreamSourceProvider {
             AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().enableForceGlobalBucketAccess()
                     .withRegion(region)
                     .withClientConfiguration(clientconfig)
-                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials));
+                    .withCredentials(awsCredentialsProvider);
 
             String endpoint = cred.get(Credentials.Attr.API_ENDPOINT);
             if (endpoint != null) {
@@ -156,3 +158,4 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
 }
+
