@@ -291,7 +291,7 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
         addToBucket(bucket, Arrays.asList(lines));
     }
 
-    //@Override
+    @Override
     public void insertEntries(Collection<DictionaryEntry> entries) {
         insert(entries);
     }

@@ -761,6 +761,25 @@ public class UTestBaseTable {
 
         Assert.assertFalse(dict.isBucketize());
     }
+
+    @Test
+    public void testCreateDictFolders() throws IOException {
+        gordFile = workDirPath.resolve("folder1").resolve("folder2").resolve("dict.gord");
+
+        Files.createDirectories(workDirPath.resolve("x/y"));
+        Files.createFile(workDirPath.resolve("x/y/z.gor"));
+
+        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toAbsolutePath()).validateFiles(false).build();
+
+        URI path = URI.create("../../x/y/z.gor");
+        DictionaryEntry entry = new DictionaryEntry.Builder(path.toString(), dict.getRootPath()).build();
+        dict.insert(entry);
+
+        dict.save();
+
+        Assert.assertTrue(Files.exists(gordFile));
+        Assert.assertTrue(Files.exists(Path.of(dict.getFolderPath())));
+    }
     
     private void setupSimpleDict() throws Exception {
         gordFile = workDirPath.resolve("dict.gord");

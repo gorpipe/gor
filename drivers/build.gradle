@@ -42,7 +42,6 @@ project(':drivers') {
         implementation 'io.nextflow:nxf-s3fs:_' // Add com.upplication.s3fs
         implementation 'org.apache.commons:commons-lang3:_'
 
-
         testFixturesImplementation project(':base')
         testFixturesImplementation project(':model')
         testFixturesImplementation "org.slf4j:slf4j-api:_"

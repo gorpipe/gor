@@ -60,7 +60,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
     public static final int DEFAULT_MIN_BUCKET_SIZE = 20;
     public static final int DEFAULT_BUCKET_SIZE = 100;
-    public static final int DEFAULT_MAX_BUCKET_COUNT = 3;
+    public static final int DEFAULT_MAX_BUCKET_COUNT = 20;
     public static final BucketPackLevel DEFAULT_BUCKET_PACK_LEVEL = BucketPackLevel.CONSOLIDATE;
     public static final String DEFAULT_BUCKET_FOLDER = "b";
     public static final String BUCKET_FILE_PREFIX = "b_"; // Use to identify which files are bucket files.

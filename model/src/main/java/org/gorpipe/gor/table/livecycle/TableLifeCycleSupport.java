@@ -68,18 +68,16 @@ public abstract class TableLifeCycleSupport<T>  implements TableLifeCycle<T> {
     public void initialize() {
         log.trace("Initialize {}", table.getName());
 
-        if (!table.getFileReader().exists(table.getPath())) {
-            if (!table.getFileReader().exists(table.getRootPath())) {
-                throw new GorSystemException("Table " + table.getPath() + " can not be created as the parent path does not exists!", null);
+        try {
+            if (!table.getFileReader().exists(table.getPath())) {
+                table.getFileReader().createDirectories(table.getRootPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+
+                // Create the header.
+                table.header.setProperty(TableHeader.HEADER_FILE_FORMAT_KEY, "1.0");
+                table.header.setProperty(TableHeader.HEADER_CREATED_KEY, new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
             }
 
-            // Create the header.
-            table.header.setProperty(TableHeader.HEADER_FILE_FORMAT_KEY, "1.0");
-            table.header.setProperty(TableHeader.HEADER_CREATED_KEY, new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
-        }
-
-        try {
-            table.getFileReader().createDirectoryIfNotExists(table.getFolderPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+            table.getFileReader().createDirectories(table.getFolderPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
 
             if (table.isUseHistory()) {
                 table.getFileReader().createDirectories(tableLog.getLogDir(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
@@ -87,8 +85,6 @@ public abstract class TableLifeCycleSupport<T>  implements TableLifeCycle<T> {
         } catch (IOException ioe) {
             throw new GorSystemException("Could not create directory", ioe);
         }
-
-
     }
 
     public void loadMeta() {
