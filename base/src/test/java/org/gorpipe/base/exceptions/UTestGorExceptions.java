@@ -126,7 +126,7 @@ public class UTestGorExceptions {
         Assert.assertTrue(ex.getMessage().startsWith("Got error: '" + json + "'\n" +
             "Trying to parse this error as json error resulted in an exception."));
         Assert.assertTrue(ex.getCause() instanceof org.json.simple.parser.ParseException);
-        Assert.assertEquals(ex.getCause().getMessage(), null);
+        Assert.assertNull(ex.getCause().getMessage());
     }
 
     @Test

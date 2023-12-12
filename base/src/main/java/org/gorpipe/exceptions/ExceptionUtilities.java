@@ -24,7 +24,9 @@ package org.gorpipe.exceptions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import org.gorpipe.logging.GorLogbackUtil;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
@@ -69,10 +71,7 @@ public final class ExceptionUtilities {
         builder.append("==== Security Error ====\n");
         builder.append(exception.getMessage());
         printCommandSource(exception, builder);
-        printRequestId(exception, builder);
-        printStackTrace(exception, builder);
-        printEndMessage(builder);
-        builder.append("\n");
+        printCommonStack(exception, builder);
 
         return builder.toString();
     }
@@ -110,11 +109,7 @@ public final class ExceptionUtilities {
         }
 
         printCommandSource(exception, builder);
-        printRequestId(exception, builder);
-        printStackTrace(exception, builder);
-        printEndMessage(builder);
-
-        builder.append("\n");
+        printCommonStack(exception, builder);
 
         return builder.toString();
     }
@@ -150,9 +145,7 @@ public final class ExceptionUtilities {
         }
 
         printCommandSource(exception, builder);
-        printRequestId(exception, builder);
-        printStackTrace(exception, builder);
-        printEndMessage(builder);
+        printCommonStack(exception, builder);
 
         return builder.toString();
     }
@@ -183,9 +176,7 @@ public final class ExceptionUtilities {
         }
 
         printCommandSource(exception, builder);
-        printRequestId(exception, builder);
-        printStackTrace(exception, builder);
-        printEndMessage(builder);
+        printCommonStack(exception, builder);
 
         return builder.toString();
     }
@@ -197,12 +188,12 @@ public final class ExceptionUtilities {
         builder.append(exception.getMessage());
         builder.append("\n");
 
-        printRequestId(exception, builder);
-        printStackTrace(exception, builder);
-        printEndMessage(builder);
+        printCommonStack(exception, builder);
 
         return builder.toString();
     }
+
+
 
     private static final String ERROR_TYPE = "errorType";
     private static final String GOR_MESSAGE = "gorMessage";
@@ -288,15 +279,31 @@ public final class ExceptionUtilities {
 
     private static String getErrorType(Throwable exception) {
         Class<?> enclosingClass = exception.getClass().getEnclosingClass();
-        if (enclosingClass != null) {
-            return enclosingClass.getSimpleName();
-        } else {
-            return exception.getClass().getSimpleName();
-        }
+        return Objects.requireNonNullElseGet(enclosingClass, exception::getClass).getSimpleName();
     }
 
     public static boolean isNullOrEmpty(String value) {
-        return value == null || value.length() == 0;
+        return value == null || value.isEmpty();
+    }
+
+    private static void printCommonStack(GorException exception, StringBuilder builder) {
+        printRequestId(exception, builder);
+        printGorVersion(builder);
+        printStackTrace(exception, builder);
+        printEndMessage(builder);
+    }
+
+    public static void printGorVersion(StringBuilder builder) {
+        builder.append("\n");
+        builder.append("GOR Version: ");
+
+        String version = ExceptionUtilities.class.getPackage().getImplementationVersion();
+        if (version == null) {
+            version = "unknown";
+        }
+
+        builder.append(version);
+        builder.append("\n");
     }
 
     public static void printStackTrace(Throwable exception, StringBuilder builder) {
@@ -332,7 +339,7 @@ public final class ExceptionUtilities {
     }
 
     private static void printEndMessage(StringBuilder builder) {
-        builder.append("\n");
+        builder.append("\n\n");
     }
 
     @SuppressWarnings("unused") // Used by gor-services (ResqueJob)
