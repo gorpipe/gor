@@ -14,6 +14,7 @@ import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.gor.util.Tuple;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -51,18 +52,18 @@ public class BaseScriptExecutionEngine {
      * @param res
      * @return
      */
-    private Optional<Tuple2<String,Boolean>> resolveForkPathParent(String res) {
+    private Optional<Tuple<String,Boolean>> resolveForkPathParent(String res) {
         var i = res.indexOf("#{");
         if(i != -1) {
             var k = res.lastIndexOf('/', i);
             var ret = k == -1 ? "." : res.substring(0,k);
-            return Optional.of(Tuple2.apply(ret, true));
+            return Optional.of(new Tuple<>(ret, true));
         } else {
-            return Optional.of(Tuple2.apply(res, false));
+            return Optional.of(new Tuple<>(res, false));
         }
     }
 
-    private Optional<Tuple2<String,Boolean>> resolveCache(GorContext context, String lastCommand, ExecutionBlock queryBlock) {
+    private Optional<Tuple<String,Boolean>> resolveCache(GorContext context, String lastCommand, ExecutionBlock queryBlock) {
         var write = new Write();
         var split = CommandParseUtilities.quoteSafeSplit(lastCommand.substring(6).trim(), ' ');
         var args = write.validateArguments(split);
@@ -78,7 +79,7 @@ public class BaseScriptExecutionEngine {
         return !lastField.startsWith("-") ? resolveForkPathParent(lastField) : Optional.empty();
     }
 
-    public Optional<Tuple2<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {
+    public Optional<Tuple<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {
         var lastCommand = MacroUtilities.getLastCommand(queryBlock.query());
         if (lastCommand.toLowerCase().startsWith("write ")) {
             return resolveCache(context, lastCommand, queryBlock);
@@ -187,7 +188,7 @@ public class BaseScriptExecutionEngine {
         return activeCreates;
     }
 
-    private Tuple2<Map<String,ExecutionBlock>,Map<String,ExecutionBlock>> splitBasedOnDependencies(Map<String,ExecutionBlock> executionBlocks) {
+    private Tuple<Map<String,ExecutionBlock>,Map<String,ExecutionBlock>> splitBasedOnDependencies(Map<String,ExecutionBlock> executionBlocks) {
         var activeExecutionBlocks = new HashMap<String, ExecutionBlock>();
         var dependantExecutionBlocks = new HashMap<String, ExecutionBlock>();
 
@@ -212,10 +213,10 @@ public class BaseScriptExecutionEngine {
             }
         }
 
-        return Tuple2.apply(activeExecutionBlocks, dependantExecutionBlocks);
+        return new Tuple<>(activeExecutionBlocks, dependantExecutionBlocks);
     }
 
-    public Tuple2<String,List<String>> processBlocks(GorContext context, boolean suggestName, ExecutionBatch executionBatch, boolean validate, String currentGorCmd) {
+    public Tuple<String,List<String>> processBlocks(GorContext context, boolean suggestName, ExecutionBatch executionBatch, boolean validate, String currentGorCmd) {
         var session = context.getSession();
         var eventLogger = session.getEventLogger();
         var gorCommand = new String[] {currentGorCmd};
@@ -223,7 +224,7 @@ public class BaseScriptExecutionEngine {
         var cAllUsedFiles = Collections.synchronizedList(allUsedFiles);
         Arrays.stream(executionBatch.getBlocks()).parallel().forEach(firstLevelBlock -> {
             firstLevelBlock.query_$eq(virtualFileManager.replaceVirtualFiles(firstLevelBlock.query()));
-
+            GorSession.currentSession.set(session);
             var query = firstLevelBlock.query();
             var queryLower = query.toLowerCase();
             var isParallelQuery = queryLower.startsWith("pgor ") || queryLower.startsWith("partgor ") || queryLower.startsWith("parallel ");
@@ -235,9 +236,9 @@ public class BaseScriptExecutionEngine {
 
                 var cachePath = getExplicitWrite(context, firstLevelBlock);
                 if (cachePath.isPresent()) {
-                    Tuple2<String,Boolean> cp = cachePath.get();
-                    firstLevelBlock.cachePath_$eq(cp._1());
-                    firstLevelBlock.hasForkWrite_$eq(cp._2());
+                    Tuple<String,Boolean> cp = cachePath.get();
+                    firstLevelBlock.cachePath_$eq(cp.getFirst());
+                    firstLevelBlock.hasForkWrite_$eq(cp.getSecond());
                 }
             }
 
@@ -247,8 +248,8 @@ public class BaseScriptExecutionEngine {
             // We need to determine if there is any dependency in the new executions, remove dependent blocks and
             // add them to the executionBlocks map
             var tmpExecutionBlocks = splitBasedOnDependencies(newExecutionBlocks);
-            var activeExecutionBlocks = tmpExecutionBlocks._1;
-            var dependentExecutionBlocks = tmpExecutionBlocks._2;
+            var activeExecutionBlocks = tmpExecutionBlocks.getFirst();
+            var dependentExecutionBlocks = tmpExecutionBlocks.getSecond();
 
             virtualFileManager.addRange(activeExecutionBlocks);
 
@@ -265,8 +266,8 @@ public class BaseScriptExecutionEngine {
                     var ocache = getExplicitWrite(context, newExecutionBlock);
                     if(ocache.isPresent()) {
                         var tup = ocache.get();
-                        cachePath = tup._1;
-                        hasFork = tup._2;
+                        cachePath = tup.getFirst();
+                        hasFork = tup.getSecond();
                     } else {
                         cachePath = cacheFile;
                         hasFork = hasForkWrite;
@@ -330,6 +331,6 @@ public class BaseScriptExecutionEngine {
             // Replace any virtual file in the current query
         });
         Collections.sort(allUsedFiles);
-        return Tuple2.apply(gorCommand[0],allUsedFiles);
+        return new Tuple<>(gorCommand[0],allUsedFiles);
     }
 }

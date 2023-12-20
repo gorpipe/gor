@@ -36,6 +36,8 @@ public class GorSession implements AutoCloseable {
     private GorSessionCache cache;
     private EventLogger eventLogger;
 
+    public static InheritableThreadLocal<GorSession> currentSession = new InheritableThreadLocal<>();
+
     private final GorContext gorContext = new GorContext(this);
 
     /**
@@ -45,6 +47,7 @@ public class GorSession implements AutoCloseable {
      */
     public GorSession(String requestId) {
         this.requestId = requestId;
+        currentSession.set(this);
     }
 
     public void init(ProjectContext projectContext, SystemContext systemContext, GorSessionCache cache) {

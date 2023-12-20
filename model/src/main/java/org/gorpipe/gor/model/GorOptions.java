@@ -86,7 +86,7 @@ public class GorOptions {
     /**
      * True if we cache all the parsed lines of a dictionary once we have read it, and make a hash map from pn's to lines.
      */
-    private final boolean useDictionaryCache = Boolean.valueOf(System.getProperty("gor.dictionary.cache.active", "true"));
+    private final boolean useDictionaryCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
     private final boolean useTable = false;
     /**
      * The gorPipeSession
@@ -232,6 +232,7 @@ public class GorOptions {
         for (String part : parts) {
             if (part.equals(".")) {
                 /* do nothing */
+                continue;
             } else if (part.equals("..")) {
                 last -= 1;
                 if (last < 0) { // dot dots have traversed above the root, not allowed
@@ -248,7 +249,7 @@ public class GorOptions {
     private static String[] extractQuotedFiles(String[] files) {
         List<String> processedFiles = new ArrayList<>();
         for (String file : files){
-            if (file != null && file.length() > 0) {
+            if (file != null && !file.isEmpty()) {
                 if (file.charAt(0) == '\"' || file.charAt(0) == '\'') {
                     final char lastChr = file.charAt(file.length() - 1);
                     final String name = file.substring(1, lastChr == '\"' || lastChr == '\'' ? file.length() - 1 : file.length());
@@ -458,13 +459,17 @@ public class GorOptions {
     List<GenomicIterator> getIterators() {
         Stream<SourceRef> inRange = files.stream().filter(ref -> chrname == null || ref.isInRange(chrname, begin, end));
         Stream<SourceRef> withTag = inRange.filter( ref -> columnTags == null || ref.analyzeQueryTags(columnTags, insertSource) != SourceRef.NO_TAG);
-        Stream<GenomicIterator> iteratorStream = withTag.parallel().map(this::createGenomicIteratorFromRef);
+
+        // Prepare the driver frameworks for the files
+        Stream<SourceRef> preparedSources = prepareSources(withTag);
+
+        Stream<GenomicIterator> iteratorStream = preparedSources.parallel().map(this::createGenomicIteratorFromRef);
 
         List<GenomicIterator> genomicIterators = iteratorStream.collect(Collectors.toList());
 
         if (genomicIterators.isEmpty()) {
             // No iterator in range, add dummy one (that will not return any rows) as we must return at least one.
-            if (files.size()>0) {
+            if (!files.isEmpty()) {
                 SourceRef ref = files.get(0);
                 genomicIterators.add(new BoundedIterator(createGenomicIteratorFromRef(ref), "", 0, "", 0));
             } else if(tableHeader!=null) {
@@ -476,7 +481,16 @@ public class GorOptions {
         return genomicIterators;
     }
 
+    private Stream<SourceRef> prepareSources(Stream<SourceRef> sources) {
+        if (this.session != null) {
+            return this.session.getProjectContext().getFileReader().prepareSources(sources);
+        } else {
+            return sources;
+        }
+    }
+
     private GenomicIterator createGenomicIteratorFromRef(SourceRef ref) {
+        GorSession.currentSession.set(session);
         GenomicIterator i;
         try {
             i = ref.iterate(new DefaultChromoLookup(), chrname, session);
@@ -489,9 +503,9 @@ public class GorOptions {
         if (!isNoLineFilter && tagStatus == SourceRef.POSSIBLE_TAG) {
             final int tagColIdx = i.getHeader().split("\t").length - 1;
             final RowFilter rf;
-            if (columnTags.size() > 0) {
+            if (!columnTags.isEmpty()) {
                 final RowFilter inf = new InFilter(tagColIdx, this.columnTags);
-                if (ref.deletedTags != null && ref.deletedTags.size() > 0) {
+                if (ref.deletedTags != null && !ref.deletedTags.isEmpty()) {
                     rf = inf.and(new InFilter(tagColIdx, ref.deletedTags).not());
                 } else {
                     rf = inf;
@@ -584,9 +598,12 @@ public class GorOptions {
             }
         } else {
             Dictionary.DictionaryLine sf = Dictionary.parseDictionaryLine(file, null, file);
+
+            if (sf != null) {
             hasLocalDictonaryFile = hasLocalDictonaryFile || !Strings.isNullOrEmpty(sf.alias) || (sf.tags != null && !sf.tags.isEmpty()) ;
             addSourceRef(sf.fileRef.physical, sf.fileRef.logical, sf.fileRef.isAcceptedAbsoluteRef, projectContext,
                     sf.alias, sf.startChr, sf.startPos, sf.stopChr, sf.stopPos, sf.tags, allowBucketAccess, alltags, isSilentTagFilter);
+            }
         }
     }
 
@@ -688,7 +705,7 @@ public class GorOptions {
 
         // Add files, including alias and tags
         for (SourceRef source : files) {
-            if (text.length() > 0) {
+            if (!text.isEmpty()) {
                 text.append(" ");
             }
             String file = source.file;

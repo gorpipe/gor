@@ -29,7 +29,10 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.SourceProvider;
-import org.gorpipe.gor.driver.meta.*;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.meta.FileNature;
+import org.gorpipe.gor.driver.meta.IndexableSourceReference;
+import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.CachedSourceWrapper;
@@ -40,7 +43,6 @@ import org.gorpipe.gor.driver.utils.RetryHandler;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
-
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +53,6 @@ import java.nio.file.FileSystemException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public abstract class StreamSourceProvider implements SourceProvider {

@@ -27,7 +27,7 @@ import java.util.Arrays;
 /**
  * Defines types of sources
  */
-public class SourceType {
+public abstract class SourceType {
     /**
      * FILE(false,"","file:"),
      * HTTP(true,"http:","https:"),
@@ -63,6 +63,10 @@ public class SourceType {
         return true;
     }
 
+    public boolean supportsPreparation() {
+        return false;
+    }
+
     /**
      * @return true if the given path is absolute, else false.
      */
@@ -87,7 +91,7 @@ public class SourceType {
     public boolean match(String file) {
         // Should match our cases, which are normal protocols and //db:.
         for (String protocol : protocols) {
-            if (protocol.length() > 0) {
+            if (!protocol.isEmpty()) {
                 if (file.startsWith(protocol)) return true;
             } else {
                 return true;
@@ -103,8 +107,7 @@ public class SourceType {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof SourceType) {
-            SourceType other = (SourceType) obj;
+        if (obj instanceof SourceType other) {
             return name.equals(other.name) && isRemote == other.isRemote && Arrays.equals(protocols, other.protocols);
         }
         return false;

@@ -49,10 +49,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -624,5 +621,22 @@ public class TestUtils {
         table.setBucketize(true);
         table.save();
         return table;
+    }
+
+    public static String SECRETS_FILE_NAME = "../tests/config/secrets.env";
+
+    public static Properties loadSecrets() {
+        Properties prop = new Properties();
+        if (Files.exists(Paths.get(SECRETS_FILE_NAME))) {
+            try (InputStream inputStream = new FileInputStream(SECRETS_FILE_NAME)) {
+                prop.load(inputStream);
+            } catch (IOException e) {
+                // Do nothing
+            }
+        }
+
+        prop.putAll(System.getenv());
+
+        return prop;
     }
 }

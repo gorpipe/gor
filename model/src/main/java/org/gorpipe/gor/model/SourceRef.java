@@ -346,7 +346,7 @@ public class SourceRef {
      * @return The name of the file
      */
     public String getName() {
-        if (alias != null && alias.length() > 0) {
+        if (alias != null && !alias.isEmpty()) {
             return alias;
         }
         if (uniqueFileNamePart != null) {
@@ -418,4 +418,5 @@ public class SourceRef {
             throw ExceptionUtilities.mapGorResourceException(fileNotFoundexception.getMessage(), file, fileNotFoundexception);
         }
     }
+
 }

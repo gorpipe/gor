@@ -117,6 +117,10 @@ public class PluggableGorDriver implements GorDriver {
         }
     }
 
+    public SourceProvider getSourceProvider(SourceType sourceType) {
+        return sourceTypeToSourceProvider.get(sourceType);
+    }
+
     @Override
     public GenomicIterator createIterator(SourceReference sourceReference) throws IOException {
         DataSource source = getDataSource(sourceReference);

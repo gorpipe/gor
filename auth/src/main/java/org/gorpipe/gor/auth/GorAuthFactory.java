@@ -38,8 +38,8 @@ public class GorAuthFactory {
 
     private final static Logger log = LoggerFactory.getLogger(GorAuthFactory.class);
 
-    private Cache<String, GorAuth> authCache;
-    private AuthConfig config;
+    private final Cache<String, GorAuth> authCache;
+    private final AuthConfig config;
     private List<String> policesCache;
     private CsaApiService csaApiService;
     private OAuthHandler oAuthHandler;
@@ -77,7 +77,7 @@ public class GorAuthFactory {
             final String[] policyConfig = policyConfigRead.length == 1 ? policyConfigRead[0].split(";") : policyConfigRead;
 
             policesCache = Arrays.stream(policyConfig).map(String::trim).map(p -> p.replaceAll("^[\"']|[\"']$", "")).filter(p -> !p.isEmpty()).collect(Collectors.toList());
-            if (policesCache.size() == 0) {
+            if (policesCache.isEmpty()) {
                 throw new GorSystemException("Error: Security policy must not be empty.", null);
             }
             log.info("Valid security policies: {} (from {})", policesCache, policyConfigRead);
@@ -114,9 +114,7 @@ public class GorAuthFactory {
         try {
             final String cacheSessionKey = Strings.isNullOrEmpty(sessionKey) ? "NO_SESSION" : sessionKey;
             return authCache.get(cacheSessionKey, () -> getGorAuthFromPolicy(getPolicyFromSessionKey(cacheSessionKey)));
-        } catch (GorException ge) {
-            throw ge;
-        } catch (UncheckedExecutionException | ExecutionException e) {
+        }  catch (UncheckedExecutionException | ExecutionException e) {
             throw new GorSystemException("Error getting gorauth from sessionKey!", e.getCause());
         }
     }
@@ -130,9 +128,7 @@ public class GorAuthFactory {
     }
 
     public void closeAll() {
-        authCache.asMap().values().stream().distinct().forEach((gorAuth) -> {
-            gorAuth.close();
-        });
+        authCache.asMap().values().stream().distinct().forEach(GorAuth::close);
 
         authCache.invalidateAll();
     }
@@ -182,7 +178,7 @@ public class GorAuthFactory {
     private String inferPolicyFromSessionKey(String sessionKey) {
         String policy;
 
-        if (sessionKey == null || sessionKey.length() == 0 || "NO_SESSION".equals(sessionKey)) {
+        if (sessionKey == null || sessionKey.isEmpty() || "NO_SESSION".equals(sessionKey)) {
             policy = SecurityPolicy.PLAIN.toString();
         } else {
             Map<String, Object> sessionMap;
@@ -213,7 +209,7 @@ public class GorAuthFactory {
     private GorAuth getNoAuth() {
         // No security concerns, allow clients to access any data
         return new NoAuth(config, config.sessioncheckerUsername(), "", 0, "",
-                Arrays.asList(Strings.nullToEmpty(config.sessioncheckerUserrole())), 0);
+                List.of(Strings.nullToEmpty(config.sessioncheckerUserrole())), 0);
     }
 
     public String getSystemAppSession(String project) {

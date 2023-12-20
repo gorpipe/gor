@@ -337,4 +337,8 @@ public abstract class FileReader {
         // Default implementation just return self.
         return this;
     }
+
+    public Stream<SourceRef> prepareSources(Stream<SourceRef> sources) {
+        return sources;
+    }
 }

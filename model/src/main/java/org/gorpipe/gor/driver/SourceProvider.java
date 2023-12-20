@@ -30,10 +30,11 @@ import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.util.DynamicRowIterator;
+import org.gorpipe.gor.model.SourceRef;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.stream.Stream;
 
 public interface SourceProvider {
 
@@ -80,4 +81,8 @@ public interface SourceProvider {
     default GenomicIteratorBase createMetaIterator(DataSource source, FileReader reader) throws IOException {
         return new DynamicRowIterator();
     };
+
+    default Stream<SourceRef> prepareSources(Stream<SourceRef> sources) {
+        return sources;
+    }
 }

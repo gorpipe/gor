@@ -29,6 +29,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
+import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -47,8 +48,7 @@ import java.io.*;
 import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -415,4 +415,28 @@ public class DriverBackedFileReader extends FileReader {
         return Stream.concat(Stream.of(header), stream);
     }
 
+    @Override
+    public Stream<SourceRef> prepareSources(Stream<SourceRef> sources) {
+        if (sources == null) {
+            return sources;
+        }
+
+
+
+        var gorDriverFactory = (PluggableGorDriver)GorDriverFactory.fromConfig();
+        var sourceTypes =  gorDriverFactory.getSupportedSourceTypes();
+
+        var resultStream = sources;
+
+        for (var sourceType : sourceTypes) {
+            if (!sourceType.supportsPreparation()) {
+                continue;
+            }
+
+            var provider =gorDriverFactory.getSourceProvider(sourceType);
+            resultStream = provider.prepareSources(resultStream);
+        }
+
+        return resultStream;
+    }
 }
