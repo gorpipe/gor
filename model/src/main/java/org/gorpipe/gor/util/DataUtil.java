@@ -75,10 +75,12 @@ public class DataUtil {
     }
 
     public static boolean isYml(String file) {
+        // yml files can have params, so we can have .yml(), .yml:, .yml?..
         return DataType.containsType(file, DataType.YML);
     }
 
     public static boolean isGorq(String file) {
+        // gorq files can have params, so we can have .gorq(), .gorq:, .gorq?..
         return DataType.containsType(file, DataType.GORQ);
     }
 

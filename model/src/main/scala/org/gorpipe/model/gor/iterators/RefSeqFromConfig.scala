@@ -30,13 +30,21 @@ import org.gorpipe.gor.driver.adapters.StreamSourceRacFile
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, RacFile}
+import org.gorpipe.gor.reference.FolderMigrator
 import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
 
+import java.nio.file.{Files, Path, Paths}
+import scala.util.Try
+
 class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
+  private val GOR_REFSEQ_CACHE_FOLDER = System.getProperty("gor.refseq.cache.folder")
+  private val GOR_REFSEQ_CACHE_DOWNLOAD = Option(System.getProperty("gor.refseq.cache.download", "true")).exists(_.toBoolean)
+
   private val log: Logger = LoggerFactory.getLogger(RefSeqFromConfig.this.getClass)
 
-  val path: String = ipath.replace( """\""", "/")
+
+  val path: String = getBuildPath(ipath)
   val buffLength = 10000
   val lufo = new LUFO[Array[Byte]](10)
   // Keep a LUFO cache with 10 last used buffers
@@ -49,6 +57,29 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
   override def close(): Unit = {
     filemap.entrySet().stream().forEach( f => f.getValue.ifPresent(f => f.close()) )
     filemap.clear()
+  }
+
+  def getBuildPath(ipath: String): String = {
+    if (GOR_REFSEQ_CACHE_FOLDER != null
+      && !GOR_REFSEQ_CACHE_FOLDER.isEmpty) {
+
+      if (Files.exists(Paths.get(GOR_REFSEQ_CACHE_FOLDER))) {
+        return GOR_REFSEQ_CACHE_FOLDER
+      } else if (GOR_REFSEQ_CACHE_DOWNLOAD) {
+        triggerRefSeqDownload(ipath)
+        ipath.replace( """\""", "/")
+      }
+    }
+    return ipath.replace( """\""", "/")
+  }
+
+  private def triggerRefSeqDownload(ipath: String) = {
+    val refseqDownloaderThread = new Thread(new Runnable {
+      override def run(): Unit = {
+        FolderMigrator.migrate(Path.of(ipath), Path.of(GOR_REFSEQ_CACHE_FOLDER))
+      }
+    })
+    refseqDownloaderThread.start()
   }
 
   def getBase(chr: String, pos: Int): Char = {
