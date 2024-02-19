@@ -62,6 +62,7 @@ project(':model') {
         testImplementation "ch.qos.logback:logback-classic:_"
 
         testImplementation Testing.mockito.core
+        testImplementation 'com.github.stefanbirkner:system-rules:_'
         testImplementation "org.scalatest:scalatest_${scalaVersion}:_"
         testImplementation "org.scalacheck:scalacheck_${scalaVersion}:_"
         testImplementation "org.scalatestplus:junit-4-13_${scalaVersion}:_"

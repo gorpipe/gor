@@ -3,9 +3,36 @@ package org.gorpipe.model.gor.iterators;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
+import org.junit.contrib.java.lang.system.SystemErrRule;
+import org.junit.rules.TemporaryFolder;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class UTestRefSeqFromConfig {
+
+    @Rule
+    public final ProvideSystemProperty cacheFolder
+            = new ProvideSystemProperty("gor.refseq.cache.folder", "/tmp/cache");
+
+    @Rule
+    public final ProvideSystemProperty triggerDownload
+            = new ProvideSystemProperty("gor.refseq.cache.download", "False");
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Rule
+    public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
+
+
 
     @Test
     public void testGetRefbase() {
@@ -75,5 +102,58 @@ public class UTestRefSeqFromConfig {
         System.out.println(String.format("Same buffer: %d, diff buffers: %d", sameBuffer, diffBuffer));
     }
 
+    // Test getFullCachePath
+    @Test
+    public void testGetFullCachePath() {
+        var refPath = "../tests/data/ref_mini/chromSeq";
+        var fullRefPath = Path.of(refPath).toAbsolutePath();
+        RefSeqFromConfig refseq = new RefSeqFromConfig(refPath, new DriverBackedFileReader(""));
+        Assert.assertEquals("/tmp/cache/ref_mini/chromSeq", refseq.getFullCachePath(fullRefPath).toString());
+    }
 
+    @Test
+    public void testGetRefbaseFromCache() throws InterruptedException {
+
+        Path workDirPath = workDir.getRoot().toPath();
+
+        System.setProperty("gor.refseq.cache.download", "True");
+        System.setProperty("gor.refseq.cache.folder", workDirPath.resolve("cache").toString());
+
+        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        Assert.assertEquals('C', refseq.getBase("chr1", 101000));
+
+        // Wait for download to finish.
+        long startWaitTime = System.currentTimeMillis();
+        while (!Files.exists(workDirPath.resolve("cache").resolve("ref_mini").resolve("chromSeq"))) {
+            Thread.sleep(50);
+            if (System.currentTimeMillis() - startWaitTime > 2000) {
+                throw new RuntimeException("Timeout waiting for download to finish");
+            }
+        }
+
+        Assert.assertEquals('C', refseq.getBase("chr1", 101000));
+    }
+
+    @Test
+    public void testCacheDownloadFailure() throws InterruptedException {
+
+        Path workDirPath = workDir.getRoot().toPath();
+
+        System.setProperty("gor.refseq.cache.download", "True");
+        System.setProperty("gor.refseq.cache.folder", workDirPath.resolve("cache").toString());
+
+        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        Assert.assertEquals('C', refseq.getBase("chr1", 101000));
+
+        // Wait for download to finish/fail.
+        long startWaitTime = System.currentTimeMillis();
+        while (!Files.exists(workDirPath.resolve("cache").resolve("ref_mini").resolve("chromSeq"))) {
+            Thread.sleep(50);
+            if (System.currentTimeMillis() - startWaitTime > 1000) {
+                throw new RuntimeException("Timeout waiting for download to finish");
+            }
+        }
+
+        Assert.assertFalse(systemErrRule.getLog().contains("Not all bytes were read from the S3ObjectInputStream"));
+    }
 }

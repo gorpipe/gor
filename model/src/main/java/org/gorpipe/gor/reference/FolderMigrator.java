@@ -3,9 +3,12 @@ package org.gorpipe.gor.reference;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorSystemException;
 
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 public class FolderMigrator {
 
@@ -19,7 +22,8 @@ public class FolderMigrator {
             return;
         }
         try {
-            FileUtils.copyDirectory(inputFolder.toFile(), tmpFolder.toFile());
+            FileUtils.copyDirectory(inputFolder.toFile(), tmpFolder.toFile(), (FileFilter)null, true,
+                    NOFOLLOW_LINKS);
         } catch (IOException e) {
             throw new GorSystemException(
                     String.format("Could not copy (%s) folder into (%s)", inputFolder, outputFolder), e);

@@ -43,7 +43,6 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
 
   private val log: Logger = LoggerFactory.getLogger(RefSeqFromConfig.this.getClass)
 
-
   val path: String = getBuildPath(ipath)
   val buffLength = 10000
   val lufo = new LUFO[Array[Byte]](10)
@@ -59,24 +58,40 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
     filemap.clear()
   }
 
-  def getBuildPath(ipath: String): String = {
-    if (GOR_REFSEQ_CACHE_FOLDER != null
-      && !GOR_REFSEQ_CACHE_FOLDER.isEmpty) {
-
-      if (Files.exists(Paths.get(GOR_REFSEQ_CACHE_FOLDER))) {
-        return GOR_REFSEQ_CACHE_FOLDER
+  def getBuildPath(iRefPath: String): String = {
+    val refPath = iRefPath.replace("""\""", "/")
+    if (GOR_REFSEQ_CACHE_FOLDER != null && !GOR_REFSEQ_CACHE_FOLDER.isEmpty) {
+      val fullRefPath = fileReader.toAbsolutePath(refPath)
+      val fullCachePath: Path = getFullCachePath(fullRefPath)
+      if (Files.exists(fullCachePath)) {
+        log.debug("Using cached reference build {}", fullCachePath.toString)
+        return fullCachePath.toString
       } else if (GOR_REFSEQ_CACHE_DOWNLOAD) {
-        triggerRefSeqDownload(ipath)
-        ipath.replace( """\""", "/")
+        triggerRefSeqDownload(fullRefPath, fullCachePath)
       }
     }
-    return ipath.replace( """\""", "/")
+    refPath
   }
 
-  private def triggerRefSeqDownload(ipath: String) = {
+  def getFullCachePath(fullRefPath: Path) = {
+    val realRefPath = fullRefPath.toRealPath()
+    val partialRefPath = realRefPath.getParent.getFileName.resolve(realRefPath.getFileName)
+    // To make sure we don't mix up different reference builds we use the full real path as cache sub-path.
+    val fullCachePath = Paths.get(GOR_REFSEQ_CACHE_FOLDER).resolve(partialRefPath).normalize()
+    fullCachePath
+  }
+
+  private def triggerRefSeqDownload(orgPath: Path, cachePath: Path) = {
     val refseqDownloaderThread = new Thread(new Runnable {
       override def run(): Unit = {
-        FolderMigrator.migrate(Path.of(ipath), Path.of(GOR_REFSEQ_CACHE_FOLDER))
+        try {
+          log.info("Downloading reference build {} to {} - Start", orgPath, cachePath)
+          FolderMigrator.migrate(orgPath, cachePath)
+          log.info("Downloading reference build {} to {} - Done", orgPath, cachePath)
+        } catch {
+            case e: Exception =>
+              log.error("Error downloading reference build {} to {} - {}", orgPath, cachePath, e.getMessage)
+          }
       }
     })
     refseqDownloaderThread.start()
@@ -98,7 +113,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
           val f = if( filemap.containsKey(chrFilePath) ) filemap.get(chrFilePath) else {
             val cf = Optional.ofNullable(fileReader match {
               case dbfr: DriverBackedFileReader =>
-                val ds = dbfr.resolveUrl(chrFilePath)
+                val ds = dbfr.unsecure().resolveUrl(chrFilePath)
                 if (ds.exists()) new StreamSourceRacFile(ds.asInstanceOf[StreamSource]) else null
               case _ =>
                 fileReader.openFile(chrFilePath)
@@ -128,9 +143,9 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
       case ioex: IOException =>
         throw new GorResourceException("Reference build " + path + " inaccessible", path, ioex)
       case ex: Exception => {
-        log.debug("Warning: Reference build " + path + "\n\n"+ex.getMessage)
+        log.warn("Warning: Reference build " + path + "\n\n"+ex.getMessage)
       }
-        'N'
+      'N'
     }
   }
 
