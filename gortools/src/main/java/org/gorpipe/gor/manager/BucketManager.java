@@ -210,9 +210,9 @@ public class BucketManager<T extends DictionaryEntry> {
         Map<String, Integer> bucketCounts = getBucketCountsMap();
         int totalFilesNeedingNewBucket = bucketCounts.values().stream().filter(i -> i < getBucketSize()).mapToInt(Integer::intValue).sum();
         if (packLevel == BucketPackLevel.FULL_PACKING) {
-            return totalFilesNeedingNewBucket > 0;
+            return totalFilesNeedingNewBucket + unbucketizedCount > 1;
         } else if (packLevel == BucketPackLevel.CONSOLIDATE) {
-            return totalFilesNeedingNewBucket + unbucketizedCount > getBucketSize();
+            return totalFilesNeedingNewBucket + unbucketizedCount >= getBucketSize();
         }
 
         return false;
@@ -405,7 +405,7 @@ public class BucketManager<T extends DictionaryEntry> {
             // Find which buckets to delete and which buckets to create.
             log.trace("Bucketize - Finding files to bucketize");
             bucketsToDelete = findBucketsToDelete(trans.getLock(), packLevel, unbucketizedCount, maxBucketCount);
-            newBucketsMap = findBucketsToCreate(trans.getLock(), bucketsToDelete, maxBucketCount);
+            newBucketsMap = findBucketsToCreate(trans.getLock(), bucketsToDelete, maxBucketCount, packLevel);
 
             if (log.isDebugEnabled()) {
                 log.debug("Bucketize - Bucketizing {} files into {} buckets",
@@ -802,7 +802,8 @@ public class BucketManager<T extends DictionaryEntry> {
      * @param maxBucketCount    Maximum number of buckets to generate on this call (positive integer).
      * @return
      */
-    private Map<String, List<T>> findBucketsToCreate(TableLock lock, Collection<String> bucketsToDelete, int maxBucketCount) {
+    private Map<String, List<T>> findBucketsToCreate(TableLock lock, Collection<String> bucketsToDelete,
+                                                     int maxBucketCount, BucketPackLevel packLevel) {
         lock.assertValid();
 
         List<String> relBucketsToDelete = bucketsToDelete != null
@@ -817,7 +818,8 @@ public class BucketManager<T extends DictionaryEntry> {
                 .collect(Collectors.toList());
 
         int bucketCreateCount = (int) Math.ceil((double) lines2bucketize.size() / getBucketSize());
-        if ((lines2bucketize.size() - (bucketCreateCount - 1) * getBucketSize()) < getEffectiveMinBucketSize()) {
+        if (packLevel != BucketPackLevel.FULL_PACKING
+                && (lines2bucketize.size() - (bucketCreateCount - 1) * getBucketSize()) < getEffectiveMinBucketSize()) {
             // The last bucket will be too small so skip it.
             bucketCreateCount--;
         }

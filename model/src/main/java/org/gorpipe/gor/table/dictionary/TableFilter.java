@@ -108,26 +108,35 @@ public class TableFilter<T extends DictionaryEntry> {
     }
 
     private boolean matchFiles(T l) {
-        return files == null || Stream.of(files).anyMatch(f -> f.equals(l.getContentReal(getTable().getRootPath())));
+        if (files == null) return true;
+        String contentReal = l.getContentReal(getTable().getRootPath());
+        return Stream.of(files).anyMatch(f -> f.equals(contentReal));
     }
 
     private boolean matchBuckets(T l) {
-        return buckets == null || (!l.hasBucket() && buckets.length == 0) ||
-                (l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(l.getBucketReal(getTable().getRootPath()))));
+        if (buckets == null || (!l.hasBucket() && buckets.length == 0)) return true;
+
+        var bucketPath = l.getBucketReal(getTable().getRootPath());
+        return l.hasBucket() && Stream.of(buckets).anyMatch(b -> b.equals(bucketPath));
     }
 
     private boolean matchAliases(T l) {
-        return aliases == null || Stream.of(aliases).anyMatch(f -> f.equals(l.getAlias()));
+        if (aliases == null) return true;
+        String lineAlias = l.getAlias();
+        return Stream.of(aliases).anyMatch(f -> f.equals(lineAlias));
     }
 
     private boolean matchTags(T l) {
         String[] filterTags = l.getFilterTags();
         return tags == null || (filterTags.length == 0 && tags.length == 0)
-                || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(filterTags, t)) : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(filterTags, t)));
+                || (matchAllTags ? Stream.of(tags).allMatch(t -> ArrayUtils.contains(filterTags, t))
+                                 : Stream.of(tags).anyMatch(t -> ArrayUtils.contains(filterTags, t)));
     }
 
     private boolean matchRange(T l) {
-        return chrRange == null || (l.getRange() != null && chrRange.equals(l.getRange().formatAsTabDelimited()));
+        if (chrRange == null) return true;
+        String lineRange = l.getRange().formatAsTabDelimited();
+        return l.getRange() != null && chrRange.equals(lineRange);
     }
 
     public List<T> get() {
