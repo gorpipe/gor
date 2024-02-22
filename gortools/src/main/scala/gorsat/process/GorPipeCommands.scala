@@ -106,6 +106,7 @@ object GorPipeCommands {
       addInfo(new Span.SegSpan)
       addInfo(new gorsat.Commands.SegProj)
       addInfo(new gorsat.Commands.SegHist)
+      addInfo(new gorsat.Commands.SegWhere)
       addInfo(new gorsat.Commands.Skip)
       addInfo(new gorsat.Commands.DistLoc)
       addInfo(new gorsat.Commands.Sort)

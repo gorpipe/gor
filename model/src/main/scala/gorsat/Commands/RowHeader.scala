@@ -85,6 +85,12 @@ object RowHeader {
     new RowHeader(cols, colTypes)
   }
 
+  def apply(header: String, colTypes: String): RowHeader = {
+    val cols = header.split("\t")
+    val types = colTypes.split("\t")
+    new RowHeader(cols, types)
+  }
+
   def apply(columnNames: Array[String], columnTypes: Array[String]): RowHeader = {
     new RowHeader(columnNames, columnTypes)
   }
