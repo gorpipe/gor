@@ -73,16 +73,6 @@ project(':documentation') {
         outputFile = new File(generateText.outputDirectory, "functions_help.txt")
     }
 
-
-    if (!project.hasProperty('include.documentation') ) {
-        project.tasks.generateMetadataFileForMavenJavaLibModulePublication.onlyIf {false}
-        project.tasks.publishMavenJavaLibModulePublicationToMavenLocal .onlyIf {false}
-        project.afterEvaluate {
-            project.tasks.generatePomFileForMavenJavaLibModulePublication.enabled = false
-            project.tasks."publishMavenJavaLibModulePublicationToGitlab-gor-mavenRepository".onlyIf {false}
-        }
-    }
-
     jar {
         dependsOn generateGorCommandsToolsHelp, generateGorFunctionsToolsHelp, generateHtml
         onlyIf { project.hasProperty('include.documentation') }
