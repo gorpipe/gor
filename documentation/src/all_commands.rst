@@ -85,6 +85,7 @@
    command/SEGHIST
    command/SEGPROJ
    command/SEGSPAN
+   command/SEGWHERE
    command/SELECT
    command/SELWHERE
    command/SEQ

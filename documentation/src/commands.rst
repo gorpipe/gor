@@ -221,6 +221,9 @@ Commands
    * - :ref:`SEGSPAN`
      - Turns a stream of segments into a stream of non-overlapping segments.
      - GOR
+   * - :ref:`SEGWHERE`
+     - Turns a stream of segments into a stream of non-overlapping segments based on a where condition.
+     - GOR
    * - :ref:`SELECT`
      - Filters specified columns from the output stream.
      - GOR/NOR

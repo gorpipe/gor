@@ -4,9 +4,9 @@
 
 .. _FILTERINVALIDROWS:
 
-===========
+=================
 FILTERINVALIDROWS
-===========
+=================
 The :ref:`FILTERINVALIDROWS` filters out invalid rows, for example rows with too few columns.  This can be useful when working with corrupt data.
 
 Usage
