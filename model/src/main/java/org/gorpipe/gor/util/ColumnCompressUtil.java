@@ -20,8 +20,9 @@ public class ColumnCompressUtil {
         var dataBytes = data.getBytes(StandardCharsets.UTF_8);
         d.setInput(dataBytes);
         d.finish();
-        byte output[] = new byte[dataBytes.length + 100];
+        var output = new byte[dataBytes.length + 100];
         var byteCount = d.deflate(output);
+        d.end();
 
         return MAGIC + dataBytes.length + "::" + Base64.getEncoder().encodeToString(Arrays.copyOfRange(output, 0, byteCount));
     }
@@ -38,12 +39,11 @@ public class ColumnCompressUtil {
             var decodedBytes = Base64.getDecoder().decode(dataToDeflate);
             var i = new Inflater();
             i.setInput(decodedBytes);
-            var a = i.getTotalIn();
-            var b = i.getTotalOut();
-            var outbytes = new byte[Integer.parseInt(size)];
-            var bytesInflated = i.inflate(outbytes);
+            var outBytes = new byte[Integer.parseInt(size)];
+            var bytesInflated = i.inflate(outBytes);
+            i.end();
 
-            return new String(outbytes, 0, bytesInflated, StandardCharsets.UTF_8);
+            return new String(outBytes, 0, bytesInflated, StandardCharsets.UTF_8);
         } else {
             return data;
         }

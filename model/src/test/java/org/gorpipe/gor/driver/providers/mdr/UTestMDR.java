@@ -5,7 +5,9 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.experimental.categories.Category;
 
 import java.io.*;
@@ -16,6 +18,14 @@ import java.util.Properties;
 @Category(IntegrationTests.class)
 public class UTestMDR {
 
+    private static String S3_KEY;
+    private static String S3_SECRET;
+
+
+    @Rule
+    public final EnvironmentVariables environmentVariables
+            = new EnvironmentVariables();
+
     @BeforeClass
     public static void setupClass() {
         Properties props = TestUtils.loadSecrets();
@@ -24,10 +34,17 @@ public class UTestMDR {
             System.setProperty("GOR_KEYCLOAK_CLIENT_SECRET", secret);
         }
 
+        S3_KEY = props.getProperty("S3_KEY");
+        S3_SECRET = props.getProperty("S3_SECRET");
+
     }
 
     @Test
     public void testReadDocument() {
+
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         var result = TestUtils.runGorPipeLines("gor mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a | top 10000");
 
         Assert.assertEquals(10001, result.length);
@@ -39,6 +56,10 @@ public class UTestMDR {
 
     @Test
     public void testReadDocumentWithNor() {
+
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         var result = TestUtils.runGorPipeLines("nor -h mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a | top 10000");
 
         Assert.assertEquals(10001, result.length);
@@ -49,6 +70,10 @@ public class UTestMDR {
 
     @Test
     public void testReadDocuments() {
+
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         var result = TestUtils.runGorPipeLines("gor mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a mdr://191b3d28-4db9-4aa3-aa6b-cbb2968885a5 mdr://ee4d7e36-e6dc-42d8-8f78-714242a8cf6d | top 10000");
 
         Assert.assertEquals(10001, result.length);
@@ -60,6 +85,10 @@ public class UTestMDR {
 
     @Test
     public void testReadDocumentThroughLinkFile() throws IOException {
+
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         Path tempFile = Files.createTempFile("document_", ".gor.link");
         Files.write(tempFile, "mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a".getBytes());
 
@@ -73,6 +102,10 @@ public class UTestMDR {
 
     @Test
     public void testNonExistingDocumentId() {
+
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         var ex = Assert.assertThrows(GorResourceException.class, () -> {
             TestUtils.runGorPipeLines("gor mdr://f3658d3a-5220-4094-b7b1-311804df3db8");
         });
@@ -82,6 +115,9 @@ public class UTestMDR {
 
     @Test
     public void testDictionaryWithInvalidEntry() throws IOException {
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         // Copy test file to a new file
         Path tempFile = Files.createTempFile("genes_", ".gord");
         Files.copy(Path.of("../tests/data/mdr/genes_mdr_1000.gord"), tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -101,6 +137,9 @@ public class UTestMDR {
 
     @Test
     public void test1000EntryDictionary() {
+        environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+
         var result = TestUtils.runGorPipeLines("gor ../tests/data/mdr/genes_mdr_1000.gord | top 10000");
 
         Assert.assertEquals(10001, result.length);
