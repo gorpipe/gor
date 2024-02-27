@@ -112,9 +112,11 @@ object AnalysisUtilities {
                                           usedFiles: List[String],
                                           header: String)
 
-  def getSignature(commandToExecute: String): String = {
+  def getSignature(session: GorSession, commandToExecute: String): String = {
     var result = ""
     val name = "SIGNATURE"
+    val timeresOption = "-timeres"
+    val fileOption = "-file"
 
     if (commandToExecute.toUpperCase.contains(name)) {
       val command = getSignatureCommand(commandToExecute)
@@ -122,8 +124,15 @@ object AnalysisUtilities {
       if (command.nonEmpty) {
         val args = CommandParseUtilities.quoteSafeSplit(command, ' ').map(x => x.toLowerCase)
 
-        if (CommandParseUtilities.hasOption(args, "-timeres")) {
-          val timeDiff = CommandParseUtilities.intValueOfOption(args, "-timeres")
+        // having both file and timeres is not allowed
+        if (CommandParseUtilities.hasOption(args, timeresOption) && CommandParseUtilities.hasOption(args, fileOption)) {
+          val exception = new GorParsingException("Cannot have both -timeres and -file options")
+          exception.setCommandName(name)
+          throw exception
+        }
+
+        if (CommandParseUtilities.hasOption(args, timeresOption)) {
+          val timeDiff = CommandParseUtilities.intValueOfOption(args, timeresOption)
           val currentTime = System.currentTimeMillis() / 1000L
 
           if (timeDiff > 0) {
@@ -131,16 +140,19 @@ object AnalysisUtilities {
           } else {
             result = currentTime.toString
           }
-
-          result = " " + result
+        } else if (CommandParseUtilities.hasOption(args, fileOption)) {
+          result = session.getProjectContext.getFileReader.getFileSignature(CommandParseUtilities.stringValueOfOption(args, fileOption))
         } else {
-          val exception = new GorParsingException("Needs to have one of the following options: -timeres")
+          val exception = new GorParsingException("Needs to have one of the following options: -timeres, -file")
           exception.setCommandName(name)
 
           throw exception
         }
       }
     }
+
+    if (result.nonEmpty)
+      result = " " + result
 
     result
   }

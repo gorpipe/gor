@@ -26,7 +26,7 @@ import org.gorpipe.gor.session.GorContext
 
 
 class Signature extends CommandInfo("SIGNATURE",
-  CommandArguments("", "-timeres", 0, 0),
+  CommandArguments("", "-timeres -file", 0, 0),
   CommandOptions(gorCommand = true, norCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
     CommandParsingResult(null, null)

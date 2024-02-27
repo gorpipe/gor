@@ -13,7 +13,7 @@ Usage
 
 This command will inject a signature into the create statement and invalidating it based on the input criteria.
 
-This command will no effect standard gor queries.
+This command will not effect standard gor queries.
 
 Options
 =======
@@ -21,8 +21,10 @@ Options
 +-----------------------+----------------------------------------------------------------------+
 | ``-timeres seconds``  | Time stamp resolution in seconds.                                    |
 +-----------------------+----------------------------------------------------------------------+
+| ``-file filepath``    | Path to a file to calculate the signature from.                      |
++-----------------------+----------------------------------------------------------------------+
 
-The ``-timeres`` option is required.
+The ``-timeres`` or the ``-file`` option is required. If both are present the command fails with an error.
 
 Example
 =======
@@ -33,3 +35,10 @@ Example
    gor [foo]
 
 The above query will re-evaluate the #dbSNP# query at least every 1000 seconds and regenerate the underlying cache-file.
+
+.. code-block:: gor
+
+   create foo = gor #dbSNP# | signature -file ../foo.txt | top 10;
+   gor [foo]
+
+The above query will re-evaluate the #dbSNP# query when changes are detected in the ``../foo.txt`` file.

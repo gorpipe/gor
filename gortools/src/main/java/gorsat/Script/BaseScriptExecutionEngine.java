@@ -139,7 +139,7 @@ public class BaseScriptExecutionEngine {
             var usedFilesConcatStr = String.join(" ", usedFiles);
             fileSignature = StringUtilities.createMD5(usedFilesConcatStr);
         } else {
-            var signatureKey = AnalysisUtilities.getSignature(commandToExecute);
+            var signatureKey = AnalysisUtilities.getSignature(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles) + signatureKey;
             fileSignature = fileSignatureMap.computeIfAbsent(fileListKey, (k) -> StringUtilities.createMD5(usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
         }

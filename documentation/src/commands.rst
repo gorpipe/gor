@@ -236,6 +236,9 @@ Commands
    * - :ref:`SETCOLTYPE`
      - Sets column data types.
      - GOR/NOR
+   * - :ref:`SIGNATURE`
+     - Allows the control of create statements via time resolution or file changes.
+     - GOR/NOR
    * - :ref:`SKIP`
      - Skips a specified number of rows before returning data.
      - GOR/NOR

@@ -23,14 +23,24 @@
 package gorsat;
 
 import gorsat.Utilities.AnalysisUtilities;
+import gorsat.process.PipeOptions;
+import gorsat.process.TestSessionFactory;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.SlowTests;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
+
+@Category(SlowTests.class)
 public class UTestSignature {
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
 
     @Test
     public void testEmptySignature() {
@@ -51,7 +61,6 @@ public class UTestSignature {
         }
     }
 
-    @Category(SlowTests.class)
     @Test
     public void testSignatureZeroTime() {
 
@@ -95,22 +104,85 @@ public class UTestSignature {
     }
 
     @Test
-    public void testSignatureParsing() {
+    public void testSignatureFile() throws IOException {
 
-        String signature = AnalysisUtilities.getSignature("gor ../tests/data/gor/genes.gor | signature -timeres 1000");
-        long timeValue = Long.parseLong(signature.trim());
-        Assert.assertEquals(0, timeValue % 1000);
+        // Create a file and get the signature
+        try {
+            var file = workDir.newFile("test.gor");
+            // Run a simple query to reduce initialization timelags
+            TestUtils.runGorPipeLines("gor ../tests/data/gor/genes.gor | top 0");
 
-        signature = AnalysisUtilities.getSignature("pgor ../tests/data/gor/genes.gor | signature -timeres 100");
-        timeValue = Long.parseLong(signature.trim());
-        Assert.assertEquals(0, timeValue % 100);
+            long start = System.currentTimeMillis();
+            String[] lines = TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
+            long duration = System.currentTimeMillis() - start;
 
-        signature = AnalysisUtilities.getSignature("gor ../tests/data/gor/genes.gor | calc signature 1.0 | signature -timeres 1000");
-        timeValue = Long.parseLong(signature.trim());
-        Assert.assertEquals(0, timeValue % 1000);
+            Assert.assertEquals("Expect 11 lines", 11, lines.length);
+            Assume.assumeTrue("Duration should be long due to wait command", duration > 1000);
 
-        signature = AnalysisUtilities.getSignature("gor ../tests/data/gor/genes.gor | calc signature 1.0 ");
-        Assert.assertEquals("", signature);
+            start = System.currentTimeMillis();
+            TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
+            duration = System.currentTimeMillis() - start;
+
+            Assert.assertEquals("Expect 11 lines", 11, lines.length);
+            Assume.assumeTrue("Duration should be short with access to the cache", duration < 900);
+
+            // Touch the file and try again
+            var r = file.setLastModified(System.currentTimeMillis());
+
+            start = System.currentTimeMillis();
+            TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
+            duration = System.currentTimeMillis() - start;
+
+            Assert.assertEquals("Expect 11 lines", 11, lines.length);
+            Assume.assumeTrue("Duration should be short with access to the cache", duration > 1000);
+        } finally {
+            workDir.delete();
+        }
+    }
+
+    @Test
+    public void testSignatureParsing() throws IOException {
+
+        try {
+            var options = new PipeOptions();
+            options.gorRoot_$eq(workDir.toString());
+            options.requestId_$eq("test");
+            var factory = new TestSessionFactory(options, null, false, null, null);
+            try (var session = factory.create()) {
+                String signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -timeres 1000");
+                long timeValue = Long.parseLong(signature.trim());
+                Assert.assertEquals(0, timeValue % 1000);
+
+                signature = AnalysisUtilities.getSignature(session, "pgor ../tests/data/gor/genes.gor | signature -timeres 100");
+                timeValue = Long.parseLong(signature.trim());
+                Assert.assertEquals(0, timeValue % 100);
+
+                signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | calc signature 1.0 | signature -timeres 1000");
+                timeValue = Long.parseLong(signature.trim());
+                Assert.assertEquals(0, timeValue % 1000);
+
+                signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | calc signature 1.0 ");
+                Assert.assertEquals("", signature);
+
+                // Create a file and get the signature
+                var file  = workDir.newFile("test.gor");
+                signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
+                Assert.assertFalse(signature.isEmpty());
+
+                var signature2 = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
+                Assert.assertFalse(signature2.isEmpty());
+                Assert.assertEquals(signature, signature2);
+
+                // Touch the file and get the signature
+                var r = file.setLastModified(System.currentTimeMillis());
+                var signature3 = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
+                Assert.assertFalse(signature3.isEmpty());
+                Assert.assertNotEquals(signature, signature3);
+
+            }
+        } finally {
+            workDir.delete();
+        }
 
     }
 }
