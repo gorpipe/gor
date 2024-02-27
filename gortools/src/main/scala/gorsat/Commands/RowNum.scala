@@ -22,21 +22,27 @@
 
 package gorsat.Commands
 
-import gorsat.Analysis.RowNumAnalysis
+import gorsat.Analysis.{RowNumAnalysis, RowNumGroupedAnalysis}
+import gorsat.Commands.CommandParseUtilities.columnsOfOptionWithNil
 import gorsat.Utilities.IteratorUtilities.validHeader
 import org.gorpipe.gor.session.GorContext
 
 class RowNum extends CommandInfo("ROWNUM",
-  CommandArguments("", "", 0, 0),
+  CommandArguments("", "-gc", 0, 0),
   CommandOptions(gorCommand = true, norCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                 args: Array[String], executeNor: Boolean, forcedInputHeader: String)
   : CommandParsingResult =
   {
+    val gcCols: List[Int] = columnsOfOptionWithNil(args, "-gc", forcedInputHeader, executeNor).distinct
     val incomingColumns = forcedInputHeader.split("\t").toList
     val outgoingColumns = incomingColumns ::: List("rownum")
     val outgoingTypes = incomingColumns.indices.map(x => x.toString).toList ::: List("I")
     val outgoingHeader = RowHeader(outgoingColumns.toArray, outgoingTypes.toArray)
-    CommandParsingResult(RowNumAnalysis(outgoingHeader), validHeader(outgoingHeader.toString))
+
+    if (gcCols.isEmpty)
+      CommandParsingResult(RowNumAnalysis(outgoingHeader), validHeader(outgoingHeader.toString))
+    else
+      CommandParsingResult(RowNumGroupedAnalysis(outgoingHeader, gcCols), validHeader(outgoingHeader.toString))
   }
 }
