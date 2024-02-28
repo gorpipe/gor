@@ -23,17 +23,26 @@
 package gorsat.Analysis
 
 import gorsat.Commands.{Analysis, RowHeader}
+import org.gorpipe.data.Segment
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.RowObj
 
-case class SegWhereAnalysis(context: GorContext, maxSeg: Int, paramString: String, header: String,
+
+
+case class SegWhereAnalysis(context: GorContext,
+                            minseg: Int,
+                            startHalf: Boolean,
+                            endHalf: Boolean,
+                            paramString: String,
+                            header: String,
                             ignoreFilterError: Boolean = false)
   extends Analysis with Filtering
 {
-  var firstRow: Row = _
-  var currentRow: Row = _
+  var segment: Segment = _
+  var lastRow: Row = _
+  var lastRowValue: Boolean = false
 
   filter.setContext(context, executeNor =  false)
 
@@ -67,42 +76,52 @@ case class SegWhereAnalysis(context: GorContext, maxSeg: Int, paramString: Strin
 
   override def process(r: Row): Unit = {
 
-    if (firstRow != null &&  r.chr != firstRow.chr) {
+    if (lastRow != null &&  r.chr != lastRow.chr) {
       produceRow()
-      firstRow = null
-      currentRow = null
+      lastRow = null
+      lastRowValue = false
     }
 
-    if (!isFilterValid || filter.evalBooleanFunction(r)) {
-      if (firstRow == null) {
-        firstRow = r
-        currentRow = r
-      } else {
-        val segLength = r.pos - currentRow.pos
+    val currentValue = if (isFilterValid) filter.evalBooleanFunction(r) else false
 
-        if (segLength > maxSeg) {
-          produceRow()
-          firstRow = r
-          currentRow = r
-        } else {
-          currentRow = r
-        }
+    if (lastRowValue && !currentValue) {
+      // End of segment
+      if (endHalf) {
+        val half = (r.pos + lastRow.pos) / 2
+        segment = new Segment(segment.start, half)
       }
-    } else {
       produceRow()
+    } else if (!lastRowValue && currentValue) {
+      // Start of segment
+      if (startHalf) {
+        val half = (r.pos + lastRow.pos) / 2
+        segment = new Segment(half, r.pos)
+      } else {
+        segment = new Segment(r.pos, r.pos)
+      }
+    } else if (lastRowValue && currentValue) {
+      // In segment, extend to the current position
+      segment = new Segment(segment.start, r.pos)
+    } else {
+      // Not in segment
+      segment = null
     }
+
+    lastRow = r
+    lastRowValue = currentValue
   }
 
   private def produceRow(): Unit = {
-    if (firstRow == null) return
+    if (segment == null || lastRow == null) return
 
-    val segLength = currentRow.pos - firstRow.pos
-    if (segLength > 0) {
-      super.process(RowObj.apply(s"${firstRow.chr}\t${firstRow.pos}\t${firstRow.pos + segLength}"))
+    if (segment.length == 0) {
+      segment = new Segment(segment.start, segment.start + 1)
     }
 
-    currentRow = null
-    firstRow = null
+    if (minseg <= 0 || segment.length() >= minseg)
+      super.process(RowObj.apply(s"${lastRow.chr}\t${segment.start}\t${segment.end}"))
+
+    segment = null
   }
 
 

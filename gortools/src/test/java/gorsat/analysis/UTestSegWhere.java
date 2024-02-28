@@ -37,30 +37,32 @@ public class UTestSegWhere {
     private final RowHeader header_with_number = RowHeader.apply("Chrom\tPOS\tVAL", "S\tI\tD");
 
     @Test
-    public void testSingleSegmentWithinMaxSegRange() {
+    public void testSingleSegmentAllTrue() {
         String[] INPUT_DATA_3_COLUMNS = {
                 "chr1\t1",
                 "chr1\t10",
                 "chr1\t100",
         };
         String[] OUTPUT_DATA_3_COLUMNS = {
-                "chr1\t1\t10"
+                "chr1\t1\t100"
         };
 
-        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "pos > 0", 10);
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "pos > 0");
     }
 
 
     @Test
-    public void testNoAvailableSegments() {
+    public void testComplexCondition() {
         String[] INPUT_DATA_3_COLUMNS = {
                 "chr1\t1",
                 "chr1\t100",
                 "chr1\t1000",
         };
-        String[] OUTPUT_DATA_3_COLUMNS = {};
+        String[] OUTPUT_DATA_3_COLUMNS = {
+                "chr1\t1\t100",
+        };
 
-        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "pos > 0", 5);
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "pos > 0 and pos < 500");
     }
 
     @Test
@@ -76,7 +78,7 @@ public class UTestSegWhere {
                 "chr2\t12\t20"
         };
 
-        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "pos > 0", 100);
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "pos > 0");
     }
 
     @Test
@@ -96,7 +98,7 @@ public class UTestSegWhere {
                 "chr1\t220\t230"
         };
 
-        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header_with_string, "val == 'a'", 100);
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header_with_string, "val == 'a'");
     }
 
     @Test
@@ -122,21 +124,76 @@ public class UTestSegWhere {
                 "chr2\t10\t80"
         };
 
-        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header_with_number, "val >= 1 and val < 5", 1000);
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header_with_number, "val >= 1 and val < 5");
+    }
+
+    @Test
+    public void testWithNumericalConditionHalfStartAndHalfEnd() {
+        String[] INPUT_DATA_3_COLUMNS = {
+                "chr1\t1\t0",
+                "chr1\t2\t1",
+                "chr1\t4\t2",
+                "chr1\t10\t3",
+                "chr1\t14\t4",
+                "chr1\t30\t5",
+                "chr1\t200\t6",
+                "chr1\t220\t7",
+                "chr1\t230\t8",
+                "chr2\t1\t0",
+                "chr2\t10\t1",
+                "chr2\t40\t2",
+                "chr2\t80\t4",
+                "chr2\t160\t5",
+        };
+        String[] OUTPUT_DATA_3_COLUMNS = {
+                "chr1\t7\t22",
+                "chr2\t60\t120"
+        };
+
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header_with_number, "val >= 3 and val < 5", -1, true, true);
+    }
+
+    @Test
+    public void testWithNumericalConditionAndMinSeg() {
+        String[] INPUT_DATA_3_COLUMNS = {
+                "chr1\t1\t0",
+                "chr1\t2\t1",
+                "chr1\t4\t2",
+                "chr1\t10\t3",
+                "chr1\t14\t4",
+                "chr1\t30\t5",
+                "chr1\t200\t6",
+                "chr1\t220\t7",
+                "chr1\t230\t8",
+                "chr2\t1\t0",
+                "chr2\t10\t1",
+                "chr2\t40\t2",
+                "chr2\t80\t4",
+                "chr2\t160\t5",
+        };
+        String[] OUTPUT_DATA_3_COLUMNS = {
+                "chr2\t60\t120"
+        };
+
+        performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header_with_number, "val >= 3 and val < 5", 40, true, true);
     }
 
 
-    private void performTest(String[] input, String[] output, RowHeader inputHeader, String whereStatement, int maxSeg) {
+    private void performTest(String[] input, String[] output, RowHeader inputHeader, String whereStatement, int minseg, boolean startHalf, boolean endHalf) {
         AnalysisTestSessionFactory sessionFactory = new AnalysisTestSessionFactory();
 
 
         try(var session = sessionFactory.create()) {
-            SegWhereAnalysis analysis = new SegWhereAnalysis(session.getGorContext(), maxSeg,
+            SegWhereAnalysis analysis = new SegWhereAnalysis(session.getGorContext(), minseg, startHalf, endHalf,
                     whereStatement, inputHeader.toString(), false);
             AnalysisTestEngine engine = new AnalysisTestEngine();
             engine.run(analysis, input, output, inputHeader);
         }
 
+    }
+
+    private void performTest(String[] input, String[] output, RowHeader inputHeader, String whereStatement) {
+        performTest(input, output, inputHeader, whereStatement, -1, false, false);
     }
 
     @Test
@@ -148,7 +205,7 @@ public class UTestSegWhere {
         };
         String[] OUTPUT_DATA_3_COLUMNS = {};
 
-        Assert.assertThrows(GorParsingException.class, () -> performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "foo > 0", 10));
+        Assert.assertThrows(GorParsingException.class, () -> performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "foo > 0"));
     }
 
     @Test
@@ -160,6 +217,6 @@ public class UTestSegWhere {
         };
         String[] OUTPUT_DATA_3_COLUMNS = {};
 
-        Assert.assertThrows(GorParsingException.class, () -> performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "foo + 10", 10));
+        Assert.assertThrows(GorParsingException.class, () -> performTest(INPUT_DATA_3_COLUMNS, OUTPUT_DATA_3_COLUMNS, header, "foo + 10"));
     }
 }

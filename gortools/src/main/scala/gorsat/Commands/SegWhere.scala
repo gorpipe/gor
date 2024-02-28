@@ -23,18 +23,20 @@
 package gorsat.Commands
 
 import gorsat.Analysis.SegWhereAnalysis
-import gorsat.Commands.CommandParseUtilities.intValueOfOptionWithDefaultWithRangeCheck
+import gorsat.Commands.CommandParseUtilities.{hasOption, intValueOfOptionWithDefaultWithRangeCheck}
 import org.gorpipe.gor.session.GorContext
 
 class SegWhere extends CommandInfo("SEGWHERE",
-  CommandArguments("", "-m", 1, -1, ignoreIllegalArguments = true), CommandOptions(gorCommand = true))
+  CommandArguments("-sh -eh", "-minseg", 1, -1, ignoreIllegalArguments = true), CommandOptions(gorCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
-    val maxSeg = intValueOfOptionWithDefaultWithRangeCheck(args, "-m", defaultValue = 3000, minimumValue = 1)
+    val minseg = intValueOfOptionWithDefaultWithRangeCheck(args, "-minseg", -1, 1, Int.MaxValue)
+    val startHalf = hasOption(args, "-sh")
+    val endHalf = hasOption(args, "-eh")
 
     val header = "Chrom\tbpStart\tbpStop"
 
-    CommandParsingResult(SegWhereAnalysis(context, maxSeg, iargs.mkString(" "), forcedInputHeader), header)
+    CommandParsingResult(SegWhereAnalysis(context, minseg, startHalf, endHalf, iargs.mkString(" "), forcedInputHeader), header)
   }
 }
