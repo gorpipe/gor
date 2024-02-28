@@ -7,7 +7,7 @@
 =====
 ATMAX
 =====
-The :ref:`ATMAX` command allows you to select a single row based on a maximum value of a defined column. Note that the column needs to be a number.
+The :ref:`ATMAX` command allows you to select a single row based on a maximum value of a defined column. Note that the column is treated as a number by default, to do a string comparison use the ``-s`` option.
 
 Using **ATMAX** in a nor query will give an error if ``binsize`` input parameter is used.
 
@@ -31,6 +31,8 @@ Options
 | ``-gc cols``      | Grouping columns (other than bin).                                   |
 +-------------------+----------------------------------------------------------------------+
 | ``-ordered``      | Assume the grouping columns are ordered.                             |
++-------------------+----------------------------------------------------------------------+
+| ``-s``            | Treats the test column as a string and performs a string comparison. |
 +-------------------+----------------------------------------------------------------------+
 
 Use ``binsize = chrom`` to aggregate for a whole chromosome and ``binsize = genome`` to aggregate for the entire genome. Note, that the column must be a numeric column.

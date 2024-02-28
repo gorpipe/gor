@@ -33,22 +33,31 @@ object AtAnalysis {
 
   case class GroupStatHolder() {
     var row: Row = _
-    var value: Double = Double.NaN
+    var value: Either[Double, String] = _
   }
 
   case class Parameters() {
     var useLast = false
     var useMax = false
+    var compareString = false
   }
 
   case class AtState(binSize: Int, testColumn: Int, groupColumns: Array[Int], parameters: Parameters) extends BinState {
 
     val useGroup: Boolean = if (groupColumns.nonEmpty) true else false
     var groupMap = Map.empty[String, GroupStatHolder]
-    var comparison: (Double, Double) => Boolean = _
+    var comparisonNumber: (Double, Double) => Boolean = _
+    var comparisonString: (String, String) => Boolean = _
     val groupColumnsArray: Array[Int] = groupColumns
 
-    comparison = (parameters.useMax, parameters.useLast) match {
+    comparisonNumber = (parameters.useMax, parameters.useLast) match {
+      case (true, true) => _ >= _
+      case (false, true) => _ <= _
+      case (false, false) => _ < _
+      case _ => _ > _
+    }
+
+    comparisonString = (parameters.useMax, parameters.useLast) match {
       case (true, true) => _ >= _
       case (false, true) => _ <= _
       case (false, false) => _ < _
@@ -61,11 +70,17 @@ object AtAnalysis {
     }
 
     override def process(r: Row): Unit = {
+      if (parameters.compareString) {
+        processString(r)
+      } else {
+        processNumber(r)
+      }
+    }
 
-      // Get all the values being used
+    private def processNumber(row: Row): Unit = {
+      val currentValue = row.colAsDouble(testColumn)
       var currentGroup: GroupStatHolder = null
-      val currentValue = r.colAsDouble(testColumn)
-      val currentGroupID = if (useGroup) r.selectedColumns(groupColumnsArray) else ""
+      val currentGroupID = if (useGroup) row.selectedColumns(groupColumnsArray) else ""
 
       // Construct the group map, note if no group is defined we still use "" as the default group
       groupMap.get(currentGroupID) match {
@@ -77,12 +92,37 @@ object AtAnalysis {
 
       // Test comparison per group
       if (currentGroup.row == null) {
-        currentGroup.row = r
-        currentGroup.value = currentValue
+        currentGroup.row = row
+        currentGroup.value = Left(currentValue)
       } else {
-        if (comparison(currentValue, currentGroup.value)) {
-          currentGroup.value = currentValue
-          currentGroup.row = r
+        if (comparisonNumber(currentValue, currentGroup.value.left.getOrElse(0.0))) {
+          currentGroup.value = Left(currentValue)
+          currentGroup.row = row
+        }
+      }
+    }
+
+    private def processString(row: Row): Unit = {
+      val currentValue = row.colAsString(testColumn).toString
+      var currentGroup: GroupStatHolder = null
+      val currentGroupID = if (useGroup) row.selectedColumns(groupColumnsArray) else ""
+
+      // Construct the group map, note if no group is defined we still use "" as the default group
+      groupMap.get(currentGroupID) match {
+        case Some(x) => currentGroup = x
+        case None =>
+          currentGroup = GroupStatHolder()
+          groupMap += (currentGroupID -> currentGroup)
+      }
+
+      // Test comparison per group
+      if (currentGroup.row == null) {
+        currentGroup.row = row
+        currentGroup.value = Right(currentValue)
+      } else {
+        if (comparisonString(currentValue, currentGroup.value.getOrElse(""))) {
+          currentGroup.value = Right(currentValue)
+          currentGroup.row = row
         }
       }
     }
@@ -163,11 +203,11 @@ object AtAnalysis {
 
     parameters.useLast = hasOption(args, "-last")
     parameters.useMax = useMax
+    parameters.compareString = hasOption(args, "-s")
 
-    //Tsting for the group option and then extracting the columns to use
     val groupColumns = columnsOfOptionWithNil(args, "-gc", forcedInputHeader, executeNor).distinct
 
-    // Different processing when handling gor vs nor as nor is just gor with -NOR option
+
     val binSizeDescription = if (executeNor) "1" else iargs(0).toUpperCase
     var binSize = if (executeNor) 1 else 1000000000
     if (!(binSizeDescription.startsWith("CHR") || binSizeDescription.startsWith("GEN") || executeNor))
