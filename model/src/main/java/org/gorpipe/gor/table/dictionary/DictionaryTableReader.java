@@ -26,6 +26,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.gor.table.livecycle.TableInfoBase;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.util.ByteTextBuilder;
@@ -33,12 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gorpipe.gor.table.dictionary.DictionaryTableMeta.DEFAULT_SOURCE_COLUMN;
+import static org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta.DEFAULT_SOURCE_COLUMN;
 import static org.gorpipe.gor.table.util.PathUtils.*;
 
 /**
@@ -47,50 +47,47 @@ import static org.gorpipe.gor.table.util.PathUtils.*;
  * Contains basic info for a dictionary table.
  *
  */
-public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
+public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoBase {
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryTableReader.class);
 
     private String contentType = null;  // For caching content type.
 
-    protected ITableEntries<DictionaryEntry> tableEntries;
+    protected IDictionaryEntries<T> tableEntries;
 
-    protected TableAccessOptimizer tableAccessOptimizer;
+    protected DictionaryAccessOptimizer tableAccessOptimizer;
 
-    public DictionaryTableReader(String path) {
-        this(path, null);
-    }
+    protected IDictionaryEntryFactory<T> factory;
 
-    public DictionaryTableReader(String path, FileReader fileReader) {
-        super(path, fileReader);
-    }
+    public DictionaryTableReader(String path, FileReader fileReader, TableHeader header,  IDictionaryEntryFactory<T> factory) {
+        super(path, fileReader, header);
+        this.factory = factory;
 
-    public DictionaryTableReader(Path path) {
-        this(path.toUri().toString(), null);
+        reload();
     }
 
     public String getSourceColumn() {
-        return getConfigTableProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, DEFAULT_SOURCE_COLUMN);
+        return getConfigTableProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, DEFAULT_SOURCE_COLUMN);
     }
 
     public boolean isBucketize() {
-        Boolean headerOrSetBucketize = getBooleanConfigTableProperty(DictionaryTableMeta.HEADER_BUCKETIZE_KEY, null);
+        Boolean headerOrSetBucketize = getBooleanConfigTableProperty(GorDictionaryTableMeta.HEADER_BUCKETIZE_KEY, null);
         return headerOrSetBucketize != null ? headerOrSetBucketize : BooleanUtils.isTrue(inferShouldBucketizeFromContent());
     }
 
     public Boolean getLineFilter() {
-        return Boolean.valueOf(header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY, "true"));
+        return Boolean.valueOf(header.getProperty(GorDictionaryTableMeta.HEADER_LINE_FILTER_KEY, "true"));
     }
 
     public boolean isHasUniqueTags() {
-        return Boolean.parseBoolean(getConfigTableProperty(DictionaryTableMeta.HEADER_UNIQUE_TAGS_KEY,  "false"));
+        return Boolean.parseBoolean(getConfigTableProperty(GorDictionaryTableMeta.HEADER_UNIQUE_TAGS_KEY,  "false"));
     }
 
-    public String getContentReal(DictionaryEntry entry) {
+    public String getContentReal(T entry) {
         return resolve(getRootPath(), entry.getContentRelative());
     }
 
-    public String getContentProjectRelative(DictionaryEntry entry) {
+    public String getContentProjectRelative(T entry) {
         return relativize(getProjectPath(),  resolve(getRootPath(), entry.getContentRelative()));
     }
 
@@ -100,7 +97,7 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
      * @param filters filters to filter rows by.
      * @return union of rows as specified by the given filters.
      */
-    public final List<DictionaryEntry> selectUninon(TableFilter<DictionaryEntry>... filters) {
+    public final List<T> selectUninon(DictionaryFilter<T>... filters) {
         return Arrays.stream(filters).flatMap(f -> f.get().stream()).collect(Collectors.toList());
     }
 
@@ -109,7 +106,7 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
      *
      * @return list with all the rows including the deleted rows.
      */
-    public final List<DictionaryEntry> selectAll() {
+    public final List<T> selectAll() {
         // Copy the list but not the elements, so it can be used as input into for example delete.
         return new ArrayList<>(getEntries());
     }
@@ -120,15 +117,15 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
      *
      * @return new filter on this table.
      */
-    public TableFilter<DictionaryEntry> filter() {
-        return new TableFilter<>(this, tableEntries);
+    public DictionaryFilter<T> filter() {
+        return new DictionaryFilter<>(this, tableEntries);
     }
 
-    public List<DictionaryEntry> getEntries() {
+    public List<T> getEntries() {
         return tableEntries.getEntries();
     }
 
-    public List<DictionaryEntry> getEntries(String... aliasesAndTags) {
+    public List<T> getEntries(String... aliasesAndTags) {
         return tableEntries.getEntries(aliasesAndTags);
     }
 
@@ -138,7 +135,7 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
      * @return List of Path elements representing all the buckets in the table.
      */
     public List<String> getBuckets() {
-        return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(DictionaryEntry::getBucket).distinct().collect(Collectors.toList());
+        return filter().get().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(T::getBucket).distinct().collect(Collectors.toList());
     }
 
     public boolean hasBuckets() {
@@ -154,7 +151,7 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
     /**
      * @return list of lines that need bucketizing.
      */
-    public List<DictionaryEntry> needsBucketizing() {
+    public List<T> needsBucketizing() {
         return this.selectAll().stream().filter(l -> !l.hasBucket()).collect(Collectors.toList());
     }
 
@@ -179,7 +176,7 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
     }
 
     public String getFileEndingFromContent() {
-        List<DictionaryEntry> entries = getEntries();
+        List<T> entries = getEntries();
         if (!entries.isEmpty()) {
             return getFileEndingFromContentFile(getContentReal(entries.get(0)));
         }
@@ -216,9 +213,9 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
         int maxFiles = Integer.parseInt(getConfigTableProperty("gor.table.signature.maxfiles", "10"));
         ByteTextBuilder fingerPrintString;
         if ((tags != null && tags.length > 0 && tags.length <= maxFiles)) {
-            List<DictionaryEntry> matchingLines = filter().tags(tags).get();
+            List<T> matchingLines = filter().tags(tags).get();
             fingerPrintString = new ByteTextBuilder(matchingLines.size() * 300);
-            for (DictionaryEntry line : matchingLines) {
+            for (T line : matchingLines) {
                 fingerPrintString.append(getContentReal(line));
                 fingerPrintString.append((byte) '&');
                 fingerPrintString.append(getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot));
@@ -252,8 +249,8 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
         long lastModified = 0;
         if ((tags != null && tags.length > 0 && tags.length <= maxFiles)) {
             // Empty tags here means no tags so replace with null.
-            List<DictionaryEntry> matchingLines = filter().tags(tags).get();
-            for (DictionaryEntry line : matchingLines) {
+            List<T> matchingLines = filter().tags(tags).get();
+            for (T line : matchingLines) {
                 lastModified = Math.max(lastModified, getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot));
             }
         } else {
@@ -305,8 +302,8 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
             getEntries();
     }
 
-    protected ITableEntries<DictionaryEntry> createTableEntries() {
-        return new TableEntries<>(this, DictionaryEntry.class);
+    protected IDictionaryEntries<T> createTableEntries() {
+        return new DictionaryEntries<T>(this, factory);
         // Leave this in here for easy try out.
         //return new TableEntries<>(path, DictionaryRawEntry.class);
     }
@@ -320,11 +317,11 @@ public class DictionaryTableReader extends TableInfoBase<DictionaryEntry> {
      * @param isSilentTagFilter
      * @return                   optimzed list of files to data for the given tags.
      */
-    public List<DictionaryEntry> getOptimizedLines(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
+    public List<T> getOptimizedLines(Set<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
         return getTableAccessOptimizer().getOptimizedEntries(tags, allowBucketAccess, isSilentTagFilter);
     }
 
-    protected TableAccessOptimizer getTableAccessOptimizer() {
+    protected DictionaryAccessOptimizer getTableAccessOptimizer() {
         if (tableAccessOptimizer == null) {
             tableAccessOptimizer = new DefaultTableAccessOptimizer(this, tableEntries);
         }

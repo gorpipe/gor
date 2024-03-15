@@ -19,26 +19,33 @@
  *
  *  END_COPYRIGHT
  */
+package org.gorpipe.gor.table.dictionary.gor;
 
-package gorsat.process;
 
-import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public record NordIteratorEntry(String filePath, String tag) {
+public class GorDictionaryTableMeta extends DictionaryTableMeta {
 
-    public static NordIteratorEntry parse(String entry) {
-        String[] entries = entry.split("\t");
+    private static final Logger log = LoggerFactory.getLogger(GorDictionaryTableMeta.class);
 
-        if (entries.length < 2) {
-            throw new GorDataException("Nord file requires at least two columns, id and file");
-        }
+    // Basic properties
+    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", DEFAULT_SOURCE_COLUMN, "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"};
 
-        return new NordIteratorEntry(entries[0], entries[1]);
+    public GorDictionaryTableMeta() {
+        super();
+        saveHeaderLine = true;
+        setFileHeader(DEFAULT_TABLE_HEADER);
     }
 
-
+    /**
+     * Clear the header info.
+     */
     @Override
-    public String toString() {
-        return filePath + "\t" + tag;
+    public void clear() {
+        super.clear();
+        setFileHeader(DEFAULT_TABLE_HEADER);
     }
 }
+

@@ -29,7 +29,7 @@ compile-all-with-warnings:  ## Compile code and tests.
 #
 
 publish-local:  ## Publish libraries locally (mavenLocal), then compile services with -PuseMavenLocal
-	./gradlew -Pversion=$(CURRENT_VERSION)-SNAPSHOT publishToMavenLocal
+	./gradlew -Pversion=$(CURRENT_VERSION)-SNAPSHOT publishToMavenLocal -x documentation:publishToMavenLocal
 
 publish-maven-central:   ## Publish to maven central
 	./gradlew -Pversion=$(CURRENT_VERSION)-SNAPSHOT -PpublishToMavenCentral publish

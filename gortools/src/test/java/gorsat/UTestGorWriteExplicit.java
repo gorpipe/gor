@@ -1,6 +1,6 @@
 package gorsat;
 
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
@@ -410,9 +410,9 @@ public class UTestGorWriteExplicit {
         var result = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());
         Assert.assertEquals(WRONG_RES_PARTGOR, expected, result);
 
-        var header = new DictionaryTableMeta();
+        var header = new GorDictionaryTableMeta();
         header.loadAndMergeMeta(folderpath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME));
-        Assert.assertEquals("false", header.getProperty(DictionaryTableMeta.HEADER_LINE_FILTER_KEY));
+        Assert.assertEquals("false", header.getProperty(GorDictionaryTableMeta.HEADER_LINE_FILTER_KEY));
 
         partsize = 4;
         folderpath = workDirPath.resolve("folder3.gord");

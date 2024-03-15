@@ -25,9 +25,7 @@ package org.gorpipe.gor.table.util;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.table.util.TableLog;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -96,13 +94,13 @@ public class UTestTableLog {
         TableLog tableLog = new TableLog(workDirPath);
 
         tableLog.logAfter("1", TableLog.LogAction.INSERT, "ARG1",
-                new DictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build().formatEntryNoNewLine());
+                new GorDictionaryEntry.Builder("dummy1.gor", workDirPath).alias("A1").build().formatEntryNoNewLine());
         tableLog.logAfter("1", TableLog.LogAction.ADDTOBUCKET, "BUCKET1",
-                new DictionaryEntry.Builder("dummy2.gor", workDirPath).bucket("BUCKET1").alias("A2").build().formatEntryNoNewLine());
+                new GorDictionaryEntry.Builder("dummy2.gor", workDirPath).bucket("BUCKET1").alias("A2").build().formatEntryNoNewLine());
         tableLog.logAfter("1", TableLog.LogAction.REMOVEFROMBUCKET, "BUCKET2",
-                new DictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build().formatEntryNoNewLine());
+                new GorDictionaryEntry.Builder("dummy3.gor", workDirPath).alias("A3").build().formatEntryNoNewLine());
         tableLog.logAfter("1", TableLog.LogAction.DELETE, "ARG2",
-                new DictionaryEntry.Builder("dummy4.gor", workDirPath).alias("A4").build().formatEntryNoNewLine());
+                new GorDictionaryEntry.Builder("dummy4.gor", workDirPath).alias("A4").build().formatEntryNoNewLine());
         return tableLog;
     }
 

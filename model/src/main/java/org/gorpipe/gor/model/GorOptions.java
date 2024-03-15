@@ -41,7 +41,8 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.table.Dictionary;
-import org.gorpipe.gor.table.dictionary.*;
+import org.gorpipe.gor.table.dictionary.DictionaryTableReader;
+import org.gorpipe.gor.table.dictionary.gor.*;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.util.DataUtil;
@@ -802,7 +803,7 @@ public class GorOptions {
     }
 
     private void processDictionary(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        DictionaryTableReader table = DictionaryCache.getTable(fileName, session.getProjectContext().getFileReader());
+        DictionaryTableReader table = GorDictionaryCache.dictCache.getTable(fileName, session.getProjectContext().getFileReader());
         final Dictionary gord = Dictionary.getDictionary(table, this.useDictionaryCache);
 
         isNoLineFilter = isNoLineFilter || !table.getLineFilter();
@@ -823,7 +824,7 @@ public class GorOptions {
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            sourceColName = table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
+            sourceColName = table.getProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
         }
 
         if (tableHeader == null) {
@@ -845,12 +846,12 @@ public class GorOptions {
     }
 
     private void processDictionaryTable(String fileName, boolean allowBucketAccess, ProjectContext projectContext, boolean isSilentTagFilter, Set<String> alltags) throws IOException {
-        DictionaryTable table = DictionaryCache.getTable(fileName, session.getProjectContext().getFileReader());
+        GorDictionaryTable table = GorDictionaryCache.dictCache.getTable(fileName, session.getProjectContext().getFileReader());
 
         this.isNoLineFilter = isNoLineFilter || !table.getLineFilter();
         this.hasLocalDictonaryFile = hasLocalDictonaryFile || !table.getAllActiveTags().isEmpty() /*!table.getAllActiveTags().isEmpty()*/;  // Does not count as dictionary if no tags
 
-        final List<DictionaryEntry> fileList = table.getOptimizedLines(this.columnTags, allowBucketAccess, isSilentTagFilter);
+        final List<GorDictionaryEntry> fileList = table.getOptimizedLines(this.columnTags, allowBucketAccess, isSilentTagFilter);
         this.isDictionaryWithBuckets = table.hasBuckets();
 
         final boolean hasTags = !(this.columnTags == null || this.columnTags.isEmpty());
@@ -865,7 +866,7 @@ public class GorOptions {
         if (sourceColName == null) {
             // Note:  if multiple dicts or dicts and files the first dict with source column defined will
             //        determine the source column name.
-            sourceColName = table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
+            sourceColName = table.getProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY);
         }
 
         if (tableHeader == null) {
@@ -873,13 +874,13 @@ public class GorOptions {
             if (tableHeader!=null) tableHeader = tableHeader.replace(',','\t');
         }
 
-        for (DictionaryEntry line : fileList) {
+        for (GorDictionaryEntry line : fileList) {
             subProcessOfProcessDictionaryTable(table, line, allowBucketAccess, projectContext, alltags,
                     table.getBucketDeletedFiles(PathUtils.getFileName(line.getContent())), true );
         }
     }
 
-    private void subProcessOfProcessDictionaryTable(DictionaryTable table, DictionaryEntry dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags, boolean isSilentTagFilter) {
+    private void subProcessOfProcessDictionaryTable(GorDictionaryTable table, GorDictionaryEntry dictionaryLine, boolean allowBucketAccess, ProjectContext projectContext, Set<String> alltags, Collection<String> deletedTags, boolean isSilentTagFilter) {
         String contentReal = table.getContentProjectRelative(dictionaryLine);
 
         if (dictionaryLine.isSourceInserted()) {

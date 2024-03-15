@@ -24,8 +24,10 @@ package org.gorpipe.gor.manager;
 
 import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.Dictionary;
 import org.gorpipe.gor.table.lock.TableLock;
@@ -88,7 +90,7 @@ public class UTestTableManager {
         Path dictFile = testWorkDir.resolve(name + ".gord");
         
         TableManager man = TableManager.newBuilder().lockTimeout(Duration.ofDays(13)).build();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
     }
@@ -102,11 +104,11 @@ public class UTestTableManager {
 
 
         TableManager man = TableManager.newBuilder().build();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
         table.setValidateFiles(false);
 
-        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
-        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
+        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new GorDictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
+        man.insert(dictFile.toString(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new GorDictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).collect(Collectors.joining());
 
@@ -124,12 +126,12 @@ public class UTestTableManager {
         // Test History option false.
         TableManager manNoHist = TableManager.newBuilder().build();
         String noHistDict = "noHistDict";
-        DictionaryTable table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
+        DictionaryTable<GorDictionaryEntry> table = manNoHist.initTable(workDirPath.resolve(noHistDict + ".gord"));
         table.setUseHistory(false);
         table.save();
-        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
-        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
-        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(DictionaryTable.HISTORY_DIR_NAME)));
+        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new GorDictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
+        manNoHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new GorDictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
+        Assert.assertTrue(!Files.exists(workDirPath.resolve("." + noHistDict).resolve(GorDictionaryTable.HISTORY_DIR_NAME)));
 
         // Test History option true.
         TableManager manHist = TableManager.newBuilder().build();
@@ -137,8 +139,8 @@ public class UTestTableManager {
         table = manHist.initTable(workDirPath.resolve(histDict + ".gord"));
         table.setUseHistory(true);
         table.save();
-        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
-        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, (DictionaryEntry)new DictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
+        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new GorDictionaryEntry.Builder<>(testFile1.toString(), table.getRootPath()).alias("A").build());
+        manHist.insert(table.getPath(), BucketManager.BucketPackLevel.CONSOLIDATE, 4, new GorDictionaryEntry.Builder<>(testFile2.toString(), table.getRootPath()).alias("B").build());
         table.reload();
         Assert.assertTrue(Files.exists(workDirPath.resolve("." + histDict).resolve(DictionaryTable.HISTORY_DIR_NAME)));
         Assert.assertEquals(1, Files.list(workDirPath.resolve("." + histDict).resolve(DictionaryTable.HISTORY_DIR_NAME)).count()); // 1 action log.
@@ -205,7 +207,7 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         Process p = null;
 
         // Bucketize in process.   Set the pack level, otherwise we will sometimes pack the buckets and fail the test.
@@ -230,7 +232,7 @@ public class UTestTableManager {
                         name, workDirPath, 10, new int[]{1, 2, 3}, 10, "PN", true, sources2);
                 table.insert(dataFiles2);
 
-                Collection<DictionaryEntry> entriesToDelete = table.filter().aliases("PN10", "PN11").get();
+                Collection<GorDictionaryEntry> entriesToDelete = table.filter().aliases("PN10", "PN11").get();
                 table.delete(entriesToDelete);
 
                 // Validate that we are sill bucketizing (We should NOT get the lock here).
@@ -302,7 +304,7 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         long startTime;
 
         startTime = System.currentTimeMillis();
@@ -334,8 +336,8 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        //DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/gorman/100k_gorman_test/100k_orginal.gord"));
+        //GorDictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
+        DictionaryTable table = man.initTable(Paths.get("../../testing/gorman/100k_gorman_test/100k_orginal.gord"));
 
         startTime = System.currentTimeMillis();
         final Dictionary d = Dictionary.getDictionary(table.getPath().toString(), ProjectContext.DEFAULT_READER, ".", true);
@@ -399,8 +401,8 @@ public class UTestTableManager {
         man.setBucketSize(100);
 
         startTime = System.currentTimeMillis();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
-        List<DictionaryEntry> entries = table.filter().tags(tags.split(",")).get();
+        DictionaryTable<GorDictionaryEntry> table = man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
+        List<GorDictionaryEntry> entries = table.filter().tags(tags.split(",")).get();
         long tableLoadAndTagFilterTime = System.currentTimeMillis() - startTime;
         log.info("Filtering entries with dictionary table by tags from large dict: {}", tableLoadAndTagFilterTime);
 
@@ -443,11 +445,11 @@ public class UTestTableManager {
         man.setMinBucketSize(20);
         man.setBucketSize(100);
 
-        DictionaryTable table = (DictionaryTable) man.initTable(gord);
+        DictionaryTable table = man.initTable(gord);
         table.reloadForce();
 
         startTime = System.currentTimeMillis();
-        List<DictionaryEntry> entries = table.filter().tags(tags.split(",")).get();
+        List<GorDictionaryEntry> entries = table.filter().tags(tags.split(",")).get();
         long tableTagFilterTime = System.currentTimeMillis() - startTime;
         Assert.assertEquals("Selection failed", tags.split(",").length, entries.size());
         log.info("Finding entries with dictionary table by tags from large dict (already loaded): {}", tableTagFilterTime);
@@ -466,7 +468,7 @@ public class UTestTableManager {
         String[] tags = new String[]{"PN1000", "PN10000", "PN500000", "PN900000"};
 
         TableManager man = new TableManager();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
+        DictionaryTable table = man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         long startTime = System.currentTimeMillis();
         String s1 = table.getSignature(tags);
         long t1 = System.currentTimeMillis() - startTime;
@@ -493,7 +495,7 @@ public class UTestTableManager {
         String name = "testSignatureOfLargeDictionaryManyTags";
 
         TableManager man = new TableManager();
-        DictionaryTable table = (DictionaryTable) man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
+        DictionaryTable<DictionaryEntry> table = man.initTable(Paths.get("../../testing/data/1m/1m.gord"));
         Random r = new Random();
         String[] tags = table.getAllActiveTags().stream().filter(t -> r.nextFloat() > 0.9).collect(Collectors.toList()).toArray(new String[0]);  // Randomly pick 10% of the tags..
 
@@ -513,11 +515,11 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toString()).build();
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        DictionaryTable dummyTable = new GorDictionaryTable.Builder<>(workDirPath.resolve("dummy").toString()).build();
+        GorDictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new GorDictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new GorDictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
-        DictionaryTable table1 = TestUtils.createDictionaryWithData(name + 1, workDirPath, new HashMap<>());
+        GorDictionaryTable table1 = TestUtils.createDictionaryWithData(name + 1, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table1, false, BucketManager.BucketPackLevel.NO_PACKING);
     }
 
@@ -531,13 +533,13 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        DictionaryTable dummyTable = new GorDictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
+        GorDictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new GorDictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new GorDictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         man.setBucketSize(1);
         man.setMinBucketSize(1);
-        DictionaryTable table2 = TestUtils.createDictionaryWithData(name + 2, workDirPath, new HashMap<>());
+        GorDictionaryTable table2 = TestUtils.createDictionaryWithData(name + 2, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table2, true, BucketManager.BucketPackLevel.NO_PACKING);
         Assert.assertEquals("Number of used buckets wrong", table2.filter().get().size(), table2.filter().get().stream().map(e -> e.getBucket()).filter(b -> b != null).distinct().count());
     }
@@ -552,13 +554,13 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        GorDictionaryTable dummyTable = new GorDictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
+        GorDictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new GorDictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new GorDictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         man.setBucketSize(4);
         man.setMinBucketSize(2);
-        DictionaryTable table3 = TestUtils.createDictionaryWithData(name + 3, workDirPath, new HashMap<>());
+        GorDictionaryTable table3 = TestUtils.createDictionaryWithData(name + 3, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table3, true, BucketManager.BucketPackLevel.NO_PACKING);
         Assert.assertEquals("Number of used buckets wrong", table3.selectAll().size() / 2, table3.filter().get().stream().map(e -> e.getBucket()).filter(b -> b != null).distinct().count());
     }
@@ -573,14 +575,14 @@ public class UTestTableManager {
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
         TableManager man = new TableManager();
-        DictionaryTable dummyTable = new DictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
+        GorDictionaryTable dummyTable = new GorDictionaryTable.Builder<>(workDirPath.resolve("dummy").toUri()).build();
         dummyTable.setBucketize(true);
-        DictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new DictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new DictionaryEntry[size]);
+        GorDictionaryEntry[] entries = dataFiles.keySet().stream().map(k -> new GorDictionaryEntry.Builder(dataFiles.get(k).get(0).toString(), dummyTable.getRootPath()).alias(k).build()).toArray(size -> new GorDictionaryEntry[size]);
         String[] pns = dataFiles.keySet().toArray(new String[0]);
 
         man.setBucketSize(4);
         man.setMinBucketSize(2);
-        DictionaryTable table4 = TestUtils.createDictionaryWithData(name + 4, workDirPath, new HashMap<>());
+        GorDictionaryTable table4 = TestUtils.createDictionaryWithData(name + 4, workDirPath, new HashMap<>());
         testRepeatedInsertDeleteHelper(man, entries, pns, table4, true, BucketManager.BucketPackLevel.FULL_PACKING);
         Assert.assertEquals("Number of used buckets wrong", table4.selectAll().size() / 4 + (table4.selectAll().size() % 4) / 2,
                 table4.filter().get().stream().map(e -> e.getBucket()).filter(b -> b != null).distinct().count());
@@ -656,7 +658,7 @@ public class UTestTableManager {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFile4}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<GorDictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);
@@ -733,7 +735,7 @@ public class UTestTableManager {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFile4});
 
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<GorDictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFile1 + "\tA\n" + testFile2 + "\tB\n" + testFile4 + "\tD\n", result);

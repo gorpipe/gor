@@ -32,7 +32,7 @@ import gorsat.process.GorPipeMacros;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.SlowTests;
 import org.gorpipe.test.utils.FileTestUtils;
@@ -82,7 +82,7 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
@@ -147,7 +147,7 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
@@ -176,7 +176,7 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
@@ -205,7 +205,7 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         Path dictionaryPath = Path.of(table.getPath());
 
         // Create the partgor
@@ -234,7 +234,7 @@ public class UTestPartGor {
         TableManager man = new TableManager();
         man.setMinBucketSize(10);
         man.setBucketSize(50);
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         String dictionaryPath = table.getPath();
 
         man.bucketize(dictionaryPath, BucketManager.BucketPackLevel.NO_PACKING, 8, 10000, null);

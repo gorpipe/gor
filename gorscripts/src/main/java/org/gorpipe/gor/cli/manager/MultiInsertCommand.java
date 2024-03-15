@@ -25,9 +25,10 @@ package org.gorpipe.gor.cli.manager;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import picocli.CommandLine;
 
@@ -98,15 +99,15 @@ public class MultiInsertCommand extends CommandBucketizeOptions implements Runna
         DictionaryTable table = tm.initTable(dictionaryFile.toString());
         try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
             if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
-                table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
+                table.setProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
             }
 
             table.insert(IntStream.range(0, files.size())
-                    .mapToObj(i -> new DictionaryEntry.Builder<>(PathUtils.relativize(table.getRootPath(), files.get(i)), table.getRootPath())
+                    .mapToObj(i -> new GorDictionaryEntry.Builder<>(PathUtils.relativize(table.getRootPath(), files.get(i)), table.getRootPath())
                             .range(GenomicRange.parseGenomicRange(ranges.get(i)))
                             .alias(aliases.get(i))
                             .tags(new String[]{tags.get(i)})
-                            .build()).toArray(DictionaryEntry[]::new));
+                            .build()).toArray(GorDictionaryEntry[]::new));
             trans.commit();
         }
     }

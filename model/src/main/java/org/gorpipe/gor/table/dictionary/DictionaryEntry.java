@@ -23,102 +23,80 @@
 package org.gorpipe.gor.table.dictionary;
 
 import com.google.common.base.Strings;
-import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.gor.table.util.GenomicRange;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.nio.file.Path;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.gorpipe.gor.table.util.PathUtils.relativize;
+import static org.gorpipe.gor.table.util.PathUtils.resolve;
 
 /**
- * Line from gor dictionary (GORD).
+ * Class that represent one table entry.
  * <p>
  * Created by gisli on 22/08/16.
- * TODO:  Dictinoary entry and SourceRef are almost the samething. DictionaryEntry is basically source ref stored in dict.  Can we combine.  What about SourceReference.
  */
-public class DictionaryEntry extends TableEntry {
+public class DictionaryEntry {
 
-    private final boolean sourceInserted;
+    private static final Logger log = LoggerFactory.getLogger(DictionaryEntry.class);
+
+    protected static final String[] EMPTY_TAGS_LIST = new String[]{};
+
+    public static final DictionaryEntry dummy = new DictionaryEntry("dummy", "dummy", "dummy", new String[]{}, "dummy", false, false);
 
     // Use strings for performance reasons (using Path or URI takes twice as long to parse).
+    private final String contentRelative;              // Normalized URI as specified in the table (normalized and absolute or relative to the table).
+    private final String alias;
+    private final String[] tags;                       // For performance use string array.
     protected String bucketLogical;
     protected boolean isDeleted;
 
+    private final boolean sourceInserted;
+
+
     // Copy constructor.
     public DictionaryEntry(DictionaryEntry entry) {
-        super(entry);
+        this.contentRelative = entry.contentRelative;
+        this.alias = entry.alias;
+        this.tags = entry.getTags();
+
         this.sourceInserted = entry.sourceInserted;
         this.bucketLogical = entry.bucketLogical;
         this.isDeleted = entry.isDeleted;
+
     }
 
-    protected DictionaryEntry(String contentLogical, String rootUri, String alias, String[] tags, GenomicRange range, String bucket, boolean isDeleted, boolean sourceInserted) {
-        super(contentLogical, rootUri, alias, tags, range);
+    /**
+     * Create new table entry.
+     *
+     * @param contentLogical path to the content file, absolute or relative to the table root.  Normalized.
+     *                       Use table.normalize(table.relativ)
+     * @param rootUri        the parent folder of the table we are adding to.  Absolute path.
+     * @param alias          alias
+     * @param tags           tags associated with the entry.
+     * @param bucket         bucket file, normalized and relative to table or absolute.
+     * @param isDeleted      true if the entry is deleted.
+     * @param sourceInserted
+     */
+     public DictionaryEntry(String contentLogical, String rootUri, String alias, String[] tags, String bucket, boolean isDeleted, boolean sourceInserted) {
+        assert rootUri != null;
+
+        this.contentRelative = contentLogical;
+        this.alias = alias;
+        this.tags = tags != null ? tags : EMPTY_TAGS_LIST;
+
         this.sourceInserted = sourceInserted;
         this.bucketLogical = bucket;
         this.isDeleted = isDeleted;
-    }
 
-    public boolean isSourceInserted() {
-        return sourceInserted;
-    }
-
-    /**
-     * Get unique key for the entry.
-     * NOTE: If they fields used to generate the key are changed then the entries must be deleted and reinserted.
-     */
-    @Override
-    public String getKey() {
-        // We keep deleted entries around for the the bucket (to know what to exclude).
-        // So for each deleted entry we need to add the bucket to the key.
-        if (isDeleted()) {
-            return super.getKey() + getBucket();
-        } else {
-            return super.getKey();
-        }
-    }
-
-    /**
-     * Get the bucket (relative path)
-     *
-     * @return  the bucket.
-     */
-    public String getBucket() {
-        return this.bucketLogical;
-    }
-
-    /**
-     * Get the buckets real path.
-     *
-     * @return the buckets real path.
-     */
-    public String getBucketReal(String rootUri) {
-        return getBucket() != null ? PathUtils.resolve(rootUri, getBucket()) : null;
-    }
-
-    /**
-     * Set the bucket logical path.
-     *
-     * @param bucket bucket file, normalized and relative to table or absolute.
-     */
-    protected void setBucket(String bucket) {
-        this.bucketLogical = bucket;
-    }
-
-    public boolean hasBucket() {
-        return !Strings.isNullOrEmpty(getBucket());
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.isDeleted = deleted;
     }
 
     /**
@@ -155,7 +133,7 @@ public class DictionaryEntry extends TableEntry {
         final boolean lineDeleted = flags != null && flags.toLowerCase().contains("d");
         final String alias = columns.size() > 1 ? columns.get(1) : null;
 
-        Builder<DictionaryEntry.Builder> builder = (DictionaryEntry.Builder)new Builder<>(file, rootUri).needsRelativize(needsRelativize);
+        DictionaryEntry.Builder<DictionaryEntry.Builder> builder = new DictionaryEntry.Builder<>(file, rootUri).needsRelativize(needsRelativize);
         builder.bucket(bucketFileName).alias(alias);
 
         if (lineDeleted) {
@@ -163,27 +141,94 @@ public class DictionaryEntry extends TableEntry {
         }
 
         if (columns.size() > 2) {
-            if (columns.size() >= 6) {
-                GenomicRange range = GenomicRange.parseGenomicRange(String.join("\t", columns.subList(2, 6)));
-                builder.range(range);
-
-                if (columns.size() == 7) {
-                    // support both comma separadted and tab separated tags
-                    if (columns.get(6).indexOf(',') >= 0) {
-                        builder.tags(StringUtil.split(columns.get(6), ','));
-                    } else {
-                        builder.tags(columns.subList(6, columns.size()));
-                    }
+            if (columns.size() == 3) {
+                // support both comma separadted and tab separated tags
+                if (columns.get(2).indexOf(',') >= 0) {
+                    builder.tags(StringUtil.split(columns.get(2), ','));
+                } else {
+                    builder.tags(columns.subList(2, columns.size()));
                 }
-            } else {
-                throw new GorDataException("Error initializing query. Expected 4 columns for genomic range specification!");
             }
         }
 
         return builder.build();
     }
 
-    @Override
+    public static DictionaryEntry.Builder getBuilder(String contentLogical, String rootUri) {
+        return new Builder(contentLogical, rootUri);
+    }
+
+    public boolean isSourceInserted() {
+        return sourceInserted;
+    }
+
+    /**
+     * Get unique key for the entry.
+     * NOTE: If they fields used to generate the key are changed then the entries must be deleted and reinserted.
+     */
+    public String getKey() {
+        // We keep deleted entries around for the the bucket (to know what to exclude).
+        // So for each deleted entry we need to add the bucket to the key.
+        var key = this.contentRelative + ":" + alias;
+        if (isDeleted()) {
+            return key + getBucket();
+        } else {
+            return key;
+        }
+    }
+
+    /**
+     * Get the bucket (relative path)
+     *
+     * @return  the bucket.
+     */
+    public String getBucket() {
+        return this.bucketLogical;
+    }
+
+    /**
+     * Get the buckets real path.
+     *
+     * @return the buckets real path.
+     */
+    public String getBucketReal(String rootUri) {
+        return getBucket() != null ? PathUtils.resolve(rootUri, getBucket()) : null;
+    }
+
+    /**
+     * Set the bucket logical path.
+     *
+     * @param bucket bucket file, normalized and relative to table or absolute.
+     */
+    public void setBucket(String bucket) {
+        this.bucketLogical = bucket;
+    }
+
+    public boolean hasBucket() {
+        return !Strings.isNullOrEmpty(getBucket());
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.isDeleted = deleted;
+    }
+
+    /**
+     * Hash code used to search speed up, not unique for the entry.
+     *
+     * @return non-unique hash code.
+     */
+    public int getSearchHash() {
+        return contentRelative.hashCode();
+    }
+    
+    public String formatEntry() {
+        return formatEntryNoNewLine() + "\n";
+    }
+
     public String formatEntryNoNewLine() {
         StringBuilder sb = new StringBuilder();
 
@@ -201,10 +246,6 @@ public class DictionaryEntry extends TableEntry {
         sb.append('\t');
         sb.append(getAlias() != null ? getAlias() : "");
 
-        // Range columns
-        sb.append('\t');
-        getRange().formatAsTabDelimited(sb);
-
         sb.append('\t');
         if (getTags() != null && getTags().length > 0) {
             sb.append(String.join(",", getTags()));
@@ -217,15 +258,66 @@ public class DictionaryEntry extends TableEntry {
         return line;
     }
 
+
+    public String getContentRelative() {
+        return contentRelative;
+    }
+
+    public String getContentReal(String rootUri) {
+        return resolve(rootUri, getContentRelative());
+    }
+
+    public String getContent() {
+        return getContentRelative();
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public String[] getTags() {
+        return tags;
+    }
+
+    /**
+     * Correctly combine tags and the alias for filtering (in most cases should be used rather than getTags or getAlias)
+     */
+    public String[] getFilterTags() {
+        String[] filterTags;
+        if (tags != null && tags.length > 0) {
+            filterTags = tags;
+        } else if (alias != null) {
+            filterTags = new String[]{alias};
+        } else {
+            filterTags = EMPTY_TAGS_LIST;
+        }
+        return filterTags;
+    }
+
+    public static DictionaryEntry copy(DictionaryEntry template) {
+        try {
+            Class<? extends DictionaryEntry> clazz = template.getClass();
+            Constructor<? extends DictionaryEntry> constructor = clazz.getDeclaredConstructor(clazz);
+            constructor.setAccessible(true);
+            return constructor.newInstance(template);
+        } catch (Exception e) {
+            throw new GorSystemException("Could not copy table entry", e);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DictionaryEntry)) return false;
-        if (!super.equals(o)) return false;
-        DictionaryEntry that = (DictionaryEntry) o;
-        // We only include the bucket if the entry is deleted (do keep track of delete entries).
-        return this.isDeleted == that.isDeleted
-                && (this.isDeleted ? Objects.equals(this.bucketLogical, that.bucketLogical) : true);
+
+        DictionaryEntry entry = (DictionaryEntry) o;
+
+        return this.getKey().equals(entry.getKey());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(this.getKey());
     }
 
     @Override
@@ -234,44 +326,81 @@ public class DictionaryEntry extends TableEntry {
     }
 
     protected String toStringFields() {
-        return super.toStringFields() +
-                ", sourceInserted=" + sourceInserted +
+        return "contentRelative='" + contentRelative + '\'' +
+                ", alias='" + alias + '\'' +
+                ", tags=" + Arrays.toString(tags) +
                 ", bucketLogical='" + bucketLogical + '\'' +
+                ", sourceInserted=" + sourceInserted +
                 ", isDeleted=" + isDeleted;
     }
 
-    public static class Builder<B extends TableEntry.Builder> extends TableEntry.Builder<Builder<B>> {
+    public static class Builder<B extends Builder> {
+        protected String contentLogical;
+        protected String rootUri;
+        protected String alias;
+        protected List<String> tags = new ArrayList<>();
         protected String bucketLogical = null;
         protected boolean isDeleted = false;
-        private boolean sourceInserted = false;
+        protected boolean needsRelativize = true;
 
+        protected boolean sourceInserted = false;
+
+        /**
+         * Create entry builder.
+         *
+         * @param contentLogical entry content, absolute or relative path to the current dir..
+         * @param rootUri        root URI for the table entry.
+         */
         public Builder(String contentLogical, String rootUri) {
-            super(contentLogical, rootUri);
+            this.contentLogical = contentLogical;
+            this.rootUri = rootUri;
         }
 
-        public Builder(Path contentLogical, String rootUri) {
-            super(contentLogical.toString(), rootUri);
+        @SuppressWarnings("unchecked")
+        protected final B self() {
+            return (B) this;
         }
 
-        public Builder<B> bucket(String bucketLogical) {
+        public B alias(String alias) {
+            this.alias = alias;
+            return self();
+        }
+
+        public B tags(List<String> tags) {
+            this.tags.addAll(tags.stream().filter(t -> t != null && t.length() > 0).collect(Collectors.toList()));
+            return self();
+        }
+
+        public B tags(String[] tags) {
+            this.tags.addAll(Arrays.stream(tags).filter(t -> t != null && t.length() > 0).collect(Collectors.toList()));
+            return self();
+        }
+
+        public B bucket(String bucketLogical) {
             this.bucketLogical = bucketLogical;
             return self();
         }
 
-        public Builder<B> deleted() {
+        public B deleted() {
             this.isDeleted = true;
             return self();
         }
 
-        public Builder<B> sourceInserted(boolean val) {
+        public B sourceInserted(boolean val) {
             this.sourceInserted = val;
             return self();
         }
 
-        @Override
+        public B needsRelativize(boolean val) {
+            this.needsRelativize = val;
+            return self();
+        }
+
         public DictionaryEntry build() {
-            return new DictionaryEntry(!needsRelativize ? contentLogical : relativize(rootUri, contentLogical), rootUri, alias, tags != null ? tags.toArray(new String[0]) : null, range,
+            return new DictionaryEntry(!needsRelativize ? contentLogical : relativize(rootUri, contentLogical), rootUri, alias, tags != null ? tags.toArray(new String[0]) : null,
                     !needsRelativize ? bucketLogical : relativize(rootUri, bucketLogical), isDeleted, sourceInserted);
         }
+
+
     }
 }

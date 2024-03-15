@@ -11,7 +11,6 @@ import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.TableInfo;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Util;
@@ -32,10 +31,8 @@ import static org.gorpipe.gor.table.util.PathUtils.*;
  * Does not cover:
  * - building blocks/mechanism for updating table (including support for transactions and two phase commit).
  * - Loading of data/entries
- *
- * @param <T>
  */
-public abstract class TableInfoBase<T> implements TableInfo<T> {
+public abstract class TableInfoBase implements TableInfo {
 
     private static final Logger log = LoggerFactory.getLogger(TableInfoBase.class);
 
@@ -61,7 +58,8 @@ public abstract class TableInfoBase<T> implements TableInfo<T> {
      *
      * @param uri              path to the dictionary file.
      */
-    public TableInfoBase(String uri, FileReader inputFileReader) {
+    public TableInfoBase(String uri, FileReader inputFileReader, TableHeader header) {
+        this.header = header;
         var secureFileReader = inputFileReader != null ? inputFileReader : ProjectContext.DEFAULT_READER;
         DataSource source = secureFileReader.resolveUrl(uri);
 
@@ -83,19 +81,11 @@ public abstract class TableInfoBase<T> implements TableInfo<T> {
             this.path =  PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
             this.folderPath = rootUri;
         } else {
-            // Old school dict.
+            // Old school dict or file
             this.rootUri = normalize(PathUtils.getParent(realUri));
             this.path = PathUtils.resolve(rootUri, fileName);
             this.folderPath = PathUtils.resolve(rootUri, "." + this.name);
         }
-
-        this.header = new DictionaryTableMeta();
-
-        reload();
-    }
-
-    protected TableInfoBase(String uri) {
-        this(uri, null);
     }
 
     @Override
@@ -279,7 +269,7 @@ public abstract class TableInfoBase<T> implements TableInfo<T> {
         log.trace("Done validating file");
     }
 
-    protected void updateValidateHeader(String file) {
+    public void updateValidateHeader(String file) {
         // Validate that line matches header columns.
 
         TableHeader lineHeader = parseHeaderFromFile(file);
@@ -319,7 +309,7 @@ public abstract class TableInfoBase<T> implements TableInfo<T> {
      * @return new header object inferred from the table file.
      */
     protected TableHeader parseHeaderFromFile(String file) {
-        TableHeader newHeader = new TableHeader();
+        TableHeader newHeader = header.newLineHeader();
 
         try {
             String headerLine = fileReader.readHeaderLine(file);

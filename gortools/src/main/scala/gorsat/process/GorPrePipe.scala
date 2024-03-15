@@ -107,7 +107,7 @@ object GorPrePipe {
                 val subFiles = getUsedFiles(iteratorCommand, session)
                 usedFiles :::= subFiles
               } else {
-                if (inputArguments.exists(inputArgument => DataUtil.isGord(inputArgument) || DataUtil.isNord(inputArgument))) {
+                if (inputArguments.exists(inputArgument => DataUtil.isDictionary(inputArgument))) {
                   var tags: List[String] = List[String]()
                   if (CommandParseUtilities.hasOption(cargs, "-f")) {
                     tags = CommandParseUtilities.stringValueOfOption(cargs, "-f")
@@ -121,11 +121,11 @@ object GorPrePipe {
                     }
                   }
                   val dictFiles = inputArguments.collect {
-                    case s: String if (DataUtil.isGord(s) || DataUtil.isNord(s)) && !s.startsWith("-") =>
+                    case s: String if DataUtil.isDictionary(s) && !s.startsWith("-") =>
                       if (tags.isEmpty) "#gordict#" + s else "#gordict#" + s + "#gortags#" + tags.mkString(",")
                   }
                   val otherFiles = inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-") &&
-                    !(DataUtil.isGord(argumentEntry) || DataUtil.isNord(argumentEntry)))
+                    !DataUtil.isDictionary(argumentEntry))
 
                   usedFiles :::= otherFiles ::: dictFiles
                 } else if(isSql) {

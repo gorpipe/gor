@@ -25,6 +25,7 @@ package org.gorpipe.gor.cli.manager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryFilter;
 import picocli.CommandLine;
 
 import java.time.Duration;
@@ -50,12 +51,16 @@ public class DeleteCommand extends FilterOptions implements Runnable{
 
         String[] allFiles = (String[]) ArrayUtils.addAll(this.inputFiles.toArray(new String[0]), this.files.toArray(new String[0]));
         DictionaryTable table = tm.initTable(dictionaryFile.toString());
-        tm.delete(dictionaryFile.toString(), table.filter()
+        var filter = table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
                 .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
                 .tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)
                 .buckets(this.buckets.size() > 0 ? this.buckets.toArray(new String[0]) : null)
-                .chrRange(range)
-                .includeDeleted(this.includeDeleted));
+                .includeDeleted(this.includeDeleted);
+        if (filter instanceof GorDictionaryFilter) {
+            ((GorDictionaryFilter) filter).chrRange(range);
+        }
+
+        tm.delete(dictionaryFile.toString(), filter);
     }
 }

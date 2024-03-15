@@ -77,7 +77,7 @@ public class UTestGorpipe {
         String rfile = org.gorpipe.gor.driver.utils.TestUtils.getTestFile("/nor/simple.nor");
         String file = org.gorpipe.gor.driver.utils.TestUtils.getTestFile("/nor/simple.norz");
         List<String> result = query("nor " + file + " | where 1=1");
-        List<String> expected = Files.readAllLines(new File(rfile).toPath());
+        List<String> expected = query("nor " + rfile);
         Assert.assertEquals(expected, result);
     }
 

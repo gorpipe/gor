@@ -41,6 +41,10 @@ public class DataUtil {
                 || isNor(file);
     }
 
+    public static boolean isDictionary(String file) {
+        return isGord(file) || isNord(file) ;
+    }
+
     public static boolean isTxt(String file) {
         return DataType.isOfTypeOrLinksToType(file, DataType.TXT);
     }

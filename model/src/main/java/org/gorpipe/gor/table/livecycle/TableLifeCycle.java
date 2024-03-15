@@ -3,10 +3,8 @@ package org.gorpipe.gor.table.livecycle;
 
 /**
  * Interface to change tables.
- *
- * @param <T>
  */
-public interface TableLifeCycle<T>  {
+public interface TableLifeCycle  {
 
     /**
      * Intialize the table on disk.

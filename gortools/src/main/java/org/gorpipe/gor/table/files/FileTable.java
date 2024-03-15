@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  * The internal data is stored in temp files.
  *
  */
-public abstract class FileTable<T extends Row> extends TableInfoBase<T> implements Table<T> {
+public abstract class FileTable<T extends Row> extends TableInfoBase implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(FileTable.class);
 
@@ -59,7 +59,7 @@ public abstract class FileTable<T extends Row> extends TableInfoBase<T> implemen
     }
 
     public FileTable(String uri, FileReader inputFileReader) {
-        super(uri, inputFileReader);
+        super(uri, inputFileReader, new TableHeader());
         init();
     }
 

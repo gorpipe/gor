@@ -4,6 +4,8 @@ import gorsat.TestUtils;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.test.IntegrationTests;
@@ -107,7 +109,7 @@ public class ITestTableManager {
                 .minBucketSize(2)
                 .build();
 
-        DictionaryTable table = man.initTable(dictPath);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictPath);
         table.setUseHistory(false);
         table.setValidateFiles(false);
 
@@ -191,7 +193,7 @@ public class ITestTableManager {
         String testFolder = PathUtils.resolve(projectRoot, name);
         try {
             String dictPath = createSmallS3Dict(testFolder);
-            new DictionaryTable.Builder<>(dictPath).fileReader(s3FileReader).useHistory(false).build().save();
+            new GorDictionaryTable.Builder<>(dictPath).fileReader(s3FileReader).useHistory(false).build().save();
 
             long time = System.currentTimeMillis();
 

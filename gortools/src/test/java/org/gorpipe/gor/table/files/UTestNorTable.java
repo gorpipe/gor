@@ -1,7 +1,7 @@
 package org.gorpipe.gor.table.files;
 
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -155,7 +155,7 @@ public class UTestNorTable {
 
         NorTable<Row> table = new NorTable<>(norFile.toString());
 
-        table.insertEntries(List.of((DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toString()).alias("A").build()));
+        table.insertEntries(List.of((GorDictionaryEntry) new GorDictionaryEntry.Builder("input1.nor",  workDirPath.toString()).alias("A").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"A", "B", "ref"}, table.getColumns());
@@ -185,7 +185,7 @@ public class UTestNorTable {
         NorTable<Row> table = new NorTable<>(norFile.toString());
 
         table.insertEntries(List.of(
-                (DictionaryEntry) new DictionaryEntry.Builder("input1.nor",  workDirPath.toString()).alias("A").build()));
+                (GorDictionaryEntry) new GorDictionaryEntry.Builder("input1.nor",  workDirPath.toString()).alias("A").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"A", "B", "ref"}, table.getColumns());

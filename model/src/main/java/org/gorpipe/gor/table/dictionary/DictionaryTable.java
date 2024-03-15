@@ -25,9 +25,9 @@ package org.gorpipe.gor.table.dictionary;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.*;
+import org.gorpipe.gor.table.Table;
+import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.livecycle.TableBuilder;
-import org.gorpipe.gor.table.livecycle.TableTwoPhaseCommitSupport;
 import org.gorpipe.gor.table.util.TableLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,34 +36,30 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.gorpipe.gor.table.util.PathUtils.*;
+import static org.gorpipe.gor.table.util.PathUtils.relativize;
 
 /**
  * DictionaryTable.
  */
-public class DictionaryTable extends DictionaryTableReader implements Table<DictionaryEntry> {
+public abstract class DictionaryTable<T extends DictionaryEntry> extends DictionaryTableReader<T> implements Table<T> {
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryTable.class);
 
-    private TableTwoPhaseCommitSupport<DictionaryEntry> lifeCycleSupport;
+    private DictionaryTwoPhaseCommitSupport lifeCycleSupport;
 
-    public DictionaryTable(String path, FileReader fileReader) {
-        super(path, fileReader);
+    public DictionaryTable(String path, FileReader fileReader, TableHeader header, IDictionaryEntryFactory<T> factory) {
+        super(path, fileReader, header, factory);
         lifeCycleSupport = new DictionaryTwoPhaseCommitSupport(this);
 
         reload();
     }
 
-    public DictionaryTable(String path) {
-        this(path, null);
+    public DictionaryTable(String path, FileReader fileReader, IDictionaryEntryFactory<T> factory) {
+        this(path, fileReader, new DictionaryTableMeta(), factory);
     }
 
-    public DictionaryTable(Path path) {
-        this(path.toUri().toString(), null);
-    }
-    
     public DictionaryTable(Builder builder) {
-        this(builder.path, builder.fileReader);
+        this(builder.path, builder.fileReader, builder.header, (IDictionaryEntryFactory<T>) builder.factory);
 
         if (builder.validateFiles != null) {
             lifeCycleSupport.setValidateFiles(builder.validateFiles);
@@ -169,9 +165,9 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
     }
 
     @Override
-    public void insert(Collection<DictionaryEntry> lines) {
+    public void insert(Collection<T> lines) {
         int count = 0;
-        for (DictionaryEntry line : lines) {
+        for (T line : lines) {
             count++;
             if (count % 1000 == 0) {
                 log.info("Inserting line {} of {}", count, lines.size());
@@ -189,14 +185,14 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
 
     @Override
     public void insert(String... lines) {
-        List<DictionaryEntry> entries = lineStringsToEntries(lines);
+        List<T> entries = lineStringsToEntries(lines);
         insert(entries);
     }
 
     
     @Override
-    public void delete(Collection<DictionaryEntry> lines) {
-        for (DictionaryEntry line : lines) {
+    public void delete(Collection<T> lines) {
+        for (T line : lines) {
             tableEntries.delete(line, true);
             lifeCycleSupport.logAfter(TableLog.LogAction.DELETE, "", line.formatEntryNoNewLine());
         }
@@ -205,18 +201,18 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
 
     @Override
     public void delete(String... lines) {
-        List<DictionaryEntry> entries = lineStringsToEntries(lines);
+        List<T> entries = lineStringsToEntries(lines);
         delete(entries);
     }
 
-    private List<DictionaryEntry> lineStringsToEntries(String[] lines) {
-        List<DictionaryEntry> entries = new ArrayList<>();
+    private List<T> lineStringsToEntries(String[] lines) {
+        List<T> entries = new ArrayList<>();
         for (String line : lines) {
             line = line.stripLeading();
             if (line.isEmpty() || line.startsWith("#")) {
                 continue;
             }
-            entries.add(DictionaryEntry.parseEntry(line, getRootPath(), true));
+            entries.add(factory.parseEntry(line, getRootPath(), true));
         }
         return entries;
     }
@@ -226,10 +222,10 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
      *
      * @param lines lines to be removed.
      */
-    public void removeFromBucket(Collection<DictionaryEntry> lines) {
+    public void removeFromBucket(Collection<T> lines) {
         try {
-            for (DictionaryEntry line : lines) {
-                DictionaryEntry lineToRemoveFrom = tableEntries.findLine(line);
+            for (T line : lines) {
+                T lineToRemoveFrom = tableEntries.findLine(line);
                 if (lineToRemoveFrom != null) {
                     String bucket = lineToRemoveFrom.getBucket();
                     if (lineToRemoveFrom.isDeleted()) {
@@ -252,7 +248,7 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
      * @param lines lines to be removed.
      */
     @SafeVarargs
-    public final void removeFromBucket(DictionaryEntry... lines) {
+    public final void removeFromBucket(T... lines) {
         removeFromBucket(Arrays.asList(lines));
     }
 
@@ -264,10 +260,10 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
      * @param bucket bucket to add to.
      * @param lines  files to select.
      */
-    public void addToBucket(String bucket, List<DictionaryEntry> lines) {
+    public void addToBucket(String bucket, List<T> lines) {
         String bucketLogical = relativize(getRootPath(), bucket);
-        for (DictionaryEntry line : lines) {
-            DictionaryEntry lineToUpdate = tableEntries.findLine(line);
+        for (T line : lines) {
+            T lineToUpdate = tableEntries.findLine(line);
             if (lineToUpdate != null) {
                 if (lineToUpdate.hasBucket() && !lineToUpdate.getBucket().equals(bucketLogical)) {
                     throw new GorDataException(String.format("File %s is already in bucket %s and can not be added to bucket %s",
@@ -277,7 +273,7 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
                 lifeCycleSupport.logAfter(TableLog.LogAction.ADDTOBUCKET, bucketLogical, line.formatEntryNoNewLine());
             } else {
                 // No line found, must have been deleted.  To be able to use the bucket we must add a new line.
-                DictionaryEntry newDeletedLine = (DictionaryEntry) TableEntry.copy(line);
+                T newDeletedLine = factory.copy(line);
                 newDeletedLine.setDeleted(true);
                 newDeletedLine.setBucket(bucketLogical);
                 tableEntries.insert(newDeletedLine, false);
@@ -287,18 +283,18 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
     }
 
     @SafeVarargs
-    public final void addToBucket(String bucket, DictionaryEntry... lines) {
+    public final void addToBucket(String bucket, T... lines) {
         addToBucket(bucket, Arrays.asList(lines));
     }
 
     @Override
     public void insertEntries(Collection<DictionaryEntry> entries) {
-        insert(entries);
+        insert(entries.stream().map(e -> (T)e).toList());
     }
 
     @Override
     public void deleteEntries(Collection<DictionaryEntry> entries) {
-        delete(entries);
+        delete(entries.stream().map(e -> (T)e).toList());
     }
 
     /**
@@ -306,19 +302,20 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
      *             relative to the dictionary root.
      */
     public void insert(Map<String, List<String>> data) {
-        List<DictionaryEntry> lines = new ArrayList<>();
+        List<T> lines = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : data.entrySet()) {
             for (String path : entry.getValue()) {
-                lines.add(new DictionaryEntry.Builder<>(path, getRootPath()).alias(entry.getKey()).build());
+                lines.add((T)factory.getBuilder(path, getRootPath()).alias(entry.getKey()).build());
             }
         }
         insert(lines);
     }
 
     public static class Builder<B extends Builder<B>> extends TableBuilder<B> {
-
         protected String sourceColumn;
         protected Boolean uniqueTags;
+        protected Object factory;
+        protected TableHeader header;
 
         public Builder(String path) {
             super(path);
@@ -342,8 +339,9 @@ public class DictionaryTable extends DictionaryTableReader implements Table<Dict
             return self();
         }
 
-        public DictionaryTable build() {
-            return new DictionaryTable(this);
+        public B factory(IDictionaryEntryFactory factory) {
+            this.factory = factory;
+            return self();
         }
     }
 }

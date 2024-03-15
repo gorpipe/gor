@@ -26,8 +26,6 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
-
 /**
  * Tests for DataUtil.
  *
@@ -90,6 +88,14 @@ public class UTestDataUtil {
         Assert.assertTrue(DataUtil.isNorSource("foo.nor.link"));
         Assert.assertTrue(DataUtil.isNorSource("foo.norz.link"));
         Assert.assertTrue(DataUtil.isNorSource("foo.tsv.link"));
+
+        // isDictionary
+        Assert.assertFalse(DataUtil.isDictionary("foo.txt"));
+        Assert.assertTrue(DataUtil.isDictionary("foo.gord"));
+        Assert.assertTrue(DataUtil.isDictionary("foo.gord.link"));
+        Assert.assertFalse(DataUtil.isDictionary("foo.txt"));
+        Assert.assertTrue(DataUtil.isDictionary("foo.nord"));
+        Assert.assertTrue(DataUtil.isDictionary("foo.nord.link"));
 
         // isTxt
         Assert.assertFalse(DataUtil.isTxt("foo.gor"));

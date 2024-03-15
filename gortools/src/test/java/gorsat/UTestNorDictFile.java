@@ -22,10 +22,9 @@
 
 package gorsat;
 
-import gorsat.process.NordFile;
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.session.ProjectContext;
+import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,8 +34,9 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
 
 /**
  * Created by sigmar on 11/05/16.
@@ -51,34 +51,24 @@ public class UTestNorDictFile {
     }
 
     @Test
-    public void loadGenericNordFile() throws IOException {
+    public void loadGenericNordDict() throws IOException {
         var path = UTestNorDictionary.createTestFiles(10, 10, true, false, true, false);
-        var nordFile = new NordFile();
-        nordFile.load(ProjectContext.DEFAULT_READER, Path.of(path, "test.nord"), false, new String[0], false);
-
-        Assert.assertEquals(10, nordFile.entries().size());
-        Assert.assertEquals(1, nordFile.properties().size());
+        var nordDict = new NorDictionaryTable( Path.of(path, "test.nord").toString(), ProjectContext.DEFAULT_READER);
+        Assert.assertEquals(10, nordDict.getEntries().size());
+        Assert.assertEquals("phenotype", nordDict.getSourceColumn());
     }
 
-    @Test(expected = GorResourceException.class)
-    public void loadWithMissingNordFile() throws IOException {
+    @Test()
+    public void loadWithMissingNordDict() throws IOException {
         var path = UTestNorDictionary.createTestFiles(10, 10, true, false, true, false);
-        var nordFile = new NordFile();
-        nordFile.load(ProjectContext.DEFAULT_READER, Path.of(path, "test_not_there.nord"), false, new String[0], false);
+        var nordDict = new NorDictionaryTable(Path.of(path, "test_not_there.nord").toString(), ProjectContext.DEFAULT_READER);
+        Assert.assertEquals(0, nordDict.getEntries().size());
     }
 
-    @Test(expected = GorParsingException.class)
+    @Test(expected = GorDataException.class)
     public void loadWithMissingFiles() throws IOException {
         var path = UTestNorDictionary.createTestFiles(1, 10, true, false, true, false);
-        var nordFile = new NordFile();
-        nordFile.load(ProjectContext.DEFAULT_READER, Path.of(path, "test.nord"), true, new String[] {"a", "b", "c"}, false);
-    }
-
-    @Test
-    public void loadFromFileList() throws IOException {
-        var path = UTestNorDictionary.createTestFiles(10, 1, true, false, true, false);
-        var nordFile = NordFile.fromList(Files.list(Path.of(path, "files")).map(Path::toString).toArray(String[]::new));
-        Assert.assertEquals(10, nordFile.entries().size());
-        Assert.assertEquals(0, nordFile.properties().size());
+        var nordDict = new NorDictionaryTable(Path.of(path, "test.nord").toString(), ProjectContext.DEFAULT_READER);
+        nordDict.getOptimizedLines(new HashSet<>(Arrays.asList("a", "b", "c")), false, false);
     }
 }

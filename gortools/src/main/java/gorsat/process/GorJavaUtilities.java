@@ -30,9 +30,10 @@ import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.providers.rows.sources.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.TableFactory;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.Strings;
@@ -521,7 +522,8 @@ public class GorJavaUtilities {
     }
 
     private static void writeHeader(FileReader fileReader, Writer dictionarypath, String[] columns, boolean lineFilter) throws IOException {
-        var tableheader = new DictionaryTableMeta();
+        // TODO: handle nord
+        var tableheader = new GorDictionaryTableMeta();
 
         if (columns != null) {
             tableheader.setColumns(columns);
@@ -583,7 +585,7 @@ public class GorJavaUtilities {
                     // Assume we have all data in the root folder (note relatives does not work here for S3Shared).
                     var outfilename = PathUtils.getFileName(p);
                     var outfile = FilenameUtils.removeExtension(outfilename);
-                    var builder = new DictionaryEntry.Builder(outfile, outfolderpath);
+                    var builder = new GorDictionaryEntry.Builder(outfile, outfolderpath);
                     var i = ai.incrementAndGet();
                     builder.alias(Integer.toString(i));
                     builder.range(meta.getRange());
@@ -609,8 +611,8 @@ public class GorJavaUtilities {
     public static Optional<String[]> parseDictionaryColumn(String[] dictList, FileReader fileReader) {
         return Arrays.stream(dictList).mapMulti((BiConsumer<String, Consumer<String[]>>) (df, consumer) -> {
             var dflow = df.toLowerCase();
-            if (DataUtil.isGord(dflow) || DataUtil.isNord(dflow)) {
-                var dt = new DictionaryTable(df, fileReader);
+            if (DataUtil.isDictionary(dflow)) {
+                var dt = TableFactory.getTable(dflow, fileReader);
                 var cols = dt.getColumns();
                 if (cols!=null) consumer.accept(cols);
             } else {

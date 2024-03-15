@@ -1,6 +1,5 @@
 package org.gorpipe.gor.table.livecycle;
 
-import org.gorpipe.gor.table.TableInfo;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 
 import java.util.Arrays;

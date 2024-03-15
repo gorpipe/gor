@@ -9,8 +9,6 @@ import java.util.stream.Stream;
  *
  * The table object can not be muted using this interface.
  *
- * @param <T>  the line type
- *
  * Notes:
  * 1. On the difference between lines and rows:
  *    Line:  What we work with when inserting and deleting from the table.  The can either be rows (data rows,
@@ -18,7 +16,7 @@ import java.util.stream.Stream;
  *           of dictionaries).
  *    Row:   The data rows, i.e. what the user gets when goring the table.
  */
-public interface TableInfo<T> {
+public interface TableInfo {
 
     /**
      * @return name of this table.
@@ -70,5 +68,7 @@ public interface TableInfo<T> {
     String formatHeader();
 
     FileReader getFileReader();
+
+    void updateValidateHeader(String file);
 
 }

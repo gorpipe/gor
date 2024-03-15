@@ -27,7 +27,6 @@ import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -40,7 +39,6 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,7 +55,7 @@ public class GorCliManagerUtils {
     public GorCliManagerUtils() {
     }
     
-    public void testBucketDirsHelper(TableManager man, DictionaryTable table, List<String> bucketDirs, int fileCount) throws IOException {
+    public void testBucketDirsHelper(TableManager man, DictionaryTable<DictionaryEntry> table, List<String> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (String bucketDir : bucketDirs) {
             Path bucketDirFull = Path.of(resolve(table.getRootPath(), bucketDir));
@@ -168,22 +166,6 @@ public class GorCliManagerUtils {
             return waitForProcessPlus(p);
         } else {
             return "";
-        }
-    }
-
-    void waitForBucketizeToStart(DictionaryTable table, Process p) throws InterruptedException, IOException, ExecutionException {
-        long startTime = System.currentTimeMillis();
-        while (true) {
-            try (TableLock bucketizeLock = TableLock.acquireWrite(TableManager.DEFAULT_LOCK_TYPE, table, "bucketize", Duration.ofMillis(100))) {
-                if (!bucketizeLock.isValid()) {
-                    break;
-                }
-            }
-            if (System.currentTimeMillis() - startTime > 5000) {
-                log.info(waitForProcessPlus(p));
-                Assert.assertTrue("Test not setup correctly, thread did not get bucketize lock, took too long.", false);
-            }
-            Thread.sleep(100);
         }
     }
 }

@@ -5,6 +5,7 @@ import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
@@ -13,14 +14,13 @@ import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
@@ -104,11 +104,11 @@ public class ITestS3Table {
 
     private void insertIntoTableGordFile() throws IOException {
         gordFile = workDirPath.resolve("some_project").resolve("dict.gord");
-        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
+        GorDictionaryTable dict = new GorDictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
     }
 
@@ -125,7 +125,7 @@ public class ITestS3Table {
     public void testBucketizeLocalTableS3DataLocalBuckets() throws IOException {
         insertIntoTableGordFile();
 
-        DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).validateFiles(false).build();
+        DictionaryTable table = new GorDictionaryTable.Builder<>(gordFile).fileReader(fileReader).validateFiles(false).build();
 
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
         man.bucketize(table.getPath(), BucketManager.BucketPackLevel.NO_PACKING, 1, 1000, null);
@@ -146,7 +146,7 @@ public class ITestS3Table {
     public void testBucketizeLocalTableS3DataS3Buckets()  throws IOException {
         insertIntoTableGordFile();
 
-        DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
+        DictionaryTable table = new GorDictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
         table.setProperty(HEADER_BUCKET_DIRS_KEY, "s3://gdb-unit-test-data/tmp/buckets/");
         table.save();
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
@@ -179,7 +179,7 @@ public class ITestS3Table {
 
         fileReader.createDirectoryIfNotExists("s3data://project/user_data/buckets/");
 
-        DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
+        DictionaryTable table = new GorDictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
         table.setProperty(HEADER_BUCKET_DIRS_KEY, "s3data://project/user_data/buckets/");
         table.save();
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
@@ -213,7 +213,7 @@ public class ITestS3Table {
 
         //fileReader.createDirectoryIfNotExists("s3data://project/user_data/buckets/");
 
-        DictionaryTable table = new DictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
+        DictionaryTable table = new GorDictionaryTable.Builder<>(gordFile).fileReader(fileReader).build();
         table.setProperty(HEADER_BUCKET_DIRS_LOCATION_KEY, "s3data://project");
         table.save();
         TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).fileReader(fileReader).build();
@@ -247,11 +247,11 @@ public class ITestS3Table {
     private String createDictionary(String parentPath, boolean useHistory) throws IOException {
         String dictPath = parentPath +  "/dict.gord";
         fileReader.createDirectories(parentPath);
-        DictionaryTable dict = new DictionaryTable.Builder<>(dictPath).useHistory(useHistory).fileReader(fileReader).build();
+        DictionaryTable dict = new GorDictionaryTable.Builder<>(dictPath).useHistory(useHistory).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
 
         return dictPath;
@@ -260,11 +260,11 @@ public class ITestS3Table {
     private String createDictionaryFolder(String parentPath, boolean useHistory) throws IOException {
         String dictPath = parentPath +  "/dict.gord/";
         fileReader.createDirectories(dictPath);
-        DictionaryTable dict = new DictionaryTable.Builder<>(dictPath + DEFAULT_FOLDER_DICTIONARY_NAME).useHistory(useHistory).fileReader(fileReader).build();
+        DictionaryTable dict = new GorDictionaryTable.Builder<>(dictPath + DEFAULT_FOLDER_DICTIONARY_NAME).useHistory(useHistory).fileReader(fileReader).build();
 
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
-        dict.insert(new DictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_1, dict.getRootPath()).alias("D3_WGC053023D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_2, dict.getRootPath()).alias("D3_WGC053033D").build());
+        dict.insert(new GorDictionaryEntry.Builder<>(S3_FILE_3, dict.getRootPath()).alias("D3_WGC053043D").build());
         dict.save();
 
         return dictPath;
@@ -277,7 +277,7 @@ public class ITestS3Table {
         String dictPath = createDictionary(remoteTestDir, false);
 
         try {
-            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).useHistory(false).build();
+            DictionaryTable table = new GorDictionaryTable.Builder<>(dictPath).fileReader(fileReader).useHistory(false).build();
             Assert.assertEquals(remoteTestDir, table.getRootPath());
 
             TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
@@ -310,7 +310,7 @@ public class ITestS3Table {
         String dictPath = createDictionaryFolder(remoteTestDir, false);
 
         try {
-            DictionaryTable table = new DictionaryTable.Builder<>(dictPath).fileReader(fileReader).useHistory(false).build();
+            DictionaryTable table = new GorDictionaryTable.Builder<>(dictPath).fileReader(fileReader).useHistory(false).build();
             Assert.assertEquals(dictPath, PathUtils.markAsFolder(table.getRootPath()));
 
             TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();
@@ -344,7 +344,7 @@ public class ITestS3Table {
             Path linkPath = workDirPath.resolve("local.gord.link");
             Files.writeString(linkPath, dictPath);
 
-            DictionaryTable table = new DictionaryTable.Builder<>(linkPath).fileReader(fileReader).useHistory(false).build();
+            DictionaryTable table = new GorDictionaryTable.Builder<>(linkPath).fileReader(fileReader).useHistory(false).build();
             Assert.assertEquals(dictPath, PathUtils.markAsFolder(table.getRootPath()));
 
             TableManager man = TableManager.newBuilder().bucketSize(3).minBucketSize(1).lockType(NoTableLock.class).fileReader(fileReader).build();

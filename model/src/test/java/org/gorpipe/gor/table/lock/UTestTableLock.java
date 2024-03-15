@@ -16,7 +16,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.manager.TableManager;
-import org.gorpipe.gor.table.dictionary.*;
+import org.gorpipe.gor.table.dictionary.DictionaryFilter;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
@@ -151,7 +153,7 @@ public class UTestTableLock {
         Files.deleteIfExists(Paths.get(tableWorkDir.toString(), lockPath));
 
         FileUtils.write(gordFile, gort1, (Charset)null);
-        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+        GorDictionaryTable dict = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
 
         String orgRes = "filepath11.gor|bucket2\ttagI\n" +
                 "filepath12.gor|bucket2\t\tchr1\t1\tchr2\t20000\ttagJ,tagK\n" +
@@ -173,7 +175,7 @@ public class UTestTableLock {
                         try {
                             log.debug("Thread0 - Got lock");
                             log.debug("Thread0 - Read 0");
-                            DictionaryTable dict0 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                            GorDictionaryTable dict0 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                             String selectRes;
                             try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict0, dict0.getName(), tm.getLockTimeout())) {
                                 actionList.add("2");
@@ -202,7 +204,7 @@ public class UTestTableLock {
         f = executor.submit(() -> {
             try {
                 log.debug("Thread1 - Read 1");
-                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                GorDictionaryTable dict1 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                 String selectRes;
                 try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict1, dict1.getName(), tm.getLockTimeout())) {
                     log.debug("Thread1 - Got lock");
@@ -231,7 +233,7 @@ public class UTestTableLock {
         f = executor.submit(() -> {
             try {
                 log.debug("Thread2 - Loading dict");
-                DictionaryTable dict2 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                GorDictionaryTable dict2 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                 log.debug("Thread2 - Asking to delete");
                 try (TableTransaction trans = TableTransaction.openWriteTransaction(tableLockClass, dict2, dict2.getName(), tm.getLockTimeout())) {
                     log.debug("Thread2 - Got lock");
@@ -260,7 +262,7 @@ public class UTestTableLock {
         f = executor.submit(() -> {
             try {
                 log.debug("Thread3 - Read 2");
-                DictionaryTable dict3 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                GorDictionaryTable dict3 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                 String selectRes;
                 try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict3, dict3.getName(), tm.getLockTimeout())) {
                     log.debug("Thread3 - Got lock");
@@ -323,7 +325,7 @@ public class UTestTableLock {
         Files.deleteIfExists(Paths.get(tableWorkDir.toString(), lockPath));
 
         FileUtils.write(gordFile, gort1, (Charset)null);
-        DictionaryTable dict = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+        GorDictionaryTable dict = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
 
         String orgRes = "filepath11.gor|bucket2\ttagI\n" +
                 "filepath12.gor|bucket2\t\tchr1\t1\tchr2\t20000\ttagJ,tagK\n" +
@@ -341,7 +343,7 @@ public class UTestTableLock {
         Future f = executor.submit(() -> {
             try {
                 log.debug("Thread0 - Loading dict");
-                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                GorDictionaryTable dict1 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                 log.debug("Thread0 - Asking to delete");
                 try (TableTransaction trans = TableTransaction.openWriteTransaction(tableLockClass, dict1, dict1.getName(), tm.getLockTimeout())) {
                     log.debug("Thread0 - Got lock");
@@ -370,7 +372,7 @@ public class UTestTableLock {
         f = executor.submit(() -> {
             try {
                 log.debug("Thread1 - Read 1");
-                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                GorDictionaryTable dict1 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                 try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict1, dict1.getName(), Duration.ofMillis(10))) {
                     Assert.fail("Should not get lock");
                 }
@@ -387,7 +389,7 @@ public class UTestTableLock {
         f = executor.submit(() -> {
             try {
                 log.debug("Thread2 - Read 2");
-                DictionaryTable dict1 = new DictionaryTable.Builder<>(gordFile.toPath()).build();
+                GorDictionaryTable dict1 = new GorDictionaryTable.Builder<>(gordFile.toPath()).build();
                 String selectRes;
                 try (TableTransaction trans = TableTransaction.openReadTransaction(tableLockClass, dict1, dict1.getName(), tm.getLockTimeout())) {
                     log.debug("Thread2 - Got lock");
@@ -417,7 +419,7 @@ public class UTestTableLock {
 
     public static void testProcessTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
         String lockName = "ProcessTableLock";
-        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve("ProcessTableeLock" + tableLockClass.getSimpleName())).build();
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(tableWorkDir.resolve("ProcessTableeLock" + tableLockClass.getSimpleName())).build();
         table.save();
 
         String storyName = "storyProcess" + tableLockClass.getSimpleName();
@@ -475,7 +477,7 @@ public class UTestTableLock {
 
     public static void testMultiProcessUpdateTableFileLock(Class<? extends TableLock> tableLockClass) throws Exception {
         String lockName = "MultiProcessUpdateTableLock";
-        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
         table.save();
 
         String storyName = "storyMultiProcess" + tableLockClass.getSimpleName();
@@ -504,7 +506,7 @@ public class UTestTableLock {
 
     public static void testTableLockRenew(Class<? extends TableLock> tableLockClass, Field drlp) throws Exception {
         String lockName = "LockRenew";
-        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(tableWorkDir.resolve(lockName + tableLockClass.getSimpleName())).build();
 
         long reserveTime = 4000;
 
@@ -549,7 +551,7 @@ public class UTestTableLock {
     }
 
     public static void testTableLockCrashCleanUp(Class<? extends TableLock> tableLockClass) throws Exception {
-        DictionaryTable table = new DictionaryTable.Builder<>(tableWorkDir.resolve("LockCrash" + tableLockClass.getSimpleName())).build();
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(tableWorkDir.resolve("LockCrash" + tableLockClass.getSimpleName())).build();
         table.save();
         String storyName = "storyCrash" + tableLockClass.getSimpleName();
         String dataFileName = "dateCrash" + tableLockClass.getSimpleName();
@@ -599,25 +601,25 @@ public class UTestTableLock {
     }
 
 
-    private static String selectStringFilter(TableFilter<? extends DictionaryEntry> filter) {
-        return filter.get().stream().map(TableEntry::formatEntry).collect(Collectors.joining());
+    private static String selectStringFilter(DictionaryFilter<? extends DictionaryEntry> filter) {
+        return filter.get().stream().map(DictionaryEntry::formatEntry).collect(Collectors.joining());
     }
 
-    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, Runnable runBefore, DictionaryTable table, String name, Duration timeout) {
+    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, Runnable runBefore, GorDictionaryTable table, String name, Duration timeout) {
         debugReadLock(lockClass, holdDuration, holdDuration.toMillis(), runBefore, table, name, timeout);
     }
 
-    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, DictionaryTable table, String name, Duration timeout) {
+    private static void debugReadLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, GorDictionaryTable table, String name, Duration timeout) {
         try (TableTransaction trans = TableTransaction.openReadTransaction(lockClass, table, name, timeout)) {
             debugLockInternal(holdDuration, period, runBefore, null, trans.getLock());
         }
     }
 
-    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, DictionaryTable table, String name, Duration timeout) {
+    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, GorDictionaryTable table, String name, Duration timeout) {
         debugWriteLock(lockClass, holdDuration, holdDuration.toMillis(), null, null, table, name, timeout);
     }
 
-    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, Runnable runPeriod, DictionaryTable table, String name, Duration timeout) {
+    private static void debugWriteLock(Class<? extends TableLock> lockClass, Duration holdDuration, long period, Runnable runBefore, Runnable runPeriod, GorDictionaryTable table, String name, Duration timeout) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(lockClass, table, name, timeout)) {
             debugLockInternal(holdDuration, period, runBefore, runPeriod, trans.getLock());
             trans.commit();
@@ -642,7 +644,7 @@ public class UTestTableLock {
         }
     }
 
-    private static Process startLockingProcess(Class<? extends TableLock> tableLockClass, String lockType, Duration duration, Duration timeout, DictionaryTable table, String name,
+    private static Process startLockingProcess(Class<? extends TableLock> tableLockClass, String lockType, Duration duration, Duration timeout, GorDictionaryTable table, String name,
                                                Path workingDir, String id, String storyName, String dataFileName)
             throws IOException {
 
@@ -748,7 +750,7 @@ public class UTestTableLock {
         File storyFile = Paths.get(workDir).resolve(storyName).toFile();
         File dataFile = Paths.get(workDir).resolve(dataFileName).toFile();
         FileUtils.writeStringToFile(storyFile, id + "a", Charset.defaultCharset(), true);
-        DictionaryTable table = new DictionaryTable.Builder<>(Paths.get(tablePath)).build();
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(Paths.get(tablePath)).build();
         if (lockType.equals("WRITE")) {
             // Set this up so we will overwrite any changes made by others while we have the lock.
             debugWriteLock(lockClass, holdDuration, holdDuration.toMillis() + 1,

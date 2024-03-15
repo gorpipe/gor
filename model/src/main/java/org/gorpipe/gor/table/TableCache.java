@@ -1,4 +1,4 @@
-package org.gorpipe.gor.table.dictionary;
+package org.gorpipe.gor.table;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -11,42 +11,43 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.time.Duration;
 
-public class DictionaryCache {
+public abstract class TableCache<T extends Table> {
 
-    private static final Logger log = LoggerFactory.getLogger(DictionaryTable.class);
+    private static final Logger log = LoggerFactory.getLogger(TableCache.class);
 
     public static final boolean useCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
 
-    final private static Cache<String, DictionaryTable> dictCache = Caffeine.newBuilder()
+    final protected Cache<String, T> dictCache = Caffeine.newBuilder()
             .maximumSize(500).expireAfterAccess(Duration.ofHours(12L))
             .softValues()
             .build();   //A map from dictionaries to the cache objects.
 
+    abstract protected T createTable(String path, FileReader fileReader);
 
-    public static DictionaryTable getOrCreateTable(String path, FileReader fileReader) throws IOException {
+    public T getOrCreateTable(String path, FileReader fileReader) throws IOException {
         return getOrCreateTable(path, fileReader, useCache);
     }
 
-    public static DictionaryTable getOrCreateTable(String path, FileReader fileReader, boolean useCache) throws IOException {
+    public T getOrCreateTable(String path, FileReader fileReader, boolean useCache) throws IOException {
         try {
             return getTable(path, fileReader, useCache);
         } catch (NoSuchFileException e) {
-            return new DictionaryTable(path, fileReader);
+            return createTable(path, fileReader);
         }
     }
 
-    public synchronized static DictionaryTable getTable(String path, FileReader fileReader) throws IOException {
+    public synchronized T getTable(String path, FileReader fileReader) throws IOException {
         return getTable(path, fileReader, useCache);
     }
 
-    public synchronized static DictionaryTable getTable(String path, FileReader fileReader, boolean useCache) throws IOException {
+    public synchronized T getTable(String path, FileReader fileReader, boolean useCache) throws IOException {
         // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
         //        exception if file does not exists.
         if (!fileReader.exists(path)) {
             throw new NoSuchFileException(path);
         }
         // The dict is lazy loaded so the only cost is finding the id.
-        DictionaryTable dict = new DictionaryTable(path, fileReader);
+        T dict = createTable(path, fileReader);
 
         if (useCache) {
             String uniqueID = dict.getId();
@@ -55,7 +56,7 @@ public class DictionaryCache {
                 dictCache.invalidate(key);
                 return dict;
             } else {
-                DictionaryTable dictFromCache = dictCache.getIfPresent(key);
+                T dictFromCache = dictCache.getIfPresent(key);
                 if (dictFromCache == null || !dictFromCache.getId().equals(uniqueID)) {
                     dictCache.put(key, dict);
                     return dict;
@@ -68,7 +69,7 @@ public class DictionaryCache {
         }
     }
 
-    public synchronized static void updateCache(DictionaryTable table) {
+    public synchronized void updateCache(T table) {
         String uniqueID = table.getId();
         var key = dictCacheKeyFromPathAndRoot(table.getPath(), table.getFileReader());
         if (uniqueID == null || uniqueID.equals("")) {
@@ -78,7 +79,7 @@ public class DictionaryCache {
         }
     }
 
-    private static String dictCacheKeyFromPathAndRoot(String path, FileReader fileReader) {
+    protected String dictCacheKeyFromPathAndRoot(String path, FileReader fileReader) {
         return fileReader.resolveUrl(path).getFullPath();
     }
 }

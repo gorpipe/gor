@@ -128,7 +128,7 @@ public class UTestTableManagerCLI {
         testTableManagerUtil.executeGorManagerCommand(dictFile.toString(), new String[]{}, "insert", new String[]{"--alias", "D", testFiles[3]}, workDirPath.toString(), true);
 
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);
@@ -176,7 +176,7 @@ public class UTestTableManagerCLI {
 
         Path dictFile = workDirPath.resolve(name + ".gord");
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
         String result;
 
         // Single file insert.
@@ -244,7 +244,7 @@ public class UTestTableManagerCLI {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFiles[3]});
 
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         //Verify insert of files
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
@@ -291,7 +291,7 @@ public class UTestTableManagerCLI {
         Path dictFile = workDirPath.resolve(name + ".gord");
 
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         //Check matching list of tags. If the same set of tags can be found it is replaced by the new line of tags.
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", testFiles[0]});
@@ -326,7 +326,7 @@ public class UTestTableManagerCLI {
         TableManagerCLI.main(new String[]{dictFile.toString(), "insert", "--alias", "D", testFiles[3]});
 
         TableManager man = new TableManager();
-        DictionaryTable table = man.initTable(dictFile);
+        DictionaryTable<DictionaryEntry> table = man.initTable(dictFile);
 
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);

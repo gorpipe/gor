@@ -30,7 +30,7 @@ import gorsat.Utilities.AnalysisUtilities.writeList
 import gorsat.Commands.{CommandParseUtilities, Processor}
 import gorsat.DynIterator.DynamicRowSource
 import gorsat.Outputs.OutFile
-import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, getRelativeFileLocationForDictionaryFileReferences, runCommand}
+import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, runCommand}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.gorpipe.client.FileCache

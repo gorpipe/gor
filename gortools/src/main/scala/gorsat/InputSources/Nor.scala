@@ -28,10 +28,10 @@ import gorsat.DynIterator
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NoValidateNorInputSource, NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.AnalysisUtilities
-import gorsat.process.{NordFile, NordIterator, PipeOptions}
-import org.gorpipe.gor.driver.meta.DataType
+import gorsat.process.{NordIterator, PipeOptions}
 import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
+import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable
 import org.gorpipe.gor.util.DataUtil
 
 import java.nio.file.{Files, Path}
@@ -190,10 +190,8 @@ object Nor
     val ignoreMissing = hasOption(args, "-fs")
     val tags = AnalysisUtilities.getFilterTags(args, context, doHeader = false).split(',').filter(x => x.nonEmpty)
     val sourceColumnName = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-s", "")
-    val nordFile = new NordFile()
-    nordFile.load(context.getSession().getProjectContext().getFileReader(),
-      Path.of(fileName), hasFileFilter | hasFilter, tags, ignoreMissing)
-    val iterator =  new NordIterator(nordFile, sourceColumnName, ignoreMissing, hasOption(args, "-h"))
+    val norDict = new NorDictionaryTable(fileName, context.getSession().getProjectContext().getFileReader())
+    val iterator =  new NordIterator(norDict,  if (hasFilter || hasFileFilter) tags else null, sourceColumnName, ignoreMissing, hasOption(args, "-h"))
     iterator.init(context.getSession)
     iterator
   }
@@ -203,8 +201,11 @@ object Nor
     val hasFilter = CommandParseUtilities.hasOption(args, "-f")
     val ignoreMissing = hasOption(args, "-fs")
     val sourceColumnName = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-s", "")
-    val nordFile = NordFile.fromList(fileNames)
-    val iterator = new NordIterator(nordFile, sourceColumnName, ignoreMissing, hasOption(args, "-h"))
+    val nordDict = new NorDictionaryTable("dummy", context.getSession().getProjectContext().getFileReader())
+    for (fileName <- fileNames) {
+      nordDict.insert(fileName);
+    }
+    val iterator = new NordIterator(nordDict, null, sourceColumnName, ignoreMissing, hasOption(args, "-h"))
     iterator.init(context.getSession)
     iterator
   }

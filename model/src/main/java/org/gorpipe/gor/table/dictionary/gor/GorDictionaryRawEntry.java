@@ -10,9 +10,10 @@
  * with WuxiNextCODE.
  */
 
-package org.gorpipe.gor.table.dictionary;
+package org.gorpipe.gor.table.dictionary.gor;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.util.GenomicRange;
 
 import java.util.Arrays;
@@ -23,17 +24,17 @@ import java.util.Objects;
  * <p>
  * Created by gisli on 22/08/16.
  */
-public class DictionaryRawEntry extends DictionaryEntry {
+public class GorDictionaryRawEntry extends GorDictionaryEntry {
 
     private String rawLine;  // Line as stored on disk.
     private final RowParser rawColumns;
     private final RowParser rawFileInfo;
 
     private String contentRelative;              // Normalized URI as specified in the table (normalized and absolute or relative to the table).
-    protected String[] tags = TableEntry.EMPTY_TAGS_LIST;                       // For performance use string array.
+    protected String[] tags = DictionaryEntry.EMPTY_TAGS_LIST;                       // For performance use string array.
     protected GenomicRange range;
 
-    private DictionaryRawEntry(String rawLine, String rootUri) {
+    private GorDictionaryRawEntry(String rawLine, String rootUri) {
         super(null, rootUri, null, null, null, null, false, false);
         this.rawLine = rawLine;
         this.rawColumns = new RowParser(rawLine, '\t', 7, 0);
@@ -41,7 +42,7 @@ public class DictionaryRawEntry extends DictionaryEntry {
     }
 
     // Copy constructor.
-    public DictionaryRawEntry(DictionaryRawEntry entry) {
+    public GorDictionaryRawEntry(GorDictionaryRawEntry entry) {
         super(entry);
 
         this.rawLine = entry.rawLine;
@@ -58,8 +59,8 @@ public class DictionaryRawEntry extends DictionaryEntry {
      * @param rootUri       root URI to resolve relative paths.
      * @return new entry from the entryString
      */
-    public static DictionaryRawEntry parseEntry(String line, String rootUri) {
-        return new DictionaryRawEntry(line, rootUri);
+    public static GorDictionaryRawEntry parseEntry(String line, String rootUri) {
+        return new GorDictionaryRawEntry(line, rootUri);
     }
 
     @Override
@@ -101,7 +102,7 @@ public class DictionaryRawEntry extends DictionaryEntry {
      * @param bucket bucket file, normalized and relative to table or absolute.
      */
     @Override
-    protected void setBucket(String bucket) {
+    public void setBucket(String bucket) {
         this.bucketLogical = bucket;
         this.rawLine = super.formatEntryNoNewLine();
     }
@@ -173,9 +174,9 @@ public class DictionaryRawEntry extends DictionaryEntry {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DictionaryRawEntry)) return false;
+        if (!(o instanceof GorDictionaryRawEntry)) return false;
         if (!super.equals(o)) return false;
-        DictionaryRawEntry that = (DictionaryRawEntry) o;
+        GorDictionaryRawEntry that = (GorDictionaryRawEntry) o;
         return Objects.equals(rawLine, that.rawLine) &&
                 Objects.equals(rawColumns, that.rawColumns) &&
                 Objects.equals(rawFileInfo, that.rawFileInfo) &&

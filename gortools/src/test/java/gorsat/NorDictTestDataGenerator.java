@@ -24,6 +24,7 @@ package gorsat;
 
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +78,7 @@ class NorDictTestDataGenerator {
         StringBuilder builder = new StringBuilder();
 
         if (addSourceHeader) {
-            builder.append("##Source=phenotype\n");
+            builder.append(String.format("##%s=phenotype\n", DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY));
         }
 
         builder.append("#Source\tSubject\n");

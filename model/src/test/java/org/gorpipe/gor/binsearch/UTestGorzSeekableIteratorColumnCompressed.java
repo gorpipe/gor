@@ -61,7 +61,7 @@ public class UTestGorzSeekableIteratorColumnCompressed {
         final BufferedReader br2 = new BufferedReader(new FileReader(genes));
         final GorzSeekableIterator gsi = new GorzSeekableIterator(new StreamSourceSeekableFile(new FileSource(new SourceReference(columnCompressed))));
 
-        Assert.assertEquals(br2.readLine(), String.join("\t", gsi.getHeader()));
+        Assert.assertEquals(br2.readLine().substring(1), String.join("\t", gsi.getHeader()));
 
         br2.lines().forEach(line -> {
             Assert.assertTrue(gsi.hasNext());

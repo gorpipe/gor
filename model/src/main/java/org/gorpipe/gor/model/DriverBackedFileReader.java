@@ -36,7 +36,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.StringUtil;
@@ -324,7 +324,7 @@ public class DriverBackedFileReader extends FileReader {
         if (source.isDirectory()) {
             dictpath = URI.create(dictpath).resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString();
         }
-        return new DictionaryTable.Builder<>(dictpath).fileReader(this).build()
+        return new GorDictionaryTable.Builder<>(dictpath).fileReader(this).build()
                 .getSignature(true, source.getSourceReference().commonRoot, tags);
     }
 

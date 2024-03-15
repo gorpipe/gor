@@ -28,9 +28,9 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.test.GorDictionarySetup;
@@ -90,7 +90,7 @@ public class UTestBucketManager {
         Path testWorkDir = workDir.newFolder(name).toPath();
         Path dictFile = testWorkDir.resolve(name + ".gord");
 
-        DictionaryTable table = createTable(dictFile);
+        GorDictionaryTable table = createTable(dictFile);
         BucketManager man = BucketManager.newBuilder(table).lockTimeout(Duration.ofDays(13)).build();
 
         Assert.assertEquals("Manager should have builder lock timeout", Duration.ofDays(13), man.getLockTimeout());
@@ -98,7 +98,7 @@ public class UTestBucketManager {
 
     @Test
     public void testSettingBucketsize() throws Exception {
-        DictionaryTable table = createTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
+        GorDictionaryTable table = createTable(Paths.get("../../testing/misc_data/1m/1m.gord"));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(20);
@@ -147,7 +147,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
@@ -314,7 +314,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
+        GorDictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -347,7 +347,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
+        GorDictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -379,7 +379,7 @@ public class UTestBucketManager {
         Path dictPath = workDirPath.resolve("dict.gord");
         Files.writeString(dictPath, dictContent);
 
-        DictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
+        GorDictionaryTable table = getTable(dictPath.toString(), new DriverBackedFileReader("", workDirPath.toString()));
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
@@ -402,7 +402,7 @@ public class UTestBucketManager {
             Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                     name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-            DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+            GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
             BucketManager buc = new BucketManager(table);
             buc.setMinBucketSize(20);
             buc.setBucketSize(100);
@@ -465,7 +465,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(2);
         buc.setBucketSize(10);
@@ -496,7 +496,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
         buc.setBucketSize(10);
@@ -536,8 +536,8 @@ public class UTestBucketManager {
 
         int fileCount = 10;
         GorDictionarySetup dictionarySetup = new GorDictionarySetup(workDirPath, name, fileCount, 5, new int[]{1,2,3}, 10, false);
-        DictionaryTable table = new DictionaryTable(dictionarySetup.dictionary);
-        BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
+        GorDictionaryTable table = new GorDictionaryTable(dictionarySetup.dictionary);
+        BucketManager<GorDictionaryEntry> bucketManager = new BucketManager<>(table);
 
         String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
@@ -568,8 +568,8 @@ public class UTestBucketManager {
 
         int fileCount = 10;
         GorDictionarySetup dictionarySetup = new GorDictionarySetup(workDirPath, name, fileCount, 5, new int[]{1,2,3}, 10, false);
-        DictionaryTable table = new DictionaryTable(dictionarySetup.dictionary);
-        BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
+        GorDictionaryTable table = new GorDictionaryTable(dictionarySetup.dictionary);
+        BucketManager<GorDictionaryEntry> bucketManager = new BucketManager<>(table);
 
         String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
@@ -607,8 +607,8 @@ public class UTestBucketManager {
 
         int fileCount = 10;
         GorDictionarySetup dictionarySetup = new GorDictionarySetup(workDirPath, name, fileCount, 5, new int[]{1, 2, 3}, 10, false);
-        DictionaryTable table = new DictionaryTable(dictionarySetup.dictionary);
-        BucketManager<DictionaryEntry> bucketManager = new BucketManager<>(table);
+        GorDictionaryTable table = new GorDictionaryTable(dictionarySetup.dictionary);
+        BucketManager<GorDictionaryEntry> bucketManager = new BucketManager<>(table);
 
         String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
         Assert.assertEquals("Should have 2 buckets", 2, buckets.length);
@@ -645,7 +645,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
         buc.setBucketSize(10);  // Keep the bucketsize small as we use random (makes very unlikely that we get all the buckets in the same folder)
@@ -723,8 +723,8 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFilesB = GorDictionarySetup.createDataFilesMap(
                 name + 'B', workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sourcesB);
 
-        DictionaryTable tableA = TestUtils.createDictionaryWithData(name + 'A', workDirPath, dataFilesA);
-        DictionaryTable tableB = TestUtils.createDictionaryWithData(name + 'B', workDirPath, dataFilesB);
+        GorDictionaryTable tableA = TestUtils.createDictionaryWithData(name + 'A', workDirPath, dataFilesA);
+        GorDictionaryTable tableB = TestUtils.createDictionaryWithData(name + 'B', workDirPath, dataFilesB);
 
         List<String> bucketDirs = new ArrayList();
         bucketDirs.add("someCustomDir");
@@ -766,7 +766,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
         table.setBucketize(false);
 
         BucketManager buc = new BucketManager(table);
@@ -788,7 +788,7 @@ public class UTestBucketManager {
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
                 name, dataDir, 200, new int[]{1, 2, 3}, 10, "PN", true, sources);
 
-        DictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
 
         BucketManager buc = new BucketManager(table);
         buc.setMinBucketSize(10);
@@ -808,11 +808,11 @@ public class UTestBucketManager {
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
     }
 
-    private DictionaryTable createTable(Path path) {
-        return new DictionaryTable.Builder<>(path).useHistory(true).validateFiles(false).build();
+    private GorDictionaryTable createTable(Path path) {
+        return new GorDictionaryTable.Builder<>(path).useHistory(true).validateFiles(false).build();
     }
 
-    private DictionaryTable getTable(String path, FileReader fileReader) throws IOException {
+    private GorDictionaryTable getTable(String path, FileReader fileReader) throws IOException {
         // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
         //        exception if file does not exists.
         if (!fileReader.exists(path)) {
@@ -820,10 +820,10 @@ public class UTestBucketManager {
         }
 
         // The dict is lazy loaded so the onnly cost is finding the id.
-        return new DictionaryTable(path, fileReader);
+        return new GorDictionaryTable(path, fileReader);
     }
 
-    private void testBucketDirsHelper(BucketManager buc, DictionaryTable table, List<String> bucketDirs, int fileCount) throws IOException {
+    private void testBucketDirsHelper(BucketManager buc, GorDictionaryTable table, List<String> bucketDirs, int fileCount) throws IOException {
         log.trace("Calling buckets dir helper with {}", bucketDirs);
         for (String bucketDir : bucketDirs) {
             Path bucketDirFull = Path.of(resolve(table.getRootPath(), bucketDir));

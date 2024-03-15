@@ -24,10 +24,10 @@ package org.gorpipe.gor.cli.manager;
 
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.util.PathUtils;
 import picocli.CommandLine;
 
@@ -78,8 +78,8 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
         DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
-            if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
-                table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
+            if (source != null && !source.equals(table.getProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
+                table.setProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
             }
 
             if (tagskey) {
@@ -88,11 +88,11 @@ public class InsertCommand extends CommandBucketizeOptions implements Runnable{
 
             table.insert(this.files.stream()
                     .map(f -> PathUtils.relativize(table.getRootPath(), f))
-                    .map(s -> new DictionaryEntry.Builder<>(s, table.getRootPath())
+                    .map(s -> new GorDictionaryEntry.Builder<>(s, table.getRootPath())
                             .range(GenomicRange.parseGenomicRange(this.range))
                             .alias(alias)
                             .tags(this.tags)
-                            .build()).toArray(DictionaryEntry[]::new));
+                            .build()).toArray(GorDictionaryEntry[]::new));
             trans.commit();
         }
     }

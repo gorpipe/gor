@@ -1,7 +1,6 @@
 package org.gorpipe.gor.table;
 
 import org.gorpipe.gor.table.livecycle.TableInsertDelete;
-import org.gorpipe.gor.table.livecycle.TableLifeCycle;
 import org.gorpipe.gor.table.livecycle.TableTwoPhaseCommit;
 
 /**
@@ -16,7 +15,7 @@ import org.gorpipe.gor.table.livecycle.TableTwoPhaseCommit;
  *           of dictionaries).
  *    Row:   The data rows, i.e. what the user gets when goring the table.
  */
-public interface Table<T> extends TableInfo<T>, TableTwoPhaseCommit<T>, TableInsertDelete<T> {
+public interface Table<T> extends TableInfo, TableTwoPhaseCommit, TableInsertDelete<T> {
 
     void reload();
 

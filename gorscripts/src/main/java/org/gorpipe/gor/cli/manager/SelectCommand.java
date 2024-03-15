@@ -26,6 +26,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryFilter;
 import picocli.CommandLine;
 
 import java.time.Duration;
@@ -51,14 +52,19 @@ public class SelectCommand extends FilterOptions implements Runnable{
         TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(lockTimeout)).build();
         DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
-        final List<? extends DictionaryEntry> lines = table.filter()
+        var filter = table.filter()
+
                 .files(allFiles.length > 0 ? allFiles : null)
                 .aliases(aliases.size() > 0 ? aliases.toArray(new String[0]) : null)
                 .tags(tags.size() > 0 ? tags.toArray(new String[0]) : null)
                 .buckets(this.buckets.size() > 0 ? this.buckets.toArray(new String[0]) : null)
-                .chrRange(range)
-                .includeDeleted(this.includeDeleted)
-                .get();
+                .includeDeleted(this.includeDeleted);
+        if (filter instanceof GorDictionaryFilter) {
+            ((GorDictionaryFilter) filter).chrRange(range);
+        }
+
+        final List<? extends DictionaryEntry> lines = filter.get();
+
         for (DictionaryEntry line : lines) {
             System.out.print(line.formatEntry());
         }

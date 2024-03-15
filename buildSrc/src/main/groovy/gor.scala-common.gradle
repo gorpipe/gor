@@ -25,6 +25,14 @@ plugins {
     id "scala"
 }
 
+ext {
+    scalaVersion = 2.13
+}
+
+scala {
+    zincVersion = "1.9.6"
+}
+
 // See: https://github.com/gradle/gradle/issues/6854
 configurations.all {
     if (name.startsWith("incrementalScalaAnalysis")) {

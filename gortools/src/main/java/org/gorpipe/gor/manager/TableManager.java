@@ -25,9 +25,11 @@ package org.gorpipe.gor.manager;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.DictionaryFilter;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.TableFilter;
+import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryFilter;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.lock.TableTransaction;
@@ -145,7 +147,7 @@ public class TableManager {
      */
     public DictionaryTable initTable(String path) {
         if (DataUtil.isGord(path)) {
-            return new DictionaryTable.Builder<>(path).fileReader(fileReader).build();
+            return new GorDictionaryTable.Builder<>(path).fileReader(fileReader).build();
         } else {
             throw new RuntimeException("BaseTable of type " + path + " are not supported!");
         }
@@ -217,7 +219,7 @@ public class TableManager {
      * @param tableFile path to the table file.
      * @param entries   the entries to delete.
      */
-    public void delete(String tableFile, TableFilter entries) {
+    public void delete(String tableFile, DictionaryFilter entries) {
         System.err.println("Deleting entries2: " + entries);
         DictionaryTable table = initTable(tableFile);
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
@@ -243,13 +245,18 @@ public class TableManager {
      */
     public List<? extends DictionaryEntry> select(String tableFile, String[] files, String[] aliases, String[] tags, String[] buckets, String chrRange, boolean includedDeleted) {
         DictionaryTable table = initTable(tableFile);
-        return table.filter()
-                .files(files)
-                .aliases(aliases)
-                .tags(ArrayUtils.addAll(tags))
-                .buckets(buckets)
-                .chrRange(chrRange)
-                .includeDeleted(includedDeleted).get();
+        var filter = table.filter()
+            .files(files)
+            .aliases(aliases)
+            .tags(ArrayUtils.addAll(tags))
+            .buckets(buckets)
+            .includeDeleted(includedDeleted);
+
+        if (filter instanceof GorDictionaryFilter) {
+            ((GorDictionaryFilter) filter).chrRange(chrRange);
+        }
+
+        return filter.get();
     }
 
     /**
@@ -267,11 +274,11 @@ public class TableManager {
         }
     }
 
-    public void print(TableFilter lines) {
+    public void print(DictionaryFilter<DictionaryEntry> lines) {
         DictionaryTable table = lines.getTable();
         try (TableTransaction trans = TableTransaction.openReadTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
-            for (Object line : lines.get()) {
-                System.out.print(((DictionaryEntry) line).formatEntry());
+            for (DictionaryEntry line : lines.get()) {
+                System.out.print(line.formatEntry());
             }
         }
     }

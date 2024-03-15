@@ -5,10 +5,8 @@ import org.gorpipe.exceptions.GorException;
 
 /**
  * Interface to safe tables with two phase commit.
- *
- * @param <T>
  */
-public interface TableTwoPhaseCommit<T> extends TableLifeCycle<T> {
+public interface TableTwoPhaseCommit extends TableLifeCycle {
 
     /**
      * Commit request.

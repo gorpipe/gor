@@ -25,15 +25,12 @@ package org.gorpipe.gor.table.dictionary;
 import com.google.common.collect.*;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.TableInfo;
 import org.gorpipe.gor.table.TableHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,9 +39,9 @@ import java.util.stream.Collectors;
  *
  * Class is thread safe.
  */
-public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T> {
-    private static final Logger log = LoggerFactory.getLogger(TableEntries.class);
-    private final Class<? extends T> clazzOfT;
+public class DictionaryEntries<T extends DictionaryEntry> implements IDictionaryEntries<T> {
+    private static final Logger log = LoggerFactory.getLogger(DictionaryEntries.class);
+    private final IDictionaryEntryFactory<T> factory;
 
     private List<T> rawLines;
 
@@ -55,7 +52,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
 
     private Multiset<String> activeTags;
     private int deletedEntriesCount = 0;
-    private final TableInfo<T> table;
+    private final TableInfo table;
 
     private boolean dataLoaded = false;
     private boolean tagHashLoaded = false;
@@ -66,9 +63,9 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
      * It is not simple to create objects of type T.  For now we pass in the class so we can do that.
      * Another option would be using google TypeToken, but we had problem getting that working.
      */
-    public TableEntries(TableInfo<T> table, Class<? extends T> clazzOfT) {
+    public DictionaryEntries(TableInfo table, IDictionaryEntryFactory<T> factory) {
         this.table = table;
-        this.clazzOfT = clazzOfT;
+        this.factory = factory;
     }
 
     @Override
@@ -109,7 +106,7 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
 
             if (line.hasBucket() && keepIfBucket) {
                 // NOTE: the deleted flag is part of the hashCode so we remove and add again if we change it.
-                T entry = (T) TableEntry.copy(line);
+                T entry = (T) DictionaryEntry.copy(line);
                 entry.setDeleted(true);
                 getEntries().add(entry);
                 addEntryToContentMap(entry);
@@ -289,6 +286,14 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
         log.trace("Loading entries into table {} {}", table.getName(), table);
         this.rawLines = this.loadLines();
         this.updateContentMap();
+        if (table.getColumns().length == 0 && !this.rawLines.isEmpty()) {
+            try {
+                // Update header from the first file.
+                table.updateValidateHeader(this.rawLines.get(0).getContentReal(table.getRootPath()));
+            } catch (GorDataException e) {
+               // Do nothing
+            }
+        }
         dataLoaded = true;
         log.trace("Loaded {} entries into table {}", this.rawLines.size(), table.getName());
     }
@@ -309,23 +314,11 @@ public class TableEntries<T extends DictionaryEntry> implements ITableEntries<T>
             List<T> newRawLines =  new ArrayList<>();
             if (table.getFileReader().exists(table.getPath())) {
                 try (BufferedReader br = table.getFileReader().getReader(table.getPath())) {
-
-                    Method parseEntryMethod;
-                    try {
-                        parseEntryMethod = clazzOfT.getMethod("parseEntry", String.class, String.class, boolean.class);
-                    } catch (NoSuchMethodException ex) {
-                        throw new GorSystemException("Error Initializing Query, can not create entry of type: " + clazzOfT.getName() + ", no parseEntry method!", ex);
-                    }
-                    br.lines().parallel()
+                  br.lines().parallel()
                         .map(l -> {
                             String line = l;
                             if (!line.isEmpty() && !line.startsWith("#")) {
-                                try {
-                                    return (T) parseEntryMethod.invoke(null, line, table.getRootPath(), needsRelativize);
-                                } catch(IllegalAccessException | InvocationTargetException ex){
-                                    throw new GorSystemException("Error Initializing Query, can not create entry of type: "
-                                            + clazzOfT.getName() + ", error parsing line: \"" + l + "\"", ex);
-                                }
+                                return factory.parseEntry(line, table.getRootPath(), needsRelativize);
                             }
                             return null;
                         })

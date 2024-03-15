@@ -28,8 +28,7 @@ import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GorOptions;
-import org.gorpipe.gor.table.TableHeader;
-import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -543,7 +542,7 @@ public class UTestDictionary {
         Files.createDirectories(dictpath);
         var dictrelpath = path.resolve("b.gord");
         dictpath = dictpath.resolve("b.gord");
-        var tableheader = new DictionaryTableMeta();
+        var tableheader = new GorDictionaryTableMeta();
         final var cols = new String[]{"chrom","pos"};
         final var tablecols = new String[]{"filename"};
         tableheader.setFileHeader(tablecols);

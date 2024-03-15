@@ -57,4 +57,7 @@ public class TableHeader extends BaseMeta {
         return getFileHeader() != null && getFileHeader().length > 1 && !getFileHeader()[1].equalsIgnoreCase("col2");
     }
 
+    public TableHeader newLineHeader() {
+        return new TableHeader();
+    }
 }

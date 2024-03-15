@@ -23,9 +23,9 @@
 package org.gorpipe.gor.table;
 
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
-import org.gorpipe.gor.table.dictionary.TableFilter;
+import org.gorpipe.gor.table.dictionary.DictionaryFilter;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -58,7 +58,7 @@ public class UTestTableFilter {
         String testName = "testTestSameBucketDifferentPath";
         File gordFile = createDictOne(workDirPath, testName);
 
-        DictionaryTable dict = new DictionaryTable(gordFile.toPath());
+        GorDictionaryTable dict = new GorDictionaryTable(gordFile.toPath());
 
         // Files
         Assert.assertEquals(FileUtils.readLines(gordFile, "UTF-8").get(0),
@@ -97,7 +97,7 @@ public class UTestTableFilter {
     }
 
     @SafeVarargs
-    private final String selectStringFilter(DictionaryTable table, TableFilter<DictionaryEntry>... filters) {
-        return table.selectUninon(filters).stream().map(DictionaryEntry::formatEntry).sorted().collect(Collectors.joining());
+    private final String selectStringFilter(GorDictionaryTable table, DictionaryFilter<GorDictionaryEntry>... filters) {
+        return table.selectUninon(filters).stream().map(GorDictionaryEntry::formatEntry).sorted().collect(Collectors.joining());
     }
 }

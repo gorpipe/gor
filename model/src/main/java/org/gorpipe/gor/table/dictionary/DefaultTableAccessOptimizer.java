@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * Based on the optimizer from Dictionary.
  */
-public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
+public class DefaultTableAccessOptimizer implements DictionaryAccessOptimizer<DictionaryEntry> {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultTableAccessOptimizer.class);
 
@@ -25,7 +25,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
 
     private static final boolean USE_CACHE = true;
 
-    private final ITableEntries<DictionaryEntry> tableEntries;
+    private final IDictionaryEntries<DictionaryEntry> tableEntries;
     private final TableInfo table;
 
     private final List<Set<String>> bucketTagsList = new ArrayList<>();
@@ -41,7 +41,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
     /**
      *
      */
-    public DefaultTableAccessOptimizer(TableInfo table, ITableEntries<DictionaryEntry> tableEntries) {
+    public DefaultTableAccessOptimizer(TableInfo table, IDictionaryEntries tableEntries) {
         this.table = table;
         this.tableEntries = tableEntries;
     }
@@ -75,17 +75,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
             throwBadTagException(badTags);
         }
 
-        if (result.size() == 0) {
-            //Must return a dummy line.
-            Iterator<DictionaryEntry> iterator = tableEntries.getActiveEntries();
-            if (iterator.hasNext()) {
-                return List.of(tableEntries.getActiveEntries().next());
-            } else {
-                return new ArrayList<>();
-            }
-        } else {
-            return result;
-        }
+        return result;
     }
 
     @Override
@@ -123,7 +113,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
     private void processEntry(DictionaryEntry entry) {
         if (entry.hasBucket()) {
             final int bucketIdx = bucketToIdx.computeIfAbsent(entry.getBucket(), bucket -> {
-                resetBucketNames.add(entry.bucketLogical);
+                resetBucketNames.add(entry.getBucket());
                 bucketTagsList.add(new HashSet<>());
                 bucketActiveCount.add(0);
                 bucketTotalCount.add(0);
@@ -153,7 +143,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
         int numberOfFilesWithoutBucket = 0;
         final List<Set<String>> localBucketTagsList = new ArrayList<>();
 
-        if (tags != null && !tags.isEmpty()) {
+        if (tags != null) {
             Set<DictionaryEntry> filesToOptimizeTmp = new LinkedHashSet<>();
             newBucketToIdx = new HashMap<>();
             Set<String> goodTags = new HashSet<>();
@@ -166,7 +156,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
             }
 
             for (DictionaryEntry entry : tableEntries.getEntries(goodTags.toArray(String[]::new))) {
-                if (!entry.isDeleted) {
+                if (!entry.isDeleted()) {
                     filesToOptimizeTmp.add(entry);
                     final String bucket = entry.getBucket();
                     if (bucket == null) numberOfFilesWithoutBucket++;
@@ -220,8 +210,8 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
     }
 
     private List<DictionaryEntry> getOptimizedFileList(int[] bucketTotalFileCounts, int[] bucketUsedCounts, Set<String>[] bucketTagsArray,
-                                                       DictionaryEntry[] fileListToOptimize, int numberOfFilesWithoutBucket,
-                                                       Map<String, Integer> bucketsToIdx, String[] resetBucketNames) {
+                                                          DictionaryEntry[] fileListToOptimize, int numberOfFilesWithoutBucket,
+                                                          Map<String, Integer> bucketsToIdx, String[] resetBucketNames) {
         final int numberOfBuckets = bucketUsedCounts.length;
         final boolean[] replace = new boolean[numberOfBuckets]; //replace[i] = bucket i will be used
         final boolean[] include = new boolean[numberOfBuckets]; //include[i] = files of bucket i will be accessed directly.
@@ -268,7 +258,7 @@ public class DefaultTableAccessOptimizer implements TableAccessOptimizer {
                     log.trace("Bucket used={}", resetBucketNames[bucketIdx]);
                 }
                 filesToUse.add(new DictionaryEntry(resetBucketNames[bucketIdx], table.getRootPath(), null, bucketTagsArray[bucketIdx].toArray(String[]::new),
-                        null, null, false, true));
+                        null, false, true));
                 
                 } else if (bucket == null || include[bucketIdx]) { // all files from this bucket are to be included as they were
                 if (log.isTraceEnabled()) {

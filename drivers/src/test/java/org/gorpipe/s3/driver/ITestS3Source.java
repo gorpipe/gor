@@ -6,7 +6,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonStreamTests;
 import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import gorsat.TestUtils;
 import org.gorpipe.gor.driver.DataSource;
@@ -19,7 +18,6 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.SystemErrRule;
-import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -128,8 +126,8 @@ public class ITestS3Source extends CommonStreamTests {
         String randomId = UUID.randomUUID().toString();
         String dict = String.format("s3://gdb-unit-test-data/s3write/%s-genes.gord", randomId);
         TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2 | write " + dict);
-        String expected = TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2");
-        String result = TestUtils.runGorPipe("gor " + dict);
+        String expected = TestUtils.runGorPipe("create x = pgor -split 2 ../tests/data/gor/genes.gor | top 2; gor [x] | select 1-4");
+        String result = TestUtils.runGorPipe("gor " + dict + " | select 1-4");
         Assert.assertEquals(expected, result);
         DriverBackedFileReader fileReader = new DriverBackedFileReader("");
         fileReader.deleteDirectory(dict);

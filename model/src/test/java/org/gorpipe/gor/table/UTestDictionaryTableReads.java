@@ -17,7 +17,10 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTableReader;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntryFactory;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.test.GorDictionarySetup;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
@@ -182,13 +185,13 @@ public class UTestDictionaryTableReads {
         DictionaryTableReader dict2 = getTable(gordFile.getPath());
 
 
-        List<DictionaryEntry> res1 = dict1.getOptimizedLines(tagList, true, false);
-        List<DictionaryEntry> res2 = dict2.getOptimizedLines(tagList, true, false);
+        List<GorDictionaryEntry> res1 = dict1.getOptimizedLines(tagList, true, false);
+        List<GorDictionaryEntry> res2 = dict2.getOptimizedLines(tagList, true, false);
 
         Assert.assertEquals(res1.size(), res2.size());
 
-        String[] res1String = res1.stream().map(DictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);
-        String[] res2String = res2.stream().map(DictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);
+        String[] res1String = res1.stream().map(GorDictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);
+        String[] res2String = res2.stream().map(GorDictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);
 
         final int len = res1.size();
 
@@ -367,7 +370,7 @@ public class UTestDictionaryTableReads {
         dictionaryFileWriter.close();
 
         final DictionaryTableReader dict1 = getTable(dictionaryFile);
-        final List<DictionaryEntry> lines1 = dict1.getOptimizedLines(new HashSet<>(Collections.singletonList("tag1")), true, false);
+        final List<GorDictionaryEntry> lines1 = dict1.getOptimizedLines(new HashSet<>(Collections.singletonList("tag1")), true, false);
         Assert.assertEquals(1, lines1.size());
 
         // We are dealing with file timestamps here (some systems only have 1s resolution).
@@ -378,7 +381,7 @@ public class UTestDictionaryTableReads {
         newDictionaryFileWriter.close();
 
         final DictionaryTableReader dict2 = getTable(dictionaryFile);
-        final List<DictionaryEntry> lines2 = dict2.getOptimizedLines(new HashSet<>(Collections.singletonList("tag1")), true, false);
+        final List<GorDictionaryEntry> lines2 = dict2.getOptimizedLines(new HashSet<>(Collections.singletonList("tag1")), true, false);
 
         Assert.assertEquals(2, lines2.size());
     }
@@ -401,7 +404,8 @@ public class UTestDictionaryTableReads {
     }
 
     public static DictionaryTableReader getTable(String path) throws IOException {
-        return new DictionaryTableReader(path, ProjectContext.DEFAULT_READER);
+        return new DictionaryTableReader(path, ProjectContext.DEFAULT_READER, new GorDictionaryTableMeta(),
+                new GorDictionaryEntryFactory());
     }
 
     @Test
@@ -418,7 +422,7 @@ public class UTestDictionaryTableReads {
 
         String[] res1String = res1.stream().map(DictionaryEntry::formatEntryNoNewLine).sorted().toArray(String[]::new);
 
-        Assert.assertEquals("bucket2\t\t\t\t\t\ttagL2,tag1000,tagL,tagJ,tagK,tagI", res1String[0]);
+        Assert.assertEquals("bucket2\t\ttagL2,tag1000,tagL,tagJ,tagK,tagI", res1String[0]);
     }
 
     @Test

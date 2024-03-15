@@ -28,12 +28,14 @@ import de.tototec.cmdoption.CmdlineParser;
 import de.tototec.cmdoption.handler.AddToCollectionHandler;
 import de.tototec.cmdoption.handler.CmdOptionHandler;
 import org.apache.commons.lang3.ArrayUtils;
+import org.gorpipe.gor.table.dictionary.DictionaryFilter;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
-import org.gorpipe.gor.table.dictionary.TableFilter;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryFilter;
 import org.gorpipe.gor.table.lock.TableTransaction;
 import org.gorpipe.gor.table.util.GenomicRange;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.lock.TableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.logging.GorLogbackUtil;
@@ -177,11 +179,11 @@ public class TableManagerCLI {
                 }
                 table.insert(this.files.stream()
                         .map(f -> PathUtils.relativize(table.getRootPath(), f))
-                        .map(p -> new DictionaryEntry.Builder<>(p, table.getRootPath())
+                        .map(p -> new GorDictionaryEntry.Builder<>(p, table.getRootPath())
                                 .range(GenomicRange.parseGenomicRange(this.range))
                                 .alias(alias)
                                 .tags(this.tags)
-                                .build()).toArray(DictionaryEntry[]::new));
+                                .build()).toArray(GorDictionaryEntry[]::new));
                 trans.commit();
             }
         }
@@ -232,16 +234,16 @@ public class TableManagerCLI {
             DictionaryTable table = tm.initTable(genericOpts.table);
 
             try (TableTransaction trans = TableTransaction.openWriteTransaction(tm.getLockType(), table, table.getName(), tm.getLockTimeout())) {
-                if (source != null && !source.equals(table.getProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
+                if (source != null && !source.equals(table.getProperty(GorDictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY))) {
                     table.setProperty(DictionaryTableMeta.HEADER_SOURCE_COLUMN_KEY, source);
                 }
 
                 table.insert(IntStream.range(0, files.size())
-                        .mapToObj(i -> new DictionaryEntry.Builder<>(PathUtils.relativize(table.getRootPath(), files.get(i)), table.getRootPath())
+                        .mapToObj(i -> new GorDictionaryEntry.Builder<>(PathUtils.relativize(table.getRootPath(), files.get(i)), table.getRootPath())
                                 .range(GenomicRange.parseGenomicRange(ranges.get(i)))
                                 .alias(aliases.get(i))
                                 .tags(new String[]{tags.get(i)})
-                                .build()).toArray(DictionaryEntry[]::new));
+                                .build()).toArray(GorDictionaryEntry[]::new));
                 trans.commit();
             }
         }
@@ -257,7 +259,7 @@ public class TableManagerCLI {
         public void run(GenericOptions genericOpts) {
             // We support taking files both as -f option and generic arguments, simply combine those two before running.
             TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            final TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
+            final DictionaryFilter lines = getBucketableTableEntries(genericOpts, this, tm);
             DictionaryTable table = tm.initTable(genericOpts.table);
             tm.delete(genericOpts.table, lines);
         }
@@ -312,7 +314,7 @@ public class TableManagerCLI {
 
         public void run(GenericOptions genericOpts) {
             TableManager tm = TableManager.newBuilder().lockTimeout(Duration.ofSeconds(genericOpts.lockTimeout)).build();
-            final TableFilter lines = getBucketableTableEntries(genericOpts, this, tm);
+            final DictionaryFilter lines = getBucketableTableEntries(genericOpts, this, tm);
             tm.print(lines);
         }
     }
@@ -439,17 +441,22 @@ public class TableManagerCLI {
         System.out.println(baos.toString().replace("Usage: gormanager", "Usage: gormanager <table>"));
     }
 
-    private static TableFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
+    private static DictionaryFilter getBucketableTableEntries(GenericOptions genericOpts, SelectionArgs args, TableManager tm) {
         String[] allFiles = ArrayUtils.addAll(args.files.toArray(new String[0]), args.files.toArray(new String[0]));
         DictionaryTable table = tm.initTable(genericOpts.table);
 
-        return table.filter()
+        var filter = table.filter()
                 .files(allFiles.length > 0 ? allFiles : null)
                 .aliases(args.aliases.size() > 0 ? args.aliases.toArray(new String[0]) : null)
                 .tags(args.tags.size() > 0 ? args.tags.toArray(new String[0]) : null)
                 .buckets(args.buckets.size() > 0 ? args.buckets.toArray(new String[0]) : null)
-                .chrRange(args.range)
                 .includeDeleted(args.includeDeleted);
+
+        if (filter instanceof GorDictionaryFilter) {
+            ((GorDictionaryFilter) filter).chrRange(args.range);
+        }
+
+        return filter;
     }
 
 }

@@ -1,7 +1,7 @@
 package org.gorpipe.gor.table.files;
 
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -206,8 +206,8 @@ public class UTestGorTable {
         GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insertEntries(List.of(
-                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toString()).alias("A").build(),
-                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toString()).alias("B").build()));
+                (GorDictionaryEntry) new GorDictionaryEntry.Builder("input1.gor",  workDirPath.toString()).alias("A").build(),
+                (GorDictionaryEntry) new GorDictionaryEntry.Builder("input2.gor",  workDirPath.toString()).alias("B").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());
@@ -238,8 +238,8 @@ public class UTestGorTable {
         GorTable<Row> table = new GorTable<>(gorFile.toString());
 
         table.insertEntries(List.of(
-                (DictionaryEntry) new DictionaryEntry.Builder("input1.gor",  workDirPath.toString()).alias("A").build(),
-                (DictionaryEntry) new DictionaryEntry.Builder("input2.gor",  workDirPath.toString()).alias("B").build()));
+                (GorDictionaryEntry) new GorDictionaryEntry.Builder("input1.gor",  workDirPath.toString()).alias("A").build(),
+                (GorDictionaryEntry) new GorDictionaryEntry.Builder("input2.gor",  workDirPath.toString()).alias("B").build()));
         table.save();
 
         Assert.assertArrayEquals(new String[]{"chrom", "pos", "ref"}, table.getColumns());

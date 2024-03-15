@@ -17,10 +17,8 @@ import static org.gorpipe.gor.table.livecycle.TableInfoBase.HISTORY_DIR_NAME;
 
 /**
  * Helper class to implement table live cycle with two phase commit.
- *
- * @param <T>
  */
-public abstract class TableLifeCycleSupport<T>  implements TableLifeCycle<T> {
+public abstract class TableLifeCycleSupport  implements TableLifeCycle {
 
     private static final Logger log = LoggerFactory.getLogger(TableLifeCycleSupport.class);
 
@@ -28,7 +26,7 @@ public abstract class TableLifeCycleSupport<T>  implements TableLifeCycle<T> {
 
     protected final TableLog tableLog;
 
-    protected TableInfoBase<T> table;
+    protected TableInfoBase table;
 
 
     /**
@@ -36,7 +34,7 @@ public abstract class TableLifeCycleSupport<T>  implements TableLifeCycle<T> {
      *
      * @param table              table to support.
      */
-    public TableLifeCycleSupport(TableInfoBase<T> table) {
+    public TableLifeCycleSupport(TableInfoBase table) {
         this.table = table;
         this.tableLog = new TableLog(PathUtils.resolve(table.getFolderPath(), HISTORY_DIR_NAME));
     }

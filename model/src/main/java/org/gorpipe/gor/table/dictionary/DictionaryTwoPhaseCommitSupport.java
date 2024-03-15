@@ -12,7 +12,7 @@ import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.util.Iterator;
 
-public class DictionaryTwoPhaseCommitSupport extends TableTwoPhaseCommitSupport<DictionaryEntry> {
+public class DictionaryTwoPhaseCommitSupport extends TableTwoPhaseCommitSupport {
 
     DictionaryTable table;
 

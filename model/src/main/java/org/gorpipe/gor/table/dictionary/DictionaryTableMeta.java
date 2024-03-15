@@ -38,7 +38,7 @@ public class DictionaryTableMeta extends TableHeader  {
     public static final String HEADER_LINE_FILTER_KEY = "LINE_FILTER";    // not(-nf)
     public static final String DEFAULT_SOURCE_COLUMN = "Source";
     public static final String[] DEFAULT_SHORT_TABLE_HEADER = new String[] {"File", DEFAULT_SOURCE_COLUMN};
-    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", DEFAULT_SOURCE_COLUMN, "ChrStart", "PosStart", "ChrStop", "PosStop", "Tags"};
+    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", DEFAULT_SOURCE_COLUMN, "Tags"};
 
     public DictionaryTableMeta() {
         super();

@@ -33,7 +33,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
-import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -611,12 +611,12 @@ public class TestUtils {
      * @param data     map with alias to files, to be add to the dictionary.
      * @return new table created with the given data.
      */
-    public static DictionaryTable createDictionaryWithData(String name, Path rootPath, Map<String, List<String>> data) {
+    public static GorDictionaryTable createDictionaryWithData(String name, Path rootPath, Map<String, List<String>> data) {
         Path tablePath = rootPath.resolve(DataUtil.toFile(name, DataType.GORD));
         if (Files.exists(tablePath)) {
             throw new GorSystemException("Table already exists:  " + tablePath, null);
         }
-        DictionaryTable table = new DictionaryTable.Builder<>(tablePath.toString()).useHistory(true).validateFiles(false).build();
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(tablePath.toString()).useHistory(true).validateFiles(false).build();
         table.insert(data);
         table.setBucketize(true);
         table.save();

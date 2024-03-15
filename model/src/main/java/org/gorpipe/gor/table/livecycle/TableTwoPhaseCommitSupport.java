@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
  *
  * @param <T>
  */
-public abstract class TableTwoPhaseCommitSupport<T> extends TableLifeCycleSupport<T> implements TableTwoPhaseCommit<T> {
+public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport implements TableTwoPhaseCommit {
 
     private static final Logger log = LoggerFactory.getLogger(TableTwoPhaseCommitSupport.class);
 
@@ -25,7 +25,7 @@ public abstract class TableTwoPhaseCommitSupport<T> extends TableLifeCycleSuppor
      *
      * @param table              table to support.
      */
-    public TableTwoPhaseCommitSupport(TableInfoBase<T> table) {
+    public TableTwoPhaseCommitSupport(TableInfoBase table) {
         super(table);
     }
 

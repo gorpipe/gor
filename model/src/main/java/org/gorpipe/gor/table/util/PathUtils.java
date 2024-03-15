@@ -25,11 +25,9 @@ package org.gorpipe.gor.table.util;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
-import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.rows.sources.sql.LegacyDbSourceType;
 import org.gorpipe.gor.driver.providers.rows.sources.sql.SqlSourceType;
-import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Util;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
@@ -37,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -328,27 +325,4 @@ public class PathUtils {
         return Path.of("").toAbsolutePath().toString();
     }
 
-    /**
-     * Get the final link content for local links.
-     * NOTE:  This method does only support reading links from disk, in many cases we should rather use the
-     *        FileReader.readLinkContent, that uses the driver framework.
-     * @param root
-     * @param path      the path to check.
-     * @return the final link content (recursively traverse the links) if link file, otherwise the original path.
-     * @throws IOException thrown if the link file can not be read.
-     */
-    public static String readLocalLinkContent(String root, String path) throws IOException {
-        return DataUtil.isLink(path) && root != null
-                ? readLocalLinkContent(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
-                : path;
-    }
-
-    /**
-     * Gords are not handled by the driver framework (yet), and hence we must manually resolve the links to gords.
-     */
-    public static String readLocalLinkContentForGord(String root, String path) throws IOException {
-        return DataUtil.isGord(path) && root != null
-                ? readLocalLinkContentForGord(root, relativize(root, Files.readString(Path.of(resolve(root, path)))).toString())
-                : path;
-    }
 }

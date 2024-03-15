@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static gorsat.TestUtils.assertTwoGorpipeResults;
 import static org.gorpipe.gor.driver.utils.TestUtils.md5;
 
 /**
@@ -337,18 +338,20 @@ public abstract class CommonStreamTests {
 
     @Test
     public void testNor() throws IOException {
-        String testFile = "nor/simple.nor";
+        String testFile = "nor/simple_result.nor";
         String source = TestUtils.getTestFile(testFile);
 
-        TestUtils.assertFullGor(securityContext(), source, TestUtils.readFile(new File(TestUtils.getTestFile(testFile))));
+        TestUtils.assertFullGor(securityContext(),
+                source,
+                TestUtils.readFile(new File(TestUtils.getTestFile(testFile))));
     }
 
     @Test
     public void testNorz() throws IOException {
         String source = TestUtils.getTestFile("nor/simple.norz");
-        String testFile = "nor/simple.nor";
+        String testFile = TestUtils.getTestFile("nor/simple_result.nor");
 
-        TestUtils.assertFullGor(securityContext(), source, TestUtils.readFile(new File(TestUtils.getTestFile(testFile))));
+        assertTwoGorpipeResults("nor " + testFile + " | select 3-", "nor " + source);
     }
 
     protected abstract void verifyDriverDataSource(String name, DataSource fs);

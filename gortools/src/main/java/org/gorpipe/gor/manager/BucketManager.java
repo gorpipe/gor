@@ -31,6 +31,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
 import org.gorpipe.gor.table.lock.TableLock;
@@ -40,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
@@ -89,7 +89,7 @@ public class BucketManager<T extends DictionaryEntry> {
     private Class<? extends TableLock> lockType = DEFAULT_LOCK_TYPE;
     private Duration lockTimeout = DEFAULT_LOCK_TIMEOUT;
 
-    private final DictionaryTable table;
+    private final DictionaryTable<DictionaryEntry> table;
 
     private int bucketSize;
     private int minBucketSize;
@@ -484,8 +484,8 @@ public class BucketManager<T extends DictionaryEntry> {
     private void updateTableWithNewBucket(DictionaryTable table, String bucket, List<T> bucketEntries) {
         try (TableTransaction trans = TableTransaction.openWriteTransaction(this.lockType, table, table.getName(), this.lockTimeout)) {
             // Update the lines we bucketized.
-            table.removeFromBucket((List<DictionaryEntry>) bucketEntries);
-            table.addToBucket(bucket, (List<DictionaryEntry>) bucketEntries);
+            table.removeFromBucket(bucketEntries);
+            table.addToBucket(bucket, bucketEntries);
             // TODO: Keep track of added files, use for clean up to guarantee that we are only deleting what we have created.
 
             table.setProperty(HEADER_BUCKET_SIZE_KEY, Integer.toString(this.getBucketSize()));
@@ -524,7 +524,7 @@ public class BucketManager<T extends DictionaryEntry> {
      */
     private DictionaryTable initTempTable(String path) {
         if (DataUtil.isGord(path)) {
-            return new DictionaryTable.Builder<>(path)
+            return new GorDictionaryTable.Builder<>(path)
                     .useHistory(table.isUseHistory())
                     .sourceColumn(table.getSourceColumn())
                     .fileReader(table.getFileReader())
