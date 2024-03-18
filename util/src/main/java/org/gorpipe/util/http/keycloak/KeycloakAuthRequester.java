@@ -118,7 +118,7 @@ public abstract class KeycloakAuthRequester implements AuthRequester {
             var result = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             return handleResponse(result, retries, (r) -> internalPost(url, data, r));
         } catch(IOException e) {
-            throw new GorResourceException("Failed to call " + url, url.toString(), e);
+            throw new GorResourceException("Failed to call", url.toString(), e);
         } catch (InterruptedException e) {
             throw new GorSystemException("Error getting JWT, Operation cancelled", e);
         }

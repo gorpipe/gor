@@ -35,14 +35,14 @@ public class FolderMigratorCommand extends HelpOptions implements Runnable {
         try {
             Path input = Paths.get(inputFolder);
             if (!Files.exists(input)) {
-                throw new GorResourceException("Input folder does not exist: " + inputFolder, inputFolder);
+                throw new GorResourceException("Input folder does not exist", inputFolder);
             }
             if (!Files.isDirectory(input)) {
-                throw new GorResourceException("Input folder is not a directory: " + inputFolder, inputFolder);
+                throw new GorResourceException("Input folder is not a directory", inputFolder);
             }
 
             if (outputFolder == null || outputFolder.isEmpty()) {
-                throw new GorResourceException("No output folder specified: " + outputFolder, outputFolder);
+                throw new GorResourceException("No output folder specified", outputFolder);
             }
 
             FolderMigrator.migrate(input, Paths.get(outputFolder));

@@ -68,7 +68,7 @@ public abstract class AuthorizedHttpClient {
             var result = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             return handleResponse(result, retries, (r) -> internalPost(url, data, r));
         } catch(IOException e) {
-            throw new GorResourceException("Failed to call " + url, url.toString(), e);
+            throw new GorResourceException("Failed to call", url.toString(), e);
         }
     }
 
@@ -85,7 +85,7 @@ public abstract class AuthorizedHttpClient {
             var result = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             return handleResponse(result, retries, (r) -> internalGet(url, r));
         } catch (IOException e) {
-            throw new GorResourceException("Failed to call " + url, url.toString(), e);
+            throw new GorResourceException("Failed to call", url.toString(), e);
         }
     }
 
@@ -96,7 +96,7 @@ public abstract class AuthorizedHttpClient {
         } else if(response.statusCode() == HttpURLConnection.HTTP_CLIENT_TIMEOUT) {
             return callback.apply(retries+1);
         } else if(response.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
-            throw new GorResourceException("Document " + response.uri() + " not found.\n" + response.body(), null);
+            throw new GorResourceException("Document " + response.uri() + " not found.\n" + response.body(), response.uri().toString());
         } else if (response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
             throw new GorSystemException("Calling " + response.uri() + " returned with status code: " + response.statusCode() + "\n" + response.body(), null);
         }

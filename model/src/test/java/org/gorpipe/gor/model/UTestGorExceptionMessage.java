@@ -35,7 +35,7 @@ public class UTestGorExceptionMessage {
         try {
             TestUtils.runGorPipeCount("gor #dbsnp# | top 10");
         } catch (GorResourceException e) {
-            Assert.assertEquals("Input source does not exist: #dbsnp#", e.getMessage());
+            Assert.assertEquals("Input source does not exist: #dbsnp#\nURI: #dbsnp#", e.getMessage());
         }
     }
 

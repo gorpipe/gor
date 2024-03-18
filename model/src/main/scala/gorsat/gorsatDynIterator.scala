@@ -292,8 +292,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         r
       } catch {
         case e: ArrayIndexOutOfBoundsException =>
-          val exception = new GorDataException("Invalid GOR row")
-          exception.setRow(nr.otherCols())
+          val exception = new GorDataException("Invalid GOR row", nr.otherCols())
           throw exception
       }
     }

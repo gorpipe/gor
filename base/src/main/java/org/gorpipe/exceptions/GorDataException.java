@@ -53,7 +53,11 @@ public class GorDataException extends GorUserException {
     }
 
     public GorDataException(String message, int columnNumber, String header, String row, Throwable cause) {
-        super(message, cause);
+        this(message, columnNumber, header, row, cause, true);
+    }
+
+    public GorDataException(String message, int columnNumber, String header, String row, Throwable cause, boolean doFormat) {
+        super(doFormat ? format(message, columnNumber, header, row) : message, cause);
         this.header = header;
         this.row = row;
         this.columnNumber = columnNumber;
@@ -63,47 +67,34 @@ public class GorDataException extends GorUserException {
         return this.header;
     }
 
-    public void setHeader(String header) {
-        this.header = header;
-    }
-
     public String getRow() {
         return this.row;
-    }
-
-    public void setRow(String row) {
-        this.row = row;
     }
 
     public int getColumnNumber() {
         return this.columnNumber;
     }
 
-    public void setColumnNumber(int columnNumber) {
-        this.columnNumber = columnNumber;
-    }
-
-    @Override
-    public String toString() {
+    static public String format(String message, int columnNumber, String header, String row) {
         StringBuilder builder = new StringBuilder();
-        builder.append(super.toString());
+        builder.append(message);
 
         if (!ExceptionUtilities.isNullOrEmpty(header)) {
+            builder.append("\n");
             builder.append("Header: ");
             builder.append(header);
-            builder.append("\n");
         }
 
         if (!ExceptionUtilities.isNullOrEmpty(row)) {
+            builder.append("\n");
             builder.append("Row: ");
             builder.append(row);
-            builder.append("\n");
         }
 
         if (columnNumber >= 0) {
+            builder.append("\n");
             builder.append("Column: ");
             builder.append(columnNumber);
-            builder.append("\n");
         }
 
         return builder.toString();

@@ -126,7 +126,7 @@ public class BaseScriptExecutionEngine {
                     } catch(GorException ge) {
                         throw ge;
                     } catch(Exception e) {
-                        throw new GorResourceException("Could not get file signature for:  " + fileName, fileName, e);
+                        throw new GorResourceException("Could not get file signature", fileName, e);
                     }
                 }
             }

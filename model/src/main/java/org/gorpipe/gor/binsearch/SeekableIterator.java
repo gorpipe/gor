@@ -344,7 +344,7 @@ public class SeekableIterator implements AutoCloseable {
 
     private void doubleTheBuffer() {
         if (this.buffer.length > MAXIMUM_LINE_SIZE) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Buffer is larger than then maximum line size of " + MAXIMUM_LINE_SIZE + " bytes.");
         } else {
             this.buffer = new byte[2 * this.buffer.length];
         }

@@ -31,26 +31,15 @@ public class GorResourceException extends GorUserException {
     }
 
     public GorResourceException(String message, String uri, Throwable cause) {
-        super(message, cause);
+        this(message, uri, cause, true);
+    }
+
+    public GorResourceException(String message, String uri, Throwable cause, boolean doFormat) {
+        super(doFormat ? message + "\nURI: " + uri : message, cause);
         this.uri = uri;
     }
 
     public String getUri() {
         return this.uri;
     }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(super.toString());
-
-        if (!ExceptionUtilities.isNullOrEmpty(uri)) {
-            builder.append("URI: ");
-            builder.append(uri);
-            builder.append("\n");
-        }
-
-        return builder.toString();
-    }
-
 }

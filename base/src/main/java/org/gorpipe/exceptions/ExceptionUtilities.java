@@ -442,7 +442,8 @@ public final class ExceptionUtilities {
 
     private static GorException createGorResourceException(JSONObject obj) {
         GorResourceException exception = new GorResourceException(getStringValue(obj, MESSAGE, ""),
-                getStringValue(obj, URI, ""));
+                getStringValue(obj, URI, ""),
+                null, false);
 
         updateGorUserException(obj, exception);
 
@@ -453,7 +454,8 @@ public final class ExceptionUtilities {
         GorDataException exception = new GorDataException(getStringValue(obj, MESSAGE, ""),
                 getIntValue(obj, COLUMN_NUMBER, -1),
                 getStringValue(obj, HEADER, ""),
-                getStringValue(obj, ROW, ""));
+                getStringValue(obj, ROW, ""),
+                null, false);
 
         updateGorUserException(obj, exception);
 

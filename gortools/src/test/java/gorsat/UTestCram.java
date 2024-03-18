@@ -113,7 +113,7 @@ public class UTestCram {
         try {
             TestUtils.runGorPipeCount(args);
         } catch (GorResourceException e) {
-            Assert.assertEquals("Reference does not exist.", e.getMessage());
+            Assert.assertTrue(e.getMessage().startsWith("Reference does not exist."));
             Assert.assertTrue(e.getUri().endsWith("cram_query_sorted2.fasta"));
         }
     }

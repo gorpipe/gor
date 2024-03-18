@@ -123,7 +123,7 @@ public class AzureBlobSource implements StreamSource {
         if (t instanceof BlobStorageException bse) {
             handleBlobStorageException(bse);
         } else if (t instanceof URISyntaxException) {
-            throw new GorResourceException("Invalid azure url: " + url, url, t);
+            throw new GorResourceException("Invalid azure url", url, t);
         } else if (t instanceof InvalidKeyException) {
             throw new GorSystemException("Invalid azure key for url: " + url, t);
         } else if (t.getCause() instanceof IllegalArgumentException) {

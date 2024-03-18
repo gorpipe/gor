@@ -22,8 +22,8 @@
 
 package gorsat
 
-import gorsat.Outputs.{NullOut, ToList}
-import gorsat.process.{GenericSessionFactory, GorPipeCommands}
+import Outputs.{ToList}
+import process.{GenericSessionFactory, GorPipeCommands}
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
@@ -31,7 +31,6 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
-import java.util
 import scala.collection.mutable.ListBuffer
 
 @RunWith(classOf[JUnitRunner])

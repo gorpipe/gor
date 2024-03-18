@@ -354,7 +354,7 @@ public class Dictionary {
                     bucketTotalCounts.toArray(), bucketActiveCount.toArray(), resetBucketNames.toArray(new String[0]),
                     bucketTagsList.toArray(new Set[0]), bucketHasDeletedFile, validTags, useCache);
         } catch (IOException ex) {
-            throw new GorResourceException("Error Initializing Query. Can not open file " + path, path, ex);
+            throw new GorResourceException("Error Initializing Query. Can not open file", path, ex);
         }
     }
 

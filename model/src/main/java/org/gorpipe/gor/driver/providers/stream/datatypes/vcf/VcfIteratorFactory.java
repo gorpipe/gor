@@ -73,7 +73,7 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
                         for (var info : infos) { it.addAdditionalInfo(info); }
                         return it;
                     } catch (IOException e) {
-                        throw new GorResourceException("Failed to open file " + file.getFileSource().getPath(), file.getFileSource().getPath().toString());
+                        throw new GorResourceException("Failed to open file", file.getFileSource().getPath().toString());
                     }
                 }
 
