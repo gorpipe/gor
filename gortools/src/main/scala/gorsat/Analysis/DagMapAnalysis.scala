@@ -24,6 +24,7 @@ package gorsat.Analysis
 
 import gorsat.Commands.Analysis
 import gorsat.gorsatGorIterator.{FileLineIterator, MapAndListUtilities}
+import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
@@ -34,6 +35,7 @@ object DagMapAnalysis {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
+  private val DEFAULT_MAX_DAG_LEVEL = 20
 
   case class DAGnode(lookupName: String, displayName: String) {
     var childrens: List[DAGnode] = Nil
@@ -43,7 +45,8 @@ object DagMapAnalysis {
     var showDAGPath = false
     var nodes = Map.empty[String, DAGnode]
     var pathSeparator: String = "->"
-    var dagLevel = 20
+    var dagLevel = DEFAULT_MAX_DAG_LEVEL
+    var maxDagLevel = DEFAULT_MAX_DAG_LEVEL
 
 
     def createOrFind(name: String): DAGnode = {
@@ -58,9 +61,9 @@ object DagMapAnalysis {
     }
 
     private def x_leafs(node: DAGnode, depth: Int, path: String): List[(String, Int, String)] = {
-      if (depth > 20) {
-        logger.warn("Depth > 20 detected!!! The graph used with INDAG is most likely not acyclic!")
-        return Nil
+
+      if (depth > maxDagLevel) {
+        throw new GorDataException("Depth > " + dagLevel + " detected!!! The graph used with INDAG is most likely not a DAG!")
       }
 
       if (depth > dagLevel) {
@@ -68,6 +71,7 @@ object DagMapAnalysis {
       }
 
       var l = List((node.displayName, depth, if (showDAGPath) path else ""))
+
       if (showDAGPath)
         node.childrens.foreach(c => l :::= x_leafs(c, depth + 1, path + pathSeparator + c.displayName))
       else
@@ -133,7 +137,7 @@ object DagMapAnalysis {
   }
 
   case class DAGMultiMapLookup(session: GorSession, iteratorCommand: String, iterator: LineIterator, fileName: String, columns: List[Int], caseInsensitive: Boolean,
-                               missingVal: String, returnMiss: Boolean, showDAGPAth: Boolean, pathSeparator: String, dagLevel: Int) extends Analysis {
+                               missingVal: String, returnMiss: Boolean, showDAGPAth: Boolean, pathSeparator: String, dagLevel: Int, maxDagLevel: Int = DEFAULT_MAX_DAG_LEVEL) extends Analysis {
     val returnMissing: Boolean = if (returnMiss) true else false
     val singleCol: Boolean = if (columns.length == 1) true else false
     var theDAG: DAG = _
@@ -145,6 +149,7 @@ object DagMapAnalysis {
       theDAG.pathSeparator = pathSeparator
       theDAG.dagLevel = dagLevel
       theDAG.showDAGPath = showDAGPAth
+      theDAG.maxDagLevel = maxDagLevel
     }
 
     override def process(r: Row): Unit = {
