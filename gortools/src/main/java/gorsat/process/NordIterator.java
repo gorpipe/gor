@@ -28,7 +28,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
-import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable;
+import org.gorpipe.gor.table.NorDictionaryTable;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.gor.util.StringUtil;

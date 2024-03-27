@@ -1,7 +1,6 @@
-package org.gorpipe.gor.table.dictionary.nor;
+package org.gorpipe.gor.table;
 
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.table.TableCache;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.slf4j.Logger;

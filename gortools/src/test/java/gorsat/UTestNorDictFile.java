@@ -24,7 +24,7 @@ package gorsat;
 
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable;
+import org.gorpipe.gor.table.NorDictionaryTable;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Before;

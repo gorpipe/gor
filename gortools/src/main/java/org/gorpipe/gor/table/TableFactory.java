@@ -3,7 +3,6 @@ package org.gorpipe.gor.table;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryCache;
-import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable;
 import org.gorpipe.gor.table.files.GorTable;
 import org.gorpipe.gor.table.files.NorTable;
 import org.gorpipe.gor.util.DataUtil;

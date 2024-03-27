@@ -20,14 +20,18 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.table.dictionary.nor;
+package org.gorpipe.gor.table;
 
 
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
+import org.gorpipe.gor.table.dictionary.nor.NorDictionaryEntryFactory;
+import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTableMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import gorsat.Iterators.NorInputSource;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -58,6 +62,25 @@ public class NorDictionaryTable extends DictionaryTable<DictionaryEntry> {
 
     public NorDictionaryTable(Builder builder) {
         super(builder);
+    }
+
+    // We need to override this as fileReader.readHeaderLine(file) will not work for header less nor files.
+    protected TableHeader parseHeaderFromFile(String file) {
+        TableHeader newHeader = header.newLineHeader();
+
+        try {
+            String headerLine = new NorInputSource(file, fileReader, false, false, 0, false, false, false).getHeader();
+            if (headerLine != null) {
+                var CHROM_NOR_COLS = "ChromNOR\tPosNOR\t";
+                newHeader.setColumns(headerLine.startsWith(CHROM_NOR_COLS) ? headerLine.substring(CHROM_NOR_COLS.length()).split("\t") : headerLine.split("\t"));
+            } else {
+                newHeader.setColumns( new String[]{""});
+            }
+        } catch (Exception e) {
+            throw new GorDataException("Could not get header for validation from input file " + file, e);
+        }
+
+        return newHeader;
     }
 
     public static class Builder<B extends Builder<B>> extends DictionaryTable.Builder<B> {

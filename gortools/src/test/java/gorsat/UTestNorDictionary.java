@@ -30,7 +30,7 @@ import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.session.ProjectContext;
-import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable;
+import org.gorpipe.gor.table.NorDictionaryTable;
 import org.gorpipe.test.SlowTests;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;

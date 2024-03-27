@@ -31,7 +31,7 @@ import gorsat.Utilities.{AnalysisUtilities, Utilities}
 import gorsat.process.{NordIterator, PipeOptions}
 import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
-import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable
+import org.gorpipe.gor.table.NorDictionaryTable
 import org.gorpipe.gor.util.DataUtil
 
 import java.nio.file.{Files, Path}

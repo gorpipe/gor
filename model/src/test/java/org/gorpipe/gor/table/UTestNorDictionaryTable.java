@@ -26,7 +26,6 @@ import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.DictionaryFilter;
-import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTable;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 
@@ -688,6 +687,66 @@ public class UTestNorDictionaryTable {
         dict.save();
 
         Assert.assertEquals("file1.nor\tpn1\t\nfile2.nor\tpn2\t\n", FileUtils.readFileToString(nordFile, Charset.defaultCharset()));
+    }
+
+
+    @Test
+    public void testNordWithHeaderFiles() throws IOException {
+        String testName = "testNordWithHeaderlessFiles";
+
+        FileUtils.writeStringToFile(new File(tableWorkDir.toFile(), "file1.nor"), "#col1\tcol2\ncol111\tcol112\ncol121\tpn122\n", Charset.defaultCharset());
+        FileUtils.writeStringToFile(new File(tableWorkDir.toFile(), "file2.nor"), "#col1\tcol2\ncol211\tpn212\ncol221\tpn222\n", Charset.defaultCharset());
+
+        File nordFile = new File(tableWorkDir.toFile(), testName + ".nord");
+        FileUtils.writeStringToFile(nordFile, "./file1.nor\tpn1\n", Charset.defaultCharset());
+
+        Assert.assertEquals("./file1.nor\tpn1\n", FileUtils.readFileToString(nordFile, Charset.defaultCharset()));
+
+        var results = TestUtils.runGorPipe("nor " + nordFile.getAbsolutePath());
+        Assert.assertEquals("ChromNOR\tPosNOR\tcol1\tcol2\tSource\n" +
+                "chrN\t0\tcol111\tcol112\tpn1\n" +
+                "chrN\t0\tcol121\tpn122\tpn1\n", results);
+
+        NorDictionaryTable dict = new NorDictionaryTable(nordFile.toPath());
+        dict.setValidateFiles(true);
+        dict.insert("file2.nor\tpn2");
+        dict.save();
+
+        results = TestUtils.runGorPipe("nor " + nordFile.getAbsolutePath());
+        Assert.assertEquals("ChromNOR\tPosNOR\tcol1\tcol2\tSource\n" +
+                "chrN\t0\tcol111\tcol112\tpn1\n" +
+                "chrN\t0\tcol121\tpn122\tpn1\n" +
+                "chrN\t0\tcol211\tpn212\tpn2\n" +
+                "chrN\t0\tcol221\tpn222\tpn2\n", results);
+    }
+
+    @Test
+    public void testNordWithHeaderlessFiles() throws IOException {
+        String testName = "testNordWithHeaderlessFiles";
+
+        FileUtils.writeStringToFile(new File(tableWorkDir.toFile(), "file1.nor"), "col111\tcol112\ncol121\tpn122\n", Charset.defaultCharset());
+        FileUtils.writeStringToFile(new File(tableWorkDir.toFile(), "file2.nor"), "col211\tpn212\ncol221\tpn222\n", Charset.defaultCharset());
+
+        File nordFile = new File(tableWorkDir.toFile(), testName + ".nord");
+        FileUtils.writeStringToFile(nordFile, "./file1.nor\tpn1\n", Charset.defaultCharset());
+
+        Assert.assertEquals("./file1.nor\tpn1\n", FileUtils.readFileToString(nordFile, Charset.defaultCharset()));
+
+        var results = TestUtils.runGorPipe("nor " + nordFile.getAbsolutePath());
+        Assert.assertEquals("ChromNOR\tPosNOR\tcol1\tcol2\tSource\n" +
+                "chrN\t0\tcol111\tcol112\tpn1\n" +
+                "chrN\t0\tcol121\tpn122\tpn1\n", results);
+        NorDictionaryTable dict = new NorDictionaryTable(nordFile.toPath());
+        dict.setValidateFiles(true);
+        dict.insert("file2.nor\tpn2");
+        dict.save();
+
+        results = TestUtils.runGorPipe("nor " + nordFile.getAbsolutePath());
+        Assert.assertEquals("ChromNOR\tPosNOR\tcol1\tcol2\tSource\n" +
+                "chrN\t0\tcol111\tcol112\tpn1\n" +
+                "chrN\t0\tcol121\tpn122\tpn1\n" +
+                "chrN\t0\tcol211\tpn212\tpn2\n" +
+                "chrN\t0\tcol221\tpn222\tpn2\n", results);
     }
 
     @SafeVarargs
