@@ -24,6 +24,8 @@ package gorsat.parser;
 
 import org.junit.Test;
 
+import java.util.TimeZone;
+
 public class UTestCalcCompilerFunctionCalls extends TestCalcCompilerBase {
     @Test
     public void functionCall() {
@@ -66,7 +68,10 @@ public class UTestCalcCompilerFunctionCalls extends TestCalcCompilerBase {
 
     @Test
     public void functionCallLongReturn() {
-        assertResult("epoch('16/06/2017','dd/MM/yyyy')", 1497571200000L);
+        long testEpochTime = 1497571200000L;
+        // Adjust epoch time to the system's time zone
+        long adjustedEpochTime = testEpochTime - TimeZone.getDefault().getOffset(testEpochTime);
+        assertResult("epoch('16/06/2017','dd/MM/yyyy')", adjustedEpochTime);
     }
 
     @Test

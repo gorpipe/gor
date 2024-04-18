@@ -24,15 +24,25 @@ package gorsat.parser;
 
 import gorsat.TestUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.TimeZone;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class UTestDateFunctions {
+    private long adjustedEpochTime;
+    @Before
+    public void setupTest() {
+        long epochTime = 1497571200000L;
+
+        // Adjust epoch time to the system's time zone
+        adjustedEpochTime = epochTime - TimeZone.getDefault().getOffset(epochTime);
+    }
     @Test
     public void testDateNoArgs() {
         LocalDateTime before = LocalDateTime.now().truncatedTo(SECONDS);
@@ -56,13 +66,13 @@ public class UTestDateFunctions {
 
     @Test
     public void testEdateDefaultFormat() {
-        String dateString = TestUtils.getCalculated("edate(1497571200000)");
+        String dateString = TestUtils.getCalculated("edate(" + adjustedEpochTime + ")");
         Assert.assertEquals("2017-06-16 00:00:00", dateString);
     }
 
     @Test
     public void testEdateGivenFormat() {
-        String dateString = TestUtils.getCalculated("edate(1497571200000, 'dd/MM/yyyy')");
+        String dateString = TestUtils.getCalculated("edate("+ adjustedEpochTime +", 'dd/MM/yyyy')");
         Assert.assertEquals("16/06/2017", dateString);
     }
 
@@ -79,7 +89,7 @@ public class UTestDateFunctions {
     public void testEpochGivenTimeAndFormat() {
         String epochAsString = TestUtils.getCalculated("epoch('16/06/2017','dd/MM/yyyy')");
         long epoch = Long.parseLong(epochAsString);
-        Assert.assertEquals(1497571200000L, epoch);
+        Assert.assertEquals(adjustedEpochTime, epoch);
     }
 
     @Test
