@@ -23,7 +23,7 @@
 package gorsat.process
 
 import gorsat.Commands._
-import gorsat.InputSources.{Cmd, Meta, Nor, Sql}
+import gorsat.InputSources.{Cmd, Gorif, Meta, Nor, Sql}
 
 /**
   * Methods to register and access gor input sources. Input sources need to be registered before use.
@@ -66,7 +66,9 @@ object GorInputSources {
   def register() : Unit = synchronized {
     if (commandMap.isEmpty) {
       addInfo(new gorsat.InputSources.Gor)
+      addInfo(new Gorif)
       addInfo(new Nor.Nor)
+      addInfo(new Nor.Norif)
       addInfo(new Nor.GorNor)
       addInfo(new gorsat.InputSources.Gorrow)
       addInfo(new gorsat.InputSources.Gorrows)

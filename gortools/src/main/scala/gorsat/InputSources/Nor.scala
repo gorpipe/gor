@@ -27,7 +27,7 @@ import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo
 import gorsat.DynIterator
 import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NoValidateNorInputSource, NorInputSource, ServerGorSource, ServerNorGorSource}
-import gorsat.Utilities.AnalysisUtilities
+import gorsat.Utilities.{AnalysisUtilities, Utilities}
 import gorsat.process.{NordIterator, PipeOptions}
 import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
@@ -38,6 +38,11 @@ import java.nio.file.{Files, Path}
 
 object Nor
 {
+  private val norOptions: List[String] = List("-h", "-asdict", "-r", "-i", "-m", "-nl", "-fs", "-nv")
+  private val norValueOptions: List[String] = List("-f", "-ff", "-s", "-d", "-c")
+  private val norifValueOptions: List[String] = norValueOptions ::: List("-dh")
+  private val gornorOptions: List[String] = norOptions.filter(element => element != "nv")
+
   def processNorArguments(context: GorContext, argString: String, iargs: Array[String],
                           args: Array[String]): InputSourceParsingResult = {
 
@@ -73,7 +78,7 @@ object Nor
             if (k == -1) false else true
           } else false
 
-          if (iteratorCommandUpper.startsWith("GOR") || iscmd) {
+          if (iteratorCommandUpper.startsWith("GOR") || iteratorCommandUpper.startsWith("GORIF")|| iscmd) {
             inputSource = new DynamicNorGorSource(iteratorCommand, context)
           } else {
             inputSource = new DynamicNorSource(iteratorCommand, context)
@@ -168,7 +173,7 @@ object Nor
     }
   }
 
-  class Nor() extends InputSourceInfo("NOR", CommandArguments("-h -asdict -r -i -m -nl -fs -nv", "-f -ff -s -d -c", 1), isNorCommand = true) {
+  class Nor() extends InputSourceInfo("NOR", CommandArguments(norOptions.mkString(" "), norValueOptions.mkString(" "), 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -176,7 +181,32 @@ object Nor
     }
   }
 
-  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments("-h -asdict -r -i -m -nl -fs", "-f -ff -s -d -c", 1), isNorCommand = true) {
+  class Norif() extends InputSourceInfo("NORIF", CommandArguments(norOptions.mkString(" "), norifValueOptions.mkString(" "), 1), isNorCommand = true) {
+
+    override def processArguments(context: GorContext, argString: String, iargs: Array[String],
+                                  args: Array[String]): InputSourceParsingResult = {
+
+      // Filter out filepath if not exists
+      val nonExistentFiles = iargs.filter(arg =>
+        !CommandParseUtilities.isNestedCommand(arg) &&
+          !context.getSession.getProjectContext.getFileReader.exists(arg)).toList
+      val checkedIargs = iargs.filterNot(nonExistentFiles.contains)
+
+      if (checkedIargs.isEmpty) {
+        Utilities.handleNoValidFilePaths(args)
+      }else {
+        // remove the none existent file paths and -dh (and value) from args
+        val updatedArgs = args.filterNot(nonExistentFiles.contains)
+        if (hasOption(args, "-dh")){
+          updatedArgs.patch(args.indexOf("-dh"), Nil, 2)
+        }
+        processNorArguments(context, argString, checkedIargs, updatedArgs)
+      }
+
+    }
+  }
+
+  class GorNor() extends InputSourceInfo("GORNOR", CommandArguments(gornorOptions.mkString(" "), norValueOptions.mkString(" "), 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -209,5 +239,4 @@ object Nor
     iterator.init(context.getSession)
     iterator
   }
-
 }

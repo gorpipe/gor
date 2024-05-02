@@ -22,9 +22,12 @@
 
 package gorsat.Utilities
 
+import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
+
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
-import gorsat.Commands.{BinaryWrite, CommandInfo, CommandParseUtilities, Write}
+import gorsat.Commands.{BinaryWrite, CommandInfo, CommandParseUtilities, InputSourceParsingResult, Write}
+import gorsat.Iterators.RowListIterator
 import org.gorpipe.exceptions.GorParsingException
 
 import scala.jdk.CollectionConverters.SetHasAsJava
@@ -42,6 +45,22 @@ object Utilities {
     val perms = Set(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ)
     Files.setPosixFilePermissions(cacheFile, perms.asJava)
     cacheFile.toAbsolutePath.toString
+  }
+
+  def handleNoValidFilePaths(args: Array[String]): InputSourceParsingResult = {
+    if (!hasOption(args, "-dh")) {
+      throw new GorParsingException("Default header (-dh) is required when none of the provided file paths are valid.")
+    } else {
+      // return an iterator that only delivers the header defined with -dh.
+      val header = stringValueOfOption(args, "-dh").replace("\\t", "\t")
+      val headerCols = header.split("\t")
+      if (headerCols.length < 2 || headerCols(0).isEmpty || headerCols(1).isEmpty) {
+        throw new GorParsingException("-dh requires at least 2 non-empty values")
+      }
+      val inputSource = RowListIterator(List())
+      inputSource.setHeader(header)
+      InputSourceParsingResult(inputSource, header, isNorContext = false)
+    }
   }
 
 }

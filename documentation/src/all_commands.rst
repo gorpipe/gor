@@ -36,6 +36,7 @@
    command/GAVA
    command/GOR
    command/GORCMD
+   command/GORIF
    command/GORROWS
    command/GORSQL
    command/GRANNO
@@ -60,6 +61,7 @@
    command/MULTIMAP
    command/NOR
    command/NORCMD
+   command/NORIF
    command/NORROWS
    command/NORSQL
    command/PARALLEL

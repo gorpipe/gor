@@ -53,13 +53,14 @@ def addStartSelector(cmd : String, seekChr : String, seekPos : Int, endPos : Int
     if (cmd.toLowerCase.startsWith("gorrow ")) return cmd
     else if (cmd.toLowerCase.startsWith("gorrows ")) return cmd
     else if (cmd.toLowerCase.startsWith("nor ")) return cmd
+    else if (cmd.toLowerCase.startsWith("norif ")) return cmd
     else if (cmd.toLowerCase.startsWith("norrows ")) return cmd
-    else if (cmd.toLowerCase.startsWith("sdl")) return cmd
-    else if (cmd.toLowerCase.startsWith("norsql")) return cmd
+    else if (cmd.toLowerCase.startsWith("sdl ")) return cmd
+    else if (cmd.toLowerCase.startsWith("norsql ")) return cmd
     var cmd2 = cmd
 
     val lcmd = cmd2.toLowerCase
-    var offset = if( lcmd.startsWith("gor ") || lcmd.startsWith("cmd ") || lcmd.startsWith("sql ") ) 4 else if( allowedCmds != null && allowedCmds.keySet().stream().map(s => s.toLowerCase).anyMatch(s => s.equals(cmdname.toLowerCase)) ) cmdname.length+1 else -1
+    var offset = if( lcmd.startsWith("gor ") || lcmd.startsWith("cmd ") || lcmd.startsWith("sql ") ) 4 else if (lcmd.startsWith("gorif ")) 6 else if( allowedCmds != null && allowedCmds.keySet().stream().map(s => s.toLowerCase).anyMatch(s => s.equals(cmdname.toLowerCase)) ) cmdname.length+1 else -1
     if( isHeader ) {
       if( offset == -1 ) return "gor "+cmd
       else return cmd

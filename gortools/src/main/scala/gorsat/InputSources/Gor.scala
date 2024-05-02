@@ -38,8 +38,12 @@ import org.gorpipe.model.gor.Pipes
 import scala.collection.mutable.ListBuffer
 
 
+object Gor {
+  val options: List[String] = List("-nowithin", "-stdin", "-nf", "-fs", "-w", "-Y", "-g", "-q")
+  val valueOptions: List[String] = List("-s", "-f", "-ff", "-b", "-Z", "-dict", "-parts", "-p", "-seek", "-idx", "-ref", "-c", "-r", "-H", "-X")
+}
 
-class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -nf -fs -w -Y -g -q", "-s -f -ff -b -Z -dict -parts -p -seek -idx -ref -c -r -H -X", 1)) {
+class Gor() extends InputSourceInfo("GOR", CommandArguments(Gor.options.mkString(" "), Gor.valueOptions.mkString(" "), 1)) {
 
   override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                 args: Array[String]): InputSourceParsingResult = {
@@ -102,7 +106,7 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments("-nowithin -stdin -n
           }
         }
 
-        val dynamicSource: DynamicRowSource = if (iteratorCommand.toUpperCase.startsWith("NOR ") && !iteratorCommand.replaceAll(" ","").toUpperCase.contains("|TOGOR"))
+        val dynamicSource: DynamicRowSource = if ((iteratorCommand.toUpperCase.startsWith("NOR ") || iteratorCommand.toUpperCase.startsWith("NORIF ")) && !iteratorCommand.replaceAll(" ","").toUpperCase.contains("|TOGOR"))
           new gorsat.DynIterator.DynamicGorNorSource(iteratorCommand, context) else new DynamicRowSource(iteratorCommand, context)
         if (hasOption(args, "-b")) dynamicSource.setBufferSize(bufferSize)
         if (hasOption(args, "-seek")) {

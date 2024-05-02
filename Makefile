@@ -24,6 +24,9 @@ test:  ## Run all tests.
 compile-all-with-warnings:  ## Compile code and tests.
 	./gradlew --rerun-tasks --console=plain --warning-mode all clean compileJava compileTestJava
 
+build-doc:  ## Build documentation
+	./gradlew build -Pinclude.documentation
+
 #
 # Local testing
 #

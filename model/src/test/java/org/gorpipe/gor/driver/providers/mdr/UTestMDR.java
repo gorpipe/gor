@@ -3,10 +3,7 @@ package org.gorpipe.gor.driver.providers.mdr;
 import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.test.IntegrationTests;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.experimental.categories.Category;
 
@@ -16,6 +13,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 @Category(IntegrationTests.class)
+@Ignore("Can not access Keycloak from the the Gitlab build servers.")
 public class UTestMDR {
 
     private static String S3_KEY;

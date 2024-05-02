@@ -86,6 +86,9 @@ Commands
    * - :ref:`GORCMD`
      - Executes system commands that return tabular data within GOR queries.
      - GOR
+   * - :ref:`GORIF`
+     - Checks existence of source files before running the GOR command.
+     - GOR
    * - :ref:`GORROW`
      - Returns a single row of data based on the input parameters.
      - GOR
@@ -157,6 +160,9 @@ Commands
      - NOR only
    * - :ref:`NORCMD`
      - Executes system commands that return tabular data within NOR queries.
+     - NOR only
+   * - :ref:`NORIF`
+     - Checks existence of the source file before running the NOR command.
      - NOR only
    * - :ref:`NORROWS`
      - Returns a specified number rows of data in a NOR context based on the input parameters.
