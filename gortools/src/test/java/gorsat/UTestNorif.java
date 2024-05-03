@@ -66,7 +66,7 @@ public class UTestNorif {
         return Arrays.asList(new Object[][]{
                 //{testName, query, expectedResult, expectedException}
                 {"No file path", "norif", null, GorParsingException.class},
-                {"Empty file", "norif -dh col1\\tcol2 " + testEmptyFile, "col1\tcol2\n", null},
+                {"Empty file", "norif -dh col1,col2 " + testEmptyFile, "col1\tcol2\n", null},
                 {"One file path", "norif " + testTsvFile1,
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
                 {"Multiple file paths with top", "norif " + testTsvFile1 + " " + testTsvFile2 + "| select 1-3 | top 2",
@@ -75,7 +75,7 @@ public class UTestNorif {
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
                 {"Nested query started with norif", "norif <(nor " + testTsvFile1 + ")",
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
-                {"Invalid file path", "norif -dh col1\\tcol2 not_exists.tsv", "col1\tcol2\n", null},
+                {"Invalid file path", "norif -dh col1,col2 not_exists.tsv", "col1\tcol2\n", null},
                 {"Invalid file path missing -dh", "norif not_exists.tsv", null, GorParsingException.class},
                 {"Empty file missing -dh", "norif " + testEmptyFile, null, GorParsingException.class},
                 {"Invalid file path with invalid -dh value", "norif -dh col1 not_exists.tsv", null, GorParsingException.class},

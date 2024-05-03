@@ -26,7 +26,7 @@ Options
 =======
 
 +---------------------------+---------------------------------------------------------------------------------------------------+
-| ``-dh col1\tcol2``        | Use the default header ( tab-separated ) if the source file doesn't exist.                        |
+| ``-dh col1,col2``         | Use the default header ( comma-separated ) if the source file doesn't exist.                      |
 +---------------------------+---------------------------------------------------------------------------------------------------+
 
 For the other available options, please refer to the :ref:`Nor` documentation.
@@ -36,7 +36,7 @@ Examples
 
 .. code-block:: gor
 
-    norif file.tsv -dh column1\tcolumn2\tcolumn3 | top 1
+    norif file.tsv -dh column1,column2,column3 | top 1
 
 .. code-blocks:: gor
 

@@ -25,7 +25,7 @@ Options
 =======
 
 +----------------------------+---------------------------------------------------------------------------------------------------+
-|  ``-dh col1\tcol2``        | Use the default header ( tab-separated ) if none of the source files exist.                       |
+|  ``-dh col1,col2``         | Use the default header ( comma-separated ) if none of the source files exist.                     |
 +----------------------------+---------------------------------------------------------------------------------------------------+
 
 For the other available options, please refer to the :ref:`Gor` documentation.
@@ -35,8 +35,8 @@ Examples
 
 .. code-block:: gor
 
-    gorif #dbSNP# -dh chrom\tpos | top 1
+    gorif #dbSNP# -dh chrom,pos | top 1
 
 .. code-block:: gor
 
-    gor -p chr1:0-100 <(gorif -dh chrom\tpos file1.gor file2.gor)
+    gor -p chr1:0-100 <(gorif -dh chrom,pos file1.gor file2.gor)

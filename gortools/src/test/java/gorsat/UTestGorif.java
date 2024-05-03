@@ -64,7 +64,7 @@ public class UTestGorif {
         return Arrays.asList(new Object[][]{
                 //{testName, query, expectedResult, expectedException}
                 {"No file path", "gorif", null, GorParsingException.class},
-                {"Empty file", "gorif -dh col1\\tcol2 " + testEmptyFile, "col1\tcol2\n", null},
+                {"Empty file", "gorif -dh col1,col2 " + testEmptyFile, "col1\tcol2\n", null},
                 {"One file path", "gorif " + testFileGor1,
                     """
                     chrom\tpos\tcol3
@@ -98,7 +98,7 @@ public class UTestGorif {
                 chrom\tpos\tcol3
                 chr2\t2\tb
                 """, null},
-                {"Nested query started with gor with -p and -dh", "gor -p chr2:1-5 <(gorif -dh col1\\tcol2 not_exists.gor)",
+                {"Nested query started with gor with -p and -dh", "gor -p chr2:1-5 <(gorif -dh col1,col2 not_exists.gor)",
                 "col1\tcol2\n", null},
                 {"Nested query started with nor", "nor <(gorif " + testFileGor1 + "| top 1)",
                         """
@@ -110,9 +110,9 @@ public class UTestGorif {
                 chrom\tpos\tcol3
                 chr1\t0\ta
                 """, null},
-                {"Invalid file path", "gorif -dh col1\\tcol2 not_exists.gor", "col1\tcol2\n", null},
                 {"Invalid file path missing -dh", "gorif not_exists.gor", null, GorParsingException.class},
                 {"Empty file missing -dh", "gorif " + testEmptyFile, null, GorParsingException.class},
+                {"Invalid file path with -dh", "gorif -dh col1,col2 not_exists.gor", "col1\tcol2\n", null},
                 {"Invalid file path with invalid -dh value", "gorif -dh col1 not_exists.gor", null, GorParsingException.class},
                 {"Both invalid and valid file path", "gorif " + testFileGor1 + " not_exists.gor",
                 """

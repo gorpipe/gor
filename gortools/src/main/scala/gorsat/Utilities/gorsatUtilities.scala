@@ -52,13 +52,13 @@ object Utilities {
       throw new GorParsingException("Default header (-dh) is required when none of the provided file paths are valid.")
     } else {
       // return an iterator that only delivers the header defined with -dh.
-      val header = stringValueOfOption(args, "-dh").replace("\\t", "\t")
-      val headerCols = header.split("\t")
+      val header = stringValueOfOption(args, "-dh")
+      val headerCols = header.split(",")
       if (headerCols.length < 2 || headerCols(0).isEmpty || headerCols(1).isEmpty) {
-        throw new GorParsingException("-dh requires at least 2 non-empty values")
+        throw new GorParsingException("-dh requires at least 2 non-empty comma-separated values")
       }
       val inputSource = RowListIterator(List())
-      inputSource.setHeader(header)
+      inputSource.setHeader(headerCols.mkString("\t"))
       InputSourceParsingResult(inputSource, header, isNorContext = false)
     }
   }
