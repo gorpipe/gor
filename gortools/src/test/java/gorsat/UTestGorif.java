@@ -70,6 +70,11 @@ public class UTestGorif {
                     chrom\tpos\tcol3
                     chr1\t0\ta
                     """, null},
+                {"One file path with -dh", "gorif -dh col1,col2 " + testFileGor1,
+                    """
+                    chrom\tpos\tcol3
+                    chr1\t0\ta
+                    """, null},
                 {"Multiple file paths", "gorif " + testFileGor1 + " " + testFileGor2,
                     """
                     chrom\tpos\tcol3

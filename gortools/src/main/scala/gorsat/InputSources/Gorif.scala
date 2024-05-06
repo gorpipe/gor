@@ -26,9 +26,9 @@ class Gorif extends InputSourceInfo("GORIF",
       Utilities.handleNoValidFilePaths(args)
     }else {
       // remove the none existent file paths and -dh (and value) from args
-      val updatedArgs = args.filterNot(nonExistentFiles.contains)
+      var updatedArgs = args.filterNot(nonExistentFiles.contains)
       if (hasOption(args, "-dh")){
-        updatedArgs.patch(args.indexOf("-dh"), Nil, 2)
+        updatedArgs = updatedArgs.patch(args.indexOf("-dh"), Nil, 2)
       }
       new Gor().processArguments(context, argString, checkedIargs, updatedArgs)
     }

@@ -69,6 +69,8 @@ public class UTestNorif {
                 {"Empty file", "norif -dh col1,col2 " + testEmptyFile, "col1\tcol2\n", null},
                 {"One file path", "norif " + testTsvFile1,
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
+                {"One file path with -dh", "norif -dh col1,col2 " + testTsvFile1,
+                        expectedHeader + "chrN\t0\tA\t1\tA\n", null},
                 {"Multiple file paths with top", "norif " + testTsvFile1 + " " + testTsvFile2 + "| select 1-3 | top 2",
                     expectedHeader + "chrN\t0\tA\t1\tA\n" + "chrN\t0\tB\t2\tB\n", null},
                 {"Nested query started with nor", "nor <(norif " + testTsvFile1 + "| top 1)",
