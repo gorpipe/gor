@@ -47,8 +47,8 @@ before_script:
 .build_with_cache:  
   extends: .on-branches
   image: "$JAVA_BUILDER_IMAGE"
-  tags:
-    - gitlab-build-01
+  # tags:
+  #   - gitlab-build-01
   variables:
     # Vars for build resources
     KUBERNETES_CPU_REQUEST: 2
