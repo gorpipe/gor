@@ -159,8 +159,8 @@ code_quality:
   extends:
     - .on-releasable-or-release-branch-only
   stage: test
-  tags:
-    - gitlab-build-01
+  # tags:
+  #   - gitlab-build-01
   variables:
     KUBERNETES_CPU_REQUEST: 2
     KUBERNETES_CPU_LIMIT: 6
@@ -178,8 +178,8 @@ code_quality:
 
 dependency_scanning:
   stage: test
-  tags:
-    - gitlab-build-01
+  # tags:
+  #   - gitlab-build-01
   variables:
     KUBERNETES_CPU_REQUEST: 4
     KUBERNETES_CPU_LIMIT: 6
