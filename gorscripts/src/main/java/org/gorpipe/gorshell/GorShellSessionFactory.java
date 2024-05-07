@@ -32,7 +32,6 @@ import org.gorpipe.gor.model.DefaultEventLogger;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import gorsat.QueryHandlers.GeneralQueryHandler;
 
-import java.nio.file.Paths;
 import java.util.UUID;
 
 public class GorShellSessionFactory extends GorSessionFactory {
@@ -67,7 +66,7 @@ public class GorShellSessionFactory extends GorSessionFactory {
 
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
 
-        var fileReader = new DriverBackedFileReader("", this.root);
+        var fileReader = new DriverBackedFileReader("", updateCommonRoot(this.root));
         FileCache fileCache;
         if(fileCacheEnabled) {
             fileCache = new LocalFileCacheClient(fileReader, this.cacheDir);

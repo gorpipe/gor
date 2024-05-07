@@ -279,7 +279,7 @@ public class UTestDbSource {
     public void testAccessToMultipleSources() throws SQLException, IOException, ClassNotFoundException {
         // Create avas database
         var avasPaths = DatabaseHelper.createAvasDatabase();
-        DbConnection.install(new DbConnection("avas", "jdbc:derby:" + avasPaths[1], "avas", "beta3"));
+        DbConnection.systemConnections.install(new DbConnection("avas", "jdbc:derby:" + avasPaths[1], "avas", "beta3"));
 
         var dsRda = createSource("db://rda:variant_annotations", "dbscope=project_id#int#10004|||extrastuff=other");
         var dsAvas = createSource("db://avas:variant_annotations", "dbscope=project_id#int#10004|||extrastuff=other");

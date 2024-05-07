@@ -58,7 +58,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
     public DbNorIterator(String content, Map<String, Object> constants, ConnectionPool pool) {
 
         // Replace scoping variables.
-        Pair<String, Object[]> sqlWithParams = replaceConstants(content, constants);
+        Pair<String, Object[]> sqlWithParams = SqlReplacer.replaceConstants(content, constants);
 
         // Get db connection.
         try {
@@ -98,31 +98,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
         return ps;
     }
 
-    /**
-     * Replace query constants using the VARS list of usual suspects and populate a bind array with
-     * the associated values for use in prepareStatement.
-     *
-     * @param sql
-     * @param constants
-     * @return
-     */
-    // TODO: Clean up this code.
-    private static Pair<String, Object[]> replaceConstants(final String sql, final Map<String, Object> constants) {
-        var replacements = SqlReplacer.replacementList(sql);
-        var newSql = SqlReplacer.replaceWithSqlParameter(sql);
-        var usedConstants = new ArrayList<>();
 
-        if (constants != null) {
-            for (var key : replacements) {
-                if (!constants.containsKey(key)) {
-                    throw new GorResourceException("Unexpected constant in sql query: " + key, null);
-                }
-                usedConstants.add(constants.get(key));
-            }
-        }
-
-        return new Pair<>(newSql, usedConstants.toArray());
-    }
 
 
     /**

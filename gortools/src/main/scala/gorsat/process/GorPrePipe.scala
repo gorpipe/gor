@@ -29,12 +29,12 @@ package gorsat.process
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script.{ScriptEngineFactory, ScriptParsers, SplitManager}
 import gorsat.Utilities.MacroUtilities._
-import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.gorsatGorIterator.MapAndListUtilities.singleHashMap
+import org.gorpipe.gor.model.GorOptions
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.gor.util.DataUtil
 
-import scala.jdk.CollectionConverters.MapHasAsScala
+import scala.jdk.CollectionConverters.{MapHasAsScala, SetHasAsScala}
 
 
 object GorPrePipe {
@@ -108,21 +108,11 @@ object GorPrePipe {
                 usedFiles :::= subFiles
               } else {
                 if (inputArguments.exists(inputArgument => DataUtil.isDictionary(inputArgument))) {
-                  var tags: List[String] = List[String]()
-                  if (CommandParseUtilities.hasOption(cargs, "-f")) {
-                    tags = CommandParseUtilities.stringValueOfOption(cargs, "-f")
-                      .split("[, ]")
-                      .map(tagEntry => CommandParseUtilities.replaceSingleQuotes(tagEntry))
-                      .toList
-                  } else if (CommandParseUtilities.hasOption(cargs, "-ff")) {
-                    val tagFileName = CommandParseUtilities.stringValueOfOption(cargs, "-ff")
-                    if (!CommandParseUtilities.isNestedCommand(tagFileName)) {
-                      tags = MapAndListUtilities.readArray(tagFileName, session.getProjectContext.getFileReader).toList
-                    }
-                  }
+                  val jtags = GorOptions.tagsFromOptions(session, cargs)
+                  val tags: Set[String] = if (jtags != null) jtags.asScala.toSet else Set.empty
                   val dictFiles = inputArguments.collect {
                     case s: String if DataUtil.isDictionary(s) && !s.startsWith("-") =>
-                      if (tags.isEmpty) "#gordict#" + s else "#gordict#" + s + "#gortags#" + tags.mkString(",")
+                      if (tags == null || tags.isEmpty) "#gordict#" + s else "#gordict#" + s + "#gortags#" + tags.mkString(",")
                   }
                   val otherFiles = inputArguments.filter(argumentEntry => !argumentEntry.startsWith("-") &&
                     !DataUtil.isDictionary(argumentEntry))

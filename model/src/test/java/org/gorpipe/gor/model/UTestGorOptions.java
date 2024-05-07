@@ -126,7 +126,6 @@ public class UTestGorOptions {
         // Ensure a system wide common root is used if no other is specified
         checkValidResults("1.mem", "kalli", false, null, filelist("kalli/1.mem"));
         // Ensure a system wide common root is NOT used if other is specified
-        checkValidResults("1.mem -r Palli", null, false, null, filelist("Palli/1.mem"));
         checkValidResults("file://1.mem", false, null, filelist("1.mem"));
         checkValidResults("1.mem", false, null, filelist("1.mem"));
         checkValidResults("file://1.mem", false, null, filelist("1.mem"));

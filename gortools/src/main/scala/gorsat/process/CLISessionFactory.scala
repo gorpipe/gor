@@ -46,16 +46,13 @@ class CLISessionFactory(pipeOptions: PipeOptions, securityContext: String = null
 
     val session = new GorSession(requestId)
 
-    var projectRootStr = ".";
+    val projectRootStr = GorSessionFactory.updateCommonRoot(pipeOptions.gorRoot);
     var cacheDirStr = "."
-    if (pipeOptions.gorRoot==null||PathUtils.isLocal(pipeOptions.gorRoot)) {
-      val projectRoot = if (pipeOptions.gorRoot != null) pipeOptions.gorRoot else "."
+    if (PathUtils.isLocal(projectRootStr)) {
       var cacheDir = if (pipeOptions.cacheDir != null) pipeOptions.cacheDir else ProjectContext.DEFAULT_CACHE_DIR
-      if (!PathUtils.isAbsolutePath(cacheDir)) cacheDir = PathUtils.resolve(projectRoot,cacheDir)
-      projectRootStr = projectRoot
+      if (!PathUtils.isAbsolutePath(cacheDir)) cacheDir = PathUtils.resolve(projectRootStr, cacheDir)
       cacheDirStr = cacheDir
     } else {
-      projectRootStr = pipeOptions.gorRoot
       cacheDirStr = pipeOptions.cacheDir
     }
 

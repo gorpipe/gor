@@ -32,7 +32,7 @@ import org.gorpipe.model.gor.iterators.TimedRowSource
 import org.gorpipe.util.standalone.GorStandalone
 
 class FastGorSource(inOptions: String, gorRoot: String, context: GorContext, executeNor: Boolean, gm: GorMonitor, minLogTime: Int) extends TimedRowSource {
-  var options: String = if (gorRoot != "" && (!GorStandalone.isStandalone || !GorStandalone.isURL(inOptions))) "-r " + gorRoot + " " + inOptions else inOptions
+  var options: String = inOptions
   val args: Array[String] = options.split(' ')
   var chrpos = ""
   var seekChr = ""

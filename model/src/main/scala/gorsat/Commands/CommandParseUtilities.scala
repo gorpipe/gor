@@ -687,14 +687,26 @@ object CommandParseUtilities {
   }
 
   def replaceSingleQuotes(x: String): String = {
-    if (x != null) {
-      if (x.startsWith("'") && x.endsWith("'") && x.length > 1
-        || x.startsWith("\"") && x.endsWith("\"") && x.length > 1
-        || x.startsWith("{") && x.endsWith("}") && x.length > 1
-      ) return x.slice(1, x.length - 1)
+    removeDelimters(x, Array("''", "\"\"", "{}"))
+  }
+
+  /**
+   * Remote delimters from the input string.
+   * @param in      input string
+   * @param delimiters  array of delimters where is the first chars are used as opening delimiter and the second chars
+   *                    are used as closing delimiter.
+   * @return string in with stripped the first matching quote.
+   */
+  def removeDelimters(in: String, delimitersArray: Array[String]): String = {
+    if (in == null || delimitersArray == null) return in;
+
+    for (delimiters <- delimitersArray) {
+      if (in.length > 1 && delimiters.length > 1 && in.startsWith(delimiters(0).toString) && in.endsWith(delimiters(1).toString)) {
+        return in.slice(1, in.length - 1)
+      }
     }
 
-    x
+    in
   }
 
   def removeComments(query: String, allowQuotes: Boolean): String = {
@@ -975,7 +987,7 @@ object CommandParseUtilities {
 
       i += 1
     }
-    if (start < inputLength) words = inputString.substring(start) :: words
+    if (start <= inputLength) words = inputString.substring(start) :: words
 
     // Validate the final state
     if (validateBlocks) {

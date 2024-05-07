@@ -130,9 +130,13 @@ case class ColumnSelection(
       try {
         firstInRange = CommandParseUtilities.columnNumber(parts(0), headerIndexMap, headerArray, forNor) - 1
         if(parts.length > 1) {
-          lastInRange = CommandParseUtilities.columnNumber(parts(1), headerIndexMap, headerArray, forNor) - 1
+          if (parts(1).isEmpty) {
+            lastInRange = headerArray.length - 1
+          } else {
+            lastInRange = CommandParseUtilities.columnNumber(parts(1), headerIndexMap, headerArray, forNor) - 1
+          }
         } else {
-          lastInRange = if(sanitizedSelection.contains("-")) headerArray.length - 1 else firstInRange
+          lastInRange = firstInRange
         }
         isRange = true
         isEmpty = false

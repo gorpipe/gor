@@ -125,7 +125,7 @@ public class DbSource extends RowIteratorSource {
     @Override
     public boolean exists() {
         if (tableName != null) {
-            final DbConnection dbsource = DbConnection.lookup(databaseSource);
+            final DbConnection dbsource = DbConnection.systemConnections.lookup(databaseSource);
             if (dbsource == null) {
                 log.warn("Database not found: {}", databaseSource);
                 return false;
@@ -150,7 +150,7 @@ public class DbSource extends RowIteratorSource {
     public SourceMetadata getSourceMetadata() {
         long timestamp = System.currentTimeMillis();
         if (tableName != null) {
-            final DbConnection dbsource = DbConnection.lookup(databaseSource);
+            final DbConnection dbsource = DbConnection.systemConnections.lookup(databaseSource);
             if (dbsource != null) {
                 timestamp = dbsource.queryDefaultTableChange(tableName);
             }

@@ -273,7 +273,7 @@ object AnalysisUtilities {
         if (context.getSession.getProjectContext.getRoot.nonEmpty && !File(rightFile).exists) {
           rightFile = PartGor.fullFileName(context.getSession, rightFile)
         }
-        tags = GorOptions.readTags(rightFile).stream().collect(Collectors.joining(","))
+        tags = GorOptions.readTagsFromFile(context.getSession(), rightFile).stream().collect(Collectors.joining(","))
       }
     } else if (hasFilter) {
       tags = CommandParseUtilities.stringValueOfOption(largs, "-f").replace("'", "")

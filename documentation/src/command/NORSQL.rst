@@ -7,11 +7,11 @@
 ======
 NORSQL
 ======
-The :ref:`NORSQL` command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.db.credentials in the config directory). This command is not enabled when running against a gor-server and therefore does not work within the Sequence Miner. It is intended to be used with GORpipe only.
+The :ref:`NORSQL` command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.sql.credentials in the config directory).
 
-:ref:`NORSQL` can be run against any database table. In the case of :ref:`GORSQL`, the defined query must access a table have Chrom-POS information as first columns.
+:ref:`NORSQL` can be run against any database table.
 
-SQL statemens need to be encapsulated between curly brackets, e.g. norsql {sql_query}.
+SQL statements need to be encapsulated between curly brackets, e.g. norsql {sql_query}.
 
 Usage
 =====
@@ -26,4 +26,12 @@ Examples
 .. code-block:: gor
 
    norsql {select * from Case_Controls order by PN} | ...
+
+.. code-block:: gor
+
+   norsql {select * from Case_Controls WHERE PN = 'ABC' } | ...
+
+.. code-block:: gor
+
+   gorsql -f AAA,TTT {select * from Case_Controls WHERE PN in (#{TAGS}) } | ...
 

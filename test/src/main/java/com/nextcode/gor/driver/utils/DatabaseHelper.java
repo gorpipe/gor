@@ -94,7 +94,7 @@ public class DatabaseHelper {
         }
 
         // Create test db configuration
-        String dbConfiguration = "name\tdriver\turl\tuser\tpwd\nrda\torg.apache.derby.jdbc.EmbeddedDriver\tjdbc:derby:" + databasePath + "\t"+user+"\t"+password;
+        String dbConfiguration = String.format("name\tdriver\turl\tuser\tpwd\n%s\torg.apache.derby.jdbc.EmbeddedDriver\tjdbc:derby:%s\t%s\t%s", schema, databasePath, user, password);
         FileUtils.writeStringToFile(credentialsPath.toFile(), dbConfiguration, Charset.defaultCharset());
         return new String[] {tmpDirectory.getAbsolutePath(), databasePath.toString(), credentialsPath.toString()};
     }

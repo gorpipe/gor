@@ -34,7 +34,7 @@ public class UTestDbSource {
     public void parseLinesForDbSourceInstallationWithDoubleSlashes() {
         List<String> lines = new ArrayList<>();
         lines.add("name\\tdriver\\turl\\tuser\\tpwd\\nrda\\torg.postgresql.Driver\\tjdbc:postgresql://gor-dev.cqi71y09rnsb.us-east-1.rds.amazonaws.com:5432/csa\\trda\\tgislireyni22\\n");
-        List<String[]> partsList = DbConnection.parseLinesForDbSourceInstallation("irrelevant", lines);
+        List<String[]> partsList = DbConnectionCache.parseLinesForDbSourceInstallation("irrelevant", lines);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals(5, partsList.get(0).length);
     }
@@ -44,7 +44,7 @@ public class UTestDbSource {
         List<String> lines = new ArrayList<>();
         lines.add("name\tdriver\turl\tuser\tpwd");
         lines.add("rda\torg.postgresql.Driver\tjdbc:postgresql://gor-dev.cqi71y09rnsb.us-east-1.rds.amazonaws.com:5432/csa\trda\tgislireyni22\n");
-        List<String[]> partsList = DbConnection.parseLinesForDbSourceInstallation("irrelevant", lines);
+        List<String[]> partsList = DbConnectionCache.parseLinesForDbSourceInstallation("irrelevant", lines);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals(5, partsList.get(0).length);
     }
@@ -55,7 +55,7 @@ public class UTestDbSource {
         lines.add("name\tdriver\turl\tuser\tpwd");
         lines.add("rda\torg.postgresql.Driver\tjdbc:postgresql://gor-dev.cqi71y09rnsb.us-east-1.rds.amazonaws.com:5432/csa\trda\tgislireyni22\n");
         lines.add("#rda2\torg.postgresql.Driver\tjdbc:postgresql://gor-dev.cqi71y09rnsb.us-east-1.rds.amazonaws.com:5432/csa\trda\tgislireyni22\n");
-        List<String[]> partsList = DbConnection.parseLinesForDbSourceInstallation("irrelevant", lines);
+        List<String[]> partsList = DbConnectionCache.parseLinesForDbSourceInstallation("irrelevant", lines);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals(5, partsList.get(0).length);
     }
@@ -67,7 +67,7 @@ public class UTestDbSource {
         lines.add("rda\torg.postgresql.Driver\tjdbc:postgresql://gor-dev.cqi71y09rnsb.us-east-1.rds.amazonaws.com:5432/csa\trda\tgislireyni22\n");
         // This line forgets the name and has no password, should log an error
         lines.add("org.postgresql.Driver\tjdbc:postgresql://gor-dev.cqi71y09rnsb.us-east-1.rds.amazonaws.com:5432/csa\trda\n");
-        List<String[]> partsList = DbConnection.parseLinesForDbSourceInstallation("irrelevant", lines);
+        List<String[]> partsList = DbConnectionCache.parseLinesForDbSourceInstallation("irrelevant", lines);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals(5, partsList.get(0).length);
     }

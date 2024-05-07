@@ -53,9 +53,7 @@ import org.slf4j.LoggerFactory;
 import scala.Option;
 import scala.Tuple2;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -286,7 +284,7 @@ public class GorOptions {
 
     public static GorOptions createGorOptions(GorContext context, String[] arguments) {
         Tuple2<String[], String[]> result =  CommandParseUtilities.validateCommandArguments(arguments, new CommandArguments("-fs -nf -Y -P -stdin -n -nowithin",
-                "-f -ff -m -M -p -r -sc -ref -idx -Z -H -z -X -s -b -dict -parts -seek", -1, -1, false));
+                "-f -ff -m -M -p -sc -ref -idx -Z -H -z -X -s -b -dict -parts -seek", -1, -1, false));
 
         String[] inputArguments = result._1;
         String[] illegalArguments = result._2;
@@ -308,7 +306,8 @@ public class GorOptions {
      */
     public GorOptions(GorContext context, String[] iargs, String[] options) {
         this.context = context;
-        this.session = context != null ? context.getSession() : null;
+        this.session = context.getSession();
+        this. commonRoot = context.getSession().getProjectContext().getFileReader().getCommonRoot();
         boolean insertSourceOpt = false;
 
         // Non null iff list of input files was read from a file
@@ -322,23 +321,11 @@ public class GorOptions {
         String tmpIdxFile = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-idx", null);
         String tmpRefFile = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-ref", null);
         String monId = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-H", null);
-        String commonRootOpt = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-r", null);
         String securityKey = CommandParseUtilities.replaceSingleQuotes(CommandParseUtilities.stringValueOfOptionWithDefault(options, "-Z", null));
         int tmpParallelBlocks = CommandParseUtilities.intValueOfOptionWithDefault(options, "-z", 0);
 
-        if (CommandParseUtilities.hasOption(options, "-ff")) {
-            tagfile = CommandParseUtilities.stringValueOfOption(options, "-ff");
-            hasTagFiltering = true;
-        }
-
-        if (CommandParseUtilities.hasOption(options, "-f")) {
-            String taglist =  CommandParseUtilities.stringValueOfOption(options, "-f").replace("'", ""); // Incase ' is used to qoute strings, just remove it
-            taglist = taglist.replace("\"", ""); // Incase " is used to escape list, just remove it
-            final ArrayList<String> tags = StringUtil.split(taglist, 0, ',');
-            this.columnTags = new HashSet<>();
-            this.columnTags.addAll(tags);
-            hasTagFiltering = true;
-        }
+        this.columnTags = tagsFromOptions(session, options);
+        hasTagFiltering = this.columnTags != null;
 
         if (CommandParseUtilities.hasOption(options, "-s")) {
             insertSourceOpt = true;
@@ -363,26 +350,6 @@ public class GorOptions {
         this.parallelBlocks = tmpParallelBlocks;
         this.monitor = monId != null ? ResourceMonitor.find(monId) : null;
 
-        if (commonRootOpt == null) { // If not specified on command line, try the vm default
-            if (session != null && session.getProjectContext() != null) {
-                commonRootOpt = session.getProjectContext().getFileReader().getCommonRoot();
-            } else {
-                commonRootOpt = System.getProperty("gor.common.root");
-            }
-        }
-        if (commonRootOpt != null) {
-            if (commonRootOpt.trim().length() == 0) {
-                commonRootOpt = null;
-            } else if (commonRootOpt.length() > 2 && commonRootOpt.charAt(1) == ':' && !commonRootOpt.endsWith("\\")) { // windows path hack
-                commonRootOpt = commonRootOpt + '\\';
-            } else if (!commonRootOpt.endsWith("/")) {
-                commonRootOpt = commonRootOpt + '/';
-            }
-        }
-
-        commonRoot = commonRootOpt;
-
-        loadTagFiles(context, iargs, tagfile);
 
         if (CommandParseUtilities.hasOption(options, "-p")) {
             // Need to get the last range if multiple ranges are given
@@ -519,11 +486,35 @@ public class GorOptions {
         return i;
     }
 
-    private void loadTagFiles(GorContext context, String[] iargs, String tagfile) {
+    // TODO:  Merge this with AnalysisUtilites.getFilterTags
+    public static Set<String> tagsFromOptions(GorSession session, String[] options) {
+        Set<String> tags = null;
+        if (CommandParseUtilities.hasOption(options, "-ff")) {
+            var tagFile = CommandParseUtilities.stringValueOfOption(options, "-ff");
+            tags = loadAndCacheTags(session, options, tagFile);
+        } else if (CommandParseUtilities.hasOption(options, "-f")) {
+            tags = Arrays.stream(
+                    CommandParseUtilities.quoteSafeSplit(
+                        CommandParseUtilities.stringValueOfOption(options, "-f")
+                             , ','))
+                    //.split(",",-1))
+                    .map(tag -> CommandParseUtilities.replaceSingleQuotes(tag))
+                    .collect(Collectors.toSet());
+
+//            String taglist =  CommandParseUtilities.stringValueOfOption(options, "-f")
+//                    .replace("'", "")
+//                    .replace("\"", ""); // Incase ' is used to qoute strings, just remove it
+//            tags = new HashSet<>(StringUtil.split(taglist, 0, ','));
+        }
+        return tags;
+    }
+
+    // Load tags from cache, nested query or file (and cache the results)
+    public static Set<String> loadAndCacheTags(GorSession session, String[] iargs, String tagfile) {
+        Set<String> tags = null;
         if (tagfile != null) { // Parse the specified tag file for tag values to filter on
             try {
                 String key = String.join("", iargs);
-                Set<String> tags;
 
                 if (CommandParseUtilities.isNestedCommand(tagfile)) {
                     String iteratorCommand = CommandParseUtilities.parseNestedCommand(tagfile);
@@ -533,7 +524,7 @@ public class GorOptions {
                         tags = opt.get();
                     } else {
                         tags = new LinkedHashSet<>();
-                        loadTagsFromIterator(context, tags, iteratorCommand);
+                        loadTagsFromIterator(session.getGorContext(), tags, iteratorCommand);
                         MapAndListUtilities.syncAddSet(key, tags, session);
                     }
                 } else {
@@ -542,21 +533,20 @@ public class GorOptions {
                     if (opt.isDefined()) {
                         tags = opt.get();
                     } else {
-                        tags = readTags(commonRoot != null ? concatFolderFile(commonRoot, tagfile, tagfile, enforceResourceRelativeToRoot) : tagfile);
+                        tags = readTagsFromFile(session, tagfile);
                         if (session != null) MapAndListUtilities.syncAddSet(key, tags, session);
                     }
                 }
-                this.columnTags = new HashSet<>();
-                this.columnTags.addAll(tags);
             } catch (FileNotFoundException e) {
                 throw new GorResourceException(ERROR_INITIALIZING_QUERY + "Tag file " + tagfile + IS_NOT_FOUND, tagfile);
             } catch (IOException e) {
                 throw new GorSystemException(ERROR_INITIALIZING_QUERY + "Tag file " + tagfile + " can not be read!", e);
             }
         }
+        return tags;
     }
 
-    private void loadTagsFromIterator(GorContext context, Set<String> tags, String iteratorCommand) {
+    private static void loadTagsFromIterator(GorContext context, Set<String> tags, String iteratorCommand) {
         try (GenomicIterator dSource = new DynIterator.DynamicRowSource(iteratorCommand, context, true)) {
             while (dSource.hasNext()) {
                 final String line = dSource.next().toString();
@@ -651,17 +641,19 @@ public class GorOptions {
     }
 
 
-    public static Set<String> readTags(String filename) throws IOException {
+    public static Set<String> readTagsFromFile(GorSession session, String filename) throws IOException {
         final boolean isNorFile = filename.toLowerCase().endsWith("nor");
-        try (final BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            final Set<String> set = new LinkedHashSet<>();
-            br.lines().filter(line -> !line.startsWith("#")).map(line -> {
-                final int beginIdx = isNorFile ? line.indexOf('\t', line.indexOf('\t') + 1) : 0;
-                final int endIdx = line.indexOf('\t', beginIdx);
-                return endIdx == -1 ? line.substring(beginIdx) : line.substring(beginIdx, endIdx);
-            }).map(String::trim).forEach(set::add);
-            return Collections.unmodifiableSet(set);
-        }
+        final Set<String> set = new LinkedHashSet<>();
+        session.getProjectContext().getFileReader().readFile(filename)
+                .filter(line -> !line.startsWith("#"))
+                .map(line -> {
+                    final int beginIdx = isNorFile ? line.indexOf('\t', line.indexOf('\t') + 1) : 0;
+                    final int endIdx = line.indexOf('\t', beginIdx);
+                    return endIdx == -1 ? line.substring(beginIdx) : line.substring(beginIdx, endIdx);
+                    })
+                .map(String::trim)
+                .forEach(set::add);
+        return Collections.unmodifiableSet(set);
     }
 
     @Override
@@ -698,10 +690,6 @@ public class GorOptions {
 
         if (chromo != -1) {
             appendWithSep(text, " ", "-p " + chromo + ":" + begin + "-" + end);
-        }
-
-        if (commonRoot != null) {
-            appendWithSep(text, " ", "-r " + commonRoot);
         }
 
         // Add files, including alias and tags

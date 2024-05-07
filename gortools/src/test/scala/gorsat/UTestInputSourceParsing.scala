@@ -119,7 +119,7 @@ class UTestInputSourceParsing extends AnyFunSuite with BeforeAndAfter with Mocki
 
     Class.forName("org.apache.derby.jdbc.EmbeddedDriver")
     val paths = createTestDataBase_Derby
-    System.setProperty("gor.db.credentials", paths(2))
+    System.setProperty("gor.sql.credentials", paths(2))
     DbConnection.initInConsoleApp()
 
     var tempDirectory = FileTestUtils.createTempDirectory(this.getClass.getName)

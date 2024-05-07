@@ -58,6 +58,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
       .setRoot(pipeOptions.gorRoot)
+      .setProjectName("10004")
       .setFileReader(fileReader)
       .setFileCache(new LocalFileCacheClient(fileReader, pipeOptions.cacheDir, useSubFolder, subFolderSize))
       .setQueryHandler(new GeneralQueryHandler(session.getGorContext, false))

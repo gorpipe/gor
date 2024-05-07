@@ -64,7 +64,7 @@ public class DbGenomicIterator extends GenomicIteratorBase {
         this.seekInitialized = false;
         this.securityContext = securityContext;
 
-        final DbConnection dbSource = DbConnection.lookup(databaseSource);
+        final DbConnection dbSource = DbConnection.systemConnections.lookup(databaseSource);
         if (dbSource == null) {
             throw new GorSystemException("Unknown Database Source: " + databaseSource + " is not a registered source.", null);
         }

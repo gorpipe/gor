@@ -60,7 +60,11 @@ def addStartSelector(cmd : String, seekChr : String, seekPos : Int, endPos : Int
     var cmd2 = cmd
 
     val lcmd = cmd2.toLowerCase
-    var offset = if( lcmd.startsWith("gor ") || lcmd.startsWith("cmd ") || lcmd.startsWith("sql ") ) 4 else if (lcmd.startsWith("gorif ")) 6 else if( allowedCmds != null && allowedCmds.keySet().stream().map(s => s.toLowerCase).anyMatch(s => s.equals(cmdname.toLowerCase)) ) cmdname.length+1 else -1
+    var offset = if (lcmd.startsWith("gor ") || lcmd.startsWith("cmd ") || lcmd.startsWith("sql ")) 4
+      else if (lcmd.startsWith("gorif ")) 6
+      else if (lcmd.startsWith("gorsql ")) 7
+      else if (allowedCmds != null && allowedCmds.keySet().stream().map(s => s.toLowerCase).anyMatch(s => s.equals(cmdname.toLowerCase))) cmdname.length + 1
+      else -1
     if( isHeader ) {
       if( offset == -1 ) return "gor "+cmd
       else return cmd

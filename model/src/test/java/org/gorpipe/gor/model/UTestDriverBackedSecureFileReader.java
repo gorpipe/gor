@@ -12,7 +12,6 @@
 package org.gorpipe.gor.model;
 
 import com.nextcode.gor.driver.utils.DatabaseHelper;
-import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.utils.TestUtils;
@@ -33,7 +32,6 @@ import java.nio.file.attribute.FileTime;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -81,7 +79,7 @@ public class UTestDriverBackedSecureFileReader {
         final String f1SignatureB = reader.getFileSignature(f1.getAbsolutePath());
         Assert.assertNotEquals(f1SignatureA, f1SignatureB);
 
-        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+        DbConnection.systemConnections.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
         for (int i = 0; i < 10; i++) {
             final long start = System.currentTimeMillis();
             String fileSignature = reader.getFileSignature("db://rda:rda.v_variant_annotations");
@@ -299,13 +297,13 @@ public class UTestDriverBackedSecureFileReader {
         // Test reading gor.db.credentials
 
         try {
-            DbConnection.initializeDbSources("nonexisting/path/to/nowhere");
+            DbConnection.userConnections.initializeDbSources("nonexisting/path/to/nowhere");
             Assert.fail("Should get exception for non existent gor.db.credentials");
         } catch (Exception e) {
             // Success
         }
 
-        DbConnection.install(new DbConnection("rda", dbUrl, "rda", "beta3"));
+        DbConnection.userConnections.install(new DbConnection("rda", dbUrl, "rda", "beta3"));
 
         // Test reading db link file.
 
@@ -355,13 +353,13 @@ public class UTestDriverBackedSecureFileReader {
         // Test reading gor.db.credentials
 
         try {
-            DbConnection.initializeDbSources("nonexisting/path/to/nowhere");
+            DbConnection.systemConnections.initializeDbSources("nonexisting/path/to/nowhere");
             Assert.fail("Should get exception for non existent gor.db.credentials");
         } catch (Exception e) {
             // Success
         }
 
-        DbConnection.install(new DbConnection("rda", dbUrl, "rda", "beta3"));
+        DbConnection.systemConnections.install(new DbConnection("rda", dbUrl, "rda", "beta3"));
 
         // Test reading db link file.
 
@@ -448,7 +446,7 @@ public class UTestDriverBackedSecureFileReader {
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
 
-        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+        DbConnection.systemConnections.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
 
 
         // 2. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.

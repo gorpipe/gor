@@ -34,7 +34,7 @@ class GORLexer(RegexLexer):
             (r'\.gor', Text),                                                                       #Don't want to highlight file extensions
             (r'\b(gor|nor|pgor|create|def|gorcmd|gorsql|norcmd|norsql)\b', Name.Decorator),
             (r'\b(IF|-len|str|int|float|listfilter)\b', Keyword),                                   #Render key words blue
-            (r'\b(BAMFLAG|BASES|BUCKETSPLIT|CALC|CIGARSEGS|CMD|COLNUM|COLSPLIT|COLUMNSORT|CSVCC|'
+            (r'\b(BAMFLAG|BASES|BUCKETSPLIT|CALC|CIGARSEGS|CMD|COLNUM|COLSPLIT|COLUMNREORDER|COLUMNSORT|CSVCC|'
              r'CSVSEL|DAGMAP|DISTLOC|GAVA|GOR|GORROW|GRANNO|GREP|GROUP|HIDE|INSET|'
              r'JOIN|LEFTJOIN|LEFTWHERE|LIFTOVER|LOG|MAP|MERGE|MULTIMAP|NOR|PARTGOR|PEDPIVOT|PGOR|PILEUP|'
              r'PIVOT|PREFIX|RANK|RENAME|REPLACE|ROWNUM|SED|SEGPROJ|SEGSPAN|SELECT|SEQ|SKIP|'

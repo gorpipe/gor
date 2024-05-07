@@ -58,50 +58,6 @@ public class UTestProcessSource {
     }
 
     @Test
-    public void testSqlOnServetestCorruptedGorzr() {
-        String gorcmd = "sql -n {select * from users}";
-
-        boolean correctError = false;
-        try {
-            TestUtils.runGorPipeCount(gorcmd, true);
-        } catch (GorParsingException e) {
-            correctError = e.getMessage().contains("SQL input source is not allowed");
-        }
-        Assert.assertTrue("SQL should not be allowed to run in server mode", correctError);
-    }
-
-    //@Ignore("needs connection to a database")
-    @Test
-    @Ignore("Missing credentials file")
-    public void testSqlSource() throws IOException, ClassNotFoundException {
-        System.setProperty("gor.db.credentials", "../tests/config/gor.db.credentials");
-        DbConnection.initInConsoleApp();
-
-        String gorcmd = "sql -n {select * from users | where contains(email,'hakon')}";
-        Assert.assertEquals(2, TestUtils.runGorPipeCount(gorcmd));
-    }
-
-    @Ignore("needs connection to a database")
-    @Test
-    public void testNestedSqlSource() throws IOException, ClassNotFoundException {
-        System.setProperty("gor.db.credentials", "../tests/config/gor.db.credentials");
-        DbConnection.initInConsoleApp();
-
-        String gorcmd = "nor <(sql {select * from users})";
-        Assert.assertEquals(127, TestUtils.runGorPipeCount(gorcmd));
-    }
-
-    @Ignore("needs connection to a database")
-    @Test
-    public void testNestedSqlGORSource() throws IOException, ClassNotFoundException {
-        System.setProperty("gor.db.credentials", "../tests/config/gor.db.credentials");
-        DbConnection.initInConsoleApp();
-
-        String gorcmd = "sql -p chr8 {select chromo,pos,ref,alt,PN from v_variant_annotations #(S:where CHROMO='chr') order by chromo,pos}";
-        Assert.assertEquals(9, TestUtils.runGorPipeCount(gorcmd));
-    }
-
-    @Test
     public void testSimpleProcessSourceAlias() {
         // No gunzip on Windows
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);

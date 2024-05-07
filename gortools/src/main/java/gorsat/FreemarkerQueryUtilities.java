@@ -23,6 +23,7 @@
 package gorsat;
 
 import freemarker.template.TemplateException;
+import gorsat.Commands.CommandParseUtilities;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.QueryEvaluator;
@@ -189,6 +190,8 @@ public class FreemarkerQueryUtilities {
                             int end = value.indexOf(']');
                             if (value.substring(0, end).contains(",")) value = value.substring(1, value.length() - 1);
                         }
+                        value = Arrays.stream(value.split(",")).toList().stream().map(a -> CommandParseUtilities.replaceSingleQuotes(a)).collect(Collectors.joining(","));
+
                         return new ArgumentContent(value);
                     }
                 ));

@@ -23,62 +23,51 @@
 package gorsat.InputSources
 
 import gorsat.Commands.CommandParseUtilities._
-import gorsat.Commands.{CommandArguments, InputSourceInfo, InputSourceParsingResult}
+import gorsat.Commands.{CommandArguments, GenomicRange, InputSourceInfo, InputSourceParsingResult}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.GorJavaUtilities
-import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.model.GorOptions
 import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.gor.util.SqlReplacer
+
+import java.util
+
 
 object Sql {
 
   private def processAllArguments(session: GorSession, argString: String, iargs: Array[String],
                                   args: Array[String], isNorContext: Boolean): InputSourceParsingResult = {
 
-    if (session.getSystemContext.getServer) {
-      throw new GorParsingException("SQL input source is not allowed when running in server mode")
-    }
+//    if (session.getSystemContext.getServer) {
+//      throw new GorParsingException("SQL input source is not allowed when running in server mode")
+//    }
 
     AnalysisUtilities.validateExternalSource(iargs(0))
 
-    var myCommand = AnalysisUtilities.extractExternalSource(iargs(0))
-    var chr:String = null
-    var start = 0
-    var end = -1
+    val myCommand = AnalysisUtilities.extractExternalSource(iargs(0))
 
-    if (hasOption(args, "-p")) {
-      val range = rangeOfOption(args, "-p")
-      chr = range.chromosome
-      start = range.start
-      end = range.stop
+    val range = if (hasOption(args, "-p")) {
+      rangeOfOption(args, "-p")
+    } else {
+      GenomicRange.Range(null, 0, -1)
     }
+    val tags = GorOptions.tagsFromOptions(session, args)
+    val database = if (hasOption(args, "-db")) stringValueOfOption(args, "-db") else null
 
-    val filter = if (hasOption(args, "-f")) stringValueOfOption(args, "-f") else null
-    val source = if (hasOption(args, "-s")) stringValueOfOption(args, "-s") else null
+    val map = new util.HashMap[String, Object]()
+    map.put(SqlReplacer.KEY_CHROM, range.chromosome)
+    map.put(SqlReplacer.KEY_BPSTART, range.start.toString)
+    map.put(SqlReplacer.KEY_BPSTOP, range.stop.toString)
+    map.put(SqlReplacer.KEY_DATABASE, database)
+    map.put(SqlReplacer.KEY_TAGS, tags )
+    GorJavaUtilities.updateWithProjectInfo(session, map)
 
-    val sPos = myCommand.indexOf("#(S:")
-    if (sPos != -1) {
-      val sEnd = myCommand.indexOf(')', sPos + 1)
-      var seek = ""
-      if (chr != null) {
-        seek = myCommand.substring(sPos + 4, sEnd).replace("chr", chr)
-        var pos = seek.indexOf("pos-end")
-        if (pos != -1) seek = seek.replace("pos", (start + 1).toString).replace("end", end.toString)
-        else if (seek.contains("pos")) {
-          pos = seek.indexOf("pos-")
-          if (end == -1) seek = seek.replace("pos", start.toString)
-          else if (start == end && pos != -1) seek = seek.replace("pos-", start.toString)
-          else seek = seek.replace("pos", s"$start-") + end
-        }
-      }
-      myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1, myCommand.length)
-    }
-    myCommand = GorJavaUtilities.projectReplacement(myCommand, session)
-    val iteratorSource = GorJavaUtilities.getDbIteratorSource(myCommand, !isNorContext, source, false)
+    val iteratorSource = GorJavaUtilities.getDbIteratorSource(myCommand, map, database, !isNorContext, false)
 
     InputSourceParsingResult(iteratorSource, "", isNorContext)
   }
 
-  class Sql() extends InputSourceInfo("SQL", CommandArguments("-n", "-p", 1, 1)) {
+  class Sql() extends InputSourceInfo("SQL", CommandArguments("-n", "-p -f -ff -db", 1, 1)) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -86,7 +75,7 @@ object Sql {
     }
   }
 
-  class GorSql() extends InputSourceInfo("GORSQL", CommandArguments("", "-p", 1, 1)) {
+  class GorSql() extends InputSourceInfo("GORSQL", CommandArguments("", "-p -f -ff -db", 1, 1)) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {
@@ -94,7 +83,7 @@ object Sql {
     }
   }
 
-  class NorSql() extends InputSourceInfo("NORSQL", CommandArguments("", "-p", 1, 1), isNorCommand = true) {
+  class NorSql() extends InputSourceInfo("NORSQL", CommandArguments("", "-p -f -ff -db", 1, 1), isNorCommand = true) {
 
     override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                   args: Array[String]): InputSourceParsingResult = {

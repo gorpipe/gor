@@ -42,7 +42,7 @@ import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSys
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator}
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}
-import org.gorpipe.gor.util.StringUtil
+import org.gorpipe.gor.util.{CommandSubstitutions, StringUtil}
 import org.slf4j.LoggerFactory
 
 import java.net.InetAddress
@@ -558,7 +558,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
         finalCommand = GorJavaUtilities.projectReplacement(finalCommand, context.getSession)
         val inputSource = if (finalCommand.startsWith("sql ")) {
           val cmds = CommandParseUtilities.quoteSafeSplit(finalCommand.substring(4), ' ')
-          finalCommand = ProcessRowSource.filterCmd(cmds, filter).trim
+          finalCommand = CommandSubstitutions.filterCmd(cmds, filter).trim
           var source = if (hasOption(args, "-s")) stringValueOfOption(args, "-s") else if (commandType != null) commandType else null
           val k = finalCommand.indexOf("-s")
           if (k != -1) {
@@ -569,7 +569,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
             source = finalCommand.substring(k + 2, e).trim
             finalCommand = finalCommand.substring(0, k) + finalCommand.substring(e)
           }
-          GorJavaUtilities.getDbIteratorSource(finalCommand.trim, !isNorContext, source, scoping)
+          GorJavaUtilities.getDbIteratorSource(finalCommand.trim, null, source, !isNorContext, scoping)
         } else {
           val projectRoot = context.getSession.getProjectContext.getRealProjectRoot
           new ProcessRowSource(finalCommand, commandType, isNorContext, context.getSession, range, filter, false)

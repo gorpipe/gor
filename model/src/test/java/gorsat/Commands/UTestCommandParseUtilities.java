@@ -4,8 +4,6 @@ import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Test;
-import scala.collection.JavaConverters;
-import scala.collection.immutable.List;
 import scala.jdk.javaapi.CollectionConverters;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -32,6 +30,21 @@ public class UTestCommandParseUtilities {
     }
 
     @Test
+    public void removeDelimters() {
+        assertEquals("bingo", CommandParseUtilities.removeDelimters("bingo", null));
+        assertEquals("bingo'", CommandParseUtilities.removeDelimters("bingo'", new String[]{}));
+        assertEquals("bingo'", CommandParseUtilities.removeDelimters("bingo'", new String[]{"''"}));
+        assertEquals("bingo", CommandParseUtilities.removeDelimters("'bingo'", new String[]{"''"}));
+        assertEquals("bingo", CommandParseUtilities.removeDelimters("\"bingo\"", new String[]{"''", "\"\""}));
+        assertEquals("bingo", CommandParseUtilities.removeDelimters("{bingo}", new String[]{"''", "\"\"", "{}"}));
+        assertEquals("bi{}ngo", CommandParseUtilities.removeDelimters("bi{}ngo", new String[]{"''", "\"\"", "{}"}));
+        assertEquals("bi{}ngo", CommandParseUtilities.removeDelimters("{bi{}ngo}", new String[]{"''", "\"\"", "{}"}));
+        assertEquals("'bingo'", CommandParseUtilities.removeDelimters("\"'bingo'\"", new String[]{"''", "\"\"", "{}"}));
+        assertEquals("\"bingo\"", CommandParseUtilities.removeDelimters("'\"bingo\"'", new String[]{"''", "\"\"", "{}"}));
+        assertEquals("'bingo\"", CommandParseUtilities.removeDelimters("'bingo\"",  new String[]{"''", "\"\"", "{}"}));
+    }
+
+    @Test
     public void replaceSingleQuoutes() {
         assertEquals("bingo", CommandParseUtilities.replaceSingleQuotes("bingo"));
         assertEquals("bingo", CommandParseUtilities.replaceSingleQuotes("\"bingo\""));
@@ -48,7 +61,9 @@ public class UTestCommandParseUtilities {
     @Test
     public void quoteSafeSplit() {
         assertArrayEquals(new String[]{""}, CommandParseUtilities.quoteSafeSplit("", ' '));
+        assertArrayEquals(new String[]{"",""}, CommandParseUtilities.quoteSafeSplit(",", ','));
         assertArrayEquals(new String[]{"bingo"}, CommandParseUtilities.quoteSafeSplit("bingo", ' '));
+        assertArrayEquals(new String[]{"b"}, CommandParseUtilities.quoteSafeSplit("b", ' '));
         assertArrayEquals(new String[]{"bingo", "bongo"}, CommandParseUtilities.quoteSafeSplit("bingo bongo", ' '));
         assertArrayEquals(new String[]{"'bingo bongo'"}, CommandParseUtilities.quoteSafeSplit("'bingo bongo'", ' '));
         assertArrayEquals(new String[]{"'bingo \"bongo'"}, CommandParseUtilities.quoteSafeSplit("'bingo \"bongo'", ' '));

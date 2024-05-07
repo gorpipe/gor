@@ -74,11 +74,11 @@ public class UTestSqlSource {
         DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
-        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+        DbConnection.userConnections.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
 
         // Create avas database
         var avasPaths = DatabaseHelper.createAvasDatabase();
-        DbConnection.install(new DbConnection("avas", "jdbc:derby:" + avasPaths[1], "avas", "beta3"));
+        DbConnection.userConnections.install(new DbConnection("avas", "jdbc:derby:" + avasPaths[1], "avas", "beta3"));
 
         // 1.  Fails, i.e. it succeeds when it should not.
         var dataRda = reader.readAll(linkFile1.getAbsolutePath());
@@ -100,7 +100,7 @@ public class UTestSqlSource {
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         var paths = DatabaseHelper.createRdaDatabaseWithOrg();
-        DbConnection.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
+        DbConnection.userConnections.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
 
 
         var data = reader.readAll(linkFile.getAbsolutePath());

@@ -36,6 +36,7 @@ import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.gor.util.SqlReplacer;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -253,6 +254,13 @@ public class GorJavaUtilities {
         return myCommand;
     }
 
+    public static void updateWithProjectInfo(GorSession session, Map<String, Object> map) {
+        if (map == null) return;
+
+        map.put(SqlReplacer.KEY_PROJECT_ID, session.getProjectContext().getProjectName());
+        map.put(SqlReplacer.KEY_REQUEST_ID, session.getRequestId());
+    }
+
     public static String projectReplacement(String myCommand, GorSession session) throws IOException {
         String projectRoot = session.getProjectContext().getRealProjectRoot();
         String requestId = session.getRequestId();
@@ -310,8 +318,8 @@ public class GorJavaUtilities {
         return myCommand;
     }
 
-    public static GenomicIterator getDbIteratorSource(String sqlQuery, boolean gortable, final String source, boolean scoping) {
-        Supplier<Stream<String>> streamSupplier = () -> DbConnection.getDBLinkStream( sqlQuery, Map.of(), source);
+    public static GenomicIterator getDbIteratorSource(String sqlQuery, Map<String, Object> constants, final String source, boolean gortable, boolean scoping) {
+        Supplier<Stream<String>> streamSupplier = () -> DbConnection.userConnections.getDBLinkStream( sqlQuery, constants, source);
         gorsat.Iterators.IteratorSource its;
         its = gortable ? new GorStreamIterator(streamSupplier, scoping) : new NorStreamIterator(streamSupplier);
         return new gorsat.Iterators.SingleIteratorSource(its, "dbit");

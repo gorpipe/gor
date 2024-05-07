@@ -34,18 +34,11 @@ import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.StreamWrappedGenomicIterator;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.gorpipe.gor.util.SqlReplacer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SqlSource extends RowIteratorSource {
-    private static final String PROJECT_ID = "project_id";
-    private static final String DB_PROJECT_ID = "project-id";
-    private static final String ORGANIZATION_ID = "organization_id";
-    private static final String DB_ORGANIZATION_ID = "organization-id";
-
     private SqlInfo sqlInfo;
 
     public SqlSource(SourceReference sourceReference) {
@@ -72,18 +65,17 @@ public class SqlSource extends RowIteratorSource {
         var scopes = DbScope.parse(sourceReference.securityContext);
         if (!scopes.isEmpty()) {
             for (var s : scopes) {
-                if (s.getColumn().equalsIgnoreCase(PROJECT_ID)) {
-                    constants.put(DB_PROJECT_ID, s.getValue());
-                } else if (s.getColumn().equalsIgnoreCase(ORGANIZATION_ID)) {
-                    constants.put(DB_ORGANIZATION_ID, s.getValue());
+                if (s.getColumn().equalsIgnoreCase(SqlReplacer.KEY_PROJECT_ID)) {
+                    constants.put(SqlReplacer.KEY_DB_PROJECT_ID, s.getValue());
+                } else if (s.getColumn().equalsIgnoreCase(SqlReplacer.KEY_ORGANIZATION_ID)) {
+                    constants.put(SqlReplacer.KEY_DB_ORGANIZATION_ID, s.getValue());
                 }
             }
         }
 
-        var dataStream = DbConnection.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
+        var dataStream = DbConnection.userConnections.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
         return new StreamWrappedGenomicIterator(dataStream, header, true);
     }
-
 
 
     @Override
@@ -139,11 +131,11 @@ public class SqlSource extends RowIteratorSource {
         var database = sqlInfo.database();
 
         if (database == null) {
-            database = DbConnection.DEFAULT_DBSOURCE;
+            database = DbConnection.systemConnections.defaultDbSource;
         }
 
         if (tables.length > 0 && tables[0].length() > 0 && database.length() > 0) {
-            final DbConnection dbsource = DbConnection.lookup(database);
+            final DbConnection dbsource = DbConnection.systemConnections.lookup(database);
             if (dbsource != null) {
                 timestamp = dbsource.queryDefaultTableChange(tables[0]);
             }

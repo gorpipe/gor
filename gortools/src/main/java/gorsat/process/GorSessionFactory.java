@@ -26,4 +26,20 @@ import org.gorpipe.gor.session.GenericFactory;
 import org.gorpipe.gor.session.GorSession;
 
 public abstract class GorSessionFactory extends GenericFactory<GorSession> {
+
+    protected static String updateCommonRoot(String commonRootOpt) {
+        if (commonRootOpt == null) { // If not specified on command line, try the vm default
+            commonRootOpt = System.getProperty("gor.common.root", "");
+        }
+        if (commonRootOpt != null) {
+            if (commonRootOpt.trim().length() == 0) {
+                commonRootOpt = "./";
+            } else if (commonRootOpt.length() > 2 && commonRootOpt.charAt(1) == ':' && !commonRootOpt.endsWith("\\")) { // windows path hack
+                commonRootOpt = commonRootOpt + '\\';
+            } else if (!commonRootOpt.endsWith("/")) {
+                commonRootOpt = commonRootOpt + '/';
+            }
+        }
+        return commonRootOpt;
+    }
 }

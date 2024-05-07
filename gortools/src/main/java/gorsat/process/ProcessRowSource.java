@@ -42,11 +42,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.gorpipe.gor.util.CommandSubstitutions;
 
 /**
  * Created by sigmar on 12/02/16.
@@ -138,7 +139,9 @@ public class ProcessRowSource extends ProcessSource {
         }
 
         boolean bamvcf = type != null && (type.equals("bam") || type.equals("sam") || type.equals("cram") || type.equals("vcf"));
-        List<String> headercommands = bamvcf ? seekCmd(commands, it, null, 0, -1, null) : seekCmd(commands, it, range.chromosome(), range.start(), range.stop(), filter);
+        List<String> headercommands =
+                bamvcf ? CommandSubstitutions.cmdSetFilterAndSeek(commands, null, 0, -1, null)
+                       : CommandSubstitutions.cmdSetFilterAndSeek(commands, range.chromosome(), range.start(), range.stop(), filter);
 
         try {
             List<String> rcmd = headercommands.stream().filter(p -> p.length() > 0).collect(Collectors.toList());
@@ -380,115 +383,11 @@ public class ProcessRowSource extends ProcessSource {
         return it.next();
     }
 
-    private static void noSeekReplace(String cmd, List<String> seekcmd) {
-        int hPos;
-        int sPos;
-        hPos = cmd.indexOf("#(H:");
-        if (hPos != -1) {
-            int hEnd = cmd.indexOf(')', hPos + 1);
-            cmd = cmd.substring(0, hPos) + cmd.substring(hPos + 4, hEnd) + cmd.substring(hEnd + 1);
-        }
-
-        sPos = cmd.indexOf("#(S:");
-        if (sPos != -1) {
-            int sEnd = cmd.indexOf(')', sPos + 1);
-            cmd = cmd.substring(0, sPos) + cmd.substring(sEnd + 1);
-        }
-
-        if( sPos != -1 || hPos != -1 ) {
-            seekcmd.addAll(Arrays.asList(cmd.split("[ ]+")));
-        } else seekcmd.add(cmd);
-    }
-
-    private static String posReplace(String seek, GenomicIterator it, String seekChr, int startPos, int endPos) {
-        if( seekChr.startsWith("chr") ) seek = seek.replace("chn", seekChr.substring(3));
-        else seek = seek.replace("chn", seekChr);
-        int pos = seek.indexOf("pos-end");
-        if (pos != -1) {
-            if (endPos == -1) {
-                int len = Integer.MAX_VALUE;
-                seek = seek.replace("pos", (startPos + 1) + "").replace("end", len + "");
-            } else {
-                seek = seek.replace("pos", (startPos + 1) + "").replace("end", endPos + "");
-            }
-        } else if (seek.contains("pos")) {
-            pos = seek.indexOf("pos-");
-            if (endPos == -1) {
-                seek = seek.replace("pos", startPos + "");
-            } else if (startPos == endPos && pos != -1) {
-                seek = seek.replace("pos-", startPos + "");
-            } else {
-                seek = seek.replace("pos", startPos+"").replace("end", endPos+"");
-            }
-        }
-
-        return seek;
-    }
-
-    private static void seekReplace(String cmd, List<String> seekcmd, GenomicIterator it, String seekChr, int startPos, int endPos) {
-        int sPos;
-        int hPos = cmd.indexOf("#(H:");
-        if (hPos != -1) {
-            int hEnd = cmd.indexOf(')', hPos + 1);
-            cmd = cmd.substring(0, hPos) + cmd.substring(hEnd + 1);
-        }
-
-        sPos = cmd.indexOf("#(S:");
-        if (sPos != -1) {
-            int sEnd = cmd.indexOf(')', sPos + 1);
-            String seek = cmd.substring(sPos + 4, sEnd).replace("chr", seekChr);
-            seek = posReplace(seek, it, seekChr, startPos, endPos);
-            cmd = cmd.substring(0, sPos) + seek + cmd.substring(sEnd + 1);
-        }
-        if( sPos != -1 || hPos != -1 ) {
-            seekcmd.addAll(Arrays.asList(cmd.split("[ ]+")));
-        } else seekcmd.add(cmd);
-    }
-
-    public static String filterCmd(String[] commands, String filter) {
-        String[] ret = filterCmd(Arrays.asList(commands), filter).toArray(new String[0]);
-        return String.join(" ", ret).trim();
-    }
-
-    private static List<String> filterCmd(List<String> commands, String filter) {
-        List<String> seekcmd = new ArrayList<>();
-        for (String cmd : commands) {
-            if (filter == null) {
-                int fPos = cmd.indexOf("#(F:");
-                if (fPos != -1) {
-                    cmd = "";
-                }
-            } else {
-                int fPos = cmd.indexOf("#(F:");
-                if (fPos != -1) {
-                    int fEnd = CommandParseUtilities.quoteSafeIndexOf(cmd, ")", true, fPos+1);
-                    if( fEnd == -1 ) fEnd = cmd.length()-1;
-                    String filt = cmd.substring(fPos + 4, fEnd).replace("filter", filter);
-                    cmd = cmd.substring(0, fPos) + filt + cmd.substring(fEnd + 1);
-                }
-            }
-            if( cmd.length() > 0 ) seekcmd.add(cmd);
-        }
-        return seekcmd;
-    }
-
-    static List<String> seekCmd(List<String> commands, GenomicIterator it, String seekChr, int startPos, int endPos, String filter) {
-        List<String> filtercmd = filterCmd(commands,filter);
-        List<String> seekcmd = new ArrayList<>();
-        for (String cmd : filtercmd) {
-            if (seekChr == null) {
-                noSeekReplace(cmd, seekcmd);
-            } else {
-                seekReplace(cmd, seekcmd, it, seekChr, startPos, endPos);
-            }
-        }
-        return seekcmd;
-    }
 
     @Override
     public InputStream setRange(String seekChr, int startPos, int endPos) {
         try {
-            List<String> seekcmd = seekCmd(commands, it, seekChr, startPos, endPos, filter);
+            List<String> seekcmd = CommandSubstitutions.cmdSetFilterAndSeek(commands, seekChr, startPos, endPos, filter);
             if (it != null) it.close();
 
             if (p != null && p.isAlive()) {

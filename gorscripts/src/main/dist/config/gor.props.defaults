@@ -10,6 +10,7 @@ gor.s3.conn.pool.size=10000
 gor.s3.keystore=/home/rda/env/dev/config/gor.aws.credentials
 
 gor.db.credentials=
+gor.sql.credentials=
 
 gor.apps.config.path=.
 gor.cmd.whitelist.file=${gor.apps.config.path}/whitelist.txt
