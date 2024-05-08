@@ -174,7 +174,7 @@ public class UTestSignature {
                 Assert.assertEquals(signature, signature2);
 
                 // Touch the file and get the signature
-                var r = file.setLastModified(System.currentTimeMillis());
+                var r = file.setLastModified(System.currentTimeMillis() + 1000);
                 var signature3 = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
                 Assert.assertFalse(signature3.isEmpty());
                 Assert.assertNotEquals(signature, signature3);
