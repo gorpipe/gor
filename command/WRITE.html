@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>WRITE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,22 +157,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="write-1">
-<span id="write"></span><h1>WRITE<a class="headerlink" href="#write-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="write">
+<span id="id1"></span><h1>WRITE<a class="headerlink" href="#write" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#write"><span class="std std-ref">WRITE</span></a> command can be used to write a stream into one or more files simultaneously.</p>
 <p>By specifying a “fork” column, with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, the stream can be forked, i.e. written into multiple files.  In this case, #{fork} has to appear in the filename template. If you specify the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option, you must also specify the column that is used to fork the output files.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-d</span></code> option can be used to write the fork files to directories instead of spliting filenames with #{fork}.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-r</span></code> option can be used to eliminate the fork column from the output, since it is already represented in the filenames.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write filename [-<span class="no">f</span> forkCol] [-d] [-r] [-c] [-m] [-i type]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">column</span></code></p></td>
 <td><p>The “fork column” used to split the output into multiple files.</p></td>
@@ -226,8 +228,8 @@ outputs meta data.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1:10020-10051 fileA.gor | write fileB.gorz
 </pre></div>
@@ -247,6 +249,11 @@ outputs meta data.</p></td>
 <p>The query above will write the contents of <code class="docutils literal notranslate"><span class="pre">fileA.gor</span></code> into S3 project folder.  In addition it will create a link to the S3 file in the project folder under <code class="docutils literal notranslate"><span class="pre">user_data/fileB.gorz.link</span></code>.</p>
 <p>There are 4 different S3 project and shared folders that can be written to:</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 40%" />
+<col style="width: 48%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Project</p></td>
 <td><p>s3data://project/&lt;path to data&gt;</p></td>
@@ -266,8 +273,8 @@ outputs meta data.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

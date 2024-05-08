@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GTGEN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,8 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="gtgen-1">
-<span id="gtgen"></span><h1>GTGEN<a class="headerlink" href="#gtgen-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="gtgen">
+<span id="id1"></span><h1>GTGEN<a class="headerlink" href="#gtgen" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>GTGEN</strong> command is used to generate genotypes in a horizontal bucket format, e.g. with one or more rows per variant
 (chrom,pos,ref,alt) and <code class="docutils literal notranslate"><span class="pre">bucket</span></code> and <code class="docutils literal notranslate"><span class="pre">values</span></code> column to store the genotypes as characters (0,1,2,3).  The input is a
 input stream of row-based variants with a genotype column (<code class="docutils literal notranslate"><span class="pre">GT</span></code>), a tagbucketrelation and coverage relation.</p>
@@ -169,15 +167,19 @@ GT in rows with empty tag value (PN) are not put into the value column, but can 
 a variant row is present for each bucket (see the -u option in <a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> and <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a>).</p>
 <p>A presence of a coverage segment (per tag <code class="docutils literal notranslate"><span class="pre">PN</span></code>) indicates sufficient coverage, i.e. missing variant data (GT not 0,1, or 3)
 is interpreted as homozygous reference.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTGEN tagbucketrelation coveragefile [ attributes ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
 <td><p>Grouping columns other than (chrom,pos)</p></td>
@@ -190,8 +192,8 @@ is interpreted as homozygous reference.</p>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example of creating horizontal variations stored in buckets */
 
@@ -247,12 +249,12 @@ the sparse variant table <code class="docutils literal notranslate"><span class=
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> source/hvar/transwgs.gord -nf -ff myPNs.tsv | <span class="nb">CSVSEL</span> source/hvar/PNbuckets.tsv myPNs.tsv -<span class="no">gc</span> #3,#4 -u 4
 </pre></div>
 </div>
-<section id="related-commands">
+<div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SDL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,23 +157,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="sdl-1">
-<span id="sdl"></span><h1>SDL<a class="headerlink" href="#sdl-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="sdl">
+<span id="id1"></span><h1>SDL<a class="headerlink" href="#sdl" title="Permalink to this headline">¶</a></h1>
 <p>The SDL command allows you to run arbitrary SDL commands against an SDL server (the server here being defined by the content of a file called gor.sdl.credentials in the config directory).</p>
 <p>SDL statements need to be encapsulated between curly brackets, e.g. sdl {sdl_statement}.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The feature described here should be considered to be <strong>early access</strong> and users should be advised that functionality is still under active development.</p>
-</aside>
-<section id="usage">
+</div>
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>SDL {&lt;sdl query&gt;}
 </pre></div>
 </div>
 <p>If the SDL query contains no pipe symbol (‘|’) the quotes can be omitted.
 The SDL query can be any valid SDL query. See SDL documentation on query construction.</p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>Example queries:</p>
 <blockquote>
@@ -192,9 +190,9 @@ The SDL query can be any valid SDL query. See SDL documentation on query constru
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SDL</span> <span class="pre">{[{PN</span> <span class="pre">|</span> <span class="pre">PN.POPUCHA.BASECHA.AGEA</span> <span class="pre">&gt;</span> <span class="pre">70</span> <span class="pre">},descr(PN.POPUCHA.BASECHA.SEX)</span> <span class="pre">as</span> <span class="pre">sex,PN.POPUCHA.BASECHA.TOWNS</span> <span class="pre">as</span> <span class="pre">townsend_index]}</span></code></p></li>
 </ul>
-</aside>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DATE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,27 +157,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="date-1">
-<span id="date"></span><h1>DATE<a class="headerlink" href="#date-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="date">
+<span id="id1"></span><h1>DATE<a class="headerlink" href="#date" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DATE</strong> function returns the current date and time in the given format, or ‘yyyy-MM-dd HH:mm:ss’ if
 no format is given.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">date()</span> <span class="pre">:</span> <span class="pre">date</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">date(format)</span> <span class="pre">:</span> <span class="pre">date</span></code></p>
 <p>See <a class="reference internal" href="#date"><span class="std std-ref">DATE</span></a> for a description of the date format.</p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example adds a column <code class="docutils literal notranslate"><span class="pre">x</span></code> with the current date and time.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>... | <span class="nb">CALC</span> x date() | ...
 </pre></div>
 </div>
-</section>
-<section id="date-format">
+</div>
+<div class="section" id="date-format">
 <h2>Date Format<a class="headerlink" href="#date-format" title="Permalink to this headline">¶</a></h2>
 <p>You can use the following symbols in your formatting pattern:</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>G</p></td>
 <td><p>Era designator (before christ, after christ)</p></td>
@@ -247,11 +249,15 @@ no format is given.</p>
 the formatted dates.</p>
 <p>Some characters can be used in different numbers. For instance, you can write either yy for a 2-character
 version of the year (e.g. 12), or you can write yyyy for a 4-character version of the year (e.g. 2012).</p>
-</section>
-<section id="pattern-examples">
+</div>
+<div class="section" id="pattern-examples">
 <h2>Pattern Examples<a class="headerlink" href="#pattern-examples" title="Permalink to this headline">¶</a></h2>
 <p>Here are a few date pattern examples:</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 69%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>Pattern</p></td>
 <td><p>Example</p></td>
@@ -282,8 +288,8 @@ version of the year (e.g. 12), or you can write yyyy for a 4-character version o
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

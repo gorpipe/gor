@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BUG &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,24 +157,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="bug-1">
-<span id="bug"></span><h1>BUG<a class="headerlink" href="#bug-1" title="Permalink to this headline">¶</a></h1>
-<section id="usage">
+  <div class="section" id="bug">
+<span id="id1"></span><h1>BUG<a class="headerlink" href="#bug" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | bug [setup:probability | process:probability | finish:probability]
 </pre></div>
 </div>
 <p>This command is really just for testing the system to see how tolerant it is in handling exceptions arising in different phases of the query process, i.e. setup construction phase, row processing phase, or the query cleanup finish phase.</p>
 <p>This command should not be part of the regular user-manual.</p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbSNP# | bug process:0.001 | where random() &lt; 0.00001 | join -<span class="no">snpseg</span> &lt;(<span class="nd">gor</span> #genes# | bug setup:0.1 )
 </pre></div>
 </div>
 <p>The above query causes a “BUG process” error with the probability of 1/1000 rows and a “BUG setup” error with 10 chance in the setup of nested query.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

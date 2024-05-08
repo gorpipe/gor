@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>VARGROUP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,19 +157,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span><section id="vargroup-1">
-<span id="vargroup"></span><h1>VARGROUP<a class="headerlink" href="#vargroup-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span><div class="section" id="vargroup">
+<span id="id1"></span><h1>VARGROUP<a class="headerlink" href="#vargroup" title="Permalink to this headline">¶</a></h1>
 <p>Takes in a GOR stream of hardcalls stored in horizontal manner and groups together the lines corresponding to the same reference allele at a given position.
 The genotypes should be stored in a column named <cite>Values</cite>, and the reference and alternative alleles in a column whose name starts with <cite>ref</cite> and <cite>alt</cite>, respectively.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | VARGROUP [-<span class="no">gc</span> groupCols]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">groupcols</span></code></p></td>
 <td><p>The cols to group on, in addition to chrom, pos and the reference column.</p></td>
@@ -181,8 +183,8 @@ The genotypes should be stored in a column named <cite>Values</cite>, and the re
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

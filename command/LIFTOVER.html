@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LIFTOVER &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,20 +157,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="liftover-1">
-<span id="liftover"></span><h1>LIFTOVER<a class="headerlink" href="#liftover-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="liftover">
+<span id="id1"></span><h1>LIFTOVER<a class="headerlink" href="#liftover" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LIFTOVER</strong> command is used to convert GOR data from one reference genome build to another.  It provides similar functionality as the LiftOver functionality at UCSC, however, executes much faster.  The output of a LIFTOVER command is therefore in different coordinates than the input and therefore it is for instance meaningless to join such data with the source file or other sources in the original genome build.</p>
 <p>The mapping between the genome builds for the LIFTOVER command is stored in GOR files, e.g. config/liftover/hg19tohg38.gor, which are typically generated from chain files from UCSC.</p>
 <p>The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequence reads or segments, in order to reverse complement sequence columns where appropriate.  Note, that the LIFTOVER command must re-order the entire output and is therefore a blocking operation similar to SORT genome.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | bam ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-snp</span></code></p></td>
 <td><p>Single nucleotide positions.</p></td>
@@ -200,8 +202,8 @@
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>When doing a liftover on segments, we can use the approach below to minimize the unmapped segments.  The occurrence of unmapped segments is because of partial overlap with the segments that come from the UCSC chain-files.</p>
 <p>The query below maps the individual overlaps and then merges them (given they are not too far apart, e.g. 1000bp).  The 20Mbp is the maxseg in the liftover segments.  Rownum and liftsplits is just calculated to be able to see how each gene is split up.</p>
@@ -218,14 +220,14 @@
 | <span class="nb">GREP</span> CNTNAP3B | <span class="nb">GRANNO</span> chrom -sum -<span class="no">ic</span> segcount
 </pre></div>
 </div>
-</section>
-<section id="relevant-links">
+</div>
+<div class="section" id="relevant-links">
 <h2>Relevant links<a class="headerlink" href="#relevant-links" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgLiftOver">https://genome.ucsc.edu/cgi-bin/hgLiftOver</a>
 <a class="reference external" href="https://genome.ucsc.edu/goldenpath/help/chain.html">https://genome.ucsc.edu/goldenpath/help/chain.html</a>
 <a class="reference external" href="http://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/">http://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/</a></p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

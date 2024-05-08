@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>ADDDAYS &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,21 +157,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="adddays-1">
-<span id="adddays"></span><h1>ADDDAYS<a class="headerlink" href="#adddays-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="adddays">
+<span id="id1"></span><h1>ADDDAYS<a class="headerlink" href="#adddays" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>ADDDAYS</strong> function calculates the date that is some days after the given date.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">adddays(format,</span> <span class="pre">date,</span> <span class="pre">num_days)</span> <span class="pre">:</span> <span class="pre">date</span></code></p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example adds a column <code class="docutils literal notranslate"><span class="pre">x</span></code> with a date that is 15 days later than the date in column <code class="docutils literal notranslate"><span class="pre">first</span></code>.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>... | <span class="nb">CALC</span> x adddays(&#39;dd/MM/yyyy&#39;, first, 15) | ...
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

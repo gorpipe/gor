@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DISTLOC &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,18 +157,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="distloc-1">
-<span id="distloc"></span><h1>DISTLOC<a class="headerlink" href="#distloc-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="distloc">
+<span id="id1"></span><h1>DISTLOC<a class="headerlink" href="#distloc" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DISTLOC</strong> command is similar to the TOP command, except that it counts different <a class="reference internal" href="../glossary.html#term-locus"><span class="xref std std-term">loci</span></a> instead of rows. It may be more convenient to use DISTLOC in cases where there are multiple rows per locus. The command terminates the upstream process once all the loci have been passed through.</p>
 <p>To take an example, we may be opening a BAM file that has multiple rows that begin from a single position on the chromosome each representing a different sequence read. The DISTLOC command would count all of those individual reads as a single locus.</p>
 <p>The command takes one parameter, namely the number of loci to allow through.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">DISTLOC</span> &lt;number&gt;
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>COLS2LISTMAP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,16 +157,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="cols2listmap-1">
-<span id="cols2listmap"></span><h1>COLS2LISTMAP<a class="headerlink" href="#cols2listmap-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="cols2listmap">
+<span id="id1"></span><h1>COLS2LISTMAP<a class="headerlink" href="#cols2listmap" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>COLS2LISTMAP</strong> function collapses columns into a single column, similar to <strong>COLS2LIST</strong>, applying an expression
 to each value as it combines to a list with a separator between the values.
 The separator defaults to “,”, but can be set to anything, with the optional separator argument.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">COLS2LISTMAP(string,</span> <span class="pre">string[,</span> <span class="pre">sep])</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">CALC</span> test COLS2LISTMAP(&#39;cols*&#39;, &#39;lower(x)&#39;)
 </pre></div>
@@ -182,8 +180,8 @@ The separator defaults to “,”, but can be set to anything, with the optional
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">test</span></code> now contains 1 if any of the values from all columns starting with ‘cols’ contain the string ‘foo’.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

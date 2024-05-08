@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>POSOF &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,21 +157,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="posof-1">
-<span id="posof"></span><h1>POSOF<a class="headerlink" href="#posof-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="posof">
+<span id="id1"></span><h1>POSOF<a class="headerlink" href="#posof" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>POSOF</strong> function returns the position of a string within a source string. The function takes two parameters: the source string and the string for which you wish to find the position. If the string is not found, <code class="docutils literal notranslate"><span class="pre">-1</span></code> is returned instead of the position. If the string is found more than once, the position is only returned for the first instance.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">POSOF(string,string)</span> <span class="pre">:</span> <span class="pre">output</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The query below reports the position for the first instance it finds of <code class="docutils literal notranslate"><span class="pre">A</span></code> in the reference column for <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code>.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">CALC</span> test posof(<span class="na">reference</span>, &#39;A&#39;) | <span class="nb">TOP</span> 20
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

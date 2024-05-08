@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>PARALLEL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,22 +157,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="parallel-1">
-<span id="parallel"></span><h1>PARALLEL<a class="headerlink" href="#parallel-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="parallel">
+<span id="id1"></span><h1>PARALLEL<a class="headerlink" href="#parallel" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#parallel"><span class="std std-ref">PARALLEL</span></a> command, like <a class="reference internal" href="PGOR.html#pgor"><span class="std std-ref">PGOR</span></a>, can be used to run queries in parallel.  Unlike the PGOR command which partitions the query execution along the genomic axis, PARALLEL allows for fully customizable parallelism.</p>
 <p>The current implementation, the query expression must be provided like a nested-query expression with the column replacement operator #{col:[column_name]} to inject values from the input parts source into the newly generated gor query as shown in the examples.</p>
 <p>Like PGOR, PARALLEL cannot appear in a regular nested query.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> pnlist = <span class="nd">nor</span> pns.tsv;
 <span class="nd">create</span> #tempfile# = parallel -parts [pnlist]  &lt;(<span class="nd">nor</span> #{col:pn_file} | where pn = &#39;#{col:pn}&#39; );
 <span class="nd">nor</span> [#tempfile#]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-parts</span></code></p></td>
 <td><p>Required option. Input source which contains the split source. Each row in the input parts
@@ -186,13 +188,13 @@ referenced with a #{col:[columnname]} operator.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>A full discussion of PARALLEL commands and examples of how to use them can be found in the manual chapter on <a class="reference internal" href="../parallelGOR.html#parallelexamples"><span class="std std-ref">Parallelization in GOR</span></a>.</p>
 <p>See also: <a class="reference internal" href="PGOR.html"><span class="doc">PGOR</span></a></p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Commands &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -161,14 +159,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="commands">
+  <div class="section" id="commands">
 <span id="quickreference"></span><h1>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h1>
-<table class="wxnc-reference docutils align-default" id="table-1">
-<caption><span class="caption-text">A list of available GOR and NOR commands with descriptions</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given wxnc-reference docutils align-default" id="id1">
+<caption><span class="caption-text">A list of available GOR and NOR commands with descriptions</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 25.9%" />
-<col style="width: 60.3%" />
-<col style="width: 13.8%" />
+<col style="width: 26%" />
+<col style="width: 60%" />
+<col style="width: 14%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Command</p></th>
@@ -277,100 +275,108 @@
 <td><p>Executes system commands that return tabular data within GOR queries.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/GORROW.html#gorrow"><span class="std std-ref">GORROW</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/GORIF.html#gorif"><span class="std std-ref">GORIF</span></a></p></td>
+<td><p>Checks existence of source files before running the GOR command.</p></td>
+<td><p>GOR</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="command/GORROW.html#gorrow"><span class="std std-ref">GORROW</span></a></p></td>
 <td><p>Returns a single row of data based on the input parameters.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/GORROWS.html#gorrows"><span class="std std-ref">GORROWS</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/GORROWS.html#gorrows"><span class="std std-ref">GORROWS</span></a></p></td>
 <td><p>Generates genomic ordered rows based on the input parameters.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/GORSQL.html#gorsql"><span class="std std-ref">GORSQL</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/GORSQL.html#gorsql"><span class="std std-ref">GORSQL</span></a></p></td>
 <td><p>Runs arbitrary commands against a database, which can be defined in a config file.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/GRANNO.html#granno"><span class="std std-ref">GRANNO</span></a></p></td>
 <td><p>Aggregation and annotation in a single pass.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/GREP.html#grep"><span class="std std-ref">GREP</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/GREP.html#grep"><span class="std std-ref">GREP</span></a></p></td>
 <td><p>Filter for column content based on a specified expression.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a></p></td>
 <td><p>Aggregation of data based on a specified binsize and content of specified columns.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p></td>
 <td><p>Generate genotypes in a horizontal bucket format.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/GTLD.html#gtld"><span class="std std-ref">GTLD</span></a></p></td>
 <td><p>Calculate linkage disequilibrium between genotypes in different locations.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/GTTRANSPOSE.html#gttranspose"><span class="std std-ref">GTTRANSPOSE</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/GTTRANSPOSE.html#gttranspose"><span class="std std-ref">GTTRANSPOSE</span></a></p></td>
 <td><p>Generates one column named PNs and either one another column named VALUES, containing the genotypes of the pn by marker in the order defined by the marker source.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/HIDE.html#hide"><span class="std std-ref">HIDE</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/HIDE.html#hide"><span class="std std-ref">HIDE</span></a></p></td>
 <td><p>Removes the listed columns from the output stream.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/INFLATECOLUMN.html#inflatecolumn"><span class="std std-ref">INFLATECOLUMN</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/INFLATECOLUMN.html#inflatecolumn"><span class="std std-ref">INFLATECOLUMN</span></a></p></td>
 <td><p>De-compresses a column which has been compressed using <a class="reference internal" href="command/DEFLATECOLUMN.html#deflatecolumn"><span class="std std-ref">DEFLATECOLUMN</span></a>.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/INSET.html#inset"><span class="std std-ref">INSET</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/INSET.html#inset"><span class="std std-ref">INSET</span></a></p></td>
 <td><p>Only passes rows where the column value is found in the specified single-column setfile.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a></p></td>
 <td><p>Joins multiple sources (or a single source to itself) based on some defined overlap condition.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/KING.html#king"><span class="std std-ref">KING</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/KING.html#king"><span class="std std-ref">KING</span></a></p></td>
 <td><p>Calculates relationship statistics from a stream of horizontal genotypes.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/LEFTJOIN.html#leftjoin"><span class="std std-ref">LEFTJOIN</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/LEFTJOIN.html#leftjoin"><span class="std std-ref">LEFTJOIN</span></a></p></td>
 <td><p>A special type of join that returns all rows from the left source along with data from the right if any matches.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/LEFTWHERE.html#leftwhere"><span class="std std-ref">LEFTWHERE</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/LEFTWHERE.html#leftwhere"><span class="std std-ref">LEFTWHERE</span></a></p></td>
 <td><p>Supplies additional join conditions into a left-join operation.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/LIFTOVER.html#liftover"><span class="std std-ref">LIFTOVER</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/LIFTOVER.html#liftover"><span class="std std-ref">LIFTOVER</span></a></p></td>
 <td><p>Converts GOR data from one reference genome build to another.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/LOG.html#log"><span class="std std-ref">LOG</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/LOG.html#log"><span class="std std-ref">LOG</span></a></p></td>
 <td><p>Specifies how often to log rows when monitoring the progress of a running query.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a></p></td>
 <td><p>Joins together tables using columns other than the chromosome and position data.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/META.html#metainfo"><span class="std std-ref">META</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/META.html#metainfo"><span class="std std-ref">META</span></a></p></td>
 <td><p>Allows querying of meta data associated with a data source.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a></p></td>
 <td><p>Combines two independent sources into a single genomic-ordered stream.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a></p></td>
 <td><p>Similar to <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a>, but with a mapfile that may contain a one-to-many mapping.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a></p></td>
 <td><p>The core source command for working with non-ordered relational data.</p></td>
 <td><p>NOR only</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/NORCMD.html#norcmd"><span class="std std-ref">NORCMD</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/NORCMD.html#norcmd"><span class="std std-ref">NORCMD</span></a></p></td>
 <td><p>Executes system commands that return tabular data within NOR queries.</p></td>
+<td><p>NOR only</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="command/NORIF.html#norif"><span class="std std-ref">NORIF</span></a></p></td>
+<td><p>Checks existence of the source file before running the NOR command.</p></td>
 <td><p>NOR only</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="command/NORROWS.html#norrows"><span class="std std-ref">NORROWS</span></a></p></td>
@@ -457,20 +463,28 @@
 <td><p>Turns a stream of segments into a stream of non-overlapping segments.</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/SEGWHERE.html#segwhere"><span class="std std-ref">SEGWHERE</span></a></p></td>
+<td><p>Turns a stream of segments into a stream of non-overlapping segments based on a where condition.</p></td>
+<td><p>GOR</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a></p></td>
 <td><p>Filters specified columns from the output stream.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/SELWHERE.html#selwhere"><span class="std std-ref">SELWHERE</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/SELWHERE.html#selwhere"><span class="std std-ref">SELWHERE</span></a></p></td>
 <td><p>Filters specified columns from the output stream using an expression on column names/indices.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="command/SEQ.html#seq"><span class="std std-ref">SEQ</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/SEQ.html#seq"><span class="std std-ref">SEQ</span></a></p></td>
 <td><p>Returns the corresponding reference sequence read for each row of the output (based on the position).</p></td>
 <td><p>GOR</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="command/SETCOLTYPE.html#setcoltype"><span class="std std-ref">SETCOLTYPE</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="command/SETCOLTYPE.html#setcoltype"><span class="std std-ref">SETCOLTYPE</span></a></p></td>
 <td><p>Sets column data types.</p></td>
+<td><p>GOR/NOR</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="command/SIGNATURE.html#signature"><span class="std std-ref">SIGNATURE</span></a></p></td>
+<td><p>Allows the control of create statements via time resolution or file changes.</p></td>
 <td><p>GOR/NOR</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="command/SKIP.html#skip"><span class="std std-ref">SKIP</span></a></p></td>
@@ -563,7 +577,7 @@
 </tr>
 </tbody>
 </table>
-</section>
+</div>
 
 
            </div>

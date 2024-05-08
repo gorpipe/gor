@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>FLOAT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,21 +157,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="float-1">
-<span id="float"></span><h1>FLOAT<a class="headerlink" href="#float-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="float">
+<span id="id1"></span><h1>FLOAT<a class="headerlink" href="#float" title="Permalink to this headline">¶</a></h1>
 <p>A <strong>FLOAT</strong> function can be used to convert a string (or integer) to a float. This function take an additional parameter, which</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">FLOAT(col,</span> <span class="pre">float)</span> <span class="pre">:</span> <span class="pre">float</span></code></p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>In the example below, we take an integer (‘foo’), change it using a <a class="reference internal" href="#float"><span class="std std-ref">float type conversion</span></a> into a float (at which point it becomes 5.0) and then use the <strong>ISFLOAT</strong> within an <a class="reference internal" href="if.html#if"><span class="std std-ref">IF</span></a> statement to evaluate if it is a float or not. (It is.)</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> foo 5 | <span class="nb">CALC</span> bar <span class="k">float</span>(foo) | <span class="nb">CALC</span> <span class="k">float</span>? <span class="k">IF</span>(ISFLOAT(bar),&#39;true&#39;,&#39;false&#39;)
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>LISTSECOND &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,8 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="listsecond-1">
-<span id="listsecond"></span><h1>LISTSECOND<a class="headerlink" href="#listsecond-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="listsecond">
+<span id="id1"></span><h1>LISTSECOND<a class="headerlink" href="#listsecond" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>LISTSECOND</strong> function retrieves the second item from a list of items. The list is assumed to be comma-separated, but an optional second parameter can specify a different separator. The list can be explicitly stated or it can be a reference to a column (either by name of the column or by its position in the input stream).</p>
 <p>The function accepts two parameters:</p>
 <ul class="simple">
@@ -168,13 +166,13 @@
 <li><p>optional separator (if the list is not comma-separated).</p></li>
 </ul>
 <p>The function returns the result in string format.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>listsecond(<span class="k">str</span>[,sep]) : <span class="k">str</span>
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>An example of using the <strong>LISTSECOND</strong> function with an explicitly stated list is shown below. The calculated column “listresult” here will have a value of “b” for every output row.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> example.vcf | <span class="nb">CALC</span> listresult LISTSECOND(&#39;a,b,c,d&#39;)
@@ -186,15 +184,15 @@
 </div>
 <p>In the following example vcf excerpt, we can retrieve the first item in the FORMAT column by referring to that column by name or by its position in the stream. Note that it is better practice to refer to the name of the column rather than the position, since the positions can get switched around when working in queries and referring to columns by name makes the query more understandable to the reader:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">#CHROM POS    ID           REF   ALT  QUAL   FILTER   INFO                     FORMAT           BCLOIDZ</span>
-chr1<span class="w">   </span><span class="m">10180</span><span class="w">  </span>rs201694901<span class="w">  </span>T<span class="w">     </span>C<span class="w">    </span><span class="m">16</span>.86<span class="w">  </span>LowQual<span class="w">  </span><span class="nv">AC</span><span class="o">=</span><span class="m">1</span><span class="p">;</span><span class="nv">AF</span><span class="o">=</span><span class="m">0</span>.500<span class="p">;</span><span class="nv">AN</span><span class="o">=</span><span class="m">2</span><span class="p">;</span>...<span class="w">   </span>GT:AD:DP:GQ:PL<span class="w">   </span><span class="m">0</span>/1:129,12:142:45:45,0,1082
+chr1   <span class="m">10180</span>  rs201694901  T     C    <span class="m">16</span>.86  LowQual  <span class="nv">AC</span><span class="o">=</span><span class="m">1</span><span class="p">;</span><span class="nv">AF</span><span class="o">=</span><span class="m">0</span>.500<span class="p">;</span><span class="nv">AN</span><span class="o">=</span><span class="m">2</span><span class="p">;</span>...   GT:AD:DP:GQ:PL   <span class="m">0</span>/1:129,12:142:45:45,0,1082
 </pre></div>
 </div>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> example.vcf | <span class="nb">CALC</span> listresult listsecond(FORMAT, &#39;:&#39;)
 </pre></div>
 </div>
 <p>The example here would return the second item in the format list, or “AD”.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

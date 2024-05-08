@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>RANK &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,12 +157,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="rank-1">
-<span id="rank"></span><h1>RANK<a class="headerlink" href="#rank-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="rank">
+<span id="id1"></span><h1>RANK<a class="headerlink" href="#rank" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#rank"><span class="std std-ref">RANK</span></a> command returns the rank of a number within a set of numbers. It compares the value of each cell in the specified column to all the values in the result set and returns the rank of that row in a column labelled “rank_&lt;column_name&gt;”.</p>
 <p>The <a class="reference internal" href="#rank"><span class="std std-ref">RANK</span></a> command has two necessary parameters, namely the binsize, which can be set to “chrom”, “genome” or to a numeric value. The column specified in the RANK command must be a numeric column.</p>
 <p>Using <strong>RANK</strong> in a nor query will give an error if <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter is used.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">RANK</span> binsize column [ attributes ]
 </pre></div>
@@ -172,10 +170,14 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | <span class="nb">RANK</span> column [ attributes ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 72%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">asc</span> <span class="pre">|</span> <span class="pre">desc</span></code></p></td>
 <td><p>Rank order. By default it is descending.</p></td>
@@ -200,8 +202,8 @@
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The example below takes some entries from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table with indels of some length, calculates the length of the reference column in the row and then ranks the value in the column.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) &gt; 4 OR len(<span class="na">allele</span>) &gt; 4
@@ -224,8 +226,8 @@
    | where rank_length = 1
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

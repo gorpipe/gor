@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>COLSPLIT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,18 +157,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="colsplit-1">
-<span id="colsplit"></span><h1>COLSPLIT<a class="headerlink" href="#colsplit-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="colsplit">
+<span id="id1"></span><h1>COLSPLIT<a class="headerlink" href="#colsplit" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>COLSPLIT</strong> command splits the content of a column into separate columns based on a defined split separator. The number of output columns, which is specified below in the usage with <code class="docutils literal notranslate"><span class="pre">colnum</span></code>, must be smaller than 100. Output column names are one-based, e.g. prefix_1, …, prefix_colnum.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | colsplit splitcol colnum prefix [-s sepVal] [-m missVal ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">sepval</span></code></p></td>
 <td><p>Split separator. By default it is a comma ‘,’.</p></td>
@@ -183,15 +185,15 @@
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example will take the QName column in the specified BAM file and split the value at each colon. The split values will be inserted into separate columns prefixed with <code class="docutils literal notranslate"><span class="pre">split_</span></code> followed by a number. If there is not enough input for all the split columns, the question mark character will be inserted for any empty columns.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> file.bam | <span class="nb">COLSPLIT</span> QName 7 split -s &#39;:&#39; -m &#39;?&#39;
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

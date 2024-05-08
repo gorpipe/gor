@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>VARMERGE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,23 +157,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="varmerge-1">
-<span id="varmerge"></span><h1>VARMERGE<a class="headerlink" href="#varmerge-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="varmerge">
+<span id="id1"></span><h1>VARMERGE<a class="headerlink" href="#varmerge" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#varmerge"><span class="std std-ref">VARMERGE</span></a> command ensures that overlapping variants, represented as reference sequence and alternative sequence, are denoted in an equivalent manner.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">-seg</span></code> option is used to indicate if the variants are denoted with zero-based segments (e.g. Chrom,bpStart,bpStop,Ref,Alt) as opposed to the default one-based position format (e.g. Chrom,Pos,Ref,Alt).</p>
 <p>By default the variants are represented in a right-normalized format such that SNPs have one letter notation and InDels have an identical base in the first letter of refcol and altcol.  The <code class="docutils literal notranslate"><span class="pre">-nonorm</span></code> option does skip the normalization step and represents the variants with the maximum span of the reference sequence (depends on the overlap between reference sequences in the input stream).</p>
 <p>Right-normalising has the benefit of presenting the variations in different rows into a coherent form. This is done because most aligners do not guarantee consistent representations of InDels for sequence reads in repeat regions.</p>
 <p>The merge span (as defined by the <code class="docutils literal notranslate"><span class="pre">-span</span></code> option) is capped at 1M base-pairs, however, such high normalization is not recommended.  Rather consider using VARNORM
 and the use of the -norm option in VARJOIN.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARMERGE</span> refcol altcol [ -seg | -nonorm| -span]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code></p></td>
 <td><p>The variant is denoted as segment, e.g. (chr,bpstart,bpstop,ref,call).</p></td>
@@ -188,16 +190,16 @@ and the use of the -norm option in VARJOIN.</p>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>For examples of how to use the <a class="reference internal" href="#varmerge"><span class="std std-ref">VARMERGE</span></a> command, check the chapter on <a class="reference internal" href="../variantData.html#mergingvariants"><span class="std std-ref">Merging Variants</span></a>.</p>
-<section id="related-commands">
+<div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a> <a class="reference internal" href="VARJOIN.html#varjoin"><span class="std std-ref">VARJOIN</span></a></p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

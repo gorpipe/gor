@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BRACKETS &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,21 +157,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="brackets-1">
-<span id="brackets"></span><h1>BRACKETS<a class="headerlink" href="#brackets-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="brackets">
+<span id="id1"></span><h1>BRACKETS<a class="headerlink" href="#brackets" title="Permalink to this headline">¶</a></h1>
 <p><strong>BRACKETS</strong> is a string-conversion function that adds brackets around a given string.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">BRACKETS(input)</span> <span class="pre">:</span> <span class="pre">output</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query will create a column called “test” in the output stream which contains the position of the rows contained in brackets.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrows -<span class="no">p</span> chr1:0-10 | <span class="nb">CALC</span> test brackets(<span class="na">pos</span>)
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

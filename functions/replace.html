@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>REPLACE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,22 +157,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="replace">
+  <div class="section" id="replace">
 <span id="f-replace"></span><h1>REPLACE<a class="headerlink" href="#replace" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>REPLACE</strong> function replaces all occurrences of a substring in a source string with a replacement substring. It takes three parameters as input: the source string, the search substring, and the replacement substring.</p>
 <p>Note that this is not the same as the <a class="reference internal" href="../command/REPLACE.html#replace"><span class="std std-ref">REPLACE</span></a> command, which can replace a whole column based on some condition.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">REPLACE(string,string,string)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query replaces instances of ‘Apples’ with ‘Peaches’ in the provided source string (‘Apples,Bananas,Pears) resulting in a column (labelled ‘demo’) with a value of ‘Peaches,Bananas,Pears’.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> demo replace(&#39;Apples,Bananas,Pears&#39;,&#39;Apples&#39;,&#39;Peaches&#39;)
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

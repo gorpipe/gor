@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SIGNATURE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,36 +157,48 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="signature-1">
-<span id="signature"></span><h1>SIGNATURE<a class="headerlink" href="#signature-1" title="Permalink to this headline">¶</a></h1>
-<section id="usage">
+  <div class="section" id="signature">
+<span id="id1"></span><h1>SIGNATURE<a class="headerlink" href="#signature" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> foo = <span class="nd">gor</span> ... | signature [attributes] | ...
 </pre></div>
 </div>
 <p>This command will inject a signature into the create statement and invalidating it based on the input criteria.</p>
-<p>This command will no effect standard gor queries.</p>
-</section>
-<section id="options">
+<p>This command will not effect standard gor queries.</p>
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-timeres</span> <span class="pre">seconds</span></code></p></td>
 <td><p>Time stamp resolution in seconds.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-file</span> <span class="pre">filepath</span></code></p></td>
+<td><p>Path to a file to calculate the signature from.</p></td>
+</tr>
 </tbody>
 </table>
-<p>The <code class="docutils literal notranslate"><span class="pre">-timeres</span></code> option is required.</p>
-</section>
-<section id="example">
+<p>The <code class="docutils literal notranslate"><span class="pre">-timeres</span></code> or the <code class="docutils literal notranslate"><span class="pre">-file</span></code> option is required. If both are present the command fails with an error.</p>
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> foo = <span class="nd">gor</span> #dbSNP# | signature -timeres 1000 | top 10;
 <span class="nd">gor</span> [foo]
 </pre></div>
 </div>
 <p>The above query will re-evaluate the #dbSNP# query at least every 1000 seconds and regenerate the underlying cache-file.</p>
-</section>
-</section>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> foo = <span class="nd">gor</span> #dbSNP# | signature -file ../foo.txt | top 10;
+<span class="nd">gor</span> [foo]
+</pre></div>
+</div>
+<p>The above query will re-evaluate the #dbSNP# query when changes are detected in the <code class="docutils literal notranslate"><span class="pre">../foo.txt</span></code> file.</p>
+</div>
+</div>
 
 
            </div>

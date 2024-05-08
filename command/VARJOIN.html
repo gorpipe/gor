@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>VARJOIN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,8 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="varjoin-1">
-<span id="varjoin"></span><h1>VARJOIN<a class="headerlink" href="#varjoin-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="varjoin">
+<span id="id1"></span><h1>VARJOIN<a class="headerlink" href="#varjoin" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#varjoin"><span class="std std-ref">VARJOIN</span></a> command behaves similarly as a join with additional constraint that the columns denoting the
 reference and alternative allele are equal in both the left- and the right-source.</p>
 <p>The command does join on single alleles, e.g. (ref,all), or multi-alleles (ref,a1,a2) or (ref,a1/a2).
@@ -176,15 +174,19 @@ but faster than to apply varnorm first).</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>varjoin -norm == join -<span class="no">snpsnp</span> -xl ref,<span class="na">alt</span> -xr ref,<span class="na">alt</span>
 </pre></div>
 </div>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARJOIN</span> rightfile.gor [ attributes ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ref</span> <span class="pre">col</span></code></p></td>
 <td><p>The column denoting the reference seq. (for both left- and right-source).</p></td>
@@ -272,12 +274,12 @@ property ‘gor.varjointype’ or ‘varjointype’ in gor config file.</p></td>
 </table>
 <p>See also <a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> and the example for the <a class="reference internal" href="LEFTWHERE.html#leftwhere"><span class="std std-ref">LEFTWHERE</span></a> command in relation to this.</p>
 <p>The right-source can also be specified as a gor-stream, using the &lt;(…) notation as in the <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a> command.</p>
-<section id="related-commands">
+<div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a> <a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a></p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

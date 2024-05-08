@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GORSQL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,24 +157,56 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="gorsql-1">
-<span id="gorsql"></span><h1>GORSQL<a class="headerlink" href="#gorsql-1" title="Permalink to this headline">¶</a></h1>
-<p>The GORSQL command allows you to run arbitrary SQL commands against “the database” (the database here being defined by the content of a file called gor.db.credentials in the config directory). This command is not enabled when running against a gor-server and therefore does not work within the Sequence Miner. It is intended to be used with GORpipe only.</p>
-<p>For GORSQL to work properly, the defined query must access a table have Chrom-POS information as first columns.</p>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="gorsql">
+<span id="id1"></span><h1>GORSQL<a class="headerlink" href="#gorsql" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#gorsql"><span class="std std-ref">GORSQL</span></a> command allows you to run arbitrary SQL commands against “the database” (the database here being defined by the content of a file called gor.sql.credentials in the config directory).</p>
+<p>For <a class="reference internal" href="#gorsql"><span class="std std-ref">GORSQL</span></a> to work properly, the defined query must return Chrom-POS information as first two columns.</p>
 <p>SQL statements need to be encapsulated between curly brackets, e.g. gorsql {sql_query}.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> {&lt;sql_query&gt;} | ...
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> &lt;options&gt; {&lt;sql_query&gt;} | ...
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">chr:pos1-pos2</span></code></p></td>
+<td><p>Choose a specific chromosome and position or a range to read. Both pos1 and pos2 are included.
+The following place holders are provided: #{CHROM}, #{BPSTART}, #{BPSTOP}.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">A[,B]*</span></code></p></td>
+<td><p>List of tags to filter files and file contents on.
+The following place holders are provided: #{TAGS}.   The necessary quoting is done automatically.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ff</span> <span class="pre">File</span></code></p></td>
+<td><p>Read tags from a tag file and filter files and file contents on. Also accepts a nested query.
+The following place holders are provided: #{TAGS}.   The necessary quoting is done automatically.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-db</span> <span class="pre">database</span></code></p></td>
+<td><p>Database alias as defied in <code class="docutils literal notranslate"><span class="pre">gor.sql.credentials</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> {select <span class="na">Chrom</span>, Pos, <span class="na">Reference</span>, <span class="na">Call</span> from GWAS_Subset <span class="nb">WHERE</span> Phenotype = &#39;Cancer&#39; order by <span class="na">Chrom</span>,Pos} | ...
 </pre></div>
 </div>
-</section>
-</section>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> -<span class="no">p</span> chr3:1000- {select <span class="na">Chrom</span>, Pos, <span class="na">Reference</span>, <span class="na">Call</span> from GWAS_Subset <span class="nb">WHERE</span> chrom = #{CHROM} and <span class="na">POS</span> &gt;= #{BPSTART} order by <span class="na">Chrom</span>,Pos} | ...
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> -<span class="no">f</span> AAA,TTT {select <span class="na">Chrom</span>, Pos, <span class="na">Reference</span>, <span class="na">Call</span> from GWAS_Subset <span class="nb">WHERE</span> <span class="na">Call</span> in (#{TAGS}) order by <span class="na">Chrom</span>,Pos} | ...
+</pre></div>
+</div>
+</div>
+</div>
 
 
            </div>

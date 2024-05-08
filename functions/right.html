@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>RIGHT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,14 +157,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="right-1">
-<span id="right"></span><h1>RIGHT<a class="headerlink" href="#right-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="right">
+<span id="id1"></span><h1>RIGHT<a class="headerlink" href="#right" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>RIGHT</strong> function returns the right-most character or characters in a string. The function takes two parameters, the first being the source string and the second being the number of characters to return.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">RIGHT(string,integer)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query returns a column labelled “test” that contains only the right-most base in the reference column in the #dbsnp# reference data file.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">TOP</span> 10 | <span class="nb">CALC</span> test right(<span class="na">reference</span>,1)
@@ -176,8 +174,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> right(<span class="na">reference</span>,1) = &#39;G&#39; | <span class="nb">TOP</span> 10
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

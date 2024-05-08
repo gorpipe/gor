@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>CREATE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,26 +157,26 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: Materialised Queries</span><section id="create-1">
-<span id="create"></span><h1>CREATE<a class="headerlink" href="#create-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: Materialised Queries</span><div class="section" id="create">
+<span id="id1"></span><h1>CREATE<a class="headerlink" href="#create" title="Permalink to this headline">¶</a></h1>
 <p><strong>CREATE</strong> statements can written for any valid GOR query. A <strong>CREATE</strong> statement will make an intermediate table, which can then be used (and reused) in other GOR queries.</p>
 <p>The notation used for <strong>CREATE</strong> statements is not restricted, but the convention is often to use double hash symbols on either side of the create, which makes the instances of <strong>CREATE</strong> easier to find in a longer GOR query.</p>
 <p>When referring to a <strong>CREATE</strong> statement within a GOR query, you must contain the name of the statement within square brackets.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>CREATE ##example## = <span class="nd">gor</span> ... ;
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following GOR query creates an intermediate table of twenty rows in the first line. This table is then called within the gor query in the second line.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>CREATE ##example## = gorrows -<span class="no">p</span> chr1:0-20;
 <span class="nd">gor</span> [##example##]
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DECODE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,25 +157,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="decode-1">
-<span id="decode"></span><h1>DECODE<a class="headerlink" href="#decode-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="decode">
+<span id="id1"></span><h1>DECODE<a class="headerlink" href="#decode" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DECODE</strong> function decodes/maps the value of the first argument using key-value mapping pairs provided by the second argument.</p>
 <p>The key-value mapping pairs are provided as a comma-separated list of key-value pairs.  The list of pairs can end with an optional default value:</p>
 <p><code class="docutils literal notranslate"><span class="pre">'key1,value1[,key2,value2]...[,default]'</span></code></p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>decode(string, string) : string
 </pre></div>
 </div>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1 | calc chrom_decimal decode(chrom, &#39;chr1,1,chr2,2,0&#39;)
 </pre></div>
 </div>
 <p>decodes the chromosome name for the chr1 and chr2 into a number, maps other chromosomes as 0.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

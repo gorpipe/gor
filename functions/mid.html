@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>MID &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,15 +157,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="mid-1">
-<span id="mid"></span><h1>MID<a class="headerlink" href="#mid-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="mid">
+<span id="id1"></span><h1>MID<a class="headerlink" href="#mid" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>MID</strong> function extracts a portion of a source string based on two integers: the zero-based start point and the size of the string to extract.</p>
 <p>The function takes three parameters - the source of the string, the start point, and the size of the string to extract. The position indicator is zero-based, meaning that setting a start point of zero will take from the very beginning of the source string and a start point of one will start from the second character in the string and so on.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">MID(string,integer,integer)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query shown here will return a stream of rows that contain a reference value with a length of 5 bases. It will then create a column called “test” with a substring of the reference column minus the first character in the source string.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) = 5 | <span class="nb">CALC</span> test mid(<span class="na">reference</span>,1,4) | <span class="nb">TOP</span> 10
@@ -177,8 +175,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">WHERE</span> len(<span class="na">reference</span>) = 5 | <span class="nb">CALC</span> test mid(<span class="na">reference</span>,2,1) | <span class="nb">TOP</span> 10
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

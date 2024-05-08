@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GAVA &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,8 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="gava-1">
-<span id="gava"></span><h1>GAVA<a class="headerlink" href="#gava-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="gava">
+<span id="id1"></span><h1>GAVA<a class="headerlink" href="#gava" title="Permalink to this headline">¶</a></h1>
 <p><strong>GAVA</strong> is a variant association algorithm, based on the VAAST algorithm.
 <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/21700766">http://www.ncbi.nlm.nih.gov/pubmed/21700766</a></p>
 <p>Computes a p-value for a genomic feature (typically a single gene) using a randomization test, where the
@@ -168,7 +166,7 @@ affection status of the subjects is permuted and the test statistic computed usi
 ratio test as described in the VAAST paper.</p>
 <p>Note: This is not an exact implementation and for example we have a bailout parameter to avoid spending
 too much computing time on uninteresting features.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>We need to first set the case and control lists, the disease model (regular, dominant, or recessive),
 and other parameters. Then the procedure is as follows:
@@ -183,10 +181,14 @@ and other parameters. Then the procedure is as follows:
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">GAVA</span> maxiterations -caselist &lt;subjects&gt; -ctrllist &lt;subjects&gt; [ attributes ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-recessive</span></code></p></td>
 <td><p>Use recessive model, i.e. only pick 2 variants per subject.</p></td>
@@ -223,9 +225,9 @@ and other parameters. Then the procedure is as follows:
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>casepene and ctrlpene specify the number of cases and ctrls which DO NOT have to comply with the inheritance model.</p>
-</aside>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

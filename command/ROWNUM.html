@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>ROWNUM &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,17 +157,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="rownum-1">
-<span id="rownum"></span><h1>ROWNUM<a class="headerlink" href="#rownum-1" title="Permalink to this headline">¶</a></h1>
-<p>The ROWNUM command adds a column labeled “rownum” with an automatically increasing unique sequential row-number, based on the number of rows that have been passed through in the query. This is useful, if you wish to create a unique ID on the output of the query you are working with.</p>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="rownum">
+<span id="id1"></span><h1>ROWNUM<a class="headerlink" href="#rownum" title="Permalink to this headline">¶</a></h1>
+<p>The ROWNUM command adds a column labeled “rownum” with an automatically increasing unique sequential row-number, based on the number of rows that have been passed through in the query. This is useful, if you wish to create a unique ID on the output of the query you are working with.
+The row number can also be counted on a group basis with the <code class="docutils literal notranslate"><span class="pre">-gc</span></code> option. This will count the row number within each group of the specified columns.</p>
 <p>Note that this command may have unexpected behaviour if used with nested queries, as the output of the nested queries are also given row numbers.</p>
-<section id="usage">
+<div class="section" id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
+<td><p>Grouping columns</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">ROWNUM</span>
 </pre></div>
 </div>
-</section>
-</section>
+<p>Example above adds a column “rownum” to the output of the query containing the row number.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">ROWNUM</span> -<span class="no">gc</span> col1,col2
+</pre></div>
+</div>
+<p>Example above adds a column “rownum” to the output of the query containing the row number for the selected grouping.</p>
+</div>
+</div>
 
 
            </div>

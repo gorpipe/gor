@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>INFLATECOLUMN &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,27 +157,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="inflatecolumn-1">
-<span id="inflatecolumn"></span><h1>INFLATECOLUMN<a class="headerlink" href="#inflatecolumn-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="inflatecolumn">
+<span id="id1"></span><h1>INFLATECOLUMN<a class="headerlink" href="#inflatecolumn" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#inflatecolumn"><span class="std std-ref">INFLATECOLUMN</span></a> command allows you to select a single column and de-compress its content. Use the <a class="reference internal" href="DEFLATECOLUMN.html#deflatecolumn"><span class="std std-ref">DEFLATECOLUMN</span></a> to compress the column.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | INFLATECOLUMN column
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>INFLATECOLUMN</cite> command will de-compress columns starting with the <cite>zip::</cite> keyword at the start of the column indicating the the content is compressed. Trying to de-compress a column that is already de-compressed will return the original column data.</p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | inflatecolumn data
 </pre></div>
 </div>
 <p>Returns a row where the column named <cite>data</cite> is de-compressed if its content is compressed.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BUCKETSPLIT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,20 +157,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="bucketsplit-1">
-<span id="bucketsplit"></span><h1>BUCKETSPLIT<a class="headerlink" href="#bucketsplit-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="bucketsplit">
+<span id="id1"></span><h1>BUCKETSPLIT<a class="headerlink" href="#bucketsplit" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>BUCKETSPLIT</strong> command splits the content of a column into multiple rows and adds a bucket column.  Other columns will be unchanged.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | bucketsplit splitCol bucketSize (-s sepVal | -vs valueSize) [-b bucketPrefix] [-cs]
 </pre></div>
 </div>
 <p>Notes:
 1. Empty value lines will not return any results.</p>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">sepVal</span></code></p></td>
 <td><p>Split separator character.  If separator is used the output will also use it.
@@ -195,8 +197,8 @@ lines.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example will take the values column in the specified bgen file and split each line into bucket lines, each with bucket of size 10000.  Each value is 4 characters long so each bucket will contain 40000 characters.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> file.bgen | <span class="nb">BUCKETSPLIT</span> values 10000 -vs 4
@@ -206,8 +208,8 @@ lines.</p></td>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> file.gor | <span class="nb">BUCKETSPLIT</span> values 300 -s &#39;:&#39; -b &#39;bucket_&#39;
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

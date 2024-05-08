@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>CONTAINSCOUNT &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,16 +157,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="containscount-1">
-<span id="containscount"></span><h1>CONTAINSCOUNT<a class="headerlink" href="#containscount-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="containscount">
+<span id="id1"></span><h1>CONTAINSCOUNT<a class="headerlink" href="#containscount" title="Permalink to this headline">¶</a></h1>
 <p><strong>CONTAINSCOUNT</strong> counts the number of items from a literal list that appear in the defined string. It does not count the instances of the items, but only tallies the number of positive matches from the literal list that are found.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>containscount(<span class="k">str</span>,lit-list) : <span class="k">int</span>
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example shows a list of fruits in a string, matches the items (‘orange’ and ‘banana’) to the string. Note that the result is <code class="docutils literal notranslate"><span class="pre">2</span></code> and not <code class="docutils literal notranslate"><span class="pre">3</span></code> even thought ‘banana’ is found in the list twice. Only a single match is counted per item in the literal list.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> test containscount(&#39;apple,banana,banana,orange,pineapple&#39;,&#39;orange&#39;,&#39;banana&#39;)
@@ -178,8 +176,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> test containscount(&#39;apple,banana,banana,orange,pineapple&#39;,&#39;orange&#39;,&#39;banana&#39;,&#39;banana&#39;)
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Joining Tables &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -192,19 +190,19 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="joining-tables">
+  <div class="section" id="joining-tables">
 <span id="joiningtables"></span><h1>Joining Tables<a class="headerlink" href="#joining-tables" title="Permalink to this headline">¶</a></h1>
 <p>Joins are a key operation when working in relational databases and this is also the case in the GOR system. For whole genome query analysis, it is often necessary to be able to perform genomically spatial joins on a large number of features quickly. It is implicit when performing joins in the GOR system to do spatial proximity joins according to the genomic position of the data.</p>
 <p>There are many different types of joins that can be performed using the GOR language. A full reference for the JOIN command can be found <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">here</span></a>, but this chapter will go into several of the most useful operations that can be performed with GOR joins.</p>
-<section id="join-conditions">
+<div class="section" id="join-conditions">
 <h2>Join conditions<a class="headerlink" href="#join-conditions" title="Permalink to this headline">¶</a></h2>
 <p>We must first consider whether we are joining based on single positions (for example, if we are working with a file that has only the chromosome and the position defined, as is the case with the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table) or based on segments, where the start and stop position are defined in each row (as is the case in a table such as <code class="docutils literal notranslate"><span class="pre">#genes#</span></code>).</p>
 <p>The table below shows a list of the different types of joins that can be performed along with a description of each.</p>
-<table class="docutils align-default" id="table-1">
-<caption><span class="caption-text">Types of joins</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">Types of joins</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 33.3%" />
-<col style="width: 66.7%" />
+<col style="width: 33%" />
+<col style="width: 67%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Type</p></th>
@@ -229,10 +227,10 @@
 </tr>
 </tbody>
 </table>
-</section>
-<section id="join-options">
+</div>
+<div class="section" id="join-options">
 <h2>Join options<a class="headerlink" href="#join-options" title="Permalink to this headline">¶</a></h2>
-<p>The first type of join (<code class="docutils literal notranslate"><span class="pre">-snpsnp</span></code>) matches single positions in one table to single position in another table. In this most basic example, we could join <code class="docutils literal notranslate"><span class="pre">wesVars</span></code> to a <a class="reference internal" href="glossary.html#term-vep"><span class="xref std std-term">VEP</span></a> dictionary (in this case the vep_single_wgs.gord) to annotate the variants in a particular set of samples with <a class="reference internal" href="glossary.html#term-vep"><span class="xref std std-term">VEP</span></a> data.</p>
+<p>The first type of join (<code class="docutils literal notranslate"><span class="pre">-snpsnp</span></code>) matches single positions in one table to single position in another table. In this most basic example, we could join <code class="docutils literal notranslate"><span class="pre">wesVars</span></code> to a <a class="reference internal" href="glossary.html#term-VEP"><span class="xref std std-term">VEP</span></a> dictionary (in this case the vep_single_wgs.gord) to annotate the variants in a particular set of samples with <a class="reference internal" href="glossary.html#term-VEP"><span class="xref std std-term">VEP</span></a> data.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>     <span class="nd">gor</span> source/var/wes_varcalls.gor
 | <span class="nb">TOP</span> 10
 | <span class="nb">JOIN</span> -<span class="no">snpsnp</span> -xl <span class="na">reference</span>,<span class="na">call</span> -xr <span class="na">reference</span>,<span class="na">call</span> source/anno/vep_v85/vep_single_wgs_gord
@@ -253,40 +251,40 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Segment ranges in GOR are zero-based UCSC style, e.g. (start,stop)=(100,200) denotes a genomic segment including bases 101-200, i.e. of length 100bp.</p>
-</aside>
-</section>
-<section id="left-joins">
+</div>
+</div>
+<div class="section" id="left-joins">
 <span id="leftjoins"></span><h2>Left joins<a class="headerlink" href="#left-joins" title="Permalink to this headline">¶</a></h2>
 <p>When we talk about <em>left joins</em> in GOR, we are talking about joins that are known in the SQL world as <em>left outer joins</em>. In the following example, we are joining our sample variants to the frequency table, but we do not want to drop the row that fail to match. In this case, if we encounter rows that do not match, we use the <code class="docutils literal notranslate"><span class="pre">-e</span></code> option to fill empty results with “0.0”.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wesvars#
 | join -l -<span class="no">snpsnp</span> -e 0.0 #freqmax#
 </pre></div>
 </div>
-</section>
-<section id="stop-positions">
+</div>
+<div class="section" id="stop-positions">
 <h2>Stop positions<a class="headerlink" href="#stop-positions" title="Permalink to this headline">¶</a></h2>
 <p>When you are joining using any of the options that use segments (<code class="docutils literal notranslate"><span class="pre">-snpseg</span></code>, <code class="docutils literal notranslate"><span class="pre">-segseg</span></code>, or <code class="docutils literal notranslate"><span class="pre">-segsnp</span></code>), the stop position for the segments is assumed to be the third column (column #3) in the table. However, this may not be the case for some reason, such as when you are joining to a nested stream and the order of the columns has been changed.</p>
 <p>In these cases, it can be useful to use the options <code class="docutils literal notranslate"><span class="pre">-lstop</span></code> and <code class="docutils literal notranslate"><span class="pre">-rstop</span></code> which both take a single parameter of the column that should be used as the stop position for the segment (in the left and right sources respectively).</p>
-</section>
-<section id="fuzzy-joins">
+</div>
+<div class="section" id="fuzzy-joins">
 <span id="fuzzyjoins"></span><h2>Fuzzy joins<a class="headerlink" href="#fuzzy-joins" title="Permalink to this headline">¶</a></h2>
 <p>Fuzzy joins are created in GOR queries by using the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option on the query followed by the degree (an integer value) of the fuzziness.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">TOP</span> 1000 | <span class="nb">JOIN</span> -<span class="no">snpseg</span> #exons# -<span class="no">f</span> 10 | <span class="nb">SELECT</span> 1-10
 </pre></div>
 </div>
-<table class="docutils align-default" id="table-2">
-<caption><span class="caption-text">Joining #dbsnp# and #exons#</span><a class="headerlink" href="#table-2" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">Joining #dbsnp# and #exons#</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 5.9%" />
-<col style="width: 11.8%" />
-<col style="width: 5.9%" />
-<col style="width: 5.9%" />
-<col style="width: 17.6%" />
-<col style="width: 5.9%" />
-<col style="width: 11.8%" />
-<col style="width: 11.8%" />
-<col style="width: 5.9%" />
-<col style="width: 17.6%" />
+<col style="width: 6%" />
+<col style="width: 12%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 18%" />
+<col style="width: 6%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 6%" />
+<col style="width: 18%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Chrom</p></th>
@@ -328,17 +326,17 @@
 </table>
 <p>In the example shown above, we have set the join to be fuzzy with a degree of 10, which allows us to widen our result set.</p>
 <p>Notice that all of the rows from the original <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table are included this time, but in the case of the first row, the distance is now equal to 2, which is how far outside of the exact match that row is.</p>
-</section>
-<section id="verifying-genomic-order">
+</div>
+<div class="section" id="verifying-genomic-order">
 <h2>Verifying genomic order<a class="headerlink" href="#verifying-genomic-order" title="Permalink to this headline">¶</a></h2>
 <p>If we are joining multiple tables and rearranging the columns in our result set, it can sometimes occur that the genomic order is violated in the GOR output. In these cases, the <a class="reference internal" href="command/VERIFYORDER.html#verifyorder"><span class="std std-ref">VERIFYORDER</span></a> command can be used to check the genomic order of the GOR output. If the command is added to the end of a GOR query, it will throw an exception if the genomic order of the GOR stream is violated.</p>
 <p>If there is a problem with the genomic order of a GOR stream, it can be useful to use the <a class="reference internal" href="command/SORT.html#sort"><span class="std std-ref">SORT</span></a> command to correct the violated order.</p>
-<section id="joins-in-nor">
+<div class="section" id="joins-in-nor">
 <span id="joins-nor"></span><h3>Joins in NOR<a class="headerlink" href="#joins-in-nor" title="Permalink to this headline">¶</a></h3>
 <p>As we discussed at the beginning of this manual, when we are working with files in a <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> context, we cannot rely on genomic-ordered data to join tables. Joins in NOR queries are performed using the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> and <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> commands, which are discussed in the following chapter on <a class="reference internal" href="mapMultimap.html#mapmultimap"><span class="std std-ref">Map and Multimap</span></a>.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

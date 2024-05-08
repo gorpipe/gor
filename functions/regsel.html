@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>REGSEL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,23 +157,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="regsel">
+  <div class="section" id="regsel">
 <span id="f-regsel"></span><h1>REGSEL<a class="headerlink" href="#regsel" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>REGSEL</strong> function extracts a single substring based on regular expression binding pattern, e.g. with single brackets.</p>
 <p>The function takes two parameters - the source string and the regular expression to filter the source string. The part of the sting that you wish to “grab” out of the regular expression should be placed in curved brackets () to set it apart from the rest of the matching expression. The whole matching expression needs to be set in quotation marks.</p>
 <p>If you are matching many different parts of a source to map to multiple columns, it can be more efficient to use the <a class="reference internal" href="../command/REGSEL.html#regsel"><span class="std std-ref">REGSEL</span></a> command.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">REGSEL(string,expression)</span> <span class="pre">:</span> <span class="pre">string</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query creates a column called “source” with a value of ‘41000_1_1’, which is similar to how a phenotype column might look. The second <strong>CALC</strong> expression uses the regsel() function to match the pattern in the source column and only take the first number in the pattern.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> source &#39;41000_1_1&#39; | <span class="nb">CALC</span> test regsel(source,&#39;(.*)_.*_.*&#39;)
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

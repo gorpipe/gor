@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>CONTAINS, CONTAINSALL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,17 +157,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="contains-containsall">
+  <div class="section" id="contains-containsall">
 <span id="contains"></span><h1>CONTAINS, CONTAINSALL<a class="headerlink" href="#contains-containsall" title="Permalink to this headline">¶</a></h1>
 <p><strong>CONTAINS</strong> (or <strong>CONTAINSALL</strong>) is a Boolean expression that can be used to compare the contents of a string, which is in the form of a comma-separated list, to a <a class="reference internal" href="../glossary.html#term-literal-list"><span class="xref std std-term">literal list</span></a> and return true if <em>all of the items</em> in the literal list match. CONTAINS and CONTAINSALL can be used interchangeably. A related expression is <a class="reference internal" href="containsany.html#containsany"><span class="std std-ref">CONTAINSANY</span></a>, in which not all elements of the literal list need to match in the string.</p>
 <p><strong>CONTAINS</strong> is most often used as part of an IF statement in GOR.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>contains(<span class="k">str</span>,lit-list) : Boolean
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow 1,1,1 | <span class="nb">CALC</span> test if(contains(&#39;apple,banana&#39;,&#39;apple&#39;),&#39;true&#39;,&#39;false&#39;)
 </pre></div>
@@ -183,8 +181,8 @@
 </pre></div>
 </div>
 <p>returns FALSE (not all the elements in the literal list are contained in the string list)</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

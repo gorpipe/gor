@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>BASES &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,19 +157,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="bases-1">
-<span id="bases"></span><h1>BASES<a class="headerlink" href="#bases-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="bases">
+<span id="id1"></span><h1>BASES<a class="headerlink" href="#bases" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#bases"><span class="std std-ref">BASES</span></a> command splits the sequence read (specifically the <code class="docutils literal notranslate"><span class="pre">SEQ</span></code> column in BAM) into the individual bases, outputting a row for each of the bases and showing the relative position within the read along with the <a class="reference internal" href="../glossary.html#term-base-quality"><span class="xref std std-term">base-quality</span></a>. The MDI label indicates whether the read comes from a match section in the CIGAR, a deletion, or an insert section.</p>
 <p>Note that the readlength is set by default to 1000 basepairs. Setting the length to a lower value can lead to the genomic order of the gor output being violated.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> file.bam | <span class="nb">BASES</span> [ -<span class="no">gc</span> cols ] [-readlength size (<span class="nd">def</span> 1000bp)]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 87%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span></code></p></td>
 <td><p>To specify grouping columns. Used to select extra columns from the input stream such that they show up in the output.</p></td>
@@ -182,8 +184,8 @@ The default value is 1000bp.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1:999000- file.bam | <span class="nb">UNTIL</span> #2 &gt; 1000000+1000 | <span class="nb">BASES</span> -<span class="no">gc</span> MAPQ | <span class="nb">WHERE</span> MDI != &#39;I&#39;
  | <span class="nb">CALC</span> LQ if(BaseQual &lt;= 30 or MAPQ &lt;=30,1,0)  | <span class="nb">CALC</span> HQ if(not(BaseQual &gt; 30 or MAPQ &lt;= 30),1,0)
@@ -193,8 +195,8 @@ The default value is 1000bp.</p></td>
 </pre></div>
 </div>
 <p>The above query uses shows the pileup depth of high and low quality A,C,G,T and Del for each location in a 1000bp genomic region, from chr1:1M to chr1:1M+1000bp. The quality is based both on the mapping quality of the read and the quality of individual bases in the read. The range filtering is to avoid boundary effects due to missing overlapping reads</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

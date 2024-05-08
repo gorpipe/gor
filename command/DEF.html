@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DEF &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,24 +157,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: Materialised Queries</span><section id="def-1">
-<span id="def"></span><h1>DEF<a class="headerlink" href="#def-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: Materialised Queries</span><div class="section" id="def">
+<span id="id1"></span><h1>DEF<a class="headerlink" href="#def" title="Permalink to this headline">¶</a></h1>
 <p><strong>DEF</strong> statements are used in a GOR query for definitions (or “aliases”). They may be used to define paths or to calculate values that will be used repeated in the GOR query. Definitions are typically found at the beginning of a report builder yml before the main query for the report builder starts.</p>
 <p>The name of the <strong>DEF</strong> statement can be any string, but typically definition names are enclosed in double hash symbols, as in <code class="docutils literal notranslate"><span class="pre">##name_of_definition##</span></code>.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> &lt;name_of_definition&gt; = &lt;path_or_calculation&gt;;
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The example below shows a typical definition that would be found at the beginning of a report builder that would refer to the Ensemble genes files in the reference data. When working in the Sequence Miner, these definitions would not be necessary since the <code class="docutils literal notranslate"><span class="pre">##genes##</span></code> alias is defined as part of the GOR alias list.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">def</span> ##genes## = ##ref##/ensgenes/genes.gorz;
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

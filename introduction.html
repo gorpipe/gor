@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Tutorials &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -182,11 +180,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="tutorials">
+  <div class="section" id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<section id="what-is-gor">
+<div class="section" id="what-is-gor">
 <h2>What is GOR?<a class="headerlink" href="#what-is-gor" title="Permalink to this headline">¶</a></h2>
 <p>GOR is a <a class="reference internal" href="glossary.html#term-genomic-ordered-data"><span class="xref std std-term">genomic ordered</span></a> relational database architecture, which was developed for working with large volumes of DNA sequence data.</p>
 <p>The GOR system uses a declarative query language which combines features from SQL and shell pipe syntax. The GOR system can be used, for example, to annotate sequence variants, to find genomic spatial overlap between various types of genomic features, and to filter and aggregate them in various ways.</p>
@@ -195,8 +193,8 @@
 <p><em>GORpipe: a query tool for working with sequence data based on a Genomic Ordered Relational (GOR) architecture</em></p>
 <p>The target audience of this manual is a <a class="reference internal" href="glossary.html#term-bioinformatician"><span class="xref std std-term">bioinformatician</span></a> or other support personnel who will be creating their own GOR queries using either the Sequence Miner or the command line interfaces, GORpipe and GORdb.</p>
 <p>This manual will provide an overview of the GOR language and a comprehensive list of commands that are available both through GORdb, GORpipe and the Sequence Miner (SM) with use cases input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.</p>
-</section>
-<section id="writing-gor-queries">
+</div>
+<div class="section" id="writing-gor-queries">
 <h2>Writing GOR queries<a class="headerlink" href="#writing-gor-queries" title="Permalink to this headline">¶</a></h2>
 <p>The best way to learn to write GOR queries is to try it for yourself. Get your hands on some data and an environment from which you can run queries. As we describe each command and concept, we will post example of their usage.</p>
 <p>In the example below, we can see the conventions used in each example, which may be familiar to those who have used shell pipe syntax, but may require more explanation for others.</p>
@@ -206,22 +204,22 @@
 </div>
 <p>As shown above, many commands in GOR can be linked together in a pipeline of commands with each individual command separated by a vertical bar (or “pipe”) character. A combination of piped commands allow for specialised operations that individual commands can perform on their own. The rows from the file or table referred in the <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> source command are streamed from left to right.  Depending on the nature of the pipe step commands, they may output their input unchanged, rows with different output columns, fewer rows (e.g. aggregation) or more rows than in the input (e.g. split up of rows).  In every case, commands in a GOR stream must output rows with genomic position (chr,pos) whereas in a NOR stream, this is not necessary.</p>
 <p>Whenever possible, we will show example queries for each of the GOR commands that will help to illustrate the usage of the GOR syntax.</p>
-<section id="options-attributes-flags">
+<div class="section" id="options-attributes-flags">
 <h3>Options, Attributes, Flags<a class="headerlink" href="#options-attributes-flags" title="Permalink to this headline">¶</a></h3>
 <p>Each of the commands in a GOR query may have one or more options and flags that are specific to that command. We will define options and flags for each command on the manual page for each command. An option may in some cases require the input of an attribute, for example a number, range, table column name, filename or a nested query from the GOR database.  These options will be defined in the manual page for the GOR command.</p>
-</section>
-</section>
-<section id="reference-data">
+</div>
+</div>
+<div class="section" id="reference-data">
 <h2>Reference Data<a class="headerlink" href="#reference-data" title="Permalink to this headline">¶</a></h2>
 <p>There are a wide variety of source of data that are used and the best way to get familiar with the WuXi NextCODE reference data package is to explore it for yourself. Try viewing existing queries and report builders to see what reference sources are commonly used.</p>
 <p>An installation of the Sequence Miner tool will make a set of reference data available to you along with any studies that you have access to. To make the examples in this manual easier to follow, we will be using this reference data in each of the examples. Although the data is stored as a physical GOR file, each of these sets of reference data can be thought of as tables in the GOR database and in this document they are referred to as such.</p>
 <p>Reference Data used in example queries are introduced in the table below:</p>
-<table class="docutils align-default" id="table-1">
-<caption><span class="caption-text">Reference Data used in Examples</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">Reference Data used in Examples</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 12.5%" />
-<col style="width: 25.0%" />
-<col style="width: 62.5%" />
+<col style="width: 13%" />
+<col style="width: 25%" />
+<col style="width: 63%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Alias</p></th>
@@ -256,8 +254,8 @@
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

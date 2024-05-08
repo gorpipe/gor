@@ -86,6 +86,9 @@ Commands
    * - :ref:`GORCMD`
      - Executes system commands that return tabular data within GOR queries.
      - GOR
+   * - :ref:`GORIF`
+     - Checks existence of source files before running the GOR command.
+     - GOR
    * - :ref:`GORROW`
      - Returns a single row of data based on the input parameters.
      - GOR
@@ -158,6 +161,9 @@ Commands
    * - :ref:`NORCMD`
      - Executes system commands that return tabular data within NOR queries.
      - NOR only
+   * - :ref:`NORIF`
+     - Checks existence of the source file before running the NOR command.
+     - NOR only
    * - :ref:`NORROWS`
      - Returns a specified number rows of data in a NOR context based on the input parameters.
      - NOR
@@ -221,6 +227,9 @@ Commands
    * - :ref:`SEGSPAN`
      - Turns a stream of segments into a stream of non-overlapping segments.
      - GOR
+   * - :ref:`SEGWHERE`
+     - Turns a stream of segments into a stream of non-overlapping segments based on a where condition.
+     - GOR
    * - :ref:`SELECT`
      - Filters specified columns from the output stream.
      - GOR/NOR
@@ -232,6 +241,9 @@ Commands
      - GOR
    * - :ref:`SETCOLTYPE`
      - Sets column data types.
+     - GOR/NOR
+   * - :ref:`SIGNATURE`
+     - Allows the control of create statements via time resolution or file changes.
      - GOR/NOR
    * - :ref:`SKIP`
      - Skips a specified number of rows before returning data.

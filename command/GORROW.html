@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GORROW &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,20 +157,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="gorrow-1">
-<span id="gorrow"></span><h1>GORROW<a class="headerlink" href="#gorrow-1" title="Permalink to this headline">¶</a></h1>
-<p><strong>GORROW</strong> is a <a class="reference internal" href="../glossary.html#term-source-commands"><span class="xref std std-term">Source commands</span></a> that returns a single row of data based on the input parameters.</p>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="gorrow">
+<span id="id1"></span><h1>GORROW<a class="headerlink" href="#gorrow" title="Permalink to this headline">¶</a></h1>
+<p><strong>GORROW</strong> is a <a class="reference internal" href="../glossary.html#term-Source-commands"><span class="xref std std-term">Source commands</span></a> that returns a single row of data based on the input parameters.</p>
 <p>To use GORROW, you define the chromosome, start position and end position. This command is a tool similar to the SQL command <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">*</span> <span class="pre">FROM</span> <span class="pre">DUAL</span></code> when working with Oracle database. It is useful when you need to perform a calculation and you want to test the calculation out on a single row before applying the calculation as a pipe step in a larger query with an actual source.</p>
 <p>The <strong>GORROW</strong> command is particular useful when testing out a calculated step in a query.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nb">GORROW</span> chromosome,start_position,stop_position
 
 <span class="nb">GORROW</span> chromosome,position
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example creates a row and waits 1000 milliseconds. Useful for debugging purposes.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nb">GORROW</span> chr1,1,1 | <span class="nb">WAIT</span> 1000
@@ -192,8 +190,8 @@ chr1        1       1
 chr1        10
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

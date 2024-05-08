@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GTTRANSPOSE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,8 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span><section id="gttranspose-1">
-<span id="gttranspose"></span><h1>GTTRANSPOSE<a class="headerlink" href="#gttranspose-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor</span><div class="section" id="gttranspose">
+<span id="id1"></span><h1>GTTRANSPOSE<a class="headerlink" href="#gttranspose" title="Permalink to this headline">¶</a></h1>
 <p>The incoming stream are variants stored in horizontal manner. The command takes in a sources containing
 tag/bucket relations, list of pns and a list of markers. The optional headers in the tag/bucket file and
 the pns file should start with ‘#’. The marker file must contain a header.</p>
@@ -170,15 +168,19 @@ marker. (It picks out the given pns from the incoming stream and then transposes
 <p>In order to find the markers in the incoming source, all the columns from the header of the marker source are taken
 and the values in the corresponding columns in the incoming source (we assume they exist, else we throw and error) are
 taken as identifier for the marker.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTTRANSPOSE tagBucketSource pnSource markerSource [-vs w] [-sep s] [-cols]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-vs</span> <span class="pre">w</span></code></p></td>
 <td><p>The number of characters used to store the genotypes, in case they are in
@@ -195,8 +197,8 @@ marker.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

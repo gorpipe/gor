@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DAGMAP &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,18 +157,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="dagmap-1">
-<span id="dagmap"></span><h1>DAGMAP<a class="headerlink" href="#dagmap-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="dagmap">
+<span id="id1"></span><h1>DAGMAP<a class="headerlink" href="#dagmap" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DAGMAP</strong> command behaves similarly as the <a class="reference internal" href="MULTIMAP.html"><span class="doc">MULTIMAP</span></a> command, however, rather than taking in a regular mapping relation, with input columns on the left and output columns on the right, it uses a parent-child relation representing either a hierarchy or DAG.  The output columns from the DAGMAP are DAG_node and DAG_dist.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">DAGMAP</span> mapfile.txt -c columns [ Attributes ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">columns</span></code></p></td>
 <td><p>The columns on which the lookup is based.</p></td>
@@ -193,8 +195,8 @@ but it can be specied to an arbitrary value below 20.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>This example shows a create statement that forms the parent-child relation (parent_id,hpo_code) from hpo.tsv.  The NOR query then finds all the descendants of the node ‘HP:0000001’.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #hpo# = <span class="nd">nor</span> ref/disgenes/hpo.tsv  | <span class="nb">SELECT</span> hpo_code,parent_ids | <span class="nb">SPLIT</span> #2 -s &#39;;&#39;
@@ -211,12 +213,12 @@ but it can be specied to an arbitrary value below 20.</p></td>
 | <span class="nb">GROUP</span> -<span class="no">gc</span> dag_node -lis -sc parent_id,dag_dist -s &#39;;&#39;
 </pre></div>
 </div>
-<section id="related-commands">
+<div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="MAP.html#map"><span class="std std-ref">MAP</span></a> | <a class="reference internal" href="MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a></p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

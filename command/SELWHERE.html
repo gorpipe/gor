@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SELWHERE &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,27 +157,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="selwhere-1">
-<span id="selwhere"></span><h1>SELWHERE<a class="headerlink" href="#selwhere-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="selwhere">
+<span id="id1"></span><h1>SELWHERE<a class="headerlink" href="#selwhere" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#selwhere"><span class="std std-ref">SELWHERE</span></a> command allows you to choose which columns to show from the source by by evaluating an expression referring to the column index (starting from 1), or the column name.
 The expression is evaluated for each column - if the expression returns true, the column is included.</p>
 <p>When selecting in GOR, genomic ordered relational data is expected, so it is mandatory to have a <code class="docutils literal notranslate"><span class="pre">CHROM</span></code> and <code class="docutils literal notranslate"><span class="pre">POS</span></code> as the first two columns. However, when the SELWHERE statement is used in NOR, you can choose whatever columns you want.  If columns other than the first two are selected to become the first two columns, care must be taken to ensure that proper genomic order is preserved (see discussion on the <code class="docutils literal notranslate"><span class="pre">-ir</span></code> option in the <a class="reference internal" href="JOIN.html#join"><span class="std std-ref">JOIN</span></a> command).</p>
 <p>See also the <a class="reference internal" href="SELECT.html#select"><span class="std std-ref">SELECT</span></a> command.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | SELWHERE &lt; expression &gt;
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following example shows a SELWHERE command that selects column based on an expression.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | SELWHERE colnum &lt;= 2 or <span class="k">int</span>(right(colname,4)) &lt; 300
 </pre></div>
 </div>
 <p>Included in this selection are the first two columns (chrom and pos), as well as columns where the numeric value of the last four characters in the column name is less than 300.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>AWS S3 &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,16 +157,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="aws-s3">
+  <div class="section" id="aws-s3">
 <h1>AWS S3<a class="headerlink" href="#aws-s3" title="Permalink to this headline">¶</a></h1>
 <p>The GOR engine supports live querying of any supported file format stored in an Amazon S3 bucket or with an S3 compatible storage.</p>
-<section id="formats">
+<div class="section" id="formats">
 <h2>Formats<a class="headerlink" href="#formats" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>s3://&lt;bucket&gt;/&lt;path_to_file&gt;
-s3://&lt;provider&gt;:&lt;bucket&gt;/&lt;path_to_file&gt;
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span><span class="c">s3://&lt;bucket&gt;/&lt;path_to_file&gt;</span>
+<span class="c">s3://&lt;provider&gt;:&lt;bucket&gt;/&lt;path_to_file&gt;</span>
 </pre></div>
 </div>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 67%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>provider</strong></p></td>
 <td><p>Provider identifier used to look up
@@ -183,12 +185,17 @@ credentials</p></td>
 </tbody>
 </table>
 <p>The former case is intended to support S3 in AWS.  The latter can support any provider with a S3 compatible REST interface.</p>
-</section>
-<section id="credentials">
+</div>
+<div class="section" id="credentials">
 <h2>Credentials<a class="headerlink" href="#credentials" title="Permalink to this headline">¶</a></h2>
 <p>When accessing the data, the GOR engine uses the credential service (if configured) to lookup credentials.
 The following credentials fields are supported:</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 16%" />
+<col style="width: 54%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Field name</p></th>
 <th class="head"><p>Required</p></th>
@@ -221,10 +228,19 @@ i.e. either <code class="docutils literal notranslate"><span class="pre">bucket<
 </tbody>
 </table>
 <p>If no credentials are found, the GOR engine will fall back to the default credential provider chain as described in <a class="reference external" href="http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html</a></p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 31%" />
+<col style="width: 6%" />
+<col style="width: 10%" />
+<col style="width: 4%" />
+<col style="width: 5%" />
+<col style="width: 24%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Example</p></th>
 <th class="head"><p>Gor command</p></th>
@@ -276,8 +292,8 @@ i.e. either <code class="docutils literal notranslate"><span class="pre">bucket<
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

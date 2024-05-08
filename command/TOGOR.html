@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>TOGOR &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,16 +157,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="togor-1">
-<span id="togor"></span><h1>TOGOR<a class="headerlink" href="#togor-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="togor">
+<span id="id1"></span><h1>TOGOR<a class="headerlink" href="#togor" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#togor"><span class="std std-ref">TOGOR</span></a> command is used to switch from NOR mode to a GOR mode, making GOR specific commands such as join available on NOR data. The user has to make sure the Chrom,Pos columns are provided.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | TOGOR | [<span class="nb">GOR</span> specific commands]
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The NOR data could have chromosome and position columns in different location than GOR. Rearrange columns and then TOGOR:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> left.tsv | select #3,#4,#1,#2 | togor | join -<span class="no">snpsnp</span> right.gorz
@@ -178,8 +176,8 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ref/genes.gor | calc c,<span class="no">p</span> &#39;chrN&#39;,&#39;1&#39; | select c,<span class="no">p</span>,<span class="na">Gene_Symbol</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

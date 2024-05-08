@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>PIPESTEPS &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,27 +157,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="pipesteps-1">
-<span id="pipesteps"></span><h1>PIPESTEPS<a class="headerlink" href="#pipesteps-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="pipesteps">
+<span id="id1"></span><h1>PIPESTEPS<a class="headerlink" href="#pipesteps" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference internal" href="#pipesteps"><span class="std std-ref">PIPESTEPS</span></a> command reads a number of analysis steps from a .yml file (gor dialog/report).</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | PIPESTEPS filename.yml(stepentry,key=value)
 </pre></div>
 </div>
 <p>The PIPESTEPS command reads one or more gor analysis steps from a .yml file</p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>DialogName:
-<span class="w"> </span>Description:<span class="w"> </span><span class="p">|</span>
-<span class="w">     </span>This<span class="w"> </span>is<span class="w"> </span>an<span class="w"> </span>example<span class="w"> </span>of<span class="w"> </span>a<span class="w"> </span>yml<span class="w"> </span>storing<span class="w"> </span>gor<span class="w"> </span>analysis<span class="w"> </span>steps
-<span class="w"> </span>stepentry:<span class="w"> </span><span class="p">|</span>
-<span class="w">     </span>calc<span class="w"> </span>a<span class="w"> </span>b+c<span class="w"> </span><span class="p">|</span><span class="w"> </span>where<span class="w"> </span>a<span class="w"> </span>&lt;<span class="w"> </span>d<span class="w"> </span><span class="p">|</span><span class="w"> </span>group<span class="w"> </span>genome<span class="w"> </span>-count
+ Description: <span class="p">|</span>
+     This is an example of a yml storing gor analysis steps
+ stepentry: <span class="p">|</span>
+     calc a b+c <span class="p">|</span> where a &lt; d <span class="p">|</span> group genome -count
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

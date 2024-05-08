@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Filtering Streams &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -193,10 +191,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="filtering-streams">
+  <div class="section" id="filtering-streams">
 <h1>Filtering Streams<a class="headerlink" href="#filtering-streams" title="Permalink to this headline">¶</a></h1>
 <p>Once you have defined a source table for your data, you can start to structure the way you want to have the data processed and filtered. You can define commands for data processing and filtering in any number of pipe steps. Note that data flows through the pipes from left to right so that, most often, the order of the steps matters.</p>
-<section id="top-and-skip">
+<div class="section" id="top-and-skip">
 <h2>TOP and SKIP<a class="headerlink" href="#top-and-skip" title="Permalink to this headline">¶</a></h2>
 <p>There are several commands that filter streams in the GOR Query Language. The most basic are the <strong>TOP</strong> and <strong>SKIP</strong> commands, which are used to limit the number and section of rows in the stream.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | top 100
@@ -207,20 +205,20 @@
 </pre></div>
 </div>
 <p>will likewise only show rows from 101 to 200 on chr2 from the <code class="docutils literal notranslate"><span class="pre">##dbsnp##</span></code> table.</p>
-</section>
-<section id="where">
+</div>
+<div class="section" id="where">
 <h2>WHERE<a class="headerlink" href="#where" title="Permalink to this headline">¶</a></h2>
 <p>The main function for filtering streams is the <strong>WHERE</strong> command. We will now go over some of the different ways that a WHERE command can be used.</p>
-<section id="matching-patterns">
+<div class="section" id="matching-patterns">
 <h3>Matching Patterns<a class="headerlink" href="#matching-patterns" title="Permalink to this headline">¶</a></h3>
 <p>To start with a simple example of a <strong>WHERE</strong> command, we can consider the gene table, which is included in the reference data for the Sequence Miner. If you were to run the following GOR query:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">WHERE</span> <span class="na">Gene_Symbol</span> IN (&#39;BRCA1&#39;, &#39;BRCA2&#39;)
 </pre></div>
 </div>
 <p>you would expect the following output from the query showing only the two rows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom<span class="w">    </span>gene_start<span class="w">     </span>gene_end<span class="w">    </span>Gene_Symbol
-chr13<span class="w">    </span><span class="m">32889610</span><span class="w">       </span><span class="m">32973805</span><span class="w">    </span>BRCA1
-chr17<span class="w">    </span><span class="m">41196311</span><span class="w">       </span><span class="m">41277500</span><span class="w">    </span>BRCA2
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom    gene_start     gene_end    Gene_Symbol
+chr13    <span class="m">32889610</span>       <span class="m">32973805</span>    BRCA1
+chr17    <span class="m">41196311</span>       <span class="m">41277500</span>    BRCA2
 </pre></div>
 </div>
 <p>Multiple match conditions can be linked together in a single <strong>WHERE</strong> command such in the following case:</p>
@@ -231,9 +229,9 @@ chr17<span class="w">    </span><span class="m">41196311</span><span class="w"> 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Clicking the <code class="docutils literal notranslate"><span class="pre">TAB</span></code> key while writing queries in the Sequence Miner brings up a context-sensitive dialog that allows you to select columns that can be added to the query.</p>
-</aside>
-</section>
-<section id="using-wildcard-notation">
+</div>
+</div>
+<div class="section" id="using-wildcard-notation">
 <h3>Using Wildcard Notation<a class="headerlink" href="#using-wildcard-notation" title="Permalink to this headline">¶</a></h3>
 <p>It is also possible to use wildcard notation in <strong>WHERE</strong> clauses. The previous example with the <code class="docutils literal notranslate"><span class="pre">##genes##</span></code> table could be accomplished as follows by using a wildcard:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">WHERE</span> <span class="na">Gene_Symbol</span> LIKE &#39;BRCA*&#39;
@@ -246,25 +244,25 @@ chr17<span class="w">    </span><span class="m">41196311</span><span class="w"> 
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Using <code class="docutils literal notranslate"><span class="pre">~</span></code> is equivalent to using <strong>LIKE</strong>. <code class="docutils literal notranslate"><span class="pre">?</span></code> can be used for any character.</p>
-</aside>
-</section>
-<section id="base-pair-notation">
+</div>
+</div>
+<div class="section" id="base-pair-notation">
 <h3>Base-pair Notation<a class="headerlink" href="#base-pair-notation" title="Permalink to this headline">¶</a></h3>
 <p>There is a special syntax for base-pair positions, i.e. integers can be represented with commas every 3 digits.
 They must however be followed by the letters bp, e.g. not( pos &gt; 123,345,789bp ).</p>
-</section>
-</section>
-<section id="using-functions-in-where-commmands">
+</div>
+</div>
+<div class="section" id="using-functions-in-where-commmands">
 <h2>Using Functions in WHERE commmands<a class="headerlink" href="#using-functions-in-where-commmands" title="Permalink to this headline">¶</a></h2>
 <p>It is possible to use Functions in <strong>WHERE</strong> commands and also in <strong>CALC</strong> commands, which are discussed in <a class="reference internal" href="columnModifications.html#addingcalccolumns"><span class="std std-ref">a later chapter</span></a>.</p>
-<table class="docutils align-default" id="table-1">
-<caption><span class="caption-text">#dbsnp# (showing different Indel examples)</span><a class="headerlink" href="#table-1" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">#dbsnp# (showing different Indel examples)</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 12.5%" />
-<col style="width: 25.0%" />
-<col style="width: 12.5%" />
-<col style="width: 12.5%" />
-<col style="width: 37.5%" />
+<col style="width: 13%" />
+<col style="width: 25%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 38%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Chrom</p></th>
@@ -317,30 +315,30 @@ They must however be followed by the letters bp, e.g. not( pos &gt; 123,345,789b
 </pre></div>
 </div>
 <p>In the above example, we are using the <strong>LEN</strong> function, which calculates the length of a string, to filter out any results from the <code class="docutils literal notranslate"><span class="pre">#dbsnp#</span></code> table that do not have reference or allele base lengths longer than 4 bases. You can find more information on different formulas in GOR queries <a class="reference internal" href="all_functions.html#functions"><span class="std std-ref">here</span></a>. More information on the <strong>CALC</strong> command can be found <a class="reference internal" href="columnModifications.html#addingcalccolumns"><span class="std std-ref">here</span></a></p>
-</section>
-<section id="using-select-to-choose-columns">
+</div>
+<div class="section" id="using-select-to-choose-columns">
 <h2>Using SELECT to choose columns<a class="headerlink" href="#using-select-to-choose-columns" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/SELECT.html#select"><span class="std std-ref">SELECT</span></a> command allows you to choose which columns to show from the source by entering a comma-delimited list.</p>
 <p>When selecting in GOR, genomic ordered relational data is expected, so it is mandatory to have a <code class="docutils literal notranslate"><span class="pre">CHROM</span></code> and <code class="docutils literal notranslate"><span class="pre">POS</span></code> as the first two columns. However, when the SELECT statement is used in NOR, you can choose whatever columns you want.  If columns other than the first two (e.g. <code class="docutils literal notranslate"><span class="pre">#1</span></code> and <code class="docutils literal notranslate"><span class="pre">#2</span></code>) are selected to become the first two columns, care must be taken to ensure that proper genomic order is preserved (see discussion on the <code class="docutils literal notranslate"><span class="pre">-ir</span></code> option in the <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> command).</p>
-</section>
-<section id="showing-and-hiding-columns">
+</div>
+<div class="section" id="showing-and-hiding-columns">
 <h2>Showing and Hiding Columns<a class="headerlink" href="#showing-and-hiding-columns" title="Permalink to this headline">¶</a></h2>
 <p>In the next example, let’s take a table that has many different columns such as the whole exon sequence variants from the subject project, which can be loaded using the alias <code class="docutils literal notranslate"><span class="pre">#wesVars#</span></code>:</p>
-<table class="docutils align-default" id="table-2">
-<caption><span class="caption-text">#wesVars#</span><a class="headerlink" href="#table-2" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">#wesVars#</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 6.2%" />
-<col style="width: 18.8%" />
-<col style="width: 6.2%" />
-<col style="width: 18.8%" />
-<col style="width: 6.2%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 19%" />
+<col style="width: 6%" />
+<col style="width: 19%" />
+<col style="width: 6%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>CHROM</p></th>
@@ -419,17 +417,17 @@ They must however be followed by the letters bp, e.g. not( pos &gt; 123,345,789b
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When writing comma-separated lists, take care not to have spaces between the items in a list.</p>
-</aside>
+</div>
 <p>This would result in the following result set being returned:</p>
-<table class="docutils align-default" id="table-3">
-<caption><span class="caption-text">#wesVars# with 6 columns selected</span><a class="headerlink" href="#table-3" title="Permalink to this table">¶</a></caption>
+<table class="colwidths-given docutils align-default" id="id3">
+<caption><span class="caption-text">#wesVars# with 6 columns selected</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col style="width: 16.7%" />
-<col style="width: 16.7%" />
-<col style="width: 16.7%" />
-<col style="width: 16.7%" />
-<col style="width: 16.7%" />
-<col style="width: 16.7%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>CHROM</p></th>
@@ -480,8 +478,8 @@ Commands allow reference to columns based on their number and their names, howev
 them from numbers in expressions. If the listed columns do not exist, the query will throw an exception.</p>
 <p>Note that commands and column names are case insensitive.</p>
 <p>See also: <a class="reference internal" href="command/HIDE.html"><span class="doc">HIDE</span></a> and <a class="reference internal" href="command/TRYSELECT.html"><span class="doc">TRYSELECT</span></a></p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

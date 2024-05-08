@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>NORSQL &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,24 +157,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><section id="norsql-1">
-<span id="norsql"></span><h1>NORSQL<a class="headerlink" href="#norsql-1" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#norsql"><span class="std std-ref">NORSQL</span></a> command allows you to run arbitrary SQL commands against “the database” (the database here being defined by the content of a file called gor.db.credentials in the config directory). This command is not enabled when running against a gor-server and therefore does not work within the Sequence Miner. It is intended to be used with GORpipe only.</p>
-<p><a class="reference internal" href="#norsql"><span class="std std-ref">NORSQL</span></a> can be run against any database table. In the case of <a class="reference internal" href="GORSQL.html#gorsql"><span class="std std-ref">GORSQL</span></a>, the defined query must access a table have Chrom-POS information as first columns.</p>
-<p>SQL statemens need to be encapsulated between curly brackets, e.g. norsql {sql_query}.</p>
-<section id="usage">
+  <span style="float:right; padding-top:10px; color:#BABABA;">Source Command</span><div class="section" id="norsql">
+<span id="id1"></span><h1>NORSQL<a class="headerlink" href="#norsql" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#norsql"><span class="std std-ref">NORSQL</span></a> command allows you to run arbitrary SQL commands against “the database” (the database here being defined by the content of a file called gor.sql.credentials in the config directory).</p>
+<p><a class="reference internal" href="#norsql"><span class="std std-ref">NORSQL</span></a> can be run against any database table.</p>
+<p>SQL statements need to be encapsulated between curly brackets, e.g. norsql {sql_query}.</p>
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">norsql</span> {&lt;sql_query&gt;} | ...
 </pre></div>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">norsql</span> {select * from Case_Controls order by <span class="na">PN</span>} | ...
 </pre></div>
 </div>
-</section>
-</section>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">norsql</span> {select * from Case_Controls <span class="nb">WHERE</span> <span class="na">PN</span> = &#39;ABC&#39; } | ...
+</pre></div>
+</div>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gorsql</span> -<span class="no">f</span> AAA,TTT {select * from Case_Controls <span class="nb">WHERE</span> <span class="na">PN</span> in (#{TAGS}) } | ...
+</pre></div>
+</div>
+</div>
+</div>
 
 
            </div>

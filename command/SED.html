@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>SED &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,20 +157,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><section id="sed-1">
-<span id="sed"></span><h1>SED<a class="headerlink" href="#sed-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="sed">
+<span id="id1"></span><h1>SED<a class="headerlink" href="#sed" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>SED</strong> command works as a search and replace on the GOR stream to which it is applied. You can use the <code class="docutils literal notranslate"><span class="pre">-c</span></code> option to specify which columns you wish to apply the command to, but the default is all columns.</p>
 <p>The patterns for match and replace are in the form of regular expressions. To make the regular expressions case-insensitive, you can use the <code class="docutils literal notranslate"><span class="pre">-i</span></code> option, but this does not work in regular expressions with binding/group variables.</p>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option to only replace the first match in each column.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">SED</span> matchpattern replacepattern [-c columns] [-i] [-<span class="no">f</span>]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">columns</span></code></p></td>
 <td><p>The columns where to search for the pattern and replace. Default is ALL the columns.</p></td>
@@ -187,8 +189,8 @@ The pattern is applied for each column specified (except columns #1 and #2).</p>
 </tbody>
 </table>
 <p>For more information on regular expressions, the user can refer to any number of online guides, such as <a class="reference external" href="https://www.regular-expressions.info/refquick.html">https://www.regular-expressions.info/refquick.html</a>.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

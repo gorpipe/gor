@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Installation &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -175,10 +173,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="installation">
+  <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>This page describes how to get started with GORpipe.</p>
-<section id="prerequisites">
+<div class="section" id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
 <p>Before setting up GORpipe the following need to be installed:</p>
 <ul class="simple">
@@ -186,40 +184,40 @@
 <li><p>Open JDK can also be used (<a class="reference external" href="https://openjdk.java.net/install/">https://openjdk.java.net/install/</a>)</p></li>
 <li><p>Gradle (<a class="reference external" href="https://gradle.org/install/">https://gradle.org/install/</a>)</p></li>
 </ul>
-</section>
-<section id="setting-up-test-data">
+</div>
+<div class="section" id="setting-up-test-data">
 <h2>Setting up test data<a class="headerlink" href="#setting-up-test-data" title="Permalink to this headline">¶</a></h2>
 <p>Test data for GOR is obtained by cloning the GOR test data repository (<a class="reference external" href="https://github.com/gorpipe/gor-test-data">https://github.com/gorpipe/gor-test-data</a>) as a submodule into the tests/data folder:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git submodule update --init --recursive
 </pre></div>
 </div>
-</section>
-<section id="getting-started-with-gorpipe">
+</div>
+<div class="section" id="getting-started-with-gorpipe">
 <h2>Getting started with GORPipe<a class="headerlink" href="#getting-started-with-gorpipe" title="Permalink to this headline">¶</a></h2>
 <p>To get started with GORPipe, compile the code:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>build
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make build
 </pre></div>
 </div>
 <p>Now gor queries can been run against test data. For example via:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gortools/build/install/gor-scripts/bin/gorpipe<span class="w"> </span><span class="s2">&quot;gor tests/data/gor/dbsnp_test.gor | top 10&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./gortools/build/install/gor-scripts/bin/gorpipe <span class="s2">&quot;gor tests/data/gor/dbsnp_test.gor | top 10&quot;</span>
 </pre></div>
 </div>
 <p>The results should be as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom<span class="w">   </span>POS<span class="w">     </span>reference<span class="w">       </span>allele<span class="w">  </span>differentrsIDs
-chr1<span class="w">    </span><span class="m">10179</span><span class="w">   </span>C<span class="w">       </span>CC<span class="w">      </span>rs367896724
-chr1<span class="w">    </span><span class="m">10250</span><span class="w">   </span>A<span class="w">       </span>C<span class="w">       </span>rs199706086
-chr10<span class="w">   </span><span class="m">60803</span><span class="w">   </span>T<span class="w">       </span>G<span class="w">       </span>rs536478188
-chr10<span class="w">   </span><span class="m">61023</span><span class="w">   </span>C<span class="w">       </span>G<span class="w">       </span>rs370414480
-chr11<span class="w">   </span><span class="m">61248</span><span class="w">   </span>G<span class="w">       </span>A<span class="w">       </span>rs367559610
-chr11<span class="w">   </span><span class="m">66295</span><span class="w">   </span>C<span class="w">       </span>A<span class="w">       </span>rs61869613
-chr12<span class="w">   </span><span class="m">60162</span><span class="w">   </span>C<span class="w">       </span>G<span class="w">       </span>rs544101329
-chr12<span class="w">   </span><span class="m">60545</span><span class="w">   </span>A<span class="w">       </span>T<span class="w">       </span>rs570991495
-chr13<span class="w">   </span><span class="m">19020013</span><span class="w">        </span>C<span class="w">       </span>T<span class="w">       </span>rs181615907
-chr13<span class="w">   </span><span class="m">19020145</span><span class="w">        </span>G<span class="w">       </span>T<span class="w">       </span>rs28970552
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Chrom   POS     reference       allele  differentrsIDs
+chr1    <span class="m">10179</span>   C       CC      rs367896724
+chr1    <span class="m">10250</span>   A       C       rs199706086
+chr10   <span class="m">60803</span>   T       G       rs536478188
+chr10   <span class="m">61023</span>   C       G       rs370414480
+chr11   <span class="m">61248</span>   G       A       rs367559610
+chr11   <span class="m">66295</span>   C       A       rs61869613
+chr12   <span class="m">60162</span>   C       G       rs544101329
+chr12   <span class="m">60545</span>   A       T       rs570991495
+chr13   <span class="m">19020013</span>        C       T       rs181615907
+chr13   <span class="m">19020145</span>        G       T       rs28970552
 </pre></div>
 </div>
-</section>
-<section id="setting-up-gor-shell">
+</div>
+<div class="section" id="setting-up-gor-shell">
 <h2>Setting up GOR shell<a class="headerlink" href="#setting-up-gor-shell" title="Permalink to this headline">¶</a></h2>
 <p>GORpipe can be invoked and used through an interactive shell session in a terminal - a sort of REPL for GOR, coined GORshell. Start a GORshell by executing:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tools/build/install/tools/bin/gorshell
@@ -234,10 +232,10 @@ chr13<span class="w">   </span><span class="m">19020145</span><span class="w">  
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> &lt;(gorrows -<span class="no">p</span> chr1:1000-20000 -segment 100 -step 50 | multimap -cartesian &lt;(norrows 100 | group -lis -sc #1))
 </pre></div>
 </div>
-<section id="setting-environment-variables">
+<div class="section" id="setting-environment-variables">
 <h3>Setting environment variables<a class="headerlink" href="#setting-environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>For convenience, GORpipe and GORshell can be added to path. For example on Mac by editing /etc/paths:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/paths
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo vim /etc/paths
 </pre></div>
 </div>
 <p>and add the following lines:</p>
@@ -246,11 +244,11 @@ chr13<span class="w">   </span><span class="m">19020145</span><span class="w">  
 </pre></div>
 </div>
 <p>Then GORpipe and GORshell can be started via <cite>gorpipe</cite> and <cite>gorshell</cite> from any location.</p>
-</section>
-</section>
-<section id="other">
+</div>
+</div>
+<div class="section" id="other">
 <h2>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h2>
-<section id="citations">
+<div class="section" id="citations">
 <h3>Citations<a class="headerlink" href="#citations" title="Permalink to this headline">¶</a></h3>
 <p>If you make use of GORpipe in your research, we would appreciate a citation of the following paper:</p>
 <blockquote>
@@ -258,8 +256,8 @@ chr13<span class="w">   </span><span class="m">19020145</span><span class="w">  
 Bioinformatics, Volume 32, Issue 20, 15 October 2016, Pages 3081–3088,
 <a class="reference external" href="https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199">https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199</a></p>
 </div></blockquote>
-</section>
-<section id="license">
+</div>
+<div class="section" id="license">
 <h3>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>GORpipe is free software: you can redistribute it and/or modify
@@ -272,9 +270,9 @@ the AFFERO GNU General Public License for the complete license terms.</p>
 <p>You should have received a copy of the AFFERO GNU General Public License
 along with GORpipe.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/agpl-3.0.html">http://www.gnu.org/licenses/agpl-3.0.html</a>&gt;</p>
 </div></blockquote>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

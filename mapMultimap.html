@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Map and Multimap &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -190,22 +188,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="map-and-multimap">
+  <div class="section" id="map-and-multimap">
 <span id="mapmultimap"></span><h1>Map and Multimap<a class="headerlink" href="#map-and-multimap" title="Permalink to this headline">¶</a></h1>
 <p>When we are joining table data that is not genomic ordered, it is necessary to use the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> and <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> commands, which we will now discuss in the following chapter.</p>
-<section id="using-map-to-annotate">
+<div class="section" id="using-map-to-annotate">
 <h2>Using MAP to Annotate<a class="headerlink" href="#using-map-to-annotate" title="Permalink to this headline">¶</a></h2>
 <p>Occasionally, we will have annotation data that is not genome-ordered, but is based on some other column data. One example of this would be with the Ensemble annotation data for genes, which can be found in a <a class="reference internal" href="glossary.html#term-mapfile"><span class="xref std std-term">mapfile</span></a> called <code class="docutils literal notranslate"><span class="pre">ensgenes.map</span></code> in the reference data. If we wanted to join the information in this annotation file to the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> table we would need to use the MAP command.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>A map file in the reference data typically has a <code class="docutils literal notranslate"><span class="pre">.map</span></code> file extension, although any tab-separated value file can be used.</p>
-</aside>
+</div>
 <p>As you can see in the following example, we use the map command to join the two tables by setting the column (using the <code class="docutils literal notranslate"><span class="pre">-c</span></code> option) that we want to use for the mapping. The column specified must exist in both sources, although the match on column name is not case-sensitive. To get the headers from the mapped table in the output stream, you can use the <code class="docutils literal notranslate"><span class="pre">-h</span></code> option.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> ref/ensgenes/ensgenes.map -c <span class="na">Gene_Symbol</span> -h
 </pre></div>
 </div>
-</section>
-<section id="mapping-using-nested-streams">
+</div>
+<div class="section" id="mapping-using-nested-streams">
 <h2>Mapping using Nested Streams<a class="headerlink" href="#mapping-using-nested-streams" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="glossary.html#term-mapfile"><span class="xref std std-term">mapfile</span></a> can also be a nested stream, which is particularly useful if you wish to perform some filtering on the mapfile before mapping. An example of this is shown below:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MAP</span> &lt;(<span class="nd">nor</span> -h ref/ensgenes/ensgenes.map | <span class="nb">WHERE</span> OMIM_Descriptions != &#39;.&#39;)
@@ -223,8 +221,8 @@
 -c <span class="na">Gene_Symbol</span> -h -n OMIM_Descriptions
 </pre></div>
 </div>
-</section>
-<section id="mapping-in-a-nor-context">
+</div>
+<div class="section" id="mapping-in-a-nor-context">
 <h2>Mapping in a NOR context<a class="headerlink" href="#mapping-in-a-nor-context" title="Permalink to this headline">¶</a></h2>
 <p>We can also base our mapping on more than one column. For example, we could use the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> command to link two separate mapfiles together. Notice here that since neither of files contain genome-ordered data, we must perform this mapping in the nor context:</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ref/ensgenes/ensgenes.map | <span class="nb">MAP</span> &lt;(<span class="nd">nor</span> -h ref/ensgenes/ensgenes_alias.map
@@ -232,20 +230,20 @@
 </pre></div>
 </div>
 <p>In the example above, a <a class="reference internal" href="command/GROUP.html#group"><span class="std std-ref">GROUP</span></a> command was used to ensure that there was only result per combination of Gene_Symbol and gene_stable_id in the second source file.</p>
-</section>
-<section id="using-multimap">
+</div>
+<div class="section" id="using-multimap">
 <h2>Using Multimap<a class="headerlink" href="#using-multimap" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> command assumes that each gene_symbol is only going to be mapped to one output row. However, there are scenarios, such as with the mapping of genes to pathways, where the relation is one-to-many. In these cases, it is better to use the <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> command.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>While it is not necessary to use a specific file type with this, the reference data does use the file extension <code class="docutils literal notranslate"><span class="pre">.mmap</span></code> to indicate a mapfile with a one-to-many relation.</p>
-</aside>
+</div>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">MULTIMAP</span> ref/ensgenes/ensgenes_gene2pathway.mmap -h -c <span class="na">Gene_Symbol</span>
 </pre></div>
 </div>
 <p>The main difference with the <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> command is that each of the rows in the <code class="docutils literal notranslate"><span class="pre">#genes#</span></code> table can be mapped to multiple rows based on the Gene_Symbol column.</p>
 <p>The options for <a class="reference internal" href="command/MULTIMAP.html#multimap"><span class="std std-ref">MULTIMAP</span></a> are similar to the <a class="reference internal" href="command/MAP.html#map"><span class="std std-ref">MAP</span></a> command.</p>
-<section id="using-mapfiles-to-include-phenotype-data">
+<div class="section" id="using-mapfiles-to-include-phenotype-data">
 <h3>Using mapfiles to include phenotype data<a class="headerlink" href="#using-mapfiles-to-include-phenotype-data" title="Permalink to this headline">¶</a></h3>
 <p>One example of how we may want to use mapfiles is in including phenotype data, which can be found in a report file for the subjects in our studies. In the example below, we are joining the variants from our subject with the <code class="docutils literal notranslate"><span class="pre">#VEP#</span></code> table and then mapping this data to the phenotypes found in the phenotypes subject report.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #wesVars# | <span class="nb">VARJOIN</span> #VEP# | <span class="nb">TOP</span> 10000 | <span class="nb">SELECT</span> 1-<span class="na">Call</span>,Max_Consequence,<span class="na">Max_Impact</span>,<span class="na">PN</span>
@@ -253,9 +251,9 @@
 </pre></div>
 </div>
 <p>This can also be accomplished using a grid from another open table in the Sequence Miner.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

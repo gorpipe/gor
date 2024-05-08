@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GTLD &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,8 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><section id="gtld-1">
-<span id="gtld"></span><h1>GTLD<a class="headerlink" href="#gtld-1" title="Permalink to this headline">¶</a></h1>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="gtld">
+<span id="id1"></span><h1>GTLD<a class="headerlink" href="#gtld" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>GTLD</strong> command is used to calculate linkage disequilibrium between genotypes in different locations.
 The command takes in an input stream and uses a self-join style way to calculate the LD in the surrounding region
 as specified with the <code class="docutils literal notranslate"><span class="pre">-f</span></code> option.  Note that large span requires large memory buffers.  The command can be
@@ -183,15 +181,19 @@ rd = sqrt(p1*(1.0-p1)*q1*(1.0-q1))
 LD_Dp = LD_D/d
 LD_r = LD_D/rd</p>
 </div></blockquote>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | GTLD [ attributes ]
 </pre></div>
 </div>
-</section>
-<section id="options">
+</div>
+<div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">distance</span></code></p></td>
 <td><p>The maximum span for LD calculation in base pairs.
@@ -206,8 +208,8 @@ from single genotype character values column.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* An example calculating LD from a stream of (chr,<span class="na">pos</span>,ref,<span class="na">alt</span>,bucket,values) */
 
@@ -278,12 +280,12 @@ simulating haplotypes of biallelic SNPs in disequilibrium and genotypes based on
 | throwif abs(<span class="na">distance</span>) = 1 and abs(LD_D - De)&gt;0.01
 </pre></div>
 </div>
-<section id="related-commands">
+<div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="CSVCC.html#csvcc"><span class="std std-ref">CSVCC</span></a> <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> <a class="reference internal" href="GTGEN.html#gtgen"><span class="std std-ref">GTGEN</span></a></p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

@@ -5,8 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DIV &mdash; GOR Open Source v.2.0 documentation</title>
@@ -24,10 +23,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -159,29 +157,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="div-1">
-<span id="div"></span><h1>DIV<a class="headerlink" href="#div-1" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="div">
+<span id="id1"></span><h1>DIV<a class="headerlink" href="#div" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>DIV</strong> function returns the quotient in integer division. The function takes two parameters, the numerator and denominator to be used in the division calculation.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DIV(number,number)</span> <span class="pre">:</span> <span class="pre">integer</span></code></p>
-</section>
-<section id="example">
+</div>
+<div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>The example query divides 10 by 3 and returns the quotient from the result, which is 3.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> test div(10,3)
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom<span class="w">    </span>bpStart<span class="w"> </span>bpStop<span class="w"> </span><span class="nb">test</span>
-chr1<span class="w">     </span><span class="m">1</span><span class="w">       </span><span class="m">1</span><span class="w">      </span><span class="m">3</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>chrom    bpStart bpStop <span class="nb">test</span>
+chr1     <span class="m">1</span>       <span class="m">1</span>      <span class="m">3</span>
 </pre></div>
 </div>
-</section>
-<section id="related-functions">
+</div>
+<div class="section" id="related-functions">
 <h2>Related Functions<a class="headerlink" href="#related-functions" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="mod.html#mod"><span class="std std-ref">MOD</span></a></p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
