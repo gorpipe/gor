@@ -227,16 +227,24 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
 
   private def postValidateExecution(suggestName: Boolean): Unit = {
     val unusedEntries = virtualFileManager.getUnusedVirtualFileEntries
+    var nonExistVirtualFiles = List.empty[String]
 
     if (unusedEntries.nonEmpty) {
       // We should warn about unused entries
       unusedEntries.filter(x => !x.name.contains(ScriptExecutionEngine.GOR_FINAL))
-        .foreach(entry => ScriptExecutionEngine.log.warn(s"No reference to virtual file: ${entry.name}"))
+        .foreach(entry => {
+          nonExistVirtualFiles::=entry.name
+          ScriptExecutionEngine.log.warn(s"No reference to virtual file: ${entry.name}")
+        })
     }
 
     if (!executionBlocks.keySet().isEmpty && !suggestName) {
       var message = "Could not create the following queries due to virtual dependencies:\n"
       executionBlocks.keySet().forEach(x => message += "\t" + (x + " = ").replace("[] = ", " ") + executionBlocks.get(x).query.substring(0, Math.min(executionBlocks.get(x).query.length, 50)) + "\n")
+      // Append virtual file that does not exist to the message
+      if (nonExistVirtualFiles.nonEmpty) {
+        nonExistVirtualFiles.foreach(vf => message += "No reference to virtual file: " + vf + "\n")
+      }
       throw new GorParsingException(message)
     }
   }

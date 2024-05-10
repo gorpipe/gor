@@ -132,6 +132,19 @@ class UTestScriptExecutionEngine extends AnyFunSuite with BeforeAndAfter {
     assert(thrown.getMessage.contains("is not a valid name"))
   }
 
+  test("Script with virtual relation is not found should fail") {
+    val commands = Array(
+      "create ##foo## = gorrows -p chr1:1-10",
+      "gor [##foo##] [##not_exist_A##] [##not_exist_B##]"
+    )
+    val engine = createScriptExecutionEngine()
+    val thrown = intercept[GorParsingException](engine.execute(commands))
+    assert(thrown.getMessage.equals(
+      "Could not create the following queries due to virtual dependencies:\n\t gor [##foo##] [##not_exist_A##] [##not_exist_B##]\n" +
+        "No reference to virtual file: [##not_exist_A##]\n" +
+        "No reference to virtual file: [##not_exist_B##]\n"))
+  }
+
   test("Filesignature of dict folder should changed when thedict is updated") {
     val session = new GenericSessionFactory().create()
 
