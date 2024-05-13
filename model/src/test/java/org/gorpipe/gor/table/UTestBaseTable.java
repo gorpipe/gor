@@ -16,6 +16,7 @@ import gorsat.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
+import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.table.dictionary.DictionaryEntry;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
@@ -30,6 +31,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -88,8 +90,39 @@ public class UTestBaseTable {
         Assert.assertFalse(tagset1SignatureA.equalsIgnoreCase(dict.getSignature("ABC1234", "ABC2234", "ABC3234")));
 
         // Check empty tag list
+        final String dictSignature = dict.getSignature();
         Assert.assertEquals("Error in get signature without tag list",
-                new ByteTextBuilder(dict.getPath().toString() + "&" + Path.of(dict.getPath()).toFile().lastModified()).md5(), dict.getSignature());
+                new ByteTextBuilder(dict.getPath().toString() + "&" + Path.of(dict.getPath()).toFile().lastModified()).md5(), dictSignature);
+
+        gordFile.toFile().setLastModified(System.currentTimeMillis() + 10000);
+        Assert.assertNotEquals("Signature should change with touch", dictSignature, dict.getSignature());
+    }
+
+    @Test
+    public void testSignatureForGordFolder() throws Exception {
+        setupSimpleFolderDict();
+
+        GorDictionaryTable dict = new GorDictionaryTable.Builder(gordFile.toAbsolutePath()).build();
+
+        // Check that file signature can be calculated correctly
+        final String tagset1SignatureA = dict.getSignature("ABC1234", "ABC2234", "ABC3234");
+        Assert.assertEquals(tagset1SignatureA, dict.getSignature("ABC1234", "ABC2234", "ABC3234"));
+        Assert.assertFalse(tagset1SignatureA.equalsIgnoreCase(dict.getSignature("ABC1234", "ABC3234")));
+
+        // Change file modification date and ensure there is a new signature
+        Files.copy(afile, gordFile.resolve("b.gor"), StandardCopyOption.REPLACE_EXISTING);
+        bfile.toFile().setLastModified(System.currentTimeMillis() + 10000);
+        log.debug(tagset1SignatureA);
+        log.debug(dict.getSignature("ABC1234", "ABC2234", "ABC3234"));
+        Assert.assertFalse(tagset1SignatureA.equalsIgnoreCase(dict.getSignature("ABC1234", "ABC2234", "ABC3234")));
+
+        // Check empty tag list
+        final String dictSignature = dict.getSignature();
+        Assert.assertEquals("Error in get signature without tag list",
+                new ByteTextBuilder(dict.getPath().toString() + "&" + Path.of(dict.getPath()).toFile().lastModified()).md5(), dictSignature);
+
+        new File(dict.getPath()).setLastModified(System.currentTimeMillis() + 10000);
+        Assert.assertNotEquals("Signature should change with touch", dictSignature, dict.getSignature());
     }
 
     @Test
@@ -783,23 +816,35 @@ public class UTestBaseTable {
     }
     
     private void setupSimpleDict() throws Exception {
-        gordFile = workDirPath.resolve("dict.gord");
+        gordFile = setupSimpleDict(workDirPath, "dict.gord");
+    }
+
+    private void setupSimpleFolderDict() throws Exception {
+        gordFile = setupSimpleDict(workDirPath.resolve("dict.gord"), GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).getParent();
+    }
+
+    private Path setupSimpleDict(Path folder, String dictFileName) throws Exception {
+
+        Files.createDirectories(folder);
+        var gordFile = folder.resolve(dictFileName);
 
         GorDictionaryTable dict = new GorDictionaryTable.Builder<>(gordFile.toAbsolutePath()).build();
 
-        afile = Files.write(workDirPath.resolve("a.gor"), "chromo\tpos\tdata\n1\t1000\tx\n".getBytes());
-        bfile = Files.write(workDirPath.resolve("b.gor"), "chromo\tpos\tdata\n1\t1010\ty\n".getBytes());
+        afile = Files.write(folder.resolve("a.gor"), "chromo\tpos\tdata\n1\t1000\tx\n".getBytes());
+        bfile = Files.write(folder.resolve("b.gor"), "chromo\tpos\tdata\n1\t1010\ty\n".getBytes());
         bfile.toFile().setLastModified(System.currentTimeMillis());
-        cfile = Files.write(workDirPath.resolve("c.gor"), "chromo\tpos\tdata\n1\t1020\tz\n".getBytes());
+        cfile = Files.write(folder.resolve("c.gor"), "chromo\tpos\tdata\n1\t1020\tz\n".getBytes());
         cfile.toFile().setLastModified(System.currentTimeMillis() + 10000);
 
-        Files.write(workDirPath.resolve("bucket1.gor"), "chromo\tpos\tdata\ttag\n1\t1000\tx\tABC1234\n1\t1020\tx\tABC3234\n".getBytes());
-        Files.write(workDirPath.resolve("bucket2.gor"), "chromo\tpos\tdata\ttag\n1\t1010\ty\tABC2234\n".getBytes());
+        Files.write(folder.resolve("bucket1.gor"), "chromo\tpos\tdata\ttag\n1\t1000\tx\tABC1234\n1\t1020\tx\tABC3234\n".getBytes());
+        Files.write(folder.resolve("bucket2.gor"), "chromo\tpos\tdata\ttag\n1\t1010\ty\tABC2234\n".getBytes());
 
         dict.insert(new GorDictionaryEntry.Builder<>(afile.toString(), dict.getRootPath()).alias("ABC1234").bucket("bucket1.gor").build());
         dict.insert(new GorDictionaryEntry.Builder<>(bfile.toString(), dict.getRootPath()).alias("ABC2234").bucket("bucket2.gor").build());
         dict.insert(new GorDictionaryEntry.Builder<>(cfile.toString(), dict.getRootPath()).alias("ABC3234").bucket("bucket1.gor").build());
         dict.save();
+
+        return gordFile;
     }
 
     /**

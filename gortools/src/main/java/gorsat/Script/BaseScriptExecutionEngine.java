@@ -15,7 +15,6 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Tuple;
-import scala.Tuple2;
 
 import java.io.IOException;
 import java.util.*;
@@ -94,11 +93,7 @@ public class BaseScriptExecutionEngine {
         var dictFile = fileName.substring("#gordict#".length(), hasTags ? fileName.indexOf("#gortags#") : fileName.length());
         var dictTags = hasTags ? fileName.substring(fileName.indexOf("#gortags#") + "#gortags#".length()).split(",") : null;
         try {
-            if (dictTags != null && dictTags.length > 9) {
-                return fileReader.getFileSignature(dictFile);
-            } else {
-                return fileReader.getDictionarySignature(dictFile, dictTags);
-            }
+            return fileReader.getDictionarySignature(dictFile, dictTags);
         } catch(IOException e) {
             throw new GorResourceException("Could not get signature for file", dictFile, e);
         }
@@ -139,9 +134,12 @@ public class BaseScriptExecutionEngine {
             var usedFilesConcatStr = String.join(" ", usedFiles);
             fileSignature = StringUtilities.createMD5(usedFilesConcatStr);
         } else {
-            var signatureKey = AnalysisUtilities.getSignature(session, commandToExecute);
+            var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles) + signatureKey;
-            fileSignature = fileSignatureMap.computeIfAbsent(fileListKey, (k) -> StringUtilities.createMD5(usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
+            fileSignature = fileSignatureMap.computeIfAbsent(
+                    fileListKey,
+                    (k) -> StringUtilities.createMD5(
+                            usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
         }
 
         return fileSignature;

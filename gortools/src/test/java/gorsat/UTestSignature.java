@@ -149,33 +149,33 @@ public class UTestSignature {
             options.requestId_$eq("test");
             var factory = new TestSessionFactory(options, null, false, null, null);
             try (var session = factory.create()) {
-                String signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -timeres 1000");
+                String signature = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | signature -timeres 1000");
                 long timeValue = Long.parseLong(signature.trim());
                 Assert.assertEquals(0, timeValue % 1000);
 
-                signature = AnalysisUtilities.getSignature(session, "pgor ../tests/data/gor/genes.gor | signature -timeres 100");
+                signature = AnalysisUtilities.getSignatureFromSignatureCommand(session, "pgor ../tests/data/gor/genes.gor | signature -timeres 100");
                 timeValue = Long.parseLong(signature.trim());
                 Assert.assertEquals(0, timeValue % 100);
 
-                signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | calc signature 1.0 | signature -timeres 1000");
+                signature = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | calc signature 1.0 | signature -timeres 1000");
                 timeValue = Long.parseLong(signature.trim());
                 Assert.assertEquals(0, timeValue % 1000);
 
-                signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | calc signature 1.0 ");
+                signature = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | calc signature 1.0 ");
                 Assert.assertEquals("", signature);
 
                 // Create a file and get the signature
                 var file  = workDir.newFile("test.gor");
-                signature = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
+                signature = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
                 Assert.assertFalse(signature.isEmpty());
 
-                var signature2 = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
+                var signature2 = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
                 Assert.assertFalse(signature2.isEmpty());
                 Assert.assertEquals(signature, signature2);
 
                 // Touch the file and get the signature
                 var r = file.setLastModified(System.currentTimeMillis() + 1000);
-                var signature3 = AnalysisUtilities.getSignature(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
+                var signature3 = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
                 Assert.assertFalse(signature3.isEmpty());
                 Assert.assertNotEquals(signature, signature3);
 

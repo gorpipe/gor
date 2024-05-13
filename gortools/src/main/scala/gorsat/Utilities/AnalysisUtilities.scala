@@ -112,7 +112,7 @@ object AnalysisUtilities {
                                           usedFiles: List[String],
                                           header: String)
 
-  def getSignature(session: GorSession, commandToExecute: String): String = {
+  def getSignatureFromSignatureCommand(session: GorSession, commandToExecute: String): String = {
     var result = ""
     val name = "SIGNATURE"
     val timeresOption = "-timeres"

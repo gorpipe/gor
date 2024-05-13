@@ -23,15 +23,20 @@
 package gorsat.Script
 
 import gorsat.Commands.CommandParseUtilities
-import gorsat.DynIterator
+import gorsat.{DynIterator, TestUtils}
 import gorsat.QueryHandlers.GeneralQueryHandler
 import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, PipeInstance}
 import org.gorpipe.exceptions.{GorException, GorParsingException}
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable
+import org.gorpipe.test.GorDictionarySetup
 import org.gorpipe.test.utils.FileTestUtils
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
+
+import java.nio.file.{Files, Path}
+import java.util.{List, Map}
 
 @RunWith(classOf[JUnitRunner])
 class UTestScriptExecutionEngine extends AnyFunSuite with BeforeAndAfter {
@@ -126,4 +131,30 @@ class UTestScriptExecutionEngine extends AnyFunSuite with BeforeAndAfter {
 
     assert(thrown.getMessage.contains("is not a valid name"))
   }
+
+  test("Filesignature of dict folder should changed when thedict is updated") {
+    val session = new GenericSessionFactory().create()
+
+    val name = "testDictFolderSignature"
+    val workDirPath = Path.of(FileTestUtils.createTempDirectory(name).getCanonicalPath)
+    val dictPath = workDirPath.resolve(name + ".gord")
+
+    Files.createDirectories(dictPath)
+    val dataFiles: Map[String, List[String]] = GorDictionarySetup.createDataFilesMap(
+      name, dictPath, 30, Array(1, 2, 3), 30, "PN", true,
+      Array("PN1", "PN2", "PN3", "PN4", "PN5", "PN6", "PN7", "PN8", "PN9", "PN10", "PN11", "PN12", "PN13", "PN14",
+        "PN15", "PN16", "PN17", "PN18", "PN19", "PN20", "PN21", "PN22", "PN23", "PN24", "PN25", "PN26", "PN27", "PN28",
+        "PN29", "PN30"));
+    val table: GorDictionaryTable = TestUtils.createFolderDictionaryWithData(name, workDirPath, dataFiles);
+
+    val originalFingerprint = createScriptExecutionEngine().fileFingerPrint("#gordict#" + dictPath, session)
+    assert(originalFingerprint != null)
+
+    dictPath.resolve("thedict.gord").toFile.setLastModified(System.currentTimeMillis() + 10000)
+    val updatedFingerprint = createScriptExecutionEngine().fileFingerPrint("#gordict#" + dictPath, session)
+
+    assert(originalFingerprint != updatedFingerprint)
+  }
+
+
 }

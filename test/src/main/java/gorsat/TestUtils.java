@@ -53,6 +53,8 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
+
 /**
  * Utility class to help with gor testing.
  *
@@ -621,6 +623,32 @@ public class TestUtils {
         table.setBucketize(true);
         table.save();
         return table;
+    }
+
+    /**
+     * Create or update dictionary.
+     *
+     * @param name     name of the dictionary.
+     * @param rootPath root path
+     * @param data     map with alias to files, to be add to the dictionary.
+     * @return new table created with the given data.
+     */
+    public static GorDictionaryTable createFolderDictionaryWithData(String name, Path rootPath, Map<String, List<String>> data) {
+        Path tablePath = rootPath.resolve(DataUtil.toFile(name, DataType.GORD));
+        if (Files.exists(tablePath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME))) {
+            throw new GorSystemException("Table already exists:  " + tablePath, null);
+        }
+        try {
+            Files.createDirectories(tablePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        GorDictionaryTable table = new GorDictionaryTable.Builder<>(tablePath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME).toString())
+                .useHistory(true).validateFiles(false).build();
+        table.insert(data);
+        table.setBucketize(true);
+        table.save();
+        return new GorDictionaryTable(tablePath.toString());
     }
 
     public static String SECRETS_FILE_NAME = "../tests/config/secrets.env";
