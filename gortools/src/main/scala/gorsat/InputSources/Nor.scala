@@ -193,7 +193,7 @@ object Nor
       val checkedIargs = iargs.filterNot(nonExistentFiles.contains)
 
       if (checkedIargs.isEmpty) {
-        Utilities.handleNoValidFilePaths(args)
+        Utilities.handleNoValidFilePaths(args, isNor = true)
       }else {
         // remove the none existent file paths and -dh (and value) from args
         var updatedArgs = args.filterNot(nonExistentFiles.contains)

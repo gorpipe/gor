@@ -23,7 +23,7 @@ class Gorif extends InputSourceInfo("GORIF",
     val checkedIargs = iargs.filterNot(nonExistentFiles.contains)
 
     if (checkedIargs.isEmpty) {
-      Utilities.handleNoValidFilePaths(args)
+      Utilities.handleNoValidFilePaths(args, isNor = false)
     }else {
       // remove the none existent file paths and -dh (and value) from args
       var updatedArgs = args.filterNot(nonExistentFiles.contains)

@@ -26,11 +26,13 @@ import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, Paths}
-import gorsat.Commands.{BinaryWrite, CommandInfo, CommandParseUtilities, InputSourceParsingResult, Write}
+import gorsat.Commands.InputSourceParsingResult
 import gorsat.Iterators.RowListIterator
 import org.gorpipe.exceptions.GorParsingException
 
 import scala.jdk.CollectionConverters.SetHasAsJava
+import gorsat.process.NorStreamIterator.HEADER_PREFIX
+
 
 object Utilities {
 
@@ -47,7 +49,7 @@ object Utilities {
     cacheFile.toAbsolutePath.toString
   }
 
-  def handleNoValidFilePaths(args: Array[String]): InputSourceParsingResult = {
+  def handleNoValidFilePaths(args: Array[String], isNor:Boolean): InputSourceParsingResult = {
     if (!hasOption(args, "-dh")) {
       throw new GorParsingException("Default header (-dh) is required when none of the provided file paths are valid.")
     } else {
@@ -58,7 +60,7 @@ object Utilities {
         throw new GorParsingException("-dh requires at least 2 non-empty comma-separated values")
       }
       val inputSource = RowListIterator(List())
-      inputSource.setHeader(headerCols.mkString("\t"))
+      if (isNor) inputSource.setHeader(HEADER_PREFIX + headerCols.mkString("\t")) else inputSource.setHeader(headerCols.mkString("\t"))
       InputSourceParsingResult(inputSource, header, isNorContext = false)
     }
   }

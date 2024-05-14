@@ -34,6 +34,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static gorsat.process.NorStreamIterator.HEADER_PREFIX;
+
 @RunWith(Parameterized.class)
 public class UTestNorif {
 
@@ -49,7 +51,7 @@ public class UTestNorif {
     @Parameterized.Parameter(3)
     public Class<? extends Exception> expectedException;
     public static String fileHeader = "#Grp\tCategory\tValue\n";
-    public static String expectedHeader = "ChromNOR\tPosNOR\tGrp\tCategory\tValue\n";
+    public static String expectedHeader = HEADER_PREFIX + "Grp\tCategory\tValue\n";
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() throws IOException {
@@ -66,7 +68,7 @@ public class UTestNorif {
         return Arrays.asList(new Object[][]{
                 //{testName, query, expectedResult, expectedException}
                 {"No file path", "norif", null, GorParsingException.class},
-                {"Empty file", "norif -dh col1,col2 " + testEmptyFile, "col1\tcol2\n", null},
+                {"Empty file", "norif -dh col1,col2 " + testEmptyFile, HEADER_PREFIX + "col1\tcol2\n", null},
                 {"One file path", "norif " + testTsvFile1,
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
                 {"One file path with -dh", "norif -dh col1,col2 " + testTsvFile1,
@@ -77,7 +79,7 @@ public class UTestNorif {
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
                 {"Nested query started with norif", "norif <(nor " + testTsvFile1 + ")",
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
-                {"Invalid file path", "norif -dh col1,col2 not_exists.tsv", "col1\tcol2\n", null},
+                {"Invalid file path", "norif -dh col1,col2 not_exists.tsv", HEADER_PREFIX+ "col1\tcol2\n", null},
                 {"Invalid file path missing -dh", "norif not_exists.tsv", null, GorParsingException.class},
                 {"Empty file missing -dh", "norif " + testEmptyFile, null, GorParsingException.class},
                 {"Invalid file path with invalid -dh value", "norif -dh col1 not_exists.tsv", null, GorParsingException.class},
