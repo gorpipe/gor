@@ -25,7 +25,7 @@ package gorsat.process
 import gorsat.Commands.{CommandParseUtilities, Processor, RowHeader}
 import gorsat.Utilities.MacroUtilities.replaceAllAliases
 import gorsat.Outputs.{ColorStdOut, NorColorStdOut, NorStdOut, OutStream, StdOut}
-import gorsat.Utilities.AnalysisUtilities
+import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import org.gorpipe.gor.session.{GorRunner, GorSession}
 import org.gorpipe.gor.RequestStats
 import org.gorpipe.gor.driver.meta.DataType
@@ -63,7 +63,7 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     iterator.init(queryToExecute, pipeOptions.stdIn, "", pipeOptions.fileSignature, pipeOptions.virtualFile)
 
     var instance = iterator
-    if (containsWriteCommand(pipeOptions.query)) instance = null
+    if (MacroUtilities.isWrite(pipeOptions.query)) instance = null
 
     iterator.thePipeStep = iterator.thePipeStep |
       createStdOut(session.getNorContext || iterator.isNorContext, pipeOptions.color, iterator)
@@ -81,22 +81,6 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
       val rs = session.getEventLogger.asInstanceOf[RequestStats]
       rs.saveToJson()
     }
-  }
-
-  private def containsWriteCommand(query:String): Boolean = {
-    val entries = CommandParseUtilities.quoteSafeSplit(query, ';')
-    var containsWrite = false
-
-    if (entries.nonEmpty) {
-      val commands = CommandParseUtilities.quoteSafeSplitAndTrim(entries.last, '|')
-
-      if (commands.nonEmpty) {
-        // Need to replace this in the future
-        containsWrite = commands.last.toUpperCase().startsWith("WRITE ")
-      }
-    }
-
-    containsWrite
   }
 
   private def createStdOut(isNor: Boolean, color: String, iterator: PipeInstance): OutStream = {

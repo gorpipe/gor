@@ -161,7 +161,13 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
 
   private def getDictionaryType(query: String, useGordFolder: Boolean = false): String = {
     val firstCommand = CommandParseUtilities.getFirstCommand(query)
-    if(GorInputSources.isNorCommand(firstCommand)) CommandParseUtilities.NOR_DICTIONARY_PART else if(useGordFolder) CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART else CommandParseUtilities.GOR_DICTIONARY_PART
+    if (GorInputSources.isNorCommand(firstCommand)) {
+      CommandParseUtilities.NOR_DICTIONARY_PART
+    } else if (useGordFolder) {
+      CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART
+    } else {
+      CommandParseUtilities.GOR_DICTIONARY_PART
+    }
   }
 
   private def getColumnsFromQuery(parallelQuery: String, header:String, forNor: Boolean): Map[String, Int] = {

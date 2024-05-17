@@ -16,8 +16,8 @@ This section is for developers of GOR and describes how releases are created fro
 
 The steps are as follows:
 
-1. Update the relevant milestone.
-2. Review the operation dashboard.
+1. Review the operation dashboard.
+2. Update the relevant milestone.
 3. Create the release.
 4. Close the milestone.
 5. Notify Software Development

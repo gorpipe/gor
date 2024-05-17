@@ -33,6 +33,7 @@ import gorsat.Outputs.OutFile
 import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, runCommand}
 import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.{GorJavaUtilities, ParallelExecutor}
+import org.apache.commons.compress.utils.FileNameUtils
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
@@ -61,7 +62,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
 
     Files.writeString(linkCacheFilePath,
       PathUtils.resolve(nested.getSession.getProjectContext.getProjectRoot, writeLocationPath).toString)
-    val extension = linkCacheFileNameBaseAdjusted.substring(linkCacheFileNameBaseAdjusted.lastIndexOf(".")) + ".link"
+    val extension = FileNameUtils.getExtension(linkCacheFileNameBaseAdjusted) + ".link"
 
     (linkCacheFilePath, extension)
   }

@@ -432,29 +432,51 @@ public class UTestGorWrite {
     }
 
     @Test
-    @Ignore("Stop using write as result file indicator")
     public void testForkWriteWithCreate() {
-        String query = "create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1";
+        String query = "create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r data_#{fork}.gorz; gor data_0.gorz | top 1";
         String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
     }
 
     @Test
-    @Ignore("Stop using write as result file indicator")
     public void testForkWriteFolderWithCreate() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
-        String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/data_#{fork}.gorz; gor [xxx]/data_0.gorz | top 1", outputPath);
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/data_#{fork}.gorz; gor %s/data_0.gorz | top 1", outputPath, outputPath);
         String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
     }
 
     @Test
-    @Ignore("Stop using write as result file indicator")
     public void testForkWriteSubfolderWithCreate() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gorz");
-        String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/rownum=#{fork}/data.gorz; gor [xxx]/rownum=0/data.gorz | top 1", outputPath);
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/rownum=#{fork}/data.gorz; gor %s/rownum=0/data.gorz | top 1", outputPath, outputPath);
         String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
+    }
+
+    @Test
+    public void testForkWriteWithParallel() {
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        String query = String.format("create splits = norrows 3; parallel -parts [splits] <(gorrows -p chr1:1-100 | calc sp str(#{col:Rownum}) + '.gorz')  | write %s/#{fork} -f sp -r", outputPath);
+        String result = TestUtils.runGorPipe(query);
+        TestUtils.assertGorpipeResults("testForkWriteWithParallel", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath.resolve("0.gorz")));
+    }
+
+    @Test
+    public void testForkWriteWithParallelCreate() {
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        String query = String.format("create splits = norrows 3; create par = parallel -parts [splits] <(gorrows -p chr1:1-100 | calc sp str(#{col:Rownum}) + '.gorz')  | write %s/#{fork} -f sp -r; gor %s/0.gorz", outputPath, outputPath);
+        String result = TestUtils.runGorPipe(query);
+        TestUtils.assertGorpipeResults("testForkWriteWithParallel", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath.resolve("0.gorz")));
+    }
+
+    @Test
+    public void testForkWriteDictWithParallel() {
+        final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gord");
+        String query = String.format("create splits = norrows 3; parallel -parts [splits] <(gorrows -p chr1:1-100 | calc sp str(#{col:Rownum}) + '.gorz')  | write %s/#{fork} -f sp -r", outputPath);
+        String result = TestUtils.runGorPipe(query);
+        TestUtils.assertGorpipeResults("testForkWriteDictWithParallel file", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath.resolve("0.gorz")));
+        TestUtils.assertGorpipeResults("testForkWriteDictWithParallel dict", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath));
     }
 
     @Test

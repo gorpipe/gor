@@ -24,7 +24,7 @@ package org.gorpipe.jessica
 
 import gorsat.Commands.CommandParseUtilities
 import gorsat.Outputs.ToList
-import gorsat.Utilities.AnalysisUtilities
+import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.Utilities.MacroUtilities.replaceAllAliases
 import gorsat.process.{CLISessionFactory, GenericGorRunner, PipeInstance, PipeOptions}
 import org.gorpipe.gor.model.Row
@@ -67,7 +67,7 @@ class JessicaGorExecutionEngine(
     iterator.init(queryToExecute, pipeOptions.stdIn, "", pipeOptions.fileSignature, pipeOptions.virtualFile)
 
     var header = iterator.getHeader
-    if (containsWriteCommand(pipeOptions.query)) header = null
+    if (MacroUtilities.isWrite(pipeOptions.query)) header = null
 
     // Add steps that return the output of the pipe
     iterator.thePipeStep | ToList(output)
@@ -77,21 +77,5 @@ class JessicaGorExecutionEngine(
 
   def createRunner(session: GorSession): GorRunner = {
     new GenericGorRunner()
-  }
-
-  private def containsWriteCommand(query:String): Boolean = {
-    val entries = CommandParseUtilities.quoteSafeSplit(query, ';')
-    var containsWrite = false
-
-    if (entries.nonEmpty) {
-      val commands = CommandParseUtilities.quoteSafeSplitAndTrim(entries.last, '|')
-
-      if (commands.nonEmpty) {
-        // Need to replace this in the future
-        containsWrite = commands.last.toUpperCase().startsWith("WRITE ")
-      }
-    }
-
-    containsWrite
   }
 }

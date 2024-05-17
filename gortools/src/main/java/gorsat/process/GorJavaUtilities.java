@@ -618,9 +618,8 @@ public class GorJavaUtilities {
 
     public static Optional<String[]> parseDictionaryColumn(String[] dictList, FileReader fileReader) {
         return Arrays.stream(dictList).mapMulti((BiConsumer<String, Consumer<String[]>>) (df, consumer) -> {
-            var dflow = df.toLowerCase();
-            if (DataUtil.isDictionary(dflow)) {
-                var dt = TableFactory.getTable(dflow, fileReader);
+            if (DataUtil.isDictionary(df.toLowerCase())) {
+                var dt = TableFactory.getTable(df, fileReader);
                 var cols = dt.getColumns();
                 if (cols!=null) consumer.accept(cols);
             } else {

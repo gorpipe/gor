@@ -80,8 +80,13 @@ public class BaseScriptExecutionEngine {
 
     public Optional<Tuple<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {
         var lastCommand = MacroUtilities.getLastCommand(queryBlock.query());
-        if (lastCommand.toLowerCase().startsWith("write ")) {
-            return resolveCache(context, lastCommand, queryBlock);
+        if (MacroUtilities.isLastCommandWrite(lastCommand)) {
+            // The hasForkWrite is not always set on the queryBlock even if is has a work write.
+            if (!MacroUtilities.isLastCommandForkWrite(lastCommand)) {
+                return resolveCache(context, lastCommand, queryBlock);
+            } else {
+                return Optional.of(new Tuple<>(null, true));
+            }
         } else {
             return Optional.empty();
         }
