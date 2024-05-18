@@ -72,8 +72,11 @@ public class SqlSource extends RowIteratorSource {
                 }
             }
         }
+        var connectionCache = this.getSourceReference().getUrl().startsWith(LegacyDbSourceType.ProtocolName) ?
+                DbConnection.systemConnections :
+                DbConnection.userConnections;
 
-        var dataStream = DbConnection.userConnections.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
+        var dataStream = connectionCache.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
         return new StreamWrappedGenomicIterator(dataStream, header, true);
     }
 
