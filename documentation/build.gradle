@@ -34,6 +34,8 @@ project(':documentation') {
         sourceDirectory = "${project.projectDir}/src"
         outputDirectory = "${project.buildDir}/text"
         tags = ["gor_text_help"]
+        // Workaround to run on aarch64 macs
+        //binaryUrl = "https://github.com/trustin/sphinx-binary/releases/download/v0.8.1/sphinx.osx-x86_64"
     }
 
     task generateHtml (type: kr.motd.gradle.sphinx.gradle.SphinxTask){
@@ -41,6 +43,8 @@ project(':documentation') {
         builder = "html"
         sourceDirectory = "${project.projectDir}/src"
         outputDirectory = "${project.buildDir}/html"
+        // Workaround to run on aarch64 macs
+        //binaryUrl = "https://github.com/trustin/sphinx-binary/releases/download/v0.8.1/sphinx.osx-x86_64"
     }
 
     task generateGorCommandsToolsHelp( type: GenerateGorToolsHelpTask ){
