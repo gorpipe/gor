@@ -33,6 +33,7 @@ project(':base') {
         implementation "ch.qos.logback:logback-classic:_"
         implementation('net.logstash.logback:logstash-logback-encoder:_')
         implementation 'org.fusesource.jansi:jansi:_' // Needs to be included for Windows
+        implementation "com.google.guava:guava:_"
 
         testImplementation project(':test')
     }

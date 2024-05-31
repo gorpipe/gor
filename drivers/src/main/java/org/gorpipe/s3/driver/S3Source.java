@@ -33,6 +33,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.upplication.s3fs.S3OutputStream;
 import com.upplication.s3fs.S3Path;
 import com.upplication.s3fs.util.S3UploadRequest;
+import org.gorpipe.base.streams.LimitedOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -70,6 +71,9 @@ public class S3Source implements StreamSource {
 
     private Path path;
 
+    private final static int MAX_S3_CHUNKS = 10000;
+    private int writeChunkSize = Integer.parseInt(System.getProperty("gor.s3.write.chunksize", String.valueOf(1 << 26)));
+
     /**
      * Create source
      *
@@ -106,12 +110,15 @@ public class S3Source implements StreamSource {
         if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
         invalidateMeta();
 
+        long maxFileSize = (long)writeChunkSize * (long)MAX_S3_CHUNKS;
         // S3OutputStream, uses less resources and is slightly faster than our S3MultiPartOutputStream
-        return new S3OutputStream(client, new S3UploadRequest()
+        return new LimitedOutputStream(
+                new S3OutputStream(client, new S3UploadRequest()
                 .setObjectId(new S3ObjectId(bucket, key))
-                .setChunkSize(1<<23)
-        );
-        //return new S3MultiPartOutputStream(client, bucket, key);
+                .setChunkSize(writeChunkSize)
+                .setMaxThreads(4))
+                , maxFileSize);
+//        return new S3MultiPartOutputStream(client, bucket, key);
     }
 
     @Override

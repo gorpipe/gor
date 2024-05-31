@@ -1,6 +1,6 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +21,13 @@ public class S3MultiPartOutputStream extends OutputStream {
     String uploadId;
     int k = 1;
     List<PartETag> partETags = new ArrayList<>();
-    AmazonS3Client client;
+    AmazonS3 client;
     String bucket;
     String key;
     ExecutorService executorService;
     Future<String> fut;
 
-    public S3MultiPartOutputStream(AmazonS3Client client, String bucket, String key) {
+    public S3MultiPartOutputStream(AmazonS3 client, String bucket, String key) {
         this.client = client;
         this.bucket = bucket;
         this.key = key;

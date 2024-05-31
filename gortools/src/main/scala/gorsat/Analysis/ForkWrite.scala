@@ -154,7 +154,7 @@ case class ForkWrite(forkCol: Int,
 
   /**
     * Creates OutFile with given name
-    * if the path is a directory save a file with generated md5 sum as name under diretory
+    * if the path is a directory save a file with generated md5 sum as name under directory
     * @param name
     * @param skipHeader
     * @return

@@ -17,6 +17,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWra
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.contrib.java.lang.system.SystemErrRule;
 
 import java.io.IOException;
@@ -32,6 +33,9 @@ public class ITestS3Source extends CommonStreamTests {
     private static String S3_KEY;
     private static String S3_SECRET;
     private static String S3_REGION = "eu-west-1";
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     @Rule
     public final ProvideSystemProperty myPropertyHasMyValue
@@ -113,11 +117,22 @@ public class ITestS3Source extends CommonStreamTests {
     @Ignore("Local file, also too large and slow to use always, no clean up")
     @Test
     public void testS3WriteLargeFile() {
-        String localPath = "../../testing/data/ref/hg19/dbsnp.gorz";
         long startTime = System.currentTimeMillis();
-        TestUtils.runGorPipe(String.format("gor %s | top 100000000 | write s3://gdb-unit-test-data/s3write/large.gorz", localPath));
+        TestUtils.runGorPipe(String.format("gorrows -p chr1:1-1000000000 | calc data 'Some dummy data to fatten the lines, boooooooooo' | write s3://gdb-unit-test-data/s3write/large.gor"));
         long duration = System.currentTimeMillis() - startTime;
-        System.out.println("Time: " + duration + "ms");
+        System.out.println("Time: " + duration/(1000) + " s");
+    }
+
+    @Ignore("Local file, also too large and slow to use always, no clean up")
+    @Test
+    public void testS3WriteMoreThanMaxChunks() {
+        System.setProperty("gor.s3.write.chunksize", String.valueOf(1 << 21));
+        try {
+            TestUtils.runGorPipe(String.format("gorrows -p chr1:1-1000000000 | calc data 'Some dummy data to fatten the lines, boooooooooo' | write s3://gdb-unit-test-data/s3write/large.gor"));
+            Assert.fail("Should have thrown exception");
+        } catch (IllegalStateException e) {
+            Assert.assertEquals("Output stream limit exceeded: 20971651072 > 20971520000", e.getMessage());
+        }
     }
 
     //@Ignore("Too slow to always run")
