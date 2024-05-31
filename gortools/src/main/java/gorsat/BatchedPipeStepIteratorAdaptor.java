@@ -61,7 +61,6 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
     public void setEx(Throwable throwable) {
         if (ex == null || throwable == null) {
             ex = throwable;
-            log.warn("Setting exception in BatchedPipeStepIteratorAdaptor", new Exception(throwable));
         }
     }
 

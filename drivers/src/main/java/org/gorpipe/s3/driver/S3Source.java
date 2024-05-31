@@ -143,9 +143,6 @@ public class S3Source implements StreamSource {
                     new S3MultipartOutputStreamSync(client, bucket, key);
 
             return new LimitedOutputStream(os, maxFileSize);
-//                    getPath().getFileSystem().provider().newOutputStream(getPath(),
-//                            append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
-//                    maxFileSize);
         } catch (IOException e) {
             throw new GorResourceException(getName(), getName(), e).retry();
         }
