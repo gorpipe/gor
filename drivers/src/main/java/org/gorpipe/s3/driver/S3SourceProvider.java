@@ -31,6 +31,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.google.auto.service.AutoService;
 import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.base.security.BundledCredentials;
+import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -39,13 +41,9 @@ import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.utils.CredentialClientCache;
-import org.gorpipe.base.security.BundledCredentials;
-import org.gorpipe.base.security.Credentials;
-import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.util.Set;
 
 @AutoService(SourceProvider.class)
@@ -77,18 +75,9 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     @Override
-    protected RetryHandler getRetryHandler() {
+    protected RetryHandlerBase getRetryHandler() {
         if (retryHandler == null) {
-            retryHandler = new RetryHandler(10 * config.retryInitialSleep().toMillis(),
-                    config.retryMaxSleep().toMillis(), 5 * config.retryExpBackoff(),
-                    (e) -> {
-                        if (e instanceof FileNotFoundException) {
-                            throw e;
-                        }
-                        if (e instanceof FileSystemException) {
-                            throw e;
-                        }
-                    });
+            retryHandler = new S3RetryHandler(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
         }
         return retryHandler;
     }
@@ -100,20 +89,20 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     private AmazonS3Client createClient(Credentials cred) {
-        ClientConfiguration clientconfig = new ClientConfiguration();
-        clientconfig.setConnectionTimeout((int) s3Config.connectionTimeout().toMillis());
-        clientconfig.setMaxErrorRetry(s3Config.connectionRetries());
-        clientconfig.setMaxConnections(s3Config.connectionPoolSize());
+        ClientConfiguration clientConfig = new ClientConfiguration();
+        clientConfig.setConnectionTimeout((int) s3Config.connectionTimeout().toMillis());
+        clientConfig.setMaxErrorRetry(s3Config.connectionRetries());
+        clientConfig.setMaxConnections(s3Config.connectionPoolSize());
         // It looks like GOR is returning stale connections to the pool so we need always check if the connection is valid.
         // See issue: https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/issues/315
-        clientconfig.setValidateAfterInactivityMillis(s3Config.validateAfterInactivityMillis());
+        clientConfig.setValidateAfterInactivityMillis(s3Config.validateAfterInactivityMillis());
         log.debug("Creating S3Client for {}", cred);
         if (cred == null || cred.isNull()) {
             Regions region = Regions.DEFAULT_REGION;
             var builder = AmazonS3ClientBuilder.standard()
                     .enableForceGlobalBucketAccess()
                     .withCredentials(new DefaultAWSCredentialsProviderChain())
-                    .withClientConfiguration(clientconfig);
+                    .withClientConfiguration(clientConfig);
             var endpoint = s3Config.s3Endpoint();
             if (endpoint != null && endpoint.length() > 0) {
                 AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(endpoint, region.getName());
@@ -145,7 +134,7 @@ public class S3SourceProvider extends StreamSourceProvider {
             Regions region = regionStr == null ? Regions.DEFAULT_REGION : Regions.fromName(regionStr);
             AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().enableForceGlobalBucketAccess()
                     .withRegion(region)
-                    .withClientConfiguration(clientconfig)
+                    .withClientConfiguration(clientConfig)
                     .withCredentials(awsCredentialsProvider);
 
             String endpoint = cred.get(Credentials.Attr.API_ENDPOINT);

@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.providers.stream.sources;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -305,7 +306,7 @@ public abstract class CommonStreamTests {
         } catch (NullPointerException npe) {
             // A null pointer exception could be thrown due to underlying data source being null.
             log.info(npe.getMessage());
-        } catch (IOException ioe) {
+        } catch (GorResourceException ioe) {
             // An exception could be thrown due to retries failing.
             log.info(ioe.getMessage());
         } catch (Exception e) {

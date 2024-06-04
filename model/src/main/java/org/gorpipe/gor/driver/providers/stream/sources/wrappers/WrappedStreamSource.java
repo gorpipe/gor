@@ -39,37 +39,37 @@ public class WrappedStreamSource extends WrappedDataSource implements StreamSour
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
+    public StreamSourceMetadata getSourceMetadata() {
         return getWrapped().getSourceMetadata();
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open()  {
         return getWrapped().open();
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start)  {
         return getWrapped().open(start);
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         return getWrapped().open(start, minLength);
     }
 
     @Override
-    public InputStream openClosable() throws IOException {
+    public InputStream openClosable() {
         return getWrapped().openClosable();
     }
 
     @Override
-    public OutputStream getOutputStream(long position) throws IOException {
+    public OutputStream getOutputStream(long position) {
         return getWrapped().getOutputStream(position);
     }
 
     @Override
-    public OutputStream getOutputStream(boolean append) throws IOException {
+    public OutputStream getOutputStream(boolean append) {
         return getWrapped().getOutputStream(append);
     }
 

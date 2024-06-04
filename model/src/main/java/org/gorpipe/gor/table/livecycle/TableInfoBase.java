@@ -4,6 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.FileReader;
@@ -150,7 +151,7 @@ public abstract class TableInfoBase implements TableInfo {
             serial = serial != null ? serial : "";
             try {
                 this.id = this.fileReader.resolveUrl(path).getSourceMetadata().getUniqueId() + serial;
-            } catch (IOException e) {
+            } catch (GorResourceException e) {
                 // Assuming we could not access the source meta.
                 this.id = Util.md5(this.path) + serial;
             }

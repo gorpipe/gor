@@ -43,7 +43,7 @@ public interface S3Configuration extends Config {
 
     @Documentation("S3 max error retry")
     @Key("gor.s3.conn.retries")
-    @DefaultValue("15")
+    @DefaultValue("0")
     int connectionRetries();
 
     @Documentation("S3 max error retry")

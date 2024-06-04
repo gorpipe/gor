@@ -84,8 +84,6 @@ public class GorpIterator extends GenomicIteratorAdapterBase {
             RangeMergeIterator rmi =  new RangeMergeIterator(srs);
             rmi.setContext(getContext());
             return rmi;
-        } catch (IOException e) {
-            throw new GorSystemException(e);
         }
     }
 

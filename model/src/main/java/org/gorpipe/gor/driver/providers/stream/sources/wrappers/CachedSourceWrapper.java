@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
@@ -49,27 +50,31 @@ public class CachedSourceWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open() {
         return delegate().open();
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start) {
         return delegate().open(start);
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         return delegate().open(start, minLength);
     }
 
-    private StreamSource delegate() throws IOException {
+    private StreamSource delegate() {
         if (delegate == null) {
             String sourceId = getSourceMetadata().getUniqueId();
             if (getWrapped().getSourceType().isRemote() && sourceId != null) {
                 File f = cache.get(sourceId);
                 if (f == null) {
-                    f = cache.store(sourceId, getWrapped());
+                    try {
+                        f = cache.store(sourceId, getWrapped());
+                    } catch (IOException e) {
+                        throw GorResourceException.fromIOException(e, getPath().toString());
+                    }
                 }
                 if (f != null) {
                     delegate = new FileSource(new SourceReference(f.getAbsolutePath(), getSourceReference()));
@@ -91,19 +96,11 @@ public class CachedSourceWrapper extends WrappedStreamSource {
 
     @Override
     public String getFullPath() {
-        try {
-            return delegate().getFullPath();
-        } catch (IOException e) {
-            throw new GorSystemException(e);
-        }
+        return delegate().getFullPath();
     }
 
     @Override
     public String getName() {
-        try {
-            return delegate().getName();
-        } catch (IOException e) {
-            throw new GorSystemException(e);
-        }
+        return delegate().getName();
     }
 }

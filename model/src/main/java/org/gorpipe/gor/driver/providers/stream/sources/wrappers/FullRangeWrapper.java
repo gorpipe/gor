@@ -80,7 +80,7 @@ public class FullRangeWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         // 1. If working with a full range stream - see if it's seekable - then reuse, or close
         if (fullRangeStream != null) {
             if (fullRangeStream.isClosed()) {
@@ -106,7 +106,7 @@ public class FullRangeWrapper extends WrappedStreamSource {
                 if (gap >= 0 && gap <= seekThreshold) {
                     log.debug("Gap is {} - switch to full range", gap);
                     streamRange = RequestRange.fromFirstLast(start, getSourceMetadata().getLength() - 1);
-                    lastRange = null;  // Forget that - we'r not tracking this while the stream is open
+                    lastRange = null;  // Forget that - we're not tracking this while the stream is open
                     fullRangeStream = new PersistentInputStream(super.open(streamRange.getFirst(), streamRange.getLength()));
                     return fullRangeStream;
                 }
@@ -127,7 +127,7 @@ public class FullRangeWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
+    public StreamSourceMetadata getSourceMetadata() {
         if (sourceMeta == null) {
             sourceMeta = super.getSourceMetadata();
         }
@@ -136,7 +136,7 @@ public class FullRangeWrapper extends WrappedStreamSource {
 
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         log.debug("{} closing - clearing streams", this);
         clearStream();
         super.close();

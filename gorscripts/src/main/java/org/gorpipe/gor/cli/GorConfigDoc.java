@@ -53,7 +53,7 @@ public class GorConfigDoc {
             methods.removeIf(m -> m.getAnnotation(Key.class) == null);
 
             if (methods.isEmpty()) {
-                System.err.println(String.format("Class %s is a Config interface but doesn't have any @Key annotations.", config.getName()));
+                System.err.printf("Class %s is a Config interface but doesn't have any @Key annotations.%n", config.getName());
                 continue;
             }
 
@@ -94,11 +94,7 @@ class Table {
         String[] underlines = new String[header.length];
         for (int i = 0; i < header.length; i++) {
             int length = header[i].length();
-            StringBuilder sb = new StringBuilder(length);
-            for (int k = 0; k < length; k++) {
-                sb.append("=");
-            }
-            underlines[i] = sb.toString();
+            underlines[i] = "=".repeat(length);
         }
         addRow(underlines);
     }

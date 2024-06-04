@@ -65,7 +65,7 @@ public class DriverUtils {
         return bundleCreds.addToSecurityContext("");
     }
 
-    public static String awsSecurityContext(String key, String secret) throws IOException {
+    public static String awsSecurityContext(String key, String secret) {
         // Credentials for gor_unittest user in nextcode AWS account
         Credentials cred = new Credentials.Builder().service("s3").lookupKey("gdb-unit-test-data").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();
         Credentials bogus = new Credentials.Builder().service("s3").lookupKey("bla").set(Credentials.Attr.KEY, "DummyKey").set(Credentials.Attr.SECRET, "DummySecret").build();

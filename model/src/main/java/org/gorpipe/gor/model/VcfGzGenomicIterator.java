@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -175,15 +176,15 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
                 reader.close();
                 reader = null;
             } catch (Exception e) {
-                throw new RuntimeException("Failed closing VcfGzGenomicIterator reader", e);
+                throw new GorResourceException("Failed closing VcfGzGenomicIterator reader", fileName, e);
             }
         }
         if (streamSource != null) {
             String name = "<unknown>";
             try {
-                streamSource.close();
                 name = streamSource.getName();
-            } catch (IOException e) {
+                streamSource.close();
+            } catch (GorException e) {
                 throw new GorResourceException("Failed closing VcfGzGenomicIterator stream source", name, e);
             }
         }

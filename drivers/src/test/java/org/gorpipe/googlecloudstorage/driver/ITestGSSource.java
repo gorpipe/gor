@@ -1,13 +1,13 @@
 package org.gorpipe.googlecloudstorage.driver;
 
 import org.gorpipe.gor.driver.providers.stream.sources.CommonStreamTests;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -55,8 +55,8 @@ public class ITestGSSource extends CommonStreamTests {
     protected void verifyDriverDataSource(String name, DataSource fs) {
         Assert.assertEquals(ExtendedRangeWrapper.class, fs.getClass());
         fs = ((ExtendedRangeWrapper) fs).getWrapped();
-        Assert.assertEquals(RetryWrapper.class, fs.getClass());
-        fs = ((RetryWrapper) fs).getWrapped();
+        Assert.assertEquals(RetryStreamSourceWrapper.class, fs.getClass());
+        fs = ((RetryStreamSourceWrapper) fs).getWrapped();
         Assert.assertEquals(GoogleCloudStorageBlobSource.class, fs.getClass());
     }
 

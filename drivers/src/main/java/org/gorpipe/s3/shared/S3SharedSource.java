@@ -42,7 +42,7 @@ public class S3SharedSource extends S3Source {
     // Project link file is a link file within the project that points to this source.
     private String projectLinkFile;
     private String projectLinkFileContent;
-    private String relativePath;
+    private final String relativePath;
     private final S3SharedConfiguration s3SharedConfig;
 
     /**

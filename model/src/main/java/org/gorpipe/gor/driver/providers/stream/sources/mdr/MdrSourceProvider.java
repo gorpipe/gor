@@ -4,6 +4,7 @@ package org.gorpipe.gor.driver.providers.stream.sources.mdr;
 import com.google.auto.service.AutoService;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.util.http.utils.HttpUtils;
 import org.gorpipe.util.http.client.AuthorizedHttpClient;
 import org.gorpipe.util.http.keycloak.KeycloakClientAuthRequester;
@@ -101,6 +102,16 @@ public class MdrSourceProvider extends StreamSourceProvider {
             Thread.currentThread().interrupt();
             throw new GorSystemException("MDR call interrupted: " + sourceReference.getUrl(), e);
         }
+    }
+
+    @Override
+    protected RetryHandlerBase getRetryHandler() {
+        if (retryHandler == null) {
+            retryHandler = new MdrSourceRetryHandler(
+                    config.retryInitialWait().toMillis(),
+                    config.retryMaxWait().toMillis());
+        }
+        return retryHandler;
     }
 
     private String constructPayload(URI mdrUrl) {

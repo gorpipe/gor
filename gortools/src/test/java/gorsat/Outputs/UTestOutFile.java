@@ -23,6 +23,7 @@
 package gorsat.Outputs;
 
 import gorsat.Commands.Output;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.gor.session.ProjectContext;
@@ -50,7 +51,7 @@ public class UTestOutFile {
         output.setup();
         output.finish();
 
-        Assert.assertEquals(true, outputFile.exists());
+        Assert.assertTrue(outputFile.exists());
         Assert.assertEquals(0, outputFile.length());
     }
 
@@ -202,21 +203,21 @@ public class UTestOutFile {
 
     @Test
     public void invalidPathTsvThrowsResourceException() {
-        Assert.assertThrows(FileSystemException.class, () -> {
+        Assert.assertThrows(GorResourceException.class, () -> {
             OutFile.apply("/this/path/is/invalid.tsv", fileReader, "", false, true, true);
         });
     }
 
     @Test
     public void invalidPathGorThrowsResourceException() {
-        Assert.assertThrows(FileSystemException.class, () -> {
+        Assert.assertThrows(GorResourceException.class, () -> {
             OutFile.apply("/this/path/is/invalid.gor", fileReader, "", false, false, true);
         });
     }
 
     @Test
     public void invalidPathGorzThrowsResourceException() {
-        Assert.assertThrows(FileSystemException.class, () -> {
+        Assert.assertThrows(GorResourceException.class, () -> {
             OutFile.apply("/this/path/is/invalid.gorz", fileReader, "", false, false, true);
         });
     }

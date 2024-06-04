@@ -1,12 +1,14 @@
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorException;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.DummyStreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.UTestFileSource;
-import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -19,45 +21,31 @@ import java.io.InputStream;
  */
 public class UTestRetryWrapper extends UTestFileSource {
 
-
-    private RetryHandler handler;
-
-    @Before
-    public void setUp() {
-        handler = new RetryHandler(0, 6400, 2, null);
+    private static RetryHandlerBase createHandler(int retries) {
+        return new TestRetryHandlerWithFixedRetries(100, 6400, 2, retries);
     }
 
     @Override
-    protected RetryWrapper createSource(String name) {
+    protected RetryStreamSourceWrapper createSource(String name) {
         StreamSource toWrap = super.createSource(name);
-        return new RetryWrapper(handler, toWrap, 3, 4);
-    }
-
-    public long[] getSeeds() {
-        long[] arr = {System.nanoTime()};
-        return arr;
+        return new RetryStreamSourceWrapper(createHandler(3), toWrap);
     }
 
     @Test
     public void testRecoverableOpen() throws IOException {
-        RetryWrapper fs = new RetryWrapper(handler, new FailingStreamSource("ABCD", 3, 0), 3, 0);
+        RetryStreamSourceWrapper fs = new RetryStreamSourceWrapper(createHandler(3), new FailingStreamSource("ABCD", 3, 0));
         Assert.assertNotNull(fs.open());
     }
 
     @Test
     public void testUnRecoverableOpen() {
-        RetryWrapper fs = new RetryWrapper(handler, new FailingStreamSource("ABCD", 3, 0), 2, 0);
-        try {
-            fs.open();
-            Assert.fail("Should not recover");
-        } catch (IOException e) {
-            // Pass
-        }
+        RetryStreamSourceWrapper fs = new RetryStreamSourceWrapper(createHandler(2), new FailingStreamSource("ABCD", 3, 0));
+        Assert.assertThrows(GorSystemException.class, fs::open);
     }
 
     @Test
     public void testRecoverableRead() throws IOException {
-        RetryWrapper fs = new RetryWrapper(handler, new FailingStreamSource("ABCD", 0, 3), 0, 3);
+        RetryStreamSourceWrapper fs = new RetryStreamSourceWrapper(createHandler(4), new FailingStreamSource("ABCD", 0, 3));
         InputStream s = fs.open();
         Assert.assertEquals("ABCD", StreamUtils.readString(s, 100));
     }
@@ -65,7 +53,7 @@ public class UTestRetryWrapper extends UTestFileSource {
     @Test
     public void testRecoverableFragmentedRead() throws IOException {
         String data = "asdkfjweihækv124346456234";
-        RetryWrapper fs = new RetryWrapper(handler, new FailingStreamSource(data, 0, 3), 0, 3);
+        RetryStreamSourceWrapper fs = new RetryStreamSourceWrapper(createHandler(4), new FailingStreamSource(data, 0, 3));
         InputStream s = fs.open();
 
         byte[] buf = new byte[100];
@@ -81,13 +69,13 @@ public class UTestRetryWrapper extends UTestFileSource {
     }
 
     @Test
-    public void testUnRecoverableRead() throws IOException {
-        RetryWrapper fs = new RetryWrapper(handler, new FailingStreamSource("ABCD", 0, 3), 0, 2);
+    public void testUnRecoverableRead() {
+        RetryStreamSourceWrapper fs = new RetryStreamSourceWrapper(createHandler(0), new FailingStreamSource("ABCD", 0, 3));
         InputStream s = fs.open();
         try {
             StreamUtils.readString(s, 100);
             Assert.fail("Should fail during read");
-        } catch (IOException e) {
+        } catch (IOException | GorException e) {
             // Pass
         }
     }
@@ -95,9 +83,9 @@ public class UTestRetryWrapper extends UTestFileSource {
     /**
      * Implements a dummy stream source that will fail on open as well as each read.
      */
-    class FailingStreamSource extends DummyStreamSource {
-        private byte[] data;
-        private int readFails;
+    static class FailingStreamSource extends DummyStreamSource {
+        private final byte[] data;
+        private final int readFails;
         private final int openFails;
         int openFailed = 0;
         int readFailed = 0;
@@ -109,20 +97,20 @@ public class UTestRetryWrapper extends UTestFileSource {
         }
 
         @Override
-        public InputStream open() throws IOException {
+        public InputStream open() {
             return open(0, data.length);
         }
 
         @Override
-        public InputStream open(long start) throws IOException {
+        public InputStream open(long start) {
             return open(start, data.length - start);
         }
 
         @Override
-        public InputStream open(long start, long length) throws IOException {
+        public InputStream open(long start, long length) {
             if (openFailed < openFails) {
                 openFailed++;
-                throw new IOException("Failing " + openFailed);
+                throw new GorResourceException("Failing " + openFailed, "").retry();
             }
             return new FailingStream(new ByteArrayInputStream(data, (int) start, (int) length));
         }
@@ -139,13 +127,17 @@ public class UTestRetryWrapper extends UTestFileSource {
             }
 
             @Override
-            public int read(byte[] b, int off, int len) throws IOException {
+            public int read(byte[] b, int off, int len) {
                 if (readFailed < readFails) {
                     readFailed++;
-                    throw new IOException("Read failing " + readFailed);
+                    throw new GorResourceException("Read failing " + readFailed, "").retry();
                 }
                 readFailed = 0;
-                return super.read(b, off, len);
+                try {
+                    return super.read(b, off, len);
+                } catch (IOException e) {
+                    throw new GorResourceException("Failed to read", "", e).retry();
+                }
             }
         }
     }

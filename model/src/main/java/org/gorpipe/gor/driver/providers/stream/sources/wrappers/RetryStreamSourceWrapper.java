@@ -22,13 +22,13 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
-import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.attribute.FileAttribute;
@@ -51,51 +51,48 @@ import java.util.stream.Stream;
  *    want retries for open ()
  * Created by villi on 29/08/15.
  */
-public class RetryWrapper extends WrappedStreamSource {
-    private final int readRetries;
-    private final int requestRetries;
-    private final RetryHandler retry;
+public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
-    public RetryWrapper(RetryHandler retry, StreamSource wrapped, int requestRetries, int readRetries) {
+    private final RetryHandlerBase retry;
+
+    public RetryStreamSourceWrapper(RetryHandlerBase retry, StreamSource wrapped) {
         super(wrapped);
-        this.requestRetries = requestRetries;
-        this.readRetries = readRetries;
         this.retry = retry;
     }
 
     @Override
-    public InputStream open() throws IOException {
-        return retry.tryOp(() -> wrapStream(RetryWrapper.super.open(), 0, null), requestRetries);
+    public InputStream open() {
+        return retry.perform(() -> wrapStream(RetryStreamSourceWrapper.super.open(), 0, null));
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
-        return retry.tryOp(() -> wrapStream(super.open(start), start, null), requestRetries);
+    public InputStream open(long start) {
+        return retry.perform(() -> wrapStream(RetryStreamSourceWrapper.super.open(start), start, null));
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
-        return retry.tryOp(() -> wrapStream(super.open(start, minLength), start, minLength), requestRetries);
+    public InputStream open(long start, long minLength) {
+        return retry.perform(() -> wrapStream(RetryStreamSourceWrapper.super.open(start, minLength), start, minLength));
     }
 
     @Override
-    public InputStream openClosable() throws IOException {
-        return retry.tryOp(() -> wrapStream(super.openClosable(), 0, null), requestRetries);
+    public InputStream openClosable() {
+        return retry.perform(() -> wrapStream(super.openClosable(), 0, null));
     }
 
     @Override
-    public OutputStream getOutputStream(boolean append) throws IOException {
-        return retry.tryOp(() -> super.getOutputStream(append), requestRetries);
+    public OutputStream getOutputStream(boolean append) {
+        return retry.perform(() -> super.getOutputStream(append));
     }
 
     @Override
-    public OutputStream getOutputStream(long position) throws IOException {
-        return retry.tryOp(() -> super.getOutputStream(position), requestRetries);
+    public OutputStream getOutputStream(long position) {
+        return retry.perform(() -> super.getOutputStream(position));
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
-        return retry.tryOp(super::getSourceMetadata, requestRetries);
+    public StreamSourceMetadata getSourceMetadata() {
+        return retry.perform(super::getSourceMetadata);
     }
 
     @Override
@@ -104,57 +101,53 @@ public class RetryWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public boolean exists() throws IOException {
-        return retry.tryOp(super::exists, requestRetries);
+    public boolean exists() {
+        return retry.perform(super::exists);
     }
 
     @Override
-    public boolean fileExists() throws IOException {
-        return retry.tryOp(super::fileExists, requestRetries);
+    public boolean fileExists() {
+        return retry.perform(super::fileExists);
     }
 
     @Override
-    public void delete() throws IOException {
-         retry.tryOp(super::delete, requestRetries, null);
+    public void delete() {
+         retry.perform(super::delete);
     }
 
     @Override
-    public void deleteDirectory() throws IOException {
-        retry.tryOp(super::deleteDirectory, requestRetries, null);
+    public void deleteDirectory() {
+        retry.perform(super::deleteDirectory);
     }
 
     @Override
     public boolean isDirectory() {
-        try {
-            return retry.tryOp(super::isDirectory, requestRetries);
-        } catch (IOException e) {
-            return false;
-        }
+        return retry.perform(super::isDirectory);
     }
 
     @Override
-    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
-        return retry.tryOp(() -> super.createDirectory(attrs), requestRetries);
+    public String createDirectory(FileAttribute<?>... attrs) {
+        return retry.perform(() -> super.createDirectory(attrs));
     }
 
     @Override
-    public String createDirectoryIfNotExists(FileAttribute<?>... attrs) throws IOException {
-        return retry.tryOp(() -> super.createDirectoryIfNotExists(attrs), requestRetries);
+    public String createDirectoryIfNotExists(FileAttribute<?>... attrs) {
+        return retry.perform(() -> super.createDirectoryIfNotExists(attrs));
     }
 
     @Override
-    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
-        return retry.tryOp(() -> super.createDirectories(attrs), requestRetries);
+    public String createDirectories(FileAttribute<?>... attrs) {
+        return retry.perform(() -> super.createDirectories(attrs));
     }
 
     @Override
-    public Stream<String> list() throws IOException {
-        return retry.tryOp(super::list, requestRetries);
+    public Stream<String> list() {
+        return retry.perform(super::list);
     }
 
     @Override
-    public Stream<String> walk() throws IOException {
-        return retry.tryOp(super::walk, requestRetries);
+    public Stream<String> walk() {
+        return retry.perform(super::walk);
     }
 
     private InputStream wrapStream(InputStream open, long start, Long length) {
@@ -176,21 +169,26 @@ public class RetryWrapper extends WrappedStreamSource {
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            return retry.tryOp(() -> super.read(b, off, len), readRetries, lastEx -> {
-                StreamUtils.tryClose(in);
-                in = reopen();
-            });
+        public int read(byte[] b, int off, int len) {
+            return retry.perform(() -> {
+                            try {
+                                return super.read(b, off, len);
+                            } catch (GorException e) {
+                                StreamUtils.tryClose(in);
+                                in = reopen();
+                                throw e;
+                            }
+                        });
         }
 
         /**
          * NB: If reopening the stream fails - it is not retried.
          */
-        private InputStream reopen() throws IOException {
+        private InputStream reopen() {
             if (length == null) {
-                return RetryWrapper.super.open(start + getPosition());
+                return open(start + getPosition());
             } else {
-                return RetryWrapper.super.open(start + getPosition(), length - getPosition());
+                return open(start + getPosition(), length - getPosition());
             }
         }
 

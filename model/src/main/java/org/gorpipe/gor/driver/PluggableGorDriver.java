@@ -172,6 +172,7 @@ public class PluggableGorDriver implements GorDriver {
             source = sourceReference.writeSource ? source : handleLinks(source);
             return source;
         } catch (Exception e) {
+            String description = e.toString();
             throwWithSourceName(e, sourceReference.getUrl());
             return null;  // Never gets here
         }

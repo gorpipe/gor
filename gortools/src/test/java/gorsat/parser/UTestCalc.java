@@ -176,7 +176,11 @@ public class UTestCalc {
                     "chrom + 1\n" +
                     "chrom + 1 <-- \n" +
                     "Header: chrom\tpos\n" +
-                    "Row: All rows.\n",  ex.toString());
+                    "Row: All rows.\n" +
+                    "Cause: Expression compiled as String\n" +
+                    "Invalid String variable name: 1. Did you mean: pos?\n" +
+                    "chrom + 1\n" +
+                    "chrom + 1 <--\n",  ex.toString());
         } catch (Exception ex) {
             Assert.fail("Should throw GorDataException");
         }
@@ -191,7 +195,8 @@ public class UTestCalc {
             Assert.assertEquals("org.gorpipe.exceptions.GorDataException: Error in step: CALC e float(v)\n" +
                             "'ABC' is not a valid number\n" +
                             "Header: chrom\tpos\tv\n" +
-                            "Row: chr1\t10001\tABC\n", ex.toString());
+                            "Row: chr1\t10001\tABC\n" +
+                            "Cause: 'ABC' is not a valid number\n", ex.toString());
         } catch (Exception ex) {
             Assert.fail("Should throw GorDataException");
         }

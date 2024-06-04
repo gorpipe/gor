@@ -29,6 +29,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.Lists;
 import org.gorpipe.base.config.ConfigManager;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -116,23 +117,29 @@ public class GoogleCloudStorageBlobSource implements StreamSource {
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open() {
         return open(null);
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start) {
         return open(RequestRange.fromFirstLength(start, getSourceMetadata().getLength()));
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         return open(RequestRange.fromFirstLength(start, minLength));
     }
 
-    private InputStream open(RequestRange range) throws IOException {
+    private InputStream open(RequestRange range) {
         ReadChannel rc = cb.reader();
-        if( range != null ) rc.seek(range.getFirst());
+        if( range != null ) {
+            try {
+                rc.seek(range.getFirst());
+            } catch (IOException e) {
+                throw GorResourceException.fromIOException(e, getPath());
+            }
+        }
         close();
         is = Channels.newInputStream(rc);
         return is;
@@ -144,7 +151,7 @@ public class GoogleCloudStorageBlobSource implements StreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
+    public StreamSourceMetadata getSourceMetadata() {
         long length = cb.getSize();
         long lastModified = cb.getCreateTimeOffsetDateTime().toInstant().toEpochMilli();
         return new StreamSourceMetadata(this, getName(), lastModified, length, cb.getEtag(), false);
@@ -171,7 +178,11 @@ public class GoogleCloudStorageBlobSource implements StreamSource {
     }
 
     @Override
-    public void close() throws IOException {
-        if( is != null ) is.close();
+    public void close() {
+        try {
+            if (is != null) is.close();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath());
+        }
     }
 }

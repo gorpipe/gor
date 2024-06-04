@@ -22,7 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
+import com.sun.istack.NotNull;
 import org.apache.commons.io.FileUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -93,50 +95,66 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start)  {
         ensureOpen();
-        raf.seek(start);
+        try {
+            raf.seek(start);
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath().toString()).retry();
+        }
         return new FileSourceStream();
     }
 
     @Override
-    public InputStream openClosable() throws IOException {
+    public InputStream openClosable() {
         ensureOpen();
         return new FileSourceStream(true);
     }
 
     @Override
-    public OutputStream getOutputStream(long start) throws IOException {
+    public OutputStream getOutputStream(long start)  {
         ensureOpenForWrite();
-        raf.seek(start);
+        try {
+            raf.seek(start);
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath().toString()).retry();
+        }
         return new FileSourceOutputStream();
     }
 
-    private void ensureOpen() throws IOException {
+    private void ensureOpen()  {
         if (raf == null) {
             if (keepStackTraceForOpen) {
                 rafOpenedStackTrace = new Error();
             }
-            raf = new RandomAccessFile(file.toFile(), "r");
+            try {
+                raf = new RandomAccessFile(file.toFile(), "r");
+            } catch (FileNotFoundException e) {
+                throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
+            }
         }
     }
 
-    private void ensureOpenForWrite() throws IOException {
+    private void ensureOpenForWrite()  {
         if (raf == null) {
             if (keepStackTraceForOpen) {
                 rafOpenedStackTrace = new Error();
             }
-            raf = new RandomAccessFile(file.toFile(), "rw");
+            try {
+                raf = new RandomAccessFile(file.toFile(), "rw");
+            } catch (FileNotFoundException e) {
+                throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
+            }
         }
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength)  {
         return open(start);
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open()  {
         return open(0);
     }
     
@@ -151,12 +169,16 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public OutputStream getOutputStream(boolean append) throws IOException {
-        var parent = file.getParent();
-        if (parent != null && !Files.exists(parent)) {
-            Files.createDirectories(parent);
+    public OutputStream getOutputStream(boolean append)  {
+        try {
+            var parent = file.getParent();
+            if (parent != null && !Files.exists(parent)) {
+                Files.createDirectories(parent);
+            }
+            return append ? Files.newOutputStream(file, StandardOpenOption.APPEND, StandardOpenOption.CREATE) : Files.newOutputStream(file);
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
         }
-        return append ? Files.newOutputStream(file, StandardOpenOption.APPEND, StandardOpenOption.CREATE) : Files.newOutputStream(file);
     }
 
     @Override
@@ -185,24 +207,40 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public String move(DataSource dest) throws IOException {
-        return Files.move(Path.of(getFullPath()), Path.of(dest.getFullPath()),
-                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE).toString();
+    public String move(DataSource dest)  {
+        try {
+            return Files.move(Path.of(getFullPath()), Path.of(dest.getFullPath()),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE).toString();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public String copy(DataSource dest) throws IOException {
-        return Files.copy(Path.of(getFullPath()), Path.of(dest.getFullPath())).toString();
+    public String copy(DataSource dest)  {
+        try {
+            return Files.copy(Path.of(getFullPath()), Path.of(dest.getFullPath())).toString();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
-        return Files.createDirectory(file, attrs).toString();
+    public String createDirectory(FileAttribute<?>... attrs)  {
+        try {
+            return Files.createDirectory(file, attrs).toString();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
-        return Files.createDirectories(file, attrs).toString();
+    public String createDirectories(FileAttribute<?>... attrs)  {
+        try {
+            return Files.createDirectories(file, attrs).toString();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
@@ -211,42 +249,62 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public void delete() throws IOException {
-        Files.deleteIfExists(file);
+    public void delete()  {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public void deleteDirectory() throws IOException {
-        FileUtils.deleteDirectory(file.toFile());
+    public void deleteDirectory()  {
+        try {
+            FileUtils.deleteDirectory(file.toFile());
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public Stream<String> list() throws IOException {
-        return mapPathToRelative(Files.list(file));
+    public Stream<String> list()  {
+        try {
+            return mapPathToRelative(Files.list(file));
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public Stream<String> walk() throws IOException {
-        return mapPathToRelative(Files.walk(file));
+    public Stream<String> walk()  {
+        try {
+            return mapPathToRelative(Files.walk(file));
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     private Stream<String> mapPathToRelative(Stream<Path> pathStream) {
-        if (!PathUtils.isAbsolutePath(sourceReference.getUrl())) {
-            var commonRoot = sourceReference.getCommonRoot();
-            if (commonRoot != null) {
-                var root = Path.of(sourceReference.getCommonRoot());
-                return pathStream.map(root::relativize).map(Path::toString);
+            if (!PathUtils.isAbsolutePath(sourceReference.getUrl())) {
+                var commonRoot = sourceReference.getCommonRoot();
+                if (commonRoot != null) {
+                    var root = Path.of(sourceReference.getCommonRoot());
+                    return pathStream.map(root::relativize).map(Path::toString);
+                }
             }
-        }
-        return pathStream.map(Path::toString);
+                return pathStream.map(Path::toString);
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
+    public StreamSourceMetadata getSourceMetadata()  {
         // TODO:  Why does FileSource behave differently than most other sources.  We should only af the exists case here.
         var exists = Files.exists(file);
         if (exists) {
-            return new StreamSourceMetadata(this, "file://" +  file.toRealPath(), Files.getLastModifiedTime(file).toMillis(), Files.size(file), null, isSubset);
+            try {
+                return new StreamSourceMetadata(this, "file://" + file.toRealPath(), Files.getLastModifiedTime(file).toMillis(), Files.size(file), null, isSubset);
+            } catch (IOException e) {
+                throw GorResourceException.fromIOException(e, getPath()).retry();
+            }
         } else {
             return new StreamSourceMetadata(this, "file://" + file.normalize().toAbsolutePath(), 0L, 0L, null, isSubset);
         }
@@ -258,15 +316,19 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close()  {
         if (raf != null) {
-            raf.close();
+            try {
+                raf.close();
+            } catch (IOException e) {
+                throw GorResourceException.fromIOException(e, getPath()).retry();
+            }
             raf = null;
         }
     }
 
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() {
         if (raf != null) {
             String msg = "Datasource closed via finalize method: " + file.toAbsolutePath();
             if (rafOpenedStackTrace != null) {
@@ -288,7 +350,7 @@ public class FileSource implements StreamSource {
      */
     public class FileSourceStream extends InputStream {
         private long mark;
-        private boolean closable;
+        private final boolean closable;
 
         public FileSourceStream() {
             this(false);
@@ -337,11 +399,11 @@ public class FileSource implements StreamSource {
         }
 
         @Override
-        public synchronized void mark(int readlimit) {
+        public synchronized void mark(int readLimit) {
             try {
                 this.mark = raf.getFilePointer();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw GorResourceException.fromIOException(e, getPath());
             }
         }
 
@@ -351,18 +413,13 @@ public class FileSource implements StreamSource {
         }
 
         @Override
-        public int read(byte[] b) throws IOException {
+        public int read(@NotNull byte[] b) throws IOException {
             return raf.read(b);
         }
 
         @Override
         public String toString() {
             return raf.toString();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj == this;
         }
 
         @Override
@@ -383,7 +440,6 @@ public class FileSource implements StreamSource {
      * subsequent opens.
      */
     public class FileSourceOutputStream extends OutputStream {
-        private long mark;
 
         @Override
         public void write(int b) throws IOException {
@@ -412,11 +468,6 @@ public class FileSource implements StreamSource {
         @Override
         public String toString() {
             return raf.toString();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj == this;
         }
 
         @Override

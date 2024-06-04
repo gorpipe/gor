@@ -23,6 +23,7 @@
 package org.gorpipe.gor.driver.adapters;
 
 import htsjdk.samtools.util.LocationAware;
+import org.gorpipe.exceptions.GorResourceException;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -54,26 +55,38 @@ public class PositionAwareInputStream extends FilterInputStream implements Locat
     }
 
     @Override
-    public int read() throws IOException {
-        int b = in.read();
-        if (b != -1) position++;
-        return b;
-    }
-
-    @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-        int result = in.read(b, off, len);
-        if (result > 0) {
-            position += result;
+    public int read() {
+        try {
+            int b = in.read();
+            if (b != -1) position++;
+            return b;
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, "");
         }
-        return result;
     }
 
     @Override
-    public long skip(long n) throws IOException {
-        long skipped = in.skip(n);
-        position += skipped;
-        return skipped;
+    public int read(byte[] b, int off, int len) {
+        try {
+            int result = in.read(b, off, len);
+            if (result > 0) {
+                position += result;
+            }
+            return result;
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, "");
+        }
+    }
+
+    @Override
+    public long skip(long n) {
+        try {
+            long skipped = in.skip(n);
+            position += skipped;
+            return skipped;
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, "");
+        }
     }
 
     @Override
@@ -84,15 +97,19 @@ public class PositionAwareInputStream extends FilterInputStream implements Locat
     }
 
     @Override
-    public synchronized void reset() throws IOException {
+    public synchronized void reset() {
         if (!in.markSupported()) {
-            throw new IOException("Mark not supported");
+            throw new GorResourceException("Mark not supported", "");
         }
         if (mark == -1) {
-            throw new IOException("No mark set");
+            throw new GorResourceException("No mark set", "");
         }
 
-        in.reset();
+        try {
+            in.reset();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, "");
+        }
         position = mark;
     }
 }

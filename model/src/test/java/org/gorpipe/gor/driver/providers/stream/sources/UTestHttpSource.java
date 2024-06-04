@@ -10,7 +10,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.http.HTTPSource;
 import org.gorpipe.gor.driver.providers.stream.sources.http.HTTPSourceProvider;
 import org.gorpipe.gor.driver.providers.stream.sources.http.HTTPSourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,8 +60,8 @@ public class UTestHttpSource extends CommonStreamTests {
     protected void verifyDriverDataSource(String name, DataSource fs) {
         Assert.assertEquals(ExtendedRangeWrapper.class, fs.getClass());
         fs = ((ExtendedRangeWrapper) fs).getWrapped();
-        Assert.assertEquals(RetryWrapper.class, fs.getClass());
-        fs = ((RetryWrapper) fs).getWrapped();
+        Assert.assertEquals(RetryStreamSourceWrapper.class, fs.getClass());
+        fs = ((RetryStreamSourceWrapper) fs).getWrapped();
         Assert.assertEquals(HTTPSource.class, fs.getClass());
     }
 

@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table.util;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ public class TableLog {
     public void commit(FileReader fileReader) {
         log.debug("Committing {} actions to log file {}", unCommittedActions.size(), logFilePath);
         if (!fileReader.exists(PathUtils.formatUri(this.logDir)) || !fileReader.isDirectory(PathUtils.formatUri(this.logDir))) {
-            throw new GorSystemException(String.format("Log '%s'folder does not exits", this.logDir), null);
+            throw new GorResourceException(String.format("Log '%s'folder does not exits", this.logDir), logFilePath.toString(), null);
         }
 
         try (Writer destination = new BufferedWriter(
@@ -97,7 +98,7 @@ public class TableLog {
             }
             unCommittedActions.clear();
         } catch (IOException e) {
-            throw new GorSystemException(String.format("Could not save table log %s", logFilePath), e);
+            throw new GorResourceException(String.format("Could not save table log %s", logFilePath), logFilePath.toString(), e);
         }
     }
 

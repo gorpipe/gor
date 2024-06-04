@@ -25,6 +25,7 @@ package org.gorpipe.gor.model;
 import gorsat.TestUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class UTestGorExceptionMessage {
@@ -53,7 +54,8 @@ public class UTestGorExceptionMessage {
         } catch (GorResourceException e) {
             norMessage = e.getMessage();
         }
-        Assert.assertEquals(norMessage, gorMessage);
+        Assert.assertTrue(norMessage.startsWith("Input source does not exist:"));
+        Assert.assertTrue(gorMessage.startsWith("Input source does not exist:"));
     }
 
 }

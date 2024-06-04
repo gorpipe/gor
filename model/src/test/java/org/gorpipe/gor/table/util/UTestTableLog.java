@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.table.util;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.session.ProjectContext;
@@ -74,13 +75,13 @@ public class UTestTableLog {
         validateSimple(tableLogLines.stream().map(l -> l + "\n").collect(Collectors.toList()));
     }
 
-    @Test (expected = GorSystemException.class)
+    @Test (expected = GorResourceException.class)
     public void testTableLogMissingLogDir() {
         TableLog tableLog = new TableLog("/non/existent/path");
         tableLog.commit(fileReader);
     }
 
-    @Test (expected = GorSystemException.class)
+    @Test (expected = GorResourceException.class)
     public void testTableCanNotSave() throws IOException {
         File tableLogFilePath = new File(PathUtils.resolve(workDirPath, TableLog.LOG_FILE));
         tableLogFilePath.createNewFile();

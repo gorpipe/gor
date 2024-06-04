@@ -22,7 +22,7 @@
 
 package org.gorpipe.exceptions;
 
-public abstract class GorUserException extends GorException {
+public abstract class GorUserException extends GorRetryException {
 
     private String query = "";        // The query or part of the query if the query is very large.
     private String commandName = "";

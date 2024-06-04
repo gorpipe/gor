@@ -365,7 +365,7 @@ public final class ExceptionUtilities {
                     exception = createGorSystemException(obj);
                 }
 
-                exception.requestID = getStringValue(obj, REQUEST_ID, "");
+                exception.requestID = getStringValue(obj, REQUEST_ID);
 
                 if (obj.containsKey(STACK_TRACE)) {
                     setStackTrace(exception, obj);
@@ -385,6 +385,21 @@ public final class ExceptionUtilities {
         } else {
             return new GorResourceException("Input source does not exist: " + resourceName, uri, e);
         }
+    }
+
+    public static String getFullCause(Throwable e) {
+        var t = e;
+        var builder = new StringBuilder();
+
+        while (t != null && (t.getCause() != null || t.getCause() != t)) {
+            var message = t.getMessage();
+            if (ExceptionUtilities.isNullOrEmpty(message)) break;
+            builder.append(t.getMessage());
+            builder.append("\n");
+            t = t.getCause();
+        }
+
+        return builder.toString().trim();
     }
 
     /**
@@ -437,12 +452,12 @@ public final class ExceptionUtilities {
     }
 
     private static GorException createGorSystemException(JSONObject obj) {
-        return new GorSystemException(getStringValue(obj, MESSAGE, ""), null);
+        return new GorSystemException(getStringValue(obj, MESSAGE), null);
     }
 
     private static GorException createGorResourceException(JSONObject obj) {
-        GorResourceException exception = new GorResourceException(getStringValue(obj, MESSAGE, ""),
-                getStringValue(obj, URI, ""),
+        GorResourceException exception = new GorResourceException(getStringValue(obj, MESSAGE),
+                getStringValue(obj, URI),
                 null, false);
 
         updateGorUserException(obj, exception);
@@ -451,10 +466,10 @@ public final class ExceptionUtilities {
     }
 
     private static GorException createGorDataExceptionFromJSON(JSONObject obj) {
-        GorDataException exception = new GorDataException(getStringValue(obj, MESSAGE, ""),
-                getIntValue(obj, COLUMN_NUMBER, -1),
-                getStringValue(obj, HEADER, ""),
-                getStringValue(obj, ROW, ""),
+        GorDataException exception = new GorDataException(getStringValue(obj, MESSAGE),
+                getIntValue(obj, COLUMN_NUMBER),
+                getStringValue(obj, HEADER),
+                getStringValue(obj, ROW),
                 null, false);
 
         updateGorUserException(obj, exception);
@@ -463,9 +478,9 @@ public final class ExceptionUtilities {
     }
 
     private static GorException createGorParsingExceptionFromJSON(JSONObject obj) {
-        GorParsingException exception = new GorParsingException(getStringValue(obj, MESSAGE, ""),
-                getStringValue(obj, OPTION, ""),
-                getStringValue(obj, OPTION_VALUE, ""));
+        GorParsingException exception = new GorParsingException(getStringValue(obj, MESSAGE),
+                getStringValue(obj, OPTION),
+                getStringValue(obj, OPTION_VALUE));
 
         updateGorUserException(obj, exception);
 
@@ -473,19 +488,19 @@ public final class ExceptionUtilities {
     }
 
     private static void updateGorUserException(JSONObject obj, GorUserException exception) {
-        exception.setQuery(getStringValue(obj, QUERY, ""));
-        exception.setCommandName(getStringValue(obj, COMMAND_NAME, ""));
-        exception.setCommandIndex(getIntValue(obj, COMMAND_INDEX, -1));
-        exception.setCommandStep(getStringValue(obj, COMMAND, ""));
-        exception.setQuerySource(getStringValue(obj, COMMAND_SOURCE, ""));
-        exception.setExtraInfo(getStringValue(obj, EXTRA_INFO, ""));
+        exception.setQuery(getStringValue(obj, QUERY));
+        exception.setCommandName(getStringValue(obj, COMMAND_NAME));
+        exception.setCommandIndex(getIntValue(obj, COMMAND_INDEX));
+        exception.setCommandStep(getStringValue(obj, COMMAND));
+        exception.setQuerySource(getStringValue(obj, COMMAND_SOURCE));
+        exception.setExtraInfo(getStringValue(obj, EXTRA_INFO));
     }
 
-    private static String getStringValue(JSONObject obj, String key, String defaultValue) {
-        return obj != null && obj.containsKey(key) ? (String) obj.get(key) : defaultValue;
+    private static String getStringValue(JSONObject obj, String key) {
+        return obj != null && obj.containsKey(key) ? (String) obj.get(key) : "";
     }
 
-    private static Integer getIntValue(JSONObject obj, String key, Integer defaultValue) {
-        return obj != null && obj.containsKey(key) ? Integer.parseInt(obj.get(key).toString()) : defaultValue;
+    private static Integer getIntValue(JSONObject obj, String key) {
+        return obj != null && obj.containsKey(key) ? Integer.parseInt(obj.get(key).toString()) : -1;
     }
 }

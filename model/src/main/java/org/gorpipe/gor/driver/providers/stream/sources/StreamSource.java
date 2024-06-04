@@ -46,52 +46,52 @@ public interface StreamSource extends DataSource {
     /**
      * Open stream that reads through whole source.
      */
-    default InputStream openClosable() throws IOException {
+    default InputStream openClosable()  {
         return open();
     }
 
     /**
      * Open stream that reads through whole source.
      */
-    InputStream open() throws IOException;
+    InputStream open();
 
     /**
      * Open stream that reads from the position specified to the end of the stream.
      */
-    InputStream open(long start) throws IOException;
+    InputStream open(long start);
 
     /**
      * Open stream that reads from the start position and provides at least minLength bytes.
      */
-    InputStream open(long start, long minLength) throws IOException;
+    InputStream open(long start, long minLength);
 
-    default OutputStream getOutputStream(long start) throws IOException {
+    default OutputStream getOutputStream(long start) {
         return getOutputStream(false);
     }
 
     /**
      * Create stream to write to the source
      */
-    default OutputStream getOutputStream() throws IOException {
+    default OutputStream getOutputStream() {
         return getOutputStream(false);
     }
 
     /**
      * Create stream to write to the source
      */
-    default OutputStream getOutputStream(boolean append) throws IOException {
+    default OutputStream getOutputStream(boolean append) {
         throw new GorResourceException("Writing to this stream is not supported",this.getClass().toString());
     }
 
     /**
      * Get source meta data (length, timestamp) etc.
      */
-    StreamSourceMetadata getSourceMetadata() throws IOException;
+    StreamSourceMetadata getSourceMetadata();
 
     /**
      * Copy between two stream sources.
      */
-    default String copy(DataSource dest) throws IOException {
+    default String copy(DataSource dest) {
         if (!(dest instanceof StreamSource)) {
             throw new GorResourceException(String.format("Can only copy between stream sources, but between (%s to %s)",
                     getFullPath(), dest.getFullPath()), null);
@@ -101,6 +101,8 @@ public interface StreamSource extends DataSource {
             try (InputStream inputStream = open();
                  OutputStream outputStream = ((StreamSource)dest).getOutputStream()) {
                 inputStream.transferTo(outputStream);
+            } catch (IOException ioe) {
+                throw GorResourceException.fromIOException(ioe, getPath());
             }
         }
         return dest.getFullPath();

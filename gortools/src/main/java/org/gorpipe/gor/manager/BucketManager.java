@@ -25,6 +25,7 @@ package org.gorpipe.gor.manager;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.parquet.Strings;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -579,7 +580,7 @@ public class BucketManager<T extends DictionaryEntry> {
             if (source != null && source.exists()) {
                 source.delete();
             }
-        } catch (IOException e) {
+        } catch (GorResourceException e) {
             //Ignore, file does not exists.
         }
     }

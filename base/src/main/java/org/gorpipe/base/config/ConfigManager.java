@@ -219,6 +219,7 @@ public class ConfigManager {
      */
     public static void clearPrefixConfigCache() {
         prefixConfigMap.clear();
+        prefixAllConfigsMap.clear();
     }
 
     /**

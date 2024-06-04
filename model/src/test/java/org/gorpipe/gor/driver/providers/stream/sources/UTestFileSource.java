@@ -4,7 +4,7 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -32,12 +32,15 @@ public class UTestFileSource extends CommonStreamTests {
         // Ensure that we are working with unexpanded path to symlink
         Assert.assertTrue(linkPath.endsWith("/link.txt"));
 
-        StreamSource fs = createSource(linkPath);
-        StreamSourceMetadata sourceMetadata = fs.getSourceMetadata();
-        log.info("Metadata attributes: {}", sourceMetadata.attributes());
-        Assert.assertEquals(lines1000File.lastModified(), sourceMetadata.getLastModified().longValue());
-        Assert.assertEquals(4000, sourceMetadata.getLength().longValue());
-        Assert.assertEquals("file://" + lines1000File.getCanonicalPath(), sourceMetadata.attributes().get("CanonicalName"));
+        StreamSourceMetadata sourceMetadata;
+        try (StreamSource fs = createSource(linkPath)) {
+            sourceMetadata = fs.getSourceMetadata();
+
+            log.info("Metadata attributes: {}", sourceMetadata.attributes());
+            Assert.assertEquals(lines1000File.lastModified(), sourceMetadata.getLastModified().longValue());
+            Assert.assertEquals(4000, sourceMetadata.getLength().longValue());
+            Assert.assertEquals("file://" + lines1000File.getCanonicalPath(), sourceMetadata.attributes().get("CanonicalName"));
+        }
     }
 
 
@@ -58,8 +61,8 @@ public class UTestFileSource extends CommonStreamTests {
 
     @Override
     protected void verifyDriverDataSource(String name, DataSource fs) {
-        Assert.assertEquals(RetryWrapper.class, fs.getClass());
-        fs = ((RetryWrapper) fs).getWrapped();
+        Assert.assertEquals(RetryStreamSourceWrapper.class, fs.getClass());
+        fs = ((RetryStreamSourceWrapper) fs).getWrapped();
         Assert.assertEquals(FileSource.class, fs.getClass());
     }
 

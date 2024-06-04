@@ -38,8 +38,8 @@ import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.CachedSourceWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
-import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
@@ -47,11 +47,10 @@ import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +66,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
     private FileCache cache;
     protected GorDriverConfig config;
 
-    protected RetryHandler retryHandler;
+    protected RetryHandlerBase retryHandler;
 
     public StreamSourceProvider() {}
 
@@ -159,7 +158,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         StreamSource source = (StreamSource) input;
         // Wrap with retry logic before full range streaming because retries will look like seeks - no longer looking like sequential reads
         if (config.retriesEnabled()) {
-            source = new RetryWrapper(getRetryHandler(), source, config.maxRequestRetry(), config.maxReadRetries());
+            source = new RetryStreamSourceWrapper(getRetryHandler(), source);
         }
 
         if (source.getSourceType().isRemote()) {
@@ -201,21 +200,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         return source;
     }
 
-    protected RetryHandler getRetryHandler() {
-        if (retryHandler == null) {
-            retryHandler = new RetryHandler(config.retryInitialSleep().toMillis(),
-                    config.retryMaxSleep().toMillis(), config.retryExpBackoff(),
-                    (e) -> {
-                        if (e instanceof FileNotFoundException) {
-                            throw e;
-                        }
-                        if (e instanceof FileSystemException) {
-                            throw e;
-                        }
-                    });
-        }
-        return retryHandler;
-    }
+    protected abstract RetryHandlerBase getRetryHandler();
 
     /**
      * Create genomic iterator from data source
@@ -317,7 +302,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
         var sourceMetaIt = new SourceMetaIterator();
         sourceMetaIt.initMeta(source);
 
-        if (source.getSourceType().getName() == "FILE" && source instanceof StreamSource) {
+        if (Objects.equals(source.getSourceType().getName(), "FILE") && source instanceof StreamSource) {
             // This is a file source so we can explorer its file properties
             var fileIt = new FileMetaIterator();
             fileIt.initMeta(new StreamSourceFile((StreamSource)source));

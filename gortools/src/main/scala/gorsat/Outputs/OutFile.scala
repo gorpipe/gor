@@ -22,8 +22,6 @@
 
 package gorsat.Outputs
 
-import java.nio.file.Path
-import java.util.zip.Deflater
 import gorsat.Analysis.OutputOptions
 import gorsat.Commands.{Output, RowHeader}
 import gorsat.parquet.GorParquetFileOut
@@ -37,7 +35,9 @@ import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.model.{FileReader, Row}
 import org.gorpipe.gor.util.DataUtil
 
-import java.io.{BufferedOutputStream, File, FileInputStream, FileNotFoundException, FileOutputStream, OutputStream, Writer}
+import java.io._
+import java.nio.file.Path
+import java.util.zip.Deflater
 
 /**
   * @param name Name of the file to be written.
@@ -47,14 +47,14 @@ import java.io.{BufferedOutputStream, File, FileInputStream, FileNotFoundExcepti
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
   */
 class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
-  val finalFileOutputStream = fileReader.getOutputStream(name, append)
-  val interceptingFileOutputStream: OutputStream =
+  val finalFileOutputStream: OutputStream = fileReader.getOutputStream(name, append)
+  private val interceptingFileOutputStream: OutputStream =
     if (md5) {
       new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) new File(name + ".md5") else null)
     } else {
       finalFileOutputStream
     }
-  val gzippedOutputStream: OutputStream =
+  private val gzippedOutputStream: OutputStream =
     if (name.toLowerCase.endsWith(".gz") || name.toLowerCase.endsWith(".bgz")) {
       val p : Path = null
       new BlockCompressedOutputStream(interceptingFileOutputStream, p, compressionLevel)
@@ -189,7 +189,7 @@ object OutFile {
 
   def apply(name: String, fileReader: FileReader): Output = driver(name, fileReader, null, skipHeader = false, OutputOptions(), null)
 
-  def writePrefix(fileReader: FileReader, prefixFileName: String, fileName: String): Unit = {
+  private def writePrefix(fileReader: FileReader, prefixFileName: String, fileName: String): Unit = {
     val is = fileReader.getInputStream(prefixFileName)
     val os = fileReader.getOutputStream(fileName)
     val buffer = new Array[Byte](1024) //Reasonable buffer size - there is usually not that much in the file.

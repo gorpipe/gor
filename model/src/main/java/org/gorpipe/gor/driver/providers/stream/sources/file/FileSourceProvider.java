@@ -23,7 +23,6 @@
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
 import com.google.auto.service.AutoService;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -31,10 +30,8 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
-import org.gorpipe.gor.driver.utils.RetryHandler;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
-import java.io.FileNotFoundException;
-import java.nio.file.FileSystemException;
 import java.util.Set;
 
 @AutoService(SourceProvider.class)
@@ -58,23 +55,11 @@ public class FileSourceProvider extends StreamSourceProvider {
     }
 
     @Override
-    protected RetryHandler getRetryHandler() {
+    protected RetryHandlerBase getRetryHandler() {
         if (retryHandler == null) {
-            retryHandler = new RetryHandler(config.retryInitialSleep().toMillis(),
-                    config.retryMaxSleep().toMillis(), config.retryExpBackoff(),
-                    (e) -> {
-                        if (e.getMessage().equals("Stale file handle")) {
-                            // Stale file handle errors generally require retries on a higher level as the
-                            // file needs to be reopened.
-                            throw e;
-                        }
-                        if (e instanceof FileNotFoundException) {
-                            throw e;
-                        }
-                        if (e instanceof FileSystemException) {
-                            throw e;
-                        }
-                    });
+            retryHandler = new FileSourceRetryHandler(
+                   config.retryFileInitialWait().toMillis(), // config.retryInitialSleep().toMillis(),
+                    config.retryFileMaxWait().toMillis());//config.retryMaxSleep().toMillis());
         }
         return retryHandler;
     }

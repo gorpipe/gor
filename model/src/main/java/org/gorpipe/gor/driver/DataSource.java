@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -30,7 +31,6 @@ import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 
-import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
@@ -87,7 +87,7 @@ public interface DataSource extends AutoCloseable {
     /**
      * Get date type - e.g. BAM, GOR .. for files.
      */
-    DataType getDataType() throws IOException;
+    DataType getDataType();
 
     /**
      * Does this source support writing
@@ -101,27 +101,26 @@ public interface DataSource extends AutoCloseable {
      * Currently, only side effect of always returning true is that
      * automatic fallback to link files wont't work with that source
      */
-    boolean exists() throws IOException;
+    boolean exists();
 
     /**
      * Check for existence of source, when we know the source is a file. Allows for optimization per source.
-     *
      * If the source is a not a file the output of this function is undefined (some implementations check )
      *
      */
-    default boolean fileExists() throws IOException  {
+    default boolean fileExists() {
         return exists();
     }
 
-    default void delete() throws IOException {
+    default void delete() {
         throw new GorResourceException("Delete is not implemented", getSourceType().getName());
     }
 
-    default void deleteDirectory() throws IOException {
+    default void deleteDirectory() {
         throw new GorResourceException("DeleteDirectory is not implemented", getSourceType().getName());
     }
 
-    default String move(DataSource dest) throws IOException {
+    default String move(DataSource dest) {
         if (getSourceType() != dest.getSourceType()) {
             throw new GorResourceException(String.format("Can not move between different source types (%s to %s)",
                     getFullPath(), dest.getFullPath()), null);
@@ -133,7 +132,7 @@ public interface DataSource extends AutoCloseable {
         return dest.getFullPath();
     }
 
-    default String copy(DataSource dest) throws IOException {
+    default String copy(DataSource dest) {
         throw new GorSystemException(String.format("Copy not available for %s (%s)", getFullPath(), getSourceType()), null);
     }
 
@@ -146,22 +145,17 @@ public interface DataSource extends AutoCloseable {
      * Creates a new directory.
      * Returns: the directory
      */
-    default String createDirectory(FileAttribute<?>... attrs) throws IOException {
+    default String createDirectory(FileAttribute<?>... attrs) {
         throw new GorResourceException("Create directory is not implemented", getSourceType().getName());
     }
 
-    default public String createDirectoryIfNotExists(FileAttribute<?>... attrs) throws IOException {
+    default public String createDirectoryIfNotExists(FileAttribute<?>... attrs) {
         try {
             createDirectory(attrs);
-        } catch (FileAlreadyExistsException faee) {
-            // Ignore, already created.
-        } catch (IOException e) {
-            if (e.getCause() != null && e.getCause() instanceof FileAlreadyExistsException) {
-                // Ignore, already created.
-            } else {
+        } catch (GorException e) {
+            if (e.getCause() == null || !(e.getCause() instanceof FileAlreadyExistsException)) {
                 throw new GorSystemException("Could not create  directory: " + getFullPath(), e);
             }
-
         }
         return getFullPath();
     }
@@ -171,20 +165,20 @@ public interface DataSource extends AutoCloseable {
      * Creates a new directory and its full path if needed.
      * Returns: the directory
      */
-    default String createDirectories(FileAttribute<?>... attrs) throws IOException {
+    default String createDirectories(FileAttribute<?>... attrs) {
         throw new GorResourceException("Create directories is not implemented", getSourceType().getName());
     }
 
-    default Stream<String> list() throws IOException {
+    default Stream<String> list() {
         throw new GorResourceException("List directory is not implemented", getSourceType().getName());
     }
 
-    default Stream<String> walk() throws IOException {
+    default Stream<String> walk() {
         throw new GorResourceException("Walk directory is not implemented", getSourceType().getName());
     }
 
     @Override
-    void close() throws IOException;
+    void close();
 
     /**
      * Check if this datasource supports link files, i.e. if we should check for
@@ -228,11 +222,11 @@ public interface DataSource extends AutoCloseable {
     }
 
     /**
-     * Get the source meta data.
+     * Get the source metadata.
      *
      * @return the source meta data.
      */
-    SourceMetadata getSourceMetadata() throws IOException;
+    SourceMetadata getSourceMetadata();
 
     /**
      * Get the source reference (url and context).

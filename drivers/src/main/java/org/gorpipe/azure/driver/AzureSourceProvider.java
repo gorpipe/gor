@@ -30,6 +30,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -53,6 +54,14 @@ public class AzureSourceProvider extends StreamSourceProvider {
     @Override
     public AzureBlobSource resolveDataSource(SourceReference sourceReference) {
         return new AzureBlobSource(sourceReference);
+    }
+
+    @Override
+    protected RetryHandlerBase getRetryHandler() {
+        if (retryHandler != null) {
+            retryHandler = new AzureRetryHandler(100, 10000);
+        }
+        return retryHandler;
     }
 
 }

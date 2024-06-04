@@ -41,12 +41,12 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.model.gor.RowObj;
@@ -95,8 +95,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
 
     private StreamSource resolveFileSource(StreamSourceFile parquetFile) {
         StreamSource ss = parquetFile.getFileSource();
-        if (ss instanceof RetryWrapper) {
-            RetryWrapper rw = (RetryWrapper) ss;
+        if (ss instanceof RetryStreamSourceWrapper rw) {
             ss = rw.getWrapped();
         }
         return ss;
@@ -217,7 +216,7 @@ public class ParquetFileIterator extends GenomicIteratorBase {
         } else {
             Path2ParquetReader path2ParquetReader = new Path2ParquetReader();
             // Use takeWhile(Objects::nonNull) before collect when compiling with jdk9+
-            List<ParquetRowReader> parquetRowReaders = parquetPaths.parallelStream().map(path2ParquetReader).collect(Collectors.toList());
+            List<ParquetRowReader> parquetRowReaders = parquetPaths.parallelStream().map(path2ParquetReader).toList();
             if(path2ParquetReader.getError().isPresent()) throw path2ParquetReader.getError().get();
             parquetRowReaders.stream().filter(p -> p.row != null).forEach(mergeParquet::add);
             parquetPaths.clear();

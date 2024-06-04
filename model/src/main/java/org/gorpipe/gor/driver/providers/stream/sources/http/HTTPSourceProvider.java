@@ -30,6 +30,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
 import java.io.IOException;
 import java.util.Set;
@@ -53,6 +54,18 @@ public class HTTPSourceProvider extends StreamSourceProvider {
     public HTTPSource resolveDataSource(SourceReference source)
             throws IOException {
         return new HTTPSource(config, source);
+    }
+
+    @Override
+    protected RetryHandlerBase getRetryHandler() {
+        if (retryHandler == null) {
+            retryHandler = new HTTPSourceRetryHandler(
+                    config.retryHttpInitialWait().toMillis(),
+                    config.retryHttpMaxWait().toMillis()
+            );
+        }
+
+        return retryHandler;
     }
 
 }

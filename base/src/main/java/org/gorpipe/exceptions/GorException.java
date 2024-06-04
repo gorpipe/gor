@@ -59,6 +59,15 @@ public abstract class GorException extends RuntimeException {
             builder.append("\n");
         }
 
+        if (getCause() != null) {
+            var fullCause = ExceptionUtilities.getFullCause(this.getCause());
+            if (!ExceptionUtilities.isNullOrEmpty(fullCause)) {
+                builder.append("Cause: ");
+                builder.append(fullCause);
+                builder.append("\n");
+            }
+        }
+
         return builder.toString();
     }
 }

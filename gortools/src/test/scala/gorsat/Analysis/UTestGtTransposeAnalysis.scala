@@ -7,6 +7,7 @@ import gorsat.process.{GenericSessionFactory, GorPipeCommands, GorPipeMacros, Pi
 import gorsat.{DynIterator, TestUtils}
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.GorContext
 import org.gorpipe.model.gor.RowObj
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
@@ -16,7 +17,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class UTestGtTransposeAnalysis extends AnyFunSuite with BeforeAndAfter {
   var dir: File = _
-  val context = new GenericSessionFactory().create().getGorContext
+  val context: GorContext = new GenericSessionFactory().create().getGorContext
 
   before {
     DynIterator.createGorIterator = PipeInstance.createGorIterator

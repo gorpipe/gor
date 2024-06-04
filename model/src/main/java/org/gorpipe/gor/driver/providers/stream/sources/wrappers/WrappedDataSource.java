@@ -65,32 +65,32 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public DataType getDataType() throws IOException {
+    public DataType getDataType() {
         return wrapped.getDataType();
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         wrapped.close();
     }
 
     @Override
-    public boolean exists() throws IOException {
+    public boolean exists() {
         return wrapped.exists();
     }
 
     @Override
-    public boolean fileExists() throws IOException  {
+    public boolean fileExists() {
         return wrapped.fileExists();
     }
 
     @Override
-    public String move(DataSource dest) throws IOException {
+    public String move(DataSource dest) {
         return wrapped.move(dest);
     }
 
     @Override
-    public String copy(DataSource dest) throws IOException {
+    public String copy(DataSource dest) {
         return wrapped.copy(dest);
     }
 
@@ -100,12 +100,12 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public void delete() throws IOException {
+    public void delete() {
         wrapped.delete();
     }
 
     @Override
-    public void deleteDirectory() throws IOException {
+    public void deleteDirectory() {
         wrapped.deleteDirectory();
     }
 
@@ -115,27 +115,27 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
+    public String createDirectory(FileAttribute<?>... attrs) {
         return wrapped.createDirectory(attrs);
     }
 
     @Override
-    public String createDirectoryIfNotExists(FileAttribute<?>... attrs) throws IOException {
+    public String createDirectoryIfNotExists(FileAttribute<?>... attrs) {
         return wrapped.createDirectoryIfNotExists(attrs);
     }
 
     @Override
-    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
+    public String createDirectories(FileAttribute<?>... attrs) {
         return wrapped.createDirectories(attrs);
     }
 
     @Override
-    public Stream<String> list() throws IOException {
+    public Stream<String> list() {
         return wrapped.list();
     }
 
     @Override
-    public Stream<String> walk() throws IOException {
+    public Stream<String> walk() {
         return wrapped.walk();
     }
 
@@ -169,7 +169,7 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public SourceMetadata getSourceMetadata() throws IOException {
+    public SourceMetadata getSourceMetadata() {
         return wrapped.getSourceMetadata();
     }
 

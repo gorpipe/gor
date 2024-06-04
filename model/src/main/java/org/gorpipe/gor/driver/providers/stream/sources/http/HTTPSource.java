@@ -22,6 +22,9 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.http;
 
+import org.gorpipe.exceptions.GorException;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -65,9 +68,13 @@ public class HTTPSource implements StreamSource {
      *
      * @param source A standard http or https url.
      */
-    public HTTPSource(GorDriverConfig config, SourceReference source) throws IOException {
+    public HTTPSource(GorDriverConfig config, SourceReference source) {
         this.sourceReference = source;
-        this.url = new URL(sourceReference.getUrl());
+        try {
+            this.url = new URL(sourceReference.getUrl());
+        } catch (IOException e) {
+            throw new GorResourceException("Invalid url: " + sourceReference.getUrl(), sourceReference.getUrl(), e);
+        }
         this.config = config;
     }
 
@@ -77,26 +84,31 @@ public class HTTPSource implements StreamSource {
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open() {
         return open(0);
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start) {
         return open(RequestRange.fromFirstLength(start, length()));
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         return open(RequestRange.fromFirstLength(start, minLength));
     }
 
     // TODO: Check for actual range returned
     // It may be less than requested in which case read beyond the range will hang until timeout.
     // We can guard against that by wrapping the stream with one that knows the actual range and will prevent seeks beyond the limit.
-    private InputStream open(RequestRange range) throws IOException {
+    private InputStream open(RequestRange range) {
         log.debug("HTTP Stream open: {}", range);
-        HttpURLConnection urlc = createBaseUrlConnection();
+        HttpURLConnection urlc = null;
+        try {
+            urlc = createBaseUrlConnection();
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
         log.debug("HTTP request: {}", getName());
         if (range != null) {
             range = range.limitTo(length());
@@ -105,22 +117,23 @@ public class HTTPSource implements StreamSource {
             log.debug("Range: {}", range);
         }
 
-        InputStream stream = urlc.getInputStream();
+        InputStream stream = null;
         try {
+            stream = urlc.getInputStream();
             if (urlc.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 if (!is200ResponseOk(range)) {
-                    throw new IOException("Server did not return partial content for ranged request.  url:" + getName() + ", range:" + range + ", response code:" + urlc.getResponseCode());
+                    throw new GorResourceException("Server did not return partial content for ranged request.  url:" + getName() + ", range:" + range + ", response code:" + urlc.getResponseCode(), urlc.getURL().toString()).retry();
                 }
             } else if (urlc.getResponseCode() == HttpURLConnection.HTTP_PARTIAL) {
                 if (!isPartialResponseOk(range)) {
-                    throw new IOException("Expected 200 ok for non ranged request to:" + getName() + ", response code:" + urlc.getResponseCode());
+                    throw new GorResourceException("Expected 200 ok for non ranged request to:" + getName() + ", response code:" + urlc.getResponseCode(), urlc.getURL().toString()).retry();
                 }
             } else {
-                throw new IOException("Unexpected response from " + getName() + ", response code:" + urlc.getResponseCode() + " range: " + range);
+                throw new GorResourceException("Unexpected response from " + getName() + ", response code:" + urlc.getResponseCode() + " range: " + range, urlc.getURL().toString()).retry();
             }
-        } catch (final Throwable t) {
-            tryClose(stream);
-            throw t;
+        } catch (final IOException e) {
+            if (stream != null) tryClose(stream);
+            throw GorResourceException.fromIOException(e, getPath());
         }
         if (config.disconnectHttpStream()) {
             log.debug("Wrapping http stream with auto disconnecting stream");
@@ -142,12 +155,12 @@ public class HTTPSource implements StreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
-
+    public StreamSourceMetadata getSourceMetadata() {
         if (sourceMetadata == null && exists == null) {
-            HttpURLConnection urlc = createBaseUrlConnection();
-            log.debug("Reading source metadata from {} using HEAD", url);
+            HttpURLConnection urlc = null;
             try {
+                urlc = createBaseUrlConnection();
+                log.debug("Reading source metadata from {} using HEAD", url);
                 urlc.setRequestMethod("HEAD");
                 urlc.connect();
                 int responseCode = urlc.getResponseCode();
@@ -174,13 +187,16 @@ public class HTTPSource implements StreamSource {
                 } else if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
                     // If the status is "Not Found" then exists is set to false and a file not found exception is thrown
                     exists = false;
-                    throw new FileNotFoundException(url.toString());
+                    throw new GorSystemException("HTTP not found response: " + url.toString(), null);
                 } else {
                     // For status not "Ok" or "Not Found" throw a new IOException
-                    throw new IOException(url.toString());
+                    throw new GorResourceException("HTTP response other than OK found, response: " + responseCode + ", url: " + url.toString(), null).retry();
                 }
+            } catch (IOException e) {
+                throw new GorResourceException("Error reading source metadata from " + url.toString(), url.toString(), e).retry();
             } finally {
-                urlc.disconnect();
+                if (urlc != null)
+                    urlc.disconnect();
             }
         }
         return sourceMetadata;
@@ -224,7 +240,7 @@ public class HTTPSource implements StreamSource {
         if (exists == null) {
             try {
                 getSourceMetadata();
-            } catch (IOException e) {
+            } catch (GorException e) {
                 return false;
             }
         }
@@ -288,7 +304,7 @@ public class HTTPSource implements StreamSource {
         }
     }
 
-    private Long length() throws IOException {
+    private Long length() {
         if (length == null) {
             length = getSourceMetadata().getLength();
         }

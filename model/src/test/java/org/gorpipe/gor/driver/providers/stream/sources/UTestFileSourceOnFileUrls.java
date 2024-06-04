@@ -4,7 +4,7 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,8 +34,8 @@ public class UTestFileSourceOnFileUrls extends CommonStreamTests {
 
     @Override
     protected void verifyDriverDataSource(String name, DataSource fs) {
-        Assert.assertEquals(RetryWrapper.class, fs.getClass());
-        fs = ((RetryWrapper) fs).getWrapped();
+        Assert.assertEquals(RetryStreamSourceWrapper.class, fs.getClass());
+        fs = ((RetryStreamSourceWrapper) fs).getWrapped();
         Assert.assertEquals(FileSource.class, fs.getClass());
     }
 
@@ -48,8 +48,9 @@ public class UTestFileSourceOnFileUrls extends CommonStreamTests {
     @Test
     public void testGetName() throws IOException {
         String name = getDataName(emptyFile);
-        StreamSource fs = createSource(name);
-        Assert.assertEquals(name, "file://" + fs.getName());
+        try (StreamSource fs = createSource(name)) {
+            Assert.assertEquals(name, "file://" + fs.getName());
+        }
     }
 
 }

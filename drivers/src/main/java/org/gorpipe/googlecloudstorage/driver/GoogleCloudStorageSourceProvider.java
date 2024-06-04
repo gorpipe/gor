@@ -30,6 +30,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
 import java.util.Set;
 
@@ -49,6 +50,14 @@ public class GoogleCloudStorageSourceProvider extends StreamSourceProvider {
     @Override
     public GoogleCloudStorageBlobSource resolveDataSource(SourceReference sourceReference) {
         return new GoogleCloudStorageBlobSource(sourceReference);
+    }
+
+    @Override
+    protected RetryHandlerBase getRetryHandler() {
+        if (retryHandler == null) {
+            retryHandler = new GoogleCloudStorageRetryHandler(100, 10000);
+        }
+        return retryHandler;
     }
 
 }

@@ -28,7 +28,6 @@ import com.amazonaws.services.s3.model.*;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.upplication.s3fs.S3OutputStream;
 import com.upplication.s3fs.S3Path;
@@ -43,17 +42,18 @@ import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.util.PathUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -91,17 +91,17 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open() {
         return open(null);
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start) {
         return open(RequestRange.fromFirstLength(start, getSourceMetadata().getLength()));
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         return open(RequestRange.fromFirstLength(start, minLength));
     }
 
@@ -126,7 +126,7 @@ public class S3Source implements StreamSource {
         return true;
     }
 
-    private InputStream open(RequestRange range) throws IOException {
+    private InputStream open(RequestRange range) {
         GetObjectRequest req = new GetObjectRequest(bucket, key);
         if (range!=null) {
             range = range.limitTo(getSourceMetadata().getLength());
@@ -136,12 +136,12 @@ public class S3Source implements StreamSource {
         return openRequest(req);
     }
 
-    private InputStream openRequest(GetObjectRequest request) throws IOException {
+    private InputStream openRequest(GetObjectRequest request) {
         try {
             S3Object object = client.getObject(request);
             return new AbortingInputStream(object.getObjectContent(), request);
         } catch (SdkClientException e) {
-            throw mapAndRethrowS3Exceptions(e, Arrays.stream(request.getRange()).mapToObj(Long::toString).collect(Collectors.joining(",")) + ": " + sourceReference.getUrl());
+            throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), getPath().toString(), e).retry();
         }
     }
 
@@ -150,7 +150,7 @@ public class S3Source implements StreamSource {
         return sourceReference.getUrl();
     }
 
-    private S3SourceMetadata loadMetadata(String bucket, String key) throws ExecutionException {
+    private S3SourceMetadata loadMetadata(String bucket, String key) {
         if (USE_META_CACHE) {
             return loadMetadataFromCache(bucket, key);
         } else {
@@ -159,25 +159,29 @@ public class S3Source implements StreamSource {
     }
 
     private S3SourceMetadata createMetaData(String bucket, String key) {
-        ObjectMetadata md = client.getObjectMetadata(bucket, key);
-        return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+        try {
+            ObjectMetadata md = client.getObjectMetadata(bucket, key);
+            return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+        } catch (SdkClientException e) {
+            throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
+        }
     }
 
-    private S3SourceMetadata loadMetadataFromCache(String bucket, String key) throws ExecutionException {
-        return metadataCache.get(bucket + key, () -> {
-            // TODO:  If the object does not exists we don't cache.  This method will throw exception and the loader will exit.
-            return createMetaData(bucket, key);
-        });
+    private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
+        try {
+            return metadataCache.get(bucket + key, () -> {
+                // TODO:  If the object does not exists we don't cache.  This method will throw exception and the loader will exit.
+                return createMetaData(bucket, key);
+            });
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), e).retry();
+        }
     }
 
     @Override
-    public S3SourceMetadata getSourceMetadata() throws IOException {
+    public S3SourceMetadata getSourceMetadata() {
         if (meta == null) {
-            try {
-                meta = loadMetadata(bucket, key);
-            } catch (Exception e) {
-               throw mapAndRethrowS3Exceptions(e, bucket + "/"+ key);
-            }
+            meta = loadMetadata(bucket, key);
         }
         return meta;
     }
@@ -193,7 +197,7 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public boolean exists() throws IOException  {
+    public boolean exists() {
         // This only works for directories if they end with /.  Safer but much slower impl is:
 
         return fileExists() || Files.exists(getPath());
@@ -207,32 +211,14 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public boolean fileExists() throws IOException  {
+    public boolean fileExists()  {
         try {
             // Already in cache, exists
             loadMetadata(bucket, key);
             return true;
-        } catch (Exception e) {
-            if (isNotFoundException(e)) {
-                return false;
-            } else {
-                throw mapAndRethrowS3Exceptions(e, bucket + "/" + key);
-            }
+        } catch (GorResourceException e) {
+            return false;
         }
-    }
-
-    private boolean isNotFoundException(Exception e) {
-        Throwable ex = e;
-
-        if (e instanceof ExecutionException || e instanceof UncheckedExecutionException) {
-            ex = e.getCause();
-        }
-
-        if (ex instanceof AmazonS3Exception s3e) {
-            return s3e.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND;
-        }
-
-        return false;
     }
 
     /*
@@ -249,13 +235,13 @@ public class S3Source implements StreamSource {
         if (t instanceof AmazonS3Exception) {
             AmazonS3Exception e = (AmazonS3Exception) t;
             detail = detail != null ? detail : e.getMessage();
-            if (e.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST) {
+            if (e.getStatusCode() == 400) {
                 throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+            } else if (e.getStatusCode() == 401) {
                 throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == HttpURLConnection.HTTP_FORBIDDEN) {
+            } else if (e.getStatusCode() == 403) {
                 throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+            } else if (e.getStatusCode() == 404) {
                 throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
             } else {
                 return new IOException(e);
@@ -270,13 +256,21 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public String createDirectory(FileAttribute<?>... attrs) throws IOException {
-        return PathUtils.formatUri(Files.createDirectory(getPath()).toUri());
+    public String createDirectory(FileAttribute<?>... attrs) {
+        try {
+            return PathUtils.formatUri(Files.createDirectory(getPath()).toUri());
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public String createDirectories(FileAttribute<?>... attrs) throws IOException {
-        return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
+    public String createDirectories(FileAttribute<?>... attrs) {
+        try {
+            return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
@@ -285,13 +279,17 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public void delete() throws IOException {
-        Files.deleteIfExists(getPath());  // Use if exists for folders (that are not reported existing if empty)
+    public void delete() {
+        try {
+            Files.deleteIfExists(getPath());  // Use if exists for folders (that are not reported existing if empty)
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
         invalidateMeta();
     }
 
     @Override
-    public void deleteDirectory() throws IOException {
+    public void deleteDirectory() {
         // Implementation based on S3FileSystemProvider.delete with different logic for deleting the prefix.
         Preconditions.checkArgument(getPath() instanceof S3Path,
                 "path must be an instance of %s", S3Path.class.getName());
@@ -301,7 +299,7 @@ public class S3Source implements StreamSource {
         }
 
         if (!Files.isDirectory(getPath())){
-            throw new NoSuchFileException("the path: " + getPath() + " is not a directory");
+            throw new GorResourceException("the path: " + getPath() + " is not a directory", getPath().toString());
         }
 
         deleteAllWithPrefix();
@@ -344,13 +342,21 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public Stream<String> list() throws IOException {
-        return Files.list(getPath()).map(p -> s3SubPathToUriString(p));
+    public Stream<String> list() {
+        try {
+            return Files.list(getPath()).map(this::s3SubPathToUriString);
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     @Override
-    public Stream<String> walk() throws IOException {
-        return Files.walk(getPath()).map(p -> s3SubPathToUriString(p));
+    public Stream<String> walk() {
+        try {
+            return Files.walk(getPath()).map(this::s3SubPathToUriString);
+        } catch (IOException e) {
+            throw GorResourceException.fromIOException(e, getPath()).retry();
+        }
     }
 
     /**
@@ -390,7 +396,7 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         // No resources to free
     }
 

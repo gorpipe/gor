@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.providers.stream.sources;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
 import org.junit.Assert;
 import org.junit.Test;
@@ -102,7 +103,7 @@ public abstract class CommonFilesTests {
 
         try (DataSource fs = createSource(getDataName("README"))) {
             List<String> files = fs.list().collect(Collectors.toList());
-        } catch (NotDirectoryException e) {
+        } catch (GorResourceException e) {
             // Expected.
         }
 

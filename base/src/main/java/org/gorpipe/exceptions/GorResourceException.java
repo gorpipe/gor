@@ -21,6 +21,9 @@
  */
 
 package org.gorpipe.exceptions;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class GorResourceException extends GorUserException {
 
@@ -41,5 +44,17 @@ public class GorResourceException extends GorUserException {
 
     public String getUri() {
         return this.uri;
+    }
+
+    public static GorResourceException fromIOException(IOException e, String uri) {
+        var message = e.getMessage();
+        if (e instanceof FileNotFoundException fnfe) {
+            message = "Input source does not exist: " + uri;
+        }
+        return new GorResourceException(message, uri, e);
+    }
+
+    public static GorResourceException fromIOException(IOException e, Path uri) {
+        return fromIOException(e, uri.toString());
     }
 }

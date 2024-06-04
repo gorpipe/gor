@@ -24,6 +24,9 @@ package org.gorpipe.gor.driver.providers.stream.sources.mdr;
 
 import org.aeonbits.owner.Config;
 import org.gorpipe.base.config.annotations.Documentation;
+import org.gorpipe.base.config.converters.DurationConverter;
+
+import java.time.Duration;
 
 public interface MdrConfiguration extends Config {
 
@@ -70,4 +73,17 @@ public interface MdrConfiguration extends Config {
     @Documentation("Keycloak service password")
     @Key("GOR_KEYCLOAK_CLIENT_SECRET")
     String keycloakClientSecret();
+
+    @Documentation("The time to wait before the first mdr retry.")
+    @Key("org.gorpipe.gor.driver.providers.retries.mdr.initial_wait")
+    @DefaultValue("100 milliseconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryInitialWait();
+
+    @Documentation("The maximum time to wait for mdr retrying.")
+    @Key("org.gorpipe.gor.driver.retries.mdr.max_wait")
+    @DefaultValue("60 seconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryMaxWait();
+
 }

@@ -90,6 +90,30 @@ public interface GorDriverConfig extends Config {
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSleep();
 
+    @Documentation("The time to wait before the first file retry.")
+    @Key("org.gorpipe.gor.driver.retries.file.initial_wait")
+    @DefaultValue("100 milliseconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryFileInitialWait();
+
+    @Documentation("The maximum time to wait for file retrying.")
+    @Key("org.gorpipe.gor.driver.retries.file.max_wait")
+    @DefaultValue("10 seconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryFileMaxWait();
+
+    @Documentation("The time to wait before the first http retry.")
+    @Key("org.gorpipe.gor.driver.retries.http.initial_wait")
+    @DefaultValue("100 milliseconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryHttpInitialWait();
+
+    @Documentation("The maximum time to wait for http retrying.")
+    @Key("org.gorpipe.gor.driver.retries.http.max_wait")
+    @DefaultValue("60 seconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryHttpMaxWait();
+
     @Documentation("Retry exponential backoff coefficient")
     @Key("org.gorpipe.gor.driver.retries.exp_backoff")
     @DefaultValue("2")

@@ -94,7 +94,7 @@ public class RacSeekableFile extends StreamSourceSeekableFile {
                 PrintWriter pr = new PrintWriter(sw);
                 traceException.printStackTrace(pr);
                 pr.flush();
-                msg = msg + "\n Open Trace:\n" + sw.toString();
+                msg = msg + "\n Open Trace:\n" + sw;
             }
             log.info(msg);
             close();

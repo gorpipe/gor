@@ -29,6 +29,7 @@ import com.azure.storage.blob.models.BlobRange;
 import com.azure.storage.blob.models.BlobStorageException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
@@ -81,21 +82,21 @@ public class AzureBlobSource implements StreamSource {
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open() {
         return open(null);
     }
 
     @Override
-    public InputStream open(long start) throws IOException {
+    public InputStream open(long start) {
         return open(RequestRange.fromFirstLength(start, getSourceMetadata().getLength()));
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         return open(RequestRange.fromFirstLength(start, minLength));
     }
 
-    private InputStream open(RequestRange range) throws IOException {
+    private InputStream open(RequestRange range) {
         if (range!=null) {
             range = range.limitTo(getSourceMetadata().getLength());
             if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
@@ -118,7 +119,7 @@ public class AzureBlobSource implements StreamSource {
         return null;
     }
 
-    private void handleExceptions(Throwable t) throws IOException {
+    private void handleExceptions(Throwable t) {
         var url = sourceReference.getUrl();
         if (t instanceof BlobStorageException bse) {
             handleBlobStorageException(bse);
@@ -132,11 +133,11 @@ public class AzureBlobSource implements StreamSource {
             throw new GorSystemException("Unknown host: " + url, t.getCause());
         }
         else {
-            throw new IOException("Error reading file: " + url, t);
+            throw new GorSystemException("Error reading file: " + url, t);
         }
     }
 
-    private void handleBlobStorageException(BlobStorageException t) throws IOException {
+    private void handleBlobStorageException(BlobStorageException t) {
         var url = sourceReference.getUrl();
         if (t.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST) {
             throw new GorResourceException(
@@ -155,7 +156,9 @@ public class AzureBlobSource implements StreamSource {
                     String.format("Not Found. Detail: %s. Original message: %s", url, t.getMessage()),
                     url, t);
         } else {
-            throw new IOException(t);
+            throw new GorResourceException(
+                    String.format("Resource error. Detail: %s. Original message: %s", url, t.getMessage()),
+                    url, t);
         }
     }
 
@@ -165,7 +168,7 @@ public class AzureBlobSource implements StreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException{
+    public StreamSourceMetadata getSourceMetadata() {
         try {
             var client = createClient();
             var props = client.getProperties();
@@ -212,7 +215,7 @@ public class AzureBlobSource implements StreamSource {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         // No resources to free
     }
 

@@ -5,6 +5,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonStreamTests;
+import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.utils.DriverUtils;
 import gorsat.TestUtils;
@@ -14,7 +15,7 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
-import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryWrapper;
+
 import org.junit.*;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
@@ -84,8 +85,8 @@ public class ITestS3Source extends CommonStreamTests {
     protected void verifyDriverDataSource(String name, DataSource fs) {
         Assert.assertEquals(ExtendedRangeWrapper.class, fs.getClass());
         fs = ((ExtendedRangeWrapper) fs).getWrapped();
-        Assert.assertEquals(RetryWrapper.class, fs.getClass());
-        fs = ((RetryWrapper) fs).getWrapped();
+        Assert.assertEquals(RetryStreamSourceWrapper.class, fs.getClass());
+        fs = ((RetryStreamSourceWrapper) fs).getWrapped();
         Assert.assertEquals(S3Source.class, fs.getClass());
     }
 
@@ -102,8 +103,10 @@ public class ITestS3Source extends CommonStreamTests {
             Files.write(p, (getDataName("dummy.gor")+"\tstuff").getBytes());
             String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
             String res = TestUtils.runGorPipe("create xxx = gor -f 'stuff' genes.gord | top 10; gor [xxx]", true, securityContext);
-            Assert.assertEquals("Wrong result from s3 dictionary", "chrom\tpos\ta\tSource\n" +
-                    "chr1\t0\tb\tstuff\n", res);
+            Assert.assertEquals("Wrong result from s3 dictionary", """
+                    chrom\tpos\ta\tSource
+                    chr1\t0\tb\tstuff
+                    """, res);
         } finally {
             if(Files.exists(p)) Files.delete(p);
         }
@@ -149,7 +152,7 @@ public class ITestS3Source extends CommonStreamTests {
     }
 
     @Test
-    public void testS3WriteServerMode() throws IOException {
+    public void testS3WriteServerMode() {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
         TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gor",
                 true, securityContext, new String[] {"s3://"});
@@ -164,7 +167,7 @@ public class ITestS3Source extends CommonStreamTests {
     }
 
     @Test
-    public void testS3Meta() throws IOException {
+    public void testS3Meta() {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
         var result = TestUtils.runGorPipe("meta s3://gdb-unit-test-data/s3write/genes.gor", true, securityContext, new String[] {"s3://"});
 
@@ -173,7 +176,7 @@ public class ITestS3Source extends CommonStreamTests {
     }
 
     @Test
-    public void testS3MetaWithMetafile() throws IOException {
+    public void testS3MetaWithMetafile() {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
         TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
         var result = TestUtils.runGorPipe("meta s3://gdb-unit-test-data/s3write/genes.gorz", true, securityContext, new String[] {"s3://"});
@@ -185,7 +188,7 @@ public class ITestS3Source extends CommonStreamTests {
     }
 
     @Override
-    protected SourceReference mkSourceReference(String name) throws IOException {
+    protected SourceReference mkSourceReference(String name) {
         return new SourceReferenceBuilder(name).securityContext(DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET)).build();
     }
 

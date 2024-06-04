@@ -282,7 +282,7 @@ public class BaseMeta {
                     .securityContext(fileReader.getSecurityContext()).isFallback(false).build()).exists()) {
                 return;
             }
-        } catch (GorResourceException | IOException e) {
+        } catch (GorResourceException e) {
             return;
         }
         try (var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {

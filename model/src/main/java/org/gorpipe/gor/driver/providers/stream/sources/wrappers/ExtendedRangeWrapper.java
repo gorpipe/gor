@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PersistentInputStream;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -83,17 +84,17 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public InputStream openClosable() throws IOException {
+    public InputStream openClosable() {
         return open(0, DEFAULT_HEADER_RANGE);
     }
 
     @Override
-    public InputStream open() throws IOException {
+    public InputStream open() {
         return open(0, DEFAULT_HEADER_RANGE);
     }
 
     @Override
-    public InputStream open(long start, long minLength) throws IOException {
+    public InputStream open(long start, long minLength) {
         // If working with an extended range stream - see if it's seekable - then reuse, or close
         if (extendedRangeStream != null) {
             if (extendedRangeStream.isClosed()) {
@@ -132,7 +133,7 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public StreamSourceMetadata getSourceMetadata() throws IOException {
+    public StreamSourceMetadata getSourceMetadata() {
         if (sourceMeta == null) {
             sourceMeta = super.getSourceMetadata();
         }
@@ -141,7 +142,7 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
 
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         log.debug("{} closing - clearing streams", this);
         clearStream();
         super.close();
@@ -160,45 +161,49 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            // Check if read request is larger than remaining bytes in current 'in' stream
-            if (len + getPosition() > bookKeeping.getLength()) {
-                // 1. Read remainder of stream and close.  As read is not guaranteed to read but 1 byte we want we do
-                //    repeated reads.   Some streams are unhappy if the whole stream is not read when we close.
-                int remainderLength = (int) (bookKeeping.getLength() - getPosition());
-                int read = 0;
-                while (read < remainderLength) {
-                    int readNext = super.read(b, off + read, remainderLength - read);
-                    if (readNext < 0) {
-                        break;
+        public int read(byte[] b, int off, int len) {
+            try {
+                // Check if read request is larger than remaining bytes in current 'in' stream
+                if (len + getPosition() > bookKeeping.getLength()) {
+                    // 1. Read remainder of stream and close.  As read is not guaranteed to read but 1 byte we want we do
+                    //    repeated reads.   Some streams are unhappy if the whole stream is not read when we close.
+                    int remainderLength = (int) (bookKeeping.getLength() - getPosition());
+                    int read = 0;
+                    while (read < remainderLength) {
+                        int readNext = super.read(b, off + read, remainderLength - read);
+                        if (readNext < 0) {
+                            break;
+                        }
+                        read += readNext;
                     }
-                    read += readNext;
+                    in.close();
+
+                    // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.
+                    long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
+
+                    // 3. Open new 'in' stream at last position + new request length
+                    RequestRange range = RequestRange.fromFirstLength(bookKeeping.getFirst() + getPosition(), rlen);
+                    this.in = ExtendedRangeWrapper.super.open(range.getFirst(), range.getLength());
+                    this.lastRequest = range;
+                    this.bookKeeping = RequestRange.fromFirstLast(bookKeeping.getFirst(), range.getLast());
+
+                    // 4. Read the remainder of the data
+                    int readNext = super.read(b, off + read, len - read);
+                    if (readNext > 0) {
+                        read += readNext;
+                    }
+                    if (read == 0) return -1;
+                    return read;
+                } else {
+                    return super.read(b, off, len);
                 }
-                in.close();
-
-                // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.
-                long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
-
-                // 3. Open new 'in' stream at last position + new request length
-                RequestRange range = RequestRange.fromFirstLength(bookKeeping.getFirst() + getPosition(), rlen);
-                this.in = ExtendedRangeWrapper.super.open(range.getFirst(), range.getLength());
-                this.lastRequest = range;
-                this.bookKeeping = RequestRange.fromFirstLast(bookKeeping.getFirst(), range.getLast());
-
-                // 4. Read the remainder of the data
-                int readNext = super.read(b, off + read, len - read);
-                if (readNext > 0) {
-                    read += readNext;
-                }
-                if (read == 0) return -1;
-                return read;
-            } else {
-                return super.read(b, off, len);
+            } catch (IOException e) {
+                throw GorResourceException.fromIOException(e, getPath());
             }
         }
 
         @Override
-        public long skip(long n) throws IOException {
+        public long skip(long n) {
             int count = (int) n;
             if (count != n) {
                 throw new RuntimeException("Skip should not be this large:" + n);
