@@ -31,7 +31,6 @@ import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.providers.stream.datatypes.gor.GorHeader;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.model.RowBase;
 import org.gorpipe.model.gor.RowObj;
 import org.gorpipe.util.collection.ByteArray;
 import org.gorpipe.util.collection.ByteArrayWrapper;
@@ -52,7 +51,7 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
 
     private final SeekableIterator seekableIterator; //The iterator on the underlying file.
     private final String filePath;
-    private GorHeader header;
+    private final GorHeader header;
     private int columnCount = -1;
     private final Unzipper unzipper;
     private byte[] buffer;
@@ -181,7 +180,12 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         final int len = this.rawDataHolder.size();
         final int blockIdx = getBeginningOfBlock(in);
 
-        final int unzippedLen = unzipBlock(in, len, blockIdx);
+        if (len <= blockIdx || len == 0 || blockIdx == 0) {
+            throw new GorDataException(String.format("Zip block not found or is invalid in %s. Block starts with '%s'.",
+                    filePath, new String(Arrays.copyOfRange(in, 0, Math.min(len, 50)))));
+        }
+
+        final int unzippedLen = unzipBlock(in, blockIdx, len - blockIdx);
         this.bufferIterator.update(this.buffer, 0, unzippedLen, true, true);
     }
 
@@ -206,8 +210,8 @@ public class GorzSeekableIterator extends GenomicIteratorBase {
         return idx + 1;
     }
 
-    private int unzipBlock(byte[] in, int len, int blockIdx) throws DataFormatException, IOException {
-        this.unzipper.setInput(in, blockIdx, len - blockIdx);
+    private int unzipBlock(byte[] in, int blockIdx, int len) throws DataFormatException, IOException {
+        this.unzipper.setInput(in, blockIdx, len);
         int totalRead = 0;
         do {
             int read;

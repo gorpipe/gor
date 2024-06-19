@@ -94,6 +94,9 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
           }
       }
     })
+
+    refseqDownloaderThread.setName("RefSeqDownloader")
+    refseqDownloaderThread.setDaemon(false)
     refseqDownloaderThread.start()
   }
 
