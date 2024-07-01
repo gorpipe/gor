@@ -38,7 +38,7 @@ import scala.jdk.javaapi.CollectionConverters
   * @param whitelistedCmdFiles  File for white listing
   * @param server               Indicates if the session is running on server or not
   */
-class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean, securityContext:String = null, allowedWriteLocations:Array[String] = Array[String]("test", "user_data")) extends GorSessionFactory{
+class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean, securityContext:String = null, allowedWriteLocations:Array[String] = Array[String]("test", "user_data", "result_cache")) extends GorSessionFactory{
 
   override def create(): GorSession = {
     val requestId = pipeOptions.requestId

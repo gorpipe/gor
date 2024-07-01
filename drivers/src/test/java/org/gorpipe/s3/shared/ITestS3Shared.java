@@ -470,26 +470,27 @@ public class ITestS3Shared {
 
     //@Ignore("Runs too slowly")
     @Test
-    public void testProjectWriteUserDataServerPgorGord() throws IOException {
+    public void testProjectWriteUserDataServerPgorGord() throws Exception {
         testProjectWriteUserDataServerPgorGordHelper(false);
     }
 
     //@Ignore("Runs too slowly")
     @Test
-    public void testProjectWriteUserDataServerPgorGordSlash() throws IOException {
+    public void testProjectWriteUserDataServerPgorGordSlash() throws Exception {
         testProjectWriteUserDataServerPgorGordHelper(true);
     }
 
-    private void testProjectWriteUserDataServerPgorGordHelper(boolean useSlash) throws IOException {
+    private void testProjectWriteUserDataServerPgorGordHelper(boolean useSlash) throws Exception {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
         String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
         Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
         String randomId = UUID.randomUUID().toString();
         String dataPath = DataUtil.toFile("user_data/dummy_" + randomId, DataType.GORD) + (useSlash ? "/" : "");
+        System.out.println("dataPath: " + dataPath);
         try {
             runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
-
+            Thread.sleep(500);  // Need short delay for folders to get updated.
             String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
             String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
             Assert.assertEquals(expected, result);

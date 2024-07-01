@@ -68,16 +68,6 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
         super(securityContext, commonRoot);
 
         this.accessControlContext = accessControlContext != null ? accessControlContext : AccessControlContext.builder().build();
-
-        if (!this.accessControlContext.getWriteLocations().contains("result_cache")) {
-            // Must create new acc object that allows us to add the write location.
-            this.accessControlContext = new AccessControlContext(
-                    this.accessControlContext.getAuthInfo(),
-                    new ArrayList<>(this.accessControlContext.getWriteLocations()),
-                    this.accessControlContext.isAllowAbsolutePath(),
-                    this.accessControlContext.getSecurityPolicy());
-            this.accessControlContext.getWriteLocations().add("result_cache");
-        }
     }
 
     @Override

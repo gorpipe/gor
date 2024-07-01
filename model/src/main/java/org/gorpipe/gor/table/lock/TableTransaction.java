@@ -24,6 +24,8 @@ package org.gorpipe.gor.table.lock;
 
 import org.gorpipe.gor.table.livecycle.TableInfoBase;
 import org.gorpipe.gor.table.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
@@ -38,6 +40,7 @@ import java.time.Duration;
  *       the table.  For new tables changes made to the table before the transaction are saved.
  */
 public class TableTransaction implements AutoCloseable {
+    private static final Logger log = LoggerFactory.getLogger(TableTransaction.class);
     private final TableLock lock;
     private boolean shouldSave = false;
     private Runnable closeHook;
@@ -101,23 +104,28 @@ public class TableTransaction implements AutoCloseable {
             throw new AcquireLockException(String.format("Getting lock timed out for %s on %s (timeout %s)!", name, table.getName(), timeout.toString()));
         }
 
-        if (lock.isValid() && shared == false) {
-            if (table instanceof TableInfoBase) {
-                ((TableInfoBase) table).updateNFSFolderMetadata();
+        try {
+            if (shared == false) {
+                if (table instanceof TableInfoBase) {
+                    ((TableInfoBase) table).updateNFSFolderMetadata();
+                }
+                if (this.closeHook == null) {
+                    this.closeHook = () -> {
+                        if (lock.getWriteHoldCount() == 1 && this.shouldSave) {
+                            // Save if this is the last lock to close (which is the first acquired).
+                            table.save();
+                        }
+                    };
+                }
             }
-            if (this.closeHook == null) {
-                this.closeHook = () -> {
-                    if (lock.getWriteHoldCount() == 1 && this.shouldSave) {
-                        // Save if this is the last lock to close (which is the first acquired).
-                        table.save();
-                    }
-                };
-            }
-        }
 
-        if (lock.isValid() && (lock.getReadHoldCount() + lock.getWriteHoldCount()) == 1) {
-            // First lock.
-            table.reload();
+            if ((lock.getReadHoldCount() + lock.getWriteHoldCount()) == 1) {
+                // First lock.
+                table.reload();
+            }
+        } catch (Exception e) {
+            lock.release();
+            throw e;
         }
     }
 

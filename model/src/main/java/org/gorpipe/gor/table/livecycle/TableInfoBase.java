@@ -217,8 +217,8 @@ public abstract class TableInfoBase implements TableInfo {
 
     @SuppressWarnings("squid:S00108") // Emtpy blocks on purpose (enough to force meta data update)
     public void updateNFSFolderMetadata() {
-        if (isLocal(getRootPath())) {
-            try {
+        try {
+            if (isLocal(getRootPath())) {
                 try (Stream<String> paths = fileReader.list(rootUri)) {
                     // Intentionally empty.
                 }
@@ -227,9 +227,9 @@ public abstract class TableInfoBase implements TableInfo {
                         // Intentionally empty.
                     }
                 }
-            } catch (IOException e) {
-                log.warn("Error when listing dirs (to force refresh of meta data)", e);
             }
+        } catch (Exception e) {
+            log.warn("Error when listing dirs (to force refresh of meta data)", e);
         }
     }
 

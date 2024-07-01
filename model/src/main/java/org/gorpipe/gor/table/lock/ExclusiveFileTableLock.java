@@ -60,7 +60,7 @@ public class ExclusiveFileTableLock extends TableLock {
 
     private final Duration checkForLockPeriod = Duration.ofMillis(Integer.valueOf(System.getProperty("gor.table.lock.exclusive.check_period", "100")));  // Time between check for lock (if waiting.)
 
-    private Path lockPath;
+    protected Path lockPath;
     private FileChannel fc;
     private RenewableLockHelper lockHelper;
     protected int thisLockCount;

@@ -66,7 +66,7 @@ public class TestUtils {
 
     public static final String LINE_SPLIT_PATTERN = "(?<=\n)";
 
-    private static String[] DEFAULT_WRITE_LOCATIONS = {"test", "user_data"};
+    private static String[] DEFAULT_WRITE_LOCATIONS = {"test", "user_data", "result_cache"};
 
     /**
      * Run goripe
