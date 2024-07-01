@@ -287,10 +287,10 @@ public class UTestBucketManager {
         List<String> buckets = table.getBuckets();
         buc.deleteBuckets(buckets.toArray(new String[buckets.size()]));
         bucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1);
-        Assert.assertEquals("Only one bucket should be created", 1, bucketsCreated);
+        Assert.assertEquals(5, bucketsCreated);
 
         buckets = table.getBuckets();
-        Assert.assertEquals("Only on bucket should be created", 1, buckets.size());
+        Assert.assertEquals(5, buckets.size());
     }
 
     @Test
@@ -798,13 +798,13 @@ public class UTestBucketManager {
         int iterations = 0;
         do {
             int iterBucketsCreated = buc.bucketize(BucketManager.DEFAULT_BUCKET_PACK_LEVEL, 1);
-            Assert.assertEquals("Wrong number of buckets created", 1, iterBucketsCreated);
+            Assert.assertEquals("Wrong number of buckets created", 4, iterBucketsCreated);
             bucketsCreated += iterBucketsCreated;
             iterations++;
         } while (table.needsBucketizing().size() >= buc.getMinBucketSize());
 
         Assert.assertEquals("Wrong number of buckets created", 4, bucketsCreated);
-        Assert.assertEquals("Wrong number of iterations", 4, iterations);
+        Assert.assertEquals("Wrong number of iterations", 1, iterations);
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
     }
 

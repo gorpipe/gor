@@ -50,20 +50,30 @@ public class BucketCreatorGorPipe<T extends DictionaryEntry> implements BucketCr
 
     @Override
     public void createBucketsForBucketDir(DictionaryTable table, Map<String, List<T>> bucketsToCreate,
-                                          String absBucketDir, Consumer<String> callback) {
+                                          String absBucketDir, int maxBucketCount, Consumer<String> callback) {
 
-        // Build the gor query (gorpipe)
-        String gorPipeCommand = createBucketizeGorCommandForBucketDir(bucketsToCreate, absBucketDir, table);
-        GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, workers, table.getProjectPath(), table.getSecurityContext());
-
-        // Call the callback for each bucket created.
+        Map<String, List<T>> bucketsToCreateBatch = new HashMap<>();
+        int bucketsCreated = 0;
         for (Map.Entry<String, List<T>> b2c : bucketsToCreate.entrySet()) {
-            String bucket = b2c.getKey();
-            callback.accept(bucket);
+            bucketsToCreateBatch.put(b2c.getKey(), b2c.getValue());
+            bucketsCreated++;
+
+            if (bucketsToCreateBatch.size() >= maxBucketCount || bucketsToCreate.size() == bucketsCreated) {
+                // Build the gor query (gorpipe)
+                String gorPipeCommand = createBucketizeGorCommandForBucketDir(bucketsToCreate, absBucketDir, table, maxBucketCount);
+                GorPipeUtils.executeGorPipeForSideEffects(gorPipeCommand, workers, table.getProjectPath(), table.getSecurityContext());
+
+                // Call the callback for each bucket created.
+                for (String bucket : bucketsToCreateBatch.keySet()) {
+                    callback.accept(bucket);
+                }
+                bucketsToCreateBatch.clear();
+            }
         }
     }
 
-    private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, String absBucketDir, DictionaryTable table) {
+    private String createBucketizeGorCommandForBucketDir(Map<String, List<T>> bucketsToCreate, String absBucketDir,
+                                                         DictionaryTable table, int maxBucketCount) {
         // NOTE:  Can not use pgor with the write command !! Will only get one chromosome.
         // Tag based, does not work if we are adding more files with same alias, why not?.
         StringBuilder sb = new StringBuilder();

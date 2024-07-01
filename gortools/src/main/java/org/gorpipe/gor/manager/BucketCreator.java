@@ -44,9 +44,10 @@ public interface BucketCreator<T extends DictionaryEntry> {
      * @param bucketsToCreate map with bucket name to table entries, representing the buckets to be created.
      * @param absBucketDir    absolute path to the bucket dir, where bucket files should be put.  It temp folders are to be used they should
      *                        be created in this dir (for fast file move).
+     * @param maxBucketCount  maximum number of buckets to create in parallel.
      * @param callback        callback to be called when a bucket has been created.  The argument is the name of the bucket.
      */
     void createBucketsForBucketDir(DictionaryTable table, Map<String, List<T>> bucketsToCreate,
-                                   String absBucketDir, Consumer<String> callback) throws IOException;
+                                   String absBucketDir, int maxBucketCount, Consumer<String> callback) throws IOException;
 
 }

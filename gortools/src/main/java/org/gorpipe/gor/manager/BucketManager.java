@@ -405,8 +405,8 @@ public class BucketManager<T extends DictionaryEntry> {
 
             // Find which buckets to delete and which buckets to create.
             log.trace("Bucketize - Finding files to bucketize");
-            bucketsToDelete = findBucketsToDelete(trans.getLock(), packLevel, unbucketizedCount, maxBucketCount);
-            newBucketsMap = findBucketsToCreate(trans.getLock(), bucketsToDelete, maxBucketCount, packLevel);
+            bucketsToDelete = findBucketsToDelete(trans.getLock(), packLevel, unbucketizedCount, -1);
+            newBucketsMap = findBucketsToCreate(trans.getLock(), bucketsToDelete, -1, packLevel);
 
             if (log.isDebugEnabled()) {
                 log.debug("Bucketize - Bucketizing {} files into {} buckets",
@@ -422,7 +422,7 @@ public class BucketManager<T extends DictionaryEntry> {
         if (!newBucketsMap.isEmpty()) {
             for (String bucketDir : getBucketDirs()) {
                 log.trace("Bucketize - Bucketizing dir {}", bucketDir);
-                doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap);
+                doBucketizeForBucketDir(tempTable, bucketDir, newBucketsMap, maxBucketCount);
             }
         }
 
@@ -452,7 +452,7 @@ public class BucketManager<T extends DictionaryEntry> {
      * @param newBucketsMap map with bucket name to table entries, representing the buckets to be created.
      * @throws IOException
      */
-    private void doBucketizeForBucketDir(DictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap) throws IOException {
+    private void doBucketizeForBucketDir(DictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap, int maxBucketCount) throws IOException {
         Map<String, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
                         .filter(p -> PathUtils.getParent(p).equals(PathUtils.stripTrailingSlash(bucketDir)))
@@ -461,7 +461,7 @@ public class BucketManager<T extends DictionaryEntry> {
         //  Create the bucket files
         String absBucketDir = getAbsoluteBucketDir(bucketDir);
         checkBucketDirExistence(absBucketDir);
-        bucketCreator.createBucketsForBucketDir(tempTable, newBucketsMapForBucketDir, absBucketDir,
+        bucketCreator.createBucketsForBucketDir(tempTable, newBucketsMapForBucketDir, absBucketDir, maxBucketCount,
                 bucket -> updateTableWithNewBucket(table, bucket, newBucketsMapForBucketDir.get(bucket)));
     }
 
@@ -766,7 +766,7 @@ public class BucketManager<T extends DictionaryEntry> {
             int totalFilesNeeding = unbucketizedCount
                     + bucketCounts.values().stream().filter(i -> i < getBucketSize()).mapToInt(Integer::intValue).sum();
             int totalNeededNewBuckets = totalFilesNeeding / getBucketSize();
-            int totalNewBuckets = Math.min(totalNeededNewBuckets, maxBucketCount);
+            int totalNewBuckets = Math.min(totalNeededNewBuckets, maxBucketCount > 0 ? maxBucketCount : 10000);
 
             // Remove the smallest existing buckets to fill upp the space in the new buckets.
             int totalSpaceLeftInNewBuckets = totalNewBuckets * getBucketSize() - unbucketizedCount;
@@ -834,7 +834,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
         Map<String, List<T>> bucketsToCreate = new HashMap<>();
         bucketDirCount = null;
-        for (int i = 1; i <= Math.min(bucketCreateCount, maxBucketCount); i++) {
+        for (int i = 1; i <= Math.min(bucketCreateCount, maxBucketCount > 0 ? maxBucketCount : 10000); i++) {
             String bucketDir = pickBucketDir();
             int nextToBeAddedIndex = (i - 1) * getBucketSize();
             int nextBucketSize = Math.min(getBucketSize(), lines2bucketize.size() - nextToBeAddedIndex);
