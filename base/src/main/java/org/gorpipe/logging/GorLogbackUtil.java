@@ -24,6 +24,7 @@ package org.gorpipe.logging;
 
 import ch.qos.logback.classic.LoggerContext;
 import org.gorpipe.base.logging.ProcessIdConverter;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.Marker;
@@ -31,6 +32,8 @@ import org.slf4j.MarkerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Map;
 
 import static net.logstash.logback.argument.StructuredArguments.value;
@@ -82,6 +85,10 @@ public class GorLogbackUtil {
 
 
     public static void initServiceLog() {
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+        Logger.getLogger("").setLevel(Level.FINEST); // Root logger, for example.
+
         initLog(UNKNOWN_PROPERTY);
     }
 

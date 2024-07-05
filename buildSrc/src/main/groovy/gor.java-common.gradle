@@ -132,6 +132,7 @@ ext {
 
 dependencies {
     implementation "org.slf4j:slf4j-api:_"
+    implementation "org.slf4j:jul-to-slf4j:_"
     implementation "org.slf4j:jcl-over-slf4j:_"
     implementation "ch.qos.logback:logback-classic:_"
 
