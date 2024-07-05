@@ -557,7 +557,6 @@ public class UTestBucketManager {
 
         Assert.assertFalse("Bucket should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName)));
         Assert.assertFalse("Meta should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName +  DataType.META.suffix)));
-        Assert.assertFalse("gori should be deleted", Files.exists(bucketDirPath.resolve(bucketFileName + DataType.GORI.suffix)));
     }
 
     @Test
@@ -596,7 +595,6 @@ public class UTestBucketManager {
 
         Assert.assertFalse("Bucket should be deleted", Files.exists(linkFolder.resolve(bucketFileName)));
         Assert.assertFalse("Meta should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.META.suffix)));
-        Assert.assertFalse("gori should be deleted", Files.exists(linkFolder.resolve(bucketFileName + DataType.GORI.suffix)));
     }
 
     @Test

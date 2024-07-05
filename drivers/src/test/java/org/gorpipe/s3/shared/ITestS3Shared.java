@@ -33,6 +33,7 @@ import java.util.UUID;
 
 import static gorsat.TestUtils.runGorPipeCLI;
 import static gorsat.TestUtils.runGorPipeServer;
+import static org.gorpipe.gor.driver.meta.DataType.GORI;
 import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 import static org.gorpipe.utils.DriverUtils.createSecurityContext;
 
@@ -399,7 +400,7 @@ public class ITestS3Shared {
         S3SharedSourceProvider provider = new S3ProjectDataSourceProvider();
         provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
 
-        try (DataSource source = getDataSourceFromProvider(provider, dataPath + ".gori", Credentials.OwnerType.Project, "some_project")) {
+        try (DataSource source = getDataSourceFromProvider(provider, dataPath + GORI.suffix, Credentials.OwnerType.Project, "some_project")) {
             Assert.assertTrue(source.exists());
             source.delete();
         }

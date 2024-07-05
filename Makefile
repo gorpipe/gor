@@ -18,7 +18,7 @@ clean:  ## Clean the build env.
 build: ## Create local installation.
 	./gradlew installDist
 
-test:  ## Run all tests.
+all-test:  ## Run all tests.
 	./gradlew test slowTest integrationTest
 
 compile-all-with-warnings:  ## Compile code and tests.

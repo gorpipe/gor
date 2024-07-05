@@ -80,11 +80,6 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public boolean fileExists() {
-        return wrapped.fileExists();
-    }
-
-    @Override
     public String move(DataSource dest) {
         return wrapped.move(dest);
     }

@@ -24,10 +24,8 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.model.GorOptions;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -38,29 +36,31 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
+import static org.gorpipe.gor.driver.meta.DataType.GORI;
+
 /**
  * Created by hjalti on 13/06/17.
  */
 public class UTestGorWrite {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
-    private Path tmpdir;
+    private Path workDirPath;
 
     @Before
     public void setupTest() throws IOException {
-        tmpdir = workDir.getRoot().toPath();
-        Files.createDirectories(tmpdir.resolve("result_cache"));
+        workDirPath = workDir.getRoot().toPath();
+        Files.createDirectories(workDirPath.resolve("result_cache"));
     }
 
     @Test
     public void testWritePathWithLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
-        Assert.assertEquals(tmpdir.resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("dbsnp3.gor.link")));
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
 
-        String linkresult = TestUtils.runGorPipe("gor dbsnp3.gor | top 1", "-gorroot", tmpdir.toString());
+        String linkresult = TestUtils.runGorPipe("gor dbsnp3.gor | top 1", "-gorroot", workDirPath.toString());
         Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
                 "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
     }
@@ -68,12 +68,12 @@ public class UTestGorWrite {
     @Test
     public void testWritePathWithServerLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -link user_data/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true);
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -link user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
 
-        Assert.assertEquals(tmpdir.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\n", Files.readString(tmpdir.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))));
+        Assert.assertEquals(workDirPath.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\n", Files.readString(workDirPath.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))));
 
-        String linkresult = TestUtils.runGorPipe("gor user_data/dbsnp3.gor | top 1", "-gorroot", tmpdir.toString());
+        String linkresult = TestUtils.runGorPipe("gor user_data/dbsnp3.gor | top 1", "-gorroot", workDirPath.toString());
         Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
                 "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
     }
@@ -81,44 +81,44 @@ public class UTestGorWrite {
     @Test
     public void testWritePathWithUnAuthorizedServerLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
 
-        Assert.assertThrows( "Writing link to un-writable project location, throws exception",GorSecurityException.class, () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor", "-gorroot", tmpdir.toString()}, true));
+        Assert.assertThrows( "Writing link to un-writable project location, throws exception",GorSecurityException.class, () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true));
 
     }
 
     @Test(expected = Exception.class)
     public void testWritePathWithInaccessiableLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link s3://bacbucket/dbsnp3.gor", "-gorroot", tmpdir.toString());
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link s3://bacbucket/dbsnp3.gor", "-gorroot", workDirPath.toString());
     }
 
     @Test
     public void testWritePathWithExistingLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
-        Files.writeString(tmpdir.resolve("dbsnp3.gor.link"), tmpdir.resolve("dbsnp.gor").toString() + "\n");
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), workDirPath.resolve("dbsnp.gor").toString() + "\n");
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
-        Assert.assertEquals(tmpdir.resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("dbsnp3.gor.link")));
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
     }
 
     @Test
     public void testWritePathWithExistingBadLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, tmpdir.resolve("dbsnp.gor"));
-        Files.writeString(tmpdir.resolve("dbsnp3.gor.link"), "");
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", tmpdir.toString());
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), "");
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
-        Assert.assertEquals(tmpdir.resolve("dbsnp2.gor").toString() + "\n", Files.readString(tmpdir.resolve("dbsnp3.gor.link")));
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
     }
 
     @Test
     public void testTxtWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
-        Files.copy(p, tmpdir.resolve("simple1.nor"));
-        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write test/new.txt", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        Files.copy(p, workDirPath.resolve("simple1.nor"));
+        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write test/new.txt", "-gorroot", workDirPath.toAbsolutePath().toString()};
         TestUtils.runGorPipeCount(args, true);
     }
 
@@ -126,8 +126,8 @@ public class UTestGorWrite {
     @Test
     public void testTxtFolderWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
-        Files.copy(p, tmpdir.resolve("simple1.nor"));
-        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test new.txt", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        Files.copy(p, workDirPath.resolve("simple1.nor"));
+        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test new.txt", "-gorroot", workDirPath.toAbsolutePath().toString()};
         TestUtils.runGorPipeCount(args, true);
     }
 
@@ -135,28 +135,28 @@ public class UTestGorWrite {
     @Test
     public void testFolderWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
-        Files.copy(p, tmpdir.resolve("simple1.nor"));
-        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        Files.copy(p, workDirPath.resolve("simple1.nor"));
+        String[] args = {"nor simple1.nor | select Chrom | calc p 1 | write -d test", "-gorroot", workDirPath.toAbsolutePath().toString()};
         TestUtils.runGorPipeCount(args, true);
     }
 
     @Test
     public void testTsvWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
-        Files.copy(p, tmpdir.resolve("simple2.nor"));
-        String[] args = {"nor simple2.nor | select Chrom | calc p 1 | write test/new.tsv", "-gorroot", tmpdir.toAbsolutePath().toString()};
+        Files.copy(p, workDirPath.resolve("simple2.nor"));
+        String[] args = {"nor simple2.nor | select Chrom | calc p 1 | write test/new.tsv", "-gorroot", workDirPath.toAbsolutePath().toString()};
         TestUtils.runGorPipeCount(args, true);
     }
 
     @Test
     public void testGorWriteWithMd5() throws IOException {
-        Path tmpfile = tmpdir.resolve("genes_md5.gorz");
+        Path tmpfile = workDirPath.resolve("genes_md5.gorz");
         tmpfile.toFile().deleteOnExit();
         String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize();
 
         TestUtils.runGorPipeCount(query);
 
-        Path path = tmpdir.resolve("genes_md5.gorz.md5");
+        Path path = workDirPath.resolve("genes_md5.gorz.md5");
         Assert.assertTrue("Md5 file does not exist", Files.exists(path));
         path.toFile().deleteOnExit();
         String md5str = new String(Files.readAllBytes(path));
@@ -165,7 +165,7 @@ public class UTestGorWrite {
 
     @Test
     public void testGorWriteColumnNumber() {
-        Path tmpfile = tmpdir.resolve("genes_md5.gorz");
+        Path tmpfile = workDirPath.resolve("genes_md5.gorz");
         tmpfile.toFile().deleteOnExit();
         String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize();
         String headerRes = TestUtils.runGorPipe(query);
@@ -174,7 +174,7 @@ public class UTestGorWrite {
 
     @Test
     public void testGorzWriteCompressionLevel() throws IOException {
-        Path tmpfile = tmpdir.resolve("genes.gorz");
+        Path tmpfile = workDirPath.resolve("genes.gorz");
         tmpfile.toFile().deleteOnExit();
         String query = "gor ../tests/data/gor/genes.gor | write -l 9 " + tmpfile.toAbsolutePath().normalize();
 
@@ -187,13 +187,13 @@ public class UTestGorWrite {
     @Test
     @Ignore("This test is useful for load testing and performance analysis. Does not work without code change unless hekla or another proper csa volume is mounted at /mnt/csa")
     public void testGorWriteLargeFileWithMd5() throws IOException {
-        Path tmpfile = tmpdir.resolve("large_md5.gorz");
+        Path tmpfile = workDirPath.resolve("large_md5.gorz");
         tmpfile.toFile().deleteOnExit();
         String query = "gor /mnt/csa/env/dev/projects/installation_test_project/ref/dbsnp.gorz | write -m " + tmpfile.toAbsolutePath().normalize().toString();
 
         TestUtils.runGorPipeCount(query);
 
-        Path path = tmpdir.resolve("large_md5.gorz.md5");
+        Path path = workDirPath.resolve("large_md5.gorz.md5");
         Assert.assertTrue("Md5 file does not exist", Files.exists(path));
         path.toFile().deleteOnExit();
         String md5str = new String(Files.readAllBytes(path));
@@ -202,13 +202,13 @@ public class UTestGorWrite {
 
     @Test
     public void testGorWriteReadWithIdx() throws IOException {
-        Path tmpfile = tmpdir.resolve("genes.gorz");
+        Path tmpfile = workDirPath.resolve("genes.gorz");
         tmpfile.toFile().deleteOnExit();
         final String tmpFilePath = tmpfile.toAbsolutePath().normalize().toString();
         var genesPath = Path.of("../tests/data/gor/genes.gorz").toAbsolutePath();
-        TestUtils.runGorPipeCount("gor "+ genesPath +" | write -i CHROM " + tmpFilePath,"-gorroot",tmpdir.toString());
+        TestUtils.runGorPipeCount("gor "+ genesPath +" | write -i CHROM " + tmpFilePath,"-gorroot", workDirPath.toString());
 
-        Path path = tmpdir.resolve("genes.gorz.gori");
+        Path path = workDirPath.resolve("genes.gorz.gori");
         Assert.assertTrue( "Seek index file does not exist", Files.exists(path) );
         path.toFile().deleteOnExit();
 
@@ -217,35 +217,35 @@ public class UTestGorWrite {
         final int count = TestUtils.runGorPipeCount("gor -p chr22 " + tmpfile.toAbsolutePath().normalize());
 
         Assert.assertEquals("Wrong number of lines in seekindexed gorz file", 1127, count);
-        var query1 = new String[] {"pgor "+ tmpfile.toAbsolutePath().normalize() +"|group chrom -count | signature -timeres 1","-gorroot",tmpdir.toString(),"-cachedir","result_cache"};
-        var query2 = new String[] {"pgor "+genesPath+"|group chrom -count","-gorroot",tmpdir.toString(),"-cachedir","result_cache"};
+        var query1 = new String[] {"pgor "+ tmpfile.toAbsolutePath().normalize() +"|group chrom -count | signature -timeres 1","-gorroot", workDirPath.toString(),"-cachedir","result_cache"};
+        var query2 = new String[] {"pgor "+genesPath+"|group chrom -count","-gorroot", workDirPath.toString(),"-cachedir","result_cache"};
         TestUtils.assertTwoGorpipeResults("Pgor on indexed gorz file returns different results than on unindexed one", query1, query2);
     }
 
     @Test
     public void testGorWriteReadWithFullIdx() throws IOException {
-        Path tmpfile = tmpdir.resolve("genes.gorz");
+        Path tmpfile = workDirPath.resolve("genes.gorz");
         tmpfile.toFile().deleteOnExit();
         final String tmpFilePath = tmpfile.toAbsolutePath().normalize().toString();
         var genesPath = Path.of("../tests/data/gor/genes.gorz").toAbsolutePath();
-        TestUtils.runGorPipeCount("gor "+genesPath+" | write -i FULL " + tmpFilePath,"-gorroot",tmpdir.toString()); //Create index file.
+        TestUtils.runGorPipeCount("gor "+genesPath+" | write -i FULL " + tmpFilePath,"-gorroot", workDirPath.toString()); //Create index file.
 
         Assert.assertTrue("Index file for " + tmpFilePath + " is incorrect.", assertIndexFileIsCorrect(tmpFilePath));
 
-        Path path = tmpdir.resolve("genes.gorz.gori");
+        Path path = workDirPath.resolve("genes.gorz.gori");
         Assert.assertTrue( "Seek index file does not exist", Files.exists(path) );
         path.toFile().deleteOnExit();
 
         final int count = TestUtils.runGorPipeCount("gor -p chr22 "+ tmpfile.toAbsolutePath().normalize());
         Assert.assertEquals("Wrong number of lines in seekindexed gorz file", 1127, count);
-        var query1 = new String[] {"pgor "+ tmpfile.toAbsolutePath().normalize() +"|group chrom -count","-gorroot",tmpdir.toString(),"-cachedir","result_cache"};
-        var query2 = new String[] {"pgor "+genesPath+"|group chrom -count","-gorroot",tmpdir.toString(),"-cachedir","result_cache"};
+        var query1 = new String[] {"pgor "+ tmpfile.toAbsolutePath().normalize() +"|group chrom -count","-gorroot", workDirPath.toString(),"-cachedir","result_cache"};
+        var query2 = new String[] {"pgor "+genesPath+"|group chrom -count","-gorroot", workDirPath.toString(),"-cachedir","result_cache"};
         TestUtils.assertTwoGorpipeResults("Pgor on indexed gorz file returns different results than on unindexed one", query1, query2);
     }
 
     @Test
     public void testWriteGor() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".gor").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".gor").toAbsolutePath();
         TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("gor " + tmpfile, "gor ../tests/data/gor/genes.gorz");
         Assert.assertEquals("#Chrom	gene_start	gene_end	Gene_Symbol", Files.readAllLines(tmpfile).get(0));
@@ -253,7 +253,7 @@ public class UTestGorWrite {
 
     @Test
     public void testWriteNor() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".nor").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".nor").toAbsolutePath();
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
         Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
@@ -262,7 +262,7 @@ public class UTestGorWrite {
     @Test
     @Ignore("Write uses chr")
     public void testWriteVcf() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".vcf").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".vcf").toAbsolutePath();
         TestUtils.runGorPipeCount("gor ../tests/data/external/samtools/test.vcf | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("gor " + tmpfile, "gor ../tests/data/external/samtools/test.vcf ");
         Assert.assertEquals("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA00001	NA00002	NA00003", Files.readAllLines(tmpfile).get(1));
@@ -270,7 +270,7 @@ public class UTestGorWrite {
 
     @Test
     public void testWriteTsv() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".tsv").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".tsv").toAbsolutePath();
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
         Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
@@ -278,7 +278,7 @@ public class UTestGorWrite {
 
     @Test
     public void testWriteUnknownExt() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".non").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".non").toAbsolutePath();
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
         Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
@@ -286,14 +286,14 @@ public class UTestGorWrite {
 
     @Test
     public void testWriteNoHeaderUnknownExt() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".non").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".non").toAbsolutePath();
         TestUtils.runGorPipeCount("nor ../tests/data/gor/genes.gorz | top 1 | write -noheader " + tmpfile);
         Assert.assertEquals("chr1\t11868\t14412\tDDX11L1\n", FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
     }
 
     @Test
     public void testWriteNoHeaderVcf() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".vcf").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".vcf").toAbsolutePath();
         TestUtils.runGorPipeCount("gor ../tests/data/external/samtools/test.vcf  | top 1 | write -noheader " + tmpfile);
         Assert.assertEquals("chr20\t14370\trs6054257\tG\tA\t29\tPASS\tNS=3;DP=14;AF=0.5;DB;H2\tGT:GQ:DP:HQ\t0|0:48:1:51,51\t1|0:48:8:51,51\t1/1:43:5:.,.\n",
                 FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
@@ -301,7 +301,7 @@ public class UTestGorWrite {
 
     @Test
     public void testWriteNoHeaderTsv() throws IOException {
-        Path tmpfile = Files.createTempFile(tmpdir, "data", ".tsv").toAbsolutePath();
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".tsv").toAbsolutePath();
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | top 1 | write -noheader " + tmpfile);
         Assert.assertEquals("C\tCC\trs367896724\n", FileUtils.readFileToString(tmpfile.toFile(), "utf8"));
     }
@@ -309,7 +309,7 @@ public class UTestGorWrite {
     @Test
     public void testWriteNoHeaderInternalExt() throws IOException {
         try {
-            Path tmpfile = Files.createTempFile(tmpdir, "data", ".gor");
+            Path tmpfile = Files.createTempFile(workDirPath, "data", ".gor");
             TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write -noheader "
                     + tmpfile.toAbsolutePath().normalize().toString());
             Assert.fail("Can not skip header for gor");
@@ -317,7 +317,7 @@ public class UTestGorWrite {
         }
 
         try {
-            Path tmpfile = Files.createTempFile(tmpdir, "data", ".gorz");
+            Path tmpfile = Files.createTempFile(workDirPath, "data", ".gorz");
             TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write -noheader "
                     + tmpfile.toAbsolutePath().normalize().toString());
             Assert.fail("Can not skip header for gorz");
@@ -325,7 +325,7 @@ public class UTestGorWrite {
         }
 
         try {
-            Path tmpfile = Files.createTempFile(tmpdir, "data", ".nor");
+            Path tmpfile = Files.createTempFile(workDirPath, "data", ".nor");
             TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write -noheader "
                     + tmpfile.toAbsolutePath().normalize().toString());
             Assert.fail("Can not skip header for nor");
@@ -333,7 +333,7 @@ public class UTestGorWrite {
         }
 
         try {
-            Path tmpfile = Files.createTempFile(tmpdir, "data", ".norz");
+            Path tmpfile = Files.createTempFile(workDirPath, "data", ".norz");
             TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gorz | write -noheader "
                     + tmpfile.toAbsolutePath().normalize().toString());
             Assert.fail("Can not skip header for norz");
@@ -349,7 +349,7 @@ public class UTestGorWrite {
         try {
             System.setOut(new PrintStream(bout));
 
-            Path tmpfile = Files.createTempFile(tmpdir, "data", ".gor").toAbsolutePath();;
+            Path tmpfile = Files.createTempFile(workDirPath, "data", ".gor").toAbsolutePath();;
             String query = "gor ../tests/data/gor/genes.gorz | top 3 | write " + tmpfile;
             String queryResult = TestUtils.runGorPipe("gor ../tests/data/gor/genes.gorz | top 3");
 
@@ -425,22 +425,22 @@ public class UTestGorWrite {
 
     @Test
     public void testForkWriteWithTagsWithZeroRowInputCreatesFile() {
-        final String outputPath = tmpdir.toAbsolutePath().toString();
+        final String outputPath = workDirPath.toAbsolutePath().toString();
         String query = String.format("gorrow chr1,1,1 | calc xfile 0 | top 0 | write -t '0' -f xfile -r %s/data_#{fork}.gorz", outputPath);
         TestUtils.runGorPipe(query);
-        Assert.assertTrue(Files.exists(tmpdir.resolve("data_0.gorz")));
+        Assert.assertTrue(Files.exists(workDirPath.resolve("data_0.gorz")));
     }
 
     @Test
     public void testForkWriteWithCreate() {
-        String query = "create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r data_#{fork}.gorz; gor data_0.gorz | top 1";
-        String result = TestUtils.runGorPipe(query);
+        String query = "create xxx = gorrows -p chr1:1-10 | signature -timeres 1 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r data_#{fork}.gorz; gor data_0.gorz | top 1";
+        String result = TestUtils.runGorPipe(query, workDirPath.toString(), false, null);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
     }
 
     @Test
     public void testForkWriteFolderWithCreate() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        final Path outputPath = workDirPath.toAbsolutePath().resolve("mystuff");
         String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/data_#{fork}.gorz; gor %s/data_0.gorz | top 1", outputPath, outputPath);
         String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
@@ -448,7 +448,7 @@ public class UTestGorWrite {
 
     @Test
     public void testForkWriteSubfolderWithCreate() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        final Path outputPath = workDirPath.toAbsolutePath().resolve("mystuff");
         String query = String.format("create xxx = gorrows -p chr1:1-10 | rownum | replace rownum mod(rownum,2) | write -t '0' -f rownum -r %s/rownum=#{fork}/data.gorz; gor %s/rownum=0/data.gorz | top 1", outputPath, outputPath);
         String result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Wrong result in fork file","chrom\tpos\nchr1\t2\n",result);
@@ -456,7 +456,7 @@ public class UTestGorWrite {
 
     @Test
     public void testForkWriteWithParallel() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        final Path outputPath = workDirPath.toAbsolutePath().resolve("mystuff");
         String query = String.format("create splits = norrows 3; parallel -parts [splits] <(gorrows -p chr1:1-100 | calc sp str(#{col:Rownum}) + '.gorz')  | write %s/#{fork} -f sp -r", outputPath);
         String result = TestUtils.runGorPipe(query);
         TestUtils.assertGorpipeResults("testForkWriteWithParallel", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath.resolve("0.gorz")));
@@ -464,7 +464,7 @@ public class UTestGorWrite {
 
     @Test
     public void testForkWriteWithParallelCreate() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("mystuff");
+        final Path outputPath = workDirPath.toAbsolutePath().resolve("mystuff");
         String query = String.format("create splits = norrows 3; create par = parallel -parts [splits] <(gorrows -p chr1:1-100 | calc sp str(#{col:Rownum}) + '.gorz')  | write %s/#{fork} -f sp -r; gor %s/0.gorz", outputPath, outputPath);
         String result = TestUtils.runGorPipe(query);
         TestUtils.assertGorpipeResults("testForkWriteWithParallel", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath.resolve("0.gorz")));
@@ -472,7 +472,7 @@ public class UTestGorWrite {
 
     @Test
     public void testForkWriteDictWithParallel() {
-        final Path outputPath = tmpdir.toAbsolutePath().resolve("my.gord");
+        final Path outputPath = workDirPath.toAbsolutePath().resolve("my.gord");
         String query = String.format("create splits = norrows 3; parallel -parts [splits] <(gorrows -p chr1:1-100 | calc sp str(#{col:Rownum}) + '.gorz')  | write %s/#{fork} -f sp -r", outputPath);
         String result = TestUtils.runGorPipe(query);
         TestUtils.assertGorpipeResults("testForkWriteDictWithParallel file", "chrom\tpos\nchr1\t1\n", String.format("gor %s | top 1", outputPath.resolve("0.gorz")));
@@ -481,7 +481,7 @@ public class UTestGorWrite {
 
     @Test
     public void testSeekToFreshGorzFile() {
-        final Path tmpFile = tmpdir.resolve("dbsnp_test.gorz");
+        final Path tmpFile = workDirPath.resolve("dbsnp_test.gorz");
         tmpFile.toFile().deleteOnExit();
         final String path = tmpFile.toAbsolutePath().normalize().toString();
         TestUtils.runGorPipe("gor ../tests/data/gor/dbsnp_test.gor | write " + path);
@@ -506,21 +506,21 @@ public class UTestGorWrite {
         var path = Paths.get(pathstr);
         var filename = path.getFileName();
         var userpath = Paths.get("user");
-        var user = tmpdir.resolve(userpath);
+        var user = workDirPath.resolve(userpath);
         Files.createDirectory(user);
         var pgen = userpath.resolve("test.pgen");
-        var dest = tmpdir.resolve(filename);
+        var dest = workDirPath.resolve(filename);
         Files.copy(path, dest);
-        var destrel = tmpdir.relativize(dest);
+        var destrel = workDirPath.relativize(dest);
         var query = "gor "+destrel+" | rename reference ref | calc alt ref | calc values '0101' | binarywrite "+pgen;
-        TestUtils.runGorPipe(query,"-gorroot",tmpdir.toString());
+        TestUtils.runGorPipe(query,"-gorroot", workDirPath.toString());
     }
 
     @Test
     public void testWriteInfer() throws IOException {
         var query = "gorrows -p chr1:1-3 | calc u 'hello' | calc m 1 | write test.gorz";
-        TestUtils.runGorPipe(query,"-gorroot",tmpdir.toString());
-        var oschema = Files.readAllLines(tmpdir.resolve("test.gorz.meta")).stream().filter(p -> p.startsWith("## SCHEMA")).map(p -> p.substring(12).trim()).findFirst();
+        TestUtils.runGorPipe(query,"-gorroot", workDirPath.toString());
+        var oschema = Files.readAllLines(workDirPath.resolve("test.gorz.meta")).stream().filter(p -> p.startsWith("## SCHEMA")).map(p -> p.substring(12).trim()).findFirst();
         Assert.assertTrue(oschema.isPresent());
         var schema = oschema.get();
         Assert.assertEquals("S,I,S,I",schema);
@@ -528,18 +528,18 @@ public class UTestGorWrite {
 
     @Test
     public void testWriteIntoSymlinkedFolder() throws IOException {
-        Path outdir = tmpdir.resolve("out");
-        Path link2outdir = tmpdir.resolve("outlink");
+        Path outdir = workDirPath.resolve("out");
+        Path link2outdir = workDirPath.resolve("outlink");
         Files.createDirectory(outdir);
         Files.createSymbolicLink(link2outdir, outdir);
 
-        TestUtils.runGorPipe("gorrow chr1,1 | write outlink/b.gor", "-gorroot", tmpdir.toString());
+        TestUtils.runGorPipe("gorrow chr1,1 | write outlink/b.gor", "-gorroot", workDirPath.toString());
         Assert.assertEquals("#chrom\tpos\n" +
                 "chr1\t1\n", Files.readString(outdir.resolve("b.gor")));
     }
 
     static boolean assertIndexFileIsCorrect(final String filePath) throws IOException {
-        final String idxFilePath = filePath + ".gori";
+        final String idxFilePath = filePath + GORI.suffix;
 
         final Iterator<String> indexLineStream = new BufferedReader(new FileReader(idxFilePath)).lines().iterator();
         final Iterator<String> fileLineStream = new BufferedReader(new FileReader(filePath)).lines().iterator();

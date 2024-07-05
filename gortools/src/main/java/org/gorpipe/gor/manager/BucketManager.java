@@ -565,6 +565,7 @@ public class BucketManager<T extends DictionaryEntry> {
                         lastAccessTime, gracePeriodForDeletingBuckets.toMillis());
                 if (force || System.currentTimeMillis() - lastAccessTime > gracePeriodForDeletingBuckets.toMillis()) {
                     log.info("Deleting bucket file {}", bucketFile);
+                    // Can not use fileReader as we want to follow link files for buckets.
                     source.delete();
                     deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.GORI));
                     deleteFileIfExists(DataUtil.toFile(source.getFullPath(), DataType.META));
@@ -617,7 +618,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
             for (String candTempFile : candStream.collect(Collectors.toList())) {
                 if (candTempFile.contains(prefix)) {
-                    table.getFileReader().resolveUrl(candTempFile).delete();
+                    table.getFileReader().delete(candTempFile);
                 }
             }
         } catch (IOException ioe) {

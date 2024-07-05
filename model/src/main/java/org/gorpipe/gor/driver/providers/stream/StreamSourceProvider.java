@@ -207,20 +207,11 @@ public abstract class StreamSourceProvider implements SourceProvider {
      */
     @Override
     public GenomicIterator createIterator(DataSource source) throws IOException {
-        DataType type = source.getDataType();
-        if (type == null) {
-            log.warn("Unknown DataType for {}", source.getName());
+        StreamSourceIteratorFactory factory = getFactory(source);
+        StreamSourceFile file = factory != null ? factory.resolveFile((StreamSource)source) : null;
+        if (file == null) {
             return null;
         }
-        log.debug("GorDriver: Datatype of {} is {}", source.getName(), type);
-
-        StreamSourceIteratorFactory factory = dataTypeToFactory.get(source.getDataType());
-        if (factory == null) {
-            log.warn("Unsupported datatype {} for source {}", type, source.getName());
-            return null;
-        }
-
-        StreamSourceFile file = factory.resolveFile((StreamSource) source);
 
         SourceReference sourceRef = source.getSourceReference();
         if (sourceRef instanceof IndexableSourceReference) {
@@ -312,14 +303,32 @@ public abstract class StreamSourceProvider implements SourceProvider {
         return sourceMetaIt;
     }
 
-    private StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {
+    public StreamSourceFile getSourceFile(DataSource source) throws IOException {
+        var factory = getFactory(source);
+        return factory != null ? factory.resolveFile((StreamSource) source) : null;
+    }
+
+    private StreamSourceIteratorFactory getFactory(DataSource source) {
+        DataType type = source.getDataType();
+        if (type == null) {
+            log.warn("Unknown DataType for {}", source.getName());
+            return null;
+        }
+        log.debug("GorDriver: Datatype of {} is {}", source.getName(), type);
+        StreamSourceIteratorFactory factory = dataTypeToFactory.get(source.getDataType());
+        if (factory == null) {
+            log.warn("Unsupported datatype {} for source {}", type, source.getName());
+            return null;
+        }
+        return factory;
+    }
+
+    public StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {
         for (String index : file.possibleIndexNames()) {
-            StreamSource indexSource = wrap(resolveDataSource(new SourceReference(index, sourceRef)));
-            if (indexSource != null && indexSource.fileExists()) {
+            StreamSource indexSource = resolveDataSource(new SourceReference(index, sourceRef));
+            if (indexSource != null && indexSource.exists()) {
                 indexSource = wrap(indexSource);
-                if (indexSource.exists()) {
-                    return indexSource;
-                }
+                return indexSource;
             }
         }
 

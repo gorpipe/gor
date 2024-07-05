@@ -103,15 +103,6 @@ public interface DataSource extends AutoCloseable {
      */
     boolean exists();
 
-    /**
-     * Check for existence of source, when we know the source is a file. Allows for optimization per source.
-     * If the source is a not a file the output of this function is undefined (some implementations check )
-     *
-     */
-    default boolean fileExists() {
-        return exists();
-    }
-
     default void delete() {
         throw new GorResourceException("Delete is not implemented", getSourceType().getName());
     }

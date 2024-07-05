@@ -210,8 +210,7 @@ public class S3Source implements StreamSource {
 //      }
     }
 
-    @Override
-    public boolean fileExists()  {
+    private boolean fileExists()  {
         try {
             // Already in cache, exists
             loadMetadata(bucket, key);

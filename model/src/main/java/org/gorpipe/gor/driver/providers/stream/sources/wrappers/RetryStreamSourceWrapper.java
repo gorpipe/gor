@@ -106,11 +106,6 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
     }
 
     @Override
-    public boolean fileExists() {
-        return retry.perform(super::fileExists);
-    }
-
-    @Override
     public void delete() {
          retry.perform(super::delete);
     }

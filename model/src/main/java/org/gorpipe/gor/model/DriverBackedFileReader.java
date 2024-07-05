@@ -30,10 +30,14 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.PluggableGorDriver;
+import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
+import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
@@ -45,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
@@ -57,8 +60,11 @@ import java.util.stream.StreamSupport;
  */
 public class DriverBackedFileReader extends FileReader {
 
-    private String DEFAULT_COMMON_ROOT = "./";
     private static final Logger log = LoggerFactory.getLogger(DriverBackedFileReader.class);
+
+    private static final String DEFAULT_COMMON_ROOT = "./";
+
+    private final boolean DEPENDENTS = System.getProperty("gor.filereader.dependents", "true").equalsIgnoreCase("true");
 
     private final String securityContext;
     protected final String commonRoot;
@@ -171,18 +177,36 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public String move(String source, String dest) throws IOException {
-        return resolveUrl(source).move(resolveUrl(dest, true));
+        DataSource sourceSource = resolveUrl(source);
+        DataSource destSource = resolveUrl(dest, true);
+
+        if (DEPENDENTS) {
+            getDependentDestStream(source, dest, sourceSource).forEach(p -> p[0].move(p[1]));
+        }
+
+        String destPath = sourceSource.move(destSource);
+
+        return destPath;
     }
 
     @Override
     public String copy(String source, String dest) throws IOException {
-        return resolveUrl(source).copy(resolveUrl(dest, true));
+        DataSource sourceSource = resolveUrl(source);
+        DataSource destSource = resolveUrl(dest, true);
+
+        if (DEPENDENTS) {
+            getDependentDestStream(source, dest, sourceSource).forEach(p -> p[0].copy(p[1]));
+        }
+
+        String destPath = sourceSource.copy(destSource);
+
+        return destPath;
     }
 
     @Override
     public String streamMove(String source, String dest) throws IOException {
         if (!source.equals(dest)) {
-            copy(source, dest);
+            streamCopy(source, dest);
             delete(source);
         }
         return dest;
@@ -201,7 +225,15 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public void delete(String file) throws IOException {
-        resolveUrl(file, true).delete();
+        // Resolve as writeable (will not resolve links).
+        DataSource source = resolveUrl(file, true);
+        if (DEPENDENTS) {
+            List<DataSource> dependents = getValidatedDependents(source);
+            for (DataSource dependent : dependents) {
+                dependent.delete();
+            }
+        }
+        source.delete();
     }
 
     @Override
@@ -418,8 +450,6 @@ public class DriverBackedFileReader extends FileReader {
             return sources;
         }
 
-
-
         var gorDriverFactory = (PluggableGorDriver)GorDriverFactory.fromConfig();
         var sourceTypes =  gorDriverFactory.getSupportedSourceTypes();
 
@@ -435,5 +465,41 @@ public class DriverBackedFileReader extends FileReader {
         }
 
         return resultStream;
+    }
+
+    private Stream<DataSource[]> getDependentDestStream(String source, String dest, DataSource sourceSource) throws IOException {
+        return getValidatedDependents(sourceSource).stream()
+                .filter(dependent -> dependent.getName().startsWith(source)) // Only dependencies that are simply derived from the source.
+                .map(dependent -> {
+                    DataSource dependentDest = resolveUrl(dest + dependent.getName().substring(source.length()));
+                    return new DataSource[]{dependent, dependentDest};
+                });
+    }
+
+    private List<DataSource> getValidatedDependents(DataSource source) throws IOException {
+        List<DataSource> dependents = new ArrayList<>();
+        DataSource metaSource = resolveUrl(source.getName() + DataType.META.suffix, true);
+        if (metaSource != null && metaSource.exists()) {
+            dependents.add(metaSource);
+        }
+
+        DataSource indexSource = findIndexSource(source);
+        if (indexSource != null) {
+            dependents.add(indexSource);
+        }
+        return dependents;
+    }
+
+    private static StreamSource findIndexSource(DataSource source) throws IOException {
+        SourceProvider provider = PluggableGorDriver.instance().getSourceProvider(source.getSourceType());
+        if (provider != null && provider instanceof StreamSourceProvider) {
+            StreamSourceProvider streamProvider = (StreamSourceProvider) provider;
+            StreamSourceFile sourceFile = streamProvider.getSourceFile(source);
+
+            if (sourceFile != null && sourceFile.supportsIndex()) {
+                return streamProvider.findIndexFileFromFileDriver(sourceFile, source.getSourceReference());
+            }
+        }
+        return null;
     }
 }

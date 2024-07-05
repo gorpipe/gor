@@ -18,6 +18,7 @@ import org.gorpipe.gor.driver.utils.TestUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.collection.extract.Extract;
 import org.junit.*;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +47,18 @@ public class UTestDriverBackedSecureFileReader {
     private static String[] paths;
 
     @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
     private Path workDirPath;
+    private DriverBackedSecureFileReader reader;
 
     @Before
     public void setUp() throws Exception {
         workDirPath = workDir.getRoot().toPath();
+
+        reader = getReader();
     }
 
     @BeforeClass
@@ -69,8 +76,7 @@ public class UTestDriverBackedSecureFileReader {
     @Test
     public void testFileSignature() throws Exception {
         File f1 = File.createTempFile("test", DataType.TXT.suffix);
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
+
         final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
         Assert.assertEquals(f1SignatureA, reader.getFileSignature(f1.getAbsolutePath()));
 
@@ -187,9 +193,6 @@ public class UTestDriverBackedSecureFileReader {
      */
     @Test
     public void testSymbolicLinks() throws Exception {
-        final DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
-
         // Setup temporary file structure to test with
         final Path root = Files.createTempDirectory("symlinktest");
         final Path d1 = Files.createDirectory(Paths.get(root.toString(), "d1"));
@@ -252,9 +255,6 @@ public class UTestDriverBackedSecureFileReader {
         final File f1 = File.createTempFile("test", DataType.TXT.suffix);
         Files.write(f1.toPath(), "somedata".getBytes());
 
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
-
         // Test read standard file
 
         // Test readAll.
@@ -290,9 +290,6 @@ public class UTestDriverBackedSecureFileReader {
     public void testReadingDbData() throws Exception {
         String dbUrl = "jdbc:derby:" + paths[1];
         String header;
-
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
         // Test reading gor.db.credentials
 
@@ -347,11 +344,6 @@ public class UTestDriverBackedSecureFileReader {
         String dbUrl = "jdbc:derby:" + paths[1];
         String header;
 
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder().withAllowAbsolutePath(true).build());
-
-        // Test reading gor.db.credentials
-
         try {
             DbConnection.systemConnections.initializeDbSources("nonexisting/path/to/nowhere");
             Assert.fail("Should get exception for non existent gor.db.credentials");
@@ -399,14 +391,44 @@ public class UTestDriverBackedSecureFileReader {
     }
 
     @Test
-    public void testCopy() throws IOException {
+    public void testDelete() throws IOException {
+        System.setProperty("gor.filereader.dependents", "true");
+        reader = getReader();
+
         Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
         Files.write(f1, "somedata".getBytes());
 
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder()
-                        .withAllowAbsolutePath(true)
-                        .withWriteLocations(List.of(workDirPath.toString())).build());
+        reader.delete(f1.toString());
+
+        Assert.assertFalse(Files.exists(f1));
+    }
+
+    @Test
+    public void testDeleteWithDependents() throws IOException {
+        System.setProperty("gor.filereader.dependents", "true");
+        reader = getReader();
+
+        Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.GORZ));
+        Files.write(f1, "somedata".getBytes());
+        Path d1 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("test", DataType.GORZ), DataType.META));
+        Files.write(d1, "META=somedata".getBytes());
+        Path d2 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("test", DataType.GORZ), DataType.GORI));
+        Files.write(d2, "1".getBytes());
+
+        reader.delete(f1.toString());
+
+        Assert.assertFalse(Files.exists(f1));
+        Assert.assertFalse(Files.exists(d1));
+        Assert.assertFalse(Files.exists(d2));
+    }
+
+    @Test
+    public void testCopy() throws IOException {
+        System.setProperty("gor.filereader.dependents", "true");
+        reader = getReader();
+
+        Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
+        Files.write(f1, "somedata".getBytes());
 
         Path c1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.TXT));
         reader.copy(f1.toString(), c1.toString());
@@ -417,14 +439,39 @@ public class UTestDriverBackedSecureFileReader {
     }
 
     @Test
+    public void testCopyWithDependents() throws IOException {
+        System.setProperty("gor.filereader.dependents", "true");
+        reader = getReader();
+
+        Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.GORZ));
+        Files.write(f1, "somedata".getBytes());
+        Path d1 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("test", DataType.GORZ), DataType.META));
+        Files.write(d1, "META=somedata".getBytes());
+        Path d2 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("test", DataType.GORZ), DataType.GORI));
+        Files.write(d2, "1".getBytes());
+
+        Path cf1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.GORZ));
+        reader.copy(f1.toString(), cf1.toString());
+        Path cd1 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("copy", DataType.GORZ), DataType.META));
+        Path cd2 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("copy", DataType.GORZ), DataType.GORI));
+
+        Assert.assertTrue(Files.exists(f1));
+        Assert.assertTrue(Files.exists(cf1));
+        Assert.assertTrue(Files.exists(d1));
+        Assert.assertTrue(Files.exists(cd1));
+        Assert.assertTrue(Files.exists(d2));
+        Assert.assertTrue(Files.exists(cd2));
+
+        Assert.assertEquals("somedata", new String(Files.readAllBytes(cf1)));
+    }
+
+    @Test
     public void testMove() throws IOException {
+        System.setProperty("gor.filereader.dependents", "true");
+        reader = getReader();
+
         Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.TXT));
         Files.write(f1, "somedata".getBytes());
-
-        DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader("", null,
-                AccessControlContext.builder()
-                        .withAllowAbsolutePath(true)
-                        .withWriteLocations(List.of(workDirPath.toString())).build());
 
         Path c1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.TXT));
         reader.move(f1.toString(), c1.toString());
@@ -433,6 +480,34 @@ public class UTestDriverBackedSecureFileReader {
         Assert.assertTrue(Files.exists(c1));
         Assert.assertEquals("somedata", new String(Files.readAllBytes(c1)));
     }
+
+    @Test
+    public void testMoveWithDependents() throws IOException {
+        System.setProperty("gor.filereader.dependents", "true");
+        reader = getReader();
+
+        Path f1 = workDirPath.resolve(DataUtil.toFile("test", DataType.GORZ));
+        Files.write(f1, "somedata".getBytes());
+        Path d1 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("test", DataType.GORZ), DataType.META));
+        Files.write(d1, "META=somedata".getBytes());
+        Path d2 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("test", DataType.GORZ), DataType.GORI));
+        Files.write(d2, "1".getBytes());
+
+        Path cf1 = workDirPath.resolve(DataUtil.toFile("copy", DataType.GORZ));
+        reader.move(f1.toString(), cf1.toString());
+        Path cd1 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("copy", DataType.GORZ), DataType.META));
+        Path cd2 = workDirPath.resolve(DataUtil.toFile(DataUtil.toFile("copy", DataType.GORZ), DataType.GORI));
+
+        Assert.assertFalse(Files.exists(f1));
+        Assert.assertTrue(Files.exists(cf1));
+        Assert.assertFalse(Files.exists(d1));
+        Assert.assertTrue(Files.exists(cd1));
+        Assert.assertFalse(Files.exists(d2));
+        Assert.assertTrue(Files.exists(cd2));
+
+        Assert.assertEquals("somedata", new String(Files.readAllBytes(cf1)));
+    }
+
 
     @Test
     public void testReadingDbDataDirect() throws Exception {
@@ -445,9 +520,7 @@ public class UTestDriverBackedSecureFileReader {
         DriverBackedSecureFileReader reader = new DriverBackedSecureFileReader(".", securityContext,
                 AccessControlContext.builder().withAllowAbsolutePath(true).build());
 
-
         DbConnection.systemConnections.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
-
 
         // 2. Fails, should succeed but fails on check that should be removed in DriverBackedSecureFileReader.directDbUrl.
         var data = reader.readAll(dbviewquery);
@@ -503,5 +576,12 @@ public class UTestDriverBackedSecureFileReader {
 
         // 10. Ok, succeeds as should.
         result = gorsat.TestUtils.runGorPipeCLI("nor " + dbviewquery, ".", securityContext);
+    }
+
+    private DriverBackedSecureFileReader getReader() {
+        return new DriverBackedSecureFileReader(workDirPath.toString(), null,
+                AccessControlContext.builder()
+                        .withAllowAbsolutePath(true)
+                        .withWriteLocations(List.of(workDirPath.toString())).build());
     }
 }
