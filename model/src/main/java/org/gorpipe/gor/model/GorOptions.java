@@ -56,6 +56,7 @@ import scala.Tuple2;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -741,6 +742,8 @@ public class GorOptions {
                 } else {
                     processDictionary(fileName, allowBucketAccess, projectContext, isSilentTagFilter, alltags);
                 }
+            } catch (NoSuchFileException nsfe) {
+                throw new GorResourceException(String.format("Dictionary file '%s' was not found", fileName), fileName, nsfe);
             } catch (IOException e) {
                 throw new GorSystemException(e);
             }
