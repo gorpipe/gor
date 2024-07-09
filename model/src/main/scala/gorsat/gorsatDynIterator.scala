@@ -28,6 +28,7 @@ package gorsat
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.util.Util
@@ -166,7 +167,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       if (i == 0) {
         var inest = pipeSteps(0).indexOf("<(")
         if( inest == -1 ) inest = pipeSteps(0).length
-        var iyml = pipeSteps(0).toUpperCase.indexOf(".YML")
+        var iyml = pipeSteps(0).toLowerCase.indexOf(DataType.YML.suffix)
         if( iyml == -1 ) iyml = pipeSteps(0).length
         if( (iyml < inest) && drsGorPipeSession.getSystemContext.getReportBuilder != null ) {
           pipeSteps(0) = modifiedCommand( drsGorPipeSession.getSystemContext.getReportBuilder.parse(pipeSteps(0)), seekChr, seekPos, endPos, seekOnly, header )

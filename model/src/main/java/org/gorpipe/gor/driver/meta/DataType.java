@@ -115,6 +115,12 @@ public enum DataType {
         return file.trim().toLowerCase().contains(type.suffix);
     }
 
+    public static boolean containsTypeWithCallingSuffix(String file, DataType type) {
+        return  file.trim().toLowerCase().contains(type.suffix + '(') ||
+                file.trim().toLowerCase().contains(type.suffix + ':') ||
+                file.trim().toLowerCase().contains(type.suffix + '?');
+    }
+
     public static String[] getWritableFormats() {
         return new String[] {DataType.GOR.suffix,
                 DataType.GORZ.suffix,

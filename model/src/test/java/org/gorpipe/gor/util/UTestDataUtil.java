@@ -131,6 +131,14 @@ public class UTestDataUtil {
         Assert.assertFalse(DataUtil.isYml("foo.txt"));
         Assert.assertTrue(DataUtil.isYml("foo.yml"));
         Assert.assertTrue(DataUtil.isYml("foo.yml.link"));
+        Assert.assertTrue(DataUtil.isYml("../tests/data/reports/test.yml()"));
+        Assert.assertTrue(DataUtil.isYml("../tests/data/reports/test.yml(top=50)"));
+        Assert.assertTrue(DataUtil.isYml("../tests/data/reports/test2.yml::TestReport(query2, top = 10)"));
+        Assert.assertTrue(DataUtil.isYml("../tests/data/reports/test.yml?TestReport&query=echo&some=stuff"));
+        Assert.assertFalse(DataUtil.isYml("foo.yml.gord"));
+        Assert.assertFalse(DataUtil.isYml("foo.yml.gord.link"));
+        Assert.assertFalse(DataUtil.isYml("foo.yml.nord"));
+        Assert.assertFalse(DataUtil.isYml("foo.yml.nord.link"));
 
         // isGorq
         Assert.assertFalse(DataUtil.isGorq("foo.txt"));
