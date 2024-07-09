@@ -125,7 +125,7 @@ object TypeConversionFunctions {
 
   def string2Int(ex: sFun): iFun = {
     cvp => {
-      ex(cvp).toInt
+      ex(cvp).toDouble.toInt
     }
   }
 

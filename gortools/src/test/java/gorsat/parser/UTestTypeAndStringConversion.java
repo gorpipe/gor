@@ -49,7 +49,12 @@ public class UTestTypeAndStringConversion {
     @Test
     public void testInt() {
         TestUtils.assertCalculated("int(3.1415926535)", "3");
+        TestUtils.assertCalculated("int('3.1415926535')", "3");
         TestUtils.assertCalculated("int('3')", "3");
+        TestUtils.assertCalculated("int('123456789')", "123456789");
+        TestUtils.assertCalculated("int('2123456789')", "2123456789");
+        TestUtils.assertCalculated("int('2123456789.0')", "2123456789");
+        TestUtils.assertCalculated("int('2123456789.0e0')", "2123456789");
         TestUtils.assertCalculated("int(1+3.14)", "4");
         TestUtils.assertCalculated("int(1+2+3)", "6");
     }
