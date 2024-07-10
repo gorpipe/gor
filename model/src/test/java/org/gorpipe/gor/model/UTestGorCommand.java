@@ -22,8 +22,8 @@
 
 package org.gorpipe.gor.model;
 
+import gorsat.TestUtils;
 import junit.framework.TestCase;
-import org.gorpipe.gor.model.GorCommand;
 
 /**
  * Test the JoinDataCache
@@ -52,5 +52,34 @@ public class UTestGorCommand extends TestCase {
     public void testGetWithoutCommentsWithSqlHints() {
         GorCommand gc = new GorCommand("gor /*+ BROADCAST(a) */ /* this is /*inner*/first comment /* Nested */ */c:/data/test./* comment*/gor");
         assertEquals(gc.getWithoutComments(), "gor /*+ BROADCAST(a) */ c:/data/test.gor");
+    }
+
+    public void testQuotedCommentIsNotRemoved() {
+        String query = "norrows 1 | calc example_query '/* comment */ gor #dbsnp# | top 10' | select example_query";
+        try {
+            String result = TestUtils.runGorPipe(query);
+            String exp = "ChromNOR\tPosNOR\texample_query\n" +
+                    "chrN\t0\t/* comment */ gor #dbsnp# | top 10\n";
+            assertEquals("Query results do not match", exp, result);
+        } catch (Exception e) {
+            fail("Parsing problem makes query appear invalid: " + e.getMessage());
+        }
+    }
+
+    public void testQuotedPartialCommentIsIgnored() {
+        StringBuilder sb = new StringBuilder()
+                .append("def #path_spec# = \"data/gor_files/*.gor\" ;")   /* string accidentally seems to start a comment */
+                .append("  norrows ")
+                .append("/* xx */")     /* real comment could interact with false comment start in string */
+                .append(" 1 ")
+                .append("|   CALC path_spec #path_spec# ");
+        try {
+            String result = TestUtils.runGorPipe(sb.toString());
+            String exp = "ChromNOR\tPosNOR\tRowNum\tpath_spec\n" +
+                    "chrN\t0\t0\tdata/gor_files/*.gor\n";
+            assertEquals("Query results do not match", exp, result);
+        } catch (Exception e) {
+            fail("Parsing problem makes query appear invalid: " + e.getMessage());
+        }
     }
 }

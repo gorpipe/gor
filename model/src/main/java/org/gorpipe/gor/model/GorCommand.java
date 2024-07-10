@@ -22,6 +22,8 @@
 
 package org.gorpipe.gor.model;
 
+import org.gorpipe.exceptions.GorParsingException;
+
 import java.util.ArrayList;
 
 /**
@@ -61,7 +63,7 @@ public class GorCommand {
      * @return The command string without comments
      */
     public String getWithoutComments() {
-        return getWithoutComments(false);
+        return getWithoutComments(true);
     }
 
     /**
@@ -110,22 +112,26 @@ public class GorCommand {
         int startOfComment = -1;
         int nestedCount = 0;
         int charsRemoved = 0;
+        int sqlHintStart = -1;
         boolean inQuotas = false;
         for (int i = 0; i < cmd.length() - 1; i++) {
             char ch1 = cmd.charAt(i);
-            if (allowQuotes) inQuotas = inQuotas != (ch1 == '"' || ch1 == "'".charAt(0));
+            if (allowQuotes && startOfComment < 0) inQuotas = inQuotas != (ch1 == '"' || ch1 == "'".charAt(0));
             if (!inQuotas) {
                 char ch2 = cmd.charAt(i + 1);
                 if (ch1 == '/' && ch2 == '*') {
                     if (startOfComment >= 0) {
                         nestedCount++;
                     } else {
-                        if (cmd.length() <= i + 2 || cmd.charAt(i + 2) != '+') startOfComment = i;
+                        if (sqlHintStart < 0 && (cmd.length() > i + 2) && cmd.charAt(i + 2) == '+') {
+                            sqlHintStart = i;
+                        } else startOfComment = i;
                     }
+                    i++; // consume 2-char delimiter
                 } else if (ch1 == '*' && ch2 == '/') {
-                    if (nestedCount > 0) {
+                    if (nestedCount > 0) { // end of nested comments
                         nestedCount--;
-                    } else if (startOfComment >= 0) {
+                    } else if (startOfComment >= 0) { // end of outermost regular comment
                         commentsFound = true;
                         int end = i + 2;
                         int delFrom = startOfComment - charsRemoved;
@@ -135,9 +141,19 @@ public class GorCommand {
                         positions.add(cp);
                         charsRemoved = charsRemoved + end - startOfComment;
                         startOfComment = -1;
+                    } else if (sqlHintStart >= 0) { // end of (non-removable) SQL hint comment
+                        sqlHintStart = -1;
+                    } else {
+                        throw new GorParsingException("Malformed comment: unpaired comment terminator \"*/\" at position " + i);
                     }
+                    i++; // consume 2-char delimiter
                 }
             }
+        }
+        if (startOfComment >= 0) {
+            throw new GorParsingException("Malformed comment: unterminated comment starting at position " + startOfComment);
+        } else if (sqlHintStart >= 0) { // end of (non-removable) SQL hint comment
+            throw new GorParsingException("Malformed comment: unterminated SQL hint comment starting at position " + sqlHintStart);
         }
         return rc.toString();
     }

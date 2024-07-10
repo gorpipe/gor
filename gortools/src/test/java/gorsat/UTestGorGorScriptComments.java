@@ -23,11 +23,9 @@
 package gorsat;
 
 import gorsat.Commands.CommandParseUtilities;
+import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.test.utils.FileTestUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -56,6 +54,10 @@ public class UTestGorGorScriptComments {
         String query = "/* ' */\ngorrows chr1,1,1";
         String result = CommandParseUtilities.removeComments(query);
         Assert.assertEquals("\ngorrows chr1,1,1", result);
+
+        String query2 = "/* ' */'ABC'/* ' */\ngorrows chr1,1,1";
+        String result2 = CommandParseUtilities.removeComments(query2);
+        Assert.assertEquals("'ABC'\ngorrows chr1,1,1", result2);
     }
 
     @Test
@@ -68,7 +70,7 @@ public class UTestGorGorScriptComments {
         result = CommandParseUtilities.removeComments(query);
         Assert.assertEquals("", result);
 
-        query = "gorrows chr1,1,1\n/*This is a line comment\nFooBar*/";
+        query = "gorrows chr1,1,1\n/*This is a multiline comment\nFooBar*/";
         result = CommandParseUtilities.removeComments(query);
         Assert.assertEquals("gorrows chr1,1,1\n", result);
 
@@ -82,6 +84,40 @@ public class UTestGorGorScriptComments {
     }
 
     @Test
+    public void testNoCharRescan() {
+        // Once a * or / is consumed for a comment delimiter, it is not paired into another one
+        // These comments with no content are technically valid:
+        String query = "gorrows chr1,1,1\nThis is /**//*/**/*/\n/*FooBar*/";
+        String result = CommandParseUtilities.removeComments(query);
+        Assert.assertEquals("gorrows chr1,1,1\nThis is \n", result);
+
+        // '/*/' should not be parsed as both comment start and end, so this is malformed
+        query = "gorrows chr1,1,1\nThis is /*/\n/*FooBar*/";
+        String text = exceptionTextFromRemoveComments(query);
+        String exp = ("Malformed comment: unterminated comment starting at position " + 25);
+        Assert.assertEquals(exp, text);
+    }
+
+    @Test
+    public void testNestedComments() {
+        String query = "/* This is a /* query */ comment*/\ngorrows chr1,1,1";
+        String result = CommandParseUtilities.removeComments(query);
+        Assert.assertEquals("\ngorrows chr1,1,1", result);
+
+        query = "/*This is a /* line */ comment*/";
+        result = CommandParseUtilities.removeComments(query);
+        Assert.assertEquals("", result);
+
+        query = "gorrows chr1,1,1\n/*This is /*a multiline comment\nFoo*/Bar*/";
+        result = CommandParseUtilities.removeComments(query);
+        Assert.assertEquals("gorrows chr1,1,1\n", result);
+
+        query = "gorrows chr1,1,1\n/*This is /*/*/*a pathologically packed comment\nFoo*/*/*/Bar*/";
+        result = CommandParseUtilities.removeComments(query);
+        Assert.assertEquals("gorrows chr1,1,1\n", result);
+    }
+
+    @Test
     public void testGorScriptComments() throws IOException {
         String[] args = new String[]{"-script", gorScript.getCanonicalPath(), ""};
         int count = TestUtils.runGorPipeCount(args);
@@ -92,8 +128,92 @@ public class UTestGorGorScriptComments {
     @Test
     public void testCommentInQuotes() {
         String query = "norrows 1 /* 'hello/*' */";
-        String result = CommandParseUtilities.removeComments(query, true);
-        Assert.assertEquals("norrows 1 ", result);
+        // Now 'true' is default, and commented quotes are ignored, so original expectation no longer applies
+        // String result = CommandParseUtilities.removeComments(query, true);
+        // Assert.assertEquals("norrows 1 ", result);
+        String text = exceptionTextFromRemoveComments(query);
+        String exp = ("Malformed comment: unterminated comment starting at position " + 10);
+        Assert.assertEquals(exp, text);
+    }
+
+    @Test
+    public void testSqlHintComment() {
+        {
+            // Outer comment with /*+ is preserved, and regular comments are removed
+            String query = "gor /*+ BROADCAST(a) */ /* this is /*inner*/first comment /* Nested */ */c:/data/test./* comment*/gor";
+            String result = CommandParseUtilities.removeComments(query);
+            String exp = "gor /*+ BROADCAST(a) */ c:/data/test.gor";
+            Assert.assertEquals(exp, result);
+        }
+        {
+            // Nested comment is removed, with or without '+'
+            // and independent of type of surrounding comment
+            // maybe these are not useful constructs but this documents behavior
+            String query = "gor /*+ BROADCAST(a) /*+removed*/*//* also \n removed */ /* this is /*inner*/first /*+removed*/ comment /* Nested */ */c:/data/test./* comment*/gor";
+            String result = CommandParseUtilities.removeComments(query);
+            String exp = "gor /*+ BROADCAST(a) */ c:/data/test.gor";
+            Assert.assertEquals(exp, result);
+        }
+        {
+            // string inside SQL hint is parsed as such, so delimiter it contains is ignored
+            // maybe never useful, but documents behavior
+            String query = "norrows 1 /*+ BROADCAST() 'hello/*' 'YES /* string with contained comment */' */";
+            String result = CommandParseUtilities.removeComments(query);
+            String exp = "gor /*+ BROADCAST(a) */ c:/data/test.gor";
+            Assert.assertEquals(query, result);
+        }
+
+    }
+
+
+    String exceptionTextFromRemoveComments(String query) {
+        try {
+            String result = CommandParseUtilities.removeComments(query);
+            Assert.fail("Should have thrown an exception");
+            return null;
+        } catch (GorParsingException e) {
+            return e.getMessage();
+        }
+    }
+
+    @Test
+    public void testMalformedComments() {
+        {
+            String query = "/* ' */\ngorrows chr1,1,1/*";
+            String text = exceptionTextFromRemoveComments(query);
+            String exp = ("Malformed comment: unterminated comment starting at position " + (query.length() - 2));
+            Assert.assertEquals(exp, text);
+        }
+        {
+            String query = "/* ' */\ngorrows chr1,1,1*/";
+            String text = exceptionTextFromRemoveComments(query);
+            String exp = ("Malformed comment: unpaired comment terminator \"*/\" at position " + (query.length() - 2));
+            Assert.assertEquals(exp, text);
+        }
+        {
+            String query = "/* /*' */\ngorrows chr1,1,1/*";
+            String text = exceptionTextFromRemoveComments(query);
+            String exp = ("Malformed comment: unterminated comment starting at position " + 0);
+            Assert.assertEquals(exp, text);
+        }
+        {
+            String query = "/* ' */  /*\ngorrows chr1,1,1/*";
+            String text = exceptionTextFromRemoveComments(query);
+            String exp = ("Malformed comment: unterminated comment starting at position " + 9);
+            Assert.assertEquals(exp, text);
+        }
+        {
+            String query = "norrows 1 /* 'hello/*' */";
+            String text = exceptionTextFromRemoveComments(query);
+            String exp = ("Malformed comment: unterminated comment starting at position " + 10);
+            Assert.assertEquals(exp, text);
+        }
+        {
+            String query = "norrows 1 /*+ BROADCAST() /* hello */";
+            String text = exceptionTextFromRemoveComments(query);
+            String exp = ("Malformed comment: unterminated SQL hint comment starting at position " + 10);
+            Assert.assertEquals(exp, text);
+        }
     }
 
 
