@@ -182,6 +182,15 @@ This is used when the expression doesn’t produce a match.</p></td>
 </tbody>
 </table>
 </div>
+<div class="section" id="expressions">
+<h2>Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">expression</span></code> parameter is interpreted as a regular expression.  Its capture group(s)
+define how the values for output columns are extracted.</p>
+<p>Any of the characters <code class="docutils literal notranslate"><span class="pre">(</span></code>, <code class="docutils literal notranslate"><span class="pre">)</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code>, <code class="docutils literal notranslate"><span class="pre">^</span></code>, <code class="docutils literal notranslate"><span class="pre">$</span></code>, <code class="docutils literal notranslate"><span class="pre">.</span></code>, <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">]</span></code>, and <code class="docutils literal notranslate"><span class="pre">|</span></code> will be interpreted as a regular expression
+metacharacter unless it is escaped.  To insert one of these to be matched as a literal character, it must be preceded
+in the query by <em>two</em> backslashes, e.g., <code class="docutils literal notranslate"><span class="pre">\\+</span></code>.  (The escaping yields a string value containing one backslash.
+When that string is used to construct the regular expression, the backslash escapes the metacharacter.)</p>
+</div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The example shown below will match the content of the ‘source’ column and split the content of that column into separate columns ‘abc’, ‘def’, and ‘ghi’ according to the provided matching expression. Notice that there are three pairs of curved brackets in the matching expression, which correspond to the three new columns.</p>
@@ -193,6 +202,12 @@ This is used when the expression doesn’t produce a match.</p></td>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1,1 | <span class="nb">CALC</span> source &#39;41000_1&#39; | REGSEL abc,<span class="nd">def</span>,ghi source &#39;(.*)_(.*)_(.*)&#39; -e 0
 </pre></div>
 </div>
+<p>The next example illustrates splitting an input value at a marker character that happens to be a metacharacter:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>norrows 1 | calc s &#39;cov/70.gorz|.cov/5.gorz&#39; | calc match regsel(s, &#39;(.*)\\|.*&#39;) | select match
+</pre></div>
+</div>
+<p>The substring <code class="docutils literal notranslate"><span class="pre">\\|</span></code> in <code class="docutils literal notranslate"><span class="pre">expression</span></code> is used to match the <code class="docutils literal notranslate"><span class="pre">|</span></code> contained in input values, so that all characters before <code class="docutils literal notranslate"><span class="pre">|</span></code>
+are returned as the value for <code class="docutils literal notranslate"><span class="pre">match</span></code> (i.e., <code class="docutils literal notranslate"><span class="pre">cov/70.gorz</span></code>).</p>
 </div>
 </div>
 

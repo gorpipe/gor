@@ -253,6 +253,9 @@ This is a comment
 </pre></div>
 </div>
 <p>Comments can be used to quickly remove certain conditions from a GOR query if the query is well-formatted in the query editor (i.e. with individual conditions placed on single lines).</p>
+<p>Nested comments are supported, so that it is <em>usually</em> possible to logically remove an entire section of a complex query
+by inserting <code class="docutils literal notranslate"><span class="pre">/*</span></code> before and <code class="docutils literal notranslate"><span class="pre">/*</span></code> after, even if the section includes comments.
+(However, there might be unexpected results if the removed section includes quoted strings that contain unpaired <code class="docutils literal notranslate"><span class="pre">/*</span></code> or <code class="docutils literal notranslate"><span class="pre">*/</span></code> sequences.)</p>
 </div>
 <div class="section" id="other-punctuation-in-gor">
 <h2>Other Punctuation in GOR<a class="headerlink" href="#other-punctuation-in-gor" title="Permalink to this headline">¶</a></h2>
@@ -264,6 +267,16 @@ This is a comment
 <div class="section" id="hashes">
 <h3>Hashes<a class="headerlink" href="#hashes" title="Permalink to this headline">¶</a></h3>
 <p>Sections of reusable GOR queries can be defined through the use of <a class="reference internal" href="command/CREATE.html#create"><span class="std std-ref">CREATE</span></a> statements. The convention in GOR is to set the name of the section inside hash symbols, such as <code class="docutils literal notranslate"><span class="pre">#name_of_statement#</span></code>. This statement can then be called elsewhere in the code by putting the full name of the statement (and the hash symbols) inside square brackets, as in <code class="docutils literal notranslate"><span class="pre">[#name_of_statement#]</span></code></p>
+</div>
+<div class="section" id="backslashes">
+<h3>Backslashes<a class="headerlink" href="#backslashes" title="Permalink to this headline">¶</a></h3>
+<p>A single backslash (<code class="docutils literal notranslate"><span class="pre">\</span></code>) is interpreted to escape the character that follows; it does not yield a backslash in the string value.
+To include a literal backslash in a string (for example, as an escape character in a regular expression),
+it must itself be escaped, i.e., <code class="docutils literal notranslate"><span class="pre">&quot;\\&quot;</span></code> yields a string containing one backslash.</p>
+</div>
+<div class="section" id="control-characters">
+<h3>Control characters<a class="headerlink" href="#control-characters" title="Permalink to this headline">¶</a></h3>
+<p>A control character such as TAB <em>cannot</em> be inserted into a string using backslash escaping.  The input <code class="docutils literal notranslate"><span class="pre">&quot;\n\t\t&quot;</span></code> yields the same value as <code class="docutils literal notranslate"><span class="pre">&quot;ntt&quot;</span></code>.</p>
 </div>
 </div>
 </div>
