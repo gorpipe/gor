@@ -79,6 +79,11 @@ You can use comments in gor using the same notation as in Javascript or CSS. All
 
 Comments can be used to quickly remove certain conditions from a GOR query if the query is well-formatted in the query editor (i.e. with individual conditions placed on single lines).
 
+Nested comments are supported, so that it is *usually* possible to logically remove an entire section of a complex query
+by inserting ``/*`` before and ``/*`` after, even if the section includes comments.
+(However, there might be unexpected results if the removed section includes quoted strings that contain unpaired ``/*`` or ``*/`` sequences.)
+
+
 
 Other Punctuation in GOR
 ========================
@@ -95,3 +100,17 @@ Hashes
 ------
 
 Sections of reusable GOR queries can be defined through the use of :ref:`CREATE` statements. The convention in GOR is to set the name of the section inside hash symbols, such as ``#name_of_statement#``. This statement can then be called elsewhere in the code by putting the full name of the statement (and the hash symbols) inside square brackets, as in ``[#name_of_statement#]``
+
+
+Backslashes
+-----------
+
+A single backslash (``\``) is interpreted to escape the character that follows; it does not yield a backslash in the string value.
+To include a literal backslash in a string (for example, as an escape character in a regular expression),
+it must itself be escaped, i.e., ``"\\"`` yields a string containing one backslash.
+
+
+Control characters
+------------------
+
+A control character such as TAB *cannot* be inserted into a string using backslash escaping.  The input ``"\n\t\t"`` yields the same value as ``"ntt"``.

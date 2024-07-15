@@ -25,6 +25,18 @@ Options
 |              | This is used when the expression doesn't produce a match.                    |
 +--------------+------------------------------------------------------------------------------+
 
+Expressions
+===========
+
+The ``expression`` parameter is interpreted as a regular expression.  Its capture group(s)
+define how the values for output columns are extracted.
+
+Any of the characters ``(``, ``)``, ``*``, ``+``, ``?``, ``^``, ``$``, ``.``, ``[``, ``]``, and ``|`` will be interpreted as a regular expression
+metacharacter unless it is escaped.  To insert one of these to be matched as a literal character, it must be preceded
+in the query by *two* backslashes, e.g., ``\\+``.  (The escaping yields a string value containing one backslash.
+When that string is used to construct the regular expression, the backslash escapes the metacharacter.)
+
+
 Examples
 ========
 
@@ -41,3 +53,12 @@ If a default value should be entered into the new columns when no match is found
 .. code-block:: gor
 
    gorrow chr1,1,1 | CALC source '41000_1' | REGSEL abc,def,ghi source '(.*)_(.*)_(.*)' -e 0
+
+The next example illustrates splitting an input value at a marker character that happens to be a metacharacter:
+
+.. code-block:: gor
+
+   norrows 1 | calc s 'cov/70.gorz|.cov/5.gorz' | calc match regsel(s, '(.*)\\|.*') | select match
+
+The substring ``\\|`` in ``expression`` is used to match the ``|`` contained in input values, so that all characters before ``|``
+are returned as the value for ``match`` (i.e., ``cov/70.gorz``).
