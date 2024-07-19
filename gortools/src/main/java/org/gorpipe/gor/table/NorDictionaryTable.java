@@ -47,8 +47,6 @@ public class NorDictionaryTable extends DictionaryTable<DictionaryEntry> {
     public NorDictionaryTable(String path, FileReader fileReader) {
         super(path, fileReader, new NorDictionaryTableMeta(), new NorDictionaryEntryFactory());
 
-        setValidateFiles(true);
-
         reload();
     }
 

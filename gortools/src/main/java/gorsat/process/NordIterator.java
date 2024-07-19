@@ -231,7 +231,7 @@ public class NordIterator extends GenomicIteratorBase {
 
         if (getHeader().isEmpty()) {
             setHeader(iteratorHeader);
-        } else if (!iteratorHeader.equalsIgnoreCase(expectedHeader)) {
+        } else if (nordDict.isValidateFiles() && !iteratorHeader.equalsIgnoreCase(expectedHeader)) {
             String message = String.format("Headers do not match between dictionary files for: %s\n" +
                     "Expected header: %s\n" +
                     "     Got header: %s", activeEntry.getAlias(), expectedHeader, iteratorHeader);

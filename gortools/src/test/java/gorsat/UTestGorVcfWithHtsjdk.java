@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
@@ -46,7 +47,7 @@ public class UTestGorVcfWithHtsjdk {
     private String doTest(String gor, String file, int top, int expected) {
         String curdir = new File(".").getAbsolutePath();
 
-        String query = gor + " " + curdir.substring(0, curdir.length() - 1) + file + " | top " + top;
+        String query = gor + " " + curdir.substring(0, curdir.length() - 1) + file + " | top " + top + " | verifyorder";
 
         StringBuilder ret = new StringBuilder();
         GenomicIterator rs = TestUtils.runGorPipeIterator(query);
@@ -90,12 +91,27 @@ public class UTestGorVcfWithHtsjdk {
 
     @Test
     public void testTabixVcfNoSeek() {
-        doTest("gor", "../tests/data/external/samtools/testTabixIndex.vcf.gz", 10, 10);
+        doTest("gor", "../tests/data/external/samtools/testTabixIndex.vcf", 100, 26);
     }
 
     @Test
-    public void testTabixVcf() {
+    public void testTabixVcfGzNoSeek() {
+        try {
+            doTest("gor", "../tests/data/external/samtools/testTabixIndex.vcf.gz", 100, 26);
+            Assert.fail("Should have thrown an exception");
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage().contains("Wrong order observed"));
+        }
+    }
+
+    @Test
+    public void testTabixVcfChr4() {
         doTest("gor -p chr4:1-", "../tests/data/external/samtools/testTabixIndex.vcf", 10, 2);
+    }
+
+    @Test
+    public void testTabixVcfChr10() {
+        doTest("gor -p chr10:1-", "../tests/data/external/samtools/testTabixIndex.vcf", 10, 1);
     }
 
     @Test
@@ -133,8 +149,8 @@ public class UTestGorVcfWithHtsjdk {
 
     @Test
     public void testCompareOutputs() {
-        String tabix = doTest("gor", "../tests/data/external/samtools/testTabixIndex.vcf", 10, 10);
-        String orig = doTest("gor", "../tests/data/external/samtools/testTabixIndexUnsorted.vcf | sort genome", 10, 10);
+        String tabix = doTest("gor", "../tests/data/external/samtools/testTabixIndex.vcf", 100, 26);
+        String orig = doTest("gor", "../tests/data/external/samtools/testTabixIndexUnsorted.vcf | sort genome", 100, 26);
 
         Assert.assertEquals(orig, tabix);
     }
