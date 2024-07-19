@@ -54,6 +54,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Created by villi on 06/01/17.
@@ -376,7 +377,9 @@ public class DriverBackedFileReader extends FileReader {
         private final DataSource source;
 
         SourceReader(DataSource source) throws IOException {
-            super(new InputStreamReader(((StreamSource) source).open()));
+            super(DataUtil.isGZip(source.getName()) ?
+                    new BufferedReader(new InputStreamReader(new GZIPInputStream(((StreamSource) source).open()))) :
+                    new InputStreamReader(((StreamSource) source).open()));
             this.source = source;
         }
 

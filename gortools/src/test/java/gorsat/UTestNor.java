@@ -296,6 +296,18 @@ public class UTestNor {
                 "chrN\t0\tchr1\t10179\tC\tCC\trs367896724\n", result);
     }
 
+    @Test
+    public void testNorReadingVcfGzNor() {
+        String res = TestUtils.runGorPipe("nor ../tests/data/external/samtools/testTabixIndex.vcf.gz");
+        Assert.assertEquals(26, res.split("\n").length);
+    }
+
+    @Test
+    public void testNorReadingVcfGzUsingLinkWithWrongEnding() {
+        String res = TestUtils.runGorPipe("nor ../tests/data/external/samtools/testTabixIndex.vcf.link");
+        Assert.assertEquals(26, res.split("\n").length);
+    }
+
     private int getDepthRangeFromIterator(GenomicIterator iterator) {
         int minDepth = Integer.MAX_VALUE;
         int maxDepth = Integer.MIN_VALUE;

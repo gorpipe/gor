@@ -47,12 +47,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
 
 
   private val norRowSource: stream.Stream[String] = if (!readStdin) {
-    // ToDo: Add support for compressed files in the driver framework.
-    if (DataUtil.isGZip(fileName)) {
-      new BufferedReader(new InputStreamReader(new GZIPInputStream(fileReader.getInputStream(fileName)))).lines()
-    } else {
-      fileReader.iterateFile(fileName, maxWalkDepth, followLinks, showModificationDate)
-    }
+    fileReader.iterateFile(fileName, maxWalkDepth, followLinks, showModificationDate)
   } else {
     throw new GorParsingException("Stdin not supported in NOR context.")
   }
