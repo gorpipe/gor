@@ -22,15 +22,18 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.ChrDataScheme;
 import org.gorpipe.gor.model.ContigDataScheme;
-import org.gorpipe.gor.model.SourceRef;
 
 import java.io.*;
 import java.util.*;
 import java.util.function.Consumer;
+
+import static org.gorpipe.gor.model.ChrDataScheme.*;
 
 /**
  * Created by sigmar on 28/10/15.
@@ -52,10 +55,12 @@ public class VcfFile extends StreamSourceFile {
      * Find the gor data offset in a .vcf file
      *
      * @param instream The stream to read
+     * @param dataScheme inferred dataschema to return.
+     * @param fixInternalIndex  should internal index be fixed (ordered)
      * @return The offset found
      * @throws IOException If no offset is found
      */
-    public static int[] findVcfGorDataOffset(final InputStream instream, ContigDataScheme dataScheme) throws IOException {
+    public static int[] findVcfGorDataOffset(final InputStream instream, ContigDataScheme dataScheme, boolean fixInternalIndex) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // Assume .vcf files start with lines
@@ -93,21 +98,20 @@ public class VcfFile extends StreamSourceFile {
         if (ret == null) {
             throw new RuntimeException("Could not find header line for vcf file");
         }
-        findContigOrderFromHeader(dataScheme, baos.toByteArray(), ret[1] == 1);
+        findContigOrderFromHeader(dataScheme, baos.toByteArray(), ret[1] == 1, fixInternalIndex);
 
         return ret;
     }
 
-    private static void findContigOrderFromHeader(final ContigDataScheme dataScheme, byte[] byteArray, boolean hasPrefix) {
+    private static void findContigOrderFromHeader(final ContigDataScheme dataScheme, byte[] byteArray,
+                                                  boolean hasPrefix, boolean fixInternalIndex) {
         if (dataScheme != null) {
-            Map<String, Integer> chr2id = new TreeMap();
+            final List<String> originalContigList = new ArrayList<>();
             InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(byteArray));
             BufferedReader br = new BufferedReader(isr);
 
             final Set<String> chrset = new HashSet(Arrays.asList(chromosomes));
             br.lines().peek(new Consumer<>() {
-                int counter = 0;
-
                 @Override
                 public void accept(String line) {
                     if (line.startsWith("##contig=")) {
@@ -116,22 +120,54 @@ public class VcfFile extends StreamSourceFile {
                         if (hasPrefix) {
                             if (contig.equals("MT")) contig = "M";
                             String prefix = chrset.contains(contig) ? "chr" : "";
-                            dataScheme.setId2chr(counter, prefix + contig);
-                            chr2id.put(prefix + contig, counter);
-                        } else {
-                            dataScheme.setId2chr(counter, contig);
-                            chr2id.put(contig, counter);
+                            contig = prefix + contig;
                         }
-                        counter++;
+                        originalContigList.add(contig);
                     }
                 }
             }).allMatch(line -> line.startsWith("#")); // short circuiting operation, use takeWhile in jdk9
 
-            int c = 0;
-            for (String cont : chr2id.keySet()) {
-                dataScheme.setId2order(chr2id.get(cont), c++);
+            if (fixInternalIndex) {
+                ChrDataScheme.updateDataScheme(dataScheme, fixContigsOrder(originalContigList));
+            } else {
+                ChrDataScheme.updateDataScheme(dataScheme, originalContigList);
             }
         }
+    }
+
+    static List<String> fixContigsOrder(List<String> oldContigs) {
+        if (oldContigs == null || oldContigs.isEmpty()) return oldContigs;
+
+        List<String> orderedContigList;
+        if (isLexicalOrder(oldContigs)) {
+            orderedContigList = ChrDataScheme.sortUsingChrDataScheme(oldContigs, ChrLexico);
+        } else {
+            // Else assume numerical ordering, fix the order by using the order from Human Genome (HG) data scheme.
+            orderedContigList = ChrDataScheme.sortUsingChrDataScheme(oldContigs, ChrNumerical);
+        }
+
+        return orderedContigList;
+    }
+
+    private static int chrNumPart(String chr) {
+        try {
+            return Integer.parseInt(StringUtils.removeStart(chr, "chr"));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    // Find the likely ordering (lex or num).
+    private static boolean isLexicalOrder(List<String> contigsList) {
+        // Simple impl, that just checks that 10 follows 1.
+        for (int i = 0; i < contigsList.size() - 1 ; i++) {
+            String chr = contigsList.get(i);
+            if (StringUtils.containsAny(chr, "0123456789") && chrNumPart(chr) == 1) {
+                String nextChr = contigsList.get(i+1);
+                return chrNumPart(nextChr) == 10;
+            }
+        }
+        return false;
     }
 
     public static int findVcfChrNamingSystem(byte[] buf, int cur, int read, final InputStream instream) throws IOException {

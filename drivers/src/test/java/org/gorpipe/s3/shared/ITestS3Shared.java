@@ -469,7 +469,7 @@ public class ITestS3Shared {
         Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
-    //@Ignore("Runs too slowly")
+    @Ignore("Runs too slowly and fails quite often")
     @Test
     public void testProjectWriteUserDataServerPgorGord() throws Exception {
         testProjectWriteUserDataServerPgorGordHelper(false);

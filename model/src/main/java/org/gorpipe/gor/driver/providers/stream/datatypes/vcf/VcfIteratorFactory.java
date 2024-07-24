@@ -27,6 +27,7 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.OffsetStreamSourceSeekableFile;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableFile;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.providers.stream.FileMetaIterator;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
@@ -45,6 +46,7 @@ import java.util.List;
 public class VcfIteratorFactory implements StreamSourceIteratorFactory {
 
     final static String VCF_SOURCE = "VCF";
+    final static String VCF_FIX_INDEX_PLACEHOLDER = "FIX_INDEX";
 
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) throws IOException {
@@ -77,17 +79,20 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
                     }
                 }
 
+                String indexSource = (file.getFileSource().getSourceReference() instanceof IndexableSourceReference) ?
+                        ((IndexableSourceReference)file.getFileSource().getSourceReference()).getIndexSource() : null;
+                boolean fixInternalIndex = indexSource != null
+                        && indexSource.endsWith(VCF_FIX_INDEX_PLACEHOLDER);
+
                 try (InputStream instream = file.getFileSource().open()) {
-
                     ContigDataScheme dataScheme = new VcfContigDataScheme();
-                    final int[] info = VcfFile.findVcfGorDataOffset(instream, dataScheme);
+                    final int[] info = VcfFile.findVcfGorDataOffset(instream, dataScheme, fixInternalIndex);
                     final ContigDataScheme finalDataScheme;
-
                     final Comparator<StringIntKey> comparator;
                     if (dataScheme.length() == 0) {
                         // we should fail heere as there are no contigs in the file and we cannot create a lookup
                         // The default assumes stuff and if there is any mismatch we only get a part of the underlying question
-                        throw new GorResourceException("No contigs found in file " + file.getFileSource().getPath() +". Contig description is required when there is no index file available.\nYou can gzip the vcf file and use tabix command line tool to index the vcf file.", file.getFileSource().getPath().toString());
+                        throw new GorResourceException("No contigs found in file " + file.getFileSource().getPath() + ". Contig description is required when there is no index file available.\nYou can gzip the vcf file and use tabix command line tool to index the vcf file.", file.getFileSource().getPath().toString());
                     } else {
                         final boolean addAnyChrToCache = true;
                         finalDataScheme = dataScheme;

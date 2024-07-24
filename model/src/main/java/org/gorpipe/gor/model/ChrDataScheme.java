@@ -23,6 +23,8 @@
 package org.gorpipe.gor.model;
 
 
+import java.util.*;
+
 /**
  * ChrDataScheme defines the naming and ordering scheme of chromosome data. It assigns internal IDs to the chromsome, such that the standard human chromosome are
  * M = 0, 1 = 1, ..., X = 23, XY = 24 and Y = 25. All other chromsomes will get IDs after this range
@@ -43,16 +45,31 @@ public class ChrDataScheme implements ContigDataScheme {
     }
 
     /**
+     * New Chromosome Numerical object
+     */
+    public static ChrDataScheme newChrNumerical() {
+        return new ChrDataScheme(
+                new String[]{"chrM", "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrXY", "chrY"},
+                new int[]{25, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+        );
+    }
+
+    /**
      * Chromosome names are prefixed with chr and all names are in lexicographical order
      */
     public static final ChrDataScheme ChrLexico = newChrLexico();
+
+    /**
+     * Chromosome names are prefixed with chr and all names are in numerical order
+     */
+    public static final ChrDataScheme ChrNumerical = newChrNumerical();
 
     /**
      * Human chromosomes are named 1,2,...,22,X,XY,Y,MT and are first in that order, all other are in lexicographically order thereafter
      */
     public static final ChrDataScheme HG = new ChrDataScheme(
             new String[]{"MT", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "XY", "Y"},
-            new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0}
+            new int[]{25, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
     );
 
     /**
@@ -85,6 +102,10 @@ public class ChrDataScheme implements ContigDataScheme {
      * Map the order of the chromosome in this data scheme to the internal chromosome ID to the default order of the chromosome
      */
     public int[] order2id;
+    /**
+     * Map the name to id.
+     */
+    public Map<String,Integer> name2id;
     /**
      * Length of the chromosome array
      */
@@ -142,6 +163,7 @@ public class ChrDataScheme implements ContigDataScheme {
     public void newId2Chr(String[] newid2chr) {
         id2chr = newid2chr;
         id2chrbytes = new byte[id2chr.length][];
+        name2id = new HashMap<>();
         int i;
         for (i = 0; i < id2chr.length; i++) {
             String chr = id2chr[i];
@@ -149,6 +171,7 @@ public class ChrDataScheme implements ContigDataScheme {
                 break;
             }
             id2chrbytes[i] = chr.getBytes();
+            name2id.put(chr, i);
         }
         length = i;
     }
@@ -156,6 +179,14 @@ public class ChrDataScheme implements ContigDataScheme {
     @Override
     public int order2id(int i) {
         return order2id[i];
+    }
+
+    public int chr2id(String chr) {
+        return name2id.get(chr);
+    }
+
+    public int chr2order(String chr) {
+        return id2order[name2id.get(chr)];
     }
 
     @Override
@@ -179,5 +210,45 @@ public class ChrDataScheme implements ContigDataScheme {
             pos--;
         }
         return pos + 1;
+    }
+
+    /**
+     * Update the given data scheme with the provided ordered list of chromosomes.
+     *
+     * @param dataScheme        Data scheme to update.
+     * @param orderedContigList The ordered list of chromosomes.
+     */
+    public static void updateDataScheme(ContigDataScheme dataScheme, List<String> orderedContigList) {
+        int id = 0;
+        for (String contig : orderedContigList) {
+            dataScheme.setId2chr(id++, contig);
+        }
+        int c = 0;
+        for (String contig : orderedContigList.stream().sorted().toList()) {
+            dataScheme.setId2order(orderedContigList.indexOf(contig), c++);
+        }
+    }
+
+    /**
+     * Sort the list of contigs using the provided data scheme.
+     * @param contigs        contigs to sort.
+     * @param sortDataScheme data scheme to use for sorting.
+     * @return sorted list of contigs.
+     */
+    public static List<String> sortUsingChrDataScheme(List<String> contigs, ChrDataScheme sortDataScheme) {
+        List<String> orderedContigList;
+        orderedContigList = new ArrayList<>(Collections.nCopies(HG.length() + contigs.size(), null));
+        int extraIndex = sortDataScheme.length();
+        for (String contig : contigs) {
+            String hgName = contig.startsWith("chr") ? contig : "chr" + contig;
+            if (sortDataScheme.name2id.containsKey(hgName)) {
+                orderedContigList.set(sortDataScheme.id2order[sortDataScheme.name2id.get(hgName)], contig);
+            } else {
+                // Unknown contigs come just in order of appearance after known contigs.
+                orderedContigList.set(extraIndex++, contig);
+            }
+        }
+        orderedContigList = orderedContigList.stream().filter(Objects::nonNull).toList();
+        return orderedContigList;
     }
 }
