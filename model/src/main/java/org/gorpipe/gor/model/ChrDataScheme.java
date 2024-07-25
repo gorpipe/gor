@@ -23,6 +23,8 @@
 package org.gorpipe.gor.model;
 
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.*;
 
 /**
@@ -250,5 +252,61 @@ public class ChrDataScheme implements ContigDataScheme {
         }
         orderedContigList = orderedContigList.stream().filter(Objects::nonNull).toList();
         return orderedContigList;
+    }
+
+    /** Check if he list is in lexical order.
+     *
+     * @param contigsList lsit of contigs to check.
+     * @return true if the contigs are in lexical order.
+     */
+    public static boolean isStrictLexicalOrder(List<String> contigsList) {
+        // Check if every pair is in lexical order.
+        for (int i = 0; i < contigsList.size() - 1 ; i++) {
+            String curContig = contigsList.get(i);
+            String nextContig = contigsList.get(i+1);
+            if (curContig.compareTo(nextContig) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Check if the list is in the most likely lexical order.
+     * Note:  Can NOT be a strict test for either num or lex as the purpose is to find
+     *        the most likely order when the order is probably wrong and needs to be fixed.
+     *
+     * @param contigsList lsit of contigs to check.
+     * @return true if the contigs are *likely* in lexical order.
+     */
+    public static boolean isMostLikelyLexicalOrder(List<String> contigsList) {
+        // Simple impl, that just checks that 1 is followed by something less than 2 and 2 is preceeded by something between 10 - 19
+        for (int i = 0; i < contigsList.size() - 1 ; i++) {
+            String contig = contigsList.get(i);
+            if (StringUtils.containsAny(contig, "0123456789")) {
+                // Only check chromosomes, skip other contigs.
+                String nextContig = contigsList.get(i + 1);
+                if (StringUtils.containsAny(nextContig, "0123456789")) {
+                    int chrNum = chrNumPart(contig);
+                    int nextChromNum = chrNumPart(nextContig);
+                    if (chrNum == 1 && (nextChromNum < 10 || nextChromNum > 19)) {
+                        // Will return wrong result if missing 10-19
+                        return false;
+                    }
+                    if (nextChromNum == 2 && (chrNum < 10 || chrNum > 19)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private static int chrNumPart(String chr) {
+        try {
+            return Integer.parseInt(StringUtils.removeStart(chr, "chr"));
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 }

@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream.datatypes.vcf;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -139,7 +138,7 @@ public class VcfFile extends StreamSourceFile {
         if (oldContigs == null || oldContigs.isEmpty()) return oldContigs;
 
         List<String> orderedContigList;
-        if (isLexicalOrder(oldContigs)) {
+        if (ChrDataScheme.isMostLikelyLexicalOrder(oldContigs)) {
             orderedContigList = ChrDataScheme.sortUsingChrDataScheme(oldContigs, ChrLexico);
         } else {
             // Else assume numerical ordering, fix the order by using the order from Human Genome (HG) data scheme.
@@ -147,27 +146,6 @@ public class VcfFile extends StreamSourceFile {
         }
 
         return orderedContigList;
-    }
-
-    private static int chrNumPart(String chr) {
-        try {
-            return Integer.parseInt(StringUtils.removeStart(chr, "chr"));
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    // Find the likely ordering (lex or num).
-    private static boolean isLexicalOrder(List<String> contigsList) {
-        // Simple impl, that just checks that 10 follows 1.
-        for (int i = 0; i < contigsList.size() - 1 ; i++) {
-            String chr = contigsList.get(i);
-            if (StringUtils.containsAny(chr, "0123456789") && chrNumPart(chr) == 1) {
-                String nextChr = contigsList.get(i+1);
-                return chrNumPart(nextChr) == 10;
-            }
-        }
-        return false;
     }
 
     public static int findVcfChrNamingSystem(byte[] buf, int cur, int read, final InputStream instream) throws IOException {
