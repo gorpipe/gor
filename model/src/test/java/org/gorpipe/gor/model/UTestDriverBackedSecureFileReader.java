@@ -75,15 +75,19 @@ public class UTestDriverBackedSecureFileReader {
      */
     @Test
     public void testFileSignature() throws Exception {
-        File f1 = File.createTempFile("test", DataType.TXT.suffix);
 
-        final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
-        Assert.assertEquals(f1SignatureA, reader.getFileSignature(f1.getAbsolutePath()));
+        String[] names = new String[] {"test", "MixedCase", "ALL_CAPS"};
+        for (String fileName : names) {
+            File f1 = File.createTempFile(fileName, DataType.TXT.suffix);
 
-        Files.write(f1.toPath(), "somedata".getBytes());
-        f1.setLastModified(System.currentTimeMillis() + 10000);
-        final String f1SignatureB = reader.getFileSignature(f1.getAbsolutePath());
-        Assert.assertNotEquals(f1SignatureA, f1SignatureB);
+            final String f1SignatureA = reader.getFileSignature(f1.getAbsolutePath());
+            Assert.assertEquals(f1SignatureA, reader.getFileSignature(f1.getAbsolutePath()));
+
+            Files.write(f1.toPath(), "somedata".getBytes());
+            f1.setLastModified(System.currentTimeMillis() + 10000);
+            final String f1SignatureB = reader.getFileSignature(f1.getAbsolutePath());
+            Assert.assertNotEquals(f1SignatureA, f1SignatureB);
+        }
 
         DbConnection.systemConnections.install(new DbConnection("rda", "jdbc:derby:" + paths[1], "rda", "beta3"));
         for (int i = 0; i < 10; i++) {

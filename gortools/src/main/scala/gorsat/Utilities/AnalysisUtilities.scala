@@ -122,7 +122,7 @@ object AnalysisUtilities {
       val command = getSignatureCommand(commandToExecute)
 
       if (command.nonEmpty) {
-        val args = CommandParseUtilities.quoteSafeSplit(command, ' ').map(x => x.toLowerCase)
+        val args = CommandParseUtilities.quoteSafeSplit(command, ' ')
 
         // having both file and timeres is not allowed
         if (CommandParseUtilities.hasOption(args, timeresOption) && CommandParseUtilities.hasOption(args, fileOption)) {

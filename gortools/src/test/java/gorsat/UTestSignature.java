@@ -62,6 +62,25 @@ public class UTestSignature {
     }
 
     @Test
+    public void testSignatureOptionsAreCaseSensitive() {
+        try {
+            TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -TIMERES 10 | top 3 | wait 1000; gor [xxx]");
+            Assert.fail();
+        } catch (GorParsingException gpe) {
+            Assert.assertEquals("SIGNATURE", gpe.getCommandName());
+            // This should happen
+        }
+
+        try {
+            TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -FILE '../tests/data/gor/genes.gor' | top 3 | wait 1000; gor [xxx]");
+            Assert.fail();
+        } catch (GorParsingException gpe) {
+            Assert.assertEquals("SIGNATURE", gpe.getCommandName());
+            // This should happen
+        }
+    }
+
+    @Test
     public void testSignatureZeroTime() {
 
         // Run a simple query to reduce initialization timelags
@@ -165,7 +184,7 @@ public class UTestSignature {
                 Assert.assertEquals("", signature);
 
                 // Create a file and get the signature
-                var file  = workDir.newFile("test.gor");
+                var file  = workDir.newFile("test_MixedCase.gor");
                 signature = AnalysisUtilities.getSignatureFromSignatureCommand(session, "gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath());
                 Assert.assertFalse(signature.isEmpty());
 
