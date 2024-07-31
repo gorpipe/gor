@@ -480,6 +480,10 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     private List<DataSource> getValidatedDependents(DataSource source) throws IOException {
+        if (source.getDataType() != null && !source.getDataType().hasDependents) {
+            return List.of();
+        }
+
         List<DataSource> dependents = new ArrayList<>();
         DataSource metaSource = resolveUrl(source.getName() + DataType.META.suffix, true);
         if (metaSource != null && metaSource.exists()) {

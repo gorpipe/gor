@@ -31,36 +31,36 @@ import static org.gorpipe.gor.driver.meta.FileNature.*;
  * Created by villi on 23/08/15.
  */
 public enum DataType {
-    GOR(VARIANTS, ".gor"),
-    GORZ(VARIANTS, ".gorz"),
-    GORGZ(VARIANTS, ".gor.gz"),
+    GOR(VARIANTS, ".gor", true),
+    GORZ(VARIANTS, ".gorz", true),
+    GORGZ(VARIANTS, ".gor.gz", true),
     PARQUET(VARIANTS, ".parquet"),
     GORI(INDEX, ".gori"),
     SAM(VARIANTS, ".sam"),
-    BAM(VARIANTS, ".bam"),
-    BGEN(VARIANTS, ".bgen"),
+    BAM(VARIANTS, ".bam", true),
+    BAI(INDEX, ".bai"),
+    BGEN(VARIANTS, ".bgen", true),
     BGI(INDEX, ".bgi"),
     VCF(VARIANTS, ".vcf"),
-    GVCF(VARIANTS, ".gvcf"),
+    GVCF(VARIANTS, ".gvcf", true),
     BCF(VARIANTS, ".bcf"),
-    VCFGZ(VARIANTS, ".vcf.gz"),
-    VCFBGZ(VARIANTS, ".vcf.bgz"),
-    GVCFGZ(VARIANTS, ".gvcf.gz"),
-    BAI(INDEX, ".bai"),
+    VCFGZ(VARIANTS, ".vcf.gz", true),
+    VCFBGZ(VARIANTS, ".vcf.bgz", true),
+    GVCFGZ(VARIANTS, ".gvcf.gz", true),
     TBI(INDEX, ".tbi"),
     CSI(INDEX, ".csi"),
-    GORD(TABLE, ".gord"),
-    GORT(TABLE, ".gort"),
-    GORP(TABLE, ".gorp"),
+    GORD(TABLE, ".gord", false), // Note: gord is not handled by the driver framework, so must set dpendents as false (even though it has meta).
+    GORT(TABLE, ".gort", true),
+    GORP(TABLE, ".gorp", true),
     GORQ(REPORT, ".gorq"),
     LINK(REFERENCE, ".link"),
     LOCAL_LINK(REFERENCE, ".link.local"),
-    CRAM(VARIANTS, ".cram"),
+    CRAM(VARIANTS, ".cram", true),
     CRAI(INDEX, ".crai"),
     SPEC(VARIANTS, ".spec"),
-    NOR(VARIANTS, ".nor"),
-    NORZ(VARIANTS, ".norz"),
-    NORD(TABLE, ".nord"),
+    NOR(VARIANTS, ".nor", true),
+    NORZ(VARIANTS, ".norz", true),
+    NORD(TABLE, ".nord", true),
     CSV(VARIANTS, ".csv"),
     CSVGZ(VARIANTS, ".csv.gz"),
     TSV(VARIANTS, ".tsv"),
@@ -78,10 +78,16 @@ public enum DataType {
 
     public final String suffix;
     public final FileNature nature;
+    public final boolean hasDependents;
 
     DataType(FileNature nature, String suffix) {
+        this(nature, suffix, false);
+    }
+
+    DataType(FileNature nature, String suffix, boolean hasDependents) {
         this.nature = nature;
         this.suffix = suffix;
+        this.hasDependents = hasDependents;
     }
 
     /**

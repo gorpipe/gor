@@ -87,7 +87,9 @@ public interface DataSource extends AutoCloseable {
     /**
      * Get date type - e.g. BAM, GOR .. for files.
      */
-    DataType getDataType();
+    default DataType getDataType() {
+        return DataType.fromFileName(getName());
+    };
 
     /**
      * Does this source support writing
