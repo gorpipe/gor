@@ -165,26 +165,36 @@
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> foo = <span class="nd">gor</span> ... | signature [attributes] | ...
 </pre></div>
 </div>
-<p>This command will inject a signature into the create statement and invalidating it based on the input criteria.</p>
-<p>This command will not effect standard gor queries.</p>
+<p>This command will inject an additional invalidation criterion into the cached result of the <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> statement.</p>
+<p>The signature of any <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> encompasses the signatures of the files it uses, so that a change to any of those files
+will be recognized as invalidating any cached result from that <code class="docutils literal notranslate"><span class="pre">CREATE</span></code>.
+Invalidation means that the expression is re-evaluated when its value is used.
+If a <code class="docutils literal notranslate"><span class="pre">SIGNATURE</span></code> command is included, that injects an <em>additional</em> signature, so that the cached value will also be
+subject to invalidation by the selected criterion: either when a certain time has passed (<code class="docutils literal notranslate"><span class="pre">timeres</span></code>)
+or when a designated file has been updated (<code class="docutils literal notranslate"><span class="pre">file</span></code>).</p>
+<p>This command will not affect standard gor queries.</p>
 </div>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 25%" />
-<col style="width: 75%" />
+<col style="width: 21%" />
+<col style="width: 27%" />
+<col style="width: 53%" />
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-timeres</span> <span class="pre">seconds</span></code></p></td>
-<td><p>Time stamp resolution in seconds.</p></td>
+<td><p>Time resolution in seconds.</p></td>
+<td><p>Result is invalidated periodically with this time period.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-file</span> <span class="pre">filepath</span></code></p></td>
-<td><p>Path to a file to calculate the signature from.</p></td>
+<td><p>Path to a file.</p></td>
+<td><p>Result is invalidated when the file’s timestamp changes.</p></td>
 </tr>
 </tbody>
 </table>
 <p>The <code class="docutils literal notranslate"><span class="pre">-timeres</span></code> or the <code class="docutils literal notranslate"><span class="pre">-file</span></code> option is required. If both are present the command fails with an error.</p>
+<p>If multiple <code class="docutils literal notranslate"><span class="pre">SIGNATURE</span></code> commands are included in a single <code class="docutils literal notranslate"><span class="pre">CREATE</span></code>, only the first one is honored, and the others are ignored.</p>
 </div>
 <div class="section" id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>

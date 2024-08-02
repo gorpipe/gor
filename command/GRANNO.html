@@ -192,26 +192,53 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-gc</span> <span class="pre">cols</span></code></p></td>
 <td><p>Grouping columns (other than bin).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sc</span> <span class="pre">cols</span></code></p></td>
+</tbody>
+</table>
+</div>
+<div class="section" id="column-selection-options-for-annotation">
+<h2>Column selection options for annotation<a class="headerlink" href="#column-selection-options-for-annotation" title="Permalink to this headline">¶</a></h2>
+<p>Columns selected with these options will be the inputs to annotations.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-sc</span> <span class="pre">cols</span></code></p></td>
 <td><p>String columns (-ac has been deprecated).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ic</span> <span class="pre">cols</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ic</span> <span class="pre">cols</span></code></p></td>
 <td><p>Integer columns.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-fc</span> <span class="pre">cols</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-fc</span> <span class="pre">cols</span></code></p></td>
 <td><p>Floating valued columns.</p></td>
 </tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="annotation-options">
+<h2>Annotation options<a class="headerlink" href="#annotation-options" title="Permalink to this headline">¶</a></h2>
+<p>Each of the options below causes a column to be added for each applicable input column
+(selected using <code class="docutils literal notranslate"><span class="pre">-sc</span></code>, <code class="docutils literal notranslate"><span class="pre">-ic</span></code>, and/or <code class="docutils literal notranslate"><span class="pre">-fc</span></code> as listed above) whose values will be the
+result computed across the group.
+The result column name is generated as the option name joined with the input name, separated with <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-min</span></code></p></td>
-<td><p>Calculate the min for any type of column.</p></td>
+<td><p>Calculate minimum within group</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-med</span></code></p></td>
-<td><p>Calculate the median for any type of column.</p></td>
+<td><p>Calculate median within group</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-max</span></code></p></td>
-<td><p>Calculate the max for any type of column.</p></td>
+<td><p>Calculate maximum within group</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-dis</span></code></p></td>
-<td><p>Calculate the number of distinct values for any type of column.</p></td>
+<td><p>Calculate the number of distinct values</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-set</span></code></p></td>
 <td><p>Return a comma separated set with the distinct values in the column.</p></td>
@@ -219,31 +246,43 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-lis</span></code></p></td>
 <td><p>Return a comma separated list with the values in the column.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-avg</span></code></p></td>
+<td><p>Calculate average (numeric columns only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-std</span></code></p></td>
+<td><p>Calculate standard deviation (numeric columns only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-sum</span></code></p></td>
+<td><p>Calculate sum (numeric columns only)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="annotation-modifier-options">
+<h2>Annotation modifier options<a class="headerlink" href="#annotation-modifier-options" title="Permalink to this headline">¶</a></h2>
+<p>These options adjust how annotation results are produced.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-len</span> <span class="pre">number</span></code></p></td>
 <td><p>Specify the maximum column length of a set.  Defaults to 200 chars.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-avg</span></code></p></td>
-<td><p>Calculate the avg of all numeric columns.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-std</span></code></p></td>
-<td><p>Calculate the std of all numeric columns.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sum</span></code></p></td>
-<td><p>Calculate the sum of all numeric columns.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-steps</span> <span class="pre">number</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-steps</span> <span class="pre">number</span></code></p></td>
 <td><p>The number of sliding steps per group window.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">'sep'</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">'sep'</span></code></p></td>
 <td><p>The separator for elements in lists and sets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-range</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-range</span></code></p></td>
 <td><p>This interpretes the binsize as the maximum range or span for which the group (as specified
 with the -gc option) extends.  Groups that extend beyond the specified range will not be
 properly aggregated and annotations of row belonging to those group may be incorrect.
 A special binsize value, “gene”, can be used to denote 3Mbp in conjunction with the range option.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ordered</span></code></p></td>
 <td><p>Assume the grouping columns are ordered.</p></td>
 </tr>
 </tbody>
@@ -270,6 +309,13 @@ stream is correctly ordered.</p>
 </div>
 <p>will add a column (allCount) to each SNP row with, representing the number of rows (SNPs)
 that belong to each gene.</p>
+<p>Other annotations are illustrated in this contrived example, where <code class="docutils literal notranslate"><span class="pre">##roster##</span></code>
+is a table that includes columns Name, Team, and Age:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> [##roster##] | granno -<span class="no">gc</span> team -<span class="no">ic</span> age -sc name -<span class="no">avg</span> -dis
+</pre></div>
+</div>
+<p>That adds columns <code class="docutils literal notranslate"><span class="pre">dis_Name</span></code> (the number of distinct names on each team);
+<code class="docutils literal notranslate"><span class="pre">dis_Age</span></code> (the number of distinct ages, by team), and <code class="docutils literal notranslate"><span class="pre">avg_Age</span></code> (the average age, by team).</p>
 <p>See also the <a class="reference internal" href="RANK.html#rank"><span class="std std-ref">RANK</span></a> command which is of similar nature as the GRANNO (group anno) command</p>
 </div>
 </div>
