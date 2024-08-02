@@ -51,6 +51,10 @@ GOR queries have the following structure:
 
 As shown above, many commands in GOR can be linked together in a pipeline of commands with each individual command separated by a vertical bar (or "pipe") character. A combination of piped commands allow for specialised operations that individual commands can perform on their own. The rows from the file or table referred in the :ref:`GOR` source command are streamed from left to right.  Depending on the nature of the pipe step commands, they may output their input unchanged, rows with different output columns, fewer rows (e.g. aggregation) or more rows than in the input (e.g. split up of rows).  In every case, commands in a GOR stream must output rows with genomic position (chr,pos) whereas in a NOR stream, this is not necessary.
 
+Command names, function names, and column names are case insensitive.
+Command options and flags are case sensitive.
+
+
 Whenever possible, we will show example queries for each of the GOR commands that will help to illustrate the usage of the GOR syntax.
 
 

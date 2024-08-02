@@ -35,31 +35,55 @@ Options
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-gc cols``      | Grouping columns (other than bin).                                                                  |
 +-------------------+-----------------------------------------------------------------------------------------------------+
+
+Column selection options for annotation
+=======================================
+
+Columns selected with these options will be the inputs to annotations.
+
++-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-sc cols``      | String columns (-ac has been deprecated).                                                           |
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-ic cols``      | Integer columns.                                                                                    |
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-fc cols``      | Floating valued columns.                                                                            |
 +-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-min``          | Calculate the min for any type of column.                                                           |
+
+Annotation options
+==================
+
+Each of the options below causes a column to be added for each applicable input column
+(selected using ``-sc``, ``-ic``, and/or ``-fc`` as listed above) whose values will be the
+result computed across the group.
+The result column name is generated as the option name joined with the input name, separated with ``_``.
+
 +-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-med``          | Calculate the median for any type of column.                                                        |
+| ``-min``          | Calculate minimum within group                                                                      |
 +-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-max``          | Calculate the max for any type of column.                                                           |
+| ``-med``          | Calculate median within group                                                                       |
 +-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-dis``          | Calculate the number of distinct values for any type of column.                                     |
+| ``-max``          | Calculate maximum within group                                                                      |
++-------------------+-----------------------------------------------------------------------------------------------------+
+| ``-dis``          | Calculate the number of distinct values                                                             |
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-set``          | Return a comma separated set with the distinct values in the column.                                |
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-lis``          | Return a comma separated list with the values in the column.                                        |
 +-------------------+-----------------------------------------------------------------------------------------------------+
+| ``-avg``          | Calculate average (numeric columns only)                                                            |
++-------------------+-----------------------------------------------------------------------------------------------------+
+| ``-std``          | Calculate standard deviation (numeric columns only)                                                 |
++-------------------+-----------------------------------------------------------------------------------------------------+
+| ``-sum``          | Calculate sum (numeric columns only)                                                                |
++-------------------+-----------------------------------------------------------------------------------------------------+
+
+Annotation modifier options
+===========================
+
+These options adjust how annotation results are produced.
+
++-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-len number``   | Specify the maximum column length of a set.  Defaults to 200 chars.                                 |
-+-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-avg``          | Calculate the avg of all numeric columns.                                                           |
-+-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-std``          | Calculate the std of all numeric columns.                                                           |
-+-------------------+-----------------------------------------------------------------------------------------------------+
-| ``-sum``          | Calculate the sum of all numeric columns.                                                           |
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-steps number`` | The number of sliding steps per group window.                                                       |
 +-------------------+-----------------------------------------------------------------------------------------------------+
@@ -72,6 +96,8 @@ Options
 +-------------------+-----------------------------------------------------------------------------------------------------+
 | ``-ordered``      |  Assume the grouping columns are ordered.                                                           |
 +-------------------+-----------------------------------------------------------------------------------------------------+
+
+
 
 When using GRANNO in a NOR context, the ordered flag can both speed up the operation and reduce the memory usage
 significantly. Note that there are no checks to see if the order is correct - only use this option if the input
@@ -102,6 +128,16 @@ The range option can be used like this:
 
 will add a column (allCount) to each SNP row with, representing the number of rows (SNPs)
 that belong to each gene.
+
+Other annotations are illustrated in this contrived example, where ``##roster##``
+is a table that includes columns Name, Team, and Age:
+
+.. code-block:: gor
+
+    nor [##roster##] | granno -gc team -ic age -sc name -avg -dis
+
+That adds columns ``dis_Name`` (the number of distinct names on each team);
+``dis_Age`` (the number of distinct ages, by team), and ``avg_Age`` (the average age, by team).
 
 See also the :ref:`RANK` command which is of similar nature as the GRANNO (group anno) command
 
