@@ -25,10 +25,13 @@ compile-all-with-warnings:  ## Compile code and tests.
 	./gradlew --rerun-tasks --console=plain --warning-mode all clean compileJava compileTestJava
 
 build-doc:  ## Build documentation
-	./gradlew build -Pinclude.documentation
+	./gradlew :documentation:assemble -Pinclude.documentation
+
+build-doc-os-aarch:  ## Build documentation on osx using aarch
+	./gradlew :documentation:assemble -Pinclude.documentation -Psphinx.binaryUrl="https://github.com/trustin/sphinx-binary/releases/download/v0.8.1/sphinx.osx-x86_64"
 
 #
-# Local testing
+# Local testinga
 #
 
 publish-local:  ## Publish libraries locally (mavenLocal), then compile services with -PuseMavenLocal
