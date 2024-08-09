@@ -40,7 +40,7 @@ class NorFileOut(name: String, fileReader: FileReader, header: String, skipHeade
   extends NorOutStream(header, {
       val finalFileOutputStream = fileReader.getOutputStream(name, append)
       if (md5) {
-        new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) Paths.get(name + ".md5") else null)
+        new Md5CalculatingOutputStream(finalFileOutputStream, if(md5File) fileReader.toAbsolutePath(name + ".md5") else null)
       } else {
         finalFileOutputStream
       }},

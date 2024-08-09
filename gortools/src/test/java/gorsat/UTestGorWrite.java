@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 
 import static org.gorpipe.gor.driver.meta.DataType.GORI;
 
@@ -46,10 +47,15 @@ public class UTestGorWrite {
     public TemporaryFolder workDir = new TemporaryFolder();
     private Path workDirPath;
 
+    @Rule
+    public TemporaryFolder tempRoot = new TemporaryFolder();
+    private Path tempRootPath;
+
     @Before
     public void setupTest() throws IOException {
         workDirPath = workDir.getRoot().toPath();
         Files.createDirectories(workDirPath.resolve("result_cache"));
+        tempRootPath = tempRoot.getRoot().toPath();
     }
 
     @Test
@@ -164,6 +170,29 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWriteGorWithMd5AndRelPaths() throws IOException {
+        // first gor command uses standard context to write a nor file into temp root
+        Path tmpfile = tempRootPath.resolve("genes_md5.gorz");
+        String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize();
+        TestUtils.runGorPipe(query, false);
+        List<String> md5Content = Files.readAllLines(Path.of(tmpfile.toAbsolutePath() + ".md5"));
+        Assert.assertEquals(1, md5Content.size());
+        Assert.assertEquals(32, md5Content.get(0).length());
+
+        // second gor command rewrites it to a new file, setting the tempRoot as root of the context
+        // use relative path for files to exercise correct file path resolution in engine
+        Path subdir = Files.createTempDirectory(tempRootPath, "dat");
+        Path tmpfile2 = subdir.resolve("genes_md5.gorz").toAbsolutePath();
+        Path tmpfile2rel = Path.of(subdir.getFileName().toString(), tmpfile2.getFileName().toString());
+        String query1 = "gor " + tmpfile.getFileName() + " | write -m " + tmpfile2rel;
+        TestUtils.runGorPipe(query1, tempRootPath.toString(), false);
+        List<String> md5Content2 = Files.readAllLines(Path.of(tmpfile2.toAbsolutePath() + ".md5"));
+        Assert.assertEquals(1, md5Content2.size());
+        Assert.assertEquals(32, md5Content2.get(0).length());
+    }
+
+
+    @Test
     public void testGorWriteColumnNumber() {
         Path tmpfile = workDirPath.resolve("genes_md5.gorz");
         tmpfile.toFile().deleteOnExit();
@@ -257,6 +286,40 @@ public class UTestGorWrite {
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
         Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+    }
+
+    @Test
+    public void testWriteNorWithMd5() throws IOException {
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".nor").toAbsolutePath();
+        TestUtils.runGorPipe("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write -m " + tmpfile, false);
+        TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
+        List<String> md5Content = Files.readAllLines(Path.of(tmpfile.toAbsolutePath() + ".md5"));
+        Assert.assertEquals(1, md5Content.size());
+        Assert.assertEquals(32, md5Content.get(0).length());
+        Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+    }
+
+    @Test
+    public void testWriteNorWithMd5AndRelPaths() throws IOException {
+        // first gor command uses standard context to write a nor file into temp root
+        Path tmpfile = Files.createTempFile(tempRootPath, "data", ".nor").toAbsolutePath();
+        TestUtils.runGorPipe("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write -m " + tmpfile, false);
+        TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
+        List<String> md5Content = Files.readAllLines(Path.of(tmpfile.toAbsolutePath() + ".md5"));
+        Assert.assertEquals(1, md5Content.size());
+        Assert.assertEquals(32, md5Content.get(0).length());
+        Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+
+        // second gor command rewrites it to a new file, setting the tempRoot as root of the context
+        // use relative path for files to exercise correct file path resolution in engine
+        Path subdir = Files.createTempDirectory(tempRootPath, "dat");
+        Path tmpfile2 = Files.createTempFile(subdir, "dataNew", ".nor").toAbsolutePath();
+        Path tmpfile2rel = Path.of(subdir.getFileName().toString(), tmpfile2.getFileName().toString());
+        TestUtils.runGorPipe("nor " + tmpfile.getFileName() + " | write -m " + tmpfile2rel,
+                tempRootPath.toString(), false);
+        List<String> md5Content2 = Files.readAllLines(Path.of(tmpfile2.toAbsolutePath() + ".md5"));
+        Assert.assertEquals(1, md5Content2.size());
+        Assert.assertEquals(32, md5Content2.get(0).length());
     }
 
     @Test

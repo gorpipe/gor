@@ -92,6 +92,10 @@ public class TestUtils {
         return runGorPipeWithOptions(query, true, server, securityContext, writeLocations);
     }
 
+    public static String runGorPipe(String query, String gorroot, boolean server) {
+        return runGorPipeWithOptions(query, gorroot, null, true, server, null, null);
+    }
+
     public static String runGorPipe(String query, String gorroot, boolean server, String securityContext, String[] writeLocations) {
         return runGorPipeWithOptions(query, gorroot, null, true, server, securityContext, writeLocations);
     }

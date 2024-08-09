@@ -54,7 +54,8 @@ public class UTestDefaultFileReader {
     
     @Before
     public void setUp() {
-        reader = ProjectContext.DEFAULT_READER;
+        reader = new DriverBackedFileReader(System.getProperty("gor.security.context", ""),
+                                            workDir.getRoot().getAbsolutePath());
     }
 
     @Test
