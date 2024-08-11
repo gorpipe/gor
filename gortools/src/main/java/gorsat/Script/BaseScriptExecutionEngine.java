@@ -141,10 +141,20 @@ public class BaseScriptExecutionEngine {
         } else {
             var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles) + signatureKey;
-            fileSignature = fileSignatureMap.computeIfAbsent(
-                    fileListKey,
-                    (k) -> StringUtilities.createMD5(
-                            usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
+
+            if (usedFiles.stream().anyMatch(DataUtil::isYml)) {
+                // if any of the files is a template expansion, we treat this as if non-deterministic.  We do not
+                // model how expansion might depend on files and parameters.
+                // We could expand the YML file and then signature that query according to its usedFiles etc.,
+                // but that is not too different from forcing a cache miss at this stage by using a never-reused
+                // signature value.  We don't save it for reuse.
+                fileSignature = StringUtilities.createMD5(Long.toString(System.nanoTime()) + fileListKey + signatureKey);
+            } else {
+                fileSignature = fileSignatureMap.computeIfAbsent(
+                        fileListKey,
+                        (k) -> StringUtilities.createMD5(
+                                usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
+            }
         }
 
         return fileSignature;
