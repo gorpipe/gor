@@ -22,6 +22,7 @@
 
 package org.gorpipe.s3.driver;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
@@ -198,16 +199,13 @@ public class S3Source implements StreamSource {
 
     @Override
     public boolean exists() {
-        // This only works for directories if they end with /.  Safer but much slower impl is:
-
-        return fileExists() || Files.exists(getPath());
-//      This only works for directories if they end with /.  Much faster:
-//      if (sourceReference.getUrl().endsWith("/")) {
-//          // Files.exists handles directories.
-//          return Files.exists(getPath());
-//      } else {
-//          return fileExists();
-//      }
+        try {
+            // Note: fileExists only handles dirs if the end with /. Therefor we fall back to the much slower Files.exists.
+            return fileExists() || Files.exists(getPath());
+        } catch (AmazonClientException e) {
+            throw new GorResourceException(String.format("Exists failed for %s", getName()),
+                    getName(), e).retry();
+        }
     }
 
     private boolean fileExists()  {
