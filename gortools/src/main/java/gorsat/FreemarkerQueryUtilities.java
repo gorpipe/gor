@@ -59,7 +59,7 @@ public class FreemarkerQueryUtilities {
      * @throws IOException          Yml file not found
      * @throws TemplateException    Internal freemarker error
      */
-    public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
+    synchronized public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
         List<PerspectiveDialog> perspectiveDialogs = PerspectiveDialogFactory.create(fileResolver, queryEval, true).buildDialogs(resource, cacheDir);
         Optional<PerspectiveDialog> optionalPerspective = getOptionalPerspective(reportName, perspectiveDialogs);
 
