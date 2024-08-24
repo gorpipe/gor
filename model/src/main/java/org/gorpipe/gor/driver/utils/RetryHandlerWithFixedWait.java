@@ -13,8 +13,8 @@ import static java.lang.Thread.sleep;
 public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
-    protected long initialDuration;
-    protected long totalDuration;
+    protected final long initialDuration;
+    protected final long totalDuration;
 
     public RetryHandlerWithFixedWait(long initialDuration, long totalDuration) {
         this.initialDuration = initialDuration;

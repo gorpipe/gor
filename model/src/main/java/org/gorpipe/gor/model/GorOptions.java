@@ -641,19 +641,19 @@ public class GorOptions {
         }
     }
 
-
     public static Set<String> readTagsFromFile(GorSession session, String filename) throws IOException {
         final boolean isNorFile = filename.toLowerCase().endsWith("nor");
         final Set<String> set = new LinkedHashSet<>();
-        session.getProjectContext().getFileReader().readFile(filename)
-                .filter(line -> !line.startsWith("#"))
-                .map(line -> {
-                    final int beginIdx = isNorFile ? line.indexOf('\t', line.indexOf('\t') + 1) : 0;
-                    final int endIdx = line.indexOf('\t', beginIdx);
-                    return endIdx == -1 ? line.substring(beginIdx) : line.substring(beginIdx, endIdx);
+        try (Stream<String> stream = session.getProjectContext().getFileReader().readFile(filename)) {
+                stream.filter(line -> !line.startsWith("#"))
+                    .map(line -> {
+                        final int beginIdx = isNorFile ? line.indexOf('\t', line.indexOf('\t') + 1) : 0;
+                        final int endIdx = line.indexOf('\t', beginIdx);
+                        return endIdx == -1 ? line.substring(beginIdx) : line.substring(beginIdx, endIdx);
                     })
-                .map(String::trim)
-                .forEach(set::add);
+                    .map(String::trim)
+                    .forEach(set::add);
+        }
         return Collections.unmodifiableSet(set);
     }
 

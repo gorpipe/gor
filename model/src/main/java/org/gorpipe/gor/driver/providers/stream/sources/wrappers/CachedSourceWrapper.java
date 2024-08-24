@@ -90,6 +90,14 @@ public class CachedSourceWrapper extends WrappedStreamSource {
     }
 
     @Override
+    public void close() {
+        if (delegate != null) {
+            delegate.close();
+        }
+        wrapped.close();
+    }
+
+    @Override
     public SourceType getSourceType() {
         return FileSourceType.FILE;
     }

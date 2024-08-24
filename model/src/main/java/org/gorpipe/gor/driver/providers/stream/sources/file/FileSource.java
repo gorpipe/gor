@@ -322,8 +322,9 @@ public class FileSource implements StreamSource {
                 raf.close();
             } catch (IOException e) {
                 throw GorResourceException.fromIOException(e, getPath()).retry();
+            } finally {
+                raf = null;
             }
-            raf = null;
         }
     }
 
@@ -373,12 +374,7 @@ public class FileSource implements StreamSource {
         @Override
         public void close() {
             if (closable && raf != null) {
-                try {
-                    raf.close();
-                    raf = null;
-                } catch (IOException e) {
-                    // Ignore
-                }
+                FileSource.this.close();
             }
         }
 
@@ -453,11 +449,7 @@ public class FileSource implements StreamSource {
 
         @Override
         public void close() {
-            try {
-                raf.close();
-            } catch (IOException e) {
-                // Ignore
-            }
+            FileSource.this.close();
         }
 
         @Override
