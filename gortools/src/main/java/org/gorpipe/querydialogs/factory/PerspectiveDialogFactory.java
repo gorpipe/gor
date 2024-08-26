@@ -24,6 +24,8 @@ package org.gorpipe.querydialogs.factory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.TemplateException;
+import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.gor.model.ReportCommand;
@@ -141,8 +143,9 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
             for (Map<String, ? extends Object> entry : argumentAttributes) {
                 try {
                     arguments.add(buildArgument((String) entry.get("name"), entry));
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException("Error in dialog " + name + "\n" + ex.getMessage());
+                } catch (Exception ex) {
+                    throw new GorSystemException(String.format("Error in dialog %s: %s\nEntry data:\n%s",
+                            name, ex.getMessage(), entry), ex);
                 }
             }
         }

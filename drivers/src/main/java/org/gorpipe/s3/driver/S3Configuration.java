@@ -36,6 +36,12 @@ public interface S3Configuration extends Config {
     @ConverterClass(DurationConverter.class)
     Duration connectionTimeout();
 
+    @Documentation("The default timeout for reading from a connected socket.")
+    @Key("gor.s3.socket.timeout")
+    @DefaultValue("5 minutes")
+    @ConverterClass(DurationConverter.class)
+    Duration socketTimeout();
+
     @Documentation("S3 connection pool size")
     @Key("gor.s3.conn.pool.size")
     @DefaultValue("10000")
@@ -43,10 +49,10 @@ public interface S3Configuration extends Config {
 
     @Documentation("S3 max error retry")
     @Key("gor.s3.conn.retries")
-    @DefaultValue("0")
+    @DefaultValue("3")
     int connectionRetries();
 
-    @Documentation("S3 max error retry")
+    @Documentation("S3 validate after inactivity (millis)")
     @Key("gor.s3.validate.after.inactivity")
     @DefaultValue("100")
     int validateAfterInactivityMillis();

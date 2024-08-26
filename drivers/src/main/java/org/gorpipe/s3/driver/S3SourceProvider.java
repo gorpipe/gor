@@ -90,12 +90,22 @@ public class S3SourceProvider extends StreamSourceProvider {
 
     private AmazonS3Client createClient(Credentials cred) {
         ClientConfiguration clientConfig = new ClientConfiguration();
-        clientConfig.setConnectionTimeout((int) s3Config.connectionTimeout().toMillis());
+
         clientConfig.setMaxErrorRetry(s3Config.connectionRetries());
         clientConfig.setMaxConnections(s3Config.connectionPoolSize());
+
+        clientConfig.setConnectionTimeout((int) s3Config.connectionTimeout().toMillis());
+        clientConfig.setSocketTimeout((int)s3Config.socketTimeout().toMillis());
+
+        clientConfig.setMaxConsecutiveRetriesBeforeThrottling(1000);
+
+        // Solves "Connection reset .."
+        clientConfig.setUseTcpKeepAlive(true);
+
         // It looks like GOR is returning stale connections to the pool so we need always check if the connection is valid.
         // See issue: https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/issues/315
         clientConfig.setValidateAfterInactivityMillis(s3Config.validateAfterInactivityMillis());
+
         log.debug("Creating S3Client for {}", cred);
         if (cred == null || cred.isNull()) {
             Regions region = Regions.DEFAULT_REGION;
