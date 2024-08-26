@@ -34,6 +34,15 @@ case class Select2(columns: Int*) extends Analysis {
 
   override def isTypeInformationMaintained: Boolean = true
 
+  /*
+   * Determine new positions of any columns without types
+   */
+  override def columnsWithoutTypes(invalidOnInput: Array[Int]): Array[Int] = {
+    if (invalidOnInput == null) null else {
+      Array.range(0, colArray.length).filter(x => invalidOnInput.contains(colArray(x)))
+    }
+  }
+
   override def setRowHeader(header: RowHeader): Unit = {
     rowHeader = header
     if(pipeTo != null) {

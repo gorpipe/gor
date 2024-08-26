@@ -196,5 +196,25 @@ abstract class Analysis() extends Processor with Cloneable {
     if (pipeTo == null) false else pipeTo.isTypeInformationNeeded
   }
 
+  /**
+   * Does execution of this step preserve column type information?
+   * The value false (default) means if a downstream step requires types, then they must be inferred.
+   * true means that columns, except for those returned by columnsWithoutTypes(), already
+   * have type info which need not be inferred.
+   */
   def isTypeInformationMaintained: Boolean = false
+
+  /**
+   * For the case isTypeInformationMaintained=true, which columns do not have their types maintained
+   * null is valid, and equivalent to an empty array, i.e. all column types are maintained
+   * (Not to be invoked in subclasses with isTypeInformationMaintained=false which means no column types are maintained)
+   * Result is used logically as the set of elements (i.e., .contains()) so duplicated elements are harmless
+   *
+   * @param untypedColumns column numbers which have no valid types from prior step
+   * @return column numbers on the output whose type is not present or not valid
+   */
+  def columnsWithoutTypes(untypedColumns: Array[Int]): Array[Int] = {
+    // default step does not add untyped columns or invalidate type of existing columns
+    untypedColumns
+  }
 }

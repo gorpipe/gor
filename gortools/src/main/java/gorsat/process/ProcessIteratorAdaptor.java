@@ -219,7 +219,7 @@ public class ProcessIteratorAdaptor extends GenomicIteratorBase implements Seria
         ProcessAdaptor processAdaptor = nor ? new NorProcessAdaptor(os) : new ProcessAdaptor(os);
         Analysis processPipeStep;
         if (an != null) {
-            an = PipeInstance.injectTypeInferral(an, false);
+            an = PipeInstance.injectTypeInferral(an, false, null);
             processPipeStep = an.$bar(processAdaptor);
         } else {
             processPipeStep = processAdaptor;

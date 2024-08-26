@@ -84,6 +84,16 @@ public class UTestSplit {
     }
 
     @Test
+    public void splitNonAdjacentDualColumns() {
+        String[] lines = TestUtils.runGorPipeLines("gorrow 1,1 | calc data1 \"1,2,3\" | calc sep 0 | calc data2 \"a,b,c\" | split data1,data2");
+        Assert.assertEquals(4, lines.length);
+        Assert.assertEquals("chrom\tpos\tdata1\tsep\tdata2\n", lines[0]);
+        Assert.assertEquals("chr1\t1\t1\t0\ta\n", lines[1]);
+        Assert.assertEquals("chr1\t1\t2\t0\tb\n", lines[2]);
+        Assert.assertEquals("chr1\t1\t3\t0\tc\n", lines[3]);
+    }
+
+    @Test
     public void icelandicChars() throws IOException {
         assertUtfCharactersInSplit("Þetta er próf - áéíóúýö");
     }

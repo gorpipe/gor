@@ -44,6 +44,9 @@ case class InferColumnTypes() extends Analysis {
   var columnCount: Int = 0
   var columnTypes: Array[String] = _
 
+  /** which columns are to be inferred; null means all */
+  var colsToSet: Array[Int] = null
+
   var hasAnalyzedTypes = false
 
   override def process(r: Row): Unit = {
@@ -123,7 +126,10 @@ case class InferColumnTypes() extends Analysis {
     columnTypes(0) = "S"
     columnTypes(1) = "I"
     for (c <- 2 until columnCount) {
-      columnTypes(c) = determineColumnType(c, rowBuff, bCount)
+      val prevType = if (this.rowHeader != null && this.rowHeader.columnTypes != null
+                          && this.rowHeader.columnTypes.length > c) this.rowHeader.columnTypes(c) else null
+      columnTypes(c) = if (prevType != null && colsToSet != null && !colsToSet.contains(c)) prevType
+      else determineColumnType(c, rowBuff, bCount)
     }
   }
 

@@ -28,10 +28,23 @@ import org.gorpipe.model.gor.RowObj
 
 import scala.collection.mutable.StringBuilder
 
+/**
+ * Implementation of the SPLIT command (not COLSPLIT) when multiple columns are split
+ */
 case class MultiColumnSplit(totalNumberOfColumns: Int, splitColumns: Array[Int], separator: String, empty: String) extends Analysis {
   val sc = splitColumns.sorted
   val splitcol = Range(0, totalNumberOfColumns).map(x => if (sc.contains(x)) true else false).toArray
   val splitcolArray = new Array[Array[String]](sc.length)
+
+  override def isTypeInformationMaintained: Boolean = true
+
+  /*
+   * After split, we want the type of the split columns to be re-inferred
+   */
+  override def columnsWithoutTypes(invalidOnInput: Array[Int]): Array[Int] = {
+    if (invalidOnInput == null) sc else invalidOnInput.concat(sc)
+    // this might yield duplicated values in the result, which cause no harm
+  }
 
   override def process(r: Row): Unit = {
     if (!r.toString.contains(separator)) super.process(r)

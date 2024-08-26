@@ -26,9 +26,24 @@ import gorsat.Commands.Analysis
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 
+/**
+ * Implementation of the SPLIT command for a single column (not COLSPLIT)
+ */
 case class ColumnSplit(totalNumberOfColumns: Int, column: Int, separator: String) extends Analysis {
 
   private val isLast: Boolean = column+1 == totalNumberOfColumns
+
+  override def isTypeInformationMaintained: Boolean = true
+
+  /*
+   * After split, the type of the split column should be re-inferred
+   */
+  override def columnsWithoutTypes(invalidOnInput: Array[Int]): Array[Int] = {
+    if (invalidOnInput == null) Array(column)
+      // the next line avoids possibility of duplication, which is harmless but may be confusing
+    else if (invalidOnInput.contains(column)) invalidOnInput
+    else invalidOnInput.concat(Array(column))
+  }
 
   override def process(r: Row): Unit = {
     val colVals = r.colAsString(column).toString.split(separator, -1)

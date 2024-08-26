@@ -78,6 +78,44 @@ public class UTestSetColType {
     }
 
     @Test
+    public void splitShouldPreserveColumnTypes() {
+        String query = "gorrow 1,1 | calc s \"a,b,c\" | calc x 42 | calc y 3.14 | setcoltype x STRING | split s | top 1 | coltype";
+        final String result = TestUtils.runGorPipe(query);
+        final String expected = "chrom\tpos\ts\tx\ty\n" +
+                "chr1\t1\tS(a)\tS(42)\tD(3.14)\n";
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void splitAndSelectShouldPreserveColumnTypes() {
+        String query = "gorrow 1,1 | calc xx 0 | calc s \"10,11,12\" | calc x 42 | calc y 3.14 | calc y2 2.718 | setcoltype x STRING " +
+                "| calc v 55 | split s | select 1,2,4-6 | top 1 | coltype";
+        final String result = TestUtils.runGorPipe(query);
+        final String expected = "chrom\tpos\ts\tx\ty\n" +
+                "chr1\t1\tI(10)\tS(42)\tD(3.14)\n";
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void multiColSplitAndSelectShouldPreserveColumnTypes() {
+        String query = "gorrow 1,1 | calc xx 0 | calc s \"a,b,c\" | calc x 42 | calc y 3.14 | calc w '3,4,5' | calc y2 2.718 | " +
+                "setcoltype x STRING | calc v 55 | split s,w | select 1,2,4-7 | top 1 | coltype";
+        final String result = TestUtils.runGorPipe(query);
+        final String expected = "chrom\tpos\ts\tx\ty\tw\n" +
+                "chr1\t1\tS(a)\tS(42)\tD(3.14)\tI(3)\n";
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void calcShouldPreserveColumnTypes() {
+        String query = "gorrow 1,1 | calc x 42 | calc y 3.14 | setcoltype x s | calc z 'Z'| coltype";
+        final String result = TestUtils.runGorPipe(query);
+        final String expected = "chrom\tpos\tx\ty\tz\n" +
+                "chr1\t1\tS(42)\tD(3.14)\tS(Z)\n";
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
     public void unknownTypeShouldThrowError() {
         expected.expect(GorParsingException.class);
         String query = "gorrow 1,1 | calc data '123' | setcoltype data x | coltype";

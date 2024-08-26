@@ -71,24 +71,42 @@ object PipeInstance {
     new PipeInstance(context)
   }
 
-  def injectTypeInferral(pipeStep: Analysis, typesMaintained: Boolean = false): Analysis = {
+  /**
+   * Insert steps for column type inference if and where needed
+   * Uses recursion to walks through the chain of steps, determining if types have been maintained to that point.
+   * If types are needed for the current step and are not already there, insert an InferColumnTypes step.
+   * Note that when this is executed, any column type data has not yet been materialized; the analysis is of what
+   * will be present at execution time.
+   *
+   * @param pipeStep a chain of steps to be executed
+   * @param typesMaintained does the execution of preceding steps provide column type info
+   * @param untypedColumnsIn for the case typesMaintained=true, which columns are excluded from the type info
+   *                         null means empty, none excluded. (ignored if typesMaintained=false).
+   * @return an updated chain of steps, with type inference inserted where necessary
+   */
+  def injectTypeInferral(pipeStep: Analysis, typesMaintained: Boolean = false, untypedColumnsIn: Array[Int] = null): Analysis = {
     val next = pipeStep.pipeTo
     pipeStep.pipeTo = null
 
+    // create the inferral step, if any, that needs insertion before this step
+    val infer = if (pipeStep.isTypeInformationNeeded) {
+      if (!typesMaintained) InferColumnTypes()
+      else if (untypedColumnsIn != null && untypedColumnsIn.length > 0) {
+        val infer1 = InferColumnTypes()
+        infer1.colsToSet = untypedColumnsIn
+        infer1
+      } else null
+    } else null
+
     if (next == null) {
-      if (pipeStep.isTypeInformationNeeded && !typesMaintained) {
-        InferColumnTypes() | pipeStep
-      } else {
-        pipeStep
-      }
+      if (infer != null) infer | pipeStep else pipeStep
+
     } else {
-      if (pipeStep.isTypeInformationNeeded && !typesMaintained) {
-        val infer = InferColumnTypes()
-        infer.setRowHeader(pipeStep.rowHeader)
-        infer | pipeStep | injectTypeInferral(next, pipeStep.isTypeInformationMaintained)
-      }
-      else {
-        pipeStep | injectTypeInferral(next, pipeStep.isTypeInformationMaintained && typesMaintained)
+      if (infer != null) {
+        infer | pipeStep | injectTypeInferral(next, pipeStep.isTypeInformationMaintained, pipeStep.columnsWithoutTypes(null))
+      } else {
+        val untypedColumns = if (pipeStep.isTypeInformationMaintained) pipeStep.columnsWithoutTypes(untypedColumnsIn) else null
+        pipeStep | injectTypeInferral(next, pipeStep.isTypeInformationMaintained && typesMaintained, untypedColumns)
       }
     }
   }

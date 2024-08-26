@@ -83,6 +83,44 @@ class UTestInferColumnTypes extends AnyFlatSpec {
     assert(step.columnTypes(4) == "L")
   }
 
+  it should "adhere to column restriction if any1" in {
+    val sink = AnalysisSink()
+    val step = InferColumnTypes()
+    val colTypes: Array[String] = Array("S", "S", "S", "S", "S")
+    step.setRowHeader(RowHeader(header, colTypes))
+    step.colsToSet = Array(3)
+    val pipe = step | sink
+
+    step.process(RowObj("chr1\t1\t10\t3.14\t123456789012"))
+    step.process(RowObj("chr1\t1\t11\t4.14\t223456789012"))
+    step.process(RowObj("chr1\t1\t12\t5.14\t323456789012"))
+    step.process(RowObj("chr1\t1\t13\t6.14\t423456789012"))
+    step.finish()
+
+    assert(step.columnTypes(2) == "S")
+    assert(step.columnTypes(3) == "D")
+    assert(step.columnTypes(4) == "S")
+  }
+
+  it should "adhere to column restriction if any 2" in {
+    val sink = AnalysisSink()
+    val step = InferColumnTypes()
+    val colTypes: Array[String] = Array("S", "S", "S", "S", "S")
+    step.setRowHeader(RowHeader(header, colTypes))
+    step.colsToSet = Array(2,4)
+    val pipe = step | sink
+
+    step.process(RowObj("chr1\t1\t10\t3.14\t123456789012"))
+    step.process(RowObj("chr1\t1\t11\t4.14\t223456789012"))
+    step.process(RowObj("chr1\t1\t12\t5.14\t323456789012"))
+    step.process(RowObj("chr1\t1\t13\t6.14\t423456789012"))
+    step.finish()
+
+    assert(step.columnTypes(2) == "I")
+    assert(step.columnTypes(3) == "S")
+    assert(step.columnTypes(4) == "L")
+  }
+
   it should "work for multiple rows, numbers in all but one" in {
     val sink = AnalysisSink()
     val step = InferColumnTypes()
