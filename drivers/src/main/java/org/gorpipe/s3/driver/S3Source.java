@@ -22,17 +22,13 @@
 
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.upplication.s3fs.S3OutputStream;
-import com.upplication.s3fs.S3Path;
-import com.upplication.s3fs.util.S3UploadRequest;
+import org.apache.commons.lang3.StringUtils;
+import org.carlspring.cloud.storage.s3fs.*;
+import org.gorpipe.base.security.Credentials;
 import org.gorpipe.base.streams.LimitedOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -42,17 +38,19 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.util.PathUtils;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -66,11 +64,12 @@ public class S3Source implements StreamSource {
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
-    private final AmazonS3 client;
+    private final S3Client client;
+    private S3FileSystem s3fs;
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
-    private Path path;
+    private S3Path path;
 
     private final static int MAX_S3_CHUNKS = 10000;
     private int writeChunkSize = Integer.parseInt(System.getProperty("gor.s3.write.chunksize", String.valueOf(1 << 26)));
@@ -80,11 +79,11 @@ public class S3Source implements StreamSource {
      *
      * @param sourceReference contains S3 url of the form s3://bucket/objectpath
      */
-    public S3Source(AmazonS3 client, SourceReference sourceReference) throws MalformedURLException {
+    public S3Source(S3Client client, SourceReference sourceReference) throws MalformedURLException {
         this(client, sourceReference, S3Url.parse(sourceReference));
     }
 
-    S3Source(AmazonS3 client, SourceReference sourceReference, S3Url url) {
+    S3Source(S3Client client, SourceReference sourceReference, S3Url url) {
         this.client = client;
         this.sourceReference = sourceReference;
         this.bucket = url.getBucket();
@@ -113,12 +112,16 @@ public class S3Source implements StreamSource {
 
         long maxFileSize = (long)writeChunkSize * (long)MAX_S3_CHUNKS;
         // S3OutputStream, uses less resources and is slightly faster than our S3MultiPartOutputStream
-        return new LimitedOutputStream(
-                new S3OutputStream(client, new S3UploadRequest()
-                .setObjectId(new S3ObjectId(bucket, key))
-                .setChunkSize(writeChunkSize)
-                .setMaxThreads(4))
-                , maxFileSize);
+        try {
+            return new LimitedOutputStream(
+                    getPath().getFileSystem().provider().newOutputStream(getPath(),
+                            append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
+//                    new S3OutputStream(client, getPath().toS3ObjectId()),
+                    maxFileSize);
+        } catch (IOException e) {
+            throw new GorResourceException(getName(), getName(), e);
+        }
+        // Old internal impl.
 //        return new S3MultiPartOutputStream(client, bucket, key);
     }
 
@@ -128,19 +131,18 @@ public class S3Source implements StreamSource {
     }
 
     private InputStream open(RequestRange range) {
-        GetObjectRequest req = new GetObjectRequest(bucket, key);
+        var reqBuilder = GetObjectRequest.builder().bucket(bucket).key(key);
         if (range!=null) {
             range = range.limitTo(getSourceMetadata().getLength());
             if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
-            req.setRange(range.getFirst(), range.getLast());
+            reqBuilder.range(BytesRange.startLengthtoRange(range.getFirst(), range.getLength()));
         }
-        return openRequest(req);
+        return openRequest(reqBuilder.build());
     }
 
     private InputStream openRequest(GetObjectRequest request) {
         try {
-            S3Object object = client.getObject(request);
-            return new AbortingInputStream(object.getObjectContent(), request);
+            return new AbortingInputStream(client.getObject(request), request);
         } catch (SdkClientException e) {
             throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), getPath().toString(), e).retry();
         }
@@ -161,8 +163,8 @@ public class S3Source implements StreamSource {
 
     private S3SourceMetadata createMetaData(String bucket, String key) {
         try {
-            ObjectMetadata md = client.getObjectMetadata(bucket, key);
-            return new S3SourceMetadata(this, md, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
+            var objectMetaResponse = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
+            return new S3SourceMetadata(this, objectMetaResponse, sourceReference.getLinkLastModified(), sourceReference.getChrSubset());
         } catch (SdkClientException e) {
             throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
         }
@@ -202,8 +204,13 @@ public class S3Source implements StreamSource {
         try {
             // Note: fileExists only handles dirs if the end with /. Therefor we fall back to the much slower Files.exists.
             return fileExists() || Files.exists(getPath());
-        } catch (AmazonClientException e) {
-            throw new GorResourceException(String.format("Exists failed for %s", getName()),
+        } catch (Exception e) {
+            Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
+            throw new GorResourceException(String.format("Exists failed for %s, region: %s, access key: %s, secret key: %s",
+                    getName(), client.serviceClientConfiguration().region(),
+                    cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
+                    cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.KEY, "")) ? "Has secret" : "Empty secret")
+                                 : "No creds"),
                     getName(), e).retry();
         }
     }
@@ -218,46 +225,17 @@ public class S3Source implements StreamSource {
         }
     }
 
-    /*
-      Map AmazonS3Exception/ExecutionException/InterruptException correctly.  Map to IOException if retry is wanted.
-      Either returns IOException or throws a runtime exception.
-     */
-    protected IOException mapAndRethrowS3Exceptions(Throwable t, String detail)  {
-
-        // Handle execution exceptions.
-        if (t instanceof ExecutionException || t instanceof UncheckedExecutionException) {
-            t = t.getCause();
-        }
-
-        if (t instanceof AmazonS3Exception) {
-            AmazonS3Exception e = (AmazonS3Exception) t;
-            detail = detail != null ? detail : e.getMessage();
-            if (e.getStatusCode() == 400) {
-                throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 401) {
-                throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 403) {
-                throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else if (e.getStatusCode() == 404) {
-                throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), detail, e);
-            } else {
-                return new IOException(e);
-            }
-        } else if (t instanceof SdkClientException) {
-            return new IOException(detail, t);
-        } else if (t instanceof IOException) {
-            return (IOException) t;
-        } else {
-            return new IOException(t);
-        }
-    }
-
     @Override
     public String createDirectory(FileAttribute<?>... attrs) {
         try {
-            return PathUtils.formatUri(Files.createDirectory(getPath()).toUri());
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, getPath()).retry();
+            // Files.createDirectory needs elevated access to list all buckets.
+            S3Path s3Path = getPath();
+            String directoryKey = s3Path.getKey().endsWith("/") ? s3Path.getKey() : s3Path.getKey() + "/";
+            PutObjectRequest request = (PutObjectRequest)PutObjectRequest.builder().bucket(s3Path.getBucketName()).key(directoryKey).cacheControl(s3Path.getFileSystem().getRequestHeaderCacheControlProperty()).contentLength(0L).build();
+            client.putObject(request, RequestBody.fromBytes(new byte[0]));
+            return PathUtils.formatUri(getPath().toUri());
+        } catch (Exception e) {
+            throw new GorResourceException(e.getMessage(), getPath().toString(), e).retry();
         }
     }
 
@@ -305,26 +283,24 @@ public class S3Source implements StreamSource {
     }
 
     private void deleteAllWithPrefix() {
-        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName(bucket)
-                .withPrefix(key);
+        ListObjectsRequest listObjectsRequest = ListObjectsRequest.builder()
+                .bucket(bucket)
+                .prefix(key)
+                .build();
 
-        ObjectListing objectListing = getClient().listObjects(listObjectsRequest);
+        ListObjectsResponse objectListing = getClient().listObjects(listObjectsRequest);
 
-        while (true) {
-            List<DeleteObjectsRequest.KeyVersion> keysToDelete = new ArrayList<>();
-            for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-                keysToDelete.add(new DeleteObjectsRequest.KeyVersion(objectSummary.getKey()));
-            }
-            if (!keysToDelete.isEmpty()) {
-                DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucket).withKeys(keysToDelete);
-                getClient().deleteObjects(deleteObjectsRequest);
-            }
-            if (objectListing.isTruncated()) {
-                objectListing = getClient().listNextBatchOfObjects(objectListing);
-            } else {
-                break;
-            }
+        List<ObjectIdentifier> idsToDelete = new ArrayList<>();
+        for (var object : objectListing.contents()) {
+            idsToDelete.add(ObjectIdentifier.builder().key(object.key()).build());
+        }
+
+        if (!idsToDelete.isEmpty()) {
+            DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                    .bucket(bucket)
+                    .delete(Delete.builder().objects(idsToDelete).build())
+                    .build();
+            getClient().deleteObjects(deleteObjectsRequest);
         }
     }
 
@@ -342,8 +318,15 @@ public class S3Source implements StreamSource {
     public Stream<String> list() {
         try {
             return Files.list(getPath()).map(this::s3SubPathToUriString);
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, getPath()).retry();
+        } catch (Exception e) {
+            Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
+            throw new GorResourceException(String.format("List failed for %s, region: %s, access key: %s, secret key: %s",
+                    getName(), client.serviceClientConfiguration().region(),
+                    cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
+                    cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.KEY, "")) ? "Has secret" : "Empty secret")
+                            : "No creds"),
+                    getName(), e).retry();
+            //throw GorResourceException.fromIOException(e, getPath()).retry();
         }
     }
 
@@ -360,26 +343,30 @@ public class S3Source implements StreamSource {
      * Convert Path that we now is sub-path of this, to URI.
      */
     protected String s3SubPathToUriString(Path p) {
+        if (p instanceof S3Path) {
+            return String.format("s3://%s/%s", ((S3Path) p).getBucketName(), ((S3Path) p).getKey());
+        }
         return PathUtils.formatUri(p.toUri());
     }
 
     @Override
-    public Path getPath() {
+    public S3Path getPath() {
         if (path == null) {
             path = getS3Path(bucket, key, client);
         }
         return path;
     }
 
-    public static Path getS3Path(String bucket, String key, AmazonS3 client) {
-        FileSystem s3fs;
-        try {
+    public S3Path getS3Path(String bucket, String key, S3Client client) {
+        if (s3fs == null) {
+            // NOTE:  We keep the old style of creating our own client objects and then create filesystems using that client.
+            //        Could also stop creating our own client and just passing all the necessary information to the filesystem
+            //        using S3FileSystemProvider.PROPS_TO_OVERLOAD and S3FileSystemProvider.getFileSystem(URI, Map<String, ?>).
+            //        Then we could extract the client from the filesystem.
             s3fs = S3ClientFileSystemProvider.getInstance().getFileSystem(client);
-        } catch (ProviderNotFoundException | FileSystemNotFoundException e) {
-            s3fs = S3ClientFileSystemProvider.getInstance().newFileSystem(client, null);
         }
-        return s3fs.getPath("/" + bucket, key);
-        //return s3fs.getPath(key);
+
+        return s3fs.getPath( "/" + bucket, key);
     }
 
     @Override
@@ -397,7 +384,7 @@ public class S3Source implements StreamSource {
         // No resources to free
     }
 
-    public AmazonS3 getClient() {
+    public S3Client getClient() {
         return client;
     }
 }

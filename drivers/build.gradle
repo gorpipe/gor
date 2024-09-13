@@ -37,9 +37,10 @@ project(':drivers') {
         implementation "com.github.samtools:htsjdk:_"
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "com.google.cloud:google-cloud-storage:_"
-        implementation "com.amazonaws:aws-java-sdk-s3:_"
         implementation 'com.azure:azure-storage-blob:_'
-        implementation 'io.nextflow:nxf-s3fs:_' // Add com.upplication.s3fs
+        implementation "software.amazon.awssdk:s3:_"
+        implementation 'org.carlspring.cloud.aws:s3fs-nio:1.0.5'
+        //implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
         implementation 'org.apache.commons:commons-lang3:_'
 
         testFixturesImplementation project(':base')

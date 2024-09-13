@@ -1,11 +1,11 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.utils.RetryHandlerWithFixedWait;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.FileNotFoundException;
 import java.nio.file.FileSystemException;
@@ -34,15 +34,15 @@ public class S3RetryHandler extends RetryHandlerWithFixedWait {
         if (e.getCause() instanceof ExecutionException || e.getCause() instanceof UncheckedExecutionException) {
             var t = e.getCause();
 
-            if (t instanceof AmazonS3Exception awsException) {
+            if (t instanceof S3Exception awsException) {
                 var detail = awsException.getMessage();
-                if (awsException.getStatusCode() == 400) {
+                if (awsException.statusCode() == 400) {
                     throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
-                } else if (awsException.getStatusCode() == 401) {
+                } else if (awsException.statusCode() == 401) {
                     throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
-                } else if (awsException.getStatusCode() == 403) {
+                } else if (awsException.statusCode() == 403) {
                     throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
-                } else if (awsException.getStatusCode() == 404) {
+                } else if (awsException.statusCode() == 404) {
                     throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
                 }
             } else if (t instanceof SdkClientException) {

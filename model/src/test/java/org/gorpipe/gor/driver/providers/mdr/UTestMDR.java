@@ -18,6 +18,7 @@ public class UTestMDR {
 
     private static String S3_KEY;
     private static String S3_SECRET;
+    private static String S3_REGION = "eu-west-1";
 
 
     @Rule
@@ -42,6 +43,7 @@ public class UTestMDR {
 
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         var result = TestUtils.runGorPipeLines("gor mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a | top 10000");
 
@@ -57,6 +59,7 @@ public class UTestMDR {
 
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         var result = TestUtils.runGorPipeLines("nor -h mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a | top 10000");
 
@@ -71,6 +74,7 @@ public class UTestMDR {
 
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         var result = TestUtils.runGorPipeLines("gor mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a mdr://191b3d28-4db9-4aa3-aa6b-cbb2968885a5 mdr://ee4d7e36-e6dc-42d8-8f78-714242a8cf6d | top 10000");
 
@@ -86,6 +90,7 @@ public class UTestMDR {
 
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         Path tempFile = Files.createTempFile("document_", ".gor.link");
         Files.write(tempFile, "mdr://2806e2ec-30f0-41f1-bdf1-ce3b2def078a".getBytes());
@@ -103,6 +108,7 @@ public class UTestMDR {
 
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         var ex = Assert.assertThrows(GorResourceException.class, () -> {
             TestUtils.runGorPipeLines("gor mdr://f3658d3a-5220-4094-b7b1-311804df3db8");
@@ -115,6 +121,7 @@ public class UTestMDR {
     public void testDictionaryWithInvalidEntry() throws IOException {
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         // Copy test file to a new file
         Path tempFile = Files.createTempFile("genes_", ".gord");
@@ -137,6 +144,7 @@ public class UTestMDR {
     public void test1000EntryDictionary() {
         environmentVariables.set("AWS_ACCESS_KEY_ID", S3_KEY);
         environmentVariables.set("AWS_SECRET_ACCESS_KEY", S3_SECRET);
+        environmentVariables.set("AWS_REGION", S3_REGION);
 
         var result = TestUtils.runGorPipeLines("gor ../tests/data/mdr/genes_mdr_1000.gord | top 10000");
 

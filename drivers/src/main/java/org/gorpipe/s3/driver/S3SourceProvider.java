@@ -22,17 +22,14 @@
 
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.*;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.google.auto.service.AutoService;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.SourceProvider;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -42,14 +39,29 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
+import org.gorpipe.gor.util.StringUtil;
+import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
-    private final CredentialClientCache<AmazonS3Client> clientCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
+    private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build();
+    private final CredentialClientCache<S3Client> clientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final S3Configuration s3Config;
+
 
     public S3SourceProvider() {
         s3Config = ConfigManager.getPrefixConfig("gor.s3", S3Configuration.class);
@@ -70,7 +82,7 @@ public class S3SourceProvider extends StreamSourceProvider {
     public S3Source resolveDataSource(SourceReference sourceReference)
             throws IOException {
         S3Url url = S3Url.parse(sourceReference);
-        AmazonS3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
+        S3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
         return new S3Source(client, sourceReference);
     }
 
@@ -82,79 +94,106 @@ public class S3SourceProvider extends StreamSourceProvider {
         return retryHandler;
     }
 
-    protected AmazonS3Client getClient(String securityContext, String bucket) throws IOException {
+    protected S3Client getClient(String securityContext, String bucket) throws IOException {
         BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
-
-        return clientCache.getClient(creds, bucket);
+        return clientCredCache.getClient(creds, bucket);
     }
 
-    private AmazonS3Client createClient(Credentials cred) {
-        ClientConfiguration clientConfig = new ClientConfiguration();
+    private S3Client createClient(Credentials cred) {
+        var builder = S3Client.builder()
+                .overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
+                        .apiCallAttemptTimeout(s3Config.socketTimeout())
+                        .apiCallTimeout(s3Config.socketTimeout()));
 
-        clientConfig.setMaxErrorRetry(s3Config.connectionRetries());
-        clientConfig.setMaxConnections(s3Config.connectionPoolSize());
+        ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
+                .connectionTimeout(s3Config.connectionTimeout())  // Default 2s
+                .socketTimeout(s3Config.socketTimeout())          // Default 30s
+                .maxConnections(s3Config.connectionPoolSize())    // Default 50
+                .connectionMaxIdleTime(s3Config.socketTimeout())  // Default 60s
+                //.connectionTimeToLive(Duration.ofMinutes(5))    // Default 0
+                ;
+        // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
 
-        clientConfig.setConnectionTimeout((int) s3Config.connectionTimeout().toMillis());
-        clientConfig.setSocketTimeout((int)s3Config.socketTimeout().toMillis());
+        final String proxy = System.getProperty("http.proxyHost");
+        final String port = System.getProperty("http.proxyPort");
+        if (proxy != null && port != null) {
+            log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
+            final ProxyConfiguration.Builder proxyConfig = ProxyConfiguration.builder();
+            proxyConfig.endpoint(URI.create(proxy + ":" + port));
+            httpClientBuilder.proxyConfiguration(proxyConfig.build());
+        }
 
-        clientConfig.setMaxConsecutiveRetriesBeforeThrottling(1000);
+        builder.httpClientBuilder(httpClientBuilder);
 
-        // Solves "Connection reset .."
-        clientConfig.setUseTcpKeepAlive(true);
+        builder.credentialsProvider(getCredentialsProvider(cred));
 
-        // It looks like GOR is returning stale connections to the pool so we need always check if the connection is valid.
-        // See issue: https://gitlab.com/wuxi-nextcode/wxnc-gor/gor/-/issues/315
-        clientConfig.setValidateAfterInactivityMillis(s3Config.validateAfterInactivityMillis());
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
 
-        log.debug("Creating S3Client for {}", cred);
+        builder.region(getRegion(cred, endpoint));
+
+        builder.crossRegionAccessEnabled(true);
+
+        return builder.build();
+    }
+
+    AwsCredentialsProvider getCredentialsProvider(Credentials cred) {
         if (cred == null || cred.isNull()) {
-            Regions region = Regions.DEFAULT_REGION;
-            var builder = AmazonS3ClientBuilder.standard()
-                    .enableForceGlobalBucketAccess()
-                    .withCredentials(new DefaultAWSCredentialsProviderChain())
-                    .withClientConfiguration(clientConfig);
-            var endpoint = s3Config.s3Endpoint();
-            if (endpoint != null && endpoint.length() > 0) {
-                AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(endpoint, region.getName());
-                builder = builder.withEndpointConfiguration(endpointConfiguration);
-            } else builder = builder.withRegion(region);
-            AmazonS3 amazonS3 = builder.build();
-            return (AmazonS3Client) amazonS3;
+            return DefaultCredentialsProvider.create();
         } else {
-            AWSCredentialsProvider awsCredentialsProvider = null;
-
             var awsKey = cred.getOrDefault(Credentials.Attr.KEY, "");
             var awsSecret = cred.getOrDefault(Credentials.Attr.SECRET, "");
             var sessionToken = cred.getOrDefault(Credentials.Attr.SESSION_TOKEN, "");
 
             if (!awsKey.isEmpty() && !awsSecret.isEmpty()) {
                 if (!sessionToken.isEmpty()) {
-                    awsCredentialsProvider = new AWSStaticCredentialsProvider(new BasicSessionCredentials(
-                            awsKey,
-                            awsSecret,
-                            sessionToken));
+                    return StaticCredentialsProvider.create(
+                            AwsSessionCredentials.builder()
+                                    .accessKeyId(awsKey)
+                                    .secretAccessKey(awsSecret)
+                                    .sessionToken(sessionToken)
+                                    .build());
                 } else {
-                    awsCredentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsKey, awsSecret));
+                    log.info("CredentialsProvider: StaticCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
+                    return StaticCredentialsProvider.create(
+                            AwsBasicCredentials.builder()
+                                    .accessKeyId(awsKey)
+                                    .secretAccessKey(awsSecret)
+                                    .build());
                 }
             } else {
-                awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
+                log.info("CredentialsProvider: DefaultCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
+                return DefaultCredentialsProvider.create();
             }
-
-            String regionStr = cred.get(Credentials.Attr.REGION);
-            Regions region = regionStr == null ? Regions.DEFAULT_REGION : Regions.fromName(regionStr);
-            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().enableForceGlobalBucketAccess()
-                    .withRegion(region)
-                    .withClientConfiguration(clientConfig)
-                    .withCredentials(awsCredentialsProvider);
-
-            String endpoint = cred.get(Credentials.Attr.API_ENDPOINT);
-            if (endpoint != null) {
-                AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(endpoint, region.getName());
-                builder = builder.withEndpointConfiguration(endpointConfiguration);
-            }
-            return (AmazonS3Client) builder.build();
         }
     }
 
+    String getEndpoint(Credentials creds) {
+        var endpoint = "";
+        if (creds != null && !creds.isNull()) {
+            endpoint = creds.get(Credentials.Attr.API_ENDPOINT);
+        }
+
+        if (StringUtils.isEmpty(endpoint)) {
+            endpoint = s3Config.s3Endpoint();
+        }
+
+        return endpoint;
+    }
+
+    Region getRegion(Credentials creds, String endpoint) {
+        var regionStr = creds.get(Credentials.Attr.REGION);
+
+        if (StringUtil.isEmpty(regionStr) && !StringUtil.isEmpty(endpoint)) {
+            var m = Pattern.compile(".*?s3-(.*?)\\..*").matcher(endpoint);
+            if (m.matches()) {
+                regionStr = m.group(1);
+            }
+        }
+
+        return StringUtil.isEmpty(regionStr) ? Region.US_EAST_1 : Region.of(regionStr);
+    }
 }
 

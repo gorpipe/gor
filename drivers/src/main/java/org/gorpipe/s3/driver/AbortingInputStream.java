@@ -1,7 +1,7 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,16 +12,14 @@ import java.io.OutputStream;
  */
 class AbortingInputStream extends InputStream {
     private final long SKIP_BYTES_THRESHOLD = 1024L*1024L;
-    private final S3ObjectInputStream s3is;
+    private final ResponseInputStream s3is;
     private final long maxBytes;
     private long bytesRead = 0;
 
-    public AbortingInputStream(S3ObjectInputStream s3is, GetObjectRequest request) {
+    public AbortingInputStream(ResponseInputStream s3is, GetObjectRequest request) {
         this.s3is = s3is;
-        long[] range = request.getRange();
-        long start = range == null || range.length < 1 ? 0 : range[0];
-        long end = range == null || range.length < 2 ? Long.MAX_VALUE : range[range.length - 1];
-        this.maxBytes = end - start + 1;
+        BytesRange range = new BytesRange(request.range());
+        this.maxBytes = range.end() - range.start() + 1;
     }
 
     @Override

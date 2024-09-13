@@ -9,7 +9,6 @@ import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
-import org.gorpipe.s3.shared.ITestS3Shared;
 import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.manager.BucketManager;
@@ -34,7 +33,6 @@ import static gorsat.TestUtils.runGorPipeServer;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_KEY;
 import static org.gorpipe.gor.manager.BucketManager.HEADER_BUCKET_DIRS_LOCATION_KEY;
 import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
-import static org.gorpipe.utils.DriverUtils.awsSecurityContext;
 
 /**
  * Note, there are S3Shared integration tests in gor-services (ITestS3Shared).
@@ -52,14 +50,6 @@ public class ITestS3Table {
     //private static final String S3_FILE_2 = "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/derived/raw_vcf_to_gor/BVL_INDEX_SLC52A2.vcf.gz.gorz";
     private static final String S3_FILE_3 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053043D.wgs.genotypes.gor";
     //private static final String S3_FILE_3 = "s3://gdb-unit-test-data/csa_test_data/data_sets/bvl_min_gor/derived/raw_vcf_to_gor/BVL_MOTHER_SLC52A2.vcf.gz.gorz";
-
-    // NOTE: Providing system props for classes does usually not work if the prop is ready in static context.
-    @Rule
-    public final ProvideSystemProperty awsAccessKeyId = new ProvideSystemProperty("aws.accessKeyId", "");
-
-    @Rule
-    public final ProvideSystemProperty otherPropertyIsMissing = new ProvideSystemProperty("aws.secretKey", "");
-
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -81,8 +71,6 @@ public class ITestS3Table {
         Properties props = DriverUtils.getDriverProperties();
         S3_KEY = props.getProperty("S3_KEY");
         S3_SECRET = props.getProperty("S3_SECRET");
-
-        ITestS3Shared.setUpClass();
     }
 
     @Before
@@ -91,7 +79,7 @@ public class ITestS3Table {
         Files.createDirectory(workDirPath.resolve("some_project"));
 
         String s3dataSecurityContext = DriverUtils.createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String awsSecurityContext = awsSecurityContext(S3_KEY, S3_SECRET);;
+        String awsSecurityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);;
         BundledCredentials.Builder b = new BundledCredentials.Builder()
                 .addCredentials(BundledCredentials.fromSecurityContext(s3dataSecurityContext))
                 .addCredentials(BundledCredentials.fromSecurityContext(awsSecurityContext));
@@ -99,7 +87,6 @@ public class ITestS3Table {
         String securityContext = bundleCreds.addToSecurityContext(null);
 
         fileReader = new DriverBackedFileReader(securityContext, workDirPath.resolve("some_project").toString());
-
     }
 
     private void insertIntoTableGordFile() throws IOException {
@@ -270,6 +257,7 @@ public class ITestS3Table {
         return dictPath;
     }
 
+    @Ignore("Needs more access to be able  to use ")
     @Test
     public void testBucketizeS3TableS3DataS3Buckets() throws IOException {
         String name = "testBucketizeS3TableS3DataS3Buckets";
@@ -303,6 +291,7 @@ public class ITestS3Table {
         }
     }
 
+    @Ignore("Needs more access to be able  to use ")
     @Test
     public void testBucketizeS3TableFolderS3DataS3Bucket() throws IOException {
         String name = "testBucketizeS3TableFolderS3DataS3Bucket";
@@ -334,6 +323,7 @@ public class ITestS3Table {
         }
     }
 
+    @Ignore("Needs more access to be able  to use ")
     @Test
     public void testBucketizeS3TableFolderS3DataS3BucketUsingLink() throws IOException {
         String name = "testBucketizeS3TableFolderS3DataS3BucketUsingLink";

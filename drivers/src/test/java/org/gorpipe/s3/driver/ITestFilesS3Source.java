@@ -1,10 +1,5 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonFilesTests;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -13,6 +8,10 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.SystemErrRule;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -30,6 +29,14 @@ public class ITestFilesS3Source extends CommonFilesTests {
     @Rule
     public final ProvideSystemProperty otherPropertyIsMissing
             = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", S3_REGION);
 
     @Rule
     public final ProvideSystemProperty gorSecurityContext
@@ -63,16 +70,15 @@ public class ITestFilesS3Source extends CommonFilesTests {
 
     @Override
     protected StreamSource createSource(String name) throws IOException {
-
-        return new S3Source(newClient(),
-                new SourceReference(name));
+        return new S3Source(newClient(), new SourceReference(name));
     }
 
-    private AmazonS3 newClient() {
-        return AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(S3_KEY, S3_SECRET)))
-                .withRegion(S3_REGION)
-                .build();
+    private S3Client newClient() {
+        var credProvider = StaticCredentialsProvider.create(
+                AwsBasicCredentials.builder().accessKeyId(S3_KEY).secretAccessKey(S3_SECRET).build());
+        var builder = S3Client.builder()
+                .region(Region.of(S3_REGION))
+                .credentialsProvider(credProvider);
+        return builder.build();
     }
-
 }

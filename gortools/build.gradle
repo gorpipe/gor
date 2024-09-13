@@ -59,6 +59,8 @@ project(':gortools') {
         implementation 'org.apache.parquet:parquet-hadoop:_'
         implementation ('org.apache.hadoop:hadoop-common:_')
 
+        runtimeOnly project(':drivers')
+
         runtimeOnly "org.scala-lang:scala-reflect:_"
         runtimeOnly "org.apache.hadoop:hadoop-mapreduce-client-core:_"
 

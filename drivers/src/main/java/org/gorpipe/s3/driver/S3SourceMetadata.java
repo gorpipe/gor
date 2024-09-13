@@ -22,8 +22,8 @@
 
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -33,34 +33,33 @@ import java.util.TimeZone;
 
 public class S3SourceMetadata extends StreamSourceMetadata {
 
-    private final ObjectMetadata omd;
+    private final HeadObjectResponse omd;
 
-    public S3SourceMetadata(S3Source source, ObjectMetadata md, Long linkLastModified, String subset) {
-        super(source, source.getName(), md.getLastModified().getTime(), linkLastModified, md.getInstanceLength(), null, false);
+    public S3SourceMetadata(S3Source source, HeadObjectResponse md, Long linkLastModified, String subset) {
+        super(source, source.getName(), md.lastModified().toEpochMilli(), linkLastModified, md.contentLength(), null, false);
         this.omd = md;
     }
 
-    public S3SourceMetadata(S3Source source, ObjectMetadata md, String subset) {
-        super(source, source.getName(), md.getLastModified().getTime(), md.getInstanceLength(), null, false);
+    public S3SourceMetadata(S3Source source, HeadObjectResponse md, String subset) {
+        super(source, source.getName(), md.lastModified().toEpochMilli(), md.contentLength(), null, false);
         this.omd = md;
     }
 
     @Override
     public Map<String, String> attributes() throws IOException {
         Map<String, String> map = super.attributes();
-        map.put("S3.ContentMD5", omd.getContentMD5());
-        map.put("S3.ContentType", omd.getContentType());
-        map.put("S3.ContentEncoding", omd.getContentEncoding());
-        map.put("S3.ETag", omd.getETag());
-        map.put("S3.VersionId", omd.getVersionId());
-        map.put("S3.InstanceLength", String.valueOf(omd.getInstanceLength()));
-        Date exp = omd.getExpirationTime();
+        map.put("S3.ContentMD5", omd.checksumSHA256());
+        map.put("S3.ContentType", omd.contentType());
+        map.put("S3.ContentEncoding", omd.contentEncoding());
+        map.put("S3.ETag", omd.eTag());
+        map.put("S3.VersionId", omd.versionId());
+        map.put("S3.InstanceLength", String.valueOf(omd.contentLength()));
+        Date exp = omd.expires() != null ? new Date( omd.expires().toEpochMilli()) : null;
         if (exp != null) {
             DateFormat df = DateFormat.getTimeInstance();
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
             map.put("S3.ExpirationTime", df.format(exp));
         }
-        map.put("S3.ETag", omd.getETag());
         return map;
     }
 }

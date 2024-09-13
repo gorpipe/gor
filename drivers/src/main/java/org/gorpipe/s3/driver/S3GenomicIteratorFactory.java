@@ -22,33 +22,25 @@
 
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.*;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Stream;
 
 /**
  * S3GenomicIteratorFactory is a factory for GenomicIterators with data in a S3 instance. The credentials for S3 can
@@ -59,7 +51,8 @@ import java.util.stream.Stream;
  */
 public class S3GenomicIteratorFactory {
     private static final Logger log = LoggerFactory.getLogger(S3GenomicIteratorFactory.class);
-    final ClientConfiguration clientconfig = new ClientConfiguration();
+    final ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder();
+    final ProxyConfiguration.Builder proxyConfig = ProxyConfiguration.builder();
     final String endpoint = System.getProperty("gor.s3.endpoint");
 
     /**
@@ -75,212 +68,38 @@ public class S3GenomicIteratorFactory {
             final String port = System.getProperty("http.proxyPort");
             if (proxy != null && port != null) {
                 log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
-                clientconfig.setProxyHost(proxy);
-                clientconfig.setProxyPort(Integer.parseInt(port));
+                proxyConfig.endpoint(URI.create(proxy + ":" + port));
             }
-            String poolSize = System.getProperty("gor.s3.conn.pool.size");
-            if (poolSize != null && poolSize.trim().length() > 0) {
-                clientconfig.setMaxConnections(Integer.parseInt(poolSize));
-            }
-            clientconfig.setConnectionTimeout(120 * 1000);
-            clientconfig.setMaxErrorRetry(15);
+
+            httpClientBuilder.proxyConfiguration(proxyConfig.build());
         } catch (Exception ex) {
             log.warn(ex.getMessage(), ex);
         }
-    }
-
-    public Stream<String> newNorInstance(String file) throws IOException {
-        AmazonS3 s3;
-        try {
-            final AWSCredentialsProviderChain gcCredentialsProvider;
-            int w = file.indexOf("profile=");
-            if (w == -1) {
-                w = file.indexOf("aws_key=");
-                if (w != -1) {
-                    int v = file.indexOf('&', w);
-                    final String key = file.substring(w + 8, v);
-                    final String secret = file.substring(v + 12);
-
-                    file = file.substring(0, w - 1);
-
-                    final AWSCredentials awsc = new AWSCredentials() {
-                        public String getAWSSecretKey() {
-                            return secret;
-                        }
-
-                        public String getAWSAccessKeyId() {
-                            return key;
-                        }
-                    };
-
-                    ProfileCredentialsProvider pcp = new ProfileCredentialsProvider() {
-                        @Override
-                        public AWSCredentials getCredentials() {
-                            return awsc;
-                        }
-                    };
-
-                    gcCredentialsProvider = new AWSCredentialsProviderChain(pcp) {
-                        @Override
-                        public AWSCredentials getCredentials() {
-                            return awsc;
-                        }
-                    };
-                } else {
-                    gcCredentialsProvider = new AWSCredentialsProviderChain(
-                            new RdaAWSCredentialsProvider(), InstanceProfileCredentialsProvider.getInstance()) {
-                        @Override
-                        public AWSCredentials getCredentials() {
-                            try {
-                                return super.getCredentials();
-                            } catch (AmazonClientException ace) {
-                                log.warn(ace.getMessage(), ace);
-                                // Do nothing
-                            }
-                            log.warn("No credentials available; falling back to anonymous access");
-                            return null;
-                        }
-                    };
-                }
-            } else {
-                int k = file.indexOf('&', w);
-                if (k == -1) k = file.length();
-                String profile = file.substring(Math.min(k, w + 8), k);
-
-                int m = file.indexOf("aws_key=");
-                if (m != -1) {
-                    int v = file.indexOf('&', m);
-                    final String key = file.substring(m + 8, v);
-                    final String secret = file.substring(v + 12);
-                    String profilebrack = "[" + profile + "]";
-
-                    String userhome = System.getProperty("user.home");
-                    Path p = Paths.get(userhome);
-                    Path rp = p.resolve(".aws");
-                    Path awsdir = Files.createDirectories(rp);
-                    Path cred = awsdir.resolve("credentials");
-                    if (Files.exists(cred)) {
-                        String cont = new String(Files.readAllBytes(cred));
-                        if (!cont.contains(profilebrack)) {
-                            Files.write(cred, (profilebrack + "\naws_access_key_id = " + key + "\naws_secret_access_key = " + secret + "\n").getBytes(), StandardOpenOption.APPEND);
-                        }
-                    } else {
-                        Files.write(cred, (profilebrack + "\naws_access_key_id = " + key + "\naws_secret_access_key = " + secret + "\n").getBytes(), StandardOpenOption.CREATE_NEW);
-                    }
-                }
-
-                file = file.substring(0, w - 1);
-
-                ProfileCredentialsProvider pcp;
-                if (profile.length() > 0) pcp = new ProfileCredentialsProvider(profile);
-                else pcp = new ProfileCredentialsProvider();
-
-                gcCredentialsProvider = new AWSCredentialsProviderChain(
-                        pcp,
-                        new RdaAWSCredentialsProvider(), InstanceProfileCredentialsProvider.getInstance()) {
-                    @Override
-                    public AWSCredentials getCredentials() {
-                        try {
-                            return super.getCredentials();
-                        } catch (AmazonClientException ace) {
-                            log.warn(ace.getMessage(), ace);
-                            // Do nothing
-                        }
-                        log.warn("No credentials available; falling back to anonymous access");
-                        return null;
-                    }
-                };
-                gcCredentialsProvider.setReuseLastProvider(false);
-            }
-
-            s3 = AmazonS3ClientBuilder.standard()
-                    .withCredentials(gcCredentialsProvider)
-                    .withClientConfiguration(clientconfig)
-                    .build();
-
-            if (endpoint != null) {
-                s3.setEndpoint(endpoint);
-            }
-            log.debug("S3 endpoint is %s", Util.nvl(endpoint, "default"));
-        } catch (Exception ex) {
-            s3 = null;
-            log.warn("Could not initialize connection to Amazon S3", ex);
+        String poolSize = System.getProperty("gor.s3.conn.pool.size");
+        if (poolSize != null && poolSize.trim().length() > 0) {
+            httpClientBuilder.maxConnections(Integer.parseInt(poolSize));
         }
-
-        SamReaderFactory srf = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
-
-        final long start = System.currentTimeMillis();
-        if (s3 == null) {
-            throw new IOException("Not connected to Amazon S3, check logs to investigate what is wrong");
-        }
-        final Stream<String> stream;
-        final int idx = file.indexOf('/');
-        if (idx < 0) {
-
-            ObjectListing listing = s3.listObjects(file, "");
-            List<S3ObjectSummary> summaries = listing.getObjectSummaries();
-
-            while (listing.isTruncated()) {
-                listing = s3.listNextBatchOfObjects(listing);
-                summaries.addAll(listing.getObjectSummaries());
-            }
-            stream = Stream.concat(Stream.of(new String[]{"#Filename\tFilesize\tFilepath\tFileowner\tFilemodified"}), summaries.stream().map(x -> x.getKey() + "\t" + x.getSize() + "\ts3://" + x.getBucketName() + "/" + x.getKey() + "\t" + x.getOwner().getDisplayName() + "\t" + x.getLastModified()));
-
-            //throw new GorException("Error: Invalid S3 path", "The path " + file + " is not a valid S3 reference.");
-        } else stream = null;
-        return stream;
+        httpClientBuilder.connectionTimeout(Duration.ofSeconds(120));
     }
 
     RdaAWSCredentialsProvider rdaCredProvider;
 
-    private AmazonS3 getS3(Map<String, String> params) {
-        AmazonS3 s3;
-        if (rdaCredProvider == null) rdaCredProvider = new RdaAWSCredentialsProvider();
+    private S3Client getS3(Map<String, String> params) {
+        S3ClientBuilder s3;
+        if (rdaCredProvider == null) {
+            rdaCredProvider = new RdaAWSCredentialsProvider();
+        }
+
         try {
-            final AWSCredentialsProviderChain gcCredentialsProvider;
+            final AwsCredentialsProvider gcCredentialsProvider;
             if (!params.containsKey("profile")) {
                 if (params.containsKey("aws_key")) {
                     final String key = params.get("aws_key");
                     final String secret = params.get("aws_secret");
-
-                    final AWSCredentials awsc = new AWSCredentials() {
-                        public String getAWSSecretKey() {
-                            return secret;
-                        }
-
-                        public String getAWSAccessKeyId() {
-                            return key;
-                        }
-                    };
-
-                    ProfileCredentialsProvider pcp = new ProfileCredentialsProvider() {
-                        @Override
-                        public AWSCredentials getCredentials() {
-                            return awsc;
-                        }
-                    };
-
-                    gcCredentialsProvider = new AWSCredentialsProviderChain(pcp) {
-                        @Override
-                        public AWSCredentials getCredentials() {
-                            return awsc;
-                        }
-                    };
+                    gcCredentialsProvider = StaticCredentialsProvider.create(
+                            AwsBasicCredentials.builder().accessKeyId(key).secretAccessKey(secret).build());
                 } else {
-                    gcCredentialsProvider = new AWSCredentialsProviderChain(rdaCredProvider,
-                            InstanceProfileCredentialsProvider.getInstance()) {
-                        @Override
-                        public AWSCredentials getCredentials() {
-                            try {
-                                return super.getCredentials();
-                            } catch (AmazonClientException ace) {
-                                log.warn(ace.getMessage(), ace);
-                                // Do nothing
-                            }
-                            log.warn("No credentials available; falling back to anonymous access");
-                            return null;
-                        }
-                    };
+                    gcCredentialsProvider = DefaultCredentialsProvider.create();
                 }
             } else {
                 String profile = params.get("profile");
@@ -306,30 +125,35 @@ public class S3GenomicIteratorFactory {
                 }
 
                 ProfileCredentialsProvider pcp;
-                if (profile.length() > 0) pcp = new ProfileCredentialsProvider(profile);
-                else pcp = new ProfileCredentialsProvider();
+                if (profile.length() > 0) {
+                    pcp = ProfileCredentialsProvider.create(profile);
+                } else {
+                    pcp = ProfileCredentialsProvider.create();
+                }
 
-                gcCredentialsProvider = new AWSCredentialsProviderChain(
+                var credentialProviderChain = AwsCredentialsProviderChain.of(
                         pcp,
-                        rdaCredProvider, InstanceProfileCredentialsProvider.getInstance()) {
-                    @Override
-                    public AWSCredentials getCredentials() {
-                        try {
-                            return super.getCredentials();
-                        } catch (AmazonClientException ace) {
-                            log.warn(ace.getMessage(), ace);
-                            // Do nothing
-                        }
-                        log.warn("No credentials available; falling back to anonymous access");
-                        return null;
+                        rdaCredProvider,
+                        InstanceProfileCredentialsProvider.create());
+
+                gcCredentialsProvider = () -> {
+                    try {
+                        return credentialProviderChain.resolveCredentials();
+                    } catch (Exception ace) {
+                        log.warn(ace.getMessage(), ace);
+                        // Do nothing
                     }
+                    log.warn("No credentials available; falling back to anonymous access");
+                    return null;
                 };
-                gcCredentialsProvider.setReuseLastProvider(false);
             }
 
-            s3 = AmazonS3ClientBuilder.standard().withCredentials(gcCredentialsProvider).withClientConfiguration(clientconfig).build();
+            s3 = S3Client.builder()
+                    .credentialsProvider(gcCredentialsProvider)
+                    .httpClientBuilder(httpClientBuilder)
+                    .overrideConfiguration(o -> o.retryStrategy(s -> s.maxAttempts(10)));
             if (endpoint != null) {
-                s3.setEndpoint(endpoint);
+                s3.endpointOverride(URI.create(endpoint));
             }
             log.debug("S3 endpoint is %s", Util.nvl(endpoint, "default"));
         } catch (Exception ex) {
@@ -337,23 +161,23 @@ public class S3GenomicIteratorFactory {
             log.warn("Could not initialize connection to Amazon S3", ex);
         }
 
-        return s3;
+        return s3.build();
     }
-
 }
 
 /**
  * AWS Credential Provider implementation that reads account settings from RDA provided property file
  */
-class RdaAWSCredentialsProvider implements AWSCredentialsProvider {
+class RdaAWSCredentialsProvider implements AwsCredentialsProvider {
     private static final Logger log = LoggerFactory.getLogger(RdaAWSCredentialsProvider.class);
-    private BasicAWSCredentials credentials;
+    private AwsCredentials credentials;
 
     public RdaAWSCredentialsProvider() {
         refresh();
     }
 
-    public AWSCredentials getCredentials() {
+    @Override
+    public AwsCredentials resolveCredentials() {
         return credentials;
     }
 
@@ -381,7 +205,7 @@ class RdaAWSCredentialsProvider implements AWSCredentialsProvider {
             log.debug("RDA AWS configuration is not provided for either accessKey or secretKey");
         } else {
             log.info("Using RDA AWS configuration");
-            credentials = new BasicAWSCredentials(accessKey, secretKey);
+            credentials = AwsBasicCredentials.create(accessKey, secretKey);
         }
     }
 }

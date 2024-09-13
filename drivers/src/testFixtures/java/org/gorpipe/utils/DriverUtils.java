@@ -67,7 +67,12 @@ public class DriverUtils {
 
     public static String awsSecurityContext(String key, String secret) {
         // Credentials for gor_unittest user in nextcode AWS account
-        Credentials cred = new Credentials.Builder().service("s3").lookupKey("gdb-unit-test-data").set(Credentials.Attr.KEY, key).set(Credentials.Attr.SECRET, secret).build();
+        Credentials cred = new Credentials.Builder().service("s3")
+                .lookupKey("gdb-unit-test-data")
+                //.set(Credentials.Attr.REGION, "eu-west-1")
+                .set(Credentials.Attr.API_ENDPOINT, "https://s3-eu-west-1.amazonaws.com/")
+                .set(Credentials.Attr.KEY, key)
+                .set(Credentials.Attr.SECRET, secret).build();
         Credentials bogus = new Credentials.Builder().service("s3").lookupKey("bla").set(Credentials.Attr.KEY, "DummyKey").set(Credentials.Attr.SECRET, "DummySecret").build();
         BundledCredentials creds = new BundledCredentials.Builder().addCredentials(bogus, cred).build();
         return creds.addToSecurityContext(null);

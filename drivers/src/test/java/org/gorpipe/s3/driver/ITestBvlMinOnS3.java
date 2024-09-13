@@ -19,6 +19,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.test.IntegrationTests;
 import org.junit.*;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.experimental.categories.Category;
 
@@ -33,8 +34,26 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     @Rule
     public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
+    @Rule
+    public final ProvideSystemProperty awsAccessKey
+            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretKey
+            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", S3_REGION);
+
+
     private static String S3_KEY;
     private static String S3_SECRET;
+    private static String S3_REGION;
     private static String S3_GOOGLE_KEY;
     private static String S3_GOOGLE_SECRET;
 
@@ -46,16 +65,13 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
         Properties props = DriverUtils.getDriverProperties();
         S3_KEY = props.getProperty("S3_KEY");
         S3_SECRET = props.getProperty("S3_SECRET");
+        S3_REGION = "eu-west-1";
         S3_GOOGLE_KEY = props.getProperty("S3_GOOGLE_KEY");
         S3_GOOGLE_SECRET = props.getProperty("S3_GOOGLE_SECRET");
     }
 
     @Before
     public void setupTest() {
-        // Ensure no fallback keys
-        System.setProperty("aws.accessKeyId", "");
-        System.setProperty("aws.secretKey", "");
-
         System.setProperty("org.gorpipe.gor.driver.retries.initial_sleep", "5 milliseconds");
     }
 
@@ -71,7 +87,11 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
 
     @Test
     public void testWithDefaultCredentials() throws IOException {
-        Credentials cred = new Credentials.Builder().service("s3").set(Credentials.Attr.KEY, S3_KEY).set(Credentials.Attr.SECRET, S3_SECRET).build();
+        Credentials cred = new Credentials.Builder().service("s3")
+                .set(Credentials.Attr.KEY, S3_KEY)
+                .set(Credentials.Attr.SECRET, S3_SECRET)
+                .set(Credentials.Attr.REGION, S3_REGION)
+                .build();
         BundledCredentials creds = new BundledCredentials.Builder().addDefaultCredentials(cred).build();
         String sec = creds.addToSecurityContext(null);
 
@@ -119,8 +139,6 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     @Test
     @Ignore("Ignored as part of GOP-1458")
     public void testWithKeysInProperties() throws IOException {
-        System.setProperty("aws.accessKeyId", S3_KEY);
-        System.setProperty("aws.secretKey", S3_SECRET);
         String source = getSourcePath("derived/raw_bam_to_gor/" + names[0] + ".bam.gor");
         SourceReference ref = new SourceReferenceBuilder(source).build();
 
@@ -176,6 +194,7 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
                 .lookupKey("gdb-unit-test-data")
                 .set(Credentials.Attr.KEY, sessionCredentials.getAccessKeyId())
                 .set(Credentials.Attr.SECRET, sessionCredentials.getSecretAccessKey())
+                .set(Credentials.Attr.REGION, "eu-west-1")
                 .set(Credentials.Attr.SESSION_TOKEN, sessionCredentials.getSessionToken())
                 .build();
 

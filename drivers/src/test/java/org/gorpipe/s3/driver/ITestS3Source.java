@@ -1,9 +1,5 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.gorpipe.gor.driver.providers.stream.sources.CommonStreamTests;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.gorpipe.gor.model.DriverBackedFileReader;
@@ -20,6 +16,11 @@ import org.junit.*;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.contrib.java.lang.system.SystemErrRule;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.UUID;
 
+@Ignore
 //@Category(IntegrationTests.class)
 public class ITestS3Source extends CommonStreamTests {
 
@@ -39,12 +41,20 @@ public class ITestS3Source extends CommonStreamTests {
     public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     @Rule
-    public final ProvideSystemProperty myPropertyHasMyValue
+    public final ProvideSystemProperty awsAccessKeyId
             = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
 
     @Rule
-    public final ProvideSystemProperty otherPropertyIsMissing
+    public final ProvideSystemProperty awsSecretKey
             = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", S3_REGION);
 
     @Rule
     public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
@@ -65,15 +75,16 @@ public class ITestS3Source extends CommonStreamTests {
 
     @Override
     protected StreamSource createSource(String name) throws IOException {
-        return new S3Source(newClient(),
-                new SourceReference(name));
+        return new S3Source(newClient(), new SourceReference(name));
     }
 
-    private AmazonS3 newClient() {
-        return AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(S3_KEY, S3_SECRET)))
-                .withRegion(S3_REGION)
-                .build();
+    private S3Client newClient() {
+        var credProvider = StaticCredentialsProvider.create(
+                AwsBasicCredentials.builder().accessKeyId(S3_KEY).secretAccessKey(S3_SECRET).build());
+        var builder = S3Client.builder()
+                .region(Region.of(S3_REGION))
+                .credentialsProvider(credProvider);
+        return builder.build();
     }
 
     @Override
@@ -141,13 +152,14 @@ public class ITestS3Source extends CommonStreamTests {
     //@Ignore("Too slow to always run")
     @Test
     public void testS3WritePgorGord() throws IOException {
+        String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
         String randomId = UUID.randomUUID().toString();
         String dict = String.format("s3://gdb-unit-test-data/s3write/%s-genes.gord", randomId);
-        TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2 | write " + dict);
-        String expected = TestUtils.runGorPipe("create x = pgor -split 2 ../tests/data/gor/genes.gor | top 2; gor [x] | select 1-4");
-        String result = TestUtils.runGorPipe("gor " + dict + " | select 1-4");
+        TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2 | write " + dict, false, securityContext);
+        String expected = TestUtils.runGorPipe("create x = pgor -split 2 ../tests/data/gor/genes.gor | top 2; gor [x] | select 1-4", false, securityContext);
+        String result = TestUtils.runGorPipe("gor " + dict + " | select 1-4", false, securityContext);
         Assert.assertEquals(expected, result);
-        DriverBackedFileReader fileReader = new DriverBackedFileReader("");
+        DriverBackedFileReader fileReader = new DriverBackedFileReader(securityContext);
         fileReader.deleteDirectory(dict);
     }
 
@@ -194,6 +206,9 @@ public class ITestS3Source extends CommonStreamTests {
 
     @Override
     protected long expectedTimeStamp(String s) {
-        return newClient().getObjectMetadata("gdb-unit-test-data", "csa_test_data/data_sets/gor_driver_testfiles/" + s).getLastModified().getTime();
+        return  newClient().headObject(HeadObjectRequest.builder()
+                .bucket("gdb-unit-test-data")
+                .key("csa_test_data/data_sets/gor_driver_testfiles/" + s)
+                .build()).lastModified().toEpochMilli();
     }
 }

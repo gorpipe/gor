@@ -1,6 +1,5 @@
 package org.gorpipe.s3.shared;
 
-import com.amazonaws.services.s3.AmazonS3Client;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
@@ -15,6 +14,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.driver.S3SourceProvider;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -109,9 +109,9 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
         SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
 
-        AmazonS3Client client = getClient(s3SecurityContext, bucket);
+        S3Client client = getClient(s3SecurityContext, bucket);
         source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
-
+        //source.setFileSystem(S3ClientFileSystemProvider.getInstance().getFileSystem(s3SecurityContext, bucket));
         updateSharedSourceLink(source, project);
 
         source = handleFallback(sourceReference, source);

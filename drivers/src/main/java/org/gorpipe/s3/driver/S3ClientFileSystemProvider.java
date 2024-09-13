@@ -1,18 +1,24 @@
 package org.gorpipe.s3.driver;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.upplication.s3fs.AmazonS3Client;
-import com.upplication.s3fs.S3FileSystemProvider;
-import com.upplication.s3fs.S3FileSystem;
+import org.carlspring.cloud.storage.s3fs.S3Factory;
+import org.carlspring.cloud.storage.s3fs.S3FileSystem;
+import org.carlspring.cloud.storage.s3fs.S3FileSystemProvider;
+import org.gorpipe.base.security.BundledCredentials;
+import org.gorpipe.base.security.Credentials;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.util.StringUtil;
+import software.amazon.awssdk.services.s3.S3Client;
 
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystemAlreadyExistsException;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.file.FileSystemNotFoundException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.file.FileSystems;
+import java.nio.file.ProviderNotFoundException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class S3ClientFileSystemProvider extends S3FileSystemProvider {
-
-    final static ConcurrentHashMap<AmazonS3, S3FileSystem> fileSystems = new ConcurrentHashMap<>();
 
     private static S3ClientFileSystemProvider instance;
 
@@ -23,49 +29,52 @@ public class S3ClientFileSystemProvider extends S3FileSystemProvider {
         return instance;
     }
 
-
-    public  S3FileSystem getFileSystem(AmazonS3 client) {
-        S3FileSystem fileSystem = fileSystems.get(client);
-
-        if (fileSystem == null) {
-            throw new FileSystemNotFoundException(
-                    String.format("S3 filesystem not yet created. Use newFileSystem() instead"));
-        }
-
-        return fileSystem;
+    public S3FileSystem getFileSystem(S3Client client) {
+        String key = client.toString(); //Use the client instead of calling: getFileSystemKey(URI.create(String.format("s3://%s@", authority)), loadAmazonProperties());
+        return getFilesystems().computeIfAbsent(key, k -> createFileSystemWithClient(k, client));
     }
 
-    /**
-     * Create the fileSystem
-     *
-     * @param client AmazonS3
-     * @return S3FileSystem never null
-     */
-    public S3FileSystem createFileSystem(AmazonS3 client, String endPoint) {
-        return new S3FileSystem(this, new AmazonS3Client(client), endPoint);
+    private S3FileSystem createFileSystemWithClient(String key, S3Client client) {
+        return new S3FileSystem(this, key, client, "");
     }
 
-    public FileSystem newFileSystem(AmazonS3 client, String endPoint) {
-        if (fileSystems.contains(client)) {
-            throw new FileSystemAlreadyExistsException(
-                    "S3 filesystem already exists. Use getFileSystem() instead");
-        }
-
-        S3FileSystem result = createFileSystem(client, endPoint);
-        fileSystems.put(client, result);
-
-        return result;
-    }
-
-    // We we are not constructing the FileSystem as expected (using the newFileSystem method) as we
-    // want to reuse the client (could change that and stop reusing the client and pass in creds in the props
-    // var)
-    protected boolean isAES256Enabled() {
+    public static S3FileSystem getFileSystem(String bucket, String region, String endPoint, String securityContext) {
+        URI uri = URI.create(String.format("s3://%s/%s", endPoint, bucket));
         try {
-            return super.isAES256Enabled();
-        } catch (NullPointerException npe) {
-            // ignore
+            return (S3FileSystem) FileSystems.getFileSystem(uri);
+        } catch (ProviderNotFoundException | FileSystemNotFoundException fsnfe) {
+            try {
+                Map<String, String> env = new HashMap<>();
+
+                Credentials cred = getCredentials(securityContext, "s3", bucket);
+                if (cred != null) {
+                    var awsKey = cred.getOrDefault(Credentials.Attr.KEY, "");
+                    var awsSecret = cred.getOrDefault(Credentials.Attr.SECRET, "");
+                    var sessionToken = cred.getOrDefault(Credentials.Attr.SESSION_TOKEN, "");
+                    if (!StringUtil.isEmpty(awsKey)) env.put(S3Factory.ACCESS_KEY, awsKey);
+                    if (!StringUtil.isEmpty(awsSecret)) env.put(S3Factory.SECRET_KEY, awsSecret);
+                }
+                if (!StringUtil.isEmpty(region)) env.put(S3Factory.REGION, region);
+
+                env.put(S3Factory.MAX_CONNECTIONS, "5000");
+                env.put(S3Factory.CONNECTION_TIMEOUT, "5000");
+                env.put(S3Factory.MAX_ERROR_RETRY, "10");
+                env.put(S3Factory.SOCKET_TIMEOUT, "5000");
+                return (S3FileSystem) FileSystems.newFileSystem(uri,
+                        env,
+                        Thread.currentThread().getContextClassLoader());
+            } catch (IOException ioe) {
+                throw new GorResourceException(bucket, uri.toString(), ioe);
+            }
         }
-        return false;
     }
+
+    public static Credentials getCredentials(String securityContext, String service, String key) {
+        List<Credentials> creds = BundledCredentials.fromSecurityContext(securityContext).getCredentials(service, key);
+        if (!creds.isEmpty()) {
+            return creds.get(0);
+        }
+        return null;
+    }
+
 }

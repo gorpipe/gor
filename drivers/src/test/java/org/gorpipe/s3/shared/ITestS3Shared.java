@@ -42,6 +42,7 @@ public class ITestS3Shared {
 
     private static String S3_KEY;
     private static String S3_SECRET;
+    private static String S3_REGION = "eu-west-1";
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -53,12 +54,20 @@ public class ITestS3Shared {
     public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Rule
-    public final ProvideSystemProperty myPropertyHasMyValue
+    public final ProvideSystemProperty awsAccessKey
             = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
 
     @Rule
-    public final ProvideSystemProperty otherPropertyIsMissing
+    public final ProvideSystemProperty awsSecretKey
             = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", S3_REGION);
 
     @Rule
     public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
@@ -488,10 +497,9 @@ public class ITestS3Shared {
         Files.createSymbolicLink(Path.of(gorRoot).resolve("genes.gor"), Path.of("../tests/data/gor/genes.gor").toAbsolutePath());
         String randomId = UUID.randomUUID().toString();
         String dataPath = DataUtil.toFile("user_data/dummy_" + randomId, DataType.GORD) + (useSlash ? "/" : "");
-        System.out.println("dataPath: " + dataPath);
         try {
             runGorPipeServer("pgor -split 2 genes.gor | top 2 | write s3data://project/" + dataPath, gorRoot, securityContext);
-            Thread.sleep(500);  // Need short delay for folders to get updated.
+            Thread.sleep(1000);  // Need short delay for folders to get updated.
             String expected = runGorPipeServer("pgor -split 2 genes.gor | top 2", gorRoot, securityContext);
             String result = runGorPipeServer("gor " + dataPath, gorRoot, securityContext);
             Assert.assertEquals(expected, result);

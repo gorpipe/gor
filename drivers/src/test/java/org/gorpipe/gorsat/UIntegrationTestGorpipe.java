@@ -6,6 +6,7 @@ import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.experimental.categories.Category;
 
@@ -25,18 +26,32 @@ public class UIntegrationTestGorpipe {
     @Rule
     public SystemErrRule systemErrRule = new SystemErrRule().enableLog().muteForSuccessfulTests();
 
+    @Rule
+    public final ProvideSystemProperty awsAccessKey
+            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretKey
+            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", S3_REGION);
+
+
     private static String S3_KEY;
     private static String S3_SECRET;
+    private static String S3_REGION = "eu-west-1";
 
     @BeforeClass
     static public void setUpClass() {
         Properties props = DriverUtils.getDriverProperties();
         S3_KEY = props.getProperty("S3_KEY");
         S3_SECRET = props.getProperty("S3_SECRET");
-
-        // Ensure no fallback keys
-        System.setProperty("aws.accessKeyId", "");
-        System.setProperty("aws.secretKey", "");
     }
 
     /**

@@ -57,6 +57,13 @@ public class ITestTableManager {
     @Rule
     public final ProvideSystemProperty otherPropertyIsMissing = new ProvideSystemProperty("aws.secretKey", "");
 
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", "");
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", "");
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -89,6 +96,7 @@ public class ITestTableManager {
         s3FileReader = new DriverBackedFileReader(securityContext, projectRoot);
     }
 
+    @Ignore("Needs more access to be able  to use ")
     @Test
     public void testManCreateS3Dictionary() throws IOException {
         String name = "testManCreateS3Dictionary";
@@ -187,6 +195,7 @@ public class ITestTableManager {
         }
     }
 
+    @Ignore("Needs more access to be able  to use ")
     @Test
     public void testManS3DictionaryBucketize() throws IOException {
         String name = "testManS3DictionaryBucketize";

@@ -22,13 +22,12 @@
 
 package org.gorpipe.s3.shared;
 
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.common.base.Strings;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.s3.driver.*;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.MalformedURLException;
 
@@ -49,7 +48,7 @@ public class S3SharedSource extends S3Source {
      * Create source
      *
      */
-    public S3SharedSource(AmazonS3Client client, SourceReference sourceReference,
+    public S3SharedSource(S3Client client, SourceReference sourceReference,
                           String relativePath, S3SharedConfiguration s3SharedConfig) throws MalformedURLException {
         super(client, sourceReference);
         this.relativePath = relativePath;
