@@ -1,6 +1,7 @@
 package org.gorpipe.gor.reference;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorSystemException;
 
 import java.io.FileFilter;
@@ -15,26 +16,28 @@ public class FolderMigrator {
     private FolderMigrator() {
     }
 
-    public static void migrate(Path inputFolder, Path outputFolder) {
-        Path tmpFolder = outputFolder.resolveSibling(outputFolder.getFileName() + "_tmp");
-        if (Files.exists(tmpFolder)) {
-            // Ignore, migration already on going or has fialed.
+    public static void migrate(Path inputFolder, Path outputFolder) throws IOException{
+        if (inputFolder == null || outputFolder == null) {
+            // Nothing to do.
             return;
         }
-        try {
-            FileUtils.copyDirectory(inputFolder.toFile(), tmpFolder.toFile(), (FileFilter)null, true,
-                    NOFOLLOW_LINKS);
-        } catch (IOException e) {
-            throw new GorSystemException(
-                    String.format("Could not copy (%s) folder into (%s)", inputFolder, outputFolder), e);
+
+        String tempFileRoot = outputFolder.getFileName() + "_tmp_";
+
+        if (Files.exists(outputFolder.getParent())
+                && Files.list(outputFolder.getParent()).anyMatch(p -> p.getFileName().toString().startsWith(tempFileRoot))) {
+            // Ignore, migration already on going, or has failed.
+            return;
         }
+
+        Path tmpFolder = outputFolder.resolveSibling(tempFileRoot + RandomStringUtils.random(10));
+        tmpFolder.toFile().deleteOnExit();
+
+        FileUtils.copyDirectory(inputFolder.toFile(), tmpFolder.toFile(), (FileFilter)null, true,
+                NOFOLLOW_LINKS);
         //copyDirectory(inputFolder, tmpFolder);
-        try {
-            Files.move(tmpFolder, outputFolder);
-        } catch (IOException e) {
-            throw new GorSystemException(
-                    String.format("Could not move tmp (%s) folder into place (%s)", tmpFolder, outputFolder), e);
-        }
+
+        Files.move(tmpFolder, outputFolder);
     }
 
     // https://baptiste-wicht.com/posts/2010/08/file-copy-in-java-benchmark.html

@@ -17,13 +17,13 @@ public class UTestFolderMigrator {
 
 
     @Before
-    public void setupTest() throws IOException {
+    public void setupTest() {
         workDirPath = workDir.getRoot().toPath();
     }
 
 
     @Test
-    public void testMigrate() {
+    public void testMigrate() throws IOException {
 
         FolderMigrator.migrate(Path.of("../tests/data/ref_mini/chromSeq"), workDirPath.resolve("chromSeqNew"));
 

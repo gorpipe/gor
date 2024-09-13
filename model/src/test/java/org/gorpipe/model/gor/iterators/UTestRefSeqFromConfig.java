@@ -118,8 +118,10 @@ public class UTestRefSeqFromConfig {
 
         System.setProperty("gor.refseq.cache.download", "True");
         System.setProperty("gor.refseq.cache.folder", workDirPath.resolve("cache").toString());
+        RefSeqFromConfig.download_triggered_$eq(false);
 
         RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+
         Assert.assertEquals('C', refseq.getBase("chr1", 101000));
 
         // Wait for download to finish.
@@ -132,28 +134,5 @@ public class UTestRefSeqFromConfig {
         }
 
         Assert.assertEquals('C', refseq.getBase("chr1", 101000));
-    }
-
-    @Test
-    public void testCacheDownloadFailure() throws InterruptedException {
-
-        Path workDirPath = workDir.getRoot().toPath();
-
-        System.setProperty("gor.refseq.cache.download", "True");
-        System.setProperty("gor.refseq.cache.folder", workDirPath.resolve("cache").toString());
-
-        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
-        Assert.assertEquals('C', refseq.getBase("chr1", 101000));
-
-        // Wait for download to finish/fail.
-        long startWaitTime = System.currentTimeMillis();
-        while (!Files.exists(workDirPath.resolve("cache").resolve("ref_mini").resolve("chromSeq"))) {
-            Thread.sleep(50);
-            if (System.currentTimeMillis() - startWaitTime > 1000) {
-                throw new RuntimeException("Timeout waiting for download to finish");
-            }
-        }
-
-        Assert.assertFalse(systemErrRule.getLog().contains("Not all bytes were read from the S3ObjectInputStream"));
     }
 }

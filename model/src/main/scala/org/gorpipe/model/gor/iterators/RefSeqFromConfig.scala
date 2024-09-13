@@ -35,7 +35,10 @@ import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Path, Paths}
-import scala.util.Try
+
+object RefSeqFromConfig {
+  var download_triggered = false
+}
 
 class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
   private val GOR_REFSEQ_CACHE_FOLDER = System.getProperty("gor.refseq.cache.folder")
@@ -43,7 +46,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
 
   private val log: Logger = LoggerFactory.getLogger(RefSeqFromConfig.this.getClass)
 
-  val path: String = getBuildPath(ipath)
+  lazy val path: String = getBuildPath(ipath)
   val buffLength = 10000
   val lufo = new LUFO[Array[Byte]](10)
   // Keep a LUFO cache with 10 last used buffers
@@ -66,7 +69,8 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
       if (Files.exists(fullCachePath)) {
         log.debug("Using cached reference build {}", fullCachePath.toString)
         return fullCachePath.toString
-      } else if (GOR_REFSEQ_CACHE_DOWNLOAD) {
+      } else if (GOR_REFSEQ_CACHE_DOWNLOAD && !RefSeqFromConfig.download_triggered) {
+        RefSeqFromConfig.download_triggered = true  // Only trigger download once per client
         triggerRefSeqDownload(fullRefPath, fullCachePath)
       }
     }
@@ -85,9 +89,9 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
     val refseqDownloaderThread = new Thread(new Runnable {
       override def run(): Unit = {
         try {
-          log.info("Downloading reference build {} to {} - Start", orgPath, cachePath)
+          log.info("Start downloading reference build {} to {}", orgPath, cachePath)
           FolderMigrator.migrate(orgPath, cachePath)
-          log.info("Downloading reference build {} to {} - Done", orgPath, cachePath)
+          log.info("Done (or already in progress) downloading reference build {} to {}", orgPath, cachePath)
         } catch {
             case e: Exception =>
               log.error("Error downloading reference build {} to {} - {}", orgPath, cachePath, e.getMessage)
