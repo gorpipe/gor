@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.commons.lang3.StringUtils;
 import org.carlspring.cloud.storage.s3fs.*;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.base.streams.FullRetryInputStream;
 import org.gorpipe.base.streams.LimitedOutputStream;
 import org.gorpipe.base.streams.FullRetryOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
@@ -112,18 +113,14 @@ public class S3Source implements StreamSource {
         invalidateMeta();
 
         long maxFileSize = (long)writeChunkSize * (long)MAX_S3_CHUNKS;
-        // S3OutputStream, uses less resources and is slightly faster than our S3MultiPartOutputStream
         try {
             return new FullRetryOutputStream(new LimitedOutputStream(
                     getPath().getFileSystem().provider().newOutputStream(getPath(),
                             append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
-//                    new S3OutputStream(client, getPath().toS3ObjectId()),
                     maxFileSize));
         } catch (IOException e) {
             throw new GorResourceException(getName(), getName(), e).retry();
         }
-        // Old internal impl.
-//        return new S3MultiPartOutputStream(client, bucket, key);
     }
 
     @Override
@@ -143,7 +140,7 @@ public class S3Source implements StreamSource {
 
     private InputStream openRequest(GetObjectRequest request) {
         try {
-            return new AbortingInputStream(client.getObject(request), request);
+            return new FullRetryInputStream(new AbortingInputStream(client.getObject(request), request));
         } catch (SdkClientException e) {
             throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), getPath().toString(), e).retry();
         }
