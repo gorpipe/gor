@@ -59,6 +59,18 @@ class UTestThrowIfAnalysis extends AnyFlatSpec {
     val r = RowObj("chr1\t1\tABC")
     val thrown = intercept[GorDataException](pipe.process(r))
     assert(thrown.getMessage == "Gor throw on: A=='ABC'")
+    assert(thrown.isFullRetry() == false)
   }
 
+  it should "throw retriable exception on single row when condition is true" in {
+    val sink = AnalysisSink()
+    val header = "chrom\tpos\tA"
+    val pipe = ThrowIfAnalysis(context, executeNor = false, "A=='ABC'", header, true) | sink
+    pipe.setRowHeader(RowHeader(header, List("S", "I", "S").toArray))
+
+    val r = RowObj("chr1\t1\tABC")
+    val thrown = intercept[GorDataException](pipe.process(r))
+    assert(thrown.getMessage == "Gor throw on: A=='ABC'")
+    assert(thrown.isFullRetry() == true)
+  }
 }

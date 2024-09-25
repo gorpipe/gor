@@ -27,7 +27,7 @@ import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorContext
 
-case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: String, header: String)
+case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: String, header: String, isRetriable: Boolean = false)
   extends Analysis with Filtering
 {
   filter.setContext(context, executeNor)
@@ -51,8 +51,13 @@ case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: 
   }
 
   override def process(r: Row): Unit = {
-    if (filter.evalBooleanFunction(r))
-      throw new GorDataException(s"Gor throw on: $filterSrc", -1)
+    if (filter.evalBooleanFunction(r)) {
+      val ex = new GorDataException(s"Gor throw on: $filterSrc", -1)
+      if (isRetriable) {
+        ex.fullRetry()
+      }
+      throw ex
+    }
     else
       super.process(r)
   }

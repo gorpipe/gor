@@ -17,7 +17,7 @@ public class TestRetryHandler extends RetryHandlerWithFixedWait {
 
         counter ++;
 
-        if (e instanceof GorRetryException gre && gre.getRetry()) {
+        if (e instanceof GorRetryException gre && gre.isRetry()) {
             return;
         }
 

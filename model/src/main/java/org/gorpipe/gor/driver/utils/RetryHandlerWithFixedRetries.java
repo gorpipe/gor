@@ -22,10 +22,8 @@
 
 package org.gorpipe.gor.driver.utils;
 
-import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorRetryException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.gorpipe.gor.driver.GorDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +61,7 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
             try {
                 return action.perform();
             } catch (GorRetryException e) {
-                if (!e.getRetry()) throw e;
+                if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
                 sleepMs = retryExceptionHandler(retries, tries, sleepMs, e);
@@ -82,7 +80,7 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 action.perform();
                 return;
             } catch (GorRetryException e) {
-                if (!e.getRetry()) throw e;
+                if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
                 sleepMs = retryExceptionHandler(retries, tries, sleepMs, e);

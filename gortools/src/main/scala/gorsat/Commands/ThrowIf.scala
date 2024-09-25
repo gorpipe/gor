@@ -23,18 +23,18 @@
 package gorsat.Commands
 
 import gorsat.Analysis.ThrowIfAnalysis
+import gorsat.Commands.CommandParseUtilities.hasOption
 import org.gorpipe.gor.session.GorContext
 
 class ThrowIf extends CommandInfo("THROWIF",
-  CommandArguments("", "", 1, -1, ignoreIllegalArguments = true),
+  CommandArguments("-retriable", "", 1, -1, ignoreIllegalArguments = true),
   CommandOptions(gorCommand = true, norCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                 args: Array[String], executeNor: Boolean, forcedInputHeader: String)
   : CommandParsingResult =
   {
-
-    val pipeStep = ThrowIfAnalysis(context, executeNor, args.mkString(" "), forcedInputHeader)
+    val pipeStep = ThrowIfAnalysis(context, executeNor, iargs.mkString(" "), forcedInputHeader, hasOption(args, "-retriable"))
     CommandParsingResult(pipeStep, forcedInputHeader)
   }
 }

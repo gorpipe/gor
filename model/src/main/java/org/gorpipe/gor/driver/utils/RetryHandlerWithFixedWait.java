@@ -34,7 +34,7 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
             try {
                 return action.perform();
             } catch (GorRetryException e) {
-                if (!e.getRetry()) throw e;
+                if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
                 accumulatedDuration += handleThrowable(e, tries, initialDuration);
@@ -59,7 +59,7 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 action.perform();
                 return;
             } catch (GorRetryException e) {
-                if (!e.getRetry()) throw e;
+                if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
                 accumulatedDuration += handleThrowable(e, tries, initialDuration);
