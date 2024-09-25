@@ -39,12 +39,14 @@ import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Paths}
+import scala.util.matching.Regex
 
 object MacroUtilities {
   private val log: Logger = LoggerFactory.getLogger(this.getClass)
 
-  private def zeroParCmdReplacer(input: String, matchPatt: String, replCmd: String): String = {
+  private def zeroParCmdReplacer(input: String, matchPatt: String, replCmdIn: String): String = {
     if (!input.toUpperCase.contains(matchPatt.toUpperCase)) return input
+    val replCmd = replCmdIn.replace("$", "\\$")  // escape the one character that screws up replacement strings
     val IC = "(?i)"
     if (matchPatt.startsWith("#") && matchPatt.endsWith("#")) return input.replaceAll(IC + matchPatt, replCmd)
     var cmd = " " + input.trim + " "
@@ -154,7 +156,7 @@ object MacroUtilities {
       if (arglist.length == n) {
         var partempl = "("
         for (i <- 1 to n) partempl += "$" + i + (if (i < n) "," else ")")
-        val newMatchPatt = matchPatt.replace(partempl,"""\(""" + arglist.mkString(",") +"""\)""")
+        val newMatchPatt = matchPatt.replace(partempl,"""\(""" + Regex.quote(arglist.mkString(",")) +"""\)""")
         var replText = replCmd
         for (i <- 1 to arglist.length) replText = replText.replace("$" + i, arglist(i - 1).trim)
         input = input.replaceAll(IC + newMatchPatt, replText)
@@ -231,16 +233,24 @@ object MacroUtilities {
   }
 
   def replaceAllAliases(inputArgString: String, fileMap: singleHashMap): String = {
+
+    val maxIterations = 5000
+    val maxExpansion = 1000
+
     var keepOn = true
     var argString = inputArgString
     var i = 0
-    while (keepOn && i < 100000) {
+    while (keepOn && i < maxIterations) {
       i += 1
+      if (i == maxIterations) throw new GorParsingException("Apparent macro expansion recursion reached iteration " + i)
+      if (argString.length > maxExpansion * inputArgString.length) throw new GorParsingException(
+        "Apparent macro expansion recursion exceeded expansion limit, command length expanded to " + argString.length)
       val argStringBefore = argString
       if (fileMap != null) {
         fileMap.keySet().toArray().foreach(f => argString = parCmdReplacer(argString, f.toString, fileMap.get(f)))
       }
       if (argString != argStringBefore) keepOn = true else keepOn = false
+      if (i % 100 == 0) Thread.sleep(1)  // enables test timeouts to work if this becomes an infinite loop
     }
 
     argString

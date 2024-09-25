@@ -43,12 +43,35 @@ The :ref:`DEF` command allows you to define macros with any number of input vari
 
 .. tip:: As with CREATE commands, the DEF command must be terminated with a semi-colon.
 
-The macro shown below which we call "prefixes", takes the two variables (``$1`` and ``$2``) and uses them as prefixes for columns #3 and #4. As we can see in the second line, the macro is then given two values for the variables ``A`` and ``B``, which are then prepended onto the Reference and Call columns of the single row returned from the ``#dbsnp#`` table.
+The macro shown below which we call "prefixes", takes the two variables (``$1`` and ``$2``) and uses them as prefixes
+for columns #3 and #4. As we can see in the second line, the macro is then given two values for the
+variables ``A`` and ``B``, which are then prepended onto the Reference and Call columns of the single row
+returned from the ``#dbsnp#`` table.
 
 .. code-block:: gor
 
    def prefixes($1,$2) = PREFIX #3 $1 | PREFIX #4 $2;
    gor #dbsnp# | TOP 1 | prefixes(A,B)
+
+
+Macro names are case insensitive.
+
+The macro name affects how it is recognized and replaced in a query.  A macro name that starts and ends with ``#``
+will be found and substituted for without restriction, including inside quoted strings, in file paths, and in strings
+where commands or options are expected.  Any other name will be replaced only if it stands surrounded by non-word
+characters such as (for example) ``(``, ``,``, ``)``, ``|``, whitespace, or the start or end of the statement
+(but not between path separators ``/`` in a file path).
+
+Substitution is performed iteratively.  If the body of one macro includes instances of a second macro, then
+after the first macro is expanded, the resulting instances of the second macro will be expanded in subsequent
+iterations.  It is also possible for the expansion of one macro to combine with neighboring characters to
+complete the name of a second macro, which then gets substituted in.
+
+Macro names should be limited to ordinary word characters: letters, digits, and symbols "``_``" and "``#``".
+At present it is possible but discouraged to include whitespace and a few other symbols, but results
+are not guaranteed, and might include cryptic failures.
+
+
 
 As can be seen in the following sections, you can use virtual relations within your macro to retrieve data sets in an elegant manner.
 
