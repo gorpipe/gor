@@ -32,7 +32,7 @@ public interface S3Configuration extends Config {
 
     @Documentation("Connection timeout to use for S3 (E.g. '2 minutes')")
     @Key("gor.s3.conn.timeout")
-    @DefaultValue("2 minutes")
+    @DefaultValue("2 seconds")
     @ConverterClass(DurationConverter.class)
     Duration connectionTimeout();
 
@@ -47,7 +47,7 @@ public interface S3Configuration extends Config {
     @DefaultValue("10000")
     int connectionPoolSize();
 
-    @Documentation("S3 max error retry")
+    @Documentation("S3 max driver retry")
     @Key("gor.s3.conn.retries")
     @DefaultValue("3")
     int connectionRetries();

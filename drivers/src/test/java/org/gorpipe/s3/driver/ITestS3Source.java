@@ -29,7 +29,6 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.UUID;
 
-@Ignore
 //@Category(IntegrationTests.class)
 public class ITestS3Source extends CommonStreamTests {
 

@@ -47,6 +47,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -99,15 +100,17 @@ public class S3SourceProvider extends StreamSourceProvider {
     private S3Client createClient(Credentials cred) {
         var builder = S3Client.builder()
                 .overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                        .apiCallAttemptTimeout(s3Config.socketTimeout())
-                        .apiCallTimeout(s3Config.socketTimeout()));
+                        //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
+                        //.apiCallTimeout(s3Config.socketTimeout())
+
+                        );
 
         ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
-                .connectionTimeout(s3Config.connectionTimeout())  // Default 2s
-                .socketTimeout(s3Config.socketTimeout())          // Default 30s
-                .maxConnections(s3Config.connectionPoolSize())    // Default 50
-                .connectionMaxIdleTime(s3Config.socketTimeout())  // Default 60s
-                //.connectionTimeToLive(Duration.ofMinutes(5))    // Default 0
+                .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
+                .socketTimeout(s3Config.socketTimeout())          // Default was 30s
+                .maxConnections(s3Config.connectionPoolSize())    // Default was 50
+                .connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
+                //.connectionTimeToLive(Duration.ofMinutes(5))    // Default was 0
                 ;
         // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
 
@@ -124,6 +127,8 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.credentialsProvider(getCredentialsProvider(cred));
 
+        var metricsPub = new PrometheusMetricPublisher();
+        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
         var endpoint = getEndpoint(cred);
         if (!StringUtil.isEmpty(endpoint)) {
             builder.endpointOverride(URI.create(endpoint));
@@ -153,7 +158,7 @@ public class S3SourceProvider extends StreamSourceProvider {
                                     .sessionToken(sessionToken)
                                     .build());
                 } else {
-                    log.info("CredentialsProvider: StaticCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
+                    log.debug("CredentialsProvider: StaticCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
                     return StaticCredentialsProvider.create(
                             AwsBasicCredentials.builder()
                                     .accessKeyId(awsKey)

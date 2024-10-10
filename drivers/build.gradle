@@ -42,6 +42,7 @@ project(':drivers') {
         implementation 'org.carlspring.cloud.aws:s3fs-nio:1.0.5'
         //implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
         implementation 'org.apache.commons:commons-lang3:_'
+        implementation "io.prometheus:simpleclient:_"
 
         testFixturesImplementation project(':base')
         testFixturesImplementation project(':model')
