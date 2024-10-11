@@ -135,7 +135,10 @@ public class S3SourceProvider extends StreamSourceProvider {
         }
 
         builder.region(getRegion(cred, endpoint));
-
+        // OCI compat layer needs path style access.
+        builder.serviceConfiguration(software.amazon.awssdk.services.s3.S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .build());
         builder.crossRegionAccessEnabled(true);
 
         return builder.build();
