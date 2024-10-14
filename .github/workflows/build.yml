@@ -119,9 +119,6 @@ jobs:
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit       # Forma
 
-  test_reporter:
-   t of test results
-
   publish_snapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
     needs: [test, slowTest, integrationTest]
