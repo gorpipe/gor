@@ -16,3 +16,6 @@ jobs:
         with:
           java-version: 17
           cache: 'gradle'
+      - name: Build with Gradle
+        run: |
+          ./gradlew assemble
