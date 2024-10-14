@@ -13,10 +13,18 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 17
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+#          cache: 'gradle'
+#      - name: Grant execute permission for gradlew
+#        run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew installDist -Pinclude.documentation
+        run: ./gradlew --continue test slowTest integrationTest installDist -Pinclude.documentation
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: success() || failure() # always run even if the previous step fails
+        with:
+          report_paths: # '**/build/test-results/test/TEST-*.xml'
+            - "*/*/*/*/TEST-*.xml"
+            - "*/*/*/*/*/TEST-*.xml"
       - name: Publish snapshot package
         if: ${{ github.ref == 'refs/heads/githubtest' }}
         run: ./gradlew publish -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
