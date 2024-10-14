@@ -18,6 +18,8 @@ jobs:
           java-version: 17
           cache: 'gradle'
       - name: Prepare env
+        env:
+          INTEGRATION_TESTS_SECRETS_ENV: ${{ secrets.INTEGRATION_TESTS_SECRETS_ENV }}
         run: |
           echo ${INTEGRATION_TESTS_SECRETS_ENV} > tests/config/secrets.env
       - name: Build with Gradle
