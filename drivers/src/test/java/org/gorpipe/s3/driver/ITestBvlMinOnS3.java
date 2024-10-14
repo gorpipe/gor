@@ -7,6 +7,8 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenRequest;
 import com.amazonaws.services.securitytoken.model.GetSessionTokenResult;
+import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.providers.stream.datatypes.BvlTestSuite;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
@@ -63,6 +65,9 @@ public class ITestBvlMinOnS3 extends BvlTestSuite {
     @BeforeClass
     static public void setUpClass() {
         Properties props = DriverUtils.getDriverProperties();
+        if (props.getProperty("S3_KEY") == null) {
+            throw new GorSystemException("No s3 key set", null);
+        }
         S3_KEY = props.getProperty("S3_KEY");
         S3_SECRET = props.getProperty("S3_SECRET");
         S3_REGION = "eu-west-1";

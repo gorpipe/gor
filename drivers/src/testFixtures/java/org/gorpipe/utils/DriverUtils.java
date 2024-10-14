@@ -2,6 +2,7 @@ package org.gorpipe.utils;
 
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.exceptions.GorResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ public class DriverUtils {
     public static Properties getDriverProperties() {
         Properties prop = new Properties();
         if (Files.exists(Paths.get(SECRETS_FILE_NAME))) {
-            log.warn("Loading env: " + SECRETS_FILE_NAME);
+            log.debug("Loading env: " + SECRETS_FILE_NAME);
             try (InputStream inputStream = new FileInputStream(SECRETS_FILE_NAME)) {
                 prop.load(inputStream);
             } catch (IOException e) {
@@ -30,6 +31,7 @@ public class DriverUtils {
             }
         } else {
             log.warn("No secrets file found {}", SECRETS_FILE_NAME);
+            throw new GorResourceException("No secrets file found " + SECRETS_FILE_NAME, SECRETS_FILE_NAME);
         }
 
         prop.putAll(System.getenv());
