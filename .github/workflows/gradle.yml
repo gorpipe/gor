@@ -22,7 +22,7 @@ jobs:
           cache: 'gradle'
       - name: Prepare env
         run: |
-          echo ${INTEGRATION_TESTS_SECRETS_ENV} > tests/config/secrets.env
+          echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: |
           head -n 1 tests/config/secrets.env
