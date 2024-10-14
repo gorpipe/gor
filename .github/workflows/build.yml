@@ -119,8 +119,8 @@ jobs:
           name: Junit Tests            # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
-          list-tests: 'none'
-          list-suites: 'none'
+          list-tests: none
+          list-suites: all
 
   publish_snapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
