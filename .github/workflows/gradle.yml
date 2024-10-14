@@ -25,7 +25,9 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} > tests/config/secrets.env
       - name: Build with Gradle
         run: |
-          head -n 1 tests/config/secrets.env 
+          head -n 1 tests/config/secrets.env
+          pwd
+          ls -al
           #./gradlew --continue test slowTest integrationTest
           ./gradlew :drivers:integrationTest --tests '*ITestBvlMinOnS3.testGorz'
       - name: Publish Test Report
