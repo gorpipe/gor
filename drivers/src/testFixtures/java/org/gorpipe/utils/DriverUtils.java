@@ -21,7 +21,7 @@ public class DriverUtils {
     public static Properties getDriverProperties() {
         Properties prop = new Properties();
         if (Files.exists(Paths.get(SECRETS_FILE_NAME))) {
-            log.debug("Loading env: " + SECRETS_FILE_NAME);
+            log.warn("Loading env: " + SECRETS_FILE_NAME);
             try (InputStream inputStream = new FileInputStream(SECRETS_FILE_NAME)) {
                 prop.load(inputStream);
             } catch (IOException e) {
