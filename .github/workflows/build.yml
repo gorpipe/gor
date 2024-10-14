@@ -42,8 +42,8 @@ jobs:
         run: ./gradlew --continue test
       - uses: actions/upload-artifact@v2
         with:
-        name: reports
-        path: '**/TEST-*.xml'
+          name: reports
+          path: '**/TEST-*.xml'
 
   slowTest:
     runs-on: ubuntu-latest
@@ -64,8 +64,8 @@ jobs:
         run: ./gradlew --continue  slowTest
       - uses: actions/upload-artifact@v2
         with:
-        name: reports
-        path: '**/TEST-*.xml'
+          name: reports
+          path: '**/TEST-*.xml'
 
   integrationTest:
     runs-on: ubuntu-latest
@@ -86,8 +86,8 @@ jobs:
         run: ./gradlew --continue integrationTest
       - uses: actions/upload-artifact@v2
         with:
-        name: reports
-        path: '**/TEST-*.xml'
+          name: reports
+          path: '**/TEST-*.xml'
 
   report:
     needs: [test, slowTest, integrationTest]
