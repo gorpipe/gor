@@ -26,6 +26,7 @@ jobs:
       - name: Build with Gradle
         run: |
           head -n 1 tests/config/secrets.env
+          echo "Lines in secrets file $(wc -l tests/config/secrets.env)"
           pwd
           ls -al
           #./gradlew --continue test slowTest integrationTest
