@@ -119,6 +119,7 @@ jobs:
           name: Junit Tests            # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
+          list-tests: 'failed'
 
   publish_snapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
