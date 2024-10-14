@@ -40,7 +40,7 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: ./gradlew --continue test
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: reports
           path: '**/TEST-*.xml'
@@ -62,7 +62,7 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: ./gradlew --continue  slowTest
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: reports
           path: '**/TEST-*.xml'
@@ -84,7 +84,7 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: ./gradlew --continue integrationTest
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: reports
           path: '**/TEST-*.xml'
