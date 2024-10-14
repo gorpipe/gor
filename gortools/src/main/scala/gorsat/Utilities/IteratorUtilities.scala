@@ -45,7 +45,6 @@ object IteratorUtilities {
 
   def getHeader(filename: String, gorRoot: String, context: GorContext): String = {
     val gm: GorMonitor = null
-    val minLogTime = Int.MaxValue
     var header = ""
     context.getSession.getCache.getHeaderMap.synchronized {
       Option(context.getSession.getCache.getHeaderMap.getOrDefault(filename, null)) match {
@@ -53,7 +52,7 @@ object IteratorUtilities {
         case None =>
           var gs:FastGorSource = null
           try {
-            gs = new FastGorSource(filename, gorRoot, context, false, gm, minLogTime)
+            gs = new FastGorSource(filename, gorRoot, context, false, gm, Int.MaxValue)
             header = gs.getHeader
             context.getSession.getCache.getHeaderMap.put(filename, header)
           } finally {

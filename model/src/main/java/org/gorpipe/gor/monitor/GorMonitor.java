@@ -55,22 +55,14 @@ public class GorMonitor extends CancelMonitor implements ReadListener, AutoClose
      * @param msg log message
      */
     public void log(String msg) {
-        final long time = System.currentTimeMillis();
-        synchronized (timestampFormatter) {
-            String timestamp = timestampFormatter.format(new Date(time));
-            log.info("Log: {} {}", timestamp, msg);
-        }
+        log.info(msg);
     }
 
     /**
      * @param msg debug message
      */
     public void debug(String msg) {
-        final long time = System.currentTimeMillis();
-        synchronized (timestampFormatter) {
-            String timestamp = timestampFormatter.format(new Date(time));
-            log.debug("Log: {} {}", timestamp, msg);
-        }
+        log.debug(msg);
     }
 
     public void close() {}
