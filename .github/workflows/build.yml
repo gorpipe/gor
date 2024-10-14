@@ -120,6 +120,7 @@ jobs:
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
           list-tests: 'failed'
+          list-suites: 'failed'
 
   publish_snapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
