@@ -102,6 +102,7 @@ jobs:
     needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Download artifacts
         uses: actions/download-artifact@v4
 #      - name: Publish Test Report
@@ -117,7 +118,7 @@ jobs:
         with:
           name: Junit Tests            # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
-          reporter: java-junit       # Forma
+          reporter: java-junit         # Format
 
   publish_snapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
