@@ -25,7 +25,7 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: |
-          ./gradlew --continue test slowTest integrationTest
+          ./gradlew --no-daemon --continue test slowTest integrationTest
           #./gradlew :drivers:integrationTest --tests '*ITestBvlMinOnS3.testGorz'
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
@@ -37,11 +37,11 @@ jobs:
       - name: Publish snapshot package
         if: ${{ github.ref == 'refs/heads/githubtest' }}
         #if: github.ref == 'refs/heads/main'
-        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
+        run: ./gradlew --no-daemon publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish release package
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
+        run: ./gradlew --no-daemon publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

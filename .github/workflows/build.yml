@@ -26,7 +26,7 @@ jobs:
           cache: 'gradle'
       - name: Build with Gradle
         run: |
-          ./gradlew assemble
+          ./gradlew --no-daemon assemble
 
   test:
     runs-on: ubuntu-latest
@@ -44,10 +44,10 @@ jobs:
         run: |
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
-        run: ./gradlew --continue test
+        run: ./gradlew --no-daemon --continue test
       - uses: actions/upload-artifact@v4
         with:
-          name: reports
+          name: test-reports
           path: '**/TEST-*.xml'
 
   slowTest:
@@ -66,10 +66,10 @@ jobs:
         run: |
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
-        run: ./gradlew --continue  slowTest
+        run: ./gradlew --no-daemon --continue  slowTest
       - uses: actions/upload-artifact@v4
         with:
-          name: reports
+          name: slowTest-reports
           path: '**/TEST-*.xml'
 
   integrationTest:
@@ -88,10 +88,10 @@ jobs:
         run: |
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
-        run: ./gradlew --continue integrationTest
+        run: ./gradlew --no-daemon --continue integrationTest
       - uses: actions/upload-artifact@v4
         with:
-          name: reports
+          name: integrationTest-reports
           path: '**/TEST-*.xml'
 
   report:
