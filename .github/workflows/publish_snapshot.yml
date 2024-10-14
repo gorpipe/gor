@@ -9,7 +9,7 @@ on:
       - completed
 
 jobs:
-  build:
+  publish_snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -8,7 +8,7 @@ on:
       - completed
 
 jobs:
-  build:
+  publish_version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
