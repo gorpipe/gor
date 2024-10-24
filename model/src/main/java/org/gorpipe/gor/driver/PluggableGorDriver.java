@@ -234,7 +234,7 @@ public class PluggableGorDriver implements GorDriver {
                 source.close();
                 DataSource rawLinkSource = resolveDataSource(sourceRef);
                 if (rawLinkSource == null) {
-                    throw new GorResourceException("Link file content" + sourceRef.getUrl() + " can not be resolved", sourceRef.getUrl());
+                    throw new GorResourceException("Link file content: " + sourceRef.getUrl() + " can not be resolved", sourceRef.getUrl());
                 }
                 DataSource fromLinkSource = wrap(rawLinkSource);
                 fromLinkSource.getSourceReference().setCreatedFromLink(true);

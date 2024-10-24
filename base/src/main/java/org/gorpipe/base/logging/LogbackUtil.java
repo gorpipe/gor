@@ -26,6 +26,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.joran.spi.JoranException;
@@ -84,7 +85,10 @@ public class LogbackUtil {
             ContextInitializer ci = new ContextInitializer(loggerContext);
             URL url = logConfigFile.toURI().toURL();
 
-            ci.configureByResource(url);
+            JoranConfigurator configurator = new JoranConfigurator();
+            configurator.setContext(loggerContext);
+            configurator.doConfigure(url);
+
             return true;
         } catch (IOException | JoranException | NullPointerException e) {
             //unable to create the logback configuration file

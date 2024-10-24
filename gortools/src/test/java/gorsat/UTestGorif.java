@@ -123,7 +123,12 @@ public class UTestGorif {
                 """
                 chrom\tpos\tcol3
                 chr1\t0\ta
-                """, null}
+                """, null},
+                {"One file path with -dh last", "gorif " + testFileGor1 + " -dh col1,col2",
+                        """
+                    chrom\tpos\tcol3
+                    chr1\t0\ta
+                    """, null},
         });
     }
 
