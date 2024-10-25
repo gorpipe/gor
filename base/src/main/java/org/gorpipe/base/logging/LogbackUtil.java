@@ -85,9 +85,12 @@ public class LogbackUtil {
             ContextInitializer ci = new ContextInitializer(loggerContext);
             URL url = logConfigFile.toURI().toURL();
 
-            JoranConfigurator configurator = new JoranConfigurator();
-            configurator.setContext(loggerContext);
-            configurator.doConfigure(url);
+            ci.configureByResource(url);
+
+// Candidate for replacing configureByResource (needs to be tested with GorServices as that is the only place using this).
+//            JoranConfigurator configurator = new JoranConfigurator();
+//            configurator.setContext(loggerContext);
+//            configurator.doConfigure(url.toString());
 
             return true;
         } catch (IOException | JoranException | NullPointerException e) {

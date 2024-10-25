@@ -6,11 +6,8 @@ project(':auth') {
     dependencies {
         internal project(':base')
         internal project(':util')
-        //internal project(':platform:base')
 
         implementation "com.auth0:java-jwt:_"
-        implementation "io.grpc:grpc-api:_"
-        implementation("me.dinowernli:java-grpc-prometheus:_") { exclude group: 'io.grpc', module: 'grpc-all' } // Note: transitively adds grpc-all:1.0.0
         implementation 'ch.qos.logback:logback-classic:_'
         implementation "org.aeonbits.owner:owner:_"
 
