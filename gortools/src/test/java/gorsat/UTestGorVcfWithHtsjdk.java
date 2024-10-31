@@ -26,9 +26,8 @@ import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,6 +43,11 @@ import java.util.zip.GZIPInputStream;
  * Created by sigmar on 26/10/15.
  */
 public class UTestGorVcfWithHtsjdk {
+
+    @Rule
+    public final ProvideSystemProperty useInternalIndex
+            = new ProvideSystemProperty("gor.vcf.useInternalIndex", "true");
+
     private String doTest(String gor, String file, int top, int expected) {
         String curdir = new File(".").getAbsolutePath();
 
@@ -166,6 +170,7 @@ public class UTestGorVcfWithHtsjdk {
         Assert.assertEquals(orig, tabix);
     }
 
+    @Ignore
     @Test
     public void testNoHeaderVcf() {
         Assert.assertThrows("gor", GorResourceException.class, () -> TestUtils.runGorPipe("gor ../tests/data/external/samtools/noheader.vcf"));

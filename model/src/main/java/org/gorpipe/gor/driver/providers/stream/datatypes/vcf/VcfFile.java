@@ -38,6 +38,9 @@ import static org.gorpipe.gor.model.ChrDataScheme.*;
  * Created by sigmar on 28/10/15.
  */
 public class VcfFile extends StreamSourceFile {
+    static final String[] chromosomes = new String[]{"M", "MT", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "XY", "Y"};
+    public static final String VCF_HEADER_TOKEN = "##";
+
     public VcfFile(StreamSource str) {
         super(str);
     }
@@ -47,19 +50,19 @@ public class VcfFile extends StreamSourceFile {
         return DataType.VCF;
     }
 
-    static final String[] chromosomes = new String[]{"M", "MT", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "X", "XY", "Y"};
-    public static final String VCF_HEADER_TOKEN = "##";
+    static boolean useInternalIndex() {
+        return Boolean.valueOf(System.getProperty("gor.vcf.useInternalIndex", "false"));
+    }
 
     /**
      * Find the gor data offset in a .vcf file
      *
      * @param instream The stream to read
      * @param dataScheme inferred dataschema to return.
-     * @param fixInternalIndex  should internal index be fixed (ordered)
      * @return The offset found
      * @throws IOException If no offset is found
      */
-    public static int[] findVcfGorDataOffset(final InputStream instream, ContigDataScheme dataScheme, boolean fixInternalIndex) throws IOException {
+    public static int[] findVcfGorDataOffset(final InputStream instream, ContigDataScheme dataScheme) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // Assume .vcf files start with lines
@@ -97,13 +100,15 @@ public class VcfFile extends StreamSourceFile {
         if (ret == null) {
             throw new RuntimeException("Could not find header line for vcf file");
         }
-        findContigOrderFromHeader(dataScheme, baos.toByteArray(), ret[1] == 1, fixInternalIndex);
+        if (useInternalIndex()) {
+            findContigOrderFromHeader(dataScheme, baos.toByteArray(), ret[1] == 1);
+        }
 
         return ret;
     }
 
     private static void findContigOrderFromHeader(final ContigDataScheme dataScheme, byte[] byteArray,
-                                                  boolean hasPrefix, boolean fixInternalIndex) {
+                                                  boolean hasPrefix) {
         if (dataScheme != null) {
             final List<String> originalContigList = new ArrayList<>();
             InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(byteArray));
@@ -126,26 +131,8 @@ public class VcfFile extends StreamSourceFile {
                 }
             }).allMatch(line -> line.startsWith("#")); // short circuiting operation, use takeWhile in jdk9
 
-            if (fixInternalIndex) {
-                ChrDataScheme.updateDataScheme(dataScheme, fixContigsOrder(originalContigList));
-            } else {
-                ChrDataScheme.updateDataScheme(dataScheme, originalContigList);
-            }
+           ChrDataScheme.updateDataScheme(dataScheme, originalContigList);
         }
-    }
-
-    static List<String> fixContigsOrder(List<String> oldContigs) {
-        if (oldContigs == null || oldContigs.isEmpty()) return oldContigs;
-
-        List<String> orderedContigList;
-        if (ChrDataScheme.isMostLikelyLexicalOrder(oldContigs)) {
-            orderedContigList = ChrDataScheme.sortUsingChrDataScheme(oldContigs, ChrLexico);
-        } else {
-            // Else assume numerical ordering, fix the order by using the order from Human Genome (HG) data scheme.
-            orderedContigList = ChrDataScheme.sortUsingChrDataScheme(oldContigs, ChrNumerical);
-        }
-
-        return orderedContigList;
     }
 
     public static int findVcfChrNamingSystem(byte[] buf, int cur, int read, final InputStream instream) throws IOException {

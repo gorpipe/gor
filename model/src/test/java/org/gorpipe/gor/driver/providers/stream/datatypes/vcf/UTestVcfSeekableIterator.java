@@ -8,9 +8,8 @@ import org.gorpipe.gor.binsearch.TestFileGenerator;
 import org.gorpipe.gor.binsearch.UTestSeekableGenomicIterator;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
@@ -23,6 +22,10 @@ import java.util.stream.Collectors;
 public class UTestVcfSeekableIterator extends UTestSeekableGenomicIterator {
 
     public static File workDir;
+
+    @Rule
+    public final ProvideSystemProperty useInternalIndex
+            = new ProvideSystemProperty("gor.vcf.useInternalIndex", "true");
 
     @AfterClass
     public static void tearDown() throws IOException {

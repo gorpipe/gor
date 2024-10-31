@@ -42,51 +42,56 @@ public class PrometheusMetricPublisher implements MetricPublisher {
 
     private void mapMetrics(MetricCollection metricCollection) {
         metricCollection.stream().forEach(record -> {
-            String metricName = METRIC_PREFIX + record.metric().name();
-            var value = record.value();
-            var levelLabel = record.metric().level().name();
-            var categoriesLabel = new HashSet<>(record.metric().categories().stream().map(c -> c.name()).toList()).toString();
+            try {
+                String metricName = METRIC_PREFIX + record.metric().name();
+                var value = record.value();
+                var levelLabel = record.metric().level().name();
+                var categoriesLabel = new HashSet<>(record.metric().categories().stream().map(c -> c.name()).toList()).toString();
 
-            if (value instanceof Number || value instanceof Duration) {
-                var labelNames = new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME};
-                var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel};
+                if (value instanceof Number || value instanceof Duration) {
+                    var labelNames = new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME};
+                    var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel};
 
-                if (metricName.contains("Count")) {
-                    double doubleValue = ((Number) value).doubleValue();
+                    if (metricName.contains("Count")) {
+                        double doubleValue = ((Number) value).doubleValue();
+                        Counter counter = counters.computeIfAbsent(metricName, name -> Counter.build()
+                                .name(name)
+                                .help(name)
+                                .labelNames(labelNames)
+                                .register());
+                        counter.labels(labelsArray).inc(doubleValue);
+                    } else if (metricName.contains("Duration") || metricName.contains("Time")) {
+                        double doubleValue = (value instanceof Duration) ? ((Duration) value).toMillis() : ((Number) value).doubleValue();
+                        Histogram histogram = histograms.computeIfAbsent(metricName, name -> Histogram.build()
+                                .name(name)
+                                .help(name)
+                                .labelNames(labelNames)
+                                .register());
+                        histogram.labels(labelsArray).observe(doubleValue);
+                    } else {
+                        double doubleValue = ((Number) value).doubleValue();
+                        Gauge gauge = gauges.computeIfAbsent(metricName, name -> Gauge.build()
+                                .name(name)
+                                .help(name)
+                                .labelNames(labelNames)
+                                .register());
+                        gauge.labels(labelsArray).set(doubleValue);
+                    }
+                } else if (!Arrays.stream(BLACKLISTED_METRIC_WORDS).anyMatch(metricName::contains)) {
+                    var typeLabel = value.toString();
+                    var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel, typeLabel};
+
                     Counter counter = counters.computeIfAbsent(metricName, name -> Counter.build()
                             .name(name)
                             .help(name)
-                            .labelNames(labelNames)
+                            .labelNames(new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME, TYPE_LABEL_NAME})
                             .register());
-                    counter.labels(labelsArray).inc(doubleValue);
-                } else if (metricName.contains("Duration") || metricName.contains("Time")) {
-                    double doubleValue = (value instanceof Duration) ? ((Duration) value).toMillis() : ((Number) value).doubleValue();
-                    Histogram histogram = histograms.computeIfAbsent(metricName, name -> Histogram.build()
-                            .name(name)
-                            .help(name)
-                            .labelNames(labelNames)
-                            .register());
-                    histogram.labels(labelsArray).observe(doubleValue);
-                } else {
-                    double doubleValue = ((Number) value).doubleValue();
-                    Gauge gauge = gauges.computeIfAbsent(metricName, name -> Gauge.build()
-                            .name(name)
-                            .help(name)
-                            .labelNames(labelNames)
-                            .register());
-                    gauge.labels(labelsArray).set(doubleValue);
+
+                    counter.labels(labelsArray).inc();
                 }
-            } else if (!Arrays.stream(BLACKLISTED_METRIC_WORDS).anyMatch(metricName::contains)) {
-                var typeLabel = value.toString();
-                var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel, typeLabel};
-
-                Counter counter = counters.computeIfAbsent(metricName, name -> Counter.build()
-                        .name(name)
-                        .help(name)
-                        .labelNames(new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME, TYPE_LABEL_NAME})
-                        .register());
-
-                counter.labels(labelsArray).inc();
+            } catch (Exception e) {
+                // Ignore errors, map what we can.
+                logger.warn("Error mapping metric", e);
             }
         });
 

@@ -60,9 +60,6 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
         WITHOUT_CHR_PREFIX,
     }
 
-    public VcfGzGenomicIterator(ChromoLookup lookup) {
-        this.lookup = lookup;
-    }
 
     public VcfGzGenomicIterator(ChromoLookup lookup, String file, StreamSource streamsource, boolean compressed) throws IOException {
         this(lookup, file, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
@@ -70,7 +67,7 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
     }
 
     public VcfGzGenomicIterator(ChromoLookup lookup, String file, BufferedReader reader) throws IOException {
-        this(lookup);
+        this.lookup = lookup;
         init(file, reader);
     }
 
@@ -125,7 +122,7 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
     @Override
     public boolean seek(String chr, int pos) {
         // Could use tabix to seek and read
-        throw new RuntimeException("Cant seek to gzipped .vcf files");
+        throw new RuntimeException("Cant seek to .vcf files without an index.");
     }
 
     @Override
