@@ -26,6 +26,7 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -190,7 +191,7 @@
             
   <div class="section" id="gor-and-nor">
 <h1>GOR and NOR<a class="headerlink" href="#gor-and-nor" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command is the primary <a class="reference internal" href="glossary.html#term-Source-commands"><span class="xref std std-term">Source commands</span></a> in the GOR query language (along with the <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> command).</p>
+<p>The <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a> command is the primary <a class="reference internal" href="glossary.html#term-source-commands"><span class="xref std std-term">Source commands</span></a> in the GOR query language (along with the <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">NOR</span></a> command).</p>
 <div class="section" id="genomic-order">
 <span id="genomicorder"></span><h2>Genomic Order<a class="headerlink" href="#genomic-order" title="Permalink to this headline">¶</a></h2>
 <p>There are two main types of relations that can be used in the GOR Query Language: <a class="reference internal" href="glossary.html#term-genomic-ordered-data"><span class="xref std std-term">genomic-ordered</span></a> and <a class="reference internal" href="command/NOR.html#nor"><span class="std std-ref">non-ordered</span></a>. Genomic-ordered relations have the chromosome and position in the first two columns.  They should be sorted in order of the chromosome (1 through to 22, followed by X and Y - and in some cases “M”, for mitochrondrial DNA) and then, within each chromosome, numerically on the position.</p>
@@ -212,8 +213,8 @@
 <p>There are two different types of commands that can be used in a GOR query:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p><a class="reference internal" href="glossary.html#term-Source-commands"><span class="xref std std-term">Source commands</span></a> start a GOR query and generate data that will be worked on in the query.</p></li>
-<li><p><a class="reference internal" href="glossary.html#term-Pipe-steps"><span class="xref std std-term">Pipe steps</span></a> manipulate the data that is streamed from the source command or previous pipe step.</p></li>
+<li><p><a class="reference internal" href="glossary.html#term-source-commands"><span class="xref std std-term">Source commands</span></a> start a GOR query and generate data that will be worked on in the query.</p></li>
+<li><p><a class="reference internal" href="glossary.html#term-pipe-steps"><span class="xref std std-term">Pipe steps</span></a> manipulate the data that is streamed from the source command or previous pipe step.</p></li>
 </ol>
 </div></blockquote>
 <p>The first step in creating a GOR query is to determine the source of the stream you will be working with. In most cases this will either be genomic ordered relational data in the form of a GOR file or some non-ordered relational data that can be retrieved using the NOR command.</p>

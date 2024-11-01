@@ -26,6 +26,7 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -230,7 +231,7 @@
 </div>
 <div class="section" id="join-options">
 <h2>Join options<a class="headerlink" href="#join-options" title="Permalink to this headline">¶</a></h2>
-<p>The first type of join (<code class="docutils literal notranslate"><span class="pre">-snpsnp</span></code>) matches single positions in one table to single position in another table. In this most basic example, we could join <code class="docutils literal notranslate"><span class="pre">wesVars</span></code> to a <a class="reference internal" href="glossary.html#term-VEP"><span class="xref std std-term">VEP</span></a> dictionary (in this case the vep_single_wgs.gord) to annotate the variants in a particular set of samples with <a class="reference internal" href="glossary.html#term-VEP"><span class="xref std std-term">VEP</span></a> data.</p>
+<p>The first type of join (<code class="docutils literal notranslate"><span class="pre">-snpsnp</span></code>) matches single positions in one table to single position in another table. In this most basic example, we could join <code class="docutils literal notranslate"><span class="pre">wesVars</span></code> to a <a class="reference internal" href="glossary.html#term-vep"><span class="xref std std-term">VEP</span></a> dictionary (in this case the vep_single_wgs.gord) to annotate the variants in a particular set of samples with <a class="reference internal" href="glossary.html#term-vep"><span class="xref std std-term">VEP</span></a> data.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>     <span class="nd">gor</span> source/var/wes_varcalls.gor
 | <span class="nb">TOP</span> 10
 | <span class="nb">JOIN</span> -<span class="no">snpsnp</span> -xl <span class="na">reference</span>,<span class="na">call</span> -xr <span class="na">reference</span>,<span class="na">call</span> source/anno/vep_v85/vep_single_wgs_gord
