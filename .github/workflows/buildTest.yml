@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build Single Workflow
 
 #on: [push]
 on:

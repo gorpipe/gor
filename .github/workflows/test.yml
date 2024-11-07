@@ -3,7 +3,7 @@ name: Tests
 on:
   workflow_run:
     workflows: ["Build"]
-    branches: [githubtest]
+    branches: [githubtest,master]
     types:
       - completed
 

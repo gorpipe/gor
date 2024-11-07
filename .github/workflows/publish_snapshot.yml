@@ -3,8 +3,7 @@ name: Publish Snapshot
 on:
   workflow_run:
     workflows: ["Run Tests"]
-    tags:
-      - v*
+    branches: [githubtest,master]
     types:
       - completed
 
@@ -19,6 +18,8 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           cache: 'gradle'
+#      - name: Setup Gradle
+#        uses: gradle/actions/setup-gradle@v4
       - name: Publish release package
         run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
         env:
