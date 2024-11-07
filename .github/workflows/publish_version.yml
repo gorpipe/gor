@@ -1,0 +1,24 @@
+name: Publish Version
+
+on:
+  workflow_run:
+    workflows: ["Run Tests"]
+    branches: [githubtest]
+    types:
+      - completed
+
+jobs:
+  publish_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Publish snapshot package
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
