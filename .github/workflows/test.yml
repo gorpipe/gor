@@ -3,8 +3,10 @@ name: Tests
 on:
   workflow_run:
     workflows: ["Build"]
+    branches: [githubtest]
     types:
       - completed
+
 
 env:
   INTEGRATION_TESTS_SECRETS_ENV: ${{ secrets.INTEGRATION_TESTS_SECRETS_ENV }}
