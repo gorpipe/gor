@@ -30,12 +30,14 @@ import org.gorpipe.exceptions.{GorException, GorParsingException}
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable
 import org.gorpipe.test.GorDictionarySetup
 import org.gorpipe.test.utils.FileTestUtils
+import org.junit.Assert
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 import java.nio.file.{Files, Path}
+import java.util
 import java.util.{List, Map}
 
 @RunWith(classOf[JUnitRunner])
@@ -167,6 +169,81 @@ class UTestScriptExecutionEngine extends AnyFunSuite with BeforeAndAfter {
     val updatedFingerprint = createScriptExecutionEngine().fileFingerPrint("#gordict#" + dictPath, session)
 
     assert(originalFingerprint != updatedFingerprint)
+  }
+
+  test("Filesignature of gorif file should changed when the file is updated") {
+    val name = "testGorifFileSignature"
+    val workDirPath = Path.of(FileTestUtils.createTempDirectory(name).getCanonicalPath).resolve(name)
+    Files.createDirectories(workDirPath.resolve("cache"))
+
+    //val session = new GenericSessionFactory().create()
+    val args: Array[String] = Array("-gorroot", workDirPath.toString, "-cachedir", workDirPath.resolve("cache").toString, "-requestid", "test")
+    val session = TestUtils.createSession(args, null, false)
+
+    val testFile: Path = workDirPath.resolve("test.gor")
+
+    val command: String = "gorif -dh chrom,pos,val " + testFile
+
+    // Use new engine instance to simulate different queries.
+    Files.writeString(testFile, "#chrom\tpos\tval\nchr\t1\tA")
+    testFile.toFile.setLastModified(System.currentTimeMillis() - 100000)
+
+    val usedFiles: util.List[String] = createScriptExecutionEngine().getUsedFiles(command, session)
+    Assert.assertEquals(1, usedFiles.size())
+
+    val fileFingerprint = createScriptExecutionEngine().fileFingerPrint(testFile.toString, session)
+    val fileFingerprint2 = createScriptExecutionEngine().fileFingerPrint(testFile.toString, session)
+    Assert.assertEquals(fileFingerprint, fileFingerprint2)
+
+    val signature: String = createScriptExecutionEngine().getFileSignatureAndUpdateSignatureMap(session, command, usedFiles)
+    val signature2: String = createScriptExecutionEngine().getFileSignatureAndUpdateSignatureMap(session, command, usedFiles)
+    Assert.assertEquals(signature, signature2)
+
+    Files.writeString(testFile, "#chrom\tpos\tval\nchr\t1\tB")
+
+    val fileFingerprint3 = createScriptExecutionEngine().fileFingerPrint(testFile.toString, session)
+    Assert.assertNotEquals(fileFingerprint, fileFingerprint3)
+
+    val signature3: String = createScriptExecutionEngine().getFileSignatureAndUpdateSignatureMap(session, command, usedFiles)
+    Assert.assertNotEquals(signature, signature3)
+  }
+
+  test("Filesignature of norif file should changed when the file is updated") {
+    val name = "testNorifFileSignature"
+    val workDirPath = Path.of(FileTestUtils.createTempDirectory(name).getCanonicalPath).resolve(name)
+    Files.createDirectories(workDirPath.resolve("cache"))
+
+    //val session = new GenericSessionFactory().create()
+    val args: Array[String] = Array("-gorroot", workDirPath.toString, "-cachedir", workDirPath.resolve("cache").toString, "-requestid", "test")
+    val session = TestUtils.createSession(args, null, false)
+
+
+    val testFile: Path = workDirPath.resolve("test.gor")
+
+    val command: String = "norif -dh chrom,pos,val " + testFile
+
+    // Use new engine instance to simulate different queries.
+    Files.writeString(testFile, "#chrom\tpos\tval\nchr\t1\tA")
+    testFile.toFile.setLastModified(System.currentTimeMillis() - 100000)
+
+    val usedFiles: util.List[String] = createScriptExecutionEngine().getUsedFiles(command, session)
+    Assert.assertEquals(1, usedFiles.size())
+
+    val fileFingerprint = createScriptExecutionEngine().fileFingerPrint(testFile.toString, session)
+    val fileFingerprint2 = createScriptExecutionEngine().fileFingerPrint(testFile.toString, session)
+    Assert.assertEquals(fileFingerprint, fileFingerprint2)
+
+    val signature: String = createScriptExecutionEngine().getFileSignatureAndUpdateSignatureMap(session, command, usedFiles)
+    val signature2: String = createScriptExecutionEngine().getFileSignatureAndUpdateSignatureMap(session, command, usedFiles)
+    Assert.assertEquals(signature, signature2)
+
+    Files.writeString(testFile, "#chrom\tpos\tval\nchr\t1\tB")
+
+    val fileFingerprint3 = createScriptExecutionEngine().fileFingerPrint(testFile.toString, session)
+    Assert.assertNotEquals(fileFingerprint, fileFingerprint3)
+
+    val signature3: String = createScriptExecutionEngine().getFileSignatureAndUpdateSignatureMap(session, command, usedFiles)
+    Assert.assertNotEquals(signature, signature3)
   }
 
 
