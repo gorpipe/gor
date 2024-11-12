@@ -100,9 +100,10 @@ jobs:
           name: integrationTest-reports
           path: '**/TEST-*.xml'
 
-  test_report:
+  testReport:
     needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
+    if: always()
     steps:
 #      - uses: actions/checkout@v4
       - name: Download artifacts
@@ -124,7 +125,7 @@ jobs:
           list-tests: all
           list-suites: all
 
-  publish_snapshot:
+  publishSnapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
     needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
@@ -141,7 +142,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish_version:
+  publishVersion:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
