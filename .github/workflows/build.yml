@@ -101,7 +101,8 @@ jobs:
           path: '**/TEST-*.xml'
 
   test_report:
-    needs: [test, slowTest, integrationTest]
+#    needs: [test, slowTest, integrationTest]
+    needs: [slowTest, integrationTest ]
     runs-on: ubuntu-latest
     steps:
 #      - uses: actions/checkout@v4
