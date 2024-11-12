@@ -1,16 +1,31 @@
 name: Build
 
 on: [push]
-#on: workflow_dispatch
 
 env:
   INTEGRATION_TESTS_SECRETS_ENV: ${{ secrets.INTEGRATION_TESTS_SECRETS_ENV }}
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Build with Gradle
+        run: |
+          ./gradlew --no-daemon assemble
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,24 +40,136 @@ jobs:
         run: |
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
+        run: ./gradlew --no-daemon --continue test
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - test           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: '**/TEST-*.xml'
+
+  slowTest:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Prepare env
         run: |
-          ./gradlew --no-daemon --continue test slowTest integrationTest
-          #./gradlew :drivers:integrationTest --tests '*ITestBvlMinOnS3.testGorz'
+          echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon --continue  slowTest
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - slowTest           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slowTest-reports
+          path: '**/TEST-*.xml'
+
+  integrationTest:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Prepare env
+        run: |
+          echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon --continue integrationTest
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - integrationTest           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integrationTest-reports
+          path: '**/TEST-*.xml'
+
+  testReport:
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        #Disalbe for now because of the 64k limit, use mikepenz instad for the summary.
+        if: false #always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - all           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+          list-tests: failed
+          list-suites: failed
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
-        if: success() || failure() # always run even if the previous step fails
+        if: always() # always run even if the previous step fails
         with:
           report_paths:  '**/TEST-*.xml'
-            #- "*/*/*/*/TEST-*.xml"
-            #- "*/*/*/*/*/TEST-*.xml"
-      - name: Publish snapshot package
-        if: ${{ github.ref == 'refs/heads/githubtest' }}
-        #if: github.ref == 'refs/heads/main'
-        run: ./gradlew --no-daemon publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
+
+  publishSnapshot:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Publish release package
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish release package
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: ./gradlew --no-daemon publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
+
+  publishVersion:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Publish snapshot package
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
