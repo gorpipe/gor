@@ -124,20 +124,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download artifacts
         uses: actions/download-artifact@v4
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v4
-        if: always() # always run even if the previous step fails
-        with:
-          report_paths:  '**/TEST-*.xml'
       - name: Test Report
         uses: dorny/test-reporter@v1
-        if: always()    # run this step even if previous step failed
+        #Disalbe for now because of the 64k limit, use mikepenz instad for the summary.
+        if: false #always()    # run this step even if previous step failed
         with:
           name: Junit Tests - all           # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
           list-tests: failed
           list-suites: failed
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths:  '**/TEST-*.xml'
 
   publishSnapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
