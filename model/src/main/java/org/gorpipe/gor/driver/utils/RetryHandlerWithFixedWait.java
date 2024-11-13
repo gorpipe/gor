@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-import static java.lang.Thread.sleep;
-
 public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -37,7 +35,8 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
-                accumulatedDuration += handleThrowable(e, tries, initialDuration);
+                checkIfShouldRetryException(e);
+                accumulatedDuration += sleep(e, tries, initialDuration);
             }
         }
 
@@ -62,7 +61,8 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
-                accumulatedDuration += handleThrowable(e, tries, initialDuration);
+                checkIfShouldRetryException(e);
+                accumulatedDuration += sleep(e, tries, initialDuration);
             }
         }
 
@@ -72,24 +72,19 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
         );
     }
 
-    protected abstract void onHandleError(GorException e, long delay, int tries);
+    /**
+     * Check if the exception is a retryable exception, and if not, throw a new GorException.
+     *
+     * @param e the exception to check
+     * @throws GorException if the exception is not retryable.
+     */
+    protected abstract void checkIfShouldRetryException(GorException e) throws GorException;
 
-    private long handleThrowable(GorException e, int tries, long initialDuration) {
-        var delay = calculateDuration(tries, initialDuration);
-
-        onHandleError(e, delay, tries);
-
-        log.warn("Try number " + tries + " failed. Waiting for " + delay + "ms before retrying.", e);
-
-        try {
-            sleep(delay);
-        } catch (InterruptedException e1) {
-            // If interrupted waiting to retry, throw original exception
-            Thread.currentThread().interrupt();
-            throw new GorSystemException("Retry thread interrupted after " + tries + " retries", e);
-        }
-
-        return delay;
+    private long sleep(GorException e, int tries, long initialDuration) {
+        var sleepMs = calculateDuration(tries, initialDuration);
+        log.warn("Try number " + tries + " failed. Waiting for " + sleepMs + "ms before retrying.", e);
+        threadSleep(sleepMs, tries, e);
+        return sleepMs;
     }
 
     protected long calculateDuration(int tries, long initialDuration) {

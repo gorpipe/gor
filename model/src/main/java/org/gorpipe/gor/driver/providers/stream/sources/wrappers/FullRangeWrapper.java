@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PersistentInputStream;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -89,7 +90,11 @@ public class FullRangeWrapper extends WrappedStreamSource {
                 if (seek >= 0 && seek <= seekThreshold) {
                     fullRangeStream.reopen();
                     if (seek > 0) {
-                        fullRangeStream.skip(seek);
+                        try {
+                            fullRangeStream.skip(seek);
+                        } catch (IOException e) {
+                           throw GorResourceException.fromIOException(e, getFullPath()).retry();
+                        }
                     }
                     return fullRangeStream;
                 } else {

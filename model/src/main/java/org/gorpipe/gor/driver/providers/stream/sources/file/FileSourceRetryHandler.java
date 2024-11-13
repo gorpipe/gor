@@ -13,7 +13,7 @@ public class FileSourceRetryHandler extends RetryHandlerWithFixedWait {
     }
 
     @Override
-    protected void onHandleError(GorException e, long delay, int tries) {
+    protected void checkIfShouldRetryException(GorException e) {
         if (e.getMessage().equals("Stale file handle")) {
             // Stale file handle errors generally require retries on a higher level as the
             // file needs to be reopened.

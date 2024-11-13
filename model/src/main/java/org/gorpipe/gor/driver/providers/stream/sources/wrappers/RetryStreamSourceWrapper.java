@@ -22,13 +22,14 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
-import org.gorpipe.exceptions.GorException;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.attribute.FileAttribute;
@@ -62,17 +63,17 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
     @Override
     public InputStream open() {
-        return retry.perform(() -> wrapStream(RetryStreamSourceWrapper.super.open(), 0, null));
+        return retry.perform(() -> wrapStream(super.open(), 0, null));
     }
 
     @Override
     public InputStream open(long start) {
-        return retry.perform(() -> wrapStream(RetryStreamSourceWrapper.super.open(start), start, null));
+        return retry.perform(() -> wrapStream(super.open(start), start, null));
     }
 
     @Override
     public InputStream open(long start, long minLength) {
-        return retry.perform(() -> wrapStream(RetryStreamSourceWrapper.super.open(start, minLength), start, minLength));
+        return retry.perform(() -> wrapStream(super.open(start, minLength), start, minLength));
     }
 
     @Override
@@ -164,16 +165,29 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         }
 
         @Override
-        public int read(byte[] b, int off, int len) {
+        public int read(byte[] b, int off, int len) throws IOException {
             return retry.perform(() -> {
                             try {
                                 return super.read(b, off, len);
-                            } catch (GorException e) {
+                            } catch (IOException e) {
                                 StreamUtils.tryClose(in);
                                 in = reopen();
-                                throw e;
+                                throw GorResourceException.fromIOException(e, "").retry();
                             }
                         });
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return retry.perform(() -> {
+                try {
+                    return super.skip(n);
+                } catch (IOException e) {
+                    StreamUtils.tryClose(in);
+                    in = reopen();
+                    throw GorResourceException.fromIOException(e, "").retry();
+                }
+            });
         }
 
         /**

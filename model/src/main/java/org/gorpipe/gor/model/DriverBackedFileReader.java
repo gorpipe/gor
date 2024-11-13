@@ -378,7 +378,7 @@ public class DriverBackedFileReader extends FileReader {
 
         SourceReader(DataSource source) throws IOException {
             super(DataUtil.isGZip(source.getName()) ?
-                    new BufferedReader(new InputStreamReader(new GZIPInputStream(((StreamSource) source).open()))) :
+                    new BufferedReader(new InputStreamReader(new GZIPInputStream(((StreamSource) source).open()/*, 32*1024*/))) :
                     new InputStreamReader(((StreamSource) source).open()));
             this.source = source;
         }

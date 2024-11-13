@@ -55,38 +55,26 @@ public class PositionAwareInputStream extends FilterInputStream implements Locat
     }
 
     @Override
-    public int read() {
-        try {
-            int b = in.read();
-            if (b != -1) position++;
-            return b;
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, "");
-        }
+    public int read() throws IOException {
+        int b = in.read();
+        if (b != -1) position++;
+        return b;
     }
 
     @Override
-    public int read(byte[] b, int off, int len) {
-        try {
-            int result = in.read(b, off, len);
-            if (result > 0) {
-                position += result;
-            }
-            return result;
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, "");
+    public int read(byte[] b, int off, int len) throws IOException {
+        int result = in.read(b, off, len);
+        if (result > 0) {
+            position += result;
         }
+        return result;
     }
 
     @Override
-    public long skip(long n) {
-        try {
-            long skipped = in.skip(n);
-            position += skipped;
-            return skipped;
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, "");
-        }
+    public long skip(long n) throws IOException {
+        long skipped = in.skip(n);
+        position += skipped;
+        return skipped;
     }
 
     @Override
@@ -97,7 +85,7 @@ public class PositionAwareInputStream extends FilterInputStream implements Locat
     }
 
     @Override
-    public synchronized void reset() {
+    public synchronized void reset() throws IOException {
         if (!in.markSupported()) {
             throw new GorResourceException("Mark not supported", "");
         }
@@ -105,11 +93,7 @@ public class PositionAwareInputStream extends FilterInputStream implements Locat
             throw new GorResourceException("No mark set", "");
         }
 
-        try {
-            in.reset();
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, "");
-        }
+        in.reset();
         position = mark;
     }
 }

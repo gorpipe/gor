@@ -29,9 +29,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.commons.lang3.StringUtils;
 import org.carlspring.cloud.storage.s3fs.*;
 import org.gorpipe.base.security.Credentials;
-import org.gorpipe.base.streams.FullRetryInputStream;
 import org.gorpipe.base.streams.LimitedOutputStream;
-import org.gorpipe.base.streams.FullRetryOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -114,10 +112,11 @@ public class S3Source implements StreamSource {
 
         long maxFileSize = (long)writeChunkSize * (long)MAX_S3_CHUNKS;
         try {
-            return new FullRetryOutputStream(new LimitedOutputStream(
+            return
+                    new LimitedOutputStream(
                     getPath().getFileSystem().provider().newOutputStream(getPath(),
                             append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
-                    maxFileSize));
+                    maxFileSize);
         } catch (IOException e) {
             throw new GorResourceException(getName(), getName(), e).retry();
         }
@@ -140,7 +139,7 @@ public class S3Source implements StreamSource {
 
     private InputStream openRequest(GetObjectRequest request) {
         try {
-            return new FullRetryInputStream(new AbortingInputStream(client.getObject(request), request));
+            return new AbortingInputStream(client.getObject(request), request);
         } catch (SdkClientException e) {
             throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), getPath().toString(), e).retry();
         }
@@ -175,7 +174,8 @@ public class S3Source implements StreamSource {
                 return createMetaData(bucket, key);
             });
         } catch (ExecutionException | UncheckedExecutionException e) {
-            throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), e).retry();
+            var cause = e.getCause() != null ? e.getCause() : e;
+            throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), cause).retry();
         }
     }
 
@@ -219,7 +219,10 @@ public class S3Source implements StreamSource {
             loadMetadata(bucket, key);
             return true;
         } catch (GorResourceException e) {
-            return false;
+            if (e.getCause() != null && e.getCause() instanceof NoSuchKeyException) {
+                return false;
+            }
+            throw e;
         }
     }
 
@@ -286,7 +289,7 @@ public class S3Source implements StreamSource {
                 .prefix(key)
                 .build();
 
-        ListObjectsResponse objectListing = getClient().listObjects(listObjectsRequest);
+        ListObjectsResponse objectListing = client.listObjects(listObjectsRequest);
 
         List<ObjectIdentifier> idsToDelete = new ArrayList<>();
         for (var object : objectListing.contents()) {
@@ -298,7 +301,7 @@ public class S3Source implements StreamSource {
                     .bucket(bucket)
                     .delete(Delete.builder().objects(idsToDelete).build())
                     .build();
-            getClient().deleteObjects(deleteObjectsRequest);
+            client.deleteObjects(deleteObjectsRequest);
         }
     }
 

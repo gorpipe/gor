@@ -32,7 +32,7 @@ public interface S3Configuration extends Config {
 
     @Documentation("Connection timeout to use for S3 (E.g. '2 minutes')")
     @Key("gor.s3.conn.timeout")
-    @DefaultValue("2 seconds")
+    @DefaultValue("30 seconds")
     @ConverterClass(DurationConverter.class)
     Duration connectionTimeout();
 

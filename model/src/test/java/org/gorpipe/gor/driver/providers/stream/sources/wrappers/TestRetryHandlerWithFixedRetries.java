@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.gor.driver.utils.RetryHandlerWithFixedRetries;
 
 public class TestRetryHandlerWithFixedRetries extends RetryHandlerWithFixedRetries {
@@ -10,7 +11,7 @@ public class TestRetryHandlerWithFixedRetries extends RetryHandlerWithFixedRetri
     }
 
     @Override
-    protected void onHandleError(Throwable e, long delay, int retries, int tries) {
+    protected void checkIfShouldRetryException(GorException e) {
         counter++;
     }
 

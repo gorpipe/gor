@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.utils;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorRetryException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
@@ -64,7 +65,8 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
-                sleepMs = retryExceptionHandler(retries, tries, sleepMs, e);
+                checkIfShouldRetryException(e);
+                sleepMs = sleep(retries, tries, sleepMs, e);
             }
         }
         throw new GorSystemException("Giving up after " + tries + " retries", lastException);
@@ -73,7 +75,7 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
     @Override
     public void perform(ActionVoid action) {
         int tries = 0;
-        long sleepMs = 0;
+        long lastSleepMs = 0;
         Throwable lastException = null;
         while (tries <= retries) {
             try {
@@ -83,44 +85,33 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 if (!e.isRetry()) throw e;
                 tries++;
                 lastException = e;
-                sleepMs = retryExceptionHandler(retries, tries, sleepMs, e);
+                checkIfShouldRetryException(e);
+                lastSleepMs = sleep(retries, tries, lastSleepMs, e);
             }
         }
         throw new GorSystemException("Giving up after " + tries + " tries.", lastException);
     }
 
-    protected long retryExceptionHandler(int retries, int tries, long sleepMs, Throwable e) {
-        onHandleError(e, sleepMs, retries, tries);
-
-        if (sleepMs <= 0) {
-            sleepMs = calcInitialSleep();
-        }
-
+    protected long sleep(int retries, int tries, long lastSleep, GorException e) {
+        long sleepMs = calcNextSleep(lastSleep);
         log.warn("Try number " + tries + " of " + (retries + 1) + " failed. Waiting for " + sleepMs + "ms before retrying.", e);
-
-        sleep(sleepMs, e);
-        sleepMs = calcNextSleep(sleepMs);
-
+        threadSleep(sleepMs, tries, e);
         return sleepMs;
     }
 
-    protected long calcInitialSleep() {
-        return Math.round(retryInitialSleepMs * (0.5 + rand.nextFloat()/2.0));
-    }
-
-    protected void sleep(long sleepMs, Throwable orginalException) {
-        try {
-            Thread.sleep(sleepMs);
-        } catch (InterruptedException e1) {
-            // If interrupted waiting to retry, throw original exception
-            Thread.currentThread().interrupt();
-            throw new GorSystemException("Retry handler interrupted", orginalException);
+    protected long calcNextSleep(long lastSleepMs) {
+        if (lastSleepMs <= 0) {
+            return Math.round(retryInitialSleepMs * (0.5 + rand.nextFloat()/2.0));
+        } else {
+            return Math.min(lastSleepMs * retryExpBackoff, retryMaxSleepMs);
         }
     }
 
-    protected long calcNextSleep(long sleepMs) {
-        return Math.min(sleepMs * retryExpBackoff, retryMaxSleepMs);
-    }
-
-    protected abstract void onHandleError(Throwable e, long delay, int retries, int tries);
+    /**
+     * Check if the exception is a retryable exception, and if not, throw a new GorException.
+     *
+     * @param e the exception to check
+     * @throws GorException if the exception is not retryable.
+     */
+    protected abstract void checkIfShouldRetryException(GorException e) throws GorException;
 }
