@@ -30,7 +30,7 @@ import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.session.GorContext
 
 class Pileup extends CommandInfo("PILEUP",
-  CommandArguments(" -nf -df -sex -gt -depth", "-p -i -q -bq -gc -mprob -span", 0, 0),
+  CommandArguments(" -nf -df -sex -gt -depth -soc", "-p -i -q -bq -gc -mprob -span", 0, 0),
   CommandOptions(gorCommand = true, verifyCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
@@ -65,18 +65,21 @@ class Pileup extends CommandInfo("PILEUP",
     if (hasOption(args,"-mprob")) pa.nonReferenceProb = doubleValueOfOptionWithRangeCheck(args,"-mprob", 0.0)
     if (hasOption(args,"-sex")) pa.numGTs = 4
     if (hasOption(args,"-gt")) pa.callSnps = true
+    if (hasOption(args,"-soc")) pa.singleOverlapCount = true
 
     if (hasOption(args,"-depth")) { pa.depthOnly = true; pa.callSnps = false }
 
     val inputHeader = forcedInputHeader
 
     try {
-      val useCol = columnsFromHeader("iSize,Seq,Flag,MapQ,Cigar", inputHeader)
+      val useCol = columnsFromHeader("iSize,Seq,Flag,MapQ,Cigar,mrnm,mpos", inputHeader)
       columns.iSizeCol = useCol.head
       columns.seqBasesCol = useCol(1)
       columns.flagCol = useCol(2)
       columns.qualityCol = useCol(3)
       columns.cigarCol = useCol(4)
+      columns.mrnmCol = useCol(5)
+      columns.mPosCol = useCol(6)
     } catch {
       case e : Exception => throw new GorDataException("Necessary BAM columns not found:\n"+e.getMessage, e)
     }
