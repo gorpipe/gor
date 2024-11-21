@@ -22,10 +22,12 @@
 
 package org.gorpipe.s3.driver;
 
+import ch.qos.logback.core.util.FileUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.carlspring.cloud.storage.s3fs.*;
 import org.gorpipe.base.security.Credentials;
@@ -35,6 +37,7 @@ import org.gorpipe.base.streams.FullRetryOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
@@ -216,7 +219,7 @@ public class S3Source implements StreamSource {
     private boolean fileExists()  {
         try {
             // Already in cache, exists
-            loadMetadata(bucket, key);
+            getSourceMetadata();
             return true;
         } catch (GorResourceException e) {
             return false;
@@ -248,7 +251,9 @@ public class S3Source implements StreamSource {
 
     @Override
     public boolean isDirectory() {
-        return key.endsWith("/") || Files.isDirectory(getPath());
+        //return key.endsWith("/") || Files.isDirectory(getPath());
+        // Temporary fix for OCI directories.  We currently only get meta for files not dicts so we can use that.
+        return key.endsWith("/") || (exists() && this.meta == null);
     }
 
     @Override
