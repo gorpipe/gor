@@ -135,10 +135,10 @@ public class S3SourceProvider extends StreamSourceProvider {
         }
 
         builder.region(getRegion(cred, endpoint));
+
         // OCI compat layer needs path style access.
-        builder.serviceConfiguration(software.amazon.awssdk.services.s3.S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .build());
+        builder.forcePathStyle(true);
+
         builder.crossRegionAccessEnabled(true);
 
         return builder.build();
@@ -191,8 +191,17 @@ public class S3SourceProvider extends StreamSourceProvider {
     Region getRegion(Credentials creds, String endpoint) {
         var regionStr = creds.get(Credentials.Attr.REGION);
 
+        // Extract region from S3 endpoint if not provided
         if (StringUtil.isEmpty(regionStr) && !StringUtil.isEmpty(endpoint)) {
             var m = Pattern.compile(".*?s3-(.*?)\\..*").matcher(endpoint);
+            if (m.matches()) {
+                regionStr = m.group(1);
+            }
+        }
+
+        // Extract region from OCI endpoint if not provided
+        if (StringUtil.isEmpty(regionStr) && !StringUtil.isEmpty(endpoint)) {
+            var m = Pattern.compile(".*?\\.objectstorage\\.(.*?)\\..*").matcher(endpoint);
             if (m.matches()) {
                 regionStr = m.group(1);
             }

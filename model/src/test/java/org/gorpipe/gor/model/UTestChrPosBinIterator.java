@@ -24,9 +24,9 @@ package org.gorpipe.gor.model;
 
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.model.GenomicIterator;
-import org.gorpipe.gor.model.Row;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -35,6 +35,10 @@ import java.nio.file.Paths;
 import static org.junit.Assert.*;
 
 public class UTestChrPosBinIterator {
+
+    @Rule
+    public final ProvideSystemProperty useInternalIndex
+            = new ProvideSystemProperty("gor.vcf.useInternalIndex", "true");
 
     private final String VCF_FILE = "../tests/data/external/samtools/dbsnp_135.b37.1000.vcf";
     private final int VCF_FILE_LINECOUNT = 99;

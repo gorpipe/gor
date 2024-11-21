@@ -83,13 +83,4 @@ public class UTestChrDataScheme {
         assertFalse(ChrDataScheme.isStrictLexicalOrder(Arrays.asList("3", "1", "2", "X", "Y")));
     }
 
-    @Test
-    public void testIsMostLikelyLexicalOrder() {
-        assertFalse(ChrDataScheme.isMostLikelyLexicalOrder(Arrays.asList("1", "2", "3", "X", "Y")));
-        assertTrue(ChrDataScheme.isMostLikelyLexicalOrder(Arrays.asList("1", "10", "3", "X", "Y")));
-        assertTrue(ChrDataScheme.isMostLikelyLexicalOrder(Arrays.asList("1", "10", "20", "3", "X", "Y")));
-        assertFalse(ChrDataScheme.isMostLikelyLexicalOrder(Arrays.asList("1", "2", "3", "20", "X", "Y")));
-        assertFalse(ChrDataScheme.isMostLikelyLexicalOrder(Arrays.asList("1", "2", "10", "X", "Y")));
-        assertFalse(ChrDataScheme.isMostLikelyLexicalOrder(Arrays.asList("3", "1", "2", "X", "Y")));
-    }
 }

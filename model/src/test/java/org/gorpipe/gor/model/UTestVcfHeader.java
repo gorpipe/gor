@@ -30,7 +30,7 @@ public class UTestVcfHeader {
 
     @Test
     public void test10ColumnFile() {
-        final String query = "gor -p chr2 ../tests/data/external/gvcf/test.gvcf";
+        final String query = "gor ../tests/data/external/gvcf/test.gvcf";
         var results = TestUtils.runGorPipeLines(query);
 
         Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tVALUES\n", results[0]);
@@ -38,7 +38,7 @@ public class UTestVcfHeader {
 
     @Test
     public void test10PlusColumnFile() {
-        final String query = "gor -p chr2 ../tests/data/external/samtools/test.vcf";
+        final String query = "gor ../tests/data/external/samtools/test.vcf";
         var results = TestUtils.runGorPipeLines(query);
 
         Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNA00001\tNA00002\tNA00003\n", results[0]);

@@ -46,7 +46,6 @@ import java.util.List;
 public class VcfIteratorFactory implements StreamSourceIteratorFactory {
 
     final static String VCF_SOURCE = "VCF";
-    final static String VCF_FIX_INDEX_PLACEHOLDER = "FIX_INDEX";
 
     @Override
     public GenomicIterator createIterator(StreamSourceFile file) throws IOException {
@@ -79,29 +78,22 @@ public class VcfIteratorFactory implements StreamSourceIteratorFactory {
                     }
                 }
 
-                String indexSource = (file.getFileSource().getSourceReference() instanceof IndexableSourceReference) ?
-                        ((IndexableSourceReference)file.getFileSource().getSourceReference()).getIndexSource() : null;
-                boolean fixInternalIndex = indexSource != null
-                        && indexSource.endsWith(VCF_FIX_INDEX_PLACEHOLDER);
-
                 try (InputStream instream = file.getFileSource().open()) {
                     ContigDataScheme dataScheme = new VcfContigDataScheme();
-                    final int[] info = VcfFile.findVcfGorDataOffset(instream, dataScheme, fixInternalIndex);
+                    final int[] info = VcfFile.findVcfGorDataOffset(instream, dataScheme);
                     final ContigDataScheme finalDataScheme;
                     final Comparator<StringIntKey> comparator;
                     if (dataScheme.length() == 0) {
-                        // we should fail heere as there are no contigs in the file and we cannot create a lookup
-                        // The default assumes stuff and if there is any mismatch we only get a part of the underlying question
-                        throw new GorResourceException("No contigs found in file " + file.getFileSource().getPath() + ". Contig description is required when there is no index file available.\nYou can gzip the vcf file and use tabix command line tool to index the vcf file.", file.getFileSource().getPath().toString());
+                        return new VcfFileIterator(file, file.getFileSource().getSourceReference().getLookup(), false);
                     } else {
                         final boolean addAnyChrToCache = true;
                         finalDataScheme = dataScheme;
                         ChromoLookup lookup = new VcfChromoLookup(dataScheme, addAnyChrToCache);
                         comparator = StringIntKey.customComparator(lookup.getChromoCache());
                         file.getFileSource().getSourceReference().setLookup(lookup);
+                        StreamSourceSeekableFile sssf = new OffsetStreamSourceSeekableFile(file.getFileSource(), info[0]);
+                        return new VcfSeekableIterator(sssf, comparator, finalDataScheme);
                     }
-                    StreamSourceSeekableFile sssf = new OffsetStreamSourceSeekableFile(file.getFileSource(), info[0]);
-                    return new VcfSeekableIterator(sssf, comparator, finalDataScheme);
                 }
             }
         } else {

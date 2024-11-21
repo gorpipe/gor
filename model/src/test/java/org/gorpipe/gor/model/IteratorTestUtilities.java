@@ -1,6 +1,5 @@
 package org.gorpipe.gor.model;
 
-import org.gorpipe.gor.model.GenomicIterator;
 
 public class IteratorTestUtilities {
     public static int countRemainingLines(GenomicIterator it) {

@@ -30,4 +30,4 @@ class ServerGorSource(options: String, context: GorContext, executeNor: Boolean,
     context,
     executeNor,
     context.getSession.getSystemContext.getMonitor,
-    500))
+      Integer.parseInt(System.getProperty("gor.monitor.log.interval", "2000"))))
