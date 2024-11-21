@@ -141,7 +141,7 @@ jobs:
           report_paths:  '**/TEST-*.xml'
 
   publishSnapshot:
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref == 'refs/heads/githubtest' }}
     needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
     steps:
