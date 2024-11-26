@@ -212,6 +212,9 @@ to filter reads on TAG_VALUES in BAM files</p></td>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-span</span></code></p></td>
 <td><p>Max read span. The default is 1000bp.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-soc</span></code></p></td>
+<td><p>Single overlap count.  Don’t double count overlapping bases in read pairs.</p></td>
+</tr>
 </tbody>
 </table>
 <p>The Chi value in the output is based on a calculation where the 3 non-major bases are assumed equally distributed.  The SNP column is 1 or 0 depending on comparison of the most likely genotype, GT, with the reference base.  GT2 is the second most likely genotype and the LOD is the log of the log of the likelihood ratio of GT and GT2.</p>
