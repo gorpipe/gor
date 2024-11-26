@@ -40,4 +40,16 @@ public class UTestVariantBamCigarValidation {
         String[] args = new String[]{"gor -p chr22 ../tests/data/external/samtools/index_test.bam | pileup", "-config", "../tests/config/gor_unittests_config.txt"};
         Assert.assertEquals(5965, TestUtils.runGorPipeCount(args));
     }
+
+    @Test
+    public void testOverlapPileup() {
+        String[] args = new String[]{"gor ../tests/data/external/samtools/bam.gorz | where qname = 'LH00430:208:22CMM2LT4:1:1194:15833:24435' | pileup -q 0 -bq 0 -depth | where depth = 1", "-config", "../tests/config/gor_unittests_config.txt"};
+        Assert.assertEquals(191, TestUtils.runGorPipeCount(args));
+    }
+
+    @Test
+    public void testNonOverlapPileup() {
+        String[] args = new String[]{"gor ../tests/data/external/samtools/bam.gorz | where qname = 'LH00430:208:22CMM2LT4:1:1194:15833:24435' | pileup -soc -q 0 -bq 0 -depth | where depth = 1", "-config", "../tests/config/gor_unittests_config.txt"};
+        Assert.assertEquals(246, TestUtils.runGorPipeCount(args));
+    }
 }

@@ -40,14 +40,17 @@ object GorPileup {
     var numGTs = 10
     var callSnps = false
     var depthOnly = false
+    var singleOverlapCount = false
   }
 
   case class PileupColumns() {
-    var iSizeCol = 9
+    var iSizeCol = 9 /* many of there are not correct and captured from column order elsewhere */
     var seqBasesCol = 10
     var flagCol = 3
     var qualityCol = 4
     var cigarCol = 5
+    var mrnmCol = 7
+    var mPosCol = 8
     var baseQualCol = 11
     var ChiCol = 5
     var DelsCol = 11
@@ -307,6 +310,7 @@ object GorPileup {
     val minQual: Int = pa.minQual
     val minBaseQual: Int = pa.minBaseQual
     val noFilter: Boolean = pa.noFilter
+    val notSingleOverlapCount = if (pa.singleOverlapCount) false else true
 
     val binIDgen = RegularBinIDgen(1)
     val base = baseHolder('?', 0, 0, "") // This object is used for every base in the seq to transfer the base-code
@@ -342,7 +346,13 @@ object GorPileup {
       val flag = r.colAsInt(columns.flagCol)
       val quality = r.colAsInt(columns.qualityCol)
       val cigar = r.colAsString(columns.cigarCol)
+      val mrnm = r.colAsString(columns.mrnmCol)
+
       baseQualSeq = r.colAsString(columns.baseQualCol)
+
+      /* val firstInPair = if((flag & 0x0040) == 64) true else false */
+
+      val mpos = if (r.colAsString(columns.mPosCol).length() > 0) r.colAsInt(columns.mPosCol) else r.pos + 100000
 
       r1.bH = base
       r1.chr = r.chr
@@ -381,7 +391,7 @@ object GorPileup {
                 base.code = seqBases.charAt(readShift + i)
                 r1.pos = r.pos + refShift + i
                 base.qual = if (readShift + i < baseQualSeq.length) baseQualSeq.charAt(readShift + i) else minBaseQualChar
-                if (base.qual >= minBaseQualChar) BA.update(r1, binID, r.chr, sta, sto)
+                if (base.qual >= minBaseQualChar && (notSingleOverlapCount || r.chr != mrnm || mpos < r.pos || r.pos + refShift + i < mpos )) BA.update(r1, binID, r.chr, sta, sto)
                 binID += 1
                 sta += 1
                 sto += 1
@@ -401,7 +411,7 @@ object GorPileup {
                 val (sta, sto) = binIDgen.StartAndStop(binID)
                 base.code = 'D'
                 r1.pos = r.pos + refShift + i
-                BA.update(r1, binID, r.chr, sta, sto)
+                if (notSingleOverlapCount || r.chr != mrnm || mpos < r.pos || r.pos + refShift + i < mpos ) BA.update(r1, binID, r.chr, sta, sto)
                 i += 1
               }
               refShift += numBases
@@ -412,7 +422,7 @@ object GorPileup {
               val (sta, sto) = binIDgen.StartAndStop(binID)
               base.code = 'I'
               r1.pos = r.pos + refShift
-              BA.update(r1, binID, r.chr, sta, sto)
+              if (notSingleOverlapCount || r.chr != mrnm || mpos < r.pos || r.pos + refShift < mpos ) BA.update(r1, binID, r.chr, sta, sto)
               readShift += numBases
             case 'P' =>
               /* do nothing */

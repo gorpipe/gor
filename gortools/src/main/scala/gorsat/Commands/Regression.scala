@@ -60,7 +60,7 @@ class Regression extends CommandInfo("REGRESSION",
 
     val covarFile = if (hasOption(args, "-covar")) Some(stringValueOfOption(args, "-covar")) else None
 
-    val sep = if (hasOption(args, "-s")) Some(stringValueOfOption(args, "-s")) else None
+    val sep = if (hasOption(args, "-s")) Some(replaceSingleQuotes(stringValueOfOption(args, "-s"))) else None
 
     val imputed = hasOption(args, "-imp")
 

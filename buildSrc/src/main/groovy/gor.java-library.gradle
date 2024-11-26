@@ -81,6 +81,8 @@ publishing {
             }
         }
     }
+
+    // Common repositories for push.
     repositories {
         if (project.hasProperty('publishToMavenCentral')) {
             maven {

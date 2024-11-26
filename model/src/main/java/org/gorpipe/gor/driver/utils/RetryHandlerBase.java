@@ -22,5 +22,15 @@ public abstract class RetryHandlerBase {
     public interface ActionVoid {
         void perform();
     }
+
+    protected void threadSleep(long sleepMs, int tries, Throwable orginalException) {
+        try {
+            Thread.sleep(sleepMs);
+        } catch (InterruptedException e) {
+            // If interrupted waiting to retry, throw original exception
+            Thread.currentThread().interrupt();
+            throw new GorSystemException("Retry thread interrupted after " + tries + " retries", e);
+        }
+    }
 }
 

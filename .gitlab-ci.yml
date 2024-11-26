@@ -16,7 +16,7 @@ variables:
   SECURITY_SCAN: "false"
   SKIP_ECR: 'yes' # Skip the push to ECR step
   # Vars needed for the Genuity Auto-CI
-  #RELEASABLE_BRANCH: 573-update-gor-s3-drivers
+  #RELEASABLE_BRANCH: 584-oci-cloud-gor-driver
   RELEASABLE_BRANCH: master        # Optional (master is the default).  If this matches the current branch, the built image will be releasable with a semver tag.
 
 

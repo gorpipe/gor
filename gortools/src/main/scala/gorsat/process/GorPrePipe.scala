@@ -45,7 +45,7 @@ object GorPrePipe {
   val availNorCommands: Array[String] = GorPipeCommands.getNorCommands ++ GorInputSources.getInputSources
 
   private val supportedGorSQLFileEndings = Array[String](".json",".csv",".tsv",".gor",".gorz",".gor.gz",".gord",".txt",".vcf",".bgen",".parquet",".adam",".mt",".xml")
-  private val commandsContainingInputSources = Array[String]("PARALLEL", "GOR","NOR","SPARK","MAP","MULTIMAP","INSET","MERGE","JOIN","LEFTJOIN","VARJOIN"/*,"CSVSEL","CSVCC","GTGEN"*/)
+  private val commandsContainingInputSources = Array[String]("PARALLEL", "GOR","NOR","SPARK","MAP","MULTIMAP","INSET","MERGE","JOIN","LEFTJOIN","VARJOIN","GORIF", "NORIF"/*,"CSVSEL","CSVCC","GTGEN"*/)
   val gorpred = (p: String) => supportedGorSQLFileEndings.map(e => p.toLowerCase.endsWith(e)).reduce((a,b) => a || b)
 
   private def getCommandArgument(command: String) : Option[CommandArguments] = {
@@ -76,7 +76,18 @@ object GorPrePipe {
     var usedFiles: List[String] = Nil
 
     for (i <- pipeSteps.indices) {
-      val fullcommandWithHints = if (i == 0 && !(pipeSteps(0).toUpperCase.trim.startsWith("PARALLEL") || pipeSteps(0).toUpperCase.trim.startsWith("GOR") || pipeSteps(0).toUpperCase.trim.startsWith("NOR") || pipeSteps(0).toUpperCase.trim.startsWith("SPARK") || pipeSteps(0).toUpperCase.trim.startsWith("SELECT"))) "GOR " + pipeSteps(i).trim else pipeSteps(i).trim
+      val fullcommandWithHints =
+        if (i == 0 &&
+          !(pipeSteps(0).toUpperCase.trim.startsWith("PARALLEL")
+            || pipeSteps(0).toUpperCase.trim.startsWith("GOR")
+            || pipeSteps(0).toUpperCase.trim.startsWith("NOR")
+            || pipeSteps(0).toUpperCase.trim.startsWith("GORIF")
+            || pipeSteps(0).toUpperCase.trim.startsWith("NORIF")
+            || pipeSteps(0).toUpperCase.trim.startsWith("SPARK")
+            || pipeSteps(0).toUpperCase.trim.startsWith("SELECT")))
+          "GOR " + pipeSteps(i).trim
+        else
+          pipeSteps(i).trim
       val fullcommand = GorJavaUtilities.clearHints(fullcommandWithHints)
       val command = fullcommand.split(' ')(0).toUpperCase
       var loopcommand = command

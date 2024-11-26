@@ -9,7 +9,7 @@ public class GoogleCloudStorageRetryHandler extends RetryHandlerWithFixedWait {
     }
 
     @Override
-    protected void onHandleError(GorException e, long delay, int tries) {
+    protected void checkIfShouldRetryException(GorException e) {
 
     }
 }

@@ -11,11 +11,13 @@
 
 package org.gorpipe.s3.driver;
 
+import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import gorsat.process.GenericSessionFactory;
 import gorsat.process.GorSessionFactory;
 import gorsat.process.PipeInstance;
 import org.gorpipe.gor.session.GorContext;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +26,7 @@ import java.util.Properties;
 /**
  * @version $Id$
  */
+@Category(IntegrationTests.class)
 public class TestS3SeekableFile {
 
     private static final Logger log = LoggerFactory.getLogger(TestS3SeekableFile.class);

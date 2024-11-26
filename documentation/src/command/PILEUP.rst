@@ -46,5 +46,6 @@ Options
 +-------------------+---------------------------------------------------------------------------------------+
 | ``-span``         | Max read span. The default is 1000bp.                                                 |
 +-------------------+---------------------------------------------------------------------------------------+
-
+| ``-soc``          | Single overlap count.  Don't double count overlapping bases in read pairs.            |
++-------------------+---------------------------------------------------------------------------------------+
 The Chi value in the output is based on a calculation where the 3 non-major bases are assumed equally distributed.  The SNP column is 1 or 0 depending on comparison of the most likely genotype, GT, with the reference base.  GT2 is the second most likely genotype and the LOD is the log of the log of the likelihood ratio of GT and GT2.

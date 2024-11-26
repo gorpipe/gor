@@ -48,7 +48,7 @@ ext {
 // Set  repos, source dirs, configurations
 // -----------------------------------------------------
 
-// Common repositories, dependencies and jar.
+// Common repositories for pull, dependencies and jar.
 repositories {
     if (project.hasProperty('useMavenLocal')) {
         mavenLocal()
@@ -160,6 +160,11 @@ dependencies {
                 strictly("[ 1.28.4, 2[")
             }
             because("CVE-2016-6809: Deserialization of Untrusted Data in org.apache.tika/tika-core")
+        }
+        implementation('software.amazon.awssdk:apache-client') {
+            version {
+                strictly("[2.29.6,)")
+            }
         }
     }
 }

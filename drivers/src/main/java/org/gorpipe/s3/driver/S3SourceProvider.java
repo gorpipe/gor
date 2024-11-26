@@ -109,9 +109,13 @@ public class S3SourceProvider extends StreamSourceProvider {
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .socketTimeout(s3Config.socketTimeout())          // Default was 30s
                 .maxConnections(s3Config.connectionPoolSize())    // Default was 50
-                .connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
-                //.connectionTimeToLive(Duration.ofMinutes(5))    // Default was 0
+                //.connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
+                .connectionTimeToLive(Duration.ZERO)    // Default was -1
+                //.connectionAcquisitionTimeout(s3Config.connectionTimeout())  // Default was 45s
+                //.useIdleConnectionReaper(false)
+                .tcpKeepAlive(true)
                 ;
+
         // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
 
         final String proxy = System.getProperty("http.proxyHost");

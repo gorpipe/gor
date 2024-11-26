@@ -9,7 +9,7 @@ public class HTTPSourceRetryHandler extends RetryHandlerWithFixedWait {
     }
 
     @Override
-    protected void onHandleError(GorException e, long delay, int tries) {
+    protected void checkIfShouldRetryException(GorException e) {
 
     }
 }

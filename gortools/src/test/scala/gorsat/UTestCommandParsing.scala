@@ -989,7 +989,7 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "PILEUP"
-    val header = defaultHeaderSEG + "\tiSize\tSeq\tFlag\tMapQ\tCigar\tQual\tc1\tc2\tc3"
+    val header = defaultHeaderSEG + "\tiSize\tSeq\tFlag\tMapQ\tCigar\tQual\tmrnm\tmpos\tc1\tc2\tc3"
 
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, testShouldSucceed = false)

@@ -12,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
+import static org.gorpipe.oci.driver.OCIUrl.DEFAULT_OCI_ENDPOINT;
+
 public class DriverUtils {
 
     private static final Logger log = LoggerFactory.getLogger(DriverUtils.class);
@@ -51,15 +53,18 @@ public class DriverUtils {
         return bundleCreds.addToSecurityContext("");
     }
 
-    public static String createSecurityContext(String service, String lookupKey, Credentials.OwnerType ownerType, String owner, String S3_KEY, String S3_SECRET) {
+    public static String createSecurityContext(String service, String lookupKey, Credentials.OwnerType ownerType,
+                                               String owner, String key, String secret, String apiEndpoint,
+                                               String scope) {
         Credentials creds = new Credentials.Builder()
                 .service(service)
                 .lookupKey(lookupKey)
                 .ownerType(ownerType)
                 .ownerId(owner)
-                .set(Credentials.Attr.KEY, S3_KEY)
-                .set(Credentials.Attr.SECRET, S3_SECRET)
-                .set(Credentials.Attr.REGION, "eu-west-1")
+                .set(Credentials.Attr.KEY, key)
+                .set(Credentials.Attr.SECRET, secret)
+                .set(Credentials.Attr.API_ENDPOINT, apiEndpoint)
+                .set(Credentials.Attr.SCOPE, scope)
                 .build();
         BundledCredentials bundleCreds = new BundledCredentials.Builder().addCredentials(creds).build();
         return bundleCreds.addToSecurityContext("");
@@ -74,6 +79,27 @@ public class DriverUtils {
                 .set(Credentials.Attr.KEY, key)
                 .set(Credentials.Attr.SECRET, secret).build();
         Credentials bogus = new Credentials.Builder().service("s3").lookupKey("bla").set(Credentials.Attr.KEY, "DummyKey").set(Credentials.Attr.SECRET, "DummySecret").build();
+        BundledCredentials creds = new BundledCredentials.Builder().addCredentials(bogus, cred).build();
+        return creds.addToSecurityContext(null);
+    }
+
+    public static String ociSecurityContext(String tenant, String user, String secret, String fingerprint) {
+        // Credentials for gor_unittest user in nextcode OCI account
+        Credentials cred = new Credentials.Builder().service("oci")
+                .lookupKey("gdb_gor_test_data_dev")
+                .set(Credentials.Attr.API_ENDPOINT, DEFAULT_OCI_ENDPOINT)
+                .set(Credentials.Attr.REALM, tenant)
+                .set(Credentials.Attr.KEY, fingerprint)
+                .set(Credentials.Attr.SECRET, secret)
+                .set(Credentials.Attr.SCOPE, user)
+                .build();
+        Credentials bogus = new Credentials.Builder().service("oci")
+                .lookupKey("bla")
+                .set(Credentials.Attr.REALM, "DummyTenant")
+                .set(Credentials.Attr.KEY, "DummyFingerprint")
+                .set(Credentials.Attr.SECRET, "DummySecret")
+                .set(Credentials.Attr.SCOPE, "DummyUser")
+                .build();
         BundledCredentials creds = new BundledCredentials.Builder().addCredentials(bogus, cred).build();
         return creds.addToSecurityContext(null);
     }
