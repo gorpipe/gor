@@ -48,7 +48,7 @@ ext {
 // Set  repos, source dirs, configurations
 // -----------------------------------------------------
 
-// Common repositories, dependencies and jar.
+// Common repositories for pull, dependencies and jar.
 repositories {
     if (project.hasProperty('useMavenLocal')) {
         mavenLocal()

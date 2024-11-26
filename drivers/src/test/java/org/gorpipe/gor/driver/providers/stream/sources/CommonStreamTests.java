@@ -225,9 +225,11 @@ public abstract class CommonStreamTests {
             List<Integer> indexes = getRandomIndexes(20, seed);
             for (int j = 0; j < 20; j++) {
                 int i = indexes.get(j);
+                long startTime = System.currentTimeMillis();
                 stream = fs.open(i * 200, 200);
                 Assert.assertEquals(200, StreamUtils.readToBuffer(stream, buf, 0, 200));
                 Assert.assertEquals(rangedLines(i * 50, 50, "%03d\n"), new String(buf));
+                log.debug("Time: " + (System.currentTimeMillis() - startTime));
                 fs.close();
             }
         }

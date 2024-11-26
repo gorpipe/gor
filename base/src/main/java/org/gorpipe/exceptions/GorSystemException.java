@@ -48,6 +48,15 @@ public class GorSystemException extends GorException {
      * Construct
      *
      * @param message The message to display.
+     */
+    public GorSystemException(String message) {
+        super(message, null);
+    }
+
+    /**
+     * Construct
+     *
+     * @param message The message to display.
      * @param cause The causing exception to wrap.
      */
     public GorSystemException(String message, Throwable cause) {

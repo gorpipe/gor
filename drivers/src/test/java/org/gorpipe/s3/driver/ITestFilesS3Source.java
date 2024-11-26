@@ -1,6 +1,7 @@
 package org.gorpipe.s3.driver;
 
 import org.gorpipe.gor.driver.providers.stream.sources.CommonFilesTests;
+import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -8,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.SystemErrRule;
+import org.junit.experimental.categories.Category;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -16,6 +18,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import java.io.IOException;
 import java.util.Properties;
 
+@Category(IntegrationTests.class)
 public class ITestFilesS3Source extends CommonFilesTests {
 
     private static String S3_KEY;
