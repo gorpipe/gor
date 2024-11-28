@@ -7,10 +7,17 @@ import com.oracle.bmc.ClientConfiguration;
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.*;
+import com.oracle.bmc.http.client.StandardClientProperties;
+import com.oracle.bmc.http.client.jersey3.ApacheClientProperties;
+import com.oracle.bmc.http.client.jersey3.Jersey3ClientProperties;
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.ObjectStorageAsync;
 import com.oracle.bmc.objectstorage.ObjectStorageAsyncClient;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
+import org.apache.http.HttpResponse;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.exceptions.GorResourceException;
@@ -36,8 +43,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static org.gorpipe.oci.driver.OCIUrl.DEFAULT_OCI_ENDPOINT;
+
+
 @AutoService(SourceProvider.class)
 public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
+    static {
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+    }
     private static Logger log = org.slf4j.LoggerFactory.getLogger(OCIObjectStorageSourceProvider.class);
 
     public static final String OCI_AUTH_TYPE_INSTANCE_PRINCIPAL = "INSTANCE_PRINCIPAL";
@@ -116,11 +129,31 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
                 .maxAsyncThreads(10000)
                 .build();
 
-        return ObjectStorageAsyncClient.builder()
-                    .endpoint(authData.endPoint)
-                    .region(authData.region)
-                    .configuration(clientConfig)
-                    .build(provider);
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(1000); // Default 50
+        connectionManager.setDefaultMaxPerRoute(connectionManager.getMaxTotal());
+
+        ConnectionKeepAliveStrategy keepAliveStrategy = new ConnectionKeepAliveStrategy() {
+            @Override
+            public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+                return 5000;
+            }
+        };
+
+        ObjectStorageAsync client = ObjectStorageAsyncClient.builder()
+                .clientConfigurator(builder -> {
+                    builder.property(Jersey3ClientProperties.USE_APACHE_CONNECTOR, false); // Big performance boost
+                    builder.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);  // Default PoolingHttpClientConnectionManager
+//                    builder.property(StandardClientProperties.BUFFER_REQUEST, true);
+//                    builder.property(ApacheClientProperties.RETRY_HANDLER, null);
+//                    builder.property(ApacheClientProperties.REUSE_STRATEGY, null);
+                    builder.property(ApacheClientProperties.KEEPALIVE_STRATEGY, keepAliveStrategy);
+                })
+                .endpoint(authData.endPoint)
+                .region(authData.region)
+                .configuration(clientConfig)
+                .build(provider);
+        return client;
     }
 
     public static ObjectStorage createClientSync(Credentials cred)  {
@@ -135,6 +168,9 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
                 .build();
 
         return ObjectStorageClient.builder()
+                .clientConfigurator( builder -> {
+                    builder.property(Jersey3ClientProperties.USE_APACHE_CONNECTOR, false);
+                })
                 .endpoint(authData.endPoint)
                 .region(authData.region)
                 .configuration(clientConfig)
@@ -222,16 +258,18 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
         private static final Pattern REGION_PATTERN = Pattern.compile(".*?\\.objectstorage\\.(.*?)\\..*");
         public static AuthData from(Credentials creds) {
             if (creds != null && !creds.isNull()) {
-                var endPoint = getOrDefault(creds, Credentials.Attr.API_ENDPOINT, OCIUrl.DEFAULT_OCI_ENDPOINT);
+                var endPoint = getOrDefault(creds, Credentials.Attr.API_ENDPOINT, DEFAULT_OCI_ENDPOINT);
                 var region = getRegion(creds, endPoint);
                 var tenantId = getOrDefault(creds, Credentials.Attr.REALM, OCI_TENANT);
-                var userId = creds.get(Credentials.Attr.SCOPE);
+                var userId = creds.getOrDefault(Credentials.Attr.SCOPE, OCI_USER);
                 var fingerprint = getOrDefault(creds, Credentials.Attr.KEY, OCI_SIMPLE_FINGERPRINT);
                 var privateKey = getOrDefault(creds, Credentials.Attr.SECRET, OCI_SIMPLE_PRIVATE_KEY).replaceAll("\\\\n", "\n");
 
                 return new AuthData(region, userId, tenantId, privateKey, fingerprint, endPoint);
             } else {
-                return new AuthData(Region.US_ASHBURN_1, OCI_USER, OCI_TENANT, OCI_SIMPLE_PRIVATE_KEY, OCI_SIMPLE_FINGERPRINT, OCIUrl.DEFAULT_OCI_ENDPOINT);
+                return new AuthData(Region.US_ASHBURN_1, OCI_USER, OCI_TENANT,
+                        OCI_SIMPLE_PRIVATE_KEY.replaceAll("\\\\n", "\n"),
+                        OCI_SIMPLE_FINGERPRINT, DEFAULT_OCI_ENDPOINT);
             }
         }
 
