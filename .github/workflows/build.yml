@@ -127,7 +127,7 @@ jobs:
       - name: Test Report
         uses: dorny/test-reporter@v1
         #Disalbe for now because of the 64k limit, use mikepenz instad for the summary.
-        if: false #always()    # run this step even if previous step failed
+        if: always()    # run this step even if previous step failed
         with:
           name: Junit Tests - all           # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
@@ -136,7 +136,7 @@ jobs:
           list-suites: failed
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
-        if: always() # always run even if the previous step fails
+        if: false #always() # always run even if the previous step fails
         with:
           report_paths:  '**/TEST-*.xml'
 
