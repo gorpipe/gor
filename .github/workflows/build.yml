@@ -48,6 +48,11 @@ jobs:
           name: Junit Tests - test           # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/TEST-*.xml'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -144,6 +149,11 @@ jobs:
         if: always() # always run even if the previous step fails
         with:
           report_paths:  '**/TEST-*.xml'
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: '**/TEST-*.xml'
 
   publishSnapshot:
     if: ${{ github.ref == 'refs/heads/githubtest' }}
