@@ -41,18 +41,13 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: ./gradlew --no-daemon --continue test
-      - name: Test Report
+      - name: Test Report # Do this per test to avoid the 64k limit
         uses: dorny/test-reporter@v1
         if: always()    # run this step even if previous step failed
         with:
           name: Junit Tests - test           # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: '**/TEST-*.xml'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -77,7 +72,7 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: ./gradlew --no-daemon --continue  slowTest
-      - name: Test Report
+      - name: Test Report # Do this per test to avoid the 64k limit
         uses: dorny/test-reporter@v1
         if: always()    # run this step even if previous step failed
         with:
@@ -108,18 +103,13 @@ jobs:
           echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
       - name: Build with Gradle
         run: ./gradlew --no-daemon --continue integrationTest
-      - name: Test Report
+      - name: Test Report  # Do this per test to avoid the 64k limit
         uses: dorny/test-reporter@v1
         if: always()    # run this step even if previous step failed
         with:
           name: Junit Tests - integrationTest           # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: '**/TEST-*.xml'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -136,23 +126,19 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Test Report
         uses: dorny/test-reporter@v1
-        #Disalbe for now because of the 64k limit, use mikepenz instad for the summary, and dorny per test.
-        if: always()    # run this step even if previous step failed
+        #Disalbe for now because of the 64k limit, use EnricoMi instead for the summary, and dorny per test.
+        if: false #always()    # run this step even if previous step failed
         with:
           name: Junit Tests - all           # Name of the check run which will be created
           path: '**/TEST-*.xml'        # Path to test results
           reporter: java-junit         # Format
           list-tests: failed
           list-suites: failed
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v4
-        if: always() # always run even if the previous step fails
-        with:
-          report_paths:  '**/TEST-*.xml'
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          check_name: Junit Tests - Summary
           files: '**/TEST-*.xml'
 
   publishSnapshot:
