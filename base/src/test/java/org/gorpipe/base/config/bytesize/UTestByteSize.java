@@ -38,7 +38,6 @@ public class UTestByteSize {
         BigInteger siBytes = BigInteger.valueOf(1000);
         BigInteger iecBytes = BigInteger.valueOf(1024);
 
-        assertEquals(1, 0);  // Remove
         for (ByteSizeUnit bsu : ByteSizeUnit.values()) {
             if (bsu == ByteSizeUnit.BYTES) {
                 assertEquals(1, new ByteSize(1, bsu).getBytesAsLong());
