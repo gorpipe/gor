@@ -1,0 +1,176 @@
+name: Build
+
+on: [push]
+
+env:
+  INTEGRATION_TESTS_SECRETS_ENV: ${{ secrets.INTEGRATION_TESTS_SECRETS_ENV }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Build with Gradle
+        run: |
+          ./gradlew --no-daemon assemble
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Prepare env
+        run: |
+          echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon --continue test
+      - name: Test Report # Do this per test to avoid the 64k limit
+        uses: dorny/test-reporter@v1
+        if: always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - test           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: '**/TEST-*.xml'
+
+  slowTest:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Prepare env
+        run: |
+          echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon --continue  slowTest
+      - name: Test Report # Do this per test to avoid the 64k limit
+        uses: dorny/test-reporter@v1
+        if: always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - slowTest           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: slowTest-reports
+          path: '**/TEST-*.xml'
+
+  integrationTest:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Prepare env
+        run: |
+          echo ${INTEGRATION_TESTS_SECRETS_ENV} | base64 -d > tests/config/secrets.env
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon --continue integrationTest
+      - name: Test Report  # Do this per test to avoid the 64k limit
+        uses: dorny/test-reporter@v1
+        if: always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - integrationTest           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integrationTest-reports
+          path: '**/TEST-*.xml'
+
+  testReport:
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        #Disalbe for now because of the 64k limit, use EnricoMi instead for the summary, and dorny per test.
+        if: false #always()    # run this step even if previous step failed
+        with:
+          name: Junit Tests - all           # Name of the check run which will be created
+          path: '**/TEST-*.xml'        # Path to test results
+          reporter: java-junit         # Format
+          list-tests: failed
+          list-suites: failed
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Junit Tests - Summary
+          files: '**/TEST-*.xml'
+
+  publishSnapshot:
+    if: ${{ github.ref == 'refs/heads/githubtest' }}
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Publish release package
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publishVersion:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Publish snapshot package
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
