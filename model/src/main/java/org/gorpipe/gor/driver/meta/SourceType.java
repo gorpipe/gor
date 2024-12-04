@@ -45,6 +45,25 @@ public abstract class SourceType {
      * TEST(false,"test:");
      **/
 
+    /**
+     * Priority of the source type.  Lower value means higher priority.
+     */
+    public enum PRIORITY implements Comparable<PRIORITY> {
+        LOW(15000),
+        MEDIUM(10000),
+        HIGH(5000);
+
+        private final int value;
+
+        PRIORITY(int value) {
+            this.value = value;
+        }
+
+        public int value() {
+            return value;
+        }
+    }
+
     private final boolean isRemote;
     private final String[] protocols;
     private final String name;
@@ -68,8 +87,8 @@ public abstract class SourceType {
     }
 
     // Default priority is 10000, 0 is highest priority.
-    public int getPriority() {
-        return 10000;
+    public PRIORITY getPriority() {
+        return PRIORITY.MEDIUM;
     }
 
     /**

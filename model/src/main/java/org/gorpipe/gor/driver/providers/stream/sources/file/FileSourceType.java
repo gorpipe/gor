@@ -33,8 +33,8 @@ public class FileSourceType extends SourceType {
     }
 
     @Override
-    public int getPriority() {
-        return 20000;
+    public PRIORITY getPriority() {
+        return PRIORITY.LOW;
     }
 
     @Override

@@ -54,7 +54,7 @@ public class PluggableGorDriver implements GorDriver {
     private final TreeMap<SourceType, SourceProvider> sourceTypeToSourceProvider = new TreeMap<>(new Comparator<SourceType>() {
         @Override
         public int compare(SourceType o1, SourceType o2) {
-            var comp = Integer.compare(o2.getPriority(), o1.getPriority()); // Reverse order, 0 highest priority.
+            var comp = o1.getPriority().compareTo(o2.getPriority());
             return comp == 0 ? o1.getName().compareTo(o2.getName()) : comp;
         }
     });

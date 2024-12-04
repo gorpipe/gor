@@ -10,8 +10,8 @@ public class OCIObjectStorageSourceType extends SourceType {
     }
 
     @Override
-    public int getPriority() {
-        return 5000;
+    public PRIORITY getPriority() {
+        return PRIORITY.HIGH;
     }
 
     @Override
