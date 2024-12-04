@@ -67,6 +67,11 @@ public abstract class SourceType {
         return false;
     }
 
+    // Default priority is 10000, 0 is highest priority.
+    public int getPriority() {
+        return 10000;
+    }
+
     /**
      * @return true if the given path is absolute, else false.
      */
@@ -91,11 +96,7 @@ public abstract class SourceType {
     public boolean match(String file) {
         // Should match our cases, which are normal protocols and //db:.
         for (String protocol : protocols) {
-            if (!protocol.isEmpty()) {
-                if (file.startsWith(protocol)) return true;
-            } else {
-                return true;
-            }
+            if (file.startsWith(protocol)) return true;
         }
         return false;
     }

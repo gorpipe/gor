@@ -45,15 +45,19 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.Map.Entry;
 
 import static org.gorpipe.gor.driver.meta.DataType.LINK;
 
 public class PluggableGorDriver implements GorDriver {
     private final static Logger log = LoggerFactory.getLogger(PluggableGorDriver.class);
 
-    private final TreeMap<String, SourceType> protocolToSourceType = new TreeMap<>();
-    private final Map<SourceType, SourceProvider> sourceTypeToSourceProvider = new HashMap<>();
+    private final TreeMap<SourceType, SourceProvider> sourceTypeToSourceProvider = new TreeMap<>(new Comparator<SourceType>() {
+        @Override
+        public int compare(SourceType o1, SourceType o2) {
+            var comp = Integer.compare(o2.getPriority(), o1.getPriority()); // Reverse order, 0 highest priority.
+            return comp == 0 ? o1.getName().compareTo(o2.getName()) : comp;
+        }
+    });
 
     private final GorDriverConfig config;
 
@@ -98,18 +102,8 @@ public class PluggableGorDriver implements GorDriver {
     private void register(SourceProvider provider) {
         // Sanity check source type - we don't want conflicts in protocols
         log.debug("Registering source provider {}", provider);
+
         for (SourceType type : provider.getSupportedSourceTypes()) {
-            for (String protocol : type.getProtocols()) {
-                SourceType existing = protocolToSourceType.get(protocol);
-                if (existing != null && !existing.equals(type)) {
-                    throw new GorSystemException("Cannot map protocol '" + protocol + "' to " + type + ": Already mapped to " + existing, null);
-                }
-            }
-        }
-        for (SourceType type : provider.getSupportedSourceTypes()) {
-            for (String protocol : type.getProtocols()) {
-                protocolToSourceType.put(protocol, type);
-            }
             if (sourceTypeToSourceProvider.containsKey(type)) {
                 log.warn("Overriding handling of source type {} with {}, was {}", type, sourceTypeToSourceProvider.get(type), provider);
             }
@@ -200,8 +194,7 @@ public class PluggableGorDriver implements GorDriver {
      */
     private SourceType typeFromFilename(String file) {
         String lowerCaseFile = file.toLowerCase();
-        for (Entry<String, SourceType> entry : protocolToSourceType.descendingMap().entrySet()) {
-            SourceType type = entry.getValue();
+        for (SourceType type : sourceTypeToSourceProvider.descendingKeySet()) {
             if (type.match(lowerCaseFile)) {
                 return type;
             }

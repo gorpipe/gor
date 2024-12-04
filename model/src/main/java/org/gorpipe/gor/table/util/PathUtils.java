@@ -306,7 +306,7 @@ public class PathUtils {
 
     public static boolean isLocal(String path) {
         path = fixDbSchema(path);
-        return !path.contains(":/") || path.startsWith("file");
+        return !path.contains(":") || path.startsWith("file:");
     }
 
     public static long getLastModifiedTime(String fileName, String securityContext, String commonRoot) throws IOException {

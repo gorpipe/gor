@@ -1,20 +1,19 @@
 package org.gorpipe.oci.driver;
 
 import com.oracle.bmc.Region;
-import org.apache.commons.lang3.StringUtils;
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Handle OCI urls.
+ * Handle urls to OCI resources both native, gor style and s3 style, so this class is used
+ * both by S3Source and OCIObjectStorageSource.
+ *
  * <p>
  * Supported formats:
  * <pre>
@@ -26,7 +25,7 @@ import java.util.regex.Pattern;
  *          - Standard - virtual hosted {@literal s3://<bucket>.<oci-endpoint>/<path>/<to>/<file>}
  *          - https - path based {@literal https://<oci-endpoint>/<bucket>/<path>/<to>/<file>}
  *          - https - virtual hosted {@literal https://<bucket>.<oci-endpoint>/<path>/<to>/<file>}
- *       - GOR: {@literal oci://<bucket>/<path>/<to>/<file>} - with the endpoint defined
+ *       - GOR: {@literal (oci|oc)://<bucket>/<path>/<to>/<file>} - with the endpoint defined
  *
  *      Note:
  *          - We can not distinguish between the path and virtual hosted based urls, os we must pass in the type.
@@ -56,10 +55,13 @@ public class OCIUrl {
     public static final Region DEFAULT_REGION =
             Region.valueOf(System.getProperty("gor.oci.region",
                     Region.US_ASHBURN_1.toString()));
-    private static final Pattern OCI_URL_PATTERN =
+    private static final Pattern OCI_HTTP_URL_PATTERN =
             Pattern.compile(System.getProperty("gor.oci.endpoint.pattern",
-                    ".*\\.objectstorage\\..*\\.oci\\.customer-oci\\.com.*"));
+                    "(http|https|s3):\\/\\/.*\\.objectstorage\\..*\\.oci\\.customer-oci\\.com.*"));
     public static final String PATH_DELIMITER = "/";
+
+    public static final List<String> OCI_SCHEMEs = List.of("oci:", "oc:");
+    public static final List<String> GLOBAL_SCHEMEs = List.of("oci:", "oc:", "s3:");
 
     private String bucket;
     private String lookupKey;
@@ -67,6 +69,14 @@ public class OCIUrl {
     private String endpoint;
     private URI originalUrl;
     private String namespace;
+
+    /**
+     * Check if the url is an OCI native url (including GOR style and s3 http[s]: style).
+     */
+    public static boolean isOCINativeUrl(String url) {
+        return OCI_SCHEMEs.stream().anyMatch(url::startsWith)
+                || (OCI_HTTP_URL_PATTERN.matcher(url).matches() && !url.startsWith("s3:"));
+    }
 
     public static OCIUrl parse(String url) throws MalformedURLException {
         URI uri = URI.create(url);
@@ -82,7 +92,7 @@ public class OCIUrl {
         OCIUrl result = new OCIUrl();
         result.originalUrl = uri;
 
-        if (OCI_URL_PATTERN.matcher(uri.toString()).matches()) {
+        if (OCI_HTTP_URL_PATTERN.matcher(uri.toString()).matches()) {
             return parseHttpUrl(uri);
         } else {
             return parseGlobalUrl(uri);
@@ -90,14 +100,6 @@ public class OCIUrl {
     }
 
     private static OCIUrl parseHttpUrl(URI uri) throws MalformedURLException {
-        if (uri.getAuthority() == null) {
-            throw new MalformedURLException("Expected authority in OCI objectstore url: " + uri);
-        }
-
-        if (!uri.getAuthority().contains(".objectstorage.")) {
-            throw new MalformedURLException("Invalid OCI objectstore url: " + uri);
-        }
-
         if (uri.getPath().contains("/n/")) {
             return parseOCIHttpUrl(uri);
         } else {
@@ -107,10 +109,6 @@ public class OCIUrl {
 
     //  {@literal https://<oci-endpoint>/n/<namespace>/b/<bucket>/o/<path>/<to>/<file>}
     private static OCIUrl parseOCIHttpUrl(URI uri) throws MalformedURLException {
-        if (!Arrays.asList("http", "https", "s3").contains(uri.getScheme())) {
-            throw new MalformedURLException("S3 url must have http[s]/s3 scheme: " + uri);
-        }
-
         var result = new OCIUrl();
 
         result.endpoint = uri.getAuthority();
@@ -156,8 +154,8 @@ public class OCIUrl {
     }
 
     private static OCIUrl parseGlobalUrl(URI uri) throws MalformedURLException {
-        if (!Arrays.asList("s3", "oci").contains(uri.getScheme())) {
-            throw new MalformedURLException("Global url must have s3/oci scheme: " + uri);
+        if (!GLOBAL_SCHEMEs.contains(uri.getScheme() + ":")) {
+            throw new MalformedURLException("Global url must have s3/oci/oc scheme: " + uri);
         }
 
         var result = new OCIUrl();
