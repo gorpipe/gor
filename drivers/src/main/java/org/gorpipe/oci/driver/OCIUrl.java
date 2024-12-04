@@ -55,13 +55,16 @@ public class OCIUrl {
     public static final Region DEFAULT_REGION =
             Region.valueOf(System.getProperty("gor.oci.region",
                     Region.US_ASHBURN_1.toString()));
+    private static final Pattern OCI_NATIVE_URL_PATTERN =
+            Pattern.compile(System.getProperty("gor.oci.native.pattern",
+                    "https:\\/\\/.*\\.objectstorage\\..*\\.oci\\.customer-oci\\.com\\/n\\/.*\\/b\\/.*\\/o\\/.*"));
     private static final Pattern OCI_HTTP_URL_PATTERN =
             Pattern.compile(System.getProperty("gor.oci.endpoint.pattern",
                     "(http|https|s3):\\/\\/.*\\.objectstorage\\..*\\.oci\\.customer-oci\\.com.*"));
     public static final String PATH_DELIMITER = "/";
 
-    public static final List<String> OCI_SCHEMEs = List.of("oci:", "oc:");
-    public static final List<String> GLOBAL_SCHEMEs = List.of("oci:", "oc:", "s3:");
+    public static final List<String> OCI_SCHEMAS = List.of("oci:", "oc:");
+    public static final List<String> GLOBAL_SCHEMAS = List.of("oci:", "oc:", "s3:");
 
     private String bucket;
     private String lookupKey;
@@ -72,9 +75,10 @@ public class OCIUrl {
 
     /**
      * Check if the url is an OCI native url (including GOR style and s3 http[s]: style).
+     * Does not include s3 urls.
      */
-    public static boolean isOCINativeUrl(String url) {
-        return OCI_SCHEMEs.stream().anyMatch(url::startsWith)
+    public static boolean isOCIUrl(String url) {
+        return OCI_SCHEMAS.stream().anyMatch(url::startsWith)
                 || (OCI_HTTP_URL_PATTERN.matcher(url).matches() && !url.startsWith("s3:"));
     }
 
@@ -99,8 +103,9 @@ public class OCIUrl {
         }
     }
 
+
     private static OCIUrl parseHttpUrl(URI uri) throws MalformedURLException {
-        if (uri.getPath().contains("/n/")) {
+        if (OCI_NATIVE_URL_PATTERN.matcher(uri.toString()).matches()) {
             return parseOCIHttpUrl(uri);
         } else {
             return parseS3HttpUrl(uri);
@@ -154,7 +159,7 @@ public class OCIUrl {
     }
 
     private static OCIUrl parseGlobalUrl(URI uri) throws MalformedURLException {
-        if (!GLOBAL_SCHEMEs.contains(uri.getScheme() + ":")) {
+        if (!GLOBAL_SCHEMAS.contains(uri.getScheme() + ":")) {
             throw new MalformedURLException("Global url must have s3/oci/oc scheme: " + uri);
         }
 

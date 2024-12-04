@@ -10,8 +10,6 @@ import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.Properties;
 
 import static org.junit.Assert.*;
@@ -66,10 +64,6 @@ public class UTestOCIObjectStorageSourceType {
     public void testResolveOciNativeHttpUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
                 new SourceReference("https://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/n/namespace/b/gdb_gor_test_data_dev/o/the/path.dat", securityContext(), null, null, null, null, false));
-        assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
-
-        source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("http://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/n/namespace/b/gdb_gor_test_data_dev/o/the/path.dat", securityContext(), null, null, null, null, false));
         assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 

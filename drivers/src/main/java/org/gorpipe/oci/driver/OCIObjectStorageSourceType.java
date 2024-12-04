@@ -16,6 +16,6 @@ public class OCIObjectStorageSourceType extends SourceType {
 
     @Override
     public boolean match(String file) {
-        return OCIUrl.isOCINativeUrl(file);
+        return OCIUrl.isOCIUrl(file);
     }
 }
