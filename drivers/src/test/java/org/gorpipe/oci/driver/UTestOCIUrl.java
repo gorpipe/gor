@@ -33,7 +33,8 @@ public class UTestOCIUrl {
         assertEquals("thebucket", url.getLookupKey());
         assertEquals("the/path.dat", url.getPath());
         assertEquals(OCIUrl.DEFAULT_OCI_ENDPOINT, url.getEndpoint());
-        assertEquals("namespace", url.getNamespace());
+        assertEquals(URI.create(OCIUrl.DEFAULT_OCI_ENDPOINT).getHost().split("\\.", 2)[0],
+                url.getNamespace());
     }
 
     @Test
