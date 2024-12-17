@@ -147,6 +147,7 @@ jobs:
   publishSnapshot:
     if: ${{ github.ref == 'refs/heads/main' }}
     #needs: [test, slowTest, integrationTest]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
