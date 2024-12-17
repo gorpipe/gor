@@ -29,12 +29,20 @@ public class FileSourceType extends SourceType {
     public static final FileSourceType FILE = new FileSourceType();
 
     private FileSourceType() {
-        super("FILE", false, "");
+        super("FILE", false, "file:", "");
+    }
+
+    @Override
+    public PRIORITY getPriority() {
+        return PRIORITY.LOW;
     }
 
     @Override
     public boolean match(String file) {
         // TODO: Until we get better matching strategy we must exclude mem here.
-        return !DataUtil.isMem(file) && super.match(file);
+        // TODO: Should check if file (as commented out), but a lot code seems to pass various
+        //       non file elements so simply match everything (like the former impl).
+        //       We should be the last matcher anyway.
+        return !DataUtil.isMem(file); //&& (file.startsWith("file:") || !file.contains(":"));
     }
 }

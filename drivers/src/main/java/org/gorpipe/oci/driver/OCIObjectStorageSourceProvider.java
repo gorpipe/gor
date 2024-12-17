@@ -233,6 +233,13 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
     }
 
     private static AbstractAuthenticationDetailsProvider getSimpleAuthenticationProvider(AuthData authData) {
+        if (StringUtil.isEmpty(authData.privateKey)
+                || StringUtil.isEmpty(authData.fingerprint)
+                || StringUtil.isEmpty(authData.tenantId)
+                || StringUtil.isEmpty(authData.userId)) {
+            throw new GorResourceException("Missing credentials, can not create simple OCI auth", "", null);
+        }
+
         return SimpleAuthenticationDetailsProvider.builder()
                 .tenantId(authData.tenantId)
                 .userId(authData.userId)
