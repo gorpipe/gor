@@ -121,7 +121,7 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("Whether to automatically extend the range of remote source reads when the driver detects sequential reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.remote")
-    @DefaultValue("enabled")
+    @DefaultValue("disabled")
     @ConverterClass(EnhancedBooleanConverter.class)
     boolean remoteExtendedRangeStreamingEnabled();
 

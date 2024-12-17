@@ -99,6 +99,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         Credentials sharedCreds = getS3DataCredentials(getService(), sourceReference.getSecurityContext());
 
         if (sharedCreds == null) {
+            log.warn(String.format("No credentials found for %s. Returning emtpy source.", getService()));
             return source;
         }
 
