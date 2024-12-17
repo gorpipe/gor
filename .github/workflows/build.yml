@@ -145,7 +145,7 @@ jobs:
           files: '**/TEST-*.xml'
 
   publishSnapshot:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ENGKNOW-1855-object-store-performance' }}
     #needs: [test, slowTest, integrationTest]
     needs: [build]
     runs-on: ubuntu-latest
