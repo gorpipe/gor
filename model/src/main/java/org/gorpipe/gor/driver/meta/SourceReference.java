@@ -52,7 +52,7 @@ public class SourceReference {
     private boolean isCreatedFromLink = false;
     private Long linkLastModified = null;
     private SourceReference parentSourceReference;
-    private boolean isFallback;
+    private boolean isFallback; // Should be called shouldFallback or canFallback, or better yet should be moved to S3Shared.
 
     // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
     // - should the context come in at request time?

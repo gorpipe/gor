@@ -80,13 +80,13 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("The time to wait before the first retry.")
     @Key("org.gorpipe.gor.driver.retries.initial_sleep")
-    @DefaultValue("100 milliseconds")
+    @DefaultValue("2 seconds")
     @ConverterClass(DurationConverter.class)
     Duration retryInitialSleep();
 
     @Documentation("The maximum time to wait for retrying.")
     @Key("org.gorpipe.gor.driver.retries.max_sleep")
-    @DefaultValue("60 seconds")
+    @DefaultValue("120 seconds")
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSleep();
 

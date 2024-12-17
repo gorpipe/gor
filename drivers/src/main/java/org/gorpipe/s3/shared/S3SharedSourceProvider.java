@@ -175,8 +175,11 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     private S3SharedSource handleFallback(SourceReference sourceReference, S3SharedSource source) throws IOException {
         // TODO:  Using fallbacks could be costly.  Check how much it costs and evaluate caching strategies to speed things up.
         if (!s3SharedConfig.useFallback() || !sourceReference.isFallback() || sourceReference.isWriteSource() || (source != null && wrap(source).exists())) {
+            // Have a valid source, or we don't support fallback for this source.
             return source;
         }
+
+        // Try to find a fallback source.
 
         SourceReference fallbackSourceReference = createFallbackSourceReference(sourceReference);
 

@@ -1,11 +1,9 @@
 package org.gorpipe.gor.driver.utils;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.Thread.sleep;
 
@@ -30,6 +28,24 @@ public abstract class RetryHandlerBase {
             // If interrupted waiting to retry, throw original exception
             Thread.currentThread().interrupt();
             throw new GorSystemException("Retry thread interrupted after " + tries + " retries", e);
+        }
+    }
+
+    // Find the cause by ignoring ExecutionExceptions and GORExceptions (unless it is last one)
+    protected Throwable getCause(Exception ex) {
+        Throwable cause = ex;
+        while (true) {
+            if (cause.getCause() == null) {
+                return cause;
+            }
+
+            if (cause instanceof ExecutionException
+                    || cause instanceof UncheckedExecutionException
+                    || cause instanceof GorException) {
+                cause = cause.getCause();
+            } else {
+                return cause;
+            }
         }
     }
 }

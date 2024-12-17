@@ -20,39 +20,31 @@ public class OCIObjectStorageRetryHandler extends RetryHandlerWithFixedWait {
 
     @Override
     protected void checkIfShouldRetryException(GorException e) {
-        var realEx = e.getCause() != null ? e.getCause() : e;
-
-        // Find the real exception.
-        if (realEx.getCause() instanceof ExecutionException
-                || realEx.getCause() instanceof UncheckedExecutionException) {
-            realEx = realEx.getCause();
-        }
-
-        // Some exception we throw right back.
-        if (realEx.getCause() instanceof FileNotFoundException
-                || realEx.getCause() instanceof FileSystemException) {
-            throw e;
-        }
-
         var path = "";
 
         if (e instanceof GorResourceException gre) {
             path = gre.getUri();
         }
 
+        var cause = getCause(e);
+
+        if (cause instanceof FileNotFoundException
+                || cause instanceof FileSystemException) {
+            throw e;
         // Don't retry and improve error messages.
-        if (realEx instanceof AuthClientException) {
-            throw new GorResourceException("Client exception", path, realEx);
-        } else if (realEx instanceof BmcException bmcException) {
+        } else if (cause instanceof AuthClientException) {
+            throw new GorResourceException("Client exception", path, e);
+        } else if (cause instanceof BmcException bmcException) {
+            // See: https://docs.oracle.com/en-us/iaas/Content/API/References/apierrors.htm
             var detail = bmcException.getMessage();
             if (bmcException.getStatusCode() == 400) {
-                throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, realEx.getMessage()), path, realEx);
+                throw new GorResourceException(String.format("Bad request for resource. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
             } else if (bmcException.getStatusCode() == 401) {
-                throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, realEx.getMessage()), path, realEx);
+                throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
             } else if (bmcException.getStatusCode() == 403) {
-                throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, realEx.getMessage()), path, realEx);
+                throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
             } else if (bmcException.getStatusCode() == 404) {
-                throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, realEx.getMessage()), path, realEx);
+                throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
             }
         }
     }

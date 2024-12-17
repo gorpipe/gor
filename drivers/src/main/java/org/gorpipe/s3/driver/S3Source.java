@@ -210,7 +210,7 @@ public class S3Source implements StreamSource {
             throw new GorResourceException(String.format("Exists failed for %s, region: %s, access key: %s, secret key: %s",
                     getName(), client.serviceClientConfiguration().region(),
                     cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
-                    cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.KEY, "")) ? "Has secret" : "Empty secret")
+                    cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.SECRET, "")) ? "Has secret" : "Empty secret")
                                  : "No creds"),
                     getName(), e).retry();
         }
