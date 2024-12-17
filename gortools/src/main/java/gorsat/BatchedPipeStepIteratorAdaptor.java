@@ -30,6 +30,7 @@ import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -195,6 +196,7 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
                 readerThread.setUncaughtExceptionHandler((tt, e) -> {
                     // THis is just so that the default handler does not write to std.err
                 });
+                readerThread.setMDC(MDC.getCopyOfContextMap());
                 readerThread.start();
                 rowBuffer = readerThread.pollBatch();
             } else if (!rowBuffer.available()) {
@@ -278,6 +280,7 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
                 readerThread.setUncaughtExceptionHandler((tt, e) -> {
                     // THis is just so that the default handler does not write to std.err
                 });
+                readerThread.setMDC(MDC.getCopyOfContextMap());
                 rowBuffer = readerThread.rowBuffer1;
                 readerThread.start();
             }
