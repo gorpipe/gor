@@ -121,7 +121,7 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("Whether to automatically extend the range of remote source reads when the driver detects sequential reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.remote")
-    @DefaultValue("disabled")
+    @DefaultValue("enabled")
     @ConverterClass(EnhancedBooleanConverter.class)
     boolean remoteExtendedRangeStreamingEnabled();
 
@@ -139,7 +139,7 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("The range that triggers automatic range extension.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold")
-    @DefaultValue("32 kb")
+    @DefaultValue("4 mb ")
     @ConverterClass(ByteSizeConverter.class)
     ByteSize extendedRangeStreamingSeekThreshold();
 
