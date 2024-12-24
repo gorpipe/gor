@@ -40,8 +40,8 @@ import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.util.StringUtil;
 import software.amazon.awssdk.auth.credentials.*;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
-import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.crt.ProxyConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -98,22 +98,27 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     private S3Client createClient(Credentials cred) {
-        var builder = S3Client.builder()
-                .overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                        //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
-                        //.apiCallTimeout(s3Config.socketTimeout())
+        var builder = S3Client.builder();
 
-                        );
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
 
-        ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
+        AwsCrtHttpClient.Builder httpClientBuilder = AwsCrtHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
-                .socketTimeout(s3Config.socketTimeout())          // Default was 30s
-                .maxConnections(s3Config.connectionPoolSize())    // Default was 50
                 //.connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
-                .connectionTimeToLive(Duration.ZERO)    // Default was -1
-                //.connectionAcquisitionTimeout(s3Config.connectionTimeout())  // Default was 45s
-                //.useIdleConnectionReaper(false)
-                .tcpKeepAlive(true)
+                .maxConcurrency(s3Config.connectionPoolSize())  // Default was 50
+                .tcpKeepAliveConfiguration(b -> b
+                        .keepAliveInterval(Duration.ofMillis(s3Config.socketTimeout().toMillis()/2))
+                        .keepAliveTimeout(s3Config.connectionTimeout()))
+                //.connectionHealthConfiguration()
+                //.readBufferSizeInBytes()
+
                 ;
 
         // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
@@ -123,27 +128,28 @@ public class S3SourceProvider extends StreamSourceProvider {
         if (proxy != null && port != null) {
             log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
             final ProxyConfiguration.Builder proxyConfig = ProxyConfiguration.builder();
-            proxyConfig.endpoint(URI.create(proxy + ":" + port));
+            proxyConfig.host(proxy);
+            proxyConfig.port(Integer.parseInt(port));
             httpClientBuilder.proxyConfiguration(proxyConfig.build());
         }
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.credentialsProvider(getCredentialsProvider(cred));
+
 
         var metricsPub = new PrometheusMetricPublisher();
         builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
 
-        builder.region(getRegion(cred, endpoint));
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
+                //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
+                //.apiCallTimeout(s3Config.socketTimeout())
+        );
 
         // OCI compat layer needs path style access.
         builder.forcePathStyle(true);
 
-        builder.crossRegionAccessEnabled(true);
+        // Cross region access.  One use it to create client with emtpy creds and apply creds/region/endpoint later.
+        //builder.crossRegionAccessEnabled(true);
 
         return builder.build();
     }
@@ -189,6 +195,10 @@ public class S3SourceProvider extends StreamSourceProvider {
             endpoint = s3Config.s3Endpoint();
         }
 
+        if (StringUtils.isEmpty(endpoint)) {
+            endpoint = System.getProperty("s3.endpoint");
+        }
+
         return endpoint;
     }
 
@@ -209,6 +219,14 @@ public class S3SourceProvider extends StreamSourceProvider {
             if (m.matches()) {
                 regionStr = m.group(1);
             }
+        }
+
+        if (StringUtil.isEmpty(regionStr)) {
+            regionStr = System.getProperty("aws.region");
+        }
+
+        if (StringUtil.isEmpty(regionStr)) {
+            regionStr = System.getenv("AWS_REGION");
         }
 
         return StringUtil.isEmpty(regionStr) ? Region.US_EAST_1 : Region.of(regionStr);

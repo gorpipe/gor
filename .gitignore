@@ -17,6 +17,7 @@
 **/*.iws
 **/*.iml
 **/.idea/
+**/.run/
 
 **/.vscode/
 

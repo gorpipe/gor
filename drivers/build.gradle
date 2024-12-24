@@ -39,13 +39,16 @@ project(':drivers') {
         implementation "com.google.cloud:google-cloud-storage:_"
         implementation 'com.azure:azure-storage-blob:_'
         implementation "software.amazon.awssdk:s3:_"
+        implementation "software.amazon.awssdk:aws-crt-client:_"
+        implementation "software.amazon.awssdk.crt:aws-crt:_"
         implementation 'org.carlspring.cloud.aws:s3fs-nio:_'
-        //implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
+        implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
         implementation(platform('com.oracle.oci.sdk:oci-java-sdk-bom:_'))
         implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3'
         implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'
         implementation 'com.oracle.oci.sdk:oci-java-sdk-identity'
         implementation 'org.apache.commons:commons-lang3:_'
+        implementation 'org.apache.commons:commons-io:_'
         implementation "io.prometheus:simpleclient:_"
         implementation 'com.lmax:disruptor:_'
 
@@ -59,8 +62,8 @@ project(':drivers') {
         testImplementation project(':util')
 
         testImplementation 'com.github.stefanbirkner:system-rules:_'
-        testImplementation "com.amazonaws:aws-java-sdk-sts:1.11.+"
-        testImplementation "com.amazonaws:aws-java-sdk-s3:1.11.+"
+        testImplementation "com.amazonaws:aws-java-sdk-sts:_"
+        testImplementation "com.amazonaws:aws-java-sdk-s3:_"
 
         testRuntimeOnly 'org.apache.derby:derby:_'
         testRuntimeOnly 'org.apache.derby:derbytools:_'

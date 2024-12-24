@@ -22,20 +22,19 @@
 
 package org.gorpipe.s3.driver;
 
-import ch.qos.logback.core.util.FileUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.carlspring.cloud.storage.s3fs.*;
+import org.carlspring.cloud.storage.s3fs.S3FileSystem;
+import org.carlspring.cloud.storage.s3fs.S3Path;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.base.streams.LimitedOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
+import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
@@ -51,6 +50,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
@@ -63,12 +65,14 @@ import java.util.stream.Stream;
  * Created by villi on 22/08/15.
  */
 public class S3Source implements StreamSource {
+    static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(S3Source.class);
+
     private static final boolean USE_META_CACHE = true ;
     private final SourceReference sourceReference;
     private final String bucket;
     private final String key;
     private final S3Client client;
-    private S3FileSystem s3fs;
+    private static S3FileSystem s3fs;
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -140,6 +144,21 @@ public class S3Source implements StreamSource {
         return openRequest(reqBuilder.build());
     }
 
+    private InputStream openWithFileSystem(RequestRange range) {
+        Path path = Path.of(URI.create(getName()));
+        try {
+            var channel = FileChannel.open(path, StandardOpenOption.READ);
+            if (range!=null) {
+                range = range.limitTo(getSourceMetadata().getLength());
+                if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+                channel.position(range.getFirst());
+            }
+            return Channels.newInputStream(channel);
+        } catch (IOException e) {
+           throw new RuntimeException(e);
+        }
+    }
+
     private InputStream openRequest(GetObjectRequest request) {
         try {
             return new AbortingInputStream(client.getObject(request), request);
@@ -162,12 +181,13 @@ public class S3Source implements StreamSource {
     }
 
     private S3SourceMetadata createMetaData(String bucket, String key) {
+        HeadObjectResponse objectMetaResponse;
         try {
-            var objectMetaResponse = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
-            return new S3SourceMetadata(this, objectMetaResponse, sourceReference.getLinkLastModified());
+            objectMetaResponse = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
         } catch (SdkClientException e) {
             throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
         }
+        return new S3SourceMetadata(this, objectMetaResponse, sourceReference.getLinkLastModified());
     }
 
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
@@ -204,6 +224,7 @@ public class S3Source implements StreamSource {
     public boolean exists() {
         try {
             // Note: fileExists only handles dirs if the end with /. Therefor we fall back to the much slower Files.exists.
+            //       Do exists with aws filesystem: return Files.exists(Path.of(URI.create(getName())));
             return fileExists() || Files.exists(getPath());
         } catch (Exception e) {
             Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
