@@ -26,7 +26,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    if: false
+    #if: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,7 +58,6 @@ jobs:
   slowTest:
     runs-on: ubuntu-latest
     needs: build
-    if: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -90,7 +89,6 @@ jobs:
   integrationTest:
     runs-on: ubuntu-latest
     needs: build
-    if: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -120,7 +118,7 @@ jobs:
           path: '**/TEST-*.xml'
 
   testReport:
-    #needs: [test, slowTest, integrationTest]
+    needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -145,9 +143,10 @@ jobs:
           files: '**/TEST-*.xml'
 
   publishSnapshot:
-    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ENGKNOW-1855-object-store-performance' }}
-    #needs: [test, slowTest, integrationTest]
-    needs: [build]
+    #if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ENGKNOW-1855-object-store-performance' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: [test, slowTest, integrationTest]
+    #needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
