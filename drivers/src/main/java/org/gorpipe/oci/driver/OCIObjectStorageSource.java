@@ -15,7 +15,6 @@ import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
 import com.oracle.bmc.objectstorage.responses.HeadObjectResponse;
 import com.oracle.bmc.objectstorage.responses.PutObjectResponse;
 import org.gorpipe.base.streams.LimitedOutputStream;
-import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -25,13 +24,14 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.util.concurrent.ExecutionException;
+import java.nio.file.attribute.FileAttribute;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -140,11 +140,7 @@ public class OCIObjectStorageSource implements StreamSource {
             Thread.currentThread().interrupt();
             throw new GorSystemException(e);
         } catch (Exception e) {
-            Throwable ex = e;
-            if (e instanceof ExecutionException || e instanceof UncheckedExecutionException) {
-                ex = e.getCause();
-            }
-            throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), sourceReference.getUrl(), ex).retry();
+            throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), sourceReference.getUrl(), e).retry();
         }
     }
 
@@ -180,23 +176,15 @@ public class OCIObjectStorageSource implements StreamSource {
             Thread.currentThread().interrupt();
             throw new GorSystemException(e);
         } catch (Exception e) {
-            Throwable ex = e;
-            if (e instanceof ExecutionException || e instanceof UncheckedExecutionException) {
-                ex = e.getCause();
-            }
-            throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getName(), ex).retry();
+            throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getName(), e).retry();
         }
     }
 
     private StreamSourceMetadata loadMetadataFromCache(String bucket, String key) {
         try {
             return metadataCache.get(bucket + key, () -> createMetaData(bucket, key));
-        } catch (ExecutionException | UncheckedExecutionException e) {
-            var cause = e.getCause() != null ? e.getCause() : e;
-            if (cause instanceof GorException) {
-                throw (GorException) cause;
-            }
-            throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getName(), cause).retry();
+        } catch (Exception  e) {
+            throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getName(), e).retry();
         }
     }
 
@@ -253,10 +241,6 @@ public class OCIObjectStorageSource implements StreamSource {
             Thread.currentThread().interrupt();
             throw new GorSystemException(e);
         } catch (Exception e) {
-            Throwable ex = e;
-            if (e instanceof ExecutionException || e instanceof UncheckedExecutionException) {
-                ex = e.getCause();
-            }
             throw new GorResourceException("Failed to delete " + getName(), getName(), e).retry();
         }
 
@@ -281,5 +265,38 @@ public class OCIObjectStorageSource implements StreamSource {
     @Override
     public void close() {
         // No resources to free
+    }
+
+    @Override
+    public String createDirectory(FileAttribute<?>... attrs) {
+        try {
+            var folder = PathUtils.markAsFolder(key);
+            var request = PutObjectRequest.builder()
+                    .namespaceName(namespace)
+                    .bucketName(bucket)
+                    .objectName(PathUtils.markAsFolder(key))
+                    .putObjectBody(new InputStream() {
+                        @Override
+                        public int read() {
+                            return -1;
+                        }
+                    })
+                    .contentLength(0L)
+                    .build();
+
+            client.putObject(request, null).get();
+            return folder;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new GorSystemException(e);
+        } catch (Exception e) {
+            throw new GorResourceException("Failed to create directory " + getName(), getName(), e).retry();
+        }
+    }
+
+    @Override
+    public String createDirectories(FileAttribute<?>... attrs) {
+        // For now just create the last directory in the path.
+        return createDirectory(attrs);
     }
 }

@@ -19,6 +19,7 @@ import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
+import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
@@ -42,6 +43,8 @@ public class ITestS3Table {
 
     private static String S3_KEY;
     private static String S3_SECRET;
+    private static String S3_REGION = "eu-west-1";
+
     private DriverBackedFileReader fileReader;
 
     private static final String S3_FILE_1 = "s3://gdb-unit-test-data/csa_test_data/data_sets/sim20-micro/source/var/D3_WGC053023D.wgs.genotypes.gor";
@@ -54,6 +57,25 @@ public class ITestS3Table {
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
     private Path workDirPath;
+
+    @Rule
+    public final ProvideSystemProperty myPropertyHasMyValue
+            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
+
+    @Rule
+    public final ProvideSystemProperty otherPropertyIsMissing
+            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsSecretAccessKey
+            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
+
+    @Rule
+    public final ProvideSystemProperty awsRegion
+            = new ProvideSystemProperty("aws.region", S3_REGION);
+
+    @Rule
+    public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
 
     @Rule
     public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();

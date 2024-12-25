@@ -156,7 +156,7 @@ public class ITestS3Source extends CommonStreamTests {
     public void testS3WritePgorGord() throws IOException {
         String securityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
         String randomId = UUID.randomUUID().toString();
-        String dict = String.format("s3://gdb-unit-test-data/s3write/%s-genes.gord", randomId);
+        String dict = String.format("s3://gdb-unit-test-data/s3write/%s-genes.gord/", randomId);
         TestUtils.runGorPipe("pgor -split 2 ../tests/data/gor/genes.gor | top 2 | write " + dict, false, securityContext);
         String expected = TestUtils.runGorPipe("create x = pgor -split 2 ../tests/data/gor/genes.gor | top 2; gor [x] | select 1-4", false, securityContext);
         String result = TestUtils.runGorPipe("gor " + dict + " | select 1-4", false, securityContext);

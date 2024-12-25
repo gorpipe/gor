@@ -224,7 +224,7 @@ public class S3Source implements StreamSource {
     public boolean exists() {
         try {
             // Note: fileExists only handles dirs if the end with /. Therefor we fall back to the much slower Files.exists.
-            //       Do exists with aws filesystem: return Files.exists(Path.of(URI.create(getName())));
+            //       To do a exists with aws filesystem: return Files.exists(Path.of(URI.create(getName())));
             return fileExists() || Files.exists(getPath());
         } catch (Exception e) {
             Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
@@ -256,7 +256,7 @@ public class S3Source implements StreamSource {
             // Files.createDirectory needs elevated access to list all buckets.
             S3Path s3Path = getPath();
             String directoryKey = s3Path.getKey().endsWith("/") ? s3Path.getKey() : s3Path.getKey() + "/";
-            PutObjectRequest request = (PutObjectRequest)PutObjectRequest.builder().bucket(s3Path.getBucketName()).key(directoryKey).cacheControl(s3Path.getFileSystem().getRequestHeaderCacheControlProperty()).contentLength(0L).build();
+            PutObjectRequest request = PutObjectRequest.builder().bucket(s3Path.getBucketName()).key(directoryKey).cacheControl(s3Path.getFileSystem().getRequestHeaderCacheControlProperty()).contentLength(0L).build();
             client.putObject(request, RequestBody.fromBytes(new byte[0]));
             return PathUtils.formatUri(getPath().toUri());
         } catch (Exception e) {
@@ -266,11 +266,14 @@ public class S3Source implements StreamSource {
 
     @Override
     public String createDirectories(FileAttribute<?>... attrs) {
-        try {
-            return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, getPath()).retry();
-        }
+        // Files.createDirectory needs elevated access to list all buckets.
+//        try {
+//            return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
+//        } catch (IOException e) {
+//            throw GorResourceException.fromIOException(e, getPath()).retry();
+//        }
+        // so for now just create the final directory, not the intermediate ones.
+        return createDirectory(attrs);
     }
 
     @Override
