@@ -126,7 +126,8 @@ public class ITestS3Source extends CommonStreamTests {
 
     @Test
     public void testS3Write() {
-        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gor");
+        TestUtils.runGorPipe("gor ../tests/data/gor/genes.gor | top 1 | write s3://gdb-unit-test-data/s3write/genes.gor",
+                false, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET) );
     }
 
     @Ignore("Local file, also too large and slow to use always, no clean up")

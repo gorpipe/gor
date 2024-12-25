@@ -157,8 +157,7 @@ public class S3SourceProvider extends StreamSourceProvider {
     AwsCredentialsProvider getCredentialsProvider(Credentials cred) {
         if (cred == null || cred.isNull()) {
             log.info("CredentialsProvider: DefaultCredentialsProvider for null creds");
-            throw new IllegalArgumentException("Credentials are required for S3 access");
-            //return DefaultCredentialsProvider.create();
+            return DefaultCredentialsProvider.create();
         } else {
             var awsKey = cred.getOrDefault(Credentials.Attr.KEY, "");
             var awsSecret = cred.getOrDefault(Credentials.Attr.SECRET, "");
@@ -182,8 +181,7 @@ public class S3SourceProvider extends StreamSourceProvider {
                 }
             } else {
                 log.info(String.format("CredentialsProvider: DefaultCredentialsProvider for %s:%s", cred.getService(), cred.getLookupKey()));
-                throw new IllegalArgumentException(String.format("CredentialsProvider: DefaultCredentialsProvider for %s:%s", cred.getService(), cred.getLookupKey()));
-                //return DefaultCredentialsProvider.create();
+                return DefaultCredentialsProvider.create();
             }
         }
     }

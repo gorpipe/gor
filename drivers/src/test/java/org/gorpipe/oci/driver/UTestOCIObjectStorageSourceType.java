@@ -92,7 +92,7 @@ public class UTestOCIObjectStorageSourceType {
     @Test
     public void testResolveS3OciHttpUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("s3://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/the/path.dat", securityContext(), null, null, null,  false));
+                new SourceReference("s3://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/the/path.dat", null, null, null, null,  false));
         assertNotEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 

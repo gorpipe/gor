@@ -73,7 +73,7 @@ public class ITestFilesS3Source extends CommonFilesTests {
 
     @Override
     protected StreamSource createSource(String name) throws IOException {
-        return new S3Source(newClient(), new SourceReference(name));
+        return new S3Source(newClient(), new SourceReference(name, securityContext(), null, null, null, false));
     }
 
     private S3Client newClient() {
