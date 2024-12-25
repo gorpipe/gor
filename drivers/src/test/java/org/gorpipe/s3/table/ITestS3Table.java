@@ -79,7 +79,7 @@ public class ITestS3Table {
         Files.createDirectory(workDirPath.resolve("some_project"));
 
         String s3dataSecurityContext = DriverUtils.createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String awsSecurityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);;
+        String awsSecurityContext = DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET);
         BundledCredentials.Builder b = new BundledCredentials.Builder()
                 .addCredentials(BundledCredentials.fromSecurityContext(s3dataSecurityContext))
                 .addCredentials(BundledCredentials.fromSecurityContext(awsSecurityContext));
