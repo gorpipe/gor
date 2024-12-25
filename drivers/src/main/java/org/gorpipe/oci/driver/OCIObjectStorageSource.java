@@ -2,7 +2,6 @@ package org.gorpipe.oci.driver;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.model.Range;
 import com.oracle.bmc.objectstorage.ObjectStorageAsync;
@@ -15,6 +14,7 @@ import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
 import com.oracle.bmc.objectstorage.responses.HeadObjectResponse;
 import com.oracle.bmc.objectstorage.responses.PutObjectResponse;
 import org.gorpipe.base.streams.LimitedOutputStream;
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.binsearch.GorIndexType;
@@ -218,9 +218,9 @@ public class OCIObjectStorageSource implements StreamSource {
             meta = loadMetadata(bucket, key);
             return true;
         } catch (GorResourceException e) {
-            if (e.getCause() != null && (
-                    e.getCause() instanceof NoSuchKeyException
-            || e.getCause() instanceof BmcException && ((BmcException) e.getCause()).getStatusCode() == 404)) {
+            var cause = ExceptionUtilities.getUnderlyingCause(e);
+            if (cause instanceof NoSuchKeyException
+                || (cause instanceof BmcException be && be.getStatusCode() == 404)) {
                 return false;
             }
             throw e;

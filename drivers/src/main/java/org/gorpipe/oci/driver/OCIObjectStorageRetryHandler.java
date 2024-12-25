@@ -1,17 +1,14 @@
 package org.gorpipe.oci.driver;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.oracle.bmc.auth.exception.AuthClientException;
 import com.oracle.bmc.model.BmcException;
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.utils.RetryHandlerWithFixedWait;
-import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.FileNotFoundException;
 import java.nio.file.FileSystemException;
-import java.util.concurrent.ExecutionException;
 
 public class OCIObjectStorageRetryHandler extends RetryHandlerWithFixedWait {
     public OCIObjectStorageRetryHandler(long initialDuration, long totalDuration) {
@@ -26,7 +23,7 @@ public class OCIObjectStorageRetryHandler extends RetryHandlerWithFixedWait {
             path = gre.getUri();
         }
 
-        var cause = getCause(e);
+        var cause = ExceptionUtilities.getUnderlyingCause(e);
 
         if (cause instanceof FileNotFoundException
                 || cause instanceof FileSystemException) {

@@ -31,22 +31,5 @@ public abstract class RetryHandlerBase {
         }
     }
 
-    // Find the cause by ignoring ExecutionExceptions and GORExceptions (unless it is last one)
-    protected Throwable getCause(Exception ex) {
-        Throwable cause = ex;
-        while (true) {
-            if (cause.getCause() == null) {
-                return cause;
-            }
-
-            if (cause instanceof ExecutionException
-                    || cause instanceof UncheckedExecutionException
-                    || cause instanceof GorException) {
-                cause = cause.getCause();
-            } else {
-                return cause;
-            }
-        }
-    }
 }
 

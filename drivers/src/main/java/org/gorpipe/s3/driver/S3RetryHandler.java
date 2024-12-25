@@ -1,6 +1,6 @@
 package org.gorpipe.s3.driver;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.utils.RetryHandlerWithFixedWait;
@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.FileNotFoundException;
 import java.nio.file.FileSystemException;
-import java.util.concurrent.ExecutionException;
 
 public class S3RetryHandler extends RetryHandlerWithFixedWait {
     public S3RetryHandler(long initialDuration, long totalDuration) {
@@ -25,7 +24,7 @@ public class S3RetryHandler extends RetryHandlerWithFixedWait {
             path = gre.getUri();
         }
 
-        var cause = getCause(e);
+        var cause = ExceptionUtilities.getUnderlyingCause(e);
 
         if (cause instanceof FileNotFoundException
         || cause instanceof FileSystemException) {
