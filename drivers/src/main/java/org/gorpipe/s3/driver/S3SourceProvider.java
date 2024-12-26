@@ -147,7 +147,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         builder.forcePathStyle(true);
 
         // Cross region access.  One use it to create client with emtpy creds and apply creds/region/endpoint later.
-        //builder.crossRegionAccessEnabled(true);
+        builder.crossRegionAccessEnabled(true);
 
         return builder.build();
     }
