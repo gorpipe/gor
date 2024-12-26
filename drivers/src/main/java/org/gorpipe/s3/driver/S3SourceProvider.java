@@ -143,8 +143,11 @@ public class S3SourceProvider extends StreamSourceProvider {
                 //.apiCallTimeout(s3Config.socketTimeout())
         );
 
-        // OCI compat layer needs path style access.
-        builder.forcePathStyle(true);
+
+        if (isOciEndpoint(endpoint)) {
+            // OCI compat layer needs path style access.
+            builder.forcePathStyle(true);
+        }
 
         // Cross region access.  One use it to create client with emtpy creds and apply creds/region/endpoint later.
         builder.crossRegionAccessEnabled(true);
@@ -199,6 +202,10 @@ public class S3SourceProvider extends StreamSourceProvider {
         }
 
         return endpoint;
+    }
+
+    boolean isOciEndpoint(String endpoint) {
+        return endpoint != null && endpoint.contains(".objectstorage.");
     }
 
     Region getRegion(Credentials creds, String endpoint) {
