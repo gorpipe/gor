@@ -58,7 +58,7 @@ import java.util.regex.Pattern;
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
 
-    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client", "false"));
+    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "false"));
 
     private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
