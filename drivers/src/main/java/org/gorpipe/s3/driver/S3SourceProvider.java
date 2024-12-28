@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 public class S3SourceProvider extends StreamSourceProvider {
 
     private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "false"));
+    private static final boolean USE_NETTY_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.netty", "true"));
 
     private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
@@ -222,14 +223,17 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     protected S3AsyncClient getAsyncClient(String securityContext, String bucket) throws IOException {
-        BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
-        return asyncClientCredCache.getClient(creds, bucket);
-    }
-
-    private S3AsyncClient createAsyncClient(Credentials cred) {
         if (USE_CRT_CLIENT) {
             return null; //createCrtAsyncClient(cred);
         }
+        if (USE_NETTY_CLIENT) {
+            BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
+            return asyncClientCredCache.getClient(creds, bucket);
+        }
+        return null;
+    }
+
+    private S3AsyncClient createAsyncClient(Credentials cred) {
         return createNettyClient(cred);
     }
 
