@@ -40,6 +40,7 @@ project(':drivers') {
         implementation 'com.azure:azure-storage-blob:_'
         implementation "software.amazon.awssdk:s3:_"
         implementation "software.amazon.awssdk:aws-crt-client:_"
+        implementation "software.amazon.awssdk:netty-nio-client:_"
         implementation "software.amazon.awssdk.crt:aws-crt:_"
         implementation 'org.carlspring.cloud.aws:s3fs-nio:_'
         implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"

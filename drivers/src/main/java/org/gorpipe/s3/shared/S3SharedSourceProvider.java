@@ -14,6 +14,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.driver.S3SourceProvider;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
@@ -111,7 +112,8 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
 
         S3Client client = getClient(s3SecurityContext, bucket);
-        source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
+        S3AsyncClient asyncClient = getAsyncClient(s3SecurityContext, bucket);
+        source = new S3SharedSource(client, asyncClient, s3SourceReference, relativePath, s3SharedConfig);
         //source.setFileSystem(S3ClientFileSystemProvider.getInstance().getFileSystem(s3SecurityContext, bucket));
         updateSharedSourceLink(source, project);
 

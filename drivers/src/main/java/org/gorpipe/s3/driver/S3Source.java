@@ -33,15 +33,16 @@ import org.gorpipe.base.security.Credentials;
 import org.gorpipe.base.streams.LimitedOutputStream;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
-import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.util.PathUtils;
+import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
@@ -72,6 +73,7 @@ public class S3Source implements StreamSource {
     private final String bucket;
     private final String key;
     private final S3Client client;
+    private final S3AsyncClient asyncClient;
     private static S3FileSystem s3fs;
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -87,11 +89,21 @@ public class S3Source implements StreamSource {
      * @param sourceReference contains S3 url of the form s3://bucket/objectpath
      */
     public S3Source(S3Client client, SourceReference sourceReference) throws MalformedURLException {
-        this(client, sourceReference, S3Url.parse(sourceReference));
+        this(client, null, sourceReference, S3Url.parse(sourceReference));
     }
 
-    S3Source(S3Client client, SourceReference sourceReference, S3Url url) {
+    /**
+     * Create source
+     *
+     * @param sourceReference contains S3 url of the form s3://bucket/objectpath
+     */
+    public S3Source(S3Client client, S3AsyncClient asyncClient, SourceReference sourceReference) throws MalformedURLException {
+        this(client, asyncClient, sourceReference, S3Url.parse(sourceReference));
+    }
+
+    S3Source(S3Client client, S3AsyncClient asyncClient, SourceReference sourceReference, S3Url url) {
         this.client = client;
+        this.asyncClient = asyncClient;
         this.sourceReference = sourceReference;
         this.bucket = url.getBucket();
         this.key = url.getPath();
@@ -160,6 +172,10 @@ public class S3Source implements StreamSource {
     }
 
     private InputStream openRequest(GetObjectRequest request) {
+        if (asyncClient != null) {
+            return new AbortingInputStream(asyncClient.getObject(request, AsyncResponseTransformer.toBlockingInputStream()).join(), request);
+        }
+
         try {
             return new AbortingInputStream(client.getObject(request), request);
         } catch (SdkClientException e) {
@@ -182,10 +198,14 @@ public class S3Source implements StreamSource {
 
     private S3SourceMetadata createMetaData(String bucket, String key) {
         HeadObjectResponse objectMetaResponse;
-        try {
-            objectMetaResponse = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
-        } catch (SdkClientException e) {
-            throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
+        if (asyncClient != null) {
+            objectMetaResponse = asyncClient.headObject(b -> b.bucket(bucket).key(key)).join();
+        } else {
+            try {
+                objectMetaResponse = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
+            } catch (SdkClientException e) {
+                throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
+            }
         }
         return new S3SourceMetadata(this, objectMetaResponse, sourceReference.getLinkLastModified());
     }
