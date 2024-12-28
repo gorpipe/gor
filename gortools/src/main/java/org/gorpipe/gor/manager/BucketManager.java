@@ -308,7 +308,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
     private void checkBucketDirExistence(String bucketDir) {
         // Create the default bucket dir (if it is to be used and is missing)
-        if (!table.getFileReader().exists(bucketDir.toString())) {
+        if (!table.getFileReader().exists(PathUtils.markAsFolder(bucketDir.toString()))) {
             String fullPathDefaultBucketDir = PathUtils.resolve(table.getRootPath(), getDefaultBucketDir());
             if (bucketDir.equals(fullPathDefaultBucketDir)) {
                 try {

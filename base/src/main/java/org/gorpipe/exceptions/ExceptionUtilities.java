@@ -25,6 +25,7 @@ package org.gorpipe.exceptions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -413,6 +414,7 @@ public final class ExceptionUtilities {
 
             if (cause instanceof ExecutionException
                     || cause instanceof UncheckedExecutionException
+                    || cause instanceof CompletionException
                     || cause instanceof GorException) {
                 cause = cause.getCause();
             } else {

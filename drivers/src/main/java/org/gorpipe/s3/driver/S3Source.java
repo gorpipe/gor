@@ -31,6 +31,7 @@ import org.carlspring.cloud.storage.s3fs.S3FileSystem;
 import org.carlspring.cloud.storage.s3fs.S3Path;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.base.streams.LimitedOutputStream;
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.binsearch.GorIndexType;
 import org.gorpipe.gor.driver.meta.DataType;
@@ -243,9 +244,11 @@ public class S3Source implements StreamSource {
     @Override
     public boolean exists() {
         try {
-            // Note: fileExists only handles dirs if the end with /. Therefor we fall back to the much slower Files.exists.
-            //       To do a exists with aws filesystem: return Files.exists(Path.of(URI.create(getName())));
-            return fileExists() || Files.exists(getPath());
+            // Note: fileExists only handles dirs if the end with / (and have explictly been created).
+            // Therefor we can either fall back to the much slower Files.exists, just say that all dirs exists in S3
+            // (as the don't have to explicitly be created).
+            // Note: To do a exists with aws filesystem: return Files.exists(Path.of(URI.create(getName())));
+            return fileExists() || getName().endsWith("/");//|| Files.exists(getPath());
         } catch (Exception e) {
             Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
             throw new GorResourceException(String.format("Exists failed for %s, region: %s, access key: %s, secret key: %s",
@@ -263,7 +266,8 @@ public class S3Source implements StreamSource {
             getSourceMetadata();
             return true;
         } catch (GorResourceException e) {
-            if (e.getCause() != null && e.getCause() instanceof NoSuchKeyException) {
+            var cause = ExceptionUtilities.getUnderlyingCause(e);
+            if (cause instanceof NoSuchKeyException) {
                 return false;
             }
             throw e;
