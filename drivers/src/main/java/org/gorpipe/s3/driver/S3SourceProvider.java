@@ -60,8 +60,8 @@ import java.util.regex.Pattern;
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
 
-    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "true"));
-    private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "false"));
+    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "false"));
+    private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "true"));
 
     private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
@@ -148,6 +148,10 @@ public class S3SourceProvider extends StreamSourceProvider {
             final ProxyConfiguration.Builder proxyConfig = ProxyConfiguration.builder();
             proxyConfig.host(proxy);
             proxyConfig.port(Integer.parseInt(port));
+            httpClientBuilder.proxyConfiguration(proxyConfig.build());
+        } else {
+            final var proxyConfig = ProxyConfiguration.builder();
+            proxyConfig.useEnvironmentVariableValues(false);
             httpClientBuilder.proxyConfiguration(proxyConfig.build());
         }
 
@@ -263,8 +267,13 @@ public class S3SourceProvider extends StreamSourceProvider {
         if (proxy != null && port != null) {
             log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
             final var proxyConfig = software.amazon.awssdk.http.nio.netty.ProxyConfiguration.builder();
+            proxyConfig.scheme("http");
             proxyConfig.host(proxy);
             proxyConfig.port(Integer.parseInt(port));
+            httpClientBuilder.proxyConfiguration(proxyConfig.build());
+        } else {
+            final var proxyConfig = software.amazon.awssdk.http.nio.netty.ProxyConfiguration.builder();
+            proxyConfig.useEnvironmentVariableValues(false);
             httpClientBuilder.proxyConfiguration(proxyConfig.build());
         }
 
