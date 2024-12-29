@@ -47,6 +47,8 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.crt.S3CrtHttpConfiguration;
+import software.amazon.awssdk.services.s3.crt.S3CrtProxyConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -58,8 +60,8 @@ import java.util.regex.Pattern;
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
 
-    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "false"));
-    private static final boolean USE_NETTY_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.netty", "true"));
+    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "true"));
+    private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "false"));
 
     private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
@@ -223,17 +225,17 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     protected S3AsyncClient getAsyncClient(String securityContext, String bucket) throws IOException {
-        if (USE_CRT_CLIENT) {
-            return null; //createCrtAsyncClient(cred);
+        if (!USE_ASYNC_CLIENT) {
+            return null;
         }
-        if (USE_NETTY_CLIENT) {
-            BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
-            return asyncClientCredCache.getClient(creds, bucket);
-        }
-        return null;
+        BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
+        return asyncClientCredCache.getClient(creds, bucket);
     }
 
     private S3AsyncClient createAsyncClient(Credentials cred) {
+        if (USE_CRT_CLIENT) {
+            return createAsyncCrtClient(cred);
+        }
         return createNettyClient(cred);
     }
 
@@ -283,6 +285,55 @@ public class S3SourceProvider extends StreamSourceProvider {
         builder.forcePathStyle(true);
 
         builder.crossRegionAccessEnabled(true);
+
+        return builder.build();
+    }
+
+    private S3AsyncClient createAsyncCrtClient(Credentials cred) {
+        var builder = S3AsyncClient.crtBuilder();
+
+        builder.retryConfiguration(b -> b
+                .numRetries(s3Config.connectionRetries())
+        );
+
+        // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
+
+        var httpConfigBuilder = S3CrtHttpConfiguration.builder()
+                .connectionTimeout(s3Config.connectionTimeout());
+
+        final String proxy = System.getProperty("http.proxyHost");
+        final String port = System.getProperty("http.proxyPort");
+        if (proxy != null && port != null) {
+            log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
+            final S3CrtProxyConfiguration.Builder proxyConfig = S3CrtProxyConfiguration.builder();
+            proxyConfig.host(proxy);
+            proxyConfig.port(Integer.parseInt(port));
+            httpConfigBuilder.proxyConfiguration(proxyConfig.build());
+        }
+
+        builder.httpConfiguration(httpConfigBuilder.build());
+
+
+//        var metricsPub = new PrometheusMetricPublisher();
+//        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        // OCI compat layer needs path style access.
+        builder.forcePathStyle(true);
+
+        builder.crossRegionAccessEnabled(true);
+
+//        builder.credentialsProvider(getCredentialsProvider(cred))
+//                .region(getRegion(cred, endpoint))
+//                .targetThroughputInGbps(20.0)
+//                .minimumPartSizeInBytes(8 * 1025 * 1024L)
+//                .build();
 
         return builder.build();
     }
