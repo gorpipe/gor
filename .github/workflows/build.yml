@@ -26,7 +26,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    #if: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -143,10 +142,8 @@ jobs:
           files: '**/TEST-*.xml'
 
   publishSnapshot:
-    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ENGKNOW-1855-object-store-performance' }}
-    #if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     needs: [test, slowTest, integrationTest]
-    #needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

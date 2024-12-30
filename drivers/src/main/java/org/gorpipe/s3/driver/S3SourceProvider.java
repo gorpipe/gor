@@ -124,16 +124,11 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         AwsCrtHttpClient.Builder httpClientBuilder = AwsCrtHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
-                //.connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
                 .maxConcurrency(s3Config.connectionPoolSize())  // Default was 50
                 .tcpKeepAliveConfiguration(b -> b
                         .keepAliveInterval(Duration.ofMillis(s3Config.socketTimeout().toMillis()/2))
                         .keepAliveTimeout(s3Config.connectionTimeout()))
-                //.connectionHealthConfiguration()
-                //.readBufferSizeInBytes()
                 ;
-
-        // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
 
         final String proxy = System.getProperty("http.proxyHost");
         final String port = System.getProperty("http.proxyPort");
@@ -147,41 +142,38 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        var metricsPub = new PrometheusMetricPublisher();
-        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
 
-        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
-                //.apiCallTimeout(s3Config.socketTimeout())
-        );
-
+        // OCI compat layer needs path style access.
         if (isOciEndpoint(endpoint)) {
-            // OCI compat layer needs path style access.
             builder.forcePathStyle(true);
         }
 
         // Cross region access.  One use it to create client with emtpy creds and apply creds/region/endpoint later.
         builder.crossRegionAccessEnabled(true);
 
+        var metricsPub = new PrometheusMetricPublisher();
+        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
         return builder.build();
     }
 
     private S3Client createApacheClient(Credentials cred) {
-        var builder = S3Client.builder()
-                .overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                        //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
-                        //.apiCallTimeout(s3Config.socketTimeout())
+        var builder = S3Client.builder();
 
-                );
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
 
         ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .socketTimeout(s3Config.socketTimeout())          // Default was 30s
                 .maxConnections(s3Config.connectionPoolSize())    // Default was 50
-                //.connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
-                //.connectionTimeToLive(Duration.ZERO)    // Default was -1
-                //.connectionAcquisitionTimeout(s3Config.connectionTimeout())  // Default was 45s
-                //.useIdleConnectionReaper(false)
                 .tcpKeepAlive(true)
                 ;
 
@@ -198,21 +190,17 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.credentialsProvider(getCredentialsProvider(cred));
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
+
+        builder.crossRegionAccessEnabled(true);
 
         var metricsPub = new PrometheusMetricPublisher();
         builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
-
-        builder.region(getRegion(cred, endpoint));
-
-        // OCI compat layer needs path style access.
-        builder.forcePathStyle(true);
-
-        builder.crossRegionAccessEnabled(true);
 
         return builder.build();
     }
@@ -233,23 +221,22 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     private S3AsyncClient createNettyClient(Credentials cred) {
-        var builder = S3AsyncClient.builder()
-                .overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                        //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
-                        //.apiCallTimeout(s3Config.socketTimeout())
+        var builder = S3AsyncClient.builder();
 
-                );
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
 
         NettyNioAsyncHttpClient.Builder httpClientBuilder = NettyNioAsyncHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .maxConcurrency(s3Config.connectionPoolSize())
-                //.connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
-                //.connectionTimeToLive(Duration.ZERO)    // Default was -1
-                //.connectionAcquisitionTimeout(s3Config.connectionTimeout())  // Default was 45s
                 .tcpKeepAlive(true)
                 ;
-
-        // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
 
         final String proxy = System.getProperty("http.proxyHost");
         final String port = System.getProperty("http.proxyPort");
@@ -264,21 +251,17 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.credentialsProvider(getCredentialsProvider(cred));
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
+
+        builder.crossRegionAccessEnabled(true);
 
         var metricsPub = new PrometheusMetricPublisher();
         builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
-
-        builder.region(getRegion(cred, endpoint));
-
-        // OCI compat layer needs path style access.
-        builder.forcePathStyle(true);
-
-        builder.crossRegionAccessEnabled(true);
 
         return builder.build();
     }
@@ -286,11 +269,18 @@ public class S3SourceProvider extends StreamSourceProvider {
     private S3AsyncClient createAsyncCrtClient(Credentials cred) {
         var builder = S3AsyncClient.crtBuilder();
 
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
         builder.retryConfiguration(b -> b
                 .numRetries(s3Config.connectionRetries())
         );
-
-        // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
 
         var httpConfigBuilder = S3CrtHttpConfiguration.builder()
                 .connectionTimeout(s3Config.connectionTimeout());
@@ -307,27 +297,12 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpConfiguration(httpConfigBuilder.build());
 
-
-//        var metricsPub = new PrometheusMetricPublisher();
-//        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
-
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
         }
 
-        builder.region(getRegion(cred, endpoint));
-
-        // OCI compat layer needs path style access.
-        builder.forcePathStyle(true);
-
         builder.crossRegionAccessEnabled(true);
-
-//        builder.credentialsProvider(getCredentialsProvider(cred))
-//                .region(getRegion(cred, endpoint))
-//                .targetThroughputInGbps(20.0)
-//                .minimumPartSizeInBytes(8 * 1025 * 1024L)
-//                .build();
 
         return builder.build();
     }

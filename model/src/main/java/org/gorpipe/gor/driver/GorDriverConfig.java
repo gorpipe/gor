@@ -139,7 +139,7 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("The range that triggers automatic range extension.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold")
-    @DefaultValue("1 mb")
+    @DefaultValue("64 kb")
     @ConverterClass(ByteSizeConverter.class)
     ByteSize extendedRangeStreamingSeekThreshold();
 
