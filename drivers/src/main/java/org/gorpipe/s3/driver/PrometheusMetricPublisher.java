@@ -11,9 +11,9 @@ import software.amazon.awssdk.metrics.MetricPublisher;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PrometheusMetricPublisher implements MetricPublisher {
     private static final Logger logger = LoggerFactory.getLogger(PrometheusMetricPublisher.class);
@@ -26,9 +26,9 @@ public class PrometheusMetricPublisher implements MetricPublisher {
 
     static final String[] BLACKLISTED_METRIC_WORDS = new String[]{"RequestId"};
 
-    private static final Map<String, Counter> counters = new HashMap<>();
-    private static final Map<String, Gauge> gauges = new HashMap<>();
-    private static final Map<String, Histogram> histograms = new HashMap<>();
+    private static final Map<String, Counter> counters = new ConcurrentHashMap<>();
+    private static final Map<String, Gauge> gauges = new ConcurrentHashMap<>();
+    private static final Map<String, Histogram> histograms = new ConcurrentHashMap<>();
 
     @Override
     public void publish(MetricCollection metricCollection) {

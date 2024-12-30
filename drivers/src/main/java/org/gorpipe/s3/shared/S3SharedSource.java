@@ -27,6 +27,7 @@ import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.s3.driver.*;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.MalformedURLException;
@@ -48,9 +49,9 @@ public class S3SharedSource extends S3Source {
      * Create source
      *
      */
-    public S3SharedSource(S3Client client, SourceReference sourceReference,
+    public S3SharedSource(S3Client client, S3AsyncClient asyncClient, SourceReference sourceReference,
                           String relativePath, S3SharedConfiguration s3SharedConfig) throws MalformedURLException {
-        super(client, sourceReference);
+        super(client, asyncClient, sourceReference);
         this.relativePath = relativePath;
         this.s3SharedConfig = s3SharedConfig;
     }

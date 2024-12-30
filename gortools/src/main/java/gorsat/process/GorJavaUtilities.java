@@ -579,7 +579,7 @@ public class GorJavaUtilities {
 
     public static void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
         FileReader localFileReader = fileReader;
-        try (Stream<String> metapathstream = localFileReader.walk(outfolderpath);
+        try (Stream<String> metapathstream = localFileReader.list(outfolderpath);
              Writer dictionarypathwriter = new OutputStreamWriter(localFileReader.getOutputStream(dictionarypath))) {
             var metaList = metapathstream.parallel().filter(p -> DataUtil.isMeta(p)).map(p -> GorMeta.createAndLoad(localFileReader, p)).collect(Collectors.toList());
             if (metaList.size() > 0) {

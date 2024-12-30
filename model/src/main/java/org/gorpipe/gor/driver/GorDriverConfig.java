@@ -80,13 +80,13 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("The time to wait before the first retry.")
     @Key("org.gorpipe.gor.driver.retries.initial_sleep")
-    @DefaultValue("100 milliseconds")
+    @DefaultValue("2 seconds")
     @ConverterClass(DurationConverter.class)
     Duration retryInitialSleep();
 
     @Documentation("The maximum time to wait for retrying.")
     @Key("org.gorpipe.gor.driver.retries.max_sleep")
-    @DefaultValue("60 seconds")
+    @DefaultValue("120 seconds")
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSleep();
 
@@ -139,7 +139,7 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("The range that triggers automatic range extension.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold")
-    @DefaultValue("32 kb")
+    @DefaultValue("64 kb")
     @ConverterClass(ByteSizeConverter.class)
     ByteSize extendedRangeStreamingSeekThreshold();
 

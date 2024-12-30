@@ -22,6 +22,7 @@
 
 package org.gorpipe.s3.driver;
 
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 
@@ -35,7 +36,7 @@ public class S3SourceMetadata extends StreamSourceMetadata {
 
     private final HeadObjectResponse omd;
 
-    public S3SourceMetadata(S3Source source, HeadObjectResponse md, Long linkLastModified) {
+    public S3SourceMetadata(StreamSource source, HeadObjectResponse md, Long linkLastModified) {
         super(source, source.getName(), md.lastModified().toEpochMilli(), linkLastModified, md.contentLength(), null);
         this.omd = md;
     }

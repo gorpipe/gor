@@ -6,9 +6,11 @@ import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.Duration;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +34,8 @@ public class ReaderThread extends Thread {
 
     private long numberOfPollsBeforeLog;
     private long numberOfPollsBeforeTimeout;
+
+    Map<String, String> contextMap;
 
     public ReaderThread(BatchedPipeStepIteratorAdaptor batchedPipeStepIteratorAdaptor, Analysis pipeStep, BufferAdaptor bufferAdaptor, BatchedReadSourceConfig brsConfig) {
         this.batchedPipeStepIteratorAdaptor = batchedPipeStepIteratorAdaptor;
@@ -79,6 +83,10 @@ public class ReaderThread extends Thread {
         bufferAdaptor.avgSeekTimeMilliSecond = avgSeekTimeMilliSecond;
     }
 
+    public void setMDC(Map<String, String> contextMap) {
+        this.contextMap = contextMap;
+    }
+
     private void init() {
         this.setName(Thread.currentThread().getName() + "::ReaderThread");
         rowBuffer1.setNextRowBuffer(rowBuffer2);
@@ -123,6 +131,9 @@ public class ReaderThread extends Thread {
     }
 
     public void run() {
+        if (contextMap != null) {
+            MDC.setContextMap(contextMap);
+        }
         didStart = true;
         Row r = null;
         try {

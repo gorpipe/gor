@@ -23,8 +23,6 @@
 package org.gorpipe.s3.driver;
 
 import com.google.auto.service.AutoService;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
@@ -41,23 +39,30 @@ import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.util.StringUtil;
 import software.amazon.awssdk.auth.credentials.*;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
-import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.crt.ProxyConfiguration;
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.crt.S3CrtHttpConfiguration;
+import software.amazon.awssdk.services.s3.crt.S3CrtProxyConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
-    private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build();
+
+    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "true"));
+    private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "false"));
+
     private final CredentialClientCache<S3Client> clientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
+    private final CredentialClientCache<S3AsyncClient> asyncClientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createAsyncClient);
+
     private final S3Configuration s3Config;
 
 
@@ -81,7 +86,8 @@ public class S3SourceProvider extends StreamSourceProvider {
             throws IOException {
         S3Url url = S3Url.parse(sourceReference);
         S3Client client = getClient(sourceReference.getSecurityContext(), url.getLookupKey());
-        return new S3Source(client, sourceReference);
+        S3AsyncClient asyncClient = getAsyncClient(sourceReference.getSecurityContext(), url.getLookupKey());
+        return new S3Source(client, asyncClient, sourceReference);
     }
 
     @Override
@@ -98,21 +104,76 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     private S3Client createClient(Credentials cred) {
-        var builder = S3Client.builder()
-                .overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                        //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
-                        //.apiCallTimeout(s3Config.socketTimeout())
+        if (USE_CRT_CLIENT) {
+            return createCrtClient(cred);
+        }
+        return createApacheClient(cred);
+    }
 
-                        );
+    private S3Client createCrtClient(Credentials cred) {
+        var builder = S3Client.builder();
+
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
+        AwsCrtHttpClient.Builder httpClientBuilder = AwsCrtHttpClient.builder()
+                .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
+                .maxConcurrency(s3Config.connectionPoolSize())  // Default was 50
+                .tcpKeepAliveConfiguration(b -> b
+                        .keepAliveInterval(Duration.ofMillis(s3Config.socketTimeout().toMillis()/2))
+                        .keepAliveTimeout(s3Config.connectionTimeout()))
+                ;
+
+        final String proxy = System.getProperty("http.proxyHost");
+        final String port = System.getProperty("http.proxyPort");
+        if (proxy != null && port != null) {
+            log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
+            final ProxyConfiguration.Builder proxyConfig = ProxyConfiguration.builder();
+            proxyConfig.host(proxy);
+            proxyConfig.port(Integer.parseInt(port));
+            httpClientBuilder.proxyConfiguration(proxyConfig.build());
+        }
+
+        builder.httpClientBuilder(httpClientBuilder);
+
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
+
+        // Cross region access.  One use it to create client with emtpy creds and apply creds/region/endpoint later.
+        builder.crossRegionAccessEnabled(true);
+
+        var metricsPub = new PrometheusMetricPublisher();
+        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
+        return builder.build();
+    }
+
+    private S3Client createApacheClient(Credentials cred) {
+        var builder = S3Client.builder();
+
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
 
         ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .socketTimeout(s3Config.socketTimeout())          // Default was 30s
                 .maxConnections(s3Config.connectionPoolSize())    // Default was 50
-                //.connectionMaxIdleTime(Duration.ofMillis(s3Config.socketTimeout().toMillis() * 2))  // Default was 60s
-                .connectionTimeToLive(Duration.ZERO)    // Default was -1
-                //.connectionAcquisitionTimeout(s3Config.connectionTimeout())  // Default was 45s
-                //.useIdleConnectionReaper(false)
                 .tcpKeepAlive(true)
                 ;
 
@@ -122,17 +183,46 @@ public class S3SourceProvider extends StreamSourceProvider {
         final String port = System.getProperty("http.proxyPort");
         if (proxy != null && port != null) {
             log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
-            final ProxyConfiguration.Builder proxyConfig = ProxyConfiguration.builder();
+            final software.amazon.awssdk.http.apache.ProxyConfiguration.Builder proxyConfig = software.amazon.awssdk.http.apache.ProxyConfiguration.builder();
             proxyConfig.endpoint(URI.create(proxy + ":" + port));
             httpClientBuilder.proxyConfiguration(proxyConfig.build());
         }
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.credentialsProvider(getCredentialsProvider(cred));
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
+
+        builder.crossRegionAccessEnabled(true);
 
         var metricsPub = new PrometheusMetricPublisher();
         builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
+        return builder.build();
+    }
+
+    protected S3AsyncClient getAsyncClient(String securityContext, String bucket) throws IOException {
+        if (!USE_ASYNC_CLIENT) {
+            return null;
+        }
+        BundledCredentials creds = BundledCredentials.fromSecurityContext(securityContext);
+        return asyncClientCredCache.getClient(creds, bucket);
+    }
+
+    private S3AsyncClient createAsyncClient(Credentials cred) {
+        if (USE_CRT_CLIENT) {
+            return createAsyncCrtClient(cred);
+        }
+        return createNettyClient(cred);
+    }
+
+    private S3AsyncClient createNettyClient(Credentials cred) {
+        var builder = S3AsyncClient.builder();
+
         var endpoint = getEndpoint(cred);
         if (!StringUtil.isEmpty(endpoint)) {
             builder.endpointOverride(URI.create(endpoint));
@@ -140,8 +230,77 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.region(getRegion(cred, endpoint));
 
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
+        NettyNioAsyncHttpClient.Builder httpClientBuilder = NettyNioAsyncHttpClient.builder()
+                .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
+                .maxConcurrency(s3Config.connectionPoolSize())
+                .tcpKeepAlive(true)
+                ;
+
+        final String proxy = System.getProperty("http.proxyHost");
+        final String port = System.getProperty("http.proxyPort");
+        if (proxy != null && port != null) {
+            log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
+            final var proxyConfig = software.amazon.awssdk.http.nio.netty.ProxyConfiguration.builder();
+            proxyConfig.scheme("http");
+            proxyConfig.host(proxy);
+            proxyConfig.port(Integer.parseInt(port));
+            httpClientBuilder.proxyConfiguration(proxyConfig.build());
+        }
+
+        builder.httpClientBuilder(httpClientBuilder);
+
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+
         // OCI compat layer needs path style access.
-        builder.forcePathStyle(true);
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
+
+        builder.crossRegionAccessEnabled(true);
+
+        var metricsPub = new PrometheusMetricPublisher();
+        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
+        return builder.build();
+    }
+
+    private S3AsyncClient createAsyncCrtClient(Credentials cred) {
+        var builder = S3AsyncClient.crtBuilder();
+
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
+        builder.retryConfiguration(b -> b
+                .numRetries(s3Config.connectionRetries())
+        );
+
+        var httpConfigBuilder = S3CrtHttpConfiguration.builder()
+                .connectionTimeout(s3Config.connectionTimeout());
+
+        final String proxy = System.getProperty("http.proxyHost");
+        final String port = System.getProperty("http.proxyPort");
+        if (proxy != null && port != null) {
+            log.info("RDA AWS connection - Proxy set to {}:{}", proxy, port);
+            final S3CrtProxyConfiguration.Builder proxyConfig = S3CrtProxyConfiguration.builder();
+            proxyConfig.host(proxy);
+            proxyConfig.port(Integer.parseInt(port));
+            httpConfigBuilder.proxyConfiguration(proxyConfig.build());
+        }
+
+        builder.httpConfiguration(httpConfigBuilder.build());
+
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
 
         builder.crossRegionAccessEnabled(true);
 
@@ -150,6 +309,7 @@ public class S3SourceProvider extends StreamSourceProvider {
 
     AwsCredentialsProvider getCredentialsProvider(Credentials cred) {
         if (cred == null || cred.isNull()) {
+            log.info("CredentialsProvider: DefaultCredentialsProvider for null creds");
             return DefaultCredentialsProvider.create();
         } else {
             var awsKey = cred.getOrDefault(Credentials.Attr.KEY, "");
@@ -173,7 +333,7 @@ public class S3SourceProvider extends StreamSourceProvider {
                                     .build());
                 }
             } else {
-                log.info("CredentialsProvider: DefaultCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
+                log.info(String.format("CredentialsProvider: DefaultCredentialsProvider for %s:%s", cred.getService(), cred.getLookupKey()));
                 return DefaultCredentialsProvider.create();
             }
         }
@@ -189,7 +349,15 @@ public class S3SourceProvider extends StreamSourceProvider {
             endpoint = s3Config.s3Endpoint();
         }
 
+        if (StringUtils.isEmpty(endpoint)) {
+            endpoint = System.getProperty("s3.endpoint");
+        }
+
         return endpoint;
+    }
+
+    boolean isOciEndpoint(String endpoint) {
+        return endpoint != null && endpoint.contains(".objectstorage.");
     }
 
     Region getRegion(Credentials creds, String endpoint) {
@@ -209,6 +377,14 @@ public class S3SourceProvider extends StreamSourceProvider {
             if (m.matches()) {
                 regionStr = m.group(1);
             }
+        }
+
+        if (StringUtil.isEmpty(regionStr)) {
+            regionStr = System.getProperty("aws.region");
+        }
+
+        if (StringUtil.isEmpty(regionStr)) {
+            regionStr = System.getenv("AWS_REGION");
         }
 
         return StringUtil.isEmpty(regionStr) ? Region.US_EAST_1 : Region.of(regionStr);

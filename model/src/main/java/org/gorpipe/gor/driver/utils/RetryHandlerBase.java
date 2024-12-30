@@ -1,11 +1,9 @@
 package org.gorpipe.gor.driver.utils;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.Thread.sleep;
 
@@ -32,5 +30,6 @@ public abstract class RetryHandlerBase {
             throw new GorSystemException("Retry thread interrupted after " + tries + " retries", e);
         }
     }
+
 }
 

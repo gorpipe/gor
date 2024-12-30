@@ -14,6 +14,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.driver.S3SourceProvider;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
@@ -99,6 +100,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         Credentials sharedCreds = getS3DataCredentials(getService(), sourceReference.getSecurityContext());
 
         if (sharedCreds == null) {
+            log.warn(String.format("No credentials found for %s. Returning emtpy source.", getService()));
             return source;
         }
 
@@ -110,7 +112,8 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
 
         S3Client client = getClient(s3SecurityContext, bucket);
-        source = new S3SharedSource(client, s3SourceReference, relativePath, s3SharedConfig);
+        S3AsyncClient asyncClient = getAsyncClient(s3SecurityContext, bucket);
+        source = new S3SharedSource(client, asyncClient, s3SourceReference, relativePath, s3SharedConfig);
         //source.setFileSystem(S3ClientFileSystemProvider.getInstance().getFileSystem(s3SecurityContext, bucket));
         updateSharedSourceLink(source, project);
 
@@ -175,8 +178,11 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     private S3SharedSource handleFallback(SourceReference sourceReference, S3SharedSource source) throws IOException {
         // TODO:  Using fallbacks could be costly.  Check how much it costs and evaluate caching strategies to speed things up.
         if (!s3SharedConfig.useFallback() || !sourceReference.isFallback() || sourceReference.isWriteSource() || (source != null && wrap(source).exists())) {
+            // Have a valid source, or we don't support fallback for this source.
             return source;
         }
+
+        // Try to find a fallback source.
 
         SourceReference fallbackSourceReference = createFallbackSourceReference(sourceReference);
 

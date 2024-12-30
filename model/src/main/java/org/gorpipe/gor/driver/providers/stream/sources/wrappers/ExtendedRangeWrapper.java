@@ -179,7 +179,9 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
                     in.close();
 
                     // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.
-                    long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
+                    //long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
+                    long rlen = Math.max(len - read, Math.min(Math.max(lastRequest.getLength() * 2, DEFAULT_HEADER_RANGE), maxRange));
+
 
                     // 3. Open new 'in' stream at last position + new request length
                     RequestRange range = RequestRange.fromFirstLength(bookKeeping.getFirst() + getPosition(), rlen);

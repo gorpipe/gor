@@ -107,17 +107,15 @@ case class ForkWrite(forkCol: Int,
 
   def ensureDir(projectContext: ProjectContext, path: String, parent: Boolean = false): Unit = {
     val fileReader = projectContext.getFileReader
-    if (PathUtils.isLocal(path)) {
-      val dir = if (parent) {
-        val parent = Paths.get(path).getParent
-        if (parent != null) parent.toString else null
-      } else {
-        path
-      }
+    val dir = if (parent) {
+      val parent = PathUtils.getParent(path)
+      if (parent != null) parent else null
+    } else {
+      path
+    }
 
-      if (dir != null && !fileReader.exists(dir)) {
-        fileReader.createDirectories(dir)
-      }
+    if (dir != null && !fileReader.exists(dir)) {
+      fileReader.createDirectories(dir)
     }
   }
 

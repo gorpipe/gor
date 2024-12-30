@@ -1,5 +1,6 @@
 package org.gorpipe.oci.driver;
 
+import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.utils.DriverUtils;
@@ -92,7 +93,10 @@ public class UTestOCIObjectStorageSourceType {
     @Test
     public void testResolveS3OciHttpUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("s3://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/the/path.dat", securityContext(), null, null, null,  false));
+                new SourceReference("s3://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/the/path.dat",
+                        DriverUtils.createSecurityContext("s3", "namespace.objectstorage.us-ashburn-1.oci.customer-oci.com",
+                               Credentials.OwnerType.System, "", "dummy", "dummy",
+                                "", ""), null, null, null,  false));
         assertNotEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 

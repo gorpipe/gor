@@ -25,8 +25,10 @@ package org.gorpipe.exceptions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
-import org.gorpipe.logging.GorLogbackUtil;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
@@ -400,6 +402,25 @@ public final class ExceptionUtilities {
         }
 
         return builder.toString().trim();
+    }
+
+    // Find the cause by ignoring ExecutionExceptions and GORExceptions (unless it is last one)
+    public static Throwable getUnderlyingCause(Exception ex) {
+        Throwable cause = ex;
+        while (true) {
+            if (cause.getCause() == null) {
+                return cause;
+            }
+
+            if (cause instanceof ExecutionException
+                    || cause instanceof UncheckedExecutionException
+                    || cause instanceof CompletionException
+                    || cause instanceof GorException) {
+                cause = cause.getCause();
+            } else {
+                return cause;
+            }
+        }
     }
 
     /**
