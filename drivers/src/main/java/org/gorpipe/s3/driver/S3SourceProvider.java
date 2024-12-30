@@ -23,8 +23,6 @@
 package org.gorpipe.s3.driver;
 
 import com.google.auto.service.AutoService;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.security.BundledCredentials;
@@ -54,18 +52,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
 
-    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "false"));
-    private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "true"));
+    private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "true"));
+    private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "false"));
 
-    private final Cache<String, S3Client> clientCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build();
     private final CredentialClientCache<S3Client> clientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final CredentialClientCache<S3AsyncClient> asyncClientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createAsyncClient);
 
@@ -149,10 +143,6 @@ public class S3SourceProvider extends StreamSourceProvider {
             proxyConfig.host(proxy);
             proxyConfig.port(Integer.parseInt(port));
             httpClientBuilder.proxyConfiguration(proxyConfig.build());
-        } else {
-            final var proxyConfig = ProxyConfiguration.builder();
-            proxyConfig.useEnvironmentVariableValues(false);
-            httpClientBuilder.proxyConfiguration(proxyConfig.build());
         }
 
         builder.httpClientBuilder(httpClientBuilder);
@@ -164,7 +154,6 @@ public class S3SourceProvider extends StreamSourceProvider {
                 //.apiCallAttemptTimeout(Duration.ofMillis(s3Config.socketTimeout().toMillis()/(s3Config.connectionRetries() * 3)))
                 //.apiCallTimeout(s3Config.socketTimeout())
         );
-
 
         if (isOciEndpoint(endpoint)) {
             // OCI compat layer needs path style access.
@@ -270,10 +259,6 @@ public class S3SourceProvider extends StreamSourceProvider {
             proxyConfig.scheme("http");
             proxyConfig.host(proxy);
             proxyConfig.port(Integer.parseInt(port));
-            httpClientBuilder.proxyConfiguration(proxyConfig.build());
-        } else {
-            final var proxyConfig = software.amazon.awssdk.http.nio.netty.ProxyConfiguration.builder();
-            proxyConfig.useEnvironmentVariableValues(false);
             httpClientBuilder.proxyConfiguration(proxyConfig.build());
         }
 
