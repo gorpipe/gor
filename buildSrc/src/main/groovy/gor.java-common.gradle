@@ -163,7 +163,7 @@ dependencies {
         }
         implementation('software.amazon.awssdk:apache-client') {
             version {
-                strictly("[2.29.6,)")
+                strictly("[2.29.47,)")
             }
         }
     }
