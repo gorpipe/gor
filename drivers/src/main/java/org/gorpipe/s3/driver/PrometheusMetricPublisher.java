@@ -1,9 +1,8 @@
 package org.gorpipe.s3.driver;
 
-import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
-
-import io.prometheus.client.Histogram;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Gauge;
+import io.prometheus.metrics.core.metrics.Histogram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.metrics.MetricCollection;
@@ -41,12 +40,12 @@ public class PrometheusMetricPublisher implements MetricPublisher {
     }
 
     private void mapMetrics(MetricCollection metricCollection) {
-        metricCollection.stream().forEach(record -> {
+        metricCollection.stream().forEach(metricRecord -> {
             try {
-                String metricName = METRIC_PREFIX + record.metric().name();
-                var value = record.value();
-                var levelLabel = record.metric().level().name();
-                var categoriesLabel = new HashSet<>(record.metric().categories().stream().map(c -> c.name()).toList()).toString();
+                String metricName = METRIC_PREFIX + metricRecord.metric().name();
+                var value = metricRecord.value();
+                var levelLabel = metricRecord.metric().level().name();
+                var categoriesLabel = new HashSet<>(metricRecord.metric().categories().stream().map(Enum::name).toList()).toString();
 
                 if (value instanceof Number || value instanceof Duration) {
                     var labelNames = new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME};
@@ -54,40 +53,40 @@ public class PrometheusMetricPublisher implements MetricPublisher {
 
                     if (metricName.contains("Count")) {
                         double doubleValue = ((Number) value).doubleValue();
-                        Counter counter = counters.computeIfAbsent(metricName, name -> Counter.build()
+                        Counter counter = counters.computeIfAbsent(metricName, name -> Counter.builder()
                                 .name(name)
                                 .help(name)
                                 .labelNames(labelNames)
                                 .register());
-                        counter.labels(labelsArray).inc(doubleValue);
+                        counter.labelValues(labelsArray).inc(doubleValue);
                     } else if (metricName.contains("Duration") || metricName.contains("Time")) {
                         double doubleValue = (value instanceof Duration) ? ((Duration) value).toMillis() : ((Number) value).doubleValue();
-                        Histogram histogram = histograms.computeIfAbsent(metricName, name -> Histogram.build()
+                        Histogram histogram = histograms.computeIfAbsent(metricName, name -> Histogram.builder()
                                 .name(name)
                                 .help(name)
                                 .labelNames(labelNames)
                                 .register());
-                        histogram.labels(labelsArray).observe(doubleValue);
+                        histogram.labelValues(labelsArray).observe(doubleValue);
                     } else {
                         double doubleValue = ((Number) value).doubleValue();
-                        Gauge gauge = gauges.computeIfAbsent(metricName, name -> Gauge.build()
+                        Gauge gauge = gauges.computeIfAbsent(metricName, name -> Gauge.builder()
                                 .name(name)
                                 .help(name)
                                 .labelNames(labelNames)
                                 .register());
-                        gauge.labels(labelsArray).set(doubleValue);
+                        gauge.labelValues(labelsArray).set(doubleValue);
                     }
-                } else if (!Arrays.stream(BLACKLISTED_METRIC_WORDS).anyMatch(metricName::contains)) {
+                } else if (Arrays.stream(BLACKLISTED_METRIC_WORDS).noneMatch(metricName::contains)) {
                     var typeLabel = value.toString();
                     var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel, typeLabel};
 
-                    Counter counter = counters.computeIfAbsent(metricName, name -> Counter.build()
+                    Counter counter = counters.computeIfAbsent(metricName, name -> Counter.builder()
                             .name(name)
                             .help(name)
-                            .labelNames(new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME, TYPE_LABEL_NAME})
+                            .labelNames(SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME, TYPE_LABEL_NAME)
                             .register());
 
-                    counter.labels(labelsArray).inc();
+                    counter.labelValues(labelsArray).inc();
                 }
             } catch (Exception e) {
                 // Ignore errors, map what we can.
@@ -102,6 +101,6 @@ public class PrometheusMetricPublisher implements MetricPublisher {
 
     @Override
     public void close() {
-
+        // Nothing to do.
     }
 }
