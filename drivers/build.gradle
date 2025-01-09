@@ -50,7 +50,7 @@ project(':drivers') {
         implementation 'com.oracle.oci.sdk:oci-java-sdk-identity'
         implementation 'org.apache.commons:commons-lang3:_'
         implementation 'org.apache.commons:commons-io:_'
-        implementation "io.prometheus:simpleclient:_"
+        implementation 'io.prometheus:prometheus-metrics-core:_'
         implementation 'com.lmax:disruptor:_'
 
         testFixturesImplementation project(':base')
