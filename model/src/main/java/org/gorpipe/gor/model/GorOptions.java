@@ -60,6 +60,9 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -88,6 +91,21 @@ public class GorOptions {
      */
     private final boolean useDictionaryCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
     private final boolean useTable = false;
+
+    private static final ForkJoinPool seekThreadPool = new ForkJoinPool(
+            16,
+            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+            null,
+            false,
+            16,
+            256,
+            1,
+            p -> true,
+            60,
+            TimeUnit.SECONDS);
+
+
+
     /**
      * The gorPipeSession
      */
@@ -432,9 +450,16 @@ public class GorOptions {
         // Prepare the driver frameworks for the files
         Stream<SourceRef> preparedSources = prepareSources(withTag);
 
-        Stream<GenomicIterator> iteratorStream = preparedSources.parallel().map(this::createGenomicIteratorFromRef);
-
-        List<GenomicIterator> genomicIterators = iteratorStream.collect(Collectors.toList());
+        List<GenomicIterator> genomicIterators;
+        try {
+            genomicIterators = seekThreadPool.submit(
+                    () -> preparedSources.parallel().map(this::createGenomicIteratorFromRef).collect(Collectors.toList())).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new GorSystemException("Interrupted while preparing sources", e);
+        } catch (ExecutionException e) {
+            throw new GorSystemException("Exception while preparing sources", e);
+        }
 
         if (genomicIterators.isEmpty()) {
             // No iterator in range, add dummy one (that will not return any rows) as we must return at least one.

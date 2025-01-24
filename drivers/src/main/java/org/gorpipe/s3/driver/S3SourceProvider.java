@@ -44,6 +44,7 @@ import software.amazon.awssdk.http.crt.ProxyConfiguration;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.S3BaseClientBuilder;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.crt.S3CrtHttpConfiguration;
 import software.amazon.awssdk.services.s3.crt.S3CrtProxyConfiguration;
@@ -52,6 +53,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Pattern;
 
 @AutoService(SourceProvider.class)
@@ -62,6 +65,8 @@ public class S3SourceProvider extends StreamSourceProvider {
 
     private final CredentialClientCache<S3Client> clientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final CredentialClientCache<S3AsyncClient> asyncClientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createAsyncClient);
+
+    private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10);
 
     private final S3Configuration s3Config;
 
@@ -113,15 +118,6 @@ public class S3SourceProvider extends StreamSourceProvider {
     private S3Client createCrtClient(Credentials cred) {
         var builder = S3Client.builder();
 
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
-
-        builder.region(getRegion(cred, endpoint));
-
-        builder.credentialsProvider(getCredentialsProvider(cred));
-
         AwsCrtHttpClient.Builder httpClientBuilder = AwsCrtHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .maxConcurrency(s3Config.connectionPoolSize())  // Default was 50
@@ -142,33 +138,13 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
-
-        // OCI compat layer needs path style access.
-        if (isOciEndpoint(endpoint)) {
-            builder.forcePathStyle(true);
-        }
-
-        // Cross region access.  One use it to create client with emtpy creds and apply creds/region/endpoint later.
-        builder.crossRegionAccessEnabled(true);
-
-        var metricsPub = new PrometheusMetricPublisher();
-        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+        applyBaseClientConfig(builder, cred);
 
         return builder.build();
     }
 
     private S3Client createApacheClient(Credentials cred) {
         var builder = S3Client.builder();
-
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
-
-        builder.region(getRegion(cred, endpoint));
-
-        builder.credentialsProvider(getCredentialsProvider(cred));
 
         ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
@@ -190,17 +166,7 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
-
-        // OCI compat layer needs path style access.
-        if (isOciEndpoint(endpoint)) {
-            builder.forcePathStyle(true);
-        }
-
-        builder.crossRegionAccessEnabled(true);
-
-        var metricsPub = new PrometheusMetricPublisher();
-        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+        applyBaseClientConfig(builder, cred);
 
         return builder.build();
     }
@@ -223,15 +189,6 @@ public class S3SourceProvider extends StreamSourceProvider {
     private S3AsyncClient createNettyClient(Credentials cred) {
         var builder = S3AsyncClient.builder();
 
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
-
-        builder.region(getRegion(cred, endpoint));
-
-        builder.credentialsProvider(getCredentialsProvider(cred));
-
         NettyNioAsyncHttpClient.Builder httpClientBuilder = NettyNioAsyncHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .maxConcurrency(s3Config.connectionPoolSize())
@@ -251,36 +208,13 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpClientBuilder(httpClientBuilder);
 
-        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
-
-        // OCI compat layer needs path style access.
-        if (isOciEndpoint(endpoint)) {
-            builder.forcePathStyle(true);
-        }
-
-        builder.crossRegionAccessEnabled(true);
-
-        var metricsPub = new PrometheusMetricPublisher();
-        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+        applyBaseClientConfig(builder, cred);
 
         return builder.build();
     }
 
     private S3AsyncClient createAsyncCrtClient(Credentials cred) {
         var builder = S3AsyncClient.crtBuilder();
-
-        var endpoint = getEndpoint(cred);
-        if (!StringUtil.isEmpty(endpoint)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
-
-        builder.region(getRegion(cred, endpoint));
-
-        builder.credentialsProvider(getCredentialsProvider(cred));
-
-        builder.retryConfiguration(b -> b
-                .numRetries(s3Config.connectionRetries())
-        );
 
         var httpConfigBuilder = S3CrtHttpConfiguration.builder()
                 .connectionTimeout(s3Config.connectionTimeout());
@@ -297,6 +231,25 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpConfiguration(httpConfigBuilder.build());
 
+        builder.maxConcurrency(s3Config.connectionPoolSize());
+        //builder.accelerate(true)
+
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
+        builder.retryConfiguration(b -> b.numRetries(s3Config.connectionRetries()));
+
+//        var metricsPub = new PrometheusMetricPublisher();
+//        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
+        builder.futureCompletionExecutor(scheduledExecutorService);
+
         // OCI compat layer needs path style access.
         if (isOciEndpoint(endpoint)) {
             builder.forcePathStyle(true);
@@ -305,6 +258,33 @@ public class S3SourceProvider extends StreamSourceProvider {
         builder.crossRegionAccessEnabled(true);
 
         return builder.build();
+    }
+
+    private void applyBaseClientConfig(S3BaseClientBuilder<?, ?> builder, Credentials cred) {
+        //builder.accelerate(true);
+
+        var endpoint = getEndpoint(cred);
+        if (!StringUtil.isEmpty(endpoint)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        builder.region(getRegion(cred, endpoint));
+
+        builder.credentialsProvider(getCredentialsProvider(cred));
+
+        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+
+        var metricsPub = new PrometheusMetricPublisher();
+        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
+
+        builder.overrideConfiguration(c -> c.scheduledExecutorService(scheduledExecutorService));
+
+        // OCI compat layer needs path style access.
+        if (isOciEndpoint(endpoint)) {
+            builder.forcePathStyle(true);
+        }
+
+        builder.crossRegionAccessEnabled(true);
     }
 
     AwsCredentialsProvider getCredentialsProvider(Credentials cred) {
