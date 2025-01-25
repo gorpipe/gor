@@ -27,10 +27,7 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
-import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.exceptions.*;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.filters.InFilter;
 import org.gorpipe.gor.driver.filters.RowFilter;
@@ -454,11 +451,8 @@ public class GorOptions {
         try {
             genomicIterators = seekThreadPool.submit(
                     () -> preparedSources.parallel().map(this::createGenomicIteratorFromRef).collect(Collectors.toList())).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new GorSystemException("Interrupted while preparing sources", e);
-        } catch (ExecutionException e) {
-            throw new GorSystemException("Exception while preparing sources", e);
+        } catch (Exception e) {
+            throw ExceptionUtilities.wrapExceptionInGorException(e);
         }
 
         if (genomicIterators.isEmpty()) {

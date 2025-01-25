@@ -404,7 +404,7 @@ public final class ExceptionUtilities {
         return builder.toString().trim();
     }
 
-    // Find the cause by ignoring ExecutionExceptions and GORExceptions (unless it is last one)
+    // Find the cause by ignoring ExecutionExceptions ((and related exception)) and GORExceptions (unless it is last one)
     public static Throwable getUnderlyingCause(Exception ex) {
         Throwable cause = ex;
         while (true) {
@@ -420,6 +420,40 @@ public final class ExceptionUtilities {
             } else {
                 return cause;
             }
+        }
+    }
+
+    // Find the cause by ignoring ExecutionExceptions (and related exception)
+    public static Throwable unwrapExecutionException(Exception ex) {
+        Throwable cause = ex;
+        while (true) {
+            if (cause.getCause() == null) {
+                return cause;
+            }
+
+            if (cause instanceof ExecutionException
+                    || cause instanceof UncheckedExecutionException
+                    || cause instanceof CompletionException) {
+                cause = cause.getCause();
+            } else {
+                return cause;
+            }
+        }
+    }
+
+    public static GorException wrapExceptionInGorException(Exception e) {
+        return wrapExceptionInGorException(e, null);
+    }
+
+    public static GorException wrapExceptionInGorException(Exception e, String message) {
+        Throwable cause = unwrapExecutionException(e);
+        if (cause instanceof GorException) {
+            return (GorException) cause;
+        } else if (cause instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+            return new GorSystemException("Operation was interrupted" + (message != null ? ": " + message : ""), cause);
+        } else {
+            return new GorSystemException(message != null ? message : cause.getMessage(), cause);
         }
     }
 
