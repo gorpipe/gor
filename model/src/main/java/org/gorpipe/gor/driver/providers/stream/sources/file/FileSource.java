@@ -294,10 +294,6 @@ public class FileSource implements StreamSource {
     @Override
     public Stream<String> list()  {
         try {
-            // Force meta data update on the parent.
-            try (Stream<Path> paths = Files.list(filePath.getParent())) {
-                // Intentionally empty.
-            }
             return mapPathToRelative(Files.list(filePath));
         } catch (IOException e) {
             throw GorResourceException.fromIOException(e, getPath()).retry();
