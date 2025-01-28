@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public record SqlInfo(String[] columns, String[] tables, String database, String statement) {
 
     private static final String SELECT = "select ";
+    private static final String DISTINCT = "distinct ";
     private static final String FROM = "from ";
     private static final String WHERE = "where ";
     private static final String AS = " as ";
@@ -29,6 +30,7 @@ public record SqlInfo(String[] columns, String[] tables, String database, String
 
         sql = sql.toLowerCase().replace("\n", " ").replace("\r", " ");
         final int idxSelect = sql.indexOf(SELECT);
+        final int idxDistinct = sql.indexOf(DISTINCT);
         final int idxFrom = sql.indexOf(FROM);
         int idxWhere = sql.indexOf(WHERE);
 
@@ -40,7 +42,7 @@ public record SqlInfo(String[] columns, String[] tables, String database, String
             throw new GorResourceException("Invalid sql query, must include SELECT and FROM", sql);
         }
 
-        final ArrayList<String> fields = StringUtil.split(sql, idxSelect + SELECT.length(), idxFrom, ',');
+        final ArrayList<String> fields = StringUtil.split(sql,  (idxDistinct < 0 ? idxSelect + SELECT.length() : idxDistinct + DISTINCT.length()), idxFrom, ',');
         var columns = new ArrayList<String>();
         for (String f : fields) {
             final int idxAs = f.indexOf(AS);

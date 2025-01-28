@@ -26,6 +26,7 @@ public class UTestSqlSource {
     public static void setup() throws IOException, ClassNotFoundException, SQLException {
         paths = DatabaseHelper.createRdaDatabase();
         System.setProperty("gor.db.credentials", paths[2]);
+        System.setProperty("gor.sql.credentials", paths[2]);
         DbConnection.initInConsoleApp();
     }
 
@@ -171,14 +172,54 @@ public class UTestSqlSource {
     }
 
     @Test
-    public void testThatCorrectHeaderIsShown() {
+    public void testThatCorrectHeaderIsShownWithWildCard() {
         String query = "nor 'sql://select * from variant_annotations where project_id = #{project-id}'";
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
 
-        var result = TestUtils.runGorPipe(query, false, securityContext);
+        var result = TestUtils.runGorPipe(query, false, securityContext).split("\n");
 
-        Assert.assertFalse(result.startsWith("#ChromNOR\tPosNOR\t"));
-        Assert.assertTrue(result.startsWith("ChromNOR\tPosNOR\t"));
+        Assert.assertEquals("chromnor\tposnor\tproject_id\tchromo\tpos\tpn\tfoo\tcomment", result[0].toLowerCase());
+    }
+
+    @Test
+    public void testThatCorrectHeaderIsShownWithList() {
+        String query = "nor 'sql://select chromo,pos,comment from variant_annotations where project_id = #{project-id}'";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        var result = TestUtils.runGorPipe(query, false, securityContext).split("\n");
+
+        Assert.assertEquals("chromnor\tposnor\tchromo\tpos\tcomment", result[0].toLowerCase());
+    }
+
+    @Test
+    public void testThatCorrectHandlingOfDistinct() {
+        String query = "nor 'sql://select distinct chromo,pos,pn,foo,comment from rda.variant_annotations where project_id = #{project-id}'";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        var result = TestUtils.runGorPipe(query, false, securityContext).split("\n");
+
+        Assert.assertEquals("chromnor\tposnor\tchromo\tpos\tpn\tfoo\tcomment", result[0].toLowerCase());
+    }
+
+    @Test
+    public void testThatCorrectHandlingOfColumns() {
+        String query = "nor 'sql://select chromo,pos,pn,foo,comment from variant_annotations where project_id = #{project-id}'";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+
+        var result = TestUtils.runGorPipe(query, false, securityContext).split("\n");
+
+        Assert.assertEquals("chromnor\tposnor\tchromo\tpos\tpn\tfoo\tcomment", result[0].toLowerCase());
+    }
+
+    @Test
+    public void testEmptyResult() {
+        String query = "nor 'sql://select chromo,pos,pn,foo,comment from variant_annotations where project_id = #{project-id}'";
+        String securityContext = "dbscope=project_id#int#9999|||extrastuff=other";
+
+        var result = TestUtils.runGorPipe(query, false, securityContext).split("\n");
+
+        Assert.assertEquals(1, result.length);
+        Assert.assertEquals("chromnor\tposnor\tchromo\tpos\tpn\tfoo\tcomment", result[0].toLowerCase());
     }
 
     @Test
