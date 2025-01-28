@@ -123,7 +123,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
         try {
             if (rowNum++ == 0) {
                 rowWaiting = rs.next();
-                return gorHeader();
+                return "#" + gorHeader();
             } else {
                 String gorLine = toGorLine(rs);
                 rowWaiting = rs.next();
@@ -203,7 +203,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
         StringBuilder sb = new StringBuilder();
         int cols = meta.getColumnCount();
 
-        String sep = "#";
+        String sep = "";
         for (int i = 0; i < cols; i++) {
             sb.append(sep).append(removeInvalidCharacters(meta.getColumnName(i + 1)));
             sep = "\t";

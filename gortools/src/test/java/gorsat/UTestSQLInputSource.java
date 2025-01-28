@@ -63,17 +63,20 @@ public class UTestSQLInputSource {
     @Test
     public void testNorSql() {
         String sqlcmd = "norsql {select * from v_variant_annotations}";
-        var result = TestUtils.runGorPipe(sqlcmd);
-        Assert.assertEquals(11, result.split("\n").length);
-        Assert.assertEquals("chrN\t0\t10004\tchr1\t0\tfoo1\trda1\tcomment1", result.split("\n")[1]);
+        var result = TestUtils.runGorPipe(sqlcmd).split("\n");
+
+        Assert.assertEquals(11, result.length);
+        Assert.assertEquals("chromnor\tposnor\tproject_id\tchromo\tpos\tpn\tfoo\tcomment", result[0].toLowerCase());
+        Assert.assertEquals("chrN\t0\t10004\tchr1\t0\tfoo1\trda1\tcomment1", result[1]);
     }
 
     @Test
     public void testGorSql() {
         String sqlcmd = "gorsql {select chromo, pos, pn from v_variant_annotations}";
-        var result = TestUtils.runGorPipe(sqlcmd);
-        Assert.assertEquals(11, result.split("\n").length);
-        Assert.assertEquals("chr1\t2\tfoo3", result.split("\n")[3]);
+        var result = TestUtils.runGorPipe(sqlcmd).split("\n");
+        Assert.assertEquals(11, result.length);
+        Assert.assertEquals("chromo\tpos\tpn", result[0].toLowerCase());
+        Assert.assertEquals("chr1\t2\tfoo3", result[3]);
     }
 
     @Test
@@ -87,9 +90,10 @@ public class UTestSQLInputSource {
     @Test
     public void testGorSqlWithSource() {
         String sqlcmd = "gorsql -db avas {select chromo, pos, pn, foo  from v_variant_annotations}";
-        var result = TestUtils.runGorPipe(sqlcmd);
-        Assert.assertEquals(11, result.split("\n").length);
-        Assert.assertEquals("chr1\t2\tfoo3\tavas3", result.split("\n")[3]);
+        var result = TestUtils.runGorPipe(sqlcmd).split("\n");
+        Assert.assertEquals(11, result.length);
+        Assert.assertEquals("chromo\tpos\tpn\tfoo", result[0].toLowerCase());
+        Assert.assertEquals("chr1\t2\tfoo3\tavas3", result[3]);
     }
 
     @Test
@@ -163,5 +167,16 @@ public class UTestSQLInputSource {
     public void testGorSqlNestedWithOutsideFilter() {
         String gorcmd = "gor -f foo1,bar2 <(gorsql {select chromo,pos,PN from v_variant_annotations where pn in (#{tags}) order by chromo,pos})";
         Assert.assertEquals(0, TestUtils.runGorPipeCount(gorcmd));
+    }
+
+    @Test
+    public void testNorSqlInCreate() {
+        String sqlcmd = "create xxx = norsql { select chromo,pos,pn from v_variant_annotations } | signature -timeres 1;\n" +
+                "nor [xxx] ";
+        var result = TestUtils.runGorPipe(sqlcmd).split("\n");
+
+        Assert.assertEquals(11, result.length);
+        Assert.assertEquals("chromnor\tposnor\tchromo\tpos\tpn", result[0].toLowerCase());
+        Assert.assertEquals("chrN\t0\tchr1\t0\tfoo1", result[1]);
     }
 }

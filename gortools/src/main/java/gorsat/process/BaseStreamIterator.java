@@ -60,7 +60,8 @@ public abstract class BaseStreamIterator extends gorsat.Iterators.IteratorSource
 
     public String produceHeaderFromData() {
         //todo handle calling hasNext before getting header
-        return dbit.next();
+        var header =  dbit.next();
+        return header.startsWith("#") ? header.substring(1) : header;
     }
 
     @Override

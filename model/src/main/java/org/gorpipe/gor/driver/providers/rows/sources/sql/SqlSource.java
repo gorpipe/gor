@@ -55,12 +55,6 @@ public class SqlSource extends RowIteratorSource {
         var sql = getSqlfromSource();
         sqlInfo = getInfoFromSql(sql);
 
-        String header = null;
-
-        if (sqlInfo.hasHeader()) {
-            header = "#" + String.join("\t", sqlInfo.columns());
-        }
-
         var constants = new HashMap<String, Object>();
         var scopes = DbScope.parse(sourceReference.securityContext);
         if (!scopes.isEmpty()) {
@@ -77,7 +71,7 @@ public class SqlSource extends RowIteratorSource {
                 DbConnection.userConnections;
 
         var dataStream = connectionCache.getDBLinkStream(sqlInfo.statement(), constants, sqlInfo.database());
-        return new StreamWrappedGenomicIterator(dataStream, header, true);
+        return new StreamWrappedGenomicIterator(dataStream, null, true);
     }
 
 
