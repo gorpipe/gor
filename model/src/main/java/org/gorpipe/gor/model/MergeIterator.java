@@ -23,6 +23,8 @@
 package org.gorpipe.gor.model;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.gorpipe.base.concurrency.CommonThreadPools;
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.session.GorContext;
@@ -126,11 +128,19 @@ public class MergeIterator extends GenomicIteratorBase {
 
         clearQueue();
         isPrimed = true;
-        IntStream.range(0, this.sources.size()).parallel().forEach(itIdx -> {
-            final GenomicIterator it = this.sources.get(itIdx);
-            it.seek(chr, pos);
-            addNextToSynchronizedQueue(itIdx);
-        });
+
+        try {
+            CommonThreadPools.seekThreadPool.submit(
+                    () -> IntStream.range(0, this.sources.size()).parallel().forEach(
+                            itIdx -> {
+                                final GenomicIterator it = this.sources.get(itIdx);
+                                it.seek(chr, pos);
+                                addNextToSynchronizedQueue(itIdx);
+                            })
+            ).get();
+        } catch (Exception e) {
+            throw ExceptionUtilities.wrapExceptionInGorSystemException(e);
+        }
 
         return this.hasNext();
     }

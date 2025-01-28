@@ -27,6 +27,7 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
+import org.gorpipe.base.concurrency.CommonThreadPools;
 import org.gorpipe.exceptions.*;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.filters.InFilter;
@@ -88,18 +89,7 @@ public class GorOptions {
     private final boolean useDictionaryCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
     private final boolean useTable = false;
 
-    // See: java/util/concurrent/ForkJoinPool.java
-    private static final ForkJoinPool seekThreadPool = new ForkJoinPool(
-            16,  // Defaults to number of processors.
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,  // Same as default.
-            null,  // Same as default.
-            false,  // Same as default.
-            16,  // Defaults to the same as parallelism.
-            256,  // Same as default.
-            1,  // Same as default.
-            p -> true,  // Set to true, so we don't throw error if pool exhausted, instead we wait.
-            60,        // Same as default
-            TimeUnit.SECONDS);      // Same as default
+
 
 
 
@@ -449,7 +439,7 @@ public class GorOptions {
 
         List<GenomicIterator> genomicIterators;
         try {
-            genomicIterators = seekThreadPool.submit(
+            genomicIterators = CommonThreadPools.seekThreadPool.submit(
                     () -> preparedSources.parallel().map(this::createGenomicIteratorFromRef).collect(Collectors.toList())).get();
         } catch (Exception e) {
             throw ExceptionUtilities.wrapExceptionInGorSystemException(e);
