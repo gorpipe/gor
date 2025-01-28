@@ -27,6 +27,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class UTestGorExceptions {
 
@@ -153,6 +155,43 @@ public class UTestGorExceptions {
             Assert.assertTrue(json.contains(ste.getMethodName()));
             // Skip checking the file name and line pos (as some do not have it)
         }
+    }
+
+    @Test
+    public void testUnwrapExecutionException() {
+        var ex1 = new IOException();
+        var ex2 = new RuntimeException(ex1);
+        var ex_ex2 = new ExecutionException("test", ex2);
+
+        var t1_ex = ExceptionUtilities.unwrapExecutionException(ex_ex2);
+        Assert.assertEquals(ex2, t1_ex);
+
+        var t2_ex = ExceptionUtilities.unwrapExecutionException(ex2);
+        Assert.assertEquals(ex2, t2_ex);
+    }
+
+    @Test
+    public void testWrapInGorException() {
+        var ex1 = new IOException();
+        var ex2 = new ExecutionException(ex1);
+        var ex3 = new GorDataException("dataex", ex1);
+        var ex4 = new ExecutionException(ex3);
+
+        var t1_ex = ExceptionUtilities.wrapExceptionInGorSystemException(ex1);
+        Assert.assertTrue(t1_ex instanceof GorSystemException);
+        Assert.assertEquals(ex1, t1_ex.getCause());
+
+        var t2_ex = ExceptionUtilities.wrapExceptionInGorSystemException(ex2);
+        Assert.assertTrue(t2_ex instanceof GorSystemException);
+        Assert.assertEquals(ex1, t2_ex.getCause());
+
+        var t3_ex = ExceptionUtilities.wrapExceptionInGorSystemException(ex3);
+        Assert.assertTrue(t3_ex instanceof GorDataException);
+        Assert.assertEquals(ex3, t3_ex);
+
+        var t4_ex = ExceptionUtilities.wrapExceptionInGorSystemException(ex4);
+        Assert.assertTrue(t4_ex instanceof GorDataException);
+        Assert.assertEquals(ex3, t4_ex);
     }
 
 

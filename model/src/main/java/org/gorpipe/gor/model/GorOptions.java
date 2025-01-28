@@ -57,7 +57,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -89,17 +88,18 @@ public class GorOptions {
     private final boolean useDictionaryCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
     private final boolean useTable = false;
 
+    // See: java/util/concurrent/ForkJoinPool.java
     private static final ForkJoinPool seekThreadPool = new ForkJoinPool(
-            16,
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-            null,
-            false,
-            16,
-            256,
-            1,
-            p -> true,
-            60,
-            TimeUnit.SECONDS);
+            16,  // Defaults to number of processors.
+            ForkJoinPool.defaultForkJoinWorkerThreadFactory,  // Same as default.
+            null,  // Same as default.
+            false,  // Same as default.
+            16,  // Defaults to the same as parallelism.
+            256,  // Same as default.
+            1,  // Same as default.
+            p -> true,  // Set to true, so we don't throw error if pool exhausted, instead we wait.
+            60,        // Same as default
+            TimeUnit.SECONDS);      // Same as default
 
 
 
@@ -452,7 +452,7 @@ public class GorOptions {
             genomicIterators = seekThreadPool.submit(
                     () -> preparedSources.parallel().map(this::createGenomicIteratorFromRef).collect(Collectors.toList())).get();
         } catch (Exception e) {
-            throw ExceptionUtilities.wrapExceptionInGorException(e);
+            throw ExceptionUtilities.wrapExceptionInGorSystemException(e);
         }
 
         if (genomicIterators.isEmpty()) {

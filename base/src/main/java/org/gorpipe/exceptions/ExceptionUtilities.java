@@ -441,11 +441,11 @@ public final class ExceptionUtilities {
         }
     }
 
-    public static GorException wrapExceptionInGorException(Exception e) {
-        return wrapExceptionInGorException(e, null);
+    public static GorException wrapExceptionInGorSystemException(Exception e) {
+        return wrapExceptionInGorSystemException(e, null);
     }
 
-    public static GorException wrapExceptionInGorException(Exception e, String message) {
+    public static GorException wrapExceptionInGorSystemException(Exception e, String message) {
         Throwable cause = unwrapExecutionException(e);
         if (cause instanceof GorException) {
             return (GorException) cause;
