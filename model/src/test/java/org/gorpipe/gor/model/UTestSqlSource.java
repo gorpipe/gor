@@ -212,6 +212,17 @@ public class UTestSqlSource {
     }
 
     @Test
+    public void testEmptyResult() {
+        String query = "nor 'sql://select chromo,pos,pn,foo,comment from variant_annotations where project_id = #{project-id}'";
+        String securityContext = "dbscope=project_id#int#9999|||extrastuff=other";
+
+        var result = TestUtils.runGorPipe(query, false, securityContext).split("\n");
+
+        Assert.assertEquals(1, result.length);
+        Assert.assertEquals("chromnor\tposnor\tchromo\tpos\tpn\tfoo\tcomment", result[0].toLowerCase());
+    }
+
+    @Test
     public void testReadingWithMacroreplacement() throws IOException {
         // Create whitelist file
         var whitelistFile = workDir.newFile("whitelist.txt");
