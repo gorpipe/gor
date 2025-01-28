@@ -27,10 +27,7 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Commands.GenomicRange;
 import gorsat.DynIterator;
 import gorsat.gorsatGorIterator.MapAndListUtilities;
-import org.gorpipe.exceptions.GorDataException;
-import org.gorpipe.exceptions.GorParsingException;
-import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.exceptions.*;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.filters.InFilter;
 import org.gorpipe.gor.driver.filters.RowFilter;
@@ -60,6 +57,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -88,6 +87,22 @@ public class GorOptions {
      */
     private final boolean useDictionaryCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
     private final boolean useTable = false;
+
+    // See: java/util/concurrent/ForkJoinPool.java
+    private static final ForkJoinPool seekThreadPool = new ForkJoinPool(
+            16,  // Defaults to number of processors.
+            ForkJoinPool.defaultForkJoinWorkerThreadFactory,  // Same as default.
+            null,  // Same as default.
+            false,  // Same as default.
+            16,  // Defaults to the same as parallelism.
+            256,  // Same as default.
+            1,  // Same as default.
+            p -> true,  // Set to true, so we don't throw error if pool exhausted, instead we wait.
+            60,        // Same as default
+            TimeUnit.SECONDS);      // Same as default
+
+
+
     /**
      * The gorPipeSession
      */
@@ -432,9 +447,13 @@ public class GorOptions {
         // Prepare the driver frameworks for the files
         Stream<SourceRef> preparedSources = prepareSources(withTag);
 
-        Stream<GenomicIterator> iteratorStream = preparedSources.parallel().map(this::createGenomicIteratorFromRef);
-
-        List<GenomicIterator> genomicIterators = iteratorStream.collect(Collectors.toList());
+        List<GenomicIterator> genomicIterators;
+        try {
+            genomicIterators = seekThreadPool.submit(
+                    () -> preparedSources.parallel().map(this::createGenomicIteratorFromRef).collect(Collectors.toList())).get();
+        } catch (Exception e) {
+            throw ExceptionUtilities.wrapExceptionInGorSystemException(e);
+        }
 
         if (genomicIterators.isEmpty()) {
             // No iterator in range, add dummy one (that will not return any rows) as we must return at least one.
