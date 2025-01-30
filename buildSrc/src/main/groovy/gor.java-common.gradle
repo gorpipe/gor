@@ -58,17 +58,17 @@ repositories {
             excludeGroupByRegex "com\\.(wuxi)?nextcode.*"
         }
     }
-    maven {
-        name "gitlab-maven"
-        url uri("https://gitlab.com/api/v4/groups/2443025/-/packages/maven")
-        credentials(HttpHeaderCredentials) {
-            name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
-            value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
-        }
-        authentication {
-            header(HttpHeaderAuthentication)
-        }
-    }
+//    maven {
+//        name "gitlab-maven"
+//        url uri("https://gitlab.com/api/v4/groups/2443025/-/packages/maven")
+//        credentials(HttpHeaderCredentials) {
+//            name = project.findProperty('gitlab_token') ? "Private-Token" : "Job-Token"
+//            value = project.findProperty('gitlab_token') ?: System.getenv("CI_JOB_TOKEN")
+//        }
+//        authentication {
+//            header(HttpHeaderAuthentication)
+//        }
+//    }
 }
 
 java {

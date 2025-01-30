@@ -62,6 +62,7 @@ public class S3SourceProvider extends StreamSourceProvider {
 
     private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "true"));
     private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "false"));
+    private static final boolean FORCE_PATH_STYLE = Boolean.parseBoolean(System.getProperty("gor.s3.forcePathStyle", "false"));
 
     private final CredentialClientCache<S3Client> clientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createClient);
     private final CredentialClientCache<S3AsyncClient> asyncClientCredCache = new CredentialClientCache<>(S3SourceType.S3.getName(), this::createAsyncClient);
@@ -280,7 +281,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         builder.overrideConfiguration(c -> c.scheduledExecutorService(scheduledExecutorService));
 
         // OCI compat layer needs path style access.
-        if (isOciEndpoint(endpoint)) {
+        if (isOciEndpoint(endpoint) || FORCE_PATH_STYLE) {
             builder.forcePathStyle(true);
         }
 
