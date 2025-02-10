@@ -36,7 +36,7 @@ public class ByteSizeConverter implements Converter<ByteSize> {
         return parse(input);
     }
 
-    private static ByteSize parse(String input) {
+    public static ByteSize parse(String input) {
         String[] parts = ConverterUtil.splitNumericAndChar(input);
         String value = parts[0];
         String unit = parts[1];

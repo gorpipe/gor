@@ -111,17 +111,17 @@ public class S3SourceProvider extends StreamSourceProvider {
 
     private S3Client createClient(Credentials cred) {
         if (USE_CRT_CLIENT) {
-            return createCrtClient(cred);
+            return createSyncCrtClient(cred);
         }
         return createApacheClient(cred);
     }
 
-    private S3Client createCrtClient(Credentials cred) {
+    private S3Client createSyncCrtClient(Credentials cred) {
         var builder = S3Client.builder();
 
         AwsCrtHttpClient.Builder httpClientBuilder = AwsCrtHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
-                .maxConcurrency(s3Config.connectionPoolSize())  // Default was 50
+                .maxConcurrency(s3Config.connectionPoolSize())
                 .tcpKeepAliveConfiguration(b -> b
                         .keepAliveInterval(Duration.ofMillis(s3Config.socketTimeout().toMillis()/2))
                         .keepAliveTimeout(s3Config.connectionTimeout()))
@@ -232,8 +232,13 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.httpConfiguration(httpConfigBuilder.build());
 
+        // See: https://github.com/aws/aws-sdk-java-v2/blob/master/services/s3/src/main/java/software/amazon/awssdk/services/s3/S3CrtAsyncClientBuilder.java
         builder.maxConcurrency(s3Config.connectionPoolSize());
         //builder.accelerate(true)
+        //builder.targetThroughputInGbps(5.0);
+        //builder.maxNativeMemoryLimitInBytes(1L * 1024 * 1024 * 1024);
+        //builder.minimumPartSizeInBytes(5L * 1024 * 1024);
+        //builder.initialReadBufferSizeInBytes(1L * 1024 * 1024);
 
         var endpoint = getEndpoint(cred);
         if (!StringUtil.isEmpty(endpoint)) {
