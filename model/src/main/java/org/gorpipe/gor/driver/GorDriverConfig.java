@@ -133,7 +133,7 @@ public interface GorDriverConfig extends Config {
 
     @Documentation("The maximum range to which to automatically extend the source reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.max_request_size")
-    @DefaultValue("100 mb")
+    @DefaultValue("1 mb")
     @ConverterClass(ByteSizeConverter.class)
     ByteSize extendedRangeStreamingMaxRequestSize();
 

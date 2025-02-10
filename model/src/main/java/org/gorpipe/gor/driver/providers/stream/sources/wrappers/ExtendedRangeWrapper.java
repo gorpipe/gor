@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
+import org.gorpipe.base.config.converters.ByteSizeConverter;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.adapters.PersistentInputStream;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
@@ -62,9 +63,9 @@ import java.io.InputStream;
 public class ExtendedRangeWrapper extends WrappedStreamSource {
     private static final Logger log = LoggerFactory.getLogger(ExtendedRangeWrapper.class);
 
-    public static final int DEFAULT_SEEK_THRESHOLD = 32 * 1024;  // 32kB
-    public static final int DEFAULT_MAX_RANGE = 100 * 1024 * 1024;
-    public static final int DEFAULT_HEADER_RANGE = 1024 * 1024; // 1MB
+    public static final int DEFAULT_SEEK_THRESHOLD = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold", "64 kb")).getBytesAsInt();
+    public static final int DEFAULT_MIN_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.min_request_size", "64 kb")).getBytesAsInt();
+    public static final int DEFAULT_MAX_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.max_request_size", "1 mb")).getBytesAsInt();
 
     private final int seekThreshold;
     private final int maxRange;
@@ -85,12 +86,12 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
 
     @Override
     public InputStream openClosable() {
-        return open(0, DEFAULT_HEADER_RANGE);
+        return open(0, DEFAULT_MIN_RANGE);
     }
 
     @Override
     public InputStream open() {
-        return open(0, DEFAULT_HEADER_RANGE);
+        return open(0, DEFAULT_MIN_RANGE);
     }
 
     @Override
@@ -180,7 +181,7 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
 
                     // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.
                     //long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
-                    long rlen = Math.max(len - read, Math.min(Math.max(lastRequest.getLength() * 2, DEFAULT_HEADER_RANGE), maxRange));
+                    long rlen = Math.max(len - read, Math.min(Math.max(lastRequest.getLength() * 2, DEFAULT_MIN_RANGE), maxRange));
 
 
                     // 3. Open new 'in' stream at last position + new request length
