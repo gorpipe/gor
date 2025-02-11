@@ -106,7 +106,7 @@ abstract class RegressionAnalysis[T: Manifest](lookUpSignature: String, session:
         var vIdx = 0
         while (tfIdx < len) {
           val nextIdx = values.indexOf(sep, vIdx)
-          val cand = if (nextIdx > 0) values.substring(vIdx, nextIdx) else values.substring(vIdx)
+          val cand = if (nextIdx >= 0) values.substring(vIdx, nextIdx) else values.substring(vIdx)
           if (cand == "") {
             filter(tfIdx) = false
           } else {
