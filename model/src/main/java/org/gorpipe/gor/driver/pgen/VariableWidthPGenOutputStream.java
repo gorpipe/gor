@@ -106,6 +106,7 @@ final class VariableWidthPGenOutputStream extends PGenOutputStream<VariantRecord
             this.os = fileReaderOptional.isPresent() ? fileReaderOptional.get().getOutputStream(this.fileName) : new FileOutputStream(this.fileName);
             writeHeader();
             mergeVariantBlocks();
+            closeCurrentStream();
         }
     }
 
