@@ -22,7 +22,7 @@
 
 package gorsat.Monitors
 
-import gorsat.Commands.Analysis
+import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.gor.model.Row
 
 /**
@@ -44,6 +44,9 @@ case class StatsMonitor() extends Analysis {
     super.process(r)
   }
   override def finish(): Unit = {
+    if (rowHeader == null) {
+      rowHeader = new RowHeader(Array(), Array())
+    }
     stopTime = System.currentTimeMillis;
   }
 
