@@ -144,7 +144,7 @@ abstract class Analysis() extends Processor with Cloneable {
   }
 
   // Input header string
-  def getHeader: String = {
+  def getHeader(): String = {
     if (rowHeader != null) rowHeader.toString else null
   }
 
