@@ -122,7 +122,7 @@ class Table {
 
         try (Formatter formatter = new Formatter()) {
             for (String[] row : rows) {
-                formatter.format(format, row);
+                formatter.format(format, (Object)row);
             }
 
             return header + "\n" + formatter.out().toString();

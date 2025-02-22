@@ -30,6 +30,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/* Can be run in container, something like:
+docker run -it --rm --name gor-test -v .:/opt/gor/src/  -w /opt/gor/src/ us-ashburn-1.ocir.io/id5mlxoq0dmt/genedx/gdb-gor-services:v13.1.3 bash
+export GRADLE_USER_HOME=/tmp/.gradle
+ */
 @Ignore("Needs plink2 installed")
 public class UTestPlinkRegression {
     String vcfheader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\ta\tb\tc\td\te\tf\tg\ti\tj\n";

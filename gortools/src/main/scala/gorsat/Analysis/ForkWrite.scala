@@ -284,6 +284,15 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
+  // Available after finish.
+  def getMd5: String = {
+    if (!useFork) {
+      singleFileHolder.out.getMeta.getMd5
+    } else {
+      ""
+    }
+  }
+
   private def extractLink(fileName: String) : (String,String) = {
     var linkFile = options.linkFile
     var linkFileContent = ""

@@ -33,7 +33,7 @@ abstract class Analysis() extends Processor with Cloneable {
   var nextProcessor: Processor = _
   var alreadyFinished = false
   var isInErrorState = false
-  var rowHeader: RowHeader = _
+  var rowHeader: RowHeader = _ // Input row header.
   var cloned : Analysis = _
   var isCloned = false
 
@@ -124,6 +124,9 @@ abstract class Analysis() extends Processor with Cloneable {
       pipeTo = to
       nextProcessor = to
       to.from(this)
+      if (rowHeader != null) {
+        setRowHeader(rowHeader)
+      }
     }
     this
   }
@@ -140,8 +143,9 @@ abstract class Analysis() extends Processor with Cloneable {
     null
   }
 
-  def getHeader(): String = {
-    null
+  // Input header string
+  def getHeader: String = {
+    if (rowHeader != null) rowHeader.toString else null
   }
 
   def setup() : Unit = {}
