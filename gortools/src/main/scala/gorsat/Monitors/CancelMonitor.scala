@@ -27,6 +27,8 @@ import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.monitor.GorMonitor
 
 case class CancelMonitor(gm : GorMonitor) extends Analysis {
+  override def isTypeInformationMaintained: Boolean = true
+
   override def process(r : Row): Unit = {
     if (gm.isCancelled()) {
       reportWantsNoMore()

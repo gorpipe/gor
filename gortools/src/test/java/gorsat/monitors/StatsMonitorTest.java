@@ -5,7 +5,7 @@ import gorsat.Analysis.OutputOptions;
 import gorsat.Monitors.StatsMonitor;
 import gorsat.process.PipeInstance;
 import org.gorpipe.gor.binsearch.GorIndexType;
-import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.monitor.GorMonitor;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,7 +59,7 @@ public class StatsMonitorTest{
     }
 
     @Test
-    public void testRowCountAndBytesCountForSelfwriting() {
+    public void testRowCountAndBytesCountForSelfWriting() {
 
         var statsMonitor = new StatsMonitor();
         try (PipeInstance pipe = createPipeInstance(false)) {
@@ -81,15 +81,15 @@ public class StatsMonitorTest{
 
         var statsMonitor = new StatsMonitor();
         ForkWrite forkWrite = null;
-        try (PipeInstance pipe = createPipeInstance(false)) {
-            pipe.init("gorrows -p chr1:1-1000 | calc a 'abc'", null);
+        try (PipeInstance pipe = createPipeInstance(true)) {
+            pipe.init("gorrows -p chr1:1-1000 | calc a 'abc'", new GorMonitor());
             pipe.lastStep().$bar(statsMonitor);
 
             var outputOptions = new OutputOptions(false, false, true, false,
                     false,  GorIndexType.NONE, new String[0], new String[0], Option.empty(),  Option.empty(), Deflater.BEST_SPEED,
                     Option.empty(), false, false, null, "", null, false, false);
-
             forkWrite = new ForkWrite(-1, workDirPath.resolve("test.gor").toString(), pipe.getSession(), pipe.getHeader(), outputOptions);
+
             pipe.lastStep().$bar(forkWrite);
 
             while (pipe.hasNext()) {

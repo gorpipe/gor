@@ -39,7 +39,6 @@ case class TimeoutMonitor() extends Analysis {
   // Check for timeout every (checkEveryXRows) rows, and also at the first call to process on the instance
   var resettingRowCounter = checkEveryXRows
 
-
   override def isTypeInformationMaintained: Boolean = true
 
   override def process(r: Row): Unit = {

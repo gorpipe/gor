@@ -35,11 +35,14 @@ case class StatsMonitor() extends Analysis {
   var rowCount = 0L
   var bytesCount = 0L
 
+  override def isTypeInformationMaintained: Boolean = true
+
   def elapsedTime(): Long =  if (stopTime > 0)  stopTime - startTime else System.currentTimeMillis - startTime
 
   override def process(r : Row): Unit = {
-    bytesCount += r.length();
-    rowCount += 1;
+    bytesCount += r.length()
+    rowCount += 1
+
 
     super.process(r)
   }
@@ -49,12 +52,4 @@ case class StatsMonitor() extends Analysis {
     }
     stopTime = System.currentTimeMillis;
   }
-
-  /**
-   * Does execution of this step preserve column type information?
-   * The value false (default) means if a downstream step requires types, then they must be inferred.
-   * true means that columns, except for those returned by columnsWithoutTypes(), already
-   * have type info which need not be inferred.
-   */
-  override def isTypeInformationMaintained: Boolean = true
 }
