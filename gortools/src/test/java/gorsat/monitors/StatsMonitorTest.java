@@ -63,7 +63,7 @@ public class StatsMonitorTest{
 
         var statsMonitor = new StatsMonitor();
         try (PipeInstance pipe = createPipeInstance(false)) {
-            pipe.init("gorrows -p chr1:1-1000 | calc a 'abc' | write " + workDirPath.resolve("test.gor").toString(), null);
+            pipe.init("gorrows -p chr1:1-1000 | calc a 'abc' | write " + workDirPath.resolve("test.gor").toString(), new GorMonitor());
             pipe.lastStep().$bar(statsMonitor);
 
             while (pipe.hasNext()) {
