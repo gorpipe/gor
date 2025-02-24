@@ -22,17 +22,34 @@
 
 package gorsat.Monitors
 
-import gorsat.Commands.Analysis
+import gorsat.Commands.{Analysis, RowHeader}
 import org.gorpipe.gor.model.Row
-import org.gorpipe.gor.monitor.GorMonitor
 
-case class CancelMonitor(gm : GorMonitor) extends Analysis {
+/**
+ * Collect basic stats about the analysis stream.
+ */
+case class StatsMonitor() extends Analysis {
+  var startTime: Long = System.currentTimeMillis
+  var stopTime = 0L
+
+  var rowCount = 0L
+  var bytesCount = 0L
+
   override def isTypeInformationMaintained: Boolean = true
 
+  def elapsedTime(): Long =  if (stopTime > 0)  stopTime - startTime else System.currentTimeMillis - startTime
+
   override def process(r : Row): Unit = {
-    if (gm.isCancelled()) {
-      reportWantsNoMore()
+    bytesCount += r.length()
+    rowCount += 1
+
+
+    super.process(r)
+  }
+  override def finish(): Unit = {
+    if (rowHeader == null) {
+      rowHeader = new RowHeader(Array(), Array())
     }
-    else super.process(r)
+    stopTime = System.currentTimeMillis;
   }
 }

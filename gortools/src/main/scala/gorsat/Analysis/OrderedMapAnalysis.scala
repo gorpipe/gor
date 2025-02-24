@@ -161,7 +161,7 @@ case class OrderedMapAnalysis(session: GorSession,
   }
 
   private def validateKeyOrder(r: Row, key: String, prevKey: String, source: String): Unit = {
-    if (prevKey != null && !prevKey.isEmpty && prevKey > key) {
+    if (prevKey != null && !prevKey.isEmpty && prevKey.compareTo(key) > 0) {
       throw new GorDataException(
         String.format("%s source is not ordered, as required if the -ordered options is used.  " +
           "Row '%s' is out of order.  Key/Prevkey was '%s'/'%s'.",

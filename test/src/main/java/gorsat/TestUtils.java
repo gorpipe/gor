@@ -292,7 +292,7 @@ public class TestUtils {
         return PipeInstance.createGorIterator(new GorContext(createSession(server, securityContext, writeLocations)));
     }
 
-    private static PipeInstance createPipeInstance(boolean server, String gorroot, String cacheDir, String securityContext, String[] writeLocations) {
+    public static PipeInstance createPipeInstance(boolean server, String gorroot, String cacheDir, String securityContext, String[] writeLocations) {
         List<String> options = new ArrayList<>();
         if (gorroot != null) {
             options.add("-gorroot");
@@ -318,7 +318,7 @@ public class TestUtils {
         }
     }
 
-    private static PipeInstance createPipeInstance(boolean server) {
+    public static PipeInstance createPipeInstance(boolean server) {
         return PipeInstance.createGorIterator(createSession(server).getGorContext());
     }
 

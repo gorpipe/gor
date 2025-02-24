@@ -28,6 +28,9 @@ import org.gorpipe.gor.monitor.GorMonitor
 
 case class MonitorLog(logname : String, n : Int, gm : GorMonitor) extends Analysis {
   var m = 0L
+
+  override def isTypeInformationMaintained: Boolean = true
+
   override def process(r : Row): Unit = {
     m += 1; if ((m % n) == 0) gm.log(logname+"> ("+m+") "+r.toColString)
     super.process(r)

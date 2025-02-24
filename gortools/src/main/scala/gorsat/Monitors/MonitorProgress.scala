@@ -31,6 +31,9 @@ case class MonitorProgress(milliSec : Int, gm : GorMonitor) extends Analysis {
   var t = System.currentTimeMillis
   var lastRowChr : String = ""
   var lastRowPos : Int = 0
+
+  override def isTypeInformationMaintained: Boolean = true
+
   override def process(r : Row): Unit = {
     m += 1
     if (r.chr != lastRowChr) {

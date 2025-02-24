@@ -22,7 +22,6 @@
 
 package gorsat.Analysis
 
-import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 import java.util.zip.Deflater
 import gorsat.Commands.{Analysis, Output, RowHeader}
 import gorsat.Outputs.OutFile
@@ -158,8 +157,9 @@ case class ForkWrite(forkCol: Int,
     * @return
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
-    if (rowHeader==null || useFork) OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
-    else {
+    if (rowHeader == null || useFork) {
+      OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
+    } else {
       if (!rowHeader.toString.equals(header)) {
         rowHeader = RowHeader(header, rowHeader.columnTypes)
       }
@@ -281,6 +281,15 @@ case class ForkWrite(forkCol: Int,
       if (linkFile.nonEmpty) {
         writeLinkFile(linkFile, linkFileContent)
       }
+    }
+  }
+
+  // Available after finish.
+  def getMd5: String = {
+    if (!useFork && singleFileHolder.out != null) {
+      singleFileHolder.out.getMeta.getMd5
+    } else {
+      ""
     }
   }
 
