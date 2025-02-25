@@ -86,7 +86,7 @@ public class DriverUtils {
     public static String ociSecurityContext(String tenant, String user, String secret, String fingerprint) {
         // Credentials for gor_unittest user in nextcode OCI account
         Credentials cred = new Credentials.Builder().service("oci")
-                .lookupKey("gdb_gor_test_data_dev")
+                .lookupKey("gdb-gor-test-data-dev")
                 .set(Credentials.Attr.API_ENDPOINT, DEFAULT_OCI_ENDPOINT)
                 .set(Credentials.Attr.REALM, tenant)
                 .set(Credentials.Attr.KEY, fingerprint)
