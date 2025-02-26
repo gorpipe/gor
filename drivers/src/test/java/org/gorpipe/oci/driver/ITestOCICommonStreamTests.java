@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 @Category(IntegrationTests.class)
 public class ITestOCICommonStreamTests extends CommonStreamTests {
 
-    private String bucketName = "gdb_gor_test_data_dev";
+    private String bucketName = "gdb-gor-test-data-dev";
 
     private static String OCI_TENANT;
     private static String OCI_USER;

@@ -42,29 +42,29 @@ public class UTestOCIObjectStorageSourceType {
     @Test
     public void testResolveGorOciUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("oci://gdb_gor_test_data_dev/the/path.dat", securityContext(), null, null, null, false));
+                new SourceReference("oci://gdb-gor-test-data-dev/the/path.dat", securityContext(), null, null, null, false));
         assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
 
         source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("oc://gdb_gor_test_data_dev/the/path.dat", securityContext(), null, null, null, false));
+                new SourceReference("oc://gdb-gor-test-data-dev/the/path.dat", securityContext(), null, null, null, false));
         assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 
     @Test
     public void testResolveOciHttpUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("https://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/gdb_gor_test_data_dev/the/path.dat", securityContext(), null, null, null,  false));
+                new SourceReference("https://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/gdb-gor-test-data-dev/the/path.dat", securityContext(), null, null, null,  false));
         assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
 
         source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("http://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/gdb_gor_test_data_dev/the/path.dat", securityContext(), null, null, null, false));
+                new SourceReference("http://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/gdb-gor-test-data-dev/the/path.dat", securityContext(), null, null, null, false));
         assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 
     @Test
     public void testResolveOciNativeHttpUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("https://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/n/namespace/b/gdb_gor_test_data_dev/o/the/path.dat", securityContext(), null, null, null, false));
+                new SourceReference("https://namespace.objectstorage.us-ashburn-1.oci.customer-oci.com/n/namespace/b/gdb-gor-test-data-dev/o/the/path.dat", securityContext(), null, null, null, false));
         assertEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 
@@ -82,11 +82,11 @@ public class UTestOCIObjectStorageSourceType {
     @Test
     public void testResolveS3HttpUrl() throws IOException {
         var source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("https://s3.us-east1.amazonaws.com/gdb_gor_test_data_dev/the/path.dat", securityContext(), null, null, null,  false));
+                new SourceReference("https://s3.us-east1.amazonaws.com/gdb-gor-test-data-dev/the/path.dat", securityContext(), null, null, null,  false));
         assertNotEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
 
         source = GorDriverFactory.fromConfig().resolveDataSource(
-                new SourceReference("http://s3.us-east1.amazonaws.com/gdb_gor_test_data_dev/the/path.dat", securityContext(), null, null, null,  false));
+                new SourceReference("http://s3.us-east1.amazonaws.com/gdb-gor-test-data-dev/the/path.dat", securityContext(), null, null, null,  false));
         assertNotEquals(OCIObjectStorageSourceType.OCI_OBJECT_STORAGE, source.getSourceType());
     }
 
