@@ -24,7 +24,7 @@ import com.nextcode.gradle.*
 
 plugins {
     id "gor.java-library"
-    id 'com.github.johnrengelman.shadow'
+    id 'com.gradleup.shadow'
 }
 
 // Use shadow jar to create jar with the content of the module and its 'internal' dependencies.  If the module

@@ -55,7 +55,7 @@ plugins {
     // Plugins not applied everywhere.
     id "org.sonarqube" apply false
     id "com.google.protobuf" apply false
-    id 'com.github.johnrengelman.shadow' apply false
+    id "com.gradleup.shadow" version "9.0.0-beta9" apply false
 
     // The following plugins are support plugins that don't effect the build directly.
     id 'nebula.lint'

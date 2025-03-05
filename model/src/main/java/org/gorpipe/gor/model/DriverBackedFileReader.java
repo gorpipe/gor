@@ -124,7 +124,7 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
-    public String readLinkContent(String url) {
+    public String readLink(String url) {
         try (DataSource source = resolveDataSource(createSourceReference(url, false))) {
             if (source == null) {
                 throw new GorResourceException("Could not read link, invalid uri", url, null);
