@@ -463,12 +463,17 @@ public class UTestBooleanFunctions {
     }
 
     @Test
-    public void testCsListHasCountWithStringLiterals() {
-        TestUtils.assertCalculated("cslisthascount('a,b,c,d,e,f', 'a')", 1);
-        TestUtils.assertCalculated("cslisthascount('a,b,c,d,e,f', 'x')", 0);
-        TestUtils.assertCalculated("cslisthascount('a,b,c,d,e,f,a,b,c,a,b', 'a','b','c')", 3);
-        TestUtils.assertCalculated("cslisthascount('A,B,C,D,E,F,A,B,C,A,B', 'a','b','c')", 0);
+    public void testEqualLenWithStringLiterals() {
+        TestUtils.assertCalculated("equallen('ACCTTG', 'A')", 1);
+        TestUtils.assertCalculated("equallen('ACCTTG', 'ACCTA')", 4);
+        TestUtils.assertCalculated("equallen('ACCTTG', 'ACCCTA')", 3);
+        TestUtils.assertCalculated("equallen('ACCTTG', 'CCTTG')", 0);
+        TestUtils.assertCalculated("equallen('A', 'ACCTTG')", 1);
+        TestUtils.assertCalculated("equallen('ACCTA', 'ACCTTG')", 4);
+        TestUtils.assertCalculated("equallen('ACCCTA', 'ACCTTG')", 3);
+        TestUtils.assertCalculated("equallen('CCTTG', 'ACCTTG')", 0);
     }
+
     @Test
     public void testCsListHasCount() {
         // Need to work with rows here so we can do listhascount without using string literals
