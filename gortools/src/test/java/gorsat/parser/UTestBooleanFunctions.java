@@ -471,7 +471,12 @@ public class UTestBooleanFunctions {
         TestUtils.assertCalculated("equallen('A', 'ACCTTG')", 1);
         TestUtils.assertCalculated("equallen('ACCTA', 'ACCTTG')", 4);
         TestUtils.assertCalculated("equallen('ACCCTA', 'ACCTTG')", 3);
+        TestUtils.assertCalculated("equallen('ACCCTA', 'ACCCTA')", 6);
+        TestUtils.assertCalculated("equallen('xACCCTA', 'yACCCTA')", 0);
         TestUtils.assertCalculated("equallen('CCTTG', 'ACCTTG')", 0);
+        TestUtils.assertCalculated("equallen('ACCTTG', '')", 0);
+        TestUtils.assertCalculated("equallen('', 'A')", 0);
+        TestUtils.assertCalculated("equallen('', '')", 0);
     }
 
     @Test
