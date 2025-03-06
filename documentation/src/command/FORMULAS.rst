@@ -91,7 +91,7 @@ Type and String Conversion
 +---------------------------------+----------------------------------------------------------------------------------+
 | ``DECODE(str,str) : str``       | Decode (map) the string, given key-value mapping pairs.                          |
 +---------------------------------+----------------------------------------------------------------------------------+
-| ``EQUALLEN(str,str) : int``     | Count the length of identical prefix substrings for the two strings              |
+| ``MATCHLEN(str,str) : int``     | Count the length of matching substrings for the two strings                      |
 +---------------------------------+----------------------------------------------------------------------------------+
 
 Algebraic Functions

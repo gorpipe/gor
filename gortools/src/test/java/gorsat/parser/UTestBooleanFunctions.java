@@ -463,20 +463,20 @@ public class UTestBooleanFunctions {
     }
 
     @Test
-    public void testEqualLenWithStringLiterals() {
-        TestUtils.assertCalculated("equallen('ACCTTG', 'A')", 1);
-        TestUtils.assertCalculated("equallen('ACCTTG', 'ACCTA')", 4);
-        TestUtils.assertCalculated("equallen('ACCTTG', 'ACCCTA')", 3);
-        TestUtils.assertCalculated("equallen('ACCTTG', 'CCTTG')", 0);
-        TestUtils.assertCalculated("equallen('A', 'ACCTTG')", 1);
-        TestUtils.assertCalculated("equallen('ACCTA', 'ACCTTG')", 4);
-        TestUtils.assertCalculated("equallen('ACCCTA', 'ACCTTG')", 3);
-        TestUtils.assertCalculated("equallen('ACCCTA', 'ACCCTA')", 6);
-        TestUtils.assertCalculated("equallen('xACCCTA', 'yACCCTA')", 0);
-        TestUtils.assertCalculated("equallen('CCTTG', 'ACCTTG')", 0);
-        TestUtils.assertCalculated("equallen('ACCTTG', '')", 0);
-        TestUtils.assertCalculated("equallen('', 'A')", 0);
-        TestUtils.assertCalculated("equallen('', '')", 0);
+    public void testMatchLenWithStringLiterals() {
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'A')", 1);
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'ACCTA')", 4);
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'ACCCTA')", 3);
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'CCTTG')", 0);
+        TestUtils.assertCalculated("matchlen('A', 'ACCTTG')", 1);
+        TestUtils.assertCalculated("matchlen('ACCTA', 'ACCTTG')", 4);
+        TestUtils.assertCalculated("matchlen('ACCCTA', 'ACCTTG')", 3);
+        TestUtils.assertCalculated("matchlen('ACCCTA', 'ACCCTA')", 6);
+        TestUtils.assertCalculated("matchlen('xACCCTA', 'yACCCTA')", 0);
+        TestUtils.assertCalculated("matchlen('CCTTG', 'ACCTTG')", 0);
+        TestUtils.assertCalculated("matchlen('ACCTTG', '')", 0);
+        TestUtils.assertCalculated("matchlen('', 'A')", 0);
+        TestUtils.assertCalculated("matchlen('', '')", 0);
     }
 
     @Test
