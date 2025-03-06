@@ -39,11 +39,11 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.CachedSourceWrap
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
+import org.gorpipe.gor.driver.utils.LinkFile;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
-import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,20 +133,12 @@ public abstract class StreamSourceProvider implements SourceProvider {
     }
 
     private String readLinkContent(DataSource source) throws IOException {
-        String path = StreamUtils.readString((StreamSource) source, 10000);
-        if (source instanceof FileSource) { //FileSource handling is a special case due to FileSource.close() implementation
-            source.close();
-        }
-        if (path.length() < 10000) {
-            path = path.trim();
-            // Figure out if relative path. Assume all relative paths have no colon and don't start with /
-            if (!PathUtils.isAbsolutePath(path)) {
-                // Allow relative links:
-                path = PathUtils.resolve(PathUtils.getParent(source.getName()), path);
+        try {
+            return LinkFile.load((StreamSource)source).getLatestEntryUrl();
+        } finally {
+            if (source instanceof FileSource) { //FileSource handling is a special case due to FileSource.close() implementation
+                source.close();
             }
-            return path;
-        } else {
-            throw new IllegalArgumentException("Link file " + source.getName() + " has at least 10000 bytes - aborting");
         }
     }
 

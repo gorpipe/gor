@@ -27,6 +27,7 @@ public class BaseMeta {
     public static final String NO_SERIAL = "0";
 
     // Basic properties
+    public static final String HEADER_VERSION_KEY = "VERSION";
     public static final String HEADER_FILE_FORMAT_KEY = "FILE_FORMAT";
     public static final String HEADER_SERIAL_KEY = "SERIAL";
     public static final String HEADER_CREATED_KEY = "CREATED";
@@ -64,10 +65,33 @@ public class BaseMeta {
      * Get header property.
      *
      * @param key name of the property.
-     * @return the header property identifed with [key]
+     * @param defValue default value
+     * @return the header property identified with [key]
      */
     public String getProperty(String key, String defValue) {
         return headerProps.containsKey(key) ? headerProps.get(key) : defValue;
+    }
+
+    /**
+     * Get header property.
+     *
+     * @param key name of the property.
+     * @param defValue default value
+     * @return the header property identified with [key]
+     */
+    public long getPropertyLong(String key, long defValue) {
+        return headerProps.containsKey(key) ? Long.parseLong(headerProps.get(key)) : defValue;
+    }
+
+    /**
+     * Get header property.
+     *
+     * @param key name of the property.
+     * @param defValue default value
+     * @return the header property identified with [key]
+     */
+    public int getPropertyInt(String key, int defValue) {
+        return headerProps.containsKey(key) ? Integer.parseInt(headerProps.get(key)) : defValue;
     }
 
     /**
@@ -164,6 +188,10 @@ public class BaseMeta {
         this.fileHeader = fileHeader;
     }
 
+    public String getVersion() {
+        return getProperty(HEADER_VERSION_KEY, "0");
+    }
+
     /**
      * Parse header line.
      *
@@ -173,23 +201,24 @@ public class BaseMeta {
         if (line == null) return;
 
         if (line.startsWith("##")) {
-            parseMetaLine(line);
+            parsePropertyLine(line);
         } else {
             parseHeaderLine(line);
         }
     }
 
-    protected void parseMetaLine(String line) {
+    protected void parsePropertyLine(String line) {
         String[] lineSplit = line.split("[=:]", 2);
         String propName = StringUtils.strip(lineSplit[0], "\t\n #");
+        String propValue = lineSplit.length > 1 ? lineSplit[1].trim() : "";
 
         if (propName.equals(HEADER_COLUMNS_KEY)) {
             // Ignore columns that have non standard characters.  These are errors.
             if (StandardCharsets.UTF_8.newEncoder().canEncode(lineSplit[1])) {
-                setColumns(lineSplit[1].trim().split("[\t,]", -1));
+                setColumns(propValue.split("[\t,]", -1));
             }
         } else {
-            setProperty(propName, lineSplit[1].trim());
+            setProperty(propName, propValue);
         }
     }
 
@@ -246,16 +275,27 @@ public class BaseMeta {
     }
 
     private void parseMetaReader(BufferedReader br) throws IOException {
+        parseMetaLines(extractMetaReader(br));
+    }
+
+    private void parseMetaLines(List<String> metaLines) throws IOException {
+        for (String line : metaLines) {
+            parseLine(line);
+        }
+    }
+
+    protected List<String> extractMetaReader(BufferedReader br) throws IOException {
         String line;
+        List<String> metaLines = new ArrayList<>();
         boolean isFirstLine = true;
         while ((line = br.readLine()) != null) {
             line = line.trim();
             if (line.length() > 0) {
-                if (isHeaderLine(line) || (isFirstLine &&
+                if (isHeaderLine(line) || (isFirstLine && metaPathStr != null &&
                         // gorz and norz contain headerline that does not befin with #
                         (DataUtil.isGorz(metaPathStr)
                                 || DataUtil.isNorz(metaPathStr)))) {
-                    parseLine(line);
+                    metaLines.add(line);
                 } else {
                     // Done reading the header.
                     break;
@@ -263,6 +303,7 @@ public class BaseMeta {
             }
             isFirstLine = false;
         }
+        return metaLines;
     }
 
     public void loadAndMergeMeta(Path metaPath) {
@@ -288,7 +329,18 @@ public class BaseMeta {
         try (var br = new BufferedReader(new InputStreamReader(fileReader.getInputStream(metaPath)))) {
             parseMetaReader(br);
         } catch (IOException ex) {
-            throw new GorResourceException(String.format("Error Initializing Query. Can not read file '%s' (%s)", metaPath, ex.getMessage()), metaPath, ex);
+            throw new GorResourceException(String.format("Error reading meta. Can not read file '%s' (%s)", metaPath, ex.getMessage()), metaPath, ex);
+        }
+    }
+
+    public void loadAndMergeMeta(String content) {
+        List<String> metaLines = null;
+        try {
+            metaLines = extractMetaReader(new BufferedReader(new StringReader(content)));
+            parseMetaLines(metaLines);
+        } catch (IOException ex) {
+            throw new GorResourceException(String.format("Error reading meta: (%s%n%s ",
+                    ex.getMessage(), metaLines != null ? String.join("\n", metaLines) : "no lines"), null,  ex);
         }
     }
 

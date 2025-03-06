@@ -249,6 +249,7 @@ public class PluggableGorDriver implements GorDriver {
         }
     }
 
+    // Try resolve non existing source with a fallback link file (<source path>.link)
     private DataSource tryResolveWithLink(DataSource source) throws IOException {
         SourceReference fallbackSourceRef = getSourceRef(source, DataUtil.toFile( source.getSourceReference().getUrl(), LINK), null);
         DataSource fallbackLinkSource = wrap(resolveDataSource(fallbackSourceRef));
