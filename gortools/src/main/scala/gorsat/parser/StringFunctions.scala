@@ -47,6 +47,7 @@ object StringFunctions {
     functions.register("CSLISTHASCOUNT", getSignatureStringString2Int(csListHasCount), csListHasCount _)
     functions.register("REPLACE", getSignatureStringStringString2String(replace), replace _)
     functions.register("LEN", getSignatureString2Int(len), len _)
+    functions.register("MATCHLEN", getSignatureStringString2Int(matchLen), matchLen _)
     functions.register("LEFT", getSignatureStringInt2String(left), left _)
     functions.register("RIGHT", getSignatureStringInt2String(right), right _)
     functions.register("STR2LIST", getSignatureStringInt2String(str2List), str2List _)
@@ -156,6 +157,19 @@ object StringFunctions {
   def replace(ex1: sFun, ex2: sFun, ex3: sFun): sFun = {
     cvp => {
       ex1(cvp).replace(ex2(cvp), ex3(cvp))
+    }
+  }
+
+  def matchLen(ex1: sFun, ex2: sFun): iFun = {
+    cvp => {
+      val s1 = ex1(cvp)
+      val s2 = ex2(cvp)
+      val minlen = math.min(s1.length, s2.length)
+      var pos = 0
+      while (pos < s1.length && pos < s2.length && s1(pos) == s2(pos)) {
+        pos += 1
+      }
+      pos
     }
   }
 

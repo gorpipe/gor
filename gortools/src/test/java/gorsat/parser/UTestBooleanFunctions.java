@@ -463,12 +463,22 @@ public class UTestBooleanFunctions {
     }
 
     @Test
-    public void testCsListHasCountWithStringLiterals() {
-        TestUtils.assertCalculated("cslisthascount('a,b,c,d,e,f', 'a')", 1);
-        TestUtils.assertCalculated("cslisthascount('a,b,c,d,e,f', 'x')", 0);
-        TestUtils.assertCalculated("cslisthascount('a,b,c,d,e,f,a,b,c,a,b', 'a','b','c')", 3);
-        TestUtils.assertCalculated("cslisthascount('A,B,C,D,E,F,A,B,C,A,B', 'a','b','c')", 0);
+    public void testMatchLenWithStringLiterals() {
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'A')", 1);
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'ACCTA')", 4);
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'ACCCTA')", 3);
+        TestUtils.assertCalculated("matchlen('ACCTTG', 'CCTTG')", 0);
+        TestUtils.assertCalculated("matchlen('A', 'ACCTTG')", 1);
+        TestUtils.assertCalculated("matchlen('ACCTA', 'ACCTTG')", 4);
+        TestUtils.assertCalculated("matchlen('ACCCTA', 'ACCTTG')", 3);
+        TestUtils.assertCalculated("matchlen('ACCCTA', 'ACCCTA')", 6);
+        TestUtils.assertCalculated("matchlen('xACCCTA', 'yACCCTA')", 0);
+        TestUtils.assertCalculated("matchlen('CCTTG', 'ACCTTG')", 0);
+        TestUtils.assertCalculated("matchlen('ACCTTG', '')", 0);
+        TestUtils.assertCalculated("matchlen('', 'A')", 0);
+        TestUtils.assertCalculated("matchlen('', '')", 0);
     }
+
     @Test
     public void testCsListHasCount() {
         // Need to work with rows here so we can do listhascount without using string literals
