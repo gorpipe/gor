@@ -23,12 +23,11 @@
 package org.gorpipe.gor.model;
 
 import com.google.common.base.Strings;
-import org.apache.commons.io.FilenameUtils;
-import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
-import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.driver.utils.LinkFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -307,26 +306,24 @@ public abstract class FileReader {
      */
     public abstract DataSource resolveDataSource(SourceReference sourceReference) throws IOException ;
 
-    public abstract String readLinkContent(String url);
+    /**
+     * Read link file and return the underlying file, following all link files.
+     * @param url   path to the link file
+     * @return the underlying file
+     */
+    public abstract String readLink(String url);
 
     public abstract String getCommonRoot();
 
     public abstract SourceReference createSourceReference(String url, boolean writeable);
 
+    //
     public void writeLinkIfNeeded(String url) throws IOException {
         if (Strings.isNullOrEmpty(url)) return;
         DataSource dataSource = resolveUrl(url, true);
         if (dataSource.forceLink()) {
-            writeLinkfile(dataSource.getProjectLinkFile(), dataSource.getProjectLinkFileContent());
-        }
-    }
-
-    public void writeLinkfile(String linkUrl, String linkContent) throws IOException {
-        // Use non driver file reader as this is exception from the write no links rule, add extra resolve with the
-        // server reader to validate (skip link extension as writing links is allow forbidden).
-        resolveUrl(FilenameUtils.removeExtension(linkUrl), true);
-        try (Writer linkWriter = new OutputStreamWriter(getOutputStream(linkUrl))) {
-            linkWriter.write(linkContent);
+            LinkFile.create((StreamSource)dataSource, dataSource.getProjectLinkFileContent())
+                    .save(getOutputStream(dataSource.getProjectLinkFile()));
         }
     }
 
