@@ -50,7 +50,7 @@ public class FileSource implements StreamSource {
 
     private final SourceReference sourceReference;
     private final Path filePath;
-    private RandomAccessFile raf;
+    protected RandomAccessFile raf;
     private final boolean useAtomicWrite = System.getProperty("gor.filereader.atomicwrite", "true").equalsIgnoreCase("true");;
     private Path atomicTempFilePath;  // Set when we should write to a temp file.
 
@@ -120,7 +120,7 @@ public class FileSource implements StreamSource {
         return new FileSourceOutputStream();
     }
 
-    private void ensureOpenForRead()  {
+    protected void ensureOpenForRead()  {
         if (raf == null) {
             if (keepStackTraceForOpen) {
                 rafOpenedStackTrace = new Error();

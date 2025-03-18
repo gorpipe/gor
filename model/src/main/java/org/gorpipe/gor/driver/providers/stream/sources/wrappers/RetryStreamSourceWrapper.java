@@ -194,10 +194,11 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
          * NB: If reopening the stream fails - it is not retried.
          */
         private InputStream reopen() {
+            // Need to open it using the outer super class open (and be careful NOT to warp it again)
             if (length == null) {
-                return open(start + getPosition());
+                return RetryStreamSourceWrapper.super.open(start + getPosition());
             } else {
-                return open(start + getPosition(), length - getPosition());
+                return RetryStreamSourceWrapper.super.open(start + getPosition(), length - getPosition());
             }
         }
 
