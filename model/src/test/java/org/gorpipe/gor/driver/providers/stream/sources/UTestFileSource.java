@@ -1,8 +1,12 @@
 package org.gorpipe.gor.driver.providers.stream.sources;
 
+import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
+import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceRetryHandler;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
 import org.junit.Assert;
@@ -12,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,6 +67,49 @@ public class UTestFileSource extends CommonStreamTests {
         Assert.assertTrue(Files.exists(Path.of(outfile.getPath())));
         Assert.assertTrue(Files.list(Path.of(workDir.getRoot().getPath()))
                 .allMatch(p -> !p.getFileName().toString().matches("text-temp-.*\\.txt")));
+    }
+
+    @Test
+    public void testStackOverflowInRetry() throws IOException {
+        File f = TestUtils.createGorFile( "test", new String[]{"chrom\tpos\tvar", "chr1\t1\t10"});
+
+        final int[] readCounter = {0};
+        StreamSource ss = new RetryStreamSourceWrapper(
+                new FileSourceRetryHandler(1, 10),
+                new FileSource(new SourceReference(f.getAbsolutePath())) {
+                    @Override
+                    public InputStream open(long start)  {
+                        ensureOpenForRead();
+                        try {
+                            raf.seek(start);
+                        } catch (IOException e) {
+                            throw GorResourceException.fromIOException(e, getPath().toString()).retry();
+                        }
+                        return new FileSourceStream() {
+                            @Override
+                            public int read(byte[] b, int off, int len) throws IOException {
+                                readCounter[0]++;
+                                if (readCounter[0] > 20) {
+                                    throw new RuntimeException("Test failed");
+                                }
+                                if (off > 0) {
+                                    throw new IOException("Testing failed read");
+                                }
+                                return super.read(b, off, len);
+                            }
+                        };
+                    }
+                });
+
+        try (InputStream in = ss.open()) {
+            //f.delete();
+            var b = new byte[1];
+            in.read(b, 0, 1);
+            in.read(b, 1, 1);
+            Assert.assertEquals('h', b[0]);
+        } catch (Exception e) {
+            Assert.assertTrue(e.getMessage().contains("Giving up after"));
+        }
     }
 
     @Override
