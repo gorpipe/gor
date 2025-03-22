@@ -26,26 +26,6 @@ public class ITestFilesS3Source extends CommonFilesTests {
     private static String S3_REGION = "eu-west-1";
 
     @Rule
-    public final ProvideSystemProperty myPropertyHasMyValue
-            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
-
-    @Rule
-    public final ProvideSystemProperty otherPropertyIsMissing
-            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsSecretAccessKey
-            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsRegion
-            = new ProvideSystemProperty("aws.region", S3_REGION);
-
-    @Rule
-    public final ProvideSystemProperty gorSecurityContext
-            = new ProvideSystemProperty("gor.security.context", securityContext());
-
-    @Rule
     public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
 
     public ITestFilesS3Source() throws IOException {

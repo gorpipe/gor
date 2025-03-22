@@ -26,23 +26,6 @@ public class UIntegrationTestGorpipe {
     @Rule
     public SystemErrRule systemErrRule = new SystemErrRule().enableLog().muteForSuccessfulTests();
 
-    @Rule
-    public final ProvideSystemProperty awsAccessKey
-            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
-
-    @Rule
-    public final ProvideSystemProperty awsSecretKey
-            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsSecretAccessKey
-            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsRegion
-            = new ProvideSystemProperty("aws.region", S3_REGION);
-
-
     private static String S3_KEY;
     private static String S3_SECRET;
     private static String S3_REGION = "eu-west-1";

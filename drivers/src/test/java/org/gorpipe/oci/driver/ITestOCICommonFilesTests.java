@@ -27,11 +27,6 @@ public class ITestOCICommonFilesTests extends CommonFilesTests {
     private static String OCI_SIMPLE_PRIVATE_KEY;
     private static String OCI_SIMPLE_FINGERPRINT;
 
-
-    @Rule
-    public final ProvideSystemProperty gorSecurityContext
-            = new ProvideSystemProperty("gor.security.context", securityContext());
-
     @Rule
     public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
 

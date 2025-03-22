@@ -55,17 +55,6 @@ public class ITestTableManager {
     public final ProvideSystemProperty awsAccessKeyId = new ProvideSystemProperty("aws.accessKeyId", "");
 
     @Rule
-    public final ProvideSystemProperty otherPropertyIsMissing = new ProvideSystemProperty("aws.secretKey", "");
-
-    @Rule
-    public final ProvideSystemProperty awsSecretAccessKey
-            = new ProvideSystemProperty("aws.secretAccessKey", "");
-
-    @Rule
-    public final ProvideSystemProperty awsRegion
-            = new ProvideSystemProperty("aws.region", "");
-
-    @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
     private Path workDirPath;
 

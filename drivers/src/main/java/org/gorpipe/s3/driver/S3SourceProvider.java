@@ -60,6 +60,20 @@ import java.util.regex.Pattern;
 @AutoService(SourceProvider.class)
 public class S3SourceProvider extends StreamSourceProvider {
 
+    // Beginning with version 2.30.0 of the AWS SDK for Java 2.x, the SDK provides default integrity protections
+    // by automatically calculating a CRC32 checksum for uploads.
+    // This is NOT compatible with the OCI S3 compatibility layer so we either need to:
+    // 1. Turn off the checksums in the SDK by setting the system property aws.requestChecksumValidation to "false".
+    //    See: https://docs.aws.amazon.com/sdkref/latest/guide/feature-dataintegrity.html
+    // 2. Use .checksumAlgorithm(ChecksumAlgorithm.SHA256), on the put object (not tested).
+    //    See: https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/s3-checksums.html
+    // So for now turn off the checksums.
+    // NOTE:  We also turn it off for AWS S3 buckets.
+    static {
+        System.setProperty("aws.requestChecksumCalculation", "WHEN_REQUIRED");
+        System.setProperty("aws.responseChecksumValidation", "WHEN_REQUIRED");
+    }
+
     private static final boolean USE_CRT_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.crt", "true"));
     private static final boolean USE_ASYNC_CLIENT = Boolean.parseBoolean(System.getProperty("gor.s3.client.async", "false"));
     private static final boolean FORCE_PATH_STYLE = Boolean.parseBoolean(System.getProperty("gor.s3.forcePathStyle", "false"));
@@ -294,34 +308,35 @@ public class S3SourceProvider extends StreamSourceProvider {
     }
 
     AwsCredentialsProvider getCredentialsProvider(Credentials cred) {
-        if (cred == null || cred.isNull()) {
-            log.info("CredentialsProvider: DefaultCredentialsProvider for null creds");
-            return DefaultCredentialsProvider.create();
-        } else {
-            var awsKey = cred.getOrDefault(Credentials.Attr.KEY, "");
-            var awsSecret = cred.getOrDefault(Credentials.Attr.SECRET, "");
-            var sessionToken = cred.getOrDefault(Credentials.Attr.SESSION_TOKEN, "");
+        var awsKey = System.getProperty("aws.accessKeyId", "");
+        var awsSecret = System.getProperty("aws.secretKey", "");
+        var sessionToken = System.getProperty("aws.sessionToken", "");
 
-            if (!awsKey.isEmpty() && !awsSecret.isEmpty()) {
-                if (!sessionToken.isEmpty()) {
-                    return StaticCredentialsProvider.create(
-                            AwsSessionCredentials.builder()
-                                    .accessKeyId(awsKey)
-                                    .secretAccessKey(awsSecret)
-                                    .sessionToken(sessionToken)
-                                    .build());
-                } else {
-                    log.debug("CredentialsProvider: StaticCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
-                    return StaticCredentialsProvider.create(
-                            AwsBasicCredentials.builder()
-                                    .accessKeyId(awsKey)
-                                    .secretAccessKey(awsSecret)
-                                    .build());
-                }
+        if (cred != null && !cred.isNull()) {
+            awsKey = cred.getOrDefault(Credentials.Attr.KEY, awsKey);
+            awsSecret = cred.getOrDefault(Credentials.Attr.SECRET, awsSecret);
+            sessionToken = cred.getOrDefault(Credentials.Attr.SESSION_TOKEN, sessionToken);
+        }
+
+        if (!awsKey.isEmpty() && !awsSecret.isEmpty()) {
+            if (!sessionToken.isEmpty()) {
+                return StaticCredentialsProvider.create(
+                        AwsSessionCredentials.builder()
+                                .accessKeyId(awsKey)
+                                .secretAccessKey(awsSecret)
+                                .sessionToken(sessionToken)
+                                .build());
             } else {
-                log.info(String.format("CredentialsProvider: DefaultCredentialsProvider for %s:%s", cred.getService(), cred.getLookupKey()));
-                return DefaultCredentialsProvider.create();
+                log.debug("CredentialsProvider: StaticCredentialsProvider for {}:{}", cred.getService(), cred.getLookupKey());
+                return StaticCredentialsProvider.create(
+                        AwsBasicCredentials.builder()
+                                .accessKeyId(awsKey)
+                                .secretAccessKey(awsSecret)
+                                .build());
             }
+        } else {
+            log.info("CredentialsProvider: DefaultCredentialsProvider.");
+            return DefaultCredentialsProvider.create();
         }
     }
 
@@ -337,6 +352,10 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         if (StringUtils.isEmpty(endpoint)) {
             endpoint = System.getProperty("s3.endpoint");
+        }
+
+        if (StringUtils.isEmpty(endpoint)) {
+            endpoint = System.getProperty("aws.endpointUrl");
         }
 
         return endpoint;

@@ -44,23 +44,6 @@ public class UTestS3SeekableFile {
     @Rule
     public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
-    @Rule
-    public final ProvideSystemProperty s3AcessKey
-            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
-
-    @Rule
-    public final ProvideSystemProperty s3Secret
-            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsSecretAccessKey
-            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsRegion
-            = new ProvideSystemProperty("aws.region", S3_REGION);
-
-
     String gorzFileName = "s3://gdb-unit-test-data/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gorz";
     String gorFileName = "s3://gdb-unit-test-data/csa_test_data/data_sets/ref/versions/hg19/dbsnp.gor";
 

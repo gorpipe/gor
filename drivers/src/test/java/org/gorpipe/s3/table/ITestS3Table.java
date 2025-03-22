@@ -59,22 +59,6 @@ public class ITestS3Table {
     private Path workDirPath;
 
     @Rule
-    public final ProvideSystemProperty myPropertyHasMyValue
-            = new ProvideSystemProperty("aws.accessKeyId", S3_KEY);
-
-    @Rule
-    public final ProvideSystemProperty otherPropertyIsMissing
-            = new ProvideSystemProperty("aws.secretKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsSecretAccessKey
-            = new ProvideSystemProperty("aws.secretAccessKey", S3_SECRET);
-
-    @Rule
-    public final ProvideSystemProperty awsRegion
-            = new ProvideSystemProperty("aws.region", S3_REGION);
-
-    @Rule
     public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
 
     @Rule
