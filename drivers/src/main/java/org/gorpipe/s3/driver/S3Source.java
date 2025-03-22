@@ -58,6 +58,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -75,7 +76,7 @@ public class S3Source implements StreamSource {
     private final String key;
     private final S3Client client;
     private final S3AsyncClient asyncClient;
-    private static S3FileSystem s3fs;
+    private static final Map<S3Client, S3FileSystem> s3fsCache = new ConcurrentHashMap<>();
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -412,14 +413,11 @@ public class S3Source implements StreamSource {
     }
 
     public S3Path getS3Path(String bucket, String key, S3Client client) {
-        if (s3fs == null) {
-            // NOTE:  We keep the old style of creating our own client objects and then create filesystems using that client.
-            //        Could also stop creating our own client and just passing all the necessary information to the filesystem
-            //        using S3FileSystemProvider.PROPS_TO_OVERLOAD and S3FileSystemProvider.getFileSystem(URI, Map<String, ?>).
-            //        Then we could extract the client from the filesystem.
-            s3fs = S3ClientFileSystemProvider.getInstance().getFileSystem(client);
-        }
-
+        // NOTE:  We keep the old style of creating our own client objects and then create filesystems using that client.
+        //        Could also stop creating our own client and just passing all the necessary information to the filesystem
+        //        using S3FileSystemProvider.PROPS_TO_OVERLOAD and S3FileSystemProvider.getFileSystem(URI, Map<String, ?>).
+        //        Then we could extract the client from the filesystem.
+        var s3fs = s3fsCache.computeIfAbsent(client, c -> S3ClientFileSystemProvider.getInstance().getFileSystem(c));
         return s3fs.getPath( "/" + bucket, key);
     }
 
