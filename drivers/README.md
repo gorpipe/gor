@@ -15,10 +15,6 @@ Tests that access the cloud should be marked as IntegrationTest.
 ```
 S3_KEY
 S3_SECRET
-S3_KEY_2
-S3_SECRET_2
-S3_KEY_3
-S3_SECRET_3
 ```
                                   
 #### Access keys for S3 compatiple storage at Google cloud.
@@ -32,6 +28,26 @@ S3_GOOGLE_SECRET
 GS_CLIENT_ID
 GS_SECRET
 GS_REFRESH_TOKEN
+```
+
+### Access variables for OCI S3 compatibility
+```
+S3_COMPAT_KEY
+S3_COMPAT_SECRET
+S3_COMPAT_ENDPOINT
+```
+
+### Access variables for OCI
+```
+OCI_TENANT
+OCI_USER
+
+OCI_AUTH_TOKEN_KEY_FILE
+OCI_AUTH_TOKEN_KEY
+OCI_AUTH_TOKEN_JWT
+
+OCI_SIMPLE_PRIVATE_KEY
+OCI_SIMPLE_FINGERPRINT
 ```
 
 ### secrets.env File
