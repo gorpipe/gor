@@ -7,12 +7,9 @@ import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.driver.utils.TestUtils;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.util.DataUtil;
-import org.gorpipe.s3.driver.TestS3SeekableFile;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
