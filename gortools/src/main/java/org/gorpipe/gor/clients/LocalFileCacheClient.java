@@ -103,13 +103,13 @@ public class LocalFileCacheClient implements FileCache {
 
     @Override
     public String store(Path from, String fingerprint, String ext, long cost, String md5) {
-        return storeWithSpecificCacheFilename(from, fingerprint, inferCachefileName(from, fingerprint, null, md5), cost);
+        return storeWithSpecificCacheFilename(from, fingerprint, inferCachefileName(from, fingerprint, ext, md5), cost);
     }
 
     private String inferCachefileName(Path from, String fingerprint, String ext, String md5) {
         if (!Strings.isNullOrEmpty(ext)) {
             ext = ext.charAt(0) == '.' ? ext : "." + ext;
-            if (md5 != null) {
+            if (!Strings.isNullOrBlank(md5)) {
                 return md5 + "_md5" + ext;
             } else {
                 return fingerprint + ext;
@@ -123,7 +123,7 @@ public class LocalFileCacheClient implements FileCache {
     public String storeWithSpecificCacheFilename(Path path, String fingerprint, String cacheFilename, long cost) {
         try {
             // Atomic only store in cache if successful move operation
-            var subFolder = getFolderFromFingerprint(fingerprint, true);
+            var subFolder = getCacheFolderFromFileName(PathUtils.removeExtensions(cacheFilename), true);
             var cacheFile = PathUtils.resolve(subFolder, cacheFilename);
             var resultPath = moveFile(path, Path.of(cacheFile));
 
@@ -171,7 +171,7 @@ public class LocalFileCacheClient implements FileCache {
     @Override
     public String tempLocation(String fingerprint, String ext) {
         try {
-            return PathUtils.resolve(getFolderFromFingerprint(fingerprint, true), fingerprint + ext);
+            return PathUtils.resolve(getCacheFolderFromFileName(fingerprint, true), fingerprint + ext);
         } catch (IOException ioe) {
             log.error("Error when attempting return temp location", ioe);
         }
@@ -190,10 +190,10 @@ public class LocalFileCacheClient implements FileCache {
         return results;
     }
 
-    private String getFolderFromFingerprint(String fingerprint, boolean createSubFolder) throws IOException {
+    private String getCacheFolderFromFileName(String fileName, boolean createSubFolder) throws IOException {
 
-        if (fingerprint.length() < this.subFolderSize) {
-            throw new IllegalArgumentException(String.format("Invalid fingerprint: %1$s, needs to be at least %2$d characters", fingerprint, subFolderSize));
+        if (fileName.length() < this.subFolderSize) {
+            throw new IllegalArgumentException(String.format("Invalid cache filename: %1$s, needs to be at least %2$d characters", fileName, subFolderSize));
         }
 
         var currentRoot = rootPath;
@@ -203,7 +203,7 @@ public class LocalFileCacheClient implements FileCache {
         }
 
         if (useSubFolders) {
-            var resultPath = PathUtils.resolve(currentRoot, fingerprint.substring(0, this.subFolderSize));
+            var resultPath = PathUtils.resolve(currentRoot, fileName.substring(0, this.subFolderSize));
             if (createSubFolder) {
                 fileReader.createDirectories(resultPath);
             }
@@ -229,7 +229,7 @@ public class LocalFileCacheClient implements FileCache {
     }
 
     private String findFileFromFingerPrint(String fingerprint) throws IOException {
-        String storageFolder = getFolderFromFingerprint(fingerprint, false);
+        String storageFolder = getCacheFolderFromFileName(fingerprint, false);
 
         File dir = new File(storageFolder);
         FileFilter fileFilter = new WildcardFileFilter(fingerprint + "*");

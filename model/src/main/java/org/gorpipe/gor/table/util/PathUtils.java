@@ -228,6 +228,10 @@ public class PathUtils {
         return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
     }
 
+    public static String removeExtensions(String fileName) {
+        return fileName.contains(".") ? fileName.substring(0, fileName.indexOf('.')) : fileName;
+    }
+
     public static String markAsFolder(String path) {
         if (!path.endsWith("/")) {
             return path + "/";

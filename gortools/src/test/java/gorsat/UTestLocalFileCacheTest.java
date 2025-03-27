@@ -146,7 +146,7 @@ public class UTestLocalFileCacheTest {
         for(String subItem : itemList) {
             String[] subFolderFileList = (new File(workDir.getRoot(), subItem)).list();
             Assert.assertNotNull(subFolderFileList);
-            Assert.assertEquals("One file in directory", 2, subFolderFileList.length);
+            Assert.assertEquals("One file in directory", 1, subFolderFileList.length);
         }
     }
 
@@ -154,7 +154,7 @@ public class UTestLocalFileCacheTest {
     public void testStoreInSubfoldersWithTooShortFingerprint() throws IOException {
         LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString(), true, 5);
         client.store(workDir.newFile("test1.gor").toPath(),"fin01gerprint1", ".gor", 0, "");
-        client.store(workDir.newFile("test2.gor").toPath(),"fi01", ".gor", 0, "");
+        client.store(workDir.newFile("test2.gor").toPath(),"f01", ".gor", 0, "");
     }
 
     @Test
@@ -184,7 +184,7 @@ public class UTestLocalFileCacheTest {
     public void testLookupOfTempTempFilebasedOnFingerPrint() throws IOException {
         LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString(), true, 5);
         client.store(workDir.newFile("test1.gor").toPath(),"fin01gerprint1", ".gor", 0, "");
-        client.store(workDir.newFile("test2temptempfile.gor").toPath(),"fin02gerprint2", ".gor", 0, "");
+        client.store(workDir.newFile("test2temptempfile.gor").toPath(),"fin02gerprint2", "", 0, "");
         client.store(workDir.newFile("test3.gor").toPath(),"fin03gerprint3", ".gor", 0, "");
 
         // Should get 0 files, 3 directory
