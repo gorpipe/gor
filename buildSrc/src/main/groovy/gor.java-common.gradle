@@ -161,11 +161,6 @@ dependencies {
             }
             because("CVE-2016-6809: Deserialization of Untrusted Data in org.apache.tika/tika-core")
         }
-//        implementation('software.amazon.awssdk:apache-client') {
-//            version {
-//                strictly("[2.29.47,)")
-//            }
-//        }
     }
 }
 

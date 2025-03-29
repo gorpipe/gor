@@ -244,9 +244,9 @@ public class LocalFileCacheClient implements FileCache {
                 DataType dataType = DataType.fromFileName(file.getName());
 
                 if (dataType != null) {
-                    if (dataType.nature == FileNature.MD5_LINK) {
+                    if (dataType.nature == FileNature.MD5_LINK || dataType.nature == FileNature.REFERENCE) {
                         foundFile = FileUtils.readFileToString(file, Charset.defaultCharset()).trim();
-                    } else if (dataType.nature == FileNature.VARIANTS || dataType.nature == FileNature.TABLE) {
+                    } else if (dataType.nature != FileNature.INDEX && dataType.nature != FileNature.METAINFO) {
                         foundFile = file.toString();
                     }
                 }

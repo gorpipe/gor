@@ -80,9 +80,9 @@ public class BaseScriptExecutionEngine {
 
     public Optional<Tuple<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {
         var lastCommand = MacroUtilities.getLastCommand(queryBlock.query());
-        if (MacroUtilities.isLastCommandWrite(lastCommand)) {
+        if (MacroUtilities.isCommandWrite(lastCommand)) {
             // The hasForkWrite is not always set on the queryBlock even if is has a work write.
-            if (!MacroUtilities.isLastCommandForkWrite(lastCommand)) {
+            if (!MacroUtilities.isCommandForkWrite(lastCommand)) {
                 return resolveCache(context, lastCommand, queryBlock);
             } else {
                 return Optional.of(new Tuple<>(null, true));
@@ -140,18 +140,20 @@ public class BaseScriptExecutionEngine {
             fileSignature = StringUtilities.createMD5(usedFilesConcatStr);
         } else {
             var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
-            var fileListKey = String.join(" ", usedFiles) + signatureKey;
+            var fileListKey = String.join(" ", usedFiles);
 
-            if (usedFiles.stream().anyMatch(DataUtil::isYml)) {
-                // if any of the files is a template expansion, we treat this as if non-deterministic.  We do not
+            if (usedFiles.stream().anyMatch(DataUtil::isYml) || MacroUtilities.containsWriteCommand(commandToExecute)) {
+                // Cases were we always want to run the query:
+                // 1. if any of the files is a template expansion, we treat this as if non-deterministic.  We do not
                 // model how expansion might depend on files and parameters.
                 // We could expand the YML file and then signature that query according to its usedFiles etc.,
                 // but that is not too different from forcing a cache miss at this stage by using a never-reused
                 // signature value.  We don't save it for reuse.
-                fileSignature = StringUtilities.createMD5(Long.toString(System.nanoTime()) + fileListKey + signatureKey);
+                // 2. if the command contains a write command, we always want to run it for the sideeffect of writing.
+                fileSignature = StringUtilities.createMD5(System.nanoTime() + fileListKey + signatureKey);
             } else {
                 fileSignature = fileSignatureMap.computeIfAbsent(
-                        fileListKey,
+                        fileListKey + signatureKey,
                         (k) -> StringUtilities.createMD5(
                                 usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
             }

@@ -99,7 +99,7 @@ abstract case class MacroInfo(name: String,
 
       if (a.isEmpty) {
         val commandPosition = command.toUpperCase.indexOf(this.name)
-        val theCommand = if (MacroUtilities.isWrite(command)) {
+        val theCommand = if (MacroUtilities.isLastCommandWrite(command)) {
           s"$summaryCommand [$createName] | top 0"
         } else {
           s"$summaryCommand [$createName]"

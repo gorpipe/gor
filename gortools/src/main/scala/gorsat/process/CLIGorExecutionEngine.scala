@@ -63,7 +63,7 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     iterator.init(queryToExecute, pipeOptions.stdIn, "", pipeOptions.fileSignature, pipeOptions.virtualFile)
 
     var instance = iterator
-    if (MacroUtilities.isWrite(pipeOptions.query)) instance = null
+    if (MacroUtilities.isLastCommandWrite(pipeOptions.query)) instance = null
 
     iterator.thePipeStep = iterator.thePipeStep |
       createStdOut(session.getNorContext || iterator.isNorContext, pipeOptions.color, iterator)

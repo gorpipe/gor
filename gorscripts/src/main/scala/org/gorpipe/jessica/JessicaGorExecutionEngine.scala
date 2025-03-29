@@ -67,7 +67,7 @@ class JessicaGorExecutionEngine(
     iterator.init(queryToExecute, pipeOptions.stdIn, "", pipeOptions.fileSignature, pipeOptions.virtualFile)
 
     var header = iterator.getHeader
-    if (MacroUtilities.isWrite(pipeOptions.query)) header = null
+    if (MacroUtilities.isLastCommandWrite(pipeOptions.query)) header = null
 
     // Add steps that return the output of the pipe
     iterator.thePipeStep | ToList(output)
