@@ -295,6 +295,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
 
         var metricsPub = new PrometheusMetricPublisher();
+        log.info("Adding metrics publisher: {}", metricsPub);
         builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
 
         builder.overrideConfiguration(c -> c.scheduledExecutorService(scheduledExecutorService));
