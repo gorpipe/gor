@@ -198,7 +198,7 @@ object GenomeFunctions {
     var columnIndex = 0
     var start = 0
     var nextColonPos = getEndOfField(formatValue, start)
-    while (start < formatValue.length && columnIndex < fieldIndex) {
+    while (nextColonPos + 1 < formatValue.length && columnIndex < fieldIndex) {
       start = nextColonPos + 1
       nextColonPos = getEndOfField(formatValue, start)
       columnIndex += 1
@@ -206,7 +206,7 @@ object GenomeFunctions {
     if (columnIndex == fieldIndex) {
       formatValue.substring(start, nextColonPos)
     } else {
-      "NOT_FOUND"
+      ""
     }
   }
 
