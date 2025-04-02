@@ -172,13 +172,13 @@ object GenomeFunctions {
     }
   }
 
-  private def getFieldIndex(fieldValue: String, formatValue: String) = {
+  private def getVCFFieldIndex(fieldValue: String, formatValue: String) = {
     var columnIndex = 0
     var start = 0
-    var nextColonPos: Int = getEndOfField(formatValue, start)
+    var nextColonPos: Int = getVCFEndOfField(formatValue, start)
     while (start < formatValue.length && formatValue.substring(start, nextColonPos) != fieldValue) {
       start = nextColonPos + 1
-      nextColonPos = getEndOfField(formatValue, start)
+      nextColonPos = getVCFEndOfField(formatValue, start)
       columnIndex += 1
     }
     if (start >= formatValue.length) {
@@ -188,19 +188,19 @@ object GenomeFunctions {
     columnIndex
   }
 
-  private def getEndOfField(formatValue: String, start: Int) = {
+  private def getVCFEndOfField(formatValue: String, start: Int) = {
     val ix = formatValue.indexOf(':', start)
     val nextColonPos = if (ix > -1) ix else formatValue.length
     nextColonPos
   }
 
-  private def getFieldValue(formatValue: String, fieldIndex: Int) = {
+  private def getVCFFieldValue(formatValue: String, fieldIndex: Int) = {
     var columnIndex = 0
     var start = 0
-    var nextColonPos = getEndOfField(formatValue, start)
+    var nextColonPos = getVCFEndOfField(formatValue, start)
     while (nextColonPos + 1 < formatValue.length && columnIndex < fieldIndex) {
       start = nextColonPos + 1
-      nextColonPos = getEndOfField(formatValue, start)
+      nextColonPos = getVCFEndOfField(formatValue, start)
       columnIndex += 1
     }
     if (columnIndex == fieldIndex) {
@@ -213,9 +213,13 @@ object GenomeFunctions {
   def vcfFormatTag(format: sFun, value: sFun, field: sFun): sFun = {
     cvp =>
       {
-        val fieldIndex = getFieldIndex(field(cvp), format(cvp))
+        val fieldIndex = getVCFFieldIndex(field(cvp), format(cvp))
         if (fieldIndex >= 0) {
-          getFieldValue(value(cvp), fieldIndex)
+          val fieldValue = getVCFFieldValue(value(cvp), fieldIndex)
+          if (fieldValue == "" && "GT" == field(cvp)) {
+            throw new GorParsingException("Error in VCFGTITEM - GT field is in FORMAT (%s) but missing from VALUES (%s)".formatted(format(cvp), value(cvp)))
+          }
+          if (fieldValue == "") "." else fieldValue
         } else {
           "NOT_FOUND"
         }
