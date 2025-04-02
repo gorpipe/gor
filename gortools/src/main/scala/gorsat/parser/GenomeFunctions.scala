@@ -172,13 +172,13 @@ object GenomeFunctions {
     }
   }
 
-  private def getFieldIndex(fieldValue: String, formatValue: String) = {
+  private def getVcfFieldIndex(fieldValue: String, formatValue: String) = {
     var columnIndex = 0
     var start = 0
-    var nextColonPos: Int = getEndOfField(formatValue, start)
+    var nextColonPos: Int = getVcfEndOfField(formatValue, start)
     while (start < formatValue.length && formatValue.substring(start, nextColonPos) != fieldValue) {
       start = nextColonPos + 1
-      nextColonPos = getEndOfField(formatValue, start)
+      nextColonPos = getVcfEndOfField(formatValue, start)
       columnIndex += 1
     }
     if (start >= formatValue.length) {
@@ -188,36 +188,44 @@ object GenomeFunctions {
     columnIndex
   }
 
-  private def getEndOfField(formatValue: String, start: Int) = {
+  private def getVcfEndOfField(formatValue: String, start: Int) = {
     val ix = formatValue.indexOf(':', start)
     val nextColonPos = if (ix > -1) ix else formatValue.length
     nextColonPos
   }
 
-  private def getFieldValue(formatValue: String, fieldIndex: Int) = {
+  private def getVcfFieldValue(formatValue: String, fieldIndex: Int) = {
     var columnIndex = 0
     var start = 0
-    var nextColonPos = getEndOfField(formatValue, start)
-    while (start < formatValue.length && columnIndex < fieldIndex) {
+    var nextColonPos = getVcfEndOfField(formatValue, start)
+    while (nextColonPos + 1 < formatValue.length && columnIndex < fieldIndex) {
       start = nextColonPos + 1
-      nextColonPos = getEndOfField(formatValue, start)
+      nextColonPos = getVcfEndOfField(formatValue, start)
       columnIndex += 1
     }
     if (columnIndex == fieldIndex) {
       formatValue.substring(start, nextColonPos)
     } else {
-      "NOT_FOUND"
+      ""
     }
   }
 
+  // It would be better to use "." instead of "NOT_FOUND" as that is VCF compliant.
+  // That changes requires changes to the code.
+  var VCF_NOT_FOUND = "NOT_FOUND"
   def vcfFormatTag(format: sFun, value: sFun, field: sFun): sFun = {
     cvp =>
       {
-        val fieldIndex = getFieldIndex(field(cvp), format(cvp))
+        val fieldIndex = getVcfFieldIndex(field(cvp), format(cvp))
         if (fieldIndex >= 0) {
-          getFieldValue(value(cvp), fieldIndex)
+          val fieldValue = getVcfFieldValue(value(cvp), fieldIndex)
+          // Lets skip this GT field validation for now (according to the spec GT value must be specified if GT is in the format string).
+          //if ("GT" == field(cvp) && fieldValue == "") {
+          //  throw new GorParsingException("Error in VcfGTITEM - GT field is in FORMAT (%s) but missing from VALUES (%s)".formatted(format(cvp), value(cvp)))
+          //}
+          if (fieldValue == "") VCF_NOT_FOUND else fieldValue
         } else {
-          "NOT_FOUND"
+          VCF_NOT_FOUND
         }
     }
   }

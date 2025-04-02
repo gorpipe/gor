@@ -105,10 +105,20 @@ public class UTestGenomicFunctions {
     @Test
     public void testVcfFormatTag() {
         TestUtils.assertCalculated("vcfformattag('', '', '')", "NOT_FOUND");
+
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1:3:0,3,28', 'XX')", "NOT_FOUND");
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1:3:0,3,28', 'GT')", "0/0");
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1:3:0,3,28', 'DP')", "1");
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1:3:0,3,28', 'PL')", "0,3,28");
+
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'GT')", "./.");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'AD')", "NOT_FOUND");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'DP')", "NOT_FOUND");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'XX')", "NOT_FOUND");
+
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'GT')", "0/0");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'DP')", "1");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'PL')", "NOT_FOUND");
     }
 
     @Test

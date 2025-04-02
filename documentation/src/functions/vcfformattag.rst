@@ -31,5 +31,5 @@ For the following example vcf excerpt:
    #CHROM POS    ID        REF   ALT  QUAL  FILTER  INFO                     FORMAT       NA00001         NA00002         NA00003
    20     14370  rs6054257 G     A    29    PASS    NS=3;DP=14;AF=0.5;DB;H2  GT:GQ:DP:HQ  0|0:48:1:51,51  1|0:48:8:51,51  1/1:43:5:.,.
 
-* ``vcfformat(format, NA0002, ´HQ´)`` would return 51,51
-* ``vcfformat(format, NA0003, ´DP´)`` would return 5
+* ``vcfformattag(format, NA0002, ´HQ´)`` would return 51,51
+* ``vcfformattag(format, NA0003, ´DP´)`` would return 5
