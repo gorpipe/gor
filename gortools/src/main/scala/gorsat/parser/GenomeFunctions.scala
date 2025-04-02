@@ -219,7 +219,7 @@ object GenomeFunctions {
         val fieldIndex = getVcfFieldIndex(field(cvp), format(cvp))
         if (fieldIndex >= 0) {
           val fieldValue = getVcfFieldValue(value(cvp), fieldIndex)
-          // Lets skip this GT field validation for now.
+          // Lets skip this GT field validation for now (according to the spec GT value must be specified if GT is in the format string).
           //if ("GT" == field(cvp) && fieldValue == "") {
           //  throw new GorParsingException("Error in VcfGTITEM - GT field is in FORMAT (%s) but missing from VALUES (%s)".formatted(format(cvp), value(cvp)))
           //}
