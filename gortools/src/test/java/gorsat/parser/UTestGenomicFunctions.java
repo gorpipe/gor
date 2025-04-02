@@ -112,13 +112,13 @@ public class UTestGenomicFunctions {
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1:3:0,3,28', 'PL')", "0,3,28");
 
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'GT')", "./.");
-        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'AD')", "");
-        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'DP')", "");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'AD')", ".");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'DP')", ".");
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', './.', 'XX')", "NOT_FOUND");
 
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'GT')", "0/0");
         TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'DP')", "1");
-        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'PL')", "");
+        TestUtils.assertCalculated("vcfformattag('GT:AD:DP:GQ:PL', '0/0:1,0:1', 'PL')", ".");
     }
 
     @Test
