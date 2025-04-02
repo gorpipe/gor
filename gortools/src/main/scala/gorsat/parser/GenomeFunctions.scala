@@ -210,18 +210,22 @@ object GenomeFunctions {
     }
   }
 
+  // It would be better to use "." instead of "NOT_FOUND" as that is VCF compliant.
+  // That changes requires changes to the code.
+  var VCF_NOT_FOUND = "NOT_FOUND"
   def vcfFormatTag(format: sFun, value: sFun, field: sFun): sFun = {
     cvp =>
       {
         val fieldIndex = getVcfFieldIndex(field(cvp), format(cvp))
         if (fieldIndex >= 0) {
           val fieldValue = getVcfFieldValue(value(cvp), fieldIndex)
-          if (fieldValue == "" && "GT" == field(cvp)) {
-            throw new GorParsingException("Error in VcfGTITEM - GT field is in FORMAT (%s) but missing from VALUES (%s)".formatted(format(cvp), value(cvp)))
-          }
-          if (fieldValue == "") "." else fieldValue
+          // Lets skip this GT field validation for now.
+          //if ("GT" == field(cvp) && fieldValue == "") {
+          //  throw new GorParsingException("Error in VcfGTITEM - GT field is in FORMAT (%s) but missing from VALUES (%s)".formatted(format(cvp), value(cvp)))
+          //}
+          if (fieldValue == "") VCF_NOT_FOUND else fieldValue
         } else {
-          "NOT_FOUND"
+          VCF_NOT_FOUND
         }
     }
   }
