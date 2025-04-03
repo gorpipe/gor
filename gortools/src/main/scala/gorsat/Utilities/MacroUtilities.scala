@@ -425,22 +425,27 @@ object MacroUtilities {
     cmdsplit.last.trim
   }
 
-  def isWrite(query: String): Boolean = {
+  def isLastCommandWrite(query: String): Boolean = {
     val lastCmd = getLastCommand(query)
-    isLastCommandWrite(lastCmd)
+    isCommandWrite(lastCmd)
   }
 
-  def isLastCommandWrite(lastCommand: String): Boolean = {
+  def isCommandWrite(lastCommand: String): Boolean = {
     lastCommand.toLowerCase.startsWith("write ")
   }
 
-  def isForkWrite(query: String): Boolean = {
+  def isLastCommandForkWrite(query: String): Boolean = {
     val lastCommand = getLastCommand(query)
-    isLastCommandForkWrite(lastCommand)
+    isCommandForkWrite(lastCommand)
   }
 
-  def isLastCommandForkWrite(lastCommand: String): Boolean = {
+  def isCommandForkWrite(lastCommand: String): Boolean = {
     lastCommand.toLowerCase.startsWith("write ") && lastCommand.contains("-f")
+  }
+
+  // Contains write command (side effects)
+  def containsWriteCommand(query: String): Boolean = {
+    query.toLowerCase.matches(".*[ |(]write .*")
   }
 
   def getCachePath(create: ExecutionBlock, context: GorContext, skipcache: Boolean): (Boolean, Boolean, Boolean, String, String) = {
@@ -461,13 +466,13 @@ object MacroUtilities {
     }
     val lastCmd = querySplit.last.trim
     val lastCmdLower = lastCmd.toLowerCase
-    val hasWrite = isLastCommandWrite(lastCmd)
+    val hasWrite = isCommandWrite(lastCmd)
     val didx = if(hasWrite) lastCmd.indexOf(" -d ") else 0
     val lidx = if(hasWrite) {
       if (DataUtil.isGord(lastCmdLower)) lastCmdLower.length-5
       else lastCmdLower.indexOf(DataType.GORD.suffix + "/")
     } else 0
-    val hasForkWrite = isLastCommandForkWrite(lastCmd)
+    val hasForkWrite = isCommandForkWrite(lastCmd)
     val hasGordFolderWrite = didx > 0 || lidx > 0
     val writeDir = if (didx>0) {
       var k = didx+4

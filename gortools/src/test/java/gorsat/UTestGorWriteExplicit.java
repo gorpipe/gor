@@ -541,4 +541,19 @@ public class UTestGorWriteExplicit {
         String[] result = TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")).split("\n");
         Assert.assertEquals("Header should be same lenght as lines", result[0].split("\t", -1).length, result[1].split("\t", -1).length);
     }
+
+    @Test
+    public void testCreateWriteSignature() throws IOException {
+        Path path = workDirPath.resolve("gorfile.gorz");
+        TestUtils.runGorPipe(
+                "create a = gor -p chr21 ../tests/data/gor/genes.gor | write " + path + "; " +
+                      "gor "+path+GROUP_CHROM_COUNT);
+
+        Files.deleteIfExists(path);
+        TestUtils.runGorPipe(
+                "create a = gor -p chr21 ../tests/data/gor/genes.gor | write " + path + "; " +
+                        "gor "+path+GROUP_CHROM_COUNT);
+
+        Assert.assertTrue("File should be recreated", Files.exists(path));
+    }
 }

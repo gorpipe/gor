@@ -165,7 +165,6 @@ public class S3SourceProvider extends StreamSourceProvider {
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .socketTimeout(s3Config.socketTimeout())          // Default was 30s
                 .maxConnections(s3Config.connectionPoolSize())    // Default was 50
-                .tcpKeepAlive(true)
                 ;
 
         // Note: See defaults values at https://github.com/aws/aws-sdk-java-v2/blob/master/http-client-spi/src/main/java/software/amazon/awssdk/http/SdkHttpConfigurationOption.java
@@ -295,6 +294,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
 
         var metricsPub = new PrometheusMetricPublisher();
+        log.trace("Adding metrics publisher: {}", metricsPub);
         builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
 
         builder.overrideConfiguration(c -> c.scheduledExecutorService(scheduledExecutorService));

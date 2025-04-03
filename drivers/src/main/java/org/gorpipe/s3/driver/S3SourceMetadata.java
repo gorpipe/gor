@@ -55,12 +55,7 @@ public class S3SourceMetadata extends StreamSourceMetadata {
         map.put("S3.ETag", omd.eTag());
         map.put("S3.VersionId", omd.versionId());
         map.put("S3.InstanceLength", String.valueOf(omd.contentLength()));
-        Date exp = omd.expires() != null ? new Date( omd.expires().toEpochMilli()) : null;
-        if (exp != null) {
-            DateFormat df = DateFormat.getTimeInstance();
-            df.setTimeZone(TimeZone.getTimeZone("UTC"));
-            map.put("S3.ExpirationTime", df.format(exp));
-        }
+        map.put("S3.ExpirationTime", omd.expiresString());
         return map;
     }
 }
