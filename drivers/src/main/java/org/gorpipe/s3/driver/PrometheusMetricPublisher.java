@@ -40,10 +40,10 @@ public class PrometheusMetricPublisher implements MetricPublisher {
     }
 
     private void mapMetrics(MetricCollection metricCollection) {
-    logger.info("Mapping metrics: {}", metricCollection != null ? metricCollection.name() : "emtpy");
+        logger.trace("Mapping metrics: {}", metricCollection != null ? metricCollection.name() : "emtpy");
         metricCollection.stream().forEach(metricRecord -> {
             try {
-                logger.info("Mapping metric: {}", metricRecord.metric().name());
+                logger.trace("Mapping metric: {}", metricRecord.metric().name());
                 String metricName = METRIC_PREFIX + metricRecord.metric().name();
                 var value = metricRecord.value();
                 var levelLabel = metricRecord.metric().level().name();
