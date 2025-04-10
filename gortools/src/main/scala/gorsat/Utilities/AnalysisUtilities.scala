@@ -26,7 +26,7 @@
 
 package gorsat.Utilities
 
-import java.io.Writer
+import java.io.{IOException, OutputStreamWriter, Writer}
 import java.nio.file.{Files, Path, Paths}
 import java.util.stream.Collectors
 import gorsat.Commands.CommandParseUtilities
@@ -43,7 +43,6 @@ import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.slf4j.LoggerFactory
 
-import java.io.OutputStreamWriter
 import scala.collection.mutable
 import scala.reflect.io.File
 
@@ -117,6 +116,8 @@ object AnalysisUtilities {
     val name = "SIGNATURE"
     val timeresOption = "-timeres"
     val fileOption = "-file"
+    val fileContentOptions = "-filecontent"
+    val possibleOptions = List(timeresOption, fileOption, fileContentOptions)
 
     if (commandToExecute.toUpperCase.contains(name)) {
       val command = getSignatureCommand(commandToExecute)
@@ -125,8 +126,8 @@ object AnalysisUtilities {
         val args = CommandParseUtilities.quoteSafeSplit(command, ' ')
 
         // having both file and timeres is not allowed
-        if (CommandParseUtilities.hasOption(args, timeresOption) && CommandParseUtilities.hasOption(args, fileOption)) {
-          val exception = new GorParsingException("Cannot have both -timeres and -file options")
+        if (possibleOptions.count(x => CommandParseUtilities.hasOption(args, x)) != 1) {
+          val exception = new GorParsingException("Must specify exactly one of %s".formatted(possibleOptions.mkString(", ")))
           exception.setCommandName(name)
           throw exception
         }
@@ -142,11 +143,13 @@ object AnalysisUtilities {
           }
         } else if (CommandParseUtilities.hasOption(args, fileOption)) {
           result = session.getProjectContext.getFileReader.getFileSignature(CommandParseUtilities.stringValueOfOption(args, fileOption))
-        } else {
-          val exception = new GorParsingException("Needs to have one of the following options: -timeres, -file")
-          exception.setCommandName(name)
-
-          throw exception
+        } else if (CommandParseUtilities.hasOption(args, fileContentOptions)) {
+          val data = session.getProjectContext.getFileReader.readFirstChars(CommandParseUtilities.stringValueOfOption(args, fileContentOptions), 1024)
+          if (data.nonEmpty) {
+            result = StringUtilities.createMD5(data)
+          } else {
+            result = ""
+          }
         }
       }
     }

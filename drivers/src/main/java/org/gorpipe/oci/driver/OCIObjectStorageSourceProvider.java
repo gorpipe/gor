@@ -7,7 +7,6 @@ import com.oracle.bmc.ClientConfiguration;
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.*;
-import com.oracle.bmc.http.client.StandardClientProperties;
 import com.oracle.bmc.http.client.jersey3.ApacheClientProperties;
 import com.oracle.bmc.http.client.jersey3.Jersey3ClientProperties;
 import com.oracle.bmc.objectstorage.ObjectStorage;
@@ -119,7 +118,7 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
     }
 
     public static ObjectStorageAsync createClientAsync(Credentials cred)  {
-        AuthData authData = AuthData.from(cred);
+        APIKeyAuthData authData = APIKeyAuthData.from(cred);
         AbstractAuthenticationDetailsProvider provider = findAuthenticationProvider(authData);
 
         ClientConfiguration clientConfig
@@ -140,7 +139,7 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
             }
         };
 
-        ObjectStorageAsync client = ObjectStorageAsyncClient.builder()
+        return ObjectStorageAsyncClient.builder()
                 .clientConfigurator(builder -> {
                     builder.property(Jersey3ClientProperties.USE_APACHE_CONNECTOR, false); // Big performance boost
                     builder.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);  // Default PoolingHttpClientConnectionManager
@@ -153,11 +152,10 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
                 .region(authData.region)
                 .configuration(clientConfig)
                 .build(provider);
-        return client;
     }
 
     public static ObjectStorage createClientSync(Credentials cred)  {
-        AuthData authData = AuthData.from(cred);
+        APIKeyAuthData authData = APIKeyAuthData.from(cred);
         AbstractAuthenticationDetailsProvider provider = findAuthenticationProvider(authData);
 
         ClientConfiguration clientConfig
@@ -177,7 +175,7 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
                 .build(provider);
     }
 
-    private static AbstractAuthenticationDetailsProvider findAuthenticationProvider(AuthData auth) {
+    private static AbstractAuthenticationDetailsProvider findAuthenticationProvider(APIKeyAuthData auth) {
         return switch (OCI_AUTH_TYPE) {
             case OCI_AUTH_TYPE_INSTANCE_PRINCIPAL -> getInstancePrincipalAuthenticationProvider();
             case OCI_AUTH_TYPE_AUTH_TOKEN -> getAuthTokenAuthenticationProvider();
@@ -232,7 +230,7 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
         return provider;
     }
 
-    private static AbstractAuthenticationDetailsProvider getSimpleAuthenticationProvider(AuthData authData) {
+    private static AbstractAuthenticationDetailsProvider getSimpleAuthenticationProvider(APIKeyAuthData authData) {
         if (StringUtil.isEmpty(authData.privateKey)
                 || StringUtil.isEmpty(authData.fingerprint)
                 || StringUtil.isEmpty(authData.tenantId)
@@ -261,9 +259,9 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
         return provider;
     }
 
-    private record AuthData(Region region, String userId, String tenantId, String privateKey, String fingerprint, String endPoint) {
+    private record APIKeyAuthData(Region region, String userId, String tenantId, String privateKey, String fingerprint, String endPoint) {
         private static final Pattern REGION_PATTERN = Pattern.compile(".*?\\.objectstorage\\.(.*?)\\..*");
-        public static AuthData from(Credentials creds) {
+        public static APIKeyAuthData from(Credentials creds) {
             if (creds != null && !creds.isNull()) {
                 var endPoint = getOrDefault(creds, Credentials.Attr.API_ENDPOINT, DEFAULT_OCI_ENDPOINT);
                 var region = getRegion(creds, endPoint);
@@ -272,9 +270,9 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
                 var fingerprint = getOrDefault(creds, Credentials.Attr.KEY, OCI_SIMPLE_FINGERPRINT);
                 var privateKey = getOrDefault(creds, Credentials.Attr.SECRET, OCI_SIMPLE_PRIVATE_KEY).replaceAll("\\\\n", "\n");
 
-                return new AuthData(region, userId, tenantId, privateKey, fingerprint, endPoint);
+                return new APIKeyAuthData(region, userId, tenantId, privateKey, fingerprint, endPoint);
             } else {
-                return new AuthData(Region.US_ASHBURN_1, OCI_USER, OCI_TENANT,
+                return new APIKeyAuthData(Region.US_ASHBURN_1, OCI_USER, OCI_TENANT,
                         OCI_SIMPLE_PRIVATE_KEY.replaceAll("\\\\n", "\n"),
                         OCI_SIMPLE_FINGERPRINT, DEFAULT_OCI_ENDPOINT);
             }
