@@ -35,6 +35,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Category(SlowTests.class)
 public class UTestSignature {
@@ -134,14 +136,12 @@ public class UTestSignature {
             long start = System.currentTimeMillis();
             String[] lines = TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
             long duration = System.currentTimeMillis() - start;
-
             Assert.assertEquals("Expect 11 lines", 11, lines.length);
             Assume.assumeTrue("Duration should be long due to wait command", duration > 1000);
 
             start = System.currentTimeMillis();
             TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
             duration = System.currentTimeMillis() - start;
-
             Assert.assertEquals("Expect 11 lines", 11, lines.length);
             Assume.assumeTrue("Duration should be short with access to the cache", duration < 900);
 
@@ -151,7 +151,41 @@ public class UTestSignature {
             start = System.currentTimeMillis();
             TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -file " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
             duration = System.currentTimeMillis() - start;
+            Assert.assertEquals("Expect 11 lines", 11, lines.length);
+            Assume.assumeTrue("Duration should be short with access to the cache", duration > 1000);
+        } finally {
+            workDir.delete();
+        }
+    }
 
+    @Test
+    public void testSignatureFileContent() throws IOException {
+
+        // Create a file and get the signature
+        try {
+            var file = workDir.newFile("test.gor");
+            Files.writeString(Path.of(file.getAbsolutePath()), "abc");
+            // Run a simple query to reduce initialization timelags
+            TestUtils.runGorPipeLines("gor ../tests/data/gor/genes.gor | top 0");
+
+            long start = System.currentTimeMillis();
+            String[] lines = TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -filecontent " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
+            long duration = System.currentTimeMillis() - start;
+            Assert.assertEquals("Expect 11 lines", 11, lines.length);
+            Assume.assumeTrue("Duration should be long due to wait command", duration > 1000);
+
+            start = System.currentTimeMillis();
+            TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -filecontent " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
+            duration = System.currentTimeMillis() - start;
+            Assert.assertEquals("Expect 11 lines", 11, lines.length);
+            Assume.assumeTrue("Duration should be short with access to the cache", duration < 900);
+
+            // Touch the file and try again
+            Files.writeString(Path.of(file.getAbsolutePath()), "xyz");
+
+            start = System.currentTimeMillis();
+            TestUtils.runGorPipeLines("create xxx = gor ../tests/data/gor/genes.gor | signature -filecontent " + file.getAbsolutePath() + " | top 10 | wait 100; gor [xxx]");
+            duration = System.currentTimeMillis() - start;
             Assert.assertEquals("Expect 11 lines", 11, lines.length);
             Assume.assumeTrue("Duration should be short with access to the cache", duration > 1000);
         } finally {

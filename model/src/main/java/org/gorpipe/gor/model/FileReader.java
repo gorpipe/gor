@@ -228,6 +228,28 @@ public abstract class FileReader {
      */
     public abstract String readHeaderLine(String file) throws IOException;
 
+
+    /**
+     * Read the first <code>count</code> characters of the specified file, or less if the file has less data.
+     *
+     * @param file The name of the file to read.
+     * @param count number of characters to read.
+     * @throws FileNotFoundException If file is not found
+     */
+    public String readFirstChars(String file, int count) throws IOException {
+        var totalRead = 0;
+        var buffer = new char[count];
+
+        try (var reader = getReader(file)) {
+            var lastRead = 0;
+            while (totalRead < buffer.length && lastRead != -1) {
+                lastRead = reader.read(buffer, totalRead, buffer.length - totalRead);
+                totalRead += lastRead > 0 ? lastRead : 0;
+            }
+        }
+
+        return String.valueOf(buffer, 0, totalRead);
+    }
     /**
      * Calculate a MD5 digest for the specified dictionary file based on the fullname of all physical file and last modification date given
      * for the specified tags. Note that physical file, implies that link files and symbolic links are read for their content
