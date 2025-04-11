@@ -185,13 +185,14 @@
             
   <div class="section" id="using-gor-in-notebooks">
 <span id="notebooks"></span><h1>Using GOR in Notebooks<a class="headerlink" href="#using-gor-in-notebooks" title="Permalink to this headline">¶</a></h1>
-<p>GOR can be combined with python, R or SPARK through Jupyter notebooks using our  relevant SDKs. This allows the user to efficiently query genomic data while reading desired information into data frames opening the door to the advanced plotting and analysis tools of R or Python.</p>
+<p>GOR can be combined with Python, R or SPARK through Jupyter notebooks using our relevant SDKs.
+This allows the user to efficiently query genomic data while reading desired information into data frames opening the door to the advanced plotting and analysis tools of R or Python.</p>
 <p>To create a new notebook select the <strong>Notebooks</strong> options from the current platform. You will be taken to a jupyter hub server page where you can create a new notebook from scratch or copy one of the built-in template notebooks from the GOR/ folder to your user directory.</p>
 <div class="section" id="notebook-examples">
 <h2>Notebook Examples<a class="headerlink" href="#notebook-examples" title="Permalink to this headline">¶</a></h2>
-<p>Below are examples of notebooks using GOR.</p>
+<p>Below are examples of notebooks showcasing GOR query analysis.</p>
 <table class="colwidths-given docutils align-default" id="id1">
-<caption><span class="caption-text">Notebooks using GOR</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<caption><span class="caption-text">Notebooks with GOR examples</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 30%" />
 <col style="width: 70%" />
@@ -212,7 +213,7 @@
 <td><p>Here we will show how we can take very large VCF files from the Genome Aggregation Database and convert them to GOR tables.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="notebooks/gor_helper_demo.html#notebooks-4"><span class="std std-ref">GOR Helper Demo</span></a></p></td>
-<td><p>Demonstration of how to use the Gor helper in notebooks.</p></td>
+<td><p>Demonstration of how to use the GOR helper in notebooks.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="notebooks/GWAS_Comparison.html#notebooks-5"><span class="std std-ref">GWAS Comparison</span></a></p></td>
 <td><p>Demonstrate functionality to compare different GWAS runs</p></td>
@@ -246,6 +247,66 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="notebooks/ParallelQueries_PGOR.html#notebooks-15"><span class="std std-ref">Parallel Queries: PGOR</span></a></p></td>
 <td><p>Parallel GORpipe queries with PGOR</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/AF-compare.html#notebooks-gdx-1"><span class="std std-ref">AF comparison of Gnomad WGS vs WES</span></a></p></td>
+<td><p>AF comparison of Gnomad WGS vs WES</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/CNV_annotations.html#notebooks-gdx-2"><span class="std std-ref">CNV annotations for Gregor - draft</span></a></p></td>
+<td><p>CNV annotations for Gregor - draft</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/CNV_features.html#notebooks-gdx-3"><span class="std std-ref">CNV features for variant scoring</span></a></p></td>
+<td><p>CNV features for variant scoring</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/CNVs.html#notebooks-gdx-4"><span class="std std-ref">CNVs from multiple XA-samples analysed</span></a></p></td>
+<td><p>CNVs from multiple XA-samples analysed</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/ExonCovRoiandIlluminaQC_analysis.html#notebooks-gdx-5"><span class="std std-ref">Exon coverage analysis</span></a></p></td>
+<td><p>Exon coverage analysis</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/GB_tracks.html#notebooks-gdx-6"><span class="std std-ref">Genome Browser tracks</span></a></p></td>
+<td><p>Genome Browser tracks</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/gene_overview.html#notebooks-gdx-7"><span class="std std-ref">Gene drill-in query</span></a></p></td>
+<td><p>Gene drill-in query</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/gnomAD_liftover.html#notebooks-gdx-8"><span class="std std-ref">GnomAD variant liftover</span></a></p></td>
+<td><p>GnomAD variant liftover</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/Gregor1.html#notebooks-gdx-9"><span class="std std-ref">Gregor1 SNV preprocessing</span></a></p></td>
+<td><p>Gregor1 SNV preprocessing</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/Gregor2.html#notebooks-gdx-10"><span class="std std-ref">Gregor2 SNV postprocessing</span></a></p></td>
+<td><p>Gregor2 SNV postprocessing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/Gregor_step1_and_step2.html#notebooks-gdx-11"><span class="std std-ref">Excecuting Gregor step1 and step2</span></a></p></td>
+<td><p>Excecuting Gregor step1 and step2</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/Incremental_AF_calc.html#notebooks-gdx-12"><span class="std std-ref">Incremental AF calculation</span></a></p></td>
+<td><p>Incremental AF calculation</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/Incremental_Freeze.html#notebooks-gdx-13"><span class="std std-ref">Incremental horizontal (pVCF-like) genotype generation</span></a></p></td>
+<td><p>Incremental horizontal (pVCF-like) genotype generation</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/Liftover.html#notebooks-gdx-14"><span class="std std-ref">Liftover of Clinvar</span></a></p></td>
+<td><p>Liftover of Clinvar</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/RankerAnno.html#notebooks-gdx-15"><span class="std std-ref">SNV variant feature generation for ranking</span></a></p></td>
+<td><p>SNV variant feature generation for ranking</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/Relcheck_KingQueen.html#notebooks-gdx-16"><span class="std std-ref">Relationship analysis with King and Queen</span></a></p></td>
+<td><p>Relationship analysis with King and Queen</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/RunStudies.html#notebooks-gdx-17"><span class="std std-ref">Run Gregor studies in batch</span></a></p></td>
+<td><p>Run Gregor studies in batch</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/SMA_caller.html#notebooks-gdx-18"><span class="std std-ref">SMN1 calling from BAM files</span></a></p></td>
+<td><p>SMN1 calling from BAM files</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="notebooks/GDX/UPD_new.html#notebooks-gdx-19"><span class="std std-ref">Uniparental disomy (UPD)</span></a></p></td>
+<td><p>Uniparental disomy (UPD)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="notebooks/GDX/XA_report_builder_demo.html#notebooks-gdx-20"><span class="std std-ref">XA report builder query demo</span></a></p></td>
+<td><p>XA report builder query demo</p></td>
 </tr>
 </tbody>
 </table>
