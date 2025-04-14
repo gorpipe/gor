@@ -111,5 +111,10 @@ public abstract class CommonFilesTests {
             List<String> files = fs.list().collect(Collectors.toList());
             Assert.assertEquals(3, files.size());
         }
+
+        try (DataSource fs = createSource(getDataName("derived/"))) {
+            List<String> files = fs.list().collect(Collectors.toList());
+            Assert.assertEquals(3, files.size());
+        }
     }
 }

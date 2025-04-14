@@ -22,13 +22,13 @@
 
 package org.gorpipe.s3.driver;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.commons.lang3.StringUtils;
 import org.carlspring.cloud.storage.s3fs.S3FileSystem;
 import org.carlspring.cloud.storage.s3fs.S3Path;
+import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.base.streams.LimitedOutputStream;
 import org.gorpipe.exceptions.ExceptionUtilities;
@@ -47,14 +47,13 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
@@ -70,6 +69,13 @@ import java.util.stream.Stream;
 public class S3Source implements StreamSource {
     static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(S3Source.class);
 
+    // software.amazon.nio.s3..aws-java-nio-spi-for-s3 only uses credentials from the default provider chain (can not specify creds
+    // in the driver as we can for Carlspring).  So we can not use it for multiple accounts (if using key and secret).
+    private static final boolean USE_S3_CARLSPRING_FILESYSTEM = Boolean.parseBoolean(System.getProperty("gor.s3.use.carlspring.filesystem", "true"));
+    // Use NIO filesystem where possible.  Some S3 operations using the NIO filesystem are not supported by the OCI S3 compatibility layer.
+    // TODP:  Maybe we should create a OCIS3CompatSource.
+    private static final boolean OCI_S3_COMPATIBLE = Boolean.parseBoolean(System.getProperty("gor.oci.s3.compatible", "true"));
+
     private static final boolean USE_META_CACHE = true ;
     private final SourceReference sourceReference;
     private final String bucket;
@@ -80,7 +86,7 @@ public class S3Source implements StreamSource {
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
-    private S3Path path;
+    private Path path;
 
     private final static int MAX_S3_CHUNKS = 10000;
     private int writeChunkSize = Integer.parseInt(System.getProperty("gor.s3.write.chunksize", String.valueOf(1 << 26)));
@@ -248,10 +254,10 @@ public class S3Source implements StreamSource {
             // Note: fileExists only handles dirs if the end with / (and have explictly been created).
             // Therefor we can either fall back to the much slower Files.exists, just say that all dirs exists in S3
             // (as the don't have to explicitly be created).
-            // Note: To do a exists with aws filesystem: return Files.exists(Path.of(URI.create(getName())));
-            return fileExists() || getName().endsWith("/");//|| Files.exists(getPath());
+            // Note: To do a exists with aws filesystem: return Files.exists(getPath());
+            return metaDataExists() || getName().endsWith("/");//|| Files.exists(getPath());
         } catch (Exception e) {
-            Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
+            Credentials cred = getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
             throw new GorResourceException(String.format("Exists failed for %s, region: %s, access key: %s, secret key: %s",
                     getName(), client.serviceClientConfiguration().region(),
                     cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
@@ -261,7 +267,7 @@ public class S3Source implements StreamSource {
         }
     }
 
-    private boolean fileExists()  {
+    private boolean metaDataExists()  {
         try {
             // Already in cache, exists
             getSourceMetadata();
@@ -279,9 +285,12 @@ public class S3Source implements StreamSource {
     public String createDirectory(FileAttribute<?>... attrs) {
         try {
             // Files.createDirectory needs elevated access to list all buckets.
-            S3Path s3Path = getPath();
-            String directoryKey = s3Path.getKey().endsWith("/") ? s3Path.getKey() : s3Path.getKey() + "/";
-            PutObjectRequest request = PutObjectRequest.builder().bucket(s3Path.getBucketName()).key(directoryKey).cacheControl(s3Path.getFileSystem().getRequestHeaderCacheControlProperty()).contentLength(0L).build();
+            String directoryKey = this.key.endsWith("/") ?this.key : this.key + "/";
+            PutObjectRequest request = PutObjectRequest.builder().bucket(this.bucket)
+                    .key(directoryKey)
+                    //.cacheControl(s3Path.getFileSystem().getRequestHeaderCacheControlProperty())
+                    .contentLength(0L)
+                    .build();
             client.putObject(request, RequestBody.fromBytes(new byte[0]));
             return PathUtils.formatUri(getPath().toUri());
         } catch (Exception e) {
@@ -303,36 +312,53 @@ public class S3Source implements StreamSource {
 
     @Override
     public boolean isDirectory() {
-        //return key.endsWith("/") || Files.isDirectory(getPath());
-        // Temporary fix for OCI directories.  We currently only get meta for files not dicts so we can use that.
-        return key.endsWith("/") || (exists() && this.meta == null);
+        if (OCI_S3_COMPATIBLE) {
+            return key.endsWith("/") || (exists() && this.meta == null);
+        }
+
+        return key.endsWith("/") || Files.isDirectory(getPath());
     }
 
     @Override
     public void delete() {
-        try {
-            Files.deleteIfExists(getPath());  // Use if exists for folders (that are not reported existing if empty)
-        } catch (IOException e) {
-            throw GorResourceException.fromIOException(e, getPath()).retry();
+        if (OCI_S3_COMPATIBLE) {
+            if (!exists()) {
+                return;
+            }
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            client.deleteObject(deleteObjectRequest);
+        } else {
+            try {
+                // Use if exists for folders (that are not reported existing if empty)
+                Files.deleteIfExists(getPath());
+            } catch (NoSuchFileException e) {
+                // Ignore
+            } catch (IOException e) {
+                throw GorResourceException.fromIOException(e, getPath()).retry();
+            }
         }
+
         invalidateMeta();
     }
 
     @Override
     public void deleteDirectory() {
-        // Implementation based on S3FileSystemProvider.delete with different logic for deleting the prefix.
-        Preconditions.checkArgument(getPath() instanceof S3Path,
-                "path must be an instance of %s", S3Path.class.getName());
+        if (OCI_S3_COMPATIBLE) {
+            if (!exists()) {
+                return;
+            }
 
-        if (Files.notExists(getPath())){
-            return;
+            if (!isDirectory()) {
+                throw new GorResourceException("the path: " + getPath() + " is not a directory", getPath().toString());
+            }
+
+            deleteAllWithPrefix();
+        } else {
+            delete();
         }
-
-        if (!Files.isDirectory(getPath())){
-            throw new GorResourceException("the path: " + getPath() + " is not a directory", getPath().toString());
-        }
-
-        deleteAllWithPrefix();
 
         invalidateMeta();
     }
@@ -374,15 +400,22 @@ public class S3Source implements StreamSource {
         try {
             return Files.list(getPath()).map(this::s3SubPathToUriString);
         } catch (Exception e) {
-            Credentials cred = S3ClientFileSystemProvider.getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
+            Credentials cred = getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
             throw new GorResourceException(String.format("List failed for %s, region: %s, access key: %s, secret key: %s",
                     getName(), client.serviceClientConfiguration().region(),
                     cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
                     cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.KEY, "")) ? "Has secret" : "Empty secret")
                             : "No creds"),
                     getName(), e).retry();
-            //throw GorResourceException.fromIOException(e, getPath()).retry();
         }
+    }
+
+    public static Credentials getCredentials(String securityContext, String service, String key) {
+        List<Credentials> creds = BundledCredentials.fromSecurityContext(securityContext).getCredentials(service, key);
+        if (!creds.isEmpty()) {
+            return creds.get(0);
+        }
+        return null;
     }
 
     @Override
@@ -405,20 +438,34 @@ public class S3Source implements StreamSource {
     }
 
     @Override
-    public S3Path getPath() {
+    public Path getPath() {
         if (path == null) {
             path = getS3Path(bucket, key, client);
         }
         return path;
     }
 
-    public S3Path getS3Path(String bucket, String key, S3Client client) {
+    private Path getS3Path(String bucket, String key, S3Client client) {
         // NOTE:  We keep the old style of creating our own client objects and then create filesystems using that client.
         //        Could also stop creating our own client and just passing all the necessary information to the filesystem
         //        using S3FileSystemProvider.PROPS_TO_OVERLOAD and S3FileSystemProvider.getFileSystem(URI, Map<String, ?>).
         //        Then we could extract the client from the filesystem.
-        var s3fs = s3fsCache.computeIfAbsent(client, c -> S3ClientFileSystemProvider.getInstance().getFileSystem(c));
-        return s3fs.getPath( "/" + bucket, key);
+        if (USE_S3_CARLSPRING_FILESYSTEM) {
+            var s3fs = s3fsCache.computeIfAbsent(client, c -> S3ClientFileSystemProvider.getInstance().getFileSystem(c));
+            return s3fs.getPath("/" + bucket, key);
+        } else {
+            Credentials cred = getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
+            if (cred.getOrDefault(Credentials.Attr.API_ENDPOINT, "").contains("amazonaws.com")) {
+                return Path.of(URI.create("s3://%s/%s".formatted(bucket, key)));
+            } else
+                // Format: s3x://[key:secret@]endpoint[:port]/bucket/objectkey
+                return Path.of(URI.create("s3x://%s:%s@%s/%s/%s".formatted(
+                        URLEncoder.encode(cred.getOrDefault(Credentials.Attr.KEY, ""), StandardCharsets.UTF_8),
+                        URLEncoder.encode(cred.getOrDefault(Credentials.Attr.SECRET, ""), StandardCharsets.UTF_8),
+                        cred.getOrDefault(Credentials.Attr.API_ENDPOINT, "https://").substring("https://".length()),
+                        bucket,
+                        key)));
+        }
     }
 
     @Override

@@ -42,8 +42,9 @@ project(':drivers') {
         implementation "software.amazon.awssdk:aws-crt-client:_"
         implementation "software.amazon.awssdk:netty-nio-client:_"
         implementation "software.amazon.awssdk.crt:aws-crt:_"
+        implementation "software.amazon.awssdk:apache-client:_"
         implementation 'org.carlspring.cloud.aws:s3fs-nio:_'
-        //implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
+        implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
         implementation(platform('com.oracle.oci.sdk:oci-java-sdk-bom:_'))
         implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3'
         implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'

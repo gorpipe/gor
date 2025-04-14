@@ -15,7 +15,6 @@ import org.junit.experimental.categories.Category;
 import java.io.IOException;
 import java.util.Properties;
 
-@Ignore("Not yet supported")
 @Category(IntegrationTests.class)
 public class ITestOCICommonFilesTests extends CommonFilesTests {
 
