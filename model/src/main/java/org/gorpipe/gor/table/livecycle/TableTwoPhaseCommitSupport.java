@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 /**
  * Helper class to implement table live cycle with two phase commit.
  *
- * @param <T>
  */
 public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport implements TableTwoPhaseCommit {
 
@@ -25,7 +24,7 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
      *
      * @param table              table to support.
      */
-    public TableTwoPhaseCommitSupport(TableInfoBase table) {
+    protected TableTwoPhaseCommitSupport(TableInfoBase table) {
         super(table);
     }
 
@@ -34,13 +33,17 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
         initialize();
         updateMetaBeforeSave();
         saveTempMainFile();
-        saveTempMetaFile();
+        if (!table.isUseEmbeddedHeader()) {
+            saveTempMetaFile();
+        }
     }
 
     @Override
     public void commit() {
         try {
-            updateFromTempFile(getTempMetaFileName(), table.getMetaPath());
+            if (!table.isUseEmbeddedHeader()) {
+                updateFromTempFile(getTempMetaFileName(), table.getMetaPath());
+            }
             updateFromTempFile(getTempMainFileName(), table.getPath());
         } catch (IOException e) {
             throw new GorSystemException("Could not commit " + table.getPath(), e);
