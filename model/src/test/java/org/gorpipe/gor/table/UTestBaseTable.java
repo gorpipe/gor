@@ -615,19 +615,16 @@ public class UTestBaseTable {
     private void prepareDictGordFile() throws IOException {
         prepareTableGordFile();
         Files.delete(workDirPath.resolve("dict.gord.meta"));
-        Files.delete(workDirPath.resolve(".dict/header"));
     }
 
     private void prepareDictGordFileBucketized() throws IOException {
         prepareTableGordFileBucketized();
         Files.delete(workDirPath.resolve("dict.gord.meta"));
-        Files.delete(workDirPath.resolve(".dict/header"));
     }
 
     private void prepareDictGordFileWithHeader() throws IOException {
         prepareTableGordFile();
         Files.delete(workDirPath.resolve("dict.gord.meta"));
-        Files.delete(workDirPath.resolve(".dict/header"));
         String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");
         content = "#Content\tExtraSpecial\n" + content;
         FileUtils.writeStringToFile(gordFile.toFile(), content, "utf8");
@@ -636,7 +633,6 @@ public class UTestBaseTable {
     private void prepareDictGordFileWithHeaderBucketized() throws IOException {
         prepareTableGordFileBucketized();
         Files.delete(workDirPath.resolve("dict.gord.meta"));
-        Files.delete(workDirPath.resolve(".dict/header"));
         String content = FileUtils.readFileToString(gordFile.toFile(), "utf8");
         content = "#Content\tExtraSpecial\n" + content;
         FileUtils.writeStringToFile(gordFile.toFile(), content, "utf8");
