@@ -18,7 +18,6 @@ import org.gorpipe.gor.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.stream.Stream;
 
 import static org.gorpipe.gor.table.util.PathUtils.*;
@@ -59,7 +58,7 @@ public abstract class TableInfoBase implements TableInfo {
      *
      * @param uri              path to the dictionary file.
      */
-    public TableInfoBase(String uri, FileReader inputFileReader, TableHeader header) {
+    protected TableInfoBase(String uri, FileReader inputFileReader, TableHeader header) {
         this.header = header;
         var secureFileReader = inputFileReader != null ? inputFileReader : ProjectContext.DEFAULT_READER;
         DataSource source = secureFileReader.resolveUrl(uri);
@@ -241,9 +240,8 @@ public abstract class TableInfoBase implements TableInfo {
 
         this.header.clear();
         // Add props in increasing priority order.
-        //this.header.loadAndMergeMeta(fileReader, PathUtils.resolve(getFolderPath(), "header")); // For backward compatibility.
-        this.header.loadAndMergeMeta(fileReader, getPath());
-        this.header.loadAndMergeMeta(fileReader, DataUtil.toFile(getPath(), DataType.META));
+        this.header.loadAndMergeMeta(fileReader, getPath()); // Embedded
+        this.header.loadAndMergeMeta(fileReader, getMetaPath()); // External
     }
 
 

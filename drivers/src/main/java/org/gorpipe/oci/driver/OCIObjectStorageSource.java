@@ -5,10 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.model.Range;
 import com.oracle.bmc.objectstorage.ObjectStorageAsync;
-import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
-import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
-import com.oracle.bmc.objectstorage.requests.HeadObjectRequest;
-import com.oracle.bmc.objectstorage.requests.PutObjectRequest;
+import com.oracle.bmc.objectstorage.requests.*;
 import com.oracle.bmc.objectstorage.responses.DeleteObjectResponse;
 import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
 import com.oracle.bmc.objectstorage.responses.HeadObjectResponse;
@@ -32,8 +29,10 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.file.attribute.FileAttribute;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * Represents an object in OCI.
@@ -208,11 +207,10 @@ public class OCIObjectStorageSource implements StreamSource {
 
     @Override
     public boolean exists() {
-        // Implemented by loading metadata (which has retry).
-        return fileExists();
+        return metaDataExists() || getName().endsWith("/");
     }
 
-    private boolean fileExists()  {
+    private boolean metaDataExists()  {
         try {
             // Already in cache, exists
             meta = loadMetadata(bucket, key);
@@ -229,19 +227,25 @@ public class OCIObjectStorageSource implements StreamSource {
 
     @Override
     public void delete() {
-        try {
-            DeleteObjectRequest request =
-                    DeleteObjectRequest.builder()
-                            .namespaceName(namespace)
-                            .bucketName(bucket)
-                            .objectName(key)
-                            .build();
-            DeleteObjectResponse getResponse = client.deleteObject(request, null).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new GorSystemException(e);
-        } catch (Exception e) {
-            throw new GorResourceException("Failed to delete " + getName(), getName(), e).retry();
+        if (!exists()) return;
+
+        if (isDirectory()) {
+            deleteDirectory();
+        } else {
+            try {
+                DeleteObjectRequest request =
+                        DeleteObjectRequest.builder()
+                                .namespaceName(namespace)
+                                .bucketName(bucket)
+                                .objectName(key)
+                                .build();
+                DeleteObjectResponse getResponse = client.deleteObject(request, null).get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new GorSystemException(e);
+            } catch (Exception e) {
+                throw new GorResourceException("Failed to delete " + getName(), getName(), e).retry();
+            }
         }
 
         invalidateMeta();
@@ -299,4 +303,115 @@ public class OCIObjectStorageSource implements StreamSource {
         // For now just create the last directory in the path.
         return createDirectory(attrs);
     }
+
+    @Override
+    public void deleteDirectory() {
+        try {
+            walk().forEach(object -> {
+                try {
+                    var request = DeleteObjectRequest.builder()
+                            .namespaceName(namespace)
+                            .bucketName(bucket)
+                            .objectName(object)
+                            .build();
+                    client.deleteObject(request, null).get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new GorSystemException(e);
+                } catch (Exception e) {
+                    throw new GorResourceException("Failed to delete object: " + object, getName(), e).retry();
+                }
+            });
+        } catch (Exception e) {
+            throw new GorResourceException("Failed to delete directory: " + getName(), getName(), e).retry();
+        }
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return key.endsWith("/") || (exists() && this.meta == null);
+    }
+
+    @Override
+    public Stream<String> list() {
+        try {
+            Set<String> objectNames = new HashSet<>();
+            String nextStartWith = null;
+
+            var keyAsFolder = PathUtils.markAsFolder(key);
+
+            do {
+                var builder = ListObjectsRequest.builder()
+                        .namespaceName(namespace)
+                        .bucketName(bucket)
+                        .prefix(key) // Optional: Use this to filter objects by prefix
+                        .start(nextStartWith);
+                if (key.endsWith("/")) {
+                    // Not strictly necessary but returns less data if deep hierarchy
+                    builder.delimiter("/");
+                }
+                var request = builder.build();
+
+                var response = client.listObjects(request, null).get();
+
+                var prefixes = response.getListObjects().getPrefixes();
+                if (prefixes != null) {
+                    prefixes.forEach(prefix -> {
+                        var splits = prefix.substring(keyAsFolder.length()).split("/");
+                        objectNames.add(keyAsFolder + splits[0] + "/");
+                    });
+                }
+
+                response.getListObjects().getObjects().forEach(obj -> {
+                    if (!obj.getName().equals(key)) {
+                        var splits = obj.getName().substring(keyAsFolder.length()).split("/");
+                        objectNames.add(keyAsFolder + splits[0] + (splits.length > 1 ? "/" : ""));
+                    }
+                });
+
+                nextStartWith = response.getListObjects().getNextStartWith();
+            } while (nextStartWith != null);
+
+            return objectNames.stream();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new GorSystemException(e);
+        } catch (Exception e) {
+            throw new GorResourceException("Failed to list objects in bucket " + bucket, getName(), e).retry();
+        }
+    }
+
+    @Override
+    public Stream<String> walk() {
+        try {
+            Set<String> objectNames = new HashSet<>();
+            String nextStartWith = null;
+
+            do {
+                var builder = ListObjectsRequest.builder()
+                        .namespaceName(namespace)
+                        .bucketName(bucket)
+                        .prefix(key) // Optional: Use this to filter objects by prefix
+                        .start(nextStartWith);
+
+                var request = builder.build();
+
+                var response = client.listObjects(request, null).get();
+
+                response.getListObjects().getObjects().forEach(obj -> {
+                    objectNames.add(obj.getName());
+                });
+
+                nextStartWith = response.getListObjects().getNextStartWith();
+            } while (nextStartWith != null);
+
+            return objectNames.stream();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new GorSystemException(e);
+        } catch (Exception e) {
+            throw new GorResourceException("Failed to list objects in bucket " + bucket, getName(), e).retry();
+        }
+    }
+
 }

@@ -181,7 +181,7 @@ public class ITestOCIS3CompatSource extends CommonStreamTests {
         String result = TestUtils.runGorPipe("gor " + dict + " | select 1-4", false, securityContext);
         Assert.assertEquals(expected, result);
         DriverBackedFileReader fileReader = new DriverBackedFileReader(securityContext);
-        // Not supported by compat mode: fileReader.deleteDirectory(dict);
+        fileReader.deleteDirectory(dict);
     }
 
     @Test
