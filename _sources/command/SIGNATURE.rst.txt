@@ -18,20 +18,23 @@ will be recognized as invalidating any cached result from that ``CREATE``.
 Invalidation means that the expression is re-evaluated when its value is used.
 If a ``SIGNATURE`` command is included, that injects an *additional* signature, so that the cached value will also be
 subject to invalidation by the selected criterion: either when a certain time has passed (``timeres``)
-or when a designated file has been updated (``file``).
+or when a designated file, or its content, has been updated (``file`` or ``filecontent``).
 
 This command will not affect standard gor queries.
 
 Options
 =======
 
-+-----------------------+------------------------------+-----------------------------------------------------------+
-| ``-timeres seconds``  | Time resolution in seconds.  | Result is invalidated periodically with this time period. |
-+-----------------------+------------------------------+-----------------------------------------------------------+
-| ``-file filepath``    | Path to a file.              | Result is invalidated when the file's timestamp changes.  |
-+-----------------------+------------------------------+-----------------------------------------------------------+
++--------------------------+------------------------------+-----------------------------------------------------------+
+| ``-timeres seconds``     | Time resolution in seconds.  | Result is invalidated periodically with this time period. |
++--------------------------+------------------------------+-----------------------------------------------------------+
+| ``-file filepath``       | Path to a file.              | Result is invalidated when the file's timestamp changes.  |
++--------------------------+------------------------------+-----------------------------------------------------------+
+| ``-filecontent filepath``| Path to a file.              | Result is invalidated when the file's content changes.    |
+|                          |                              | Note, we only look at the first 1024 bytes of the file.   |
++--------------------------+------------------------------+-----------------------------------------------------------+
 
-The ``-timeres`` or the ``-file`` option is required. If both are present the command fails with an error.
+The ``-timeres``, ``-file`` or ``-filecontent`` option is required. If both are present the command fails with an error.
 
 
 
