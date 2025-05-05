@@ -22,6 +22,7 @@
 
 package gorsat.gorsatGorIterator
 
+import org.gorpipe.exceptions.custom.GorLowMemoryException
 import org.slf4j.{Logger, LoggerFactory}
 
 
@@ -108,11 +109,14 @@ object MemoryMonitorUtil {
 
   val memoryMonitorActive: Boolean = (memoryMonitorMinFreeMemMB > 0 || memoryMonitorMinFreeMemRatio > 0) && memoryMonitorRowsBetweenChecks > 0
 
+  var lowMemoryExceptions: List[String] = List()
+
   def basicOutOfMemoryHandler(actualFreeMem: Long, args: List[_]) : Unit = {
     val logName = args.head
     val lineNum = args(1)
     val line = args(2)
-    val msg = "MemoryMonitor: Out of memory executing " + logName + " (line " + lineNum + ").  Free mem down to " + actualFreeMem / (1024L * 1024L) + " MB.\n" + line
-    throw new Exception(msg)
+    val msg = "MemoryMonitor: Out of memory executing: " + logName + " (line " + lineNum + ").  Free mem down to " + actualFreeMem / (1024L * 1024L) + " MB.\n" + line
+    lowMemoryExceptions = lowMemoryExceptions :+ msg
+    throw new GorLowMemoryException(msg)
   }
 }

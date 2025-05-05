@@ -24,21 +24,17 @@ package gorsat.Monitors
 
 import gorsat.Commands.Analysis
 import gorsat.gorsatGorIterator.MemoryMonitorUtil
-import org.gorpipe.exceptions.custom.GorLowMemoryException
 import org.gorpipe.gor.model.Row
 
 case class MemoryMonitor(logname: String,
                          minFreeMemMB: Int = MemoryMonitorUtil.memoryMonitorMinFreeMemMB,
                          minFreeMemRatio: Float = MemoryMonitorUtil.memoryMonitorMinFreeMemRatio) extends Analysis {
-  val mmu: MemoryMonitorUtil = new MemoryMonitorUtil((actualFreeMem: Long, args: List[_]) => {
-    val msg = "MemoryMonitor: Out of memory executing " + logname + "(line " + mmu.lineNum + ").  Free mem down to " + actualFreeMem / mmu.bytesInMB + " MB.\n" + args.head
-    throw new GorLowMemoryException(msg)
-  }, minFreeMemMB, minFreeMemRatio)
+  val mmu: MemoryMonitorUtil = new MemoryMonitorUtil(MemoryMonitorUtil.basicOutOfMemoryHandler, minFreeMemMB, minFreeMemRatio)
 
   override def isTypeInformationMaintained: Boolean = true
 
   override def process(r: Row): Unit = {
-    mmu.check(r)
+    mmu.check(logname, mmu.lineNum, r)
     super.process(r)
   }
 }
