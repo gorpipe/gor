@@ -94,6 +94,15 @@ class MemoryMonitorUtil(handler: (Long, List[_]) => Unit,
   }
 }
 
+case class LowMemoryOccurance(exception: GorLowMemoryException) {
+  val timestamp: Long = System.currentTimeMillis()
+
+  override def toString: String = {
+    val time = new java.util.Date(timestamp)
+    s"LowMemoryOccurance at $time: ${exception.getMessage}"
+  }
+}
+
 object MemoryMonitorUtil {
   private val log: Logger = LoggerFactory.getLogger("gor.gorsatUtilities")
 
@@ -109,14 +118,16 @@ object MemoryMonitorUtil {
 
   val memoryMonitorActive: Boolean = (memoryMonitorMinFreeMemMB > 0 || memoryMonitorMinFreeMemRatio > 0) && memoryMonitorRowsBetweenChecks > 0
 
-  var lowMemoryExceptions: List[String] = List()
+  val exitOnLowMemory: Boolean = System.getProperty("gor.memoryMonitor.exitOnLowMemory", "true").toBoolean
+  var lowMemoryExceptions: List[LowMemoryOccurance] = List() // List of low memory exceptions that have been thrown, latest first.
 
-  def basicOutOfMemoryHandler(actualFreeMem: Long, args: List[_]) : Unit = {
+  def basicOutOfMemoryHandler(actualFreeMem: Long, args:   List[_]) : Unit = {
     val logName = args.head
     val lineNum = args(1)
     val line = args(2)
     val msg = "MemoryMonitor: Out of memory executing: " + logName + " (line " + lineNum + ").  Free mem down to " + actualFreeMem / (1024L * 1024L) + " MB.\n" + line
-    lowMemoryExceptions = lowMemoryExceptions :+ msg
-    throw new GorLowMemoryException(msg)
+    val exception = new GorLowMemoryException(msg)
+    lowMemoryExceptions = lowMemoryExceptions.+:(LowMemoryOccurance(exception))
+    throw exception
   }
 }
