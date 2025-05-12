@@ -33,10 +33,13 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 return action.perform();
             } catch (GorRetryException e) {
                 if (!e.isRetry()) throw e;
+                checkIfShouldRetryException(e);
+
                 tries++;
                 lastException = e;
-                checkIfShouldRetryException(e);
                 accumulatedDuration += sleep(e, tries, initialDuration);
+
+                log.warn("Retrying gor action after " + accumulatedDuration + "ms, retry " + tries, e);
             }
         }
 
@@ -59,10 +62,13 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 return;
             } catch (GorRetryException e) {
                 if (!e.isRetry()) throw e;
+                checkIfShouldRetryException(e);
+
                 tries++;
                 lastException = e;
-                checkIfShouldRetryException(e);
                 accumulatedDuration += sleep(e, tries, initialDuration);
+
+                log.warn("Retrying gor action after " + accumulatedDuration + "ms, retry " + tries, e);
             }
         }
 
