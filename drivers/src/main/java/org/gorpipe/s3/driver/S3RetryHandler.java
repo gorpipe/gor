@@ -36,8 +36,8 @@ public class S3RetryHandler extends RetryHandlerWithFixedWait {
                 throw new GorResourceException(String.format("Unauthorized. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
             } else if (awsException.statusCode() == 403) {
                 throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
-            } else if (awsException.statusCode() == 404) {
-                throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
+//            } else if (awsException.statusCode() == 404) {
+//                throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, e.getMessage()), path, e);
             }
         } else if (cause instanceof SdkClientException) {
             throw new GorResourceException("Amazon SDK client exception", path, e);
