@@ -247,6 +247,17 @@ public class UTestGroup {
     }
 
     @Test
+    public void testGroupDist() {
+        String[] lines = TestUtils.runGorPipeLines(
+                "gorrows -p chr1:1-10 | calc pn 'abc' | calc hgnc_id 'id'" +
+                      " | group 1 -gc pn -dis -sc hgnc_id" +
+                      " | calc a = 1 + dis_hgnc_id");
+
+        Assert.assertEquals("Number of lines from the string column query", 10, lines.length);
+        Assert.assertEquals("Group -dis results correct", "2", lines[1].split("\t")[4].trim());
+    }
+
+    @Test
     public void set() throws IOException {
         String contents = "Chrom\tPos\tData\n" +
                 "chr1\t1\tbingo1\n" +
