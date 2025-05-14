@@ -154,7 +154,7 @@ class Group extends CommandInfo("GROUP",
           columns += ColumnHeader("lis_" + hcol(i), i.toString)
         }
         if (useDis) {
-          columns += ColumnHeader("dis_" + hcol(i), i.toString)
+          columns += ColumnHeader("dis_" + hcol(i), "I")
         }
         if (icCols.contains(i) || fcCols.contains(i)) {
           if (useAvg) {
