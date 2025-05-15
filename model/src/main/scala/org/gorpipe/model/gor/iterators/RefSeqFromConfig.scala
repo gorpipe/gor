@@ -94,7 +94,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
           log.info("Done (or already in progress) downloading reference build {} to {}", orgPath, cachePath)
         } catch {
             case e: Exception =>
-              log.error("Error downloading reference build {} to {} - {}", orgPath, cachePath, e.getMessage)
+              log.error("Error downloading reference build {} to {} - {}", orgPath, cachePath, e.getMessage, e)
           }
       }
     })
