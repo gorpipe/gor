@@ -30,7 +30,7 @@ public class FolderMigrator {
             return;
         }
 
-        Path tmpFolder = outputFolder.resolveSibling(tempFileRoot + RandomStringUtils.random(10));
+        Path tmpFolder = outputFolder.resolveSibling(tempFileRoot + RandomStringUtils.insecure().next(10, true, true));
         tmpFolder.toFile().deleteOnExit();
 
         FileUtils.copyDirectory(inputFolder.toFile(), tmpFolder.toFile(), (FileFilter)null, true,
