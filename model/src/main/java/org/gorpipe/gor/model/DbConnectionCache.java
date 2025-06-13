@@ -49,7 +49,7 @@ public class DbConnectionCache {
      * @throws IOException
      */
     @SuppressWarnings("WeakerAccess") // Used from gor-services
-    public void initializeDbSources(String credpath) throws ClassNotFoundException, IOException {
+    public void initializeDbSources(String credpath) throws IOException {
         clearDbSources();
         if (credpath != null && credpath.trim().length() > 0) {
             final Path path = Paths.get(credpath);
@@ -62,7 +62,12 @@ public class DbConnectionCache {
             List<String[]> partsList = parseLinesForDbSourceInstallation(credpath, lines);
 
             for (String[] parts : partsList) {
-                installDbSourceFromParts(parts);
+                try {
+                    installDbSourceFromParts(parts);
+                } catch (ClassNotFoundException e) {
+                    log.error("Failed to load driver class {} for db source {}. Please ensure the driver is in the classpath.",
+                            parts[1], parts[0], e);
+                }
             }
         } else {
             log.info("No db credential path specified");
