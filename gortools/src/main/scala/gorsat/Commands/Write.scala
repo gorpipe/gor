@@ -118,8 +118,6 @@ class Write extends CommandInfo("WRITE",
       throw new GorParsingException("Option -noheader (skip header) is not valid with gor/gorz/nor/norz")
     }
 
-    val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
-
     CommandParsingResult(
       ForkWrite(forkCol,
         fileName,
@@ -146,7 +144,7 @@ class Write extends CommandInfo("WRITE",
           maxseg = maxseg
         )
       ),
-      fixedHeader
+      forcedInputHeader
     )
   }
 }
