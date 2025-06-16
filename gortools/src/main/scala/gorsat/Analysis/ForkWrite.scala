@@ -149,6 +149,8 @@ case class ForkWrite(forkCol: Int,
     header = headerBuilder.toString
   }
 
+  override def isTypeInformationMaintained: Boolean = true
+
   /**
     * Creates OutFile with given name
     * if the path is a directory save a file with generated md5 sum as name under directory
