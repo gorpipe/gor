@@ -198,7 +198,7 @@ public class UTestGorWrite {
         tmpfile.toFile().deleteOnExit();
         String query = "gor ../tests/data/gor/genes.gorz | write -m " + tmpfile.toAbsolutePath().normalize();
         String headerRes = TestUtils.runGorPipe(query);
-        Assert.assertEquals("", "Chrom\tgene_start\n", headerRes);
+        Assert.assertEquals("", "Chrom\tgene_start\tgene_end\tGene_Symbol\n", headerRes);
     }
 
     @Test

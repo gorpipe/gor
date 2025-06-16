@@ -71,7 +71,7 @@ public class StatsMonitorTest{
             }
         }
 
-        assertEquals("", statsMonitor.getHeader());
+        assertEquals("chrom\tpos\ta", statsMonitor.getHeader());
         assertEquals(0, statsMonitor.rowCount());
         assertEquals(0, statsMonitor.bytesCount());
     }
