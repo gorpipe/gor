@@ -591,7 +591,7 @@ public class GorJavaUtilities {
             }
             var ai = new AtomicInteger();
             var entries = metaList.parallelStream()
-                .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0)
+                .filter(meta -> !meta.containsProperty(GorMeta.HEADER_LINE_COUNT_KEY) || meta.getLineCount() > 0L)
                 .map(meta -> {
                     var p = meta.getMetaPath();
                     // Assume we have all data in the root folder (note relatives does not work here for S3Shared).

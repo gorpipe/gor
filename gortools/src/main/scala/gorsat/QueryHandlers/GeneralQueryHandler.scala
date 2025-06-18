@@ -352,10 +352,10 @@ object GeneralQueryHandler {
         val metaPath = DataUtil.toFile(f, DataType.META)
         val opt: Optional[String] = if (fileReader.exists(metaPath)) {
           val meta = GorMeta.createAndLoad(fileReader, metaPath)
-          if (meta.getLineCount == -1) {
+          if (meta.getLineCount == -1L) {
             val ret = dictRangeFromSeekRange(x._2, prefix)
             Optional.of[String](ret)
-          } else if(meta.getLineCount > 0) {
+          } else if(meta.getLineCount > 0L) {
             Optional.of[String](prefix + meta.getRange().formatAsTabDelimited())
           } else {
             Optional.empty()

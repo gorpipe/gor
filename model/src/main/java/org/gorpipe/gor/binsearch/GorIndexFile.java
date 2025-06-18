@@ -129,8 +129,8 @@ public class GorIndexFile implements AutoCloseable{
         }
     }
 
-    public static int loadVersion1(String line, BufferedReader reader, PositionCache pc) throws IOException {
-        int lineCount = 0;
+    public static long loadVersion1(String line, BufferedReader reader, PositionCache pc) throws IOException {
+        long lineCount = 0L;
         while (line != null) {
             String[] split = line.split("\t");
             StringIntKey key = new StringIntKey(split[0], Integer.parseInt(split[1]));
@@ -162,7 +162,7 @@ public class GorIndexFile implements AutoCloseable{
                     break;
                 case VERSION2:
                     // Version 1 and 2 have same format
-                    int lineCount = loadVersion1(line, reader, pc);
+                    long lineCount = loadVersion1(line, reader, pc);
                     log.debug("{} lines read from index file", lineCount);
                     break;
                 default:
