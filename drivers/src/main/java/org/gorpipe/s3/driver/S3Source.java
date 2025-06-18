@@ -77,11 +77,11 @@ public class S3Source implements StreamSource {
     private static final boolean OCI_S3_COMPATIBLE = Boolean.parseBoolean(System.getProperty("gor.oci.s3.compatible", "true"));
 
     private static final boolean USE_META_CACHE = true ;
-    private final SourceReference sourceReference;
-    private final String bucket;
-    private final String key;
-    private final S3Client client;
-    private final S3AsyncClient asyncClient;
+    protected final SourceReference sourceReference;
+    protected final String bucket;
+    protected final String key;
+    protected final S3Client client;
+    protected final S3AsyncClient asyncClient;
     private static final Map<S3Client, S3FileSystem> s3fsCache = new ConcurrentHashMap<>();
     private S3SourceMetadata meta;
     private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();

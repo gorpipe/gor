@@ -286,7 +286,7 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
 
         // Note, we are lazy loading the table so loading here only means clearing the data.  The actual load will happen
         // when we need the data.
-        if (prevSerial.equals(TableHeader.NO_SERIAL) || !this.header.getProperty(TableHeader.HEADER_SERIAL_KEY).equals(prevSerial)) {
+        if (prevSerial == null || TableHeader.NO_SERIAL.equals(prevSerial) || !this.header.getProperty(TableHeader.HEADER_SERIAL_KEY).equals(prevSerial)) {
             tableEntries.clear();
         }
 

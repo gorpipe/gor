@@ -344,8 +344,11 @@ public abstract class FileReader {
         if (Strings.isNullOrEmpty(url)) return;
         DataSource dataSource = resolveUrl(url, true);
         if (dataSource.forceLink()) {
-            LinkFile.create((StreamSource)dataSource, dataSource.getProjectLinkFileContent())
-                    .save(getOutputStream(dataSource.getProjectLinkFile()));
+            try (OutputStream os = getOutputStream(dataSource.getProjectLinkFile())) {
+                // Create link file with the content of the data source.
+                LinkFile.create((StreamSource) dataSource, dataSource.getProjectLinkFileContent())
+                        .save(os);
+            }
         }
     }
 
