@@ -23,6 +23,9 @@
 package org.gorpipe.s3.shared;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
+import org.gorpipe.base.security.Credentials;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -32,7 +35,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.MalformedURLException;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Represents an object in Amazon S3 (created from S3Shared source reference).
@@ -102,7 +110,8 @@ public class S3SharedSource extends S3Source {
         return PathUtils.formatUri(updatedUri.toString());
     }
 
-    private String removeExtraFolder(String path) {
+    // Get extra folder, empty string if there is no extra folder.
+    private String getExtraFolder(String path) {
         if (!path.toString().endsWith("/")) {
             String fileName = PathUtils.getFileName(path);
             int fileNameDotIndex = fileName.indexOf('.');
@@ -113,10 +122,18 @@ public class S3SharedSource extends S3Source {
             if (!Strings.isNullOrEmpty(extraFolderCand) &&
                     extraFolderCand.equals(PathUtils.getFileName(parentPath)) &&
                     !Strings.isNullOrEmpty(parentParentPath)) {
-                return PathUtils.resolve(parentParentPath, fileName);
+                return extraFolderCand;
             }
         }
-        return path;
+        return "";  // No extra folder
+    }
+
+    private String removeExtraFolder(String path) {
+        if (!Strings.isNullOrEmpty(getExtraFolder(path))) {
+            return PathUtils.resolve(PathUtils.getParent(PathUtils.getParent(path)), PathUtils.getFileName(path));
+        } else {
+            return path;
+        }
     }
 
     @Override
@@ -127,5 +144,42 @@ public class S3SharedSource extends S3Source {
             top = top.getParentSourceReference();
         }
         return top;
+    }
+
+    // As S3SharedSource has artificial extra folders, we need to override the list method to get the correct list of files.
+    @Override
+    public Stream<String> list() {
+        try {
+            List<String> rawlist = new java.util.ArrayList<>();
+            List<String> list = new java.util.ArrayList<>();
+            Set<String> extraFolders = new HashSet<>();
+
+            for (Path p: Files.walk(getPath(), 2).toList()) {
+                extraFolders.add(getExtraFolder(p.toString()));
+                rawlist.add(removeExtraFolder(p.toString()));
+            }
+
+            for (String p: rawlist) {
+                String subPath = p.substring(getPath().toString().length());
+                int subPathIndex = subPath.indexOf('/');
+                if (subPath.equals("")
+                        || extraFolders.contains(subPath)
+                        || (subPathIndex > 0 && subPathIndex < subPath.length() - 1 )) {
+                    // If the path is empty or it is just the extra folder, or it is deeper than level 1.
+                    continue;
+                }
+                list.add(p);
+            }
+
+            return list.stream();
+        } catch (Exception e) {
+            Credentials cred = getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
+            throw new GorResourceException(String.format("List failed for %s, region: %s, access key: %s, secret key: %s",
+                    getName(), client.serviceClientConfiguration().region(),
+                    cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
+                    cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.KEY, "")) ? "Has secret" : "Empty secret")
+                            : "No creds"),
+                    getName(), e).retry();
+        }
     }
 }

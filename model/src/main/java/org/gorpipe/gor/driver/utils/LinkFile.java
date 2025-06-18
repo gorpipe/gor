@@ -8,11 +8,7 @@ import org.gorpipe.gor.table.util.PathUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Class to work with link files, read, write and access metadata.
@@ -66,7 +62,7 @@ public class LinkFile {
     }
 
     public void appendEntry(String link, String md5) {
-        entries.add(new LinkFileEntry(link, System.currentTimeMillis(), md5, getLatestEntry().serial() + 1));
+        entries.add(new LinkFileEntryV1(link, System.currentTimeMillis(), md5, getLatestEntry().serial() + 1));
     }
 
     public String getEntryUrl(long timestamp) {
@@ -128,13 +124,16 @@ public class LinkFile {
     }
 
     public void save(OutputStream os) {
-        var header = meta.formatHeader();
-        var content = new StringBuilder(header);
+        var content = switch (getMeta().getVersion()) {
+            case "1" -> new StringBuilder(meta.formatHeader());
+            default -> new StringBuilder();
+        };
+
         if (!entries.isEmpty()) {
             var currentTimestamp = System.currentTimeMillis();
             entries.stream()
                     .skip(Math.max(0, entries.size() - getEntriesCountMax()))
-                    .filter(entry -> entry.timestamp() + getEntriesAgeMax() >= currentTimestamp)
+                    .filter(entry -> entry.timestamp() <= 0 || entry.timestamp() + getEntriesAgeMax() >= currentTimestamp)
                     .forEach(entry -> content.append(entry.format()).append("\n"));
         }
         try {
@@ -146,22 +145,11 @@ public class LinkFile {
 
     private List<LinkFileEntry> parseEntries(String content) {
         return switch (getMeta().getVersion()) {
-            case "1" -> parseEntriesV1(content);
-            default -> parseEntriesV0(content);
+            case "1" -> LinkFileEntryV1.parse(content);
+            default -> List.of(LinkFileEntryV0.parse(content));
         };
     }
 
-    private List<LinkFileEntry> parseEntriesV0(String content) {
-        return List.of(new LinkFileEntry(content.trim(), 0, "", 0));
-    }
-
-    private List<LinkFileEntry> parseEntriesV1(String content) {
-        return Arrays.stream(content.split("\n"))
-                .filter(l -> !l.startsWith("#"))
-                .map(LinkFileEntry::parse)
-                .sorted(Comparator.comparingLong(LinkFileEntry::timestamp))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
 
     private static String loadContentFromSource(StreamSource source) {
         try (InputStream is = source.open()) {
