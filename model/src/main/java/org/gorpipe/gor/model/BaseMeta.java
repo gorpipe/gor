@@ -173,11 +173,11 @@ public class BaseMeta {
         return getProperty(HEADER_TAGS_KEY);
     }
 
-    public int getLineCount() {
+    public long getLineCount() {
         if (headerProps.containsKey(HEADER_LINE_COUNT_KEY)) {
-            return Integer.parseInt(headerProps.get(HEADER_LINE_COUNT_KEY));
+            return Long.parseLong(headerProps.get(HEADER_LINE_COUNT_KEY));
         }
-        return -1;
+        return -1L;
     }
 
     public String[] getFileHeader() {
