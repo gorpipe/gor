@@ -19,7 +19,7 @@ class Gorif extends InputSourceInfo("GORIF",
     // Filter out filepath if not exists
     val nonExistentFiles = iargs.filter(arg =>
       !CommandParseUtilities.isNestedCommand(arg) &&
-      !context.getSession.getProjectContext.getFileReader.exists(arg)).toList
+      !context.getSession.getProjectContext.getFileReader.existsWithMetaDataUpdate(arg)).toList
     val checkedIargs = iargs.filterNot(nonExistentFiles.contains)
 
     if (checkedIargs.isEmpty) {

@@ -579,12 +579,9 @@ public class GorJavaUtilities {
 
     public static void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
         FileReader localFileReader = fileReader;
-        if (PathUtils.isLocal(outfolderpath)) {
-            // Force meta data update on the parent (solves issue with NFS sycn)
-            try (Stream<String> paths = fileReader.list(PathUtils.getParent(outfolderpath))) {
-                // Intentionally empty.
-            }
-        }
+
+        fileReader.updateFileSystemMetaData(outfolderpath);
+
         try (Stream<String> metapathstream = localFileReader.list(outfolderpath);
              Writer dictionarypathwriter = new OutputStreamWriter(localFileReader.getOutputStream(dictionarypath))) {
             var metaList = metapathstream.parallel().filter(p -> DataUtil.isMeta(p)).map(p -> GorMeta.createAndLoad(localFileReader, p)).collect(Collectors.toList());
