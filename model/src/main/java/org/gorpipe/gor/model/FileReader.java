@@ -28,6 +28,7 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.utils.LinkFile;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -362,5 +363,43 @@ public abstract class FileReader {
 
     public Stream<SourceRef> prepareSources(Stream<SourceRef> sources) {
         return sources;
+    }
+
+    /**
+     * Update the file system metadata for the given path/file.
+     * NOTE: This can be expensive, so it should be used with care.  This is only needed for
+     *       (shared)filesystems (not object storage).
+     * @param path
+     * @throws IOException
+     */
+    public void updateFileSystemMetaData(String path) throws IOException {
+        if (PathUtils.isLocal(path)) {
+            // Force meta data update on the parent (solves issue with NFS sycn)
+            try (Stream<String> paths = this.list(PathUtils.getParent(path))) {
+                // Intentionally empty.
+            }
+        }
+    }
+
+    /**
+     * Check if a file exists, and if not, update the file system metadata for the given path.
+     * This is useful when working with files that may have been recently created or modified.
+     *
+     * @param path The path to check for existence.
+     * @return true if the file exists, false otherwise.
+     */
+    public boolean existsWithMetaDataUpdate(String path) {
+        if (exists(path)) {
+            return true;
+        } else {
+            try {
+                // If the file does not exist, we try to update the metadata.
+                updateFileSystemMetaData(path);
+            } catch (IOException e) {
+                log.warn("Could not update file system metadata for path: {}", path, e);
+                return false;
+            }
+            return exists(path);
+        }
     }
 }
