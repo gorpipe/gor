@@ -22,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
+
+    public static final boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.sideeffects.force.run", "false"));
+
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();
     Map<String,String> fileSignatureMap = new ConcurrentHashMap<>();
@@ -142,7 +145,8 @@ public class BaseScriptExecutionEngine {
             var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles);
 
-            if (usedFiles.stream().anyMatch(DataUtil::isYml) || MacroUtilities.containsWriteCommand(commandToExecute)) {
+            if (usedFiles.stream().anyMatch(DataUtil::isYml)
+                    || (SIDE_EFFECTS_FORCE_RUN && MacroUtilities.containsWriteCommand(commandToExecute))) {
                 // Cases were we always want to run the query:
                 // 1. if any of the files is a template expansion, we treat this as if non-deterministic.  We do not
                 // model how expansion might depend on files and parameters.
