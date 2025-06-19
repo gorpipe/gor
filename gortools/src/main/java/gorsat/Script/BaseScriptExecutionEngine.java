@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
 
-    public static final boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.sideeffects.force.run", "false"));
+    public static final boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.gorpipe.sideeffects.force_run", "false"));
 
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();

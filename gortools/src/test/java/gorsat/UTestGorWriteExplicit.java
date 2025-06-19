@@ -2,6 +2,7 @@ package gorsat;
 
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.junit.*;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
@@ -15,6 +16,10 @@ import static org.gorpipe.gor.model.GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME;
 
 
 public class UTestGorWriteExplicit {
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
     public static final String WRONG_RESULT = "Wrong results in write folder";
     static final String GROUP_CHROM_COUNT = " | group chrom -count";
 
@@ -544,6 +549,8 @@ public class UTestGorWriteExplicit {
 
     @Test
     public void testCreateWriteSignature() throws IOException {
+        System.setProperty("gor.gorpipe.sideeffects.force_run", "true");
+
         Path path = workDirPath.resolve("gorfile.gorz");
         TestUtils.runGorPipe(
                 "create a = gor -p chr21 ../tests/data/gor/genes.gor | write " + path + "; " +
