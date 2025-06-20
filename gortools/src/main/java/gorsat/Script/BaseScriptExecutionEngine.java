@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
 
-    public static final boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.gorpipe.sideeffects.force_run", "false"));
-
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();
     Map<String,String> fileSignatureMap = new ConcurrentHashMap<>();
@@ -145,6 +143,7 @@ public class BaseScriptExecutionEngine {
             var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles);
 
+            boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.gorpipe.sideeffects.force_run", "false"));
             if (usedFiles.stream().anyMatch(DataUtil::isYml)
                     || (SIDE_EFFECTS_FORCE_RUN && MacroUtilities.containsWriteCommand(commandToExecute))) {
                 // Cases were we always want to run the query:
