@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
+
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();
     Map<String,String> fileSignatureMap = new ConcurrentHashMap<>();
@@ -142,14 +143,17 @@ public class BaseScriptExecutionEngine {
             var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles);
 
-            if (usedFiles.stream().anyMatch(DataUtil::isYml) || MacroUtilities.containsWriteCommand(commandToExecute)) {
+            boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.gorpipe.sideeffects.force_run", "false"));
+            if (usedFiles.stream().anyMatch(DataUtil::isYml)
+                    || (SIDE_EFFECTS_FORCE_RUN && MacroUtilities.containsWriteCommand(commandToExecute))) {
                 // Cases were we always want to run the query:
                 // 1. if any of the files is a template expansion, we treat this as if non-deterministic.  We do not
                 // model how expansion might depend on files and parameters.
                 // We could expand the YML file and then signature that query according to its usedFiles etc.,
                 // but that is not too different from forcing a cache miss at this stage by using a never-reused
                 // signature value.  We don't save it for reuse.
-                // 2. if the command contains a write command, we always want to run it for the sideeffect of writing.
+                // 2. if the command contains a write command, we want to run it for the sideeffect of writing
+                // if gor.gorpipe.sideeffects.force_run is sett.
                 fileSignature = StringUtilities.createMD5(System.nanoTime() + fileListKey + signatureKey);
             } else {
                 fileSignature = fileSignatureMap.computeIfAbsent(
