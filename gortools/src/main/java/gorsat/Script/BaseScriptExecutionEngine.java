@@ -152,7 +152,8 @@ public class BaseScriptExecutionEngine {
                 // We could expand the YML file and then signature that query according to its usedFiles etc.,
                 // but that is not too different from forcing a cache miss at this stage by using a never-reused
                 // signature value.  We don't save it for reuse.
-                // 2. if the command contains a write command, we always want to run it for the sideeffect of writing.
+                // 2. if the command contains a write command, we want to run it for the sideeffect of writing
+                // if gor.gorpipe.sideeffects.force_run is sett.
                 fileSignature = StringUtilities.createMD5(System.nanoTime() + fileListKey + signatureKey);
             } else {
                 fileSignature = fileSignatureMap.computeIfAbsent(
