@@ -46,6 +46,8 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
     final static int VCF_COLUMN_RENAME_COUNT = 10;
     final static String VCF_COLUMN_RENAME_NAME = "VALUES";
 
+    final static int GZIP_BUFFER_SIZE = Integer.parseInt(System.getProperty("gor.gzip.buffer.size", "2046"));
+
     public BufferedReader reader;
     private StreamSource streamSource;
     final ChromoLookup lookup; // chromosome name lookup service
@@ -62,7 +64,7 @@ public class VcfGzGenomicIterator extends GenomicIteratorBase {
 
 
     public VcfGzGenomicIterator(ChromoLookup lookup, String file, StreamSource streamsource, boolean compressed) throws IOException {
-        this(lookup, file, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open()))) : streamsource.open())));
+        this(lookup, file, new BufferedReader(new InputStreamReader(compressed ? new GZIPInputStream(new NCGZIPInputStream(new PositionAwareInputStream(streamsource.open())), GZIP_BUFFER_SIZE) : streamsource.open())));
         this.streamSource = streamsource;
     }
 

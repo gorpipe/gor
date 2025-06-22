@@ -136,6 +136,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         AwsCrtHttpClient.Builder httpClientBuilder = AwsCrtHttpClient.builder()
                 .connectionTimeout(s3Config.connectionTimeout())  // Default was 2s
                 .maxConcurrency(s3Config.connectionPoolSize())
+                //.readBufferSizeInBytes(16*1024*1024L)
                 .tcpKeepAliveConfiguration(b -> b
                         .keepAliveInterval(Duration.ofMillis(s3Config.socketTimeout().toMillis()/2))
                         .keepAliveTimeout(s3Config.connectionTimeout()))
