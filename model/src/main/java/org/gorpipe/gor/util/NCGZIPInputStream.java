@@ -52,6 +52,8 @@ public class NCGZIPInputStream extends FilterInputStream {
      * http://bugs.java.com/bugdatabase/view_bug.do?bug_id=7036144
      * <p>
      * Reference TT: 0034867351
+     *
+     * 2025-06-20:  This is fixed in Java 23 b15
      */
     @Override
     public int available() throws IOException {

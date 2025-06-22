@@ -31,6 +31,7 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.SourceProvider;
+import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -43,6 +44,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.file.FileSourceType;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.gor.util.NCGZIPInputStream;
 import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.standalone.GorStandalone;
 import org.slf4j.Logger;
@@ -64,6 +66,8 @@ public class DriverBackedFileReader extends FileReader {
     private static final Logger log = LoggerFactory.getLogger(DriverBackedFileReader.class);
 
     private static final String DEFAULT_COMMON_ROOT = "./";
+
+    final static int GZIP_BUFFER_SIZE = Integer.parseInt(System.getProperty("gor.gzip.buffer.size", "2046"));
 
     private final boolean DEPENDENTS = System.getProperty("gor.filereader.dependents", "true").equalsIgnoreCase("true");
 
@@ -378,7 +382,7 @@ public class DriverBackedFileReader extends FileReader {
 
         SourceReader(DataSource source) throws IOException {
             super(DataUtil.isGZip(source.getName()) ?
-                    new BufferedReader(new InputStreamReader(new GZIPInputStream(((StreamSource) source).open()/*, 32*1024*/))) :
+                    new BufferedReader(new InputStreamReader(new GZIPInputStream(new NCGZIPInputStream(((StreamSource) source).open()), GZIP_BUFFER_SIZE))) :
                     new InputStreamReader(((StreamSource) source).open()));
             this.source = source;
         }
