@@ -160,11 +160,14 @@
             
   <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="csvcc">
 <span id="id1"></span><h1>CSVCC<a class="headerlink" href="#csvcc" title="Permalink to this headline">¶</a></h1>
-<p>The <strong>CSVCC</strong> command is used aggregate or count genotypes stored in horizontal CSV format.  See <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> for more
-description of the requirements for the data input.</p>
+<p>The <strong>CSVCC</strong> command is used aggregate or count genotypes stored in horizontal values column in a CSV or fixed element size format.
+See <a class="reference internal" href="CSVSEL.html#csvsel"><span class="std std-ref">CSVSEL</span></a> for more description of the requirements for the data input.</p>
 <p>The aggregation is grouped according to the phenotype relation, which can be of the form (tag,status) or (tag,pheno,status).
 Typically, the relation is a binary relation with PN and case vs control status.  Affection status for multiple phenotypes
 can be represented by using the class.</p>
+<p>Note, only non-zero GTcounts are in the output, hence when this output is used with <a class="reference internal" href="PIVOT.html#pivot"><span class="std std-ref">PIVOT</span></a> the -e option should be used with zero,
+e.g. see examples below.</p>
+<p>Also, CSVCC is slower when GT values outside the range 0-6 are used and when a separator is used instead of fixed value size.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">CSVCC</span> tagbucketrelation phenorelation [-<span class="no">gc</span> cols] [-u undefsymbol] [-s sep] [-vs charsize]
@@ -242,6 +245,63 @@ transform the output into multiple horizontal columns representing the different
                           + case_1_GTcount,ctrl_2_GTcount*2+ctrl_1_GTcount,ctrl_0_GTcount*2 + ctrl_1_GTcount),5,1)
 | <span class="nb">SELECT</span> 1,2,<span class="na">reference</span>,<span class="na">call</span>,pheno,pVal_mm
 | <span class="nb">PIVOT</span> -<span class="no">gc</span> <span class="na">reference</span>,<span class="na">call</span> pheno -v &#39;PhenoA,PhenoB&#39; -e &#39;NA&#39;
+</pre></div>
+</div>
+<p>Below are unit tests that show equivalence queries that use GROUP count and compare it with CSVCC:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">create</span> #bucket# = norrows 10 | calc bucket &#39;b1&#39; | calc <span class="na">PN</span> &#39;<span class="na">PN</span>&#39;+<span class="k">str</span>(#1) | select pn,bucket;
+
+<span class="nd">create</span> #gt# = gorrow chr1,1 | calc <span class="na">alt</span> &#39;A&#39; | calc ref &#39;C&#39;
+| merge &lt;(gorrow chr1,2 | calc <span class="na">alt</span> &#39;G&#39; | calc ref &#39;T&#39;)
+| merge &lt;(gorrow chr1,3 | calc <span class="na">alt</span> &#39;A&#39; | calc ref &#39;T&#39;)
+| multimap -cartesian &lt;(<span class="nd">nor</span> [#bucket#] | rownum)
+| calc gt 1+mod(rownum*4+<span class="na">pos</span>,10)
+| select 1,2,ref,<span class="na">alt</span>,gt,pn
+| where <span class="na">PN</span> != &#39;PN0&#39;
+| gtgen -<span class="no">gc</span> ref,<span class="na">alt</span> [#bucket#] &lt;(gorrow chr1,0,1 | multimap -cartesian [#bucket#] | select 1-3,pn);
+
+<span class="nd">gor</span> [#gt#]
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,bucket -vs 1 [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn) -tag <span class="na">PN</span>
+| group 1 -<span class="no">gc</span> ref,<span class="na">alt</span>,value -<span class="no">count</span>
+| calc source &#39;group&#39;
+| rename value GT | rename allcount GTcount
+
+| merge &lt;(<span class="nd">gor</span> [#gt#]
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,bucket -vs 1 [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn)
+| csvcc -<span class="no">gc</span> ref,<span class="na">alt</span> -vs 1 [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn | calc pheno &#39;pheno&#39;)
+| calc source &#39;vs&#39;
+| hide cc
+)
+
+| merge &lt;(<span class="nd">gor</span> [#gt#]
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,bucket -vs 1 [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn)
+| replace values fsvmap(values,1,&#39;x&#39;,&#39;,&#39;)
+| csvcc -<span class="no">gc</span> ref,<span class="na">alt</span> -s &#39;,&#39; [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn | calc pheno &#39;pheno&#39;)
+| calc source &#39;sep&#39;
+| hide cc
+)
+| group 1 -<span class="no">gc</span> 2-source[-1] -set -dis -sc source
+| throwif dis_source != 3
+</pre></div>
+</div>
+<p>An example showing GT values that are of different lengths:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>/* same creates as in previous example *
+<span class="nd">gor</span> [#gt#]
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,bucket -vs 1 [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn) -tag <span class="na">PN</span>
+| replace value value*2
+| group 1 -<span class="no">gc</span> ref,<span class="na">alt</span>,value -<span class="no">count</span>
+| calc source &#39;group&#39;
+| rename value GT | rename allcount GTcount
+
+
+| merge &lt;(<span class="nd">gor</span> [#gt#]
+| csvsel -<span class="no">gc</span> ref,<span class="na">alt</span>,bucket -vs 1 [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn)
+| replace values fsvmap(values,1,&#39;<span class="k">int</span>(x)*2&#39;,&#39;,&#39;)
+| csvcc -<span class="no">gc</span> ref,<span class="na">alt</span> -s &#39;,&#39; [#bucket#] &lt;(<span class="nd">nor</span> [#bucket#] | select pn | calc pheno &#39;pheno&#39;)
+| calc source &#39;sep&#39;
+| hide cc
+)
+| group 1 -<span class="no">gc</span> 2-source[-1] -set -dis -sc source
+| throwif dis_source != 2
 </pre></div>
 </div>
 <div class="section" id="related-commands">
