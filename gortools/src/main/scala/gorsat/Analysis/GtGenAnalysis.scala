@@ -61,7 +61,7 @@ object GtGenAnalysis {
         sh.buckValueCols(i).setLength(buckSize)
         var j = 0
         while (j < buckSize) {
-          sh.buckValueCols(i).setCharAt(j, '4') // Unspecified, only 4 will possibly be changed to 0 and not 3.
+          sh.buckValueCols(i).setCharAt(j, '3') // Missing
           j += 1
         }
         i += 1
@@ -291,7 +291,7 @@ object GtGenAnalysis {
       }
 
       //#######
-      super.process(RowObj(s"${lr.colsSlice(0, bucketCol+1)}\t${lSeg.values.toString().replace('4','3')}"))
+      super.process(RowObj(s"${lr.colsSlice(0, bucketCol+1)}\t${lSeg.values.toString() }"))
 
       if ((lr.chr == lastLeftChr && maxLeftStop < leftStop) || lr.chr != lastLeftChr) maxLeftStop = leftStop
       lastLeftChr = lr.chr

@@ -7,12 +7,17 @@
 =====
 CSVCC
 =====
-The **CSVCC** command is used aggregate or count genotypes stored in horizontal CSV format.  See :ref:`CSVSEL` for more
-description of the requirements for the data input.
+The **CSVCC** command is used aggregate or count genotypes stored in horizontal values column in a CSV or fixed element size format.
+See :ref:`CSVSEL` for more description of the requirements for the data input.
 
 The aggregation is grouped according to the phenotype relation, which can be of the form (tag,status) or (tag,pheno,status).
 Typically, the relation is a binary relation with PN and case vs control status.  Affection status for multiple phenotypes
 can be represented by using the class.
+
+Note, only non-zero GTcounts are in the output, hence when this output is used with :ref:`PIVOT` the -e option should be used with zero,
+e.g. see examples below.
+
+Also, CSVCC is slower when GT values outside the range 0-6 are used and when a separator is used instead of fixed value size.
 
 Usage
 =====
@@ -88,6 +93,68 @@ It is also possible to perform case-control statistics for multiple phenotypes, 
                               + case_1_GTcount,ctrl_2_GTcount*2+ctrl_1_GTcount,ctrl_0_GTcount*2 + ctrl_1_GTcount),5,1)
     | SELECT 1,2,reference,call,pheno,pVal_mm
     | PIVOT -gc reference,call pheno -v 'PhenoA,PhenoB' -e 'NA'
+
+Below are unit tests that show equivalence queries that use GROUP count and compare it with CSVCC:
+
+.. code-block:: gor
+
+    create #bucket# = norrows 10 | calc bucket 'b1' | calc PN 'PN'+str(#1) | select pn,bucket;
+
+    create #gt# = gorrow chr1,1 | calc alt 'A' | calc ref 'C'
+    | merge <(gorrow chr1,2 | calc alt 'G' | calc ref 'T')
+    | merge <(gorrow chr1,3 | calc alt 'A' | calc ref 'T')
+    | multimap -cartesian <(nor [#bucket#] | rownum)
+    | calc gt 1+mod(rownum*4+pos,10)
+    | select 1,2,ref,alt,gt,pn
+    | where PN != 'PN0'
+    | gtgen -gc ref,alt [#bucket#] <(gorrow chr1,0,1 | multimap -cartesian [#bucket#] | select 1-3,pn);
+
+    gor [#gt#]
+    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn) -tag PN
+    | group 1 -gc ref,alt,value -count
+    | calc source 'group'
+    | rename value GT | rename allcount GTcount
+
+    | merge <(gor [#gt#]
+    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn)
+    | csvcc -gc ref,alt -vs 1 [#bucket#] <(nor [#bucket#] | select pn | calc pheno 'pheno')
+    | calc source 'vs'
+    | hide cc
+    )
+
+    | merge <(gor [#gt#]
+    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn)
+    | replace values fsvmap(values,1,'x',',')
+    | csvcc -gc ref,alt -s ',' [#bucket#] <(nor [#bucket#] | select pn | calc pheno 'pheno')
+    | calc source 'sep'
+    | hide cc
+    )
+    | group 1 -gc 2-source[-1] -set -dis -sc source
+    | throwif dis_source != 3
+
+An example showing GT values that are of different lengths:
+
+.. code-block:: gor
+
+    /* same creates as in previous example *
+    gor [#gt#]
+    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn) -tag PN
+    | replace value value*2
+    | group 1 -gc ref,alt,value -count
+    | calc source 'group'
+    | rename value GT | rename allcount GTcount
+
+
+    | merge <(gor [#gt#]
+    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn)
+    | replace values fsvmap(values,1,'int(x)*2',',')
+    | csvcc -gc ref,alt -s ',' [#bucket#] <(nor [#bucket#] | select pn | calc pheno 'pheno')
+    | calc source 'sep'
+    | hide cc
+    )
+    | group 1 -gc 2-source[-1] -set -dis -sc source
+    | throwif dis_scour != 2
+
 
 Related commands
 ----------------
