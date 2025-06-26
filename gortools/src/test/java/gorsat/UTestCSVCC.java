@@ -91,4 +91,76 @@ public class UTestCSVCC {
 
         Assert.assertEquals(normalLines, inflatedLines);
     }
+
+    @Test
+    public void testCSVCCvsGroup() {
+        TestUtils.runGorPipe("""
+                create #bucket# = norrows 10 | calc bucket 'b1' | calc PN 'PN'+str(#1) | select pn,bucket;
+                
+                create #gt# = gorrow chr1,1 | calc alt 'A' | calc ref 'C'
+                    | merge <(gorrow chr1,2 | calc alt 'G' | calc ref 'T')
+                    | merge <(gorrow chr1,3 | calc alt 'A' | calc ref 'T')
+                    | multimap -cartesian <(nor [#bucket#] | rownum)
+                    | calc gt 1+mod(rownum*4+pos,10)
+                    | select 1,2,ref,alt,gt,pn
+                    | where PN != 'PN0'
+                    | gtgen -gc ref,alt [#bucket#] <(gorrow chr1,0,1 | multimap -cartesian [#bucket#] | select 1-3,pn);
+                    
+                    gor [#gt#]
+                    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn) -tag PN
+                    | group 1 -gc ref,alt,value -count
+                    | calc source 'group'
+                    | rename value GT | rename allcount GTcount
+                    | merge <(gor [#gt#]
+                    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn)
+                    | csvcc -gc ref,alt -vs 1 [#bucket#] <(nor [#bucket#] | select pn | calc pheno 'pheno')
+                    | calc source 'vs'
+                    | hide cc
+                    )
+                    
+                    | merge <(gor [#gt#]
+                    | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn)
+                    | replace values fsvmap(values,1,'x',',')
+                    | csvcc -gc ref,alt -s ',' [#bucket#] <(nor [#bucket#] | select pn | calc pheno 'pheno')
+                    | calc source 'sep'
+                    | hide cc
+                    )
+                    | group 1 -gc 2-source[-1] -set -dis -sc source
+                    | throwif dis_source != 3
+                """ );
+    }
+
+    @Test
+    public void testGTValuesOfDifferentLengths() {
+        TestUtils.runGorPipe("""
+                 create #bucket# = norrows 10 | calc bucket 'b1' | calc PN 'PN'+str(#1) | select pn,bucket;
+                
+                create #gt# = gorrow chr1,1 | calc alt 'A' | calc ref 'C'
+                    | merge <(gorrow chr1,2 | calc alt 'G' | calc ref 'T')
+                    | merge <(gorrow chr1,3 | calc alt 'A' | calc ref 'T')
+                    | multimap -cartesian <(nor [#bucket#] | rownum)
+                    | calc gt 1+mod(rownum*4+pos,10)
+                    | select 1,2,ref,alt,gt,pn
+                    | where PN != 'PN0'
+                    | gtgen -gc ref,alt [#bucket#] <(gorrow chr1,0,1 | multimap -cartesian [#bucket#] | select 1-3,pn);
+                    
+                gor [#gt#]
+                | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn) -tag PN
+                | replace value value*2
+                | group 1 -gc ref,alt,value -count
+                | calc source 'group'
+                | rename value GT | rename allcount GTcount
+                | merge <(gor [#gt#]
+                | csvsel -gc ref,alt,bucket -vs 1 [#bucket#] <(nor [#bucket#] | select pn)
+                | replace values fsvmap(values,1,'int(x)*2',',')
+                | csvcc -gc ref,alt -s ',' [#bucket#] <(nor [#bucket#] | select pn | calc pheno 'pheno')
+                | calc source 'sep'
+                | hide cc
+                )
+                | group 1 -gc 2-source[-1] -set -dis -sc source
+                | throwif dis_source != 2                    
+                    
+                """ );
+    }
+
 }

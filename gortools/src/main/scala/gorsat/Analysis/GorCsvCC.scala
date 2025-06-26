@@ -34,6 +34,7 @@ import org.gorpipe.gor.session.GorSession
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.model.gor.iterators.LineIterator
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 object GorCsvCC {
@@ -77,6 +78,8 @@ object GorCsvCC {
       var splitArr: Array[SaHolder] = _
       var phenoStatusCounter: Array[Array[Int]] = _
       var phenoStatusFloatCounter: Array[Array[Double]] = _
+      var phenoExtraValues : Array[scala.collection.mutable.HashMap[String,Int]] = _
+      var hashUsed : Array[Boolean] = _
     }
 
     val useGroup: Boolean = if (grCols.nonEmpty) true else false
@@ -104,23 +107,28 @@ object GorCsvCC {
         sh.splitArr = new Array[SaHolder](maxUsedBuckets)
         sh.phenoStatusCounter = new Array[Array[Int]](maxPhenoStats)
         sh.phenoStatusFloatCounter = new Array[Array[Double]](maxPhenoStats)
+        sh.phenoExtraValues = new Array[mutable.HashMap[String, Int]](maxPhenoStats)
+        sh.hashUsed = new Array[Boolean](maxPhenoStats)
+
         var i = 0
         while (i < maxPhenoStats) {
-          sh.phenoStatusCounter(i) = new Array[Int](5)
-          sh.phenoStatusFloatCounter(i) = new Array[Double](5)
+          sh.phenoStatusCounter(i) = new Array[Int](7)
+          sh.phenoStatusFloatCounter(i) = new Array[Double](7)
+          sh.hashUsed(i) = false
+          sh.phenoExtraValues(i) = scala.collection.mutable.HashMap.empty[String, Int]
           i += 1
         }
       }
       var i = 0
       while (i < sh.buckRows.length) {
         sh.buckRows(i) = null
-        if (valSize == -1) sh.splitArr(i) = SaHolder(new scala.collection.mutable.ArrayBuffer[Int](100))
+        if (valSize == -1) sh.splitArr(i) = SaHolder(new scala.collection.mutable.ArrayBuffer[Int](1000))
         i += 1
       }
       i = 0
       while (i < maxPhenoStats) {
         var j = 0
-        while (j < 5) {
+        while (j < 7) {
           sh.phenoStatusCounter(i)(j) = 0
           sh.phenoStatusFloatCounter(i)(j) = 0.0
           j += 1
@@ -189,19 +197,45 @@ object GorCsvCC {
               } else throw new RuntimeException("Problem with input data when generating row: " + line + "\n\n")
             } else {
               var start = 0
+              var stop = 0
 
               if (valSize == -1) {
                 val sah = sh.splitArr(buckNo)
                 if (buckPos > 0) start = sah.seps(buckPos - 1) + 1
+                stop = sah.seps(buckPos)
               } else {
                 if (buckPos > 0) start = buckPos * (valSize + sepSize)
               }
               if (!use_prob) {
-                val gt = rstr.charAt(start)
-                if (gt == '0') sh.phenoStatusCounter(phenostatus)(0) += 1
-                else if (gt == '1') sh.phenoStatusCounter(phenostatus)(1) += 1
-                else if (gt == '2') sh.phenoStatusCounter(phenostatus)(2) += 1
-                else sh.phenoStatusCounter(phenostatus)(3) += 1
+                if (valSize == 1) {
+                  val gt = rstr.charAt(start)
+                  if (gt == '0') sh.phenoStatusCounter(phenostatus)(0) += 1
+                  else if (gt == '1') sh.phenoStatusCounter(phenostatus)(1) += 1
+                  else if (gt == '2') sh.phenoStatusCounter(phenostatus)(2) += 1
+                  else if (gt == '3') sh.phenoStatusCounter(phenostatus)(3) += 1
+                  else if (gt == '4') sh.phenoStatusCounter(phenostatus)(4) += 1
+                  else if (gt == '5') sh.phenoStatusCounter(phenostatus)(5) += 1
+                  else {
+                    sh.hashUsed(phenostatus) = true
+                    val key = gt.toString
+                    val newCount = sh.phenoExtraValues(phenostatus).getOrElse(key, 0) + 1
+                    sh.phenoExtraValues(phenostatus).update(key, newCount)
+                  }
+                } else {
+                  val gt = rstr.subSequence(start,stop).toString
+                  if (gt == "0") sh.phenoStatusCounter(phenostatus)(0) += 1
+                  else if (gt == "1") sh.phenoStatusCounter(phenostatus)(1) += 1
+                  else if (gt == "2") sh.phenoStatusCounter(phenostatus)(2) += 1
+                  else if (gt == "3") sh.phenoStatusCounter(phenostatus)(3) += 1
+                  else if (gt == "4") sh.phenoStatusCounter(phenostatus)(4) += 1
+                  else if (gt == "5") sh.phenoStatusCounter(phenostatus)(5) += 1
+                  else {
+                    sh.hashUsed(phenostatus) = true
+                    val newCount = sh.phenoExtraValues(phenostatus).getOrElse(gt, 0) + 1
+                    sh.phenoExtraValues(phenostatus).update(gt, newCount)
+                  }
+                }
+
               } else {
                 if (rstr.charAt(start) == ' ') {
                   sh.phenoStatusCounter(phenostatus)(3) += 1
@@ -242,20 +276,28 @@ object GorCsvCC {
             }
             phenorow += 1
           }
+
           var i = 0
           while (i < maxPhenoStats) {
             val pheno = tbpi.phenoMap(i)
             var j = 0
-            while (j < 4.max(uc + 1)) {
+            while (j < 6.max(uc + 1)) {
               if (nextProcessor.wantsNoMore) return
               if (!use_prob || use_threshold) {
                 val counts = sh.phenoStatusCounter(i)(j)
-                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + counts))
+                if (counts > 0) nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + counts))
               } else {
                 val counts = sh.phenoStatusFloatCounter(i)(j)
-                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + fd3.format(counts)))
+                if (counts > 0.0) nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + j + '\t' + fd3.format(counts)))
               }
               j += 1
+            }
+
+            if (sh.hashUsed(i)) {
+              for (key <- sh.phenoExtraValues(i).keys.toList.sorted) {
+                val counts : Int = sh.phenoExtraValues(i)(key)
+                nextProcessor.process(RowObj(line + '\t' + pheno + '\t' + key + '\t' + counts))
+              }
             }
             i += 1
           }
