@@ -153,7 +153,7 @@ An example showing GT values that are of different lengths:
     | hide cc
     )
     | group 1 -gc 2-source[-1] -set -dis -sc source
-    | throwif dis_scour != 2
+    | throwif dis_source != 2
 
 
 Related commands
