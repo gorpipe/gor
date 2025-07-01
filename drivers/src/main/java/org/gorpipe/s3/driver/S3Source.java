@@ -180,11 +180,10 @@ public class S3Source implements StreamSource {
     }
 
     private InputStream openRequest(GetObjectRequest request) {
-        if (asyncClient != null) {
-            return new AbortingInputStream(asyncClient.getObject(request, AsyncResponseTransformer.toBlockingInputStream()).join(), request);
-        }
-
         try {
+            if (asyncClient != null) {
+                return new AbortingInputStream(asyncClient.getObject(request, AsyncResponseTransformer.toBlockingInputStream()).join(), request);
+            }
             return new AbortingInputStream(client.getObject(request), request);
         } catch (SdkException e) {
             throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), getPath().toString(), e).retry();
@@ -302,7 +301,7 @@ public class S3Source implements StreamSource {
     public String createDirectories(FileAttribute<?>... attrs) {
         // Files.createDirectory needs elevated access to list all buckets.
 //        try {
-//         œ1   return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
+//            return PathUtils.formatUri(Files.createDirectories(getPath()).toUri());
 //        } catch (IOException e) {
 //            throw GorResourceException.fromIOException(e, getPath()).retry();
 //        }
