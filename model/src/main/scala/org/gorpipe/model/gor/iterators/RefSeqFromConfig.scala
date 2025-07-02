@@ -131,7 +131,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
           if( !f.isPresent ) {
             if (!notfoundmap.contains(chrFilePath)) {
               notfoundmap.add(chrFilePath)
-              log.info("Warning: Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
+              log.warn("Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
             }
             'N'
           } else {
@@ -140,7 +140,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
             val l = f.get().read(buff, 0, buffLength)
             lufo.addObject(buffKey, buff)
             if( l == -1 ) {
-              log.info("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
+              log.warn("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
               return 'N'
             }
             refByteToChar(buff(pos - offset - 1))
@@ -150,7 +150,7 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
       case ioex: IOException =>
         throw new GorResourceException("Reference build " + path + " inaccessible", path, ioex)
       case ex: Exception => {
-        log.warn("Warning: Reference build " + path + "\n\n"+ex.getMessage)
+        log.warn(String.format("Returning 'N' for reference build %s (%s:%d)", path, chr, pos), ex)
       }
       'N'
     }

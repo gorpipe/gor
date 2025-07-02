@@ -63,10 +63,13 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 return action.perform();
             } catch (GorRetryException e) {
                 if (!e.isRetry()) throw e;
+                checkIfShouldRetryException(e);
+
                 tries++;
                 lastException = e;
-                checkIfShouldRetryException(e);
                 sleepMs = sleep(retries, tries, sleepMs, e);
+
+                log.warn("Retrying gor action after " + sleepMs + "ms, retry " + tries, e);
             }
         }
         throw new GorSystemException("Giving up after " + tries + " retries", lastException);
@@ -75,7 +78,7 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
     @Override
     public void perform(ActionVoid action) {
         int tries = 0;
-        long lastSleepMs = 0;
+        long sleepMs = 0;
         Throwable lastException = null;
         while (tries <= retries) {
             try {
@@ -83,10 +86,13 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 return;
             } catch (GorRetryException e) {
                 if (!e.isRetry()) throw e;
+                checkIfShouldRetryException(e);
+
                 tries++;
                 lastException = e;
-                checkIfShouldRetryException(e);
-                lastSleepMs = sleep(retries, tries, lastSleepMs, e);
+                sleepMs = sleep(retries, tries, sleepMs, e);
+
+                log.warn("Retrying gor action after " + sleepMs + "ms, retry " + tries, e);
             }
         }
         throw new GorSystemException("Giving up after " + tries + " tries.", lastException);

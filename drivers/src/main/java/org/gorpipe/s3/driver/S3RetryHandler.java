@@ -26,8 +26,7 @@ public class S3RetryHandler extends RetryHandlerWithFixedWait {
 
         var cause = ExceptionUtilities.getUnderlyingCause(e);
 
-        if (cause instanceof FileNotFoundException
-        || cause instanceof FileSystemException) {
+        if (cause instanceof FileNotFoundException || cause instanceof FileSystemException) {
             throw e;
         } else if (cause instanceof S3Exception awsException) {
             var detail = awsException.getMessage();
