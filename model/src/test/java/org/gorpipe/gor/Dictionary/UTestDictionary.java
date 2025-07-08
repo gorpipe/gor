@@ -415,4 +415,16 @@ public class UTestDictionary {
 
         Assert.assertTrue(res1String[0].endsWith("/bucket2 null null null -1 [tag1000, tagI, tagJ, tagK, tagL, tagL2]"));
     }
+
+    @Test
+    public void testDictionaryBucketAccess() throws IOException {
+        File gordDict = workDir.newFile("testDictionaryWithNoBucketAccess.gord");
+        FileUtils.write(gordDict, gort1, (Charset) null);
+
+        Dictionary dict = getDictionary(gordDict.getPath(), ".");
+
+        Assert.assertEquals(1, dict.getSources(new HashSet<>(Arrays.asList("tagG", "tagH")), true, false).length);
+        Assert.assertEquals(2, dict.getSources(new HashSet<>(Arrays.asList("tagG", "tagH")), false, false).length);
+    }
+
 }

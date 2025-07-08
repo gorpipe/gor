@@ -196,11 +196,11 @@ public class Dictionary {
         final DictionaryLine[] toReturn;
         final Set<String> badTags = new HashSet<>();
         if (this.useCache) {
-            final String orderedTags = orderTags(tags);
-            toReturn = tagsToListCache.compute(orderedTags, (key, list) -> list == null ? generateList(tags, allowBucketAccess, badTags) : list);
+            final String inputKey = orderTags(tags) + ":" + allowBucketAccess;
+            toReturn = tagsToListCache.compute(inputKey, (key, list) -> list == null ? generateList(tags, allowBucketAccess, badTags) : list);
             // Removing the entry from cache due to invalid tags should be separate from throwing the data exception
             if (badTags.size() > 0) {
-                tagsToListCache.remove(orderedTags);
+                tagsToListCache.remove(inputKey);
             }
         } else {
             toReturn = generateList(tags, allowBucketAccess, badTags);
