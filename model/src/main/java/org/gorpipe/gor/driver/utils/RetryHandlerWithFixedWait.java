@@ -21,7 +21,7 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
 
     protected Random rand = new Random();
 
-    public <T> T perform(Action<T> action) {
+    public <T> T perform(Action<T> action, ActionVoid preRetryOp) {
         assert initialDuration <= totalDuration;
 
         int tries = 0;
@@ -40,6 +40,10 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 accumulatedDuration += sleep(e, tries, initialDuration);
 
                 log.warn("Retrying gor action after " + accumulatedDuration + "ms, retry " + tries, e);
+
+                if (preRetryOp != null) {
+                    preRetryOp.perform();
+                }
             }
         }
 
@@ -49,7 +53,7 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
         );
     }
 
-    public void perform(ActionVoid action) {
+    public void perform(ActionVoid action, ActionVoid preRetryOp) {
         assert initialDuration <= totalDuration;
 
         int tries = 0;
@@ -69,6 +73,10 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 accumulatedDuration += sleep(e, tries, initialDuration);
 
                 log.warn("Retrying gor action after " + accumulatedDuration + "ms, retry " + tries, e);
+
+                if (preRetryOp != null) {
+                    preRetryOp.perform();
+                }
             }
         }
 

@@ -54,7 +54,7 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
     }
 
     @Override
-    public <T> T perform(Action<T> action) {
+    public <T> T perform(Action<T> action, ActionVoid preRetryOp) {
         int tries = 0;
         long sleepMs = 0;
         Throwable lastException = null;
@@ -70,13 +70,17 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 sleepMs = sleep(retries, tries, sleepMs, e);
 
                 log.warn("Retrying gor action after " + sleepMs + "ms, retry " + tries, e);
+
+                if (preRetryOp != null) {
+                    preRetryOp.perform();
+                }
             }
         }
         throw new GorSystemException("Giving up after " + tries + " retries", lastException);
     }
 
     @Override
-    public void perform(ActionVoid action) {
+    public void perform(ActionVoid action, ActionVoid preRetryOp) {
         int tries = 0;
         long sleepMs = 0;
         Throwable lastException = null;
@@ -93,6 +97,10 @@ public abstract class RetryHandlerWithFixedRetries extends RetryHandlerBase {
                 sleepMs = sleep(retries, tries, sleepMs, e);
 
                 log.warn("Retrying gor action after " + sleepMs + "ms, retry " + tries, e);
+
+                if (preRetryOp != null) {
+                    preRetryOp.perform();
+                }
             }
         }
         throw new GorSystemException("Giving up after " + tries + " tries.", lastException);
