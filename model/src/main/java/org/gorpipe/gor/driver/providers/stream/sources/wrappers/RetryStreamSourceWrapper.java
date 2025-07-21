@@ -170,11 +170,9 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
                             try {
                                 return super.read(b, off, len);
                             } catch (IOException e) {
-                                StreamUtils.tryClose(in);
-                                in = reopen();
-                                throw GorResourceException.fromIOException(e, "").retry();
+                                throw GorResourceException.fromIOException(e, getPath()).retry();
                             }
-                        });
+                        }, this::reopen);
         }
 
         @Override
@@ -183,22 +181,21 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
                 try {
                     return super.skip(n);
                 } catch (IOException e) {
-                    StreamUtils.tryClose(in);
-                    in = reopen();
-                    throw GorResourceException.fromIOException(e, "").retry();
+                    throw GorResourceException.fromIOException(e, getPath()).retry();
                 }
-            });
+            }, this::reopen);
         }
 
         /**
          * NB: If reopening the stream fails - it is not retried.
          */
-        private InputStream reopen() {
+        private void reopen() {
+            StreamUtils.tryClose(in);
             // Need to open it using the outer super class open (and be careful NOT to warp it again)
             if (length == null) {
-                return RetryStreamSourceWrapper.super.open(start + getPosition());
+                in = RetryStreamSourceWrapper.super.open(start + getPosition());
             } else {
-                return RetryStreamSourceWrapper.super.open(start + getPosition(), length - getPosition());
+                in = RetryStreamSourceWrapper.super.open(start + getPosition(), length - getPosition());
             }
         }
 
