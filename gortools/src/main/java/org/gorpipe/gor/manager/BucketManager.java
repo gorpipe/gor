@@ -73,7 +73,7 @@ public class BucketManager<T extends DictionaryEntry> {
     public static final String HEADER_MIN_BUCKET_SIZE_KEY = "MIN_BUCKET_SIZE";
     public static final String HEADER_BUCKET_SIZE_KEY = "BUCKET_SIZE";
 
-    // Comma seperated list of bucket dirs.  Absolute or relative to the table dir.
+    // A comma separated list of bucket dirs.  Absolute or relative to the table dir.
     public static final String HEADER_BUCKET_DIRS_KEY = "BUCKET_DIRS";
 
     // Bucket dir root.  Used to find the absolute bucket path if bucket dir is relative.  The path
@@ -81,7 +81,8 @@ public class BucketManager<T extends DictionaryEntry> {
     public static final String HEADER_BUCKET_DIRS_LOCATION_KEY = "BUCKET_DIRS_LOCATION";
     public static final String HEADER_BUCKET_MAX_BUCKETS = "BUCKET_MAX_BUCKETS";
 
-    protected Duration gracePeriodForDeletingBuckets = Duration.ofHours(24);
+    protected Duration gracePeriodForDeletingBuckets = Duration.ofHours(Integer.parseInt(
+            System.getProperty("gor.table.buckets.delete.grace.period.hours", "24"))); // Default 24 hours.
 
     // Location of the bucket files we create (absolute or relative to rootPath).
     private final List<String> bucketDirs = new ArrayList<>();

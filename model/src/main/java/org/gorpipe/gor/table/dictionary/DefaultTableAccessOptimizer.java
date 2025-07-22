@@ -55,7 +55,7 @@ public class DefaultTableAccessOptimizer implements DictionaryAccessOptimizer<Di
         List<DictionaryEntry> result;
         final Set<String> badTags = new HashSet<>();
         if (USE_CACHE) {
-            String key = findKey(tags, allowBucketAccess, isSilentTagFilter);
+            String key = findKey(tags, allowBucketAccess);
             result = tagsToListCache.getIfPresent(key);
             if (result == null) {
                 result = calcOptimizeFileList(tags, allowBucketAccess, badTags);
@@ -83,11 +83,11 @@ public class DefaultTableAccessOptimizer implements DictionaryAccessOptimizer<Di
         return this.bucketHasDeletedFile.get(bucket);
     }
 
-    private static String findKey(Collection<String> tags, boolean allowBucketAccess, boolean isSilentTagFilter) {
-        if (tags == null) return ":" + allowBucketAccess + ":" + isSilentTagFilter;
+    private static String findKey(Collection<String> tags, boolean allowBucketAccess) {
+        if (tags == null) return ":" + allowBucketAccess;
         final String[] stringsAsArray = tags.toArray(new String[0]);
         Arrays.sort(stringsAsArray);
-        return String.join(",", stringsAsArray) + ":" + allowBucketAccess + ":" + isSilentTagFilter;
+        return String.join(",", stringsAsArray) + ":" + allowBucketAccess;
     }
 
     private void throwBadTagException(Set<String> badTags) {
