@@ -34,7 +34,7 @@ import java.io.PrintWriter;
  *
  * @version $Id$
  */
-public class GorSystemException extends GorException {
+public class GorSystemException extends GorRetryException {
     /**
      * Construct
      *
