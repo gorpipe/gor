@@ -44,14 +44,15 @@ object GrannoAnalysis {
     def process(r: Row, BA: BinAggregator): Unit = {
       val chr = r.chr
       val binID = binIDgen.ID(1)
+      val sta : Int = 0
+      var sto : Int = 1000000000
       try {
-        val (sta, sto) = (0, session.getProjectContext.getReferenceBuild.getBuildSize.get(r.chr))
-        BA.update(r, binID, chr, sta, sto)
+        sto = session.getProjectContext.getReferenceBuild.getBuildSize.get(r.chr)
       } catch {
-        case _: Exception =>
-          val (sta, sto) = (0, 1000000000)
-          BA.update(r, binID, chr, sta, sto)
+        case _: Exception => // Ignore, use default value
       }
+
+      BA.update(r, binID, chr, sta, sto)
     } // One ouput row per input row
   }
 
