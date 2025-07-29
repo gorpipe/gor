@@ -315,14 +315,15 @@ public class PluggableGorDriver implements GorDriver {
     }
 
     private void throwWithSourceName(Exception e, String sourcename) {
+
+        if (e instanceof GorException) {
+            throw (GorException)e;
+        }
+
         if (sourcename == null) {
             throw new GorResourceException("Gor driver sourcename is null", "", e);
         } else if (e.getMessage() == null) {
             throw new GorSystemException("Gor driver - message is null", e);
-        }
-
-        if (e instanceof GorException) {
-            throw (GorException)e;
         }
 
         throw new GorResourceException("Cannot create iterator for datasource: " + sourcename + "  Cause: "

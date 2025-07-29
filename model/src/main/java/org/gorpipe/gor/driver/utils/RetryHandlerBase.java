@@ -9,9 +9,17 @@ import static java.lang.Thread.sleep;
 
 public abstract class RetryHandlerBase {
 
-    public abstract <T> T perform(Action<T> action);
+    public <T> T perform(Action<T> action) {
+        return perform(action, null);
+    }
 
-    public abstract void perform(ActionVoid action);
+    public  void perform(ActionVoid action) {
+        perform(action, null);
+    }
+
+    public abstract <T> T perform(Action<T> action, ActionVoid preRetryOp);
+
+    public abstract void perform(ActionVoid action, ActionVoid preRetryOp);
 
     public interface Action<T> {
         T perform();

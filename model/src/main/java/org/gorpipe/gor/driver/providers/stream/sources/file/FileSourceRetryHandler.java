@@ -15,13 +15,11 @@ public class FileSourceRetryHandler extends RetryHandlerWithFixedWait {
     @Override
     protected void checkIfShouldRetryException(GorException e) {
         if (e.getMessage().contains("Stale file handle")) {
-            // Stale file handle errors generally require retries on a higher level as the
-            // file needs to be reopened.
-            throw new GorResourceException("Stale file handle", "", e);
+            // We generally use RetryInputStream (which reopens the stream on retry),
         } else if (e.getCause() instanceof FileNotFoundException fe) {
-            throw GorResourceException.fromIOException(fe, "");
+            throw e;
         } else if (e.getCause() instanceof FileSystemException fe) {
-            throw GorResourceException.fromIOException(fe, "");
+            throw e;
         }
     }
 }

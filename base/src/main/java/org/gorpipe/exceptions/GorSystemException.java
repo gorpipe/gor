@@ -34,7 +34,7 @@ import java.io.PrintWriter;
  *
  * @version $Id$
  */
-public class GorSystemException extends GorException {
+public class GorSystemException extends GorRetryException {
     /**
      * Construct
      *
@@ -64,35 +64,4 @@ public class GorSystemException extends GorException {
     }
 
 
-    @Override
-    public String toString() {
-        return this.getCause() != null ? this.getCause().toString() : super.toString();
-    }
-
-    @Override
-    public void printStackTrace(PrintStream s) {
-        if (this.getCause() != null) {
-            this.getCause().printStackTrace(s);
-        } else {
-            super.printStackTrace(s);
-        }
-    }
-
-    @Override
-    public void printStackTrace(PrintWriter s) {
-        if (this.getCause() != null) {
-            this.getCause().printStackTrace(s);
-        } else {
-            super.printStackTrace(s);
-        }
-    }
-
-    @Override
-    public StackTraceElement[] getStackTrace() {
-        return this.getCause() != null ? this.getCause().getStackTrace() : super.getStackTrace();
-    }
-
-    // Note:  Will not overwrite setStackTrace and fillInStackTrace, and calling those will not have any
-    //        affect on the reported stacktrace (which will always be from the underlying exception).
-    //        If you wish to change the stacktrace, change the underlying exception.
 }

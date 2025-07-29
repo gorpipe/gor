@@ -49,7 +49,7 @@ public interface S3Configuration extends Config {
 
     @Documentation("S3 max driver retry")
     @Key("gor.s3.conn.retries")
-    @DefaultValue("3")
+    @DefaultValue("0")
     int connectionRetries();
 
     @Documentation("S3 validate after inactivity (millis)")
