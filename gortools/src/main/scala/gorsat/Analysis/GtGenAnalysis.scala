@@ -61,7 +61,7 @@ object GtGenAnalysis {
         sh.buckValueCols(i).setLength(buckSize)
         var j = 0
         while (j < buckSize) {
-          sh.buckValueCols(i).setCharAt(j, '3') // Missing
+          sh.buckValueCols(i).setCharAt(j, '#') // Missing
           j += 1
         }
         i += 1
@@ -180,7 +180,7 @@ object GtGenAnalysis {
     if (!useGroup) groupMap += (-1 -> singleGroupHolder)
 
     def set_coverage(lSeg: CovSEGinfo, rSeg: CovSEGinfo): Unit = {
-      if (lSeg.values.charAt(rSeg.buckPos) =='4') lSeg.values.setCharAt(rSeg.buckPos, '0')
+      if (lSeg.values.charAt(rSeg.buckPos) =='#') lSeg.values.setCharAt(rSeg.buckPos, '0')
     }
 
     def nested_process(lr: Row, next_lr: Row): Unit = {
@@ -291,7 +291,7 @@ object GtGenAnalysis {
       }
 
       //#######
-      super.process(RowObj(s"${lr.colsSlice(0, bucketCol+1)}\t${lSeg.values.toString() }"))
+      super.process(RowObj(s"${lr.colsSlice(0, bucketCol+1)}\t${lSeg.values.toString().replace('#','3') }"))
 
       if ((lr.chr == lastLeftChr && maxLeftStop < leftStop) || lr.chr != lastLeftChr) maxLeftStop = leftStop
       lastLeftChr = lr.chr

@@ -1,5 +1,6 @@
 package gorsat.gtgen;
 
+import gorsat.TestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -232,4 +233,18 @@ public class UTestGTGen {
         gtGen.setPrior(0.01, 1000);
         Assert.assertEquals(1001, gtGen.getAn());
     }
+
+    @Test
+    public void testGTGENunknown() {
+        TestUtils.runGorPipe("""
+             create #vars# = gorrow chr1,1 | calc ref 'A,A' | calc alt 'C,C' | calc GT '1,1' | calc pn 'pn1,pn2' | split ref,alt,gt,pn;
+             create #goodcov# = gorrow chr1,0,3 | calc pn 'pn1,pn2' | split pn;
+             create #bucket# = nor [#vars#] | select pn | calc bucket 'b1';
+             
+             gor [#vars#] | gtgen -gc ref,alt [#bucket#] [#goodcov#] | throwif values != '11'
+             | merge <(gor [#vars#] | where pn != 'pn2' | gtgen -gc ref,alt [#bucket#] [#goodcov#] | throwif values != '10')
+             | merge <(gor [#vars#] | where pn != 'pn2' | gtgen -gc ref,alt [#bucket#] <(gor [#goodcov#] | where pn != 'pn2') | throwif values != '13')
+           """ );
+    }
+
 }
