@@ -21,6 +21,9 @@ import java.util.stream.StreamSupport;
 public class DbConnectionCache {
     private static final Logger log = LoggerFactory.getLogger(DbConnectionCache.class);
 
+    /**
+     * Map of DbConnection objects, keyed by the source name in lower case, to make the name case insensitive.
+     */
     private final ConcurrentHashMap<String, DbConnection> mapSources = new ConcurrentHashMap<>();
     public String defaultDbSource = "rda";
 
@@ -38,7 +41,7 @@ public class DbConnectionCache {
      * @return The DbSource object
      */
     public DbConnection lookup(String source) {
-        return mapSources.get(source);
+        return mapSources.get(source.toLowerCase());
     }
 
     /**
@@ -120,7 +123,7 @@ public class DbConnectionCache {
     public void clearDbSources() {
         for (DbConnection src : mapSources.values()) {
             src.close();
-            mapSources.remove(src.name);
+            mapSources.remove(src.name.toLowerCase());
         }
         mapSources.clear();
     }
@@ -129,13 +132,14 @@ public class DbConnectionCache {
      * @param source The source to install as available
      */
     public void install(final DbConnection source) {
-        log.info("Installing DbSource with name {}, url {} and user {}", source.name, source.url, source.user);
-        if (mapSources.containsKey(source.name)) {
-            DbConnection existingSource = mapSources.get(source.name);
-            log.warn("Installing over an existing source with name {}, url {} and user {}",
+        log.info("Installing DbSource with name: {}, url: {} and user: {}", source.name, source.url, source.user);
+        String key = source.name.toLowerCase();
+        if (mapSources.containsKey(key)) {
+            DbConnection existingSource = mapSources.get(key);
+            log.warn("Installing over an existing source with name: {}, url: {} and user: {}",
                     existingSource.name, existingSource.url, existingSource.user);
         }
-        mapSources.put(source.name, source);
+        mapSources.put(key, source);
     }
 
 
