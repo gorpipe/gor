@@ -355,4 +355,9 @@ public class BaseMeta {
             throw new GorSystemException(String.format("Could not save meta file %s", fileName), ioe);
         }
     }
+
+    @Override
+    public String toString() {
+        return formatHeader();
+    }
 }
