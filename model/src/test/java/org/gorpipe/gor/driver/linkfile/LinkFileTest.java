@@ -1,4 +1,4 @@
-package org.gorpipe.gor.driver.utils;
+package org.gorpipe.gor.driver.linkfile;
 
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.junit.Before;
@@ -29,7 +29,7 @@ public class LinkFileTest {
 
     @Test
     public void testCreateLinkFile() {
-        LinkFile linkFile = LinkFile.create(mockSource, linkFileContent);
+        LinkFile linkFile = LinkFile.load(mockSource, linkFileContent);
         assertNotNull(linkFile);
         assertEquals(2, linkFile.getEntries().size());
         assertEquals(100, linkFile.getEntriesCountMax());
@@ -38,6 +38,7 @@ public class LinkFileTest {
 
     @Test
     public void testLoadLinkFile() throws IOException {
+        when(mockSource.exists()).thenReturn(true);
         when(mockSource.open()).thenReturn(new ByteArrayInputStream(linkFileContent.getBytes()));
         LinkFile linkFile = LinkFile.load(mockSource);
         assertNotNull(linkFile);
@@ -48,7 +49,7 @@ public class LinkFileTest {
 
     @Test
     public void testAppendEntry() {
-        LinkFile linkFile = LinkFile.create(mockSource, linkFileContent);
+        LinkFile linkFile = LinkFile.load(mockSource, linkFileContent);
         linkFile.appendEntry("source/var/var3.gorz", "NEWMD5SUM");
         assertEquals(3, linkFile.getEntries().size());
     }
@@ -56,7 +57,7 @@ public class LinkFileTest {
     @Test
     public void testGetLatestPath() {
         when(mockSource.getFullPath()).thenReturn("/mnt/csa/projects/test/x.link");
-        LinkFile linkFile = LinkFile.create(mockSource, linkFileContent);
+        LinkFile linkFile = LinkFile.load(mockSource, linkFileContent);
         assertEquals("/mnt/csa/projects/test/source/var/var2.gorz", linkFile.getLatestEntryUrl());
         linkFile.appendEntry("source/var/var3.gorz", "NEWMD5SUM");
         assertEquals("/mnt/csa/projects/test/source/var/var3.gorz", linkFile.getLatestEntryUrl());
@@ -65,7 +66,7 @@ public class LinkFileTest {
     @Test
     public void testGetTimedPath() {
         when(mockSource.getFullPath()).thenReturn("/mnt/csa/projects/test/x.link");
-        LinkFile linkFile = LinkFile.create(mockSource, linkFileContent);
+        LinkFile linkFile = LinkFile.load(mockSource, linkFileContent);
         linkFile.appendEntry("source/var/var3.gorz", "NEWMD5SUM");
 
         assertEquals(null, linkFile.getEntryUrl(1734304890790L - 100));
@@ -77,9 +78,10 @@ public class LinkFileTest {
 
     @Test
     public void testSaveLinkFile() throws IOException {
-        LinkFile linkFile = LinkFile.create(mockSource, linkFileContent);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        linkFile.save(outputStream);
+        when(mockSource.getOutputStream()).thenReturn(outputStream);
+        LinkFile linkFile = LinkFile.load(mockSource, linkFileContent);
+        linkFile.save();
         String savedContent = outputStream.toString();
         assertTrue(savedContent.contains("## VERSION = 1"));
         assertTrue(savedContent.contains("source/var/var2.gorz\t1734305124533\t334DEAF13422\t2"));

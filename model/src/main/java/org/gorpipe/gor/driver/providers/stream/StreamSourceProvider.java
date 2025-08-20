@@ -39,7 +39,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.wrappers.CachedSourceWrap
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
-import org.gorpipe.gor.driver.utils.LinkFile;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;

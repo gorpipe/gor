@@ -1,8 +1,9 @@
-package org.gorpipe.gor.driver.utils;
+package org.gorpipe.gor.driver.linkfile;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 
 import java.io.IOException;
@@ -22,35 +23,59 @@ import java.util.List;
  * source/var/var.gorz\t1734304890790\tABCDEAF13422\t1
  * source/var/var.gorz\t1734305124533\t334DEAF13422\t2
  *
- * Empty timestamp or serial are always considered as 0 (older).
+ * Notes:
+ * 1. No timestamp or serial is treated as 0 (older).
+ * 2. Entries are added to the bottom.
+ * 3. If entries have the same timestamp, the appearing later in the file is picked.
+ *
  */
-public class LinkFile {
+public abstract class LinkFile {
 
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
-    // Defaults to creating versioned link files.
-    public static LinkFile create(StreamSource source, String content) {
-        return new LinkFile(source, content);
-    }
-
     public static LinkFile load(StreamSource source) {
-        return new LinkFile(source);
+        var content = loadContentFromSource(source);
+        return load(source, content);
     }
 
-    private final StreamSource source;
-    private final LinkFileMeta meta;
-    private final List<LinkFileEntry> entries;  // Entries sorted by time (oldest first)
+    public static LinkFile load(StreamSource source, String content) {
+        var meta = LinkFileMeta.createAndLoad(content);
 
-    // Create new link file from content.
-    public LinkFile(StreamSource source, String content) {
+        if ("0".equals(meta.getVersion())) {
+            return new LinkFileV0(source, meta, content);
+        } else {
+            return new LinkFileV1(source, meta, content);
+        }
+    }
+
+    public static LinkFile load(StreamSource source, int linkVersion) {
+        switch (linkVersion) {
+            case 0:
+                return new LinkFileV0(source);
+            case 1:
+            default:
+                return new LinkFileV1(source);
+        }
+    }
+
+    protected final StreamSource source;
+    protected final LinkFileMeta meta;
+    protected final List<LinkFileEntry> entries;  // Entries sorted by time (oldest first)
+
+    /**
+     * Create a new link file from source and content.
+     *
+     * @param source the source to create the link file from
+     * @param content the content of the link file, can be empty or null to create an empty link file.
+     */
+    protected LinkFile(StreamSource source, String content) {
+        this(source, LinkFileMeta.createAndLoad(content), content);
+    }
+
+    protected LinkFile(StreamSource source, LinkFileMeta meta, String content) {
         this.source = source;
-        this.meta = LinkFileMeta.createAndLoad(content);
+        this.meta = meta;
         this.entries = parseEntries(content);
-    }
-
-    // Load from source
-    public LinkFile(StreamSource source) {
-        this(source, loadContentFromSource(source));
     }
 
     public LinkFileMeta getMeta() {
@@ -59,10 +84,6 @@ public class LinkFile {
 
     public String getPath() {
         return source.getFullPath();
-    }
-
-    public void appendEntry(String link, String md5) {
-        entries.add(new LinkFileEntryV1(link, System.currentTimeMillis(), md5, getLatestEntry().serial() + 1));
     }
 
     public String getEntryUrl(long timestamp) {
@@ -80,6 +101,10 @@ public class LinkFile {
             linkUrl = PathUtils.resolve(PathUtils.getParent(this.source.getFullPath()), linkUrl);
         }
         return linkUrl;
+    }
+
+    protected String getHeader() {
+        return meta.formatHeader();
     }
 
     List<LinkFileEntry> getEntries() {
@@ -123,11 +148,22 @@ public class LinkFile {
         return meta.getEntriesAgeMax();
     }
 
-    public void save(OutputStream os) {
-        var content = switch (getMeta().getVersion()) {
-            case "1" -> new StringBuilder(meta.formatHeader());
-            default -> new StringBuilder();
-        };
+    public LinkFile appendEntry(String link, String md5) {
+        return appendEntry(link, md5, null);
+    }
+
+    public abstract LinkFile appendEntry(String link, String md5, FileReader reader);
+
+    public void save() {
+        try (OutputStream os = source.getOutputStream()) {
+            save(os);
+        } catch (IOException e) {
+            throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
+        }
+    }
+
+    private void save(OutputStream os) {
+        var content = new StringBuilder(getHeader());
 
         if (!entries.isEmpty()) {
             var currentTimestamp = System.currentTimeMillis();
@@ -143,15 +179,20 @@ public class LinkFile {
         }
     }
 
-    private List<LinkFileEntry> parseEntries(String content) {
-        return switch (getMeta().getVersion()) {
-            case "1" -> LinkFileEntryV1.parse(content);
-            default -> List.of(LinkFileEntryV0.parse(content));
-        };
-    }
+    protected abstract List<LinkFileEntry> parseEntries(String content);
 
 
-    private static String loadContentFromSource(StreamSource source) {
+    /**
+     * Load content from the source, if it exists.
+     *
+     * @param source the source to load from
+     * @return the content of the link file or null if it does not exist (empty indicates version 0 link file).
+     */
+    protected static String loadContentFromSource(StreamSource source) {
+        if (!source.exists()) {
+            return null;
+        }
+
         try (InputStream is = source.open()) {
             var content =  StreamUtils.readString(is, LINK_FILE_MAX_SIZE);
             if (content.length() == LINK_FILE_MAX_SIZE) {
@@ -163,5 +204,4 @@ public class LinkFile {
             throw new GorResourceException("Failed to read link file: " + source.getFullPath(), source.getFullPath(), e);
         }
     }
-
 }

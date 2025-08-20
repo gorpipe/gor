@@ -1,4 +1,4 @@
-package org.gorpipe.gor.driver.utils;
+package org.gorpipe.gor.driver.linkfile;
 
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.util.Strings;
@@ -10,14 +10,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Link file entry
+ * Link file entry, with url, timestamp, md5 and serial.
+ *
+ *
  * @param url          content of the link file, path, url or a gor/nor query.  Can be have more than one line.
  * @param timestamp     timestamp of the link file entry.  Optional.
  * @param md5           md5 of file or data the link points to.  Optional.
  * @param serial        incrementing serial number for the link file entry.  Optional.
  */
-record LinkFileEntryV1(String url, long timestamp, String md5, int serial) implements LinkFileEntry {
+public record LinkFileEntryV1(String url, long timestamp, String md5, int serial) implements LinkFileEntry {
+
     public static List<LinkFileEntry> parse(String content) {
+        if (Strings.isNullOrEmpty(content)) {
+            return new ArrayList<>();
+        }
         return Arrays.stream(content.split("\n"))
                 .filter(l -> !l.startsWith("#"))
                 .map(LinkFileEntryV1::parseLine)

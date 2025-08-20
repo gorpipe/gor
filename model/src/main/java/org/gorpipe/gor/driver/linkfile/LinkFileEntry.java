@@ -1,6 +1,6 @@
-package org.gorpipe.gor.driver.utils;
+package org.gorpipe.gor.driver.linkfile;
 
-interface LinkFileEntry {
+public interface LinkFileEntry {
     String format();
 
     String url();
