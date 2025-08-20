@@ -26,8 +26,10 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.linkfile.LinkFileMeta;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -202,11 +204,19 @@ public class UTestGorWrite {
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
 
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        LinkFile linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
 
+        // Test with same file.
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
+        Assert.assertEquals(2, linkFile.getEntriesCount());
+
+        // Test with different file
         Assert.assertThrows( "Overwriting link with same path, throws exception",
                 GorSystemException.class,
-                () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor",
-                        "-gorroot", workDirPath.toString()}));
+                () -> TestUtils.runGorPipe("gor dbsnp.gor | top 1 | write dbsnp2.gor -linkv1 dbsnp3.gor",
+                        "-gorroot", workDirPath.toString()));
     }
 
     @Test

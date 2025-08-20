@@ -111,6 +111,10 @@ public abstract class LinkFile {
         return entries;
     }
 
+    public int getEntriesCount() {
+        return entries.size();
+    }
+
     /**
      * Get the entry that matches the timestamp.
      * @param timestamp  timestamp to match
