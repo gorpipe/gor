@@ -22,46 +22,57 @@ Usage
 
 .. code-block:: gor
 
-	gor ... | write filename [-f forkCol] [-d] [-r] [-c] [-m] [-i type]
+	gor ... | write <file name> [-f forkCol] [-d] [-r] [-c] [-m] [-i type]
 
 Options
 =======
 
-+-----------------+-----------------------------------------------------------------+
-| ``-f column``   | The "fork column" used to split the output into multiple files. |
-+-----------------+-----------------------------------------------------------------+
-| ``-d``          | Use subdirectories instead of #{fork} in filename for forkwrite.|
-+-----------------+-----------------------------------------------------------------+
-| ``-r``          | Eliminate the fork column from the output.                      |
-+-----------------+-----------------------------------------------------------------+
-| ``-c``          | Use column store compression for the output.                    |
-+-----------------+-----------------------------------------------------------------+
-| ``-m``          | Create MD5 sum file along with the output file.                 |
-+-----------------+-----------------------------------------------------------------+
-| ``-maxseg``     | Write maxseg to the gor meta file.                              |
-+-----------------+-----------------------------------------------------------------+
-| ``-inferschema``| Write schema to the gor meta file.                              |
-+-----------------+-----------------------------------------------------------------+
-| ``-i type``     | Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz |
-|                 | Must state the type, which can be FULL, CHROM or TABIX          |
-+-----------------+-----------------------------------------------------------------+
-| ``-l level``    | Compression level (0-9). Default 1.                             |
-+-----------------+-----------------------------------------------------------------+
-| ``-t 'tags'``   | List of tags which write ensures a file will be created.        |
-|                 | Only valid with the -f option.                                  |
-+-----------------+-----------------------------------------------------------------+
-| ``-tags 'tags'``| List of tags/alias to use in the resulting dictionary when      |
-|                 | writing the files to directories.   Usually used with partgor   |
-|                 | as ``-tags #{tags}``.                                           |
-+-----------------+-----------------------------------------------------------------+
-| ``-prefix hf``  | Takes in a text source containing prefix to be prepended to the |
-|                 | file written. Also support string in single quotes              |
-+-----------------+-----------------------------------------------------------------+
-| ``-noheader``   | Don't write a header lines.  Not valid with gor/gorz/nor/norz.  |
-+-----------------+-----------------------------------------------------------------+
-| ``-card 'cols'``| Calculate cardinality of columns in 'cols' and adds to the      |
-|                 | outputs meta data.                                              |
-+-----------------+-----------------------------------------------------------------+
++-------------------+-----------------------------------------------------------------+
+| ``-f <column>``   | The "fork column" used to split the output into multiple files. |
++-------------------+-----------------------------------------------------------------+
+| ``-d``            | Use subdirectories instead of #{fork} in filename for forkwrite.|
++-------------------+-----------------------------------------------------------------+
+| ``-r``            | Eliminate the fork column from the output.                      |
++-------------------+-----------------------------------------------------------------+
+| ``-c``            | Use column store compression for the output.                    |
++-------------------+-----------------------------------------------------------------+
+| ``-m``            | Create MD5 sum file along with the output file.                 |
++-------------------+-----------------------------------------------------------------+
+| ``-maxseg``       | Write maxseg to the gor meta file.                              |
++-------------------+-----------------------------------------------------------------+
+| ``-inferschema``  | Write schema to the gor meta file.                              |
++-------------------+-----------------------------------------------------------------+
+| ``-i <type>``     | Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz |
+|                   | Must state the type, which can be FULL, CHROM or TABIX          |
++-------------------+-----------------------------------------------------------------+
+| ``-l <level>``    | Compression level (0-9). Default 1.                             |
++-------------------+-----------------------------------------------------------------+
+| ``-t '<tags>'``   | List of tags which write ensures a file will be created.        |
+|                   | Only valid with the -f option.                                  |
++-------------------+-----------------------------------------------------------------+
+| ``-tags '<tags>'``| List of tags/alias to use in the resulting dictionary when      |
+|                   | writing the files to directories.   Usually used with partgor   |
+|                   | as ``-tags #{tags}``.                                           |
++-------------------+-----------------------------------------------------------------+
+| ``-prefix <hf>``  | Takes in a text source containing prefix to be prepended to the |
+|                   | file written. Also support string in single quotes              |
++-------------------+-----------------------------------------------------------------+
+| ``-noheader``     | Don't write a header lines.  Not valid with gor/gorz/nor/norz.  |
++-------------------+-----------------------------------------------------------------+
+| ``-card '<cols>'``| Calculate cardinality of columns in '<cols>' and adds to the    |
+|                   | outputs meta data.                                              |
++-------------------+-----------------------------------------------------------------+
+| ``-link <link>``  | Writes a link file pointing to the the <file name>.             |
+|                   |                                                                 |
++-------------------+-----------------------------------------------------------------+
+| ``-vlink <link>`` | Writes a versioned link file pointing to the the <file name>.   |
+|                   | The <file name> can not be overwritten.                         |
++-------------------+-----------------------------------------------------------------+
+| ``-link[v{0,1}] <link>`` | Writes a link file pointing to the the <file name>.      |
+|                   | -link and -linkv1 will write versioned link, in which case the  |
+|                   | the <file name> can not be overwritten.                         |
+|                   | -linkv0 will write non-versioned link file.                     |
++-------------------+-----------------------------------------------------------------+
 
 Examples
 ========

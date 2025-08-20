@@ -119,3 +119,4 @@
    command/TRYSELECT
    command/TRYWHERE
    command/TRYHIDE
+   command/TSVAPPEND
