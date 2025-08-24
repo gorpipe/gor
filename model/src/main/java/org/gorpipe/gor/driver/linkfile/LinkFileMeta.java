@@ -12,17 +12,13 @@ public class LinkFileMeta extends BaseMeta {
     public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", "Timestamp", "MD5", "Serial"};
 
     public static final int DEFAULT_ENTRIES_COUNT_MAX = 100;
-    public static final long DEFAULT_ENTRIES_AGE_MAX = 315360000000L;
-
-    public static LinkFileMeta createAndLoad(FileReader fileReader, String metaPath) {
-        LinkFileMeta meta = new LinkFileMeta();
-        meta.loadAndMergeMeta(fileReader, metaPath);
-        return meta;
-    }
+    public static final long DEFAULT_ENTRIES_AGE_MAX = Long.MAX_VALUE;
 
     public static LinkFileMeta createAndLoad(String metaContent) {
         LinkFileMeta meta = new LinkFileMeta();
-        if (!Strings.isNullOrEmpty(metaContent)) {
+        if (Strings.isNullOrEmpty(metaContent)) {
+            meta.loadAndMergeMeta(getDefaultMetaContent());
+        } else {
             meta.loadAndMergeMeta(metaContent);
         }
         return meta;
@@ -37,7 +33,7 @@ public class LinkFileMeta extends BaseMeta {
     @Override
     protected void parseHeaderLine(String line) {
         String columnsString = StringUtils.strip(line, "\n #");
-        if (columnsString.length() > 0) {
+        if (!columnsString.isBlank()) {
             setFileHeader(columnsString.split("[\t,]", -1));
         }
     }
@@ -61,9 +57,7 @@ public class LinkFileMeta extends BaseMeta {
     public static String getDefaultMetaContent() {
         return String.format("""
                 ## SERIAL = 0
-                ## ENTRIES_AGE_MAX = %d
-                ## ENTRIES_COUNT_MAX = %d
                 ## VERSION = 1
-                """, DEFAULT_ENTRIES_AGE_MAX, DEFAULT_ENTRIES_COUNT_MAX);
+                """);
     }
 }

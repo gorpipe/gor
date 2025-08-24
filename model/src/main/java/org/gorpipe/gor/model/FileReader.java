@@ -329,14 +329,11 @@ public abstract class FileReader {
      */
     public abstract DataSource resolveDataSource(SourceReference sourceReference) throws IOException ;
 
-    /**
-     * Read link file and return the underlying file, following all link files.
-     * @param url   path to the link file
-     * @return the underlying file
-     */
-    public abstract String readLink(String url);
-
     public abstract String getCommonRoot();
+
+    public abstract long getQueryTime();
+
+    public abstract void setQueryTime(long queryTime);
 
     public abstract SourceReference createSourceReference(String url, boolean writeable);
 

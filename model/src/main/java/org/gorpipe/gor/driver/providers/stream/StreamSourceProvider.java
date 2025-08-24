@@ -22,24 +22,16 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.SourceProvider;
-import org.gorpipe.gor.driver.meta.DataType;
-import org.gorpipe.gor.driver.meta.FileNature;
-import org.gorpipe.gor.driver.meta.IndexableSourceReference;
-import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.meta.*;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.CachedSourceWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.ExtendedRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.FullRangeWrapper;
 import org.gorpipe.gor.driver.providers.stream.sources.wrappers.RetryStreamSourceWrapper;
-import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
@@ -52,15 +44,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public abstract class StreamSourceProvider implements SourceProvider {
-
     protected final Logger log = LoggerFactory.getLogger(getClass());
-    private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
-    private static final Cache<DataSource, String> linkCache = Caffeine.newBuilder()
-            .maximumSize(10000)
-            .expireAfterWrite(2, TimeUnit.HOURS).build();
 
     private final Map<DataType, StreamSourceIteratorFactory> dataTypeToFactory = new HashMap<>();
     private FileCache cache;
@@ -102,43 +88,6 @@ public abstract class StreamSourceProvider implements SourceProvider {
                 log.warn("Overriding handling of data type {} with {}, was {}", type, dataTypeToFactory.get(type), factory);
             }
             dataTypeToFactory.put(type, factory);
-        }
-    }
-
-    /**
-     * Read link and resolve content.
-     *
-     * @return Path linked to
-     */
-    @Override
-    public String readLink(DataSource source) throws IOException {
-        if (USE_LINK_CACHE) {
-            try {
-                return linkCache.get(source, (k) -> {
-                    try {
-                        return readLinkContent(k);
-                    } catch (IOException e) {
-                        throw new UncheckedExecutionException(e);
-                    }
-                });
-            } catch (UncheckedExecutionException e) {
-                if (e.getCause() instanceof IOException) {
-                    throw (IOException) e.getCause();
-                }
-                throw new IOException(e.getCause());
-            }
-        } else {
-            return readLinkContent(source);
-        }
-    }
-
-    private String readLinkContent(DataSource source) throws IOException {
-        try {
-            return LinkFile.load((StreamSource)source).getLatestEntryUrl();
-        } finally {
-            if (source instanceof FileSource) { //FileSource handling is a special case due to FileSource.close() implementation
-                source.close();
-            }
         }
     }
 
@@ -215,7 +164,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
                 StreamSource idxSource;
 
                 if (indexUrl != null) {
-                    idxSource = (StreamSource) GorDriverFactory.fromConfig().getDataSource(new SourceReference(indexUrl));
+                    idxSource = (StreamSource) GorDriverFactory.fromConfig().getDataSource(new SourceReference(indexUrl, sourceRef));
                 } else {
                     // Find from the driver
                     idxSource = findIndexFileFromFileDriver(file, sourceRef);
@@ -236,7 +185,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
                 StreamSource refSource = null;
                 if (referenceUrl != null) {
-                    refSource = (StreamSource) GorDriverFactory.fromConfig().getDataSource(new SourceReference(referenceUrl));
+                    refSource = (StreamSource) GorDriverFactory.fromConfig().getDataSource(new SourceReference(referenceUrl, sourceRef));
                 }
 
                 file.setReferenceSource(refSource);

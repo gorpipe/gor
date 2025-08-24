@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.model.DefaultChromoLookup;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -43,7 +44,8 @@ public class SourceReference {
 
     public final String url;
     public final String securityContext;
-    public final String commonRoot; // TODO: This should be removed?
+    public final String commonRoot;
+    public final long queryTime; // Time in milliseconds since epoch to find version of the source.
     public final boolean writeSource;
     @JsonIgnore
     ChromoLookup lookup;
@@ -53,13 +55,13 @@ public class SourceReference {
     private SourceReference parentSourceReference;
     private boolean isFallback; // Should be called shouldFallback or canFallback, or better yet should be moved to S3Shared.
 
-    // TODO: evaluate whether the securityContext, lookup and columns should actually be a part of this class.
+    // TODO: evaluate whether the securityContext, lookup, queryTime and commonRoot should actually be a part of this class.
     // - should the context come in at request time?
     // - should the chromo lookup be retrieved from somewhere instead of pushed into this object?
     // - common root and security context are not used in all driver types, shouldn't this rather be a hash map?
     // - should the context hash map be stored as a part of this class or should it enter the chain at some other point?
 
-    public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup,
+    public SourceReference(String url, String securityContext, String commonRoot, long queryTime, ChromoLookup lookup,
                            String linkSubPath, boolean writeSource, boolean isFallback) {
         this.url = url;
         // Pick up default security context here - it's not propagated from GorOptions if this is a sub query.
@@ -69,6 +71,7 @@ public class SourceReference {
             this.securityContext = securityContext;
         }
         this.commonRoot = commonRoot;
+        this.queryTime = queryTime;
         this.lookup = lookup != null ? lookup : new DefaultChromoLookup();
         this.linkSubPath = linkSubPath;
         this.writeSource = writeSource;
@@ -77,7 +80,7 @@ public class SourceReference {
 
     public SourceReference(String url, String securityContext, String commonRoot, ChromoLookup lookup,
                            String linkSubPath, boolean writeSource) {
-        this(url, securityContext, commonRoot, lookup, linkSubPath, writeSource, true);
+        this(url, securityContext, commonRoot, System.currentTimeMillis(), lookup, linkSubPath, writeSource, true);
     }
 
     /**
@@ -89,7 +92,7 @@ public class SourceReference {
 
     /**
      * @param url                   url for the source.
-     * @param parentSourceReference parent source reference to copy unupplied context from.
+     * @param parentSourceReference parent source reference to copy unsupplied context from.
      */
     public SourceReference(String url, SourceReference parentSourceReference) {
         this(url, parentSourceReference, null);
@@ -109,8 +112,10 @@ public class SourceReference {
      */
     public SourceReference(String url, SourceReference parentSourceReference, String linkSubPath, String securityContext) {
         this(url, securityContext, parentSourceReference.getCommonRoot(),
+                parentSourceReference.queryTime,
                 parentSourceReference.getLookup(), linkSubPath,
-                parentSourceReference.isWriteSource());
+                parentSourceReference.isWriteSource(),
+                true);
         if (this.parentSourceReference == null) {
             this.parentSourceReference = parentSourceReference;
         }
@@ -118,8 +123,8 @@ public class SourceReference {
 
     @JsonCreator
     public SourceReference(@JsonProperty("url") String url, @JsonProperty("securityContext") String securityContext,
-                           @JsonProperty("commonRoot") String commonRoot) {
-        this(url, securityContext, commonRoot, null, null, false);
+                           @JsonProperty("commonRoot") String commonRoot, @JsonProperty("queryTime") long queryTime) {
+        this(url, securityContext, commonRoot, queryTime, null, null, false, true);
     }
 
     public String getUrl() {
@@ -189,7 +194,7 @@ public class SourceReference {
     public SourceReference getTopSourceReference() {
         SourceReference top = this;
         while (top.getParentSourceReference() != null
-                && !top.getParentSourceReference().getUrl().endsWith(DataType.LINK.suffix)) {
+                && !DataUtil.isLink(top.getParentSourceReference().getUrl())) {
             top = top.getParentSourceReference();
         }
         return top;
@@ -238,50 +243,6 @@ public class SourceReference {
             return mapper.readValue(json, SourceReference.class);
         } catch (IOException e) {
             throw new GorSystemException("Unable to convert JSON to SourceReference. Content:\n" + json, e);
-        }
-    }
-
-    /**
-     * Builder for the SourceReference, use builder copy constructor to allow copying fields from parent SourceReference.
-     */
-    public static class Builder {
-        private final String url;
-        private String securityContext;
-        private String commonRoot;
-        private ChromoLookup lookup;
-        private int[] columns;
-        private String linkSubPath;
-
-        public Builder(String url) {
-            this.url = url;
-        }
-
-        public Builder(String url, SourceReference parentSourceReference) {
-            this.url = url;
-            // Don't copy objects, we want to share the instance with the parent.
-            this.securityContext = parentSourceReference.securityContext;
-            this.commonRoot = parentSourceReference.commonRoot;
-            this.lookup = parentSourceReference.lookup;
-            this.linkSubPath = parentSourceReference.linkSubPath;
-        }
-
-        public SourceReference build() {
-            return new SourceReference(url, securityContext, commonRoot, lookup, linkSubPath, false);
-        }
-
-        public Builder securityContext(String securityContext) {
-            this.securityContext = securityContext;
-            return this;
-        }
-
-        public Builder commonRoot(String commonRoot) {
-            this.commonRoot = commonRoot;
-            return this;
-        }
-
-        public Builder lookup(ChromoLookup lookup) {
-            this.lookup = lookup;
-            return this;
         }
     }
 }

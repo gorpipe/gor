@@ -31,9 +31,11 @@ public class SourceReferenceBuilder {
     private final String url;
     private String securityContext;
     private String commonRoot;
+    private long queryTime = System.currentTimeMillis();
     private ChromoLookup lookup;
     private boolean writeSource = false;
     private boolean isFallBack = true;
+    private String linkSubPath;
 
     public SourceReferenceBuilder(String url) {
         this.url = url;
@@ -44,13 +46,15 @@ public class SourceReferenceBuilder {
         // Don't copy objects, we want to share the instance with the parent.
         this.securityContext = parentSourceReference.securityContext;
         this.commonRoot = parentSourceReference.commonRoot;
+        this.queryTime = parentSourceReference.queryTime;
         this.lookup = parentSourceReference.lookup;
         this.writeSource = parentSourceReference.writeSource;
         this.isFallBack = parentSourceReference.isFallback();
+        this.linkSubPath = parentSourceReference.getLinkSubPath();
     }
 
     public SourceReference build() {
-        return new SourceReference(url, securityContext, commonRoot, lookup, null, writeSource, isFallBack);
+        return new SourceReference(url, securityContext, commonRoot, queryTime, lookup, linkSubPath, writeSource, isFallBack);
     }
 
     public SourceReferenceBuilder securityContext(String securityContext) {
@@ -60,6 +64,11 @@ public class SourceReferenceBuilder {
 
     public SourceReferenceBuilder commonRoot(String commonRoot) {
         this.commonRoot = commonRoot;
+        return this;
+    }
+
+    public SourceReferenceBuilder queryTime(long queryTime) {
+        this.queryTime = queryTime;
         return this;
     }
 
@@ -75,6 +84,11 @@ public class SourceReferenceBuilder {
 
     public SourceReferenceBuilder isFallback(boolean isFallBack) {
         this.isFallBack = isFallBack;
+        return this;
+    }
+
+    public SourceReferenceBuilder linkSubPath(String linkSubPath) {
+        this.linkSubPath = linkSubPath;
         return this;
     }
 }

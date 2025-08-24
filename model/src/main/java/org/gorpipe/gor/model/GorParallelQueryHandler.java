@@ -50,13 +50,6 @@ public interface GorParallelQueryHandler {
     void setForce(boolean force);
 
     /**
-     *  Submission time (if available) in seconds from Jan 1st 1970 (i.e. like System.currentTimeMillis()/1000)
-     *
-     * @param time Time in seconds (From Jan 1st 1970)
-     */
-    void setQueryTime(Long time);
-
-    /**
      * Get time spent waiting for jobs
      *
      * @return Time in milliseconds

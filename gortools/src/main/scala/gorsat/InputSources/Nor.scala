@@ -39,7 +39,7 @@ import java.nio.file.{Files, Path}
 object Nor
 {
   private val norOptions: List[String] = List("-h", "-asdict", "-r", "-i", "-m", "-nl", "-fs", "-nv")
-  private val norValueOptions: List[String] = List("-f", "-ff", "-s", "-d", "-c")
+  private val norValueOptions: List[String] = List("-f", "-ff", "-s", "-d", "-c", "-time")
   private val norifValueOptions: List[String] = norValueOptions ::: List("-dh")
   private val gornorOptions: List[String] = norOptions.filter(element => element != "nv")
 
@@ -58,6 +58,11 @@ object Nor
 
     val inputParams = iargs(0)
     var inputSource: GenomicIterator = null
+
+    if (hasOption(args, "-time")) {
+      val queryTime = CommandParseUtilities.longValueOfOptionWithDefault(args, "-time", System.currentTimeMillis())
+      context.getSession.getProjectContext.getFileReader.setQueryTime(queryTime)
+    }
 
     try {
       val inputUpper = inputParams.toUpperCase

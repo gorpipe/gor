@@ -306,10 +306,6 @@ public class BaseMeta {
         return metaLines;
     }
 
-    public void loadAndMergeMeta(Path metaPath) {
-        loadAndMergeMeta(new DriverBackedFileReader(""), metaPath.toString());
-    }
-
     public String getMetaPath() {
         return this.metaPathStr;
     }

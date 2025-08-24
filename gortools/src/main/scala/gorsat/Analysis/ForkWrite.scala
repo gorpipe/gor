@@ -57,7 +57,7 @@ case class OutputOptions(remove: Boolean = false,
                             writeMeta: Boolean = true,
                             cardCol: String = null,
                             linkFile: String = "",
-                            linkFileVersion: Int = 0,
+                            linkFileVersion: Int = 1,
                             command: String = null,
                             infer: Boolean = false,
                             maxseg: Boolean = false
@@ -319,8 +319,7 @@ case class ForkWrite(forkCol: Int,
 
   private def writeLinkFile(linkFilePath: String, linkFileContent: String,
                             linkFileVersion: Int = 0, md5: String = null) : Unit = {
-    val linkFileToWrite = if (DataUtil.isLink(linkFilePath)) linkFilePath
-                          else DataUtil.toFile(linkFilePath, DataType.LINK)
+    val linkFileToWrite = LinkFile.validateAndUpdateLinkFileName(linkFilePath, linkFileVersion)
 
      // Validate that we can write to the location (skip link extension as writing links is always forbidden).
     session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite), true)

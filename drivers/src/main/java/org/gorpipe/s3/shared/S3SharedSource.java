@@ -26,9 +26,9 @@ import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.s3.driver.*;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -140,7 +140,7 @@ public class S3SharedSource extends S3Source {
     public SourceReference getTopSourceReference() {
         // Shared source should be access though links, so find the first link (which should be the direct access link)
         SourceReference top = getSourceReference();
-        while (top.getParentSourceReference() != null && !top.getParentSourceReference().getUrl().endsWith(DataType.LINK.suffix)) {
+        while (top.getParentSourceReference() != null && !DataUtil.isLink(top.getParentSourceReference().getUrl())) {
             top = top.getParentSourceReference();
         }
         return top;

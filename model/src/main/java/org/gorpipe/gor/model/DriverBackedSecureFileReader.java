@@ -27,7 +27,6 @@ import org.gorpipe.gor.auth.AuthorizationAction;
 import org.gorpipe.gor.auth.GorAuthRoleMatcher;
 import org.gorpipe.gor.auth.SecurityPolicy;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
@@ -38,10 +37,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * Gor server file reader.
@@ -65,7 +62,12 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
      */
     public DriverBackedSecureFileReader(String commonRoot,
                                         String securityContext, AccessControlContext accessControlContext) {
-        super(securityContext, commonRoot);
+        this(commonRoot, securityContext, accessControlContext, System.currentTimeMillis());
+    }
+
+    public DriverBackedSecureFileReader(String commonRoot,
+                                        String securityContext, AccessControlContext accessControlContext, long time) {
+        super(securityContext, commonRoot, time);
 
         this.accessControlContext = accessControlContext != null ? accessControlContext : AccessControlContext.builder().build();
     }
@@ -226,7 +228,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
     @Override
     public DriverBackedFileReader unsecure() {
         if (unsecure == null) {
-            unsecure = new DriverBackedFileReader(getSecurityContext(), getCommonRoot());
+            unsecure = new DriverBackedFileReader(getSecurityContext(), getCommonRoot(), getQueryTime());
         }
         return unsecure;
     }

@@ -28,8 +28,10 @@ import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.linkfile.LinkFileMeta;
+import org.gorpipe.gor.driver.linkfile.LinkFileV1;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -67,14 +69,16 @@ public class UTestGorWrite {
         Files.createDirectories(workDirPath.resolve("result_cache"));
         tempRootPath = tempRoot.getRoot().toPath();
 
-        defaultV1LinkFileHeader = LinkFileMeta.createAndLoad(LinkFileMeta.getDefaultMetaContent()).formatHeader();
+        var meta = new LinkFileMeta();
+        meta.setProperty(BaseMeta.HEADER_VERSION_KEY, "1");
+        defaultV1LinkFileHeader = meta.formatHeader();
     }
 
     @Test
     public void testWritePathWithLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv0 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
 
@@ -86,7 +90,7 @@ public class UTestGorWrite {
     public void testWritePathWithVersionedLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertTrue( Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
                 defaultV1LinkFileHeader +  workDirPath.resolve("dbsnp2.gor") + "\t"));
@@ -100,7 +104,7 @@ public class UTestGorWrite {
     public void testWritePathWithServerLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -linkv0 user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
+        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -link user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
 
         Assert.assertEquals(workDirPath.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\n",
                 Files.readString(workDirPath.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))));
@@ -113,7 +117,7 @@ public class UTestGorWrite {
     public void testWritePathWithServerVersionedLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -linkv1 user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
+        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -vlink user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
 
         Assert.assertTrue( Files.readString(workDirPath.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))).startsWith(
                 defaultV1LinkFileHeader +  workDirPath.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\t"));
@@ -129,7 +133,7 @@ public class UTestGorWrite {
 
         Assert.assertThrows( "Writing link to un-writable project location, throws exception",
                 GorSecurityException.class,
-                () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -linkv0 /tmp/dbsnp3.gor",
+                () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor",
                         "-gorroot", workDirPath.toString()}, true));
 
     }
@@ -138,7 +142,7 @@ public class UTestGorWrite {
     public void testWritePathWithInaccessiableLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv0 s3://bacbucket/dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link s3://bacbucket/dbsnp3.gor", "-gorroot", workDirPath.toString());
     }
 
     @Test
@@ -146,7 +150,7 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
         Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), workDirPath.resolve("dbsnp.gor").toString() + "\n");
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv0 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
     }
@@ -156,7 +160,7 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
         Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), workDirPath.resolve("dbsnp.gor").toString() + "\n");
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
                 defaultV1LinkFileHeader
@@ -169,7 +173,7 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
         Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), "");
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv0 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
     }
@@ -179,7 +183,7 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
         Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), "");
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
                 defaultV1LinkFileHeader + workDirPath.resolve("dbsnp2.gor") + "\t"));
@@ -190,8 +194,8 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
 
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv0 dbsnp3.gor", "-gorroot", workDirPath.toString());
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv0 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n",
                 Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
@@ -203,19 +207,19 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
 
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
         LinkFile linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
         Assert.assertEquals(1, linkFile.getEntriesCount());
 
         // Test with same file.
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -linkv1 dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
         linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
         Assert.assertEquals(2, linkFile.getEntriesCount());
 
         // Test with different file
         Assert.assertThrows( "Overwriting link with same path, throws exception",
                 GorSystemException.class,
-                () -> TestUtils.runGorPipe("gor dbsnp.gor | top 1 | write dbsnp2.gor -linkv1 dbsnp3.gor",
+                () -> TestUtils.runGorPipe("gor dbsnp.gor | top 1 | write dbsnp2.gor -vlink dbsnp3.gor",
                         "-gorroot", workDirPath.toString()));
     }
 

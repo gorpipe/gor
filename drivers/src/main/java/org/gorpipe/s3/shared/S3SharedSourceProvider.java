@@ -123,7 +123,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     }
 
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
-        source.setProjectLinkFile(DataUtil.toFile(PathUtils.stripTrailingSlash(getRelativePath(source)), DataType.LINK));
+        source.setProjectLinkFile(DataUtil.toLink(getRelativePath(source)));
         source.setProjectLinkFileContent(findSharedSourceLinkContent(source));
     }
 
@@ -216,10 +216,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
     private SourceReference createFallbackSourceReference(SourceReference sourceReference) {
         String fallbackUrl = getFallbackUrl(sourceReference.getUrl());
         if (fallbackUrl != null) {
-            SourceReference updatedSourceReference = new SourceReference(fallbackUrl, sourceReference.securityContext, sourceReference.commonRoot,
-                    sourceReference.getLookup(), sourceReference.getLinkSubPath(),
-                    sourceReference.isWriteSource());
-            return updatedSourceReference;
+            return new SourceReference(fallbackUrl, sourceReference);
         }
 
         return null;

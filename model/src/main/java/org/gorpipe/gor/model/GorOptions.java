@@ -290,7 +290,7 @@ public class GorOptions {
 
     public static GorOptions createGorOptions(GorContext context, String[] arguments) {
         Tuple2<String[], String[]> result =  CommandParseUtilities.validateCommandArguments(arguments, new CommandArguments("-fs -nf -Y -P -stdin -n -nowithin",
-                "-f -ff -m -M -p -sc -ref -idx -Z -H -z -X -s -b -dict -parts -seek", -1, -1, false));
+                "-f -ff -m -M -p -sc -ref -idx -Z -H -z -X -s -b -dict -parts -seek -time", -1, -1, false));
 
         String[] inputArguments = result._1;
         String[] illegalArguments = result._2;
@@ -329,6 +329,7 @@ public class GorOptions {
         String monId = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-H", null);
         String securityKey = CommandParseUtilities.replaceSingleQuotes(CommandParseUtilities.stringValueOfOptionWithDefault(options, "-Z", null));
         int tmpParallelBlocks = CommandParseUtilities.intValueOfOptionWithDefault(options, "-z", 0);
+        long queryTime = CommandParseUtilities.longValueOfOptionWithDefault(options, "-time", -1L);
 
         this.columnTags = tagsFromOptions(session, options);
         hasTagFiltering = this.columnTags != null;
@@ -356,6 +357,9 @@ public class GorOptions {
         this.parallelBlocks = tmpParallelBlocks;
         this.monitor = monId != null ? ResourceMonitor.find(monId) : null;
 
+        if (queryTime >= 0) {
+            this.context.getSession().getProjectContext().getFileReader().setQueryTime(queryTime);
+        }
 
         if (CommandParseUtilities.hasOption(options, "-p")) {
             // Need to get the last range if multiple ranges are given

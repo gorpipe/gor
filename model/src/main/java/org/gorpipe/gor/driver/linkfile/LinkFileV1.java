@@ -4,6 +4,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -19,18 +20,14 @@ public class LinkFileV1 extends LinkFile {
      *
      * @param source the source to load from
      */
-    public LinkFileV1(StreamSource source) {
+    public LinkFileV1(StreamSource source) throws IOException {
         super(source, loadContentFromSource(source));
-        if (!meta.containsProperty(BaseMeta.HEADER_VERSION_KEY)) {
-            getMeta().loadAndMergeMeta(LinkFileMeta.getDefaultMetaContent());
-        }
+        checkDefaultMeta();
     }
 
     protected LinkFileV1(StreamSource source, LinkFileMeta meta, String content) {
         super(source, meta, content);
-        if (!meta.containsProperty(BaseMeta.HEADER_VERSION_KEY)) {
-            getMeta().loadAndMergeMeta(LinkFileMeta.getDefaultMetaContent());
-        }
+        checkDefaultMeta();
     }
 
     @Override
@@ -78,6 +75,13 @@ public class LinkFileV1 extends LinkFile {
             // The old entry timestamp should be newer than the old file (as the file existed before the entry was added).
             // If the new file as timestamp larger the old entry timestamp, we assume it is a different underlying file.
             return reader == null || oldEntry.timestamp() >= reader.resolveUrl(newEntry.url()).getSourceMetadata().getLastModified();
+        }
+    }
+
+    private void checkDefaultMeta() {
+        if (!meta.containsProperty(BaseMeta.HEADER_VERSION_KEY)) {
+            getMeta().loadAndMergeMeta(LinkFileMeta.getDefaultMetaContent());
+            meta.setProperty(BaseMeta.HEADER_VERSION_KEY, "1");
         }
     }
 }

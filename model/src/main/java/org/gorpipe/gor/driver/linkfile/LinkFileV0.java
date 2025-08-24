@@ -3,6 +3,7 @@ package org.gorpipe.gor.driver.linkfile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ public class LinkFileV0 extends LinkFile {
      *
      * @param source the source to load from
      */
-    public LinkFileV0(StreamSource source) {
+    public LinkFileV0(StreamSource source) throws IOException {
         super(source, loadContentFromSource(source));
     }
 

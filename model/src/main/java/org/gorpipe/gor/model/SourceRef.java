@@ -381,7 +381,8 @@ public class SourceRef {
         try {
             var isMem = file.startsWith("mem:");
             if (!isMem && GorDriverFactory.fromConfig().config().enabled()) {
-                SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext, commonRoot, lookup);
+                SourceReference sourceReference = new IndexableSourceReference(file, index, reference, securityContext,
+                        commonRoot, session != null ? session.getProjectContext().getFileReader().getQueryTime() : Long.MAX_VALUE, lookup);
                 GenomicIterator newIt;
                 if (session != null) {
                     // Use the datasource if possible.

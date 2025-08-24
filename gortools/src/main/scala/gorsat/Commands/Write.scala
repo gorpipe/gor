@@ -34,7 +34,7 @@ import org.gorpipe.gor.util.DataUtil
 
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -linkv0 -linkv1", 0),
+  CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -vlink", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -65,10 +65,8 @@ class Write extends CommandInfo("WRITE",
 
     val (link, linkVersion) = if (hasOption(args, "-link")) {
       (stringValueOfOption(args, "-link"), 0)
-    } else if (hasOption(args, "-linkv1")) {
-      (stringValueOfOption(args, "-linkv1"), 1)
-    } else if (hasOption(args, "-linkv0")) {
-      (stringValueOfOption(args, "-linkv0"), 0)
+    } else if (hasOption(args, "-vlink")) {
+      (stringValueOfOption(args, "-vlink"), 1)
     } else {
       ("", 0)
     }

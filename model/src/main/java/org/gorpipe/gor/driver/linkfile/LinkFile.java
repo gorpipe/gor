@@ -1,15 +1,21 @@
 package org.gorpipe.gor.driver.linkfile;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
+import org.gorpipe.gor.util.DataUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class to work with link files, read, write and access metadata.
@@ -33,7 +39,12 @@ public abstract class LinkFile {
 
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
-    public static LinkFile load(StreamSource source) {
+    private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
+    private static final Cache<StreamSource, String> linkCache = Caffeine.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(2, TimeUnit.HOURS).build();
+
+    public static LinkFile load(StreamSource source) throws IOException {
         var content = loadContentFromSource(source);
         return load(source, content);
     }
@@ -41,20 +52,29 @@ public abstract class LinkFile {
     public static LinkFile load(StreamSource source, String content) {
         var meta = LinkFileMeta.createAndLoad(content);
 
-        if ("0".equals(meta.getVersion())) {
-            return new LinkFileV0(source, meta, content);
-        } else {
+        if ("1".equals(meta.getVersion())) {
             return new LinkFileV1(source, meta, content);
+        } else {
+            return new LinkFileV0(source, meta, content);
         }
     }
 
-    public static LinkFile load(StreamSource source, int linkVersion) {
+    public static LinkFile load(StreamSource source, int linkVersion) throws IOException {
         switch (linkVersion) {
             case 0:
                 return new LinkFileV0(source);
             case 1:
             default:
                 return new LinkFileV1(source);
+        }
+    }
+
+    public static String validateAndUpdateLinkFileName(String linkFilePath, int linkVersion) {
+        if (DataUtil.isLink(linkFilePath)) {
+            return linkFilePath;
+        } else {
+            //return linkVersion == 0 ? DataUtil.toLink(linkFilePath) : DataUtil.toVersionedLink(linkFilePath);
+            return DataUtil.toLink(linkFilePath);
         }
     }
 
@@ -100,6 +120,14 @@ public abstract class LinkFile {
             // Allow relative links:
             linkUrl = PathUtils.resolve(PathUtils.getParent(this.source.getFullPath()), linkUrl);
         }
+
+        // Handle link sub-path if needed.
+        SourceReference sourceReference = source.getSourceReference();
+        if (sourceReference != null) {
+            String linkSubPath = sourceReference.getLinkSubPath();
+            linkUrl = linkSubPath != null ? linkUrl + linkSubPath : linkUrl;
+        }
+
         return linkUrl;
     }
 
@@ -173,7 +201,7 @@ public abstract class LinkFile {
             var currentTimestamp = System.currentTimeMillis();
             entries.stream()
                     .skip(Math.max(0, entries.size() - getEntriesCountMax()))
-                    .filter(entry -> entry.timestamp() <= 0 || entry.timestamp() + getEntriesAgeMax() >= currentTimestamp)
+                    .filter(entry -> entry.timestamp() <= 0 || currentTimestamp - entry.timestamp() <= getEntriesAgeMax())
                     .forEach(entry -> content.append(entry.format()).append("\n"));
         }
         try {
@@ -192,11 +220,32 @@ public abstract class LinkFile {
      * @param source the source to load from
      * @return the content of the link file or null if it does not exist (empty indicates version 0 link file).
      */
-    protected static String loadContentFromSource(StreamSource source) {
-        if (!source.exists()) {
+    protected static String loadContentFromSource(StreamSource source) throws IOException {
+        if (source == null || !source.exists()) {
             return null;
         }
 
+        if (USE_LINK_CACHE) {
+            try {
+                return linkCache.get(source, (k) -> {
+                    try {
+                        return readLimitedLinkContent(k);
+                    } catch (Exception e) {
+                        throw new UncheckedExecutionException(e);
+                    }
+                });
+            } catch (UncheckedExecutionException e) {
+                if (e.getCause() instanceof IOException) {
+                    throw (IOException) e.getCause();
+                }
+                throw new IOException(e.getCause());
+            }
+        } else {
+            return readLimitedLinkContent(source);
+        }
+    }
+
+    private static String readLimitedLinkContent(StreamSource source) {
         try (InputStream is = source.open()) {
             var content =  StreamUtils.readString(is, LINK_FILE_MAX_SIZE);
             if (content.length() == LINK_FILE_MAX_SIZE) {
@@ -208,4 +257,6 @@ public abstract class LinkFile {
             throw new GorResourceException("Failed to read link file: " + source.getFullPath(), source.getFullPath(), e);
         }
     }
+
+
 }

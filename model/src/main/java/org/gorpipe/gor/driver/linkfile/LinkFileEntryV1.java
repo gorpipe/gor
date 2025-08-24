@@ -20,6 +20,23 @@ import java.util.stream.Collectors;
  */
 public record LinkFileEntryV1(String url, long timestamp, String md5, int serial) implements LinkFileEntry {
 
+    public LinkFileEntryV1(String url, long timestamp, String md5, int serial) {
+        if (Strings.isNullOrBlank(url)) {
+            throw new IllegalArgumentException("URL cannot be null or empty");
+        }
+        if (timestamp < 0) {
+            throw new IllegalArgumentException("Timestamp cannot be negative");
+        }
+        if (serial < 0) {
+            throw new IllegalArgumentException("Serial cannot be negative");
+        }
+
+        this.url = url.trim();
+        this.timestamp = timestamp;
+        this.md5 = md5;
+        this.serial = serial;
+    }
+
     public static List<LinkFileEntry> parse(String content) {
         if (Strings.isNullOrEmpty(content)) {
             return new ArrayList<>();

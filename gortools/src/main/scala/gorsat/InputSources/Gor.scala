@@ -40,7 +40,7 @@ import scala.collection.mutable.ListBuffer
 
 object Gor {
   val options: List[String] = List("-nowithin", "-stdin", "-nf", "-fs", "-w", "-Y", "-g", "-q")
-  val valueOptions: List[String] = List("-s", "-f", "-ff", "-b", "-Z", "-dict", "-parts", "-p", "-seek", "-idx", "-ref", "-c", "-H", "-X")
+  val valueOptions: List[String] = List("-s", "-f", "-ff", "-b", "-Z", "-dict", "-parts", "-p", "-seek", "-idx", "-ref", "-c", "-H", "-X", "-time")
 }
 
 class Gor() extends InputSourceInfo("GOR", CommandArguments(Gor.options.mkString(" "), Gor.valueOptions.mkString(" "), 1)) {

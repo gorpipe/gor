@@ -314,9 +314,10 @@ public class PathUtils {
         return !path.contains(":") || path.startsWith("file:");
     }
 
-    public static long getLastModifiedTime(String fileName, String securityContext, String commonRoot) throws IOException {
+    public static long getLastModifiedTime(String fileName, String securityContext, String commonRoot, long queryTime) throws IOException {
         //TODO: This method should really take in SourceReference or better yet be removed and replaced with calls to datasource.getUniqueId
-        DataSource ds = GorDriverFactory.fromConfig().getDataSource(new SourceReferenceBuilder(fileName).securityContext(securityContext).commonRoot(commonRoot).build());
+        DataSource ds = GorDriverFactory.fromConfig().getDataSource(
+                new SourceReferenceBuilder(fileName).securityContext(securityContext).commonRoot(commonRoot).queryTime(queryTime).build());
         if (ds != null) {
             return ds.getSourceMetadata().getLastModified();
         } else {

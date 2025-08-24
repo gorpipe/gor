@@ -218,13 +218,13 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
             for (T line : matchingLines) {
                 fingerPrintString.append(getContentReal(line));
                 fingerPrintString.append((byte) '&');
-                fingerPrintString.append(getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot));
+                fingerPrintString.append(getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot, fileReader.getQueryTime()));
             }
         } else {
             fingerPrintString = new ByteTextBuilder(300);
             fingerPrintString.append(getPath());
             fingerPrintString.append((byte) '&');
-            fingerPrintString.append(getLastModifiedTime(getPath(), getSecurityContext(), commonRoot));
+            fingerPrintString.append(getLastModifiedTime(getPath(), getSecurityContext(), commonRoot, fileReader.getQueryTime()));
         }
 
         return fingerPrintString.md5();
@@ -251,10 +251,10 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
             // Empty tags here means no tags so replace with null.
             List<T> matchingLines = filter().tags(tags).get();
             for (T line : matchingLines) {
-                lastModified = Math.max(lastModified, getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot));
+                lastModified = Math.max(lastModified, getLastModifiedTime(getContentReal(line), getSecurityContext(), commonRoot, fileReader.getQueryTime()));
             }
         } else {
-            lastModified = Math.max(lastModified, getLastModifiedTime(getPath().toString(), getSecurityContext(), commonRoot));
+            lastModified = Math.max(lastModified, getLastModifiedTime(getPath().toString(), getSecurityContext(), commonRoot, fileReader.getQueryTime()));
         }
 
         return lastModified;

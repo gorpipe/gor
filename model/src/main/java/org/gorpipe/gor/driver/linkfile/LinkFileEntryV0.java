@@ -16,8 +16,15 @@ public record LinkFileEntryV0(String url) implements LinkFileEntry {
             return new ArrayList<>();
         }
         List<LinkFileEntry> list = new ArrayList<>();
-        list.add(new LinkFileEntryV0(content.trim()));
+        list.add(new LinkFileEntryV0(content));
         return list;
+    }
+
+    public LinkFileEntryV0(String url) {
+        if (Strings.isNullOrBlank(url)) {
+            throw new IllegalArgumentException("URL cannot be null or empty");
+        }
+        this.url = url.trim();
     }
 
     public String format() {

@@ -31,7 +31,6 @@ import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverFactory;
 import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.SourceProvider;
-import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -73,18 +72,24 @@ public class DriverBackedFileReader extends FileReader {
 
     private final String securityContext;
     protected final String commonRoot;
+    protected long queryTime;
 
     public DriverBackedFileReader(String securityContext) {
-        this(securityContext, null);
+        this(securityContext, null, System.currentTimeMillis());
     }
 
     public DriverBackedFileReader(String securityContext, String commonRoot) {
+        this(securityContext, commonRoot, System.currentTimeMillis());
+    }
+
+    public DriverBackedFileReader(String securityContext, String commonRoot, long queryTime) {
         this.securityContext = securityContext;
         if ((commonRoot == null || commonRoot.length() < 1) && GorStandalone.isStandalone()) {
             this.commonRoot = PathUtils.markAsFolder(GorStandalone.getStandaloneRoot());
         } else {
             this.commonRoot = StringUtil.isEmpty(commonRoot) ? DEFAULT_COMMON_ROOT :  PathUtils.markAsFolder(commonRoot);
         }
+        this.queryTime = queryTime;
     }
 
     @Override
@@ -93,9 +98,19 @@ public class DriverBackedFileReader extends FileReader {
     }
 
     @Override
+    public long getQueryTime() {
+        return queryTime;
+    }
+
+    @Override
+    public void setQueryTime(long queryTime) {
+        this.queryTime = queryTime;
+    }
+
+    @Override
     public SourceReference createSourceReference(String url, boolean writeable) {
         url = convertUrl(url);
-        return new SourceReferenceBuilder(url).commonRoot(commonRoot).securityContext(securityContext).writeSource(writeable).build();
+        return new SourceReferenceBuilder(url).commonRoot(getCommonRoot()).queryTime(getQueryTime()).securityContext(getSecurityContext()).writeSource(writeable).build();
     }
 
     @Override
@@ -125,19 +140,6 @@ public class DriverBackedFileReader extends FileReader {
             log.warn("No source found for {}", sourceReference.getUrl());
         }
         return dataSource;
-    }
-
-    @Override
-    public String readLink(String url) {
-        try (DataSource source = resolveDataSource(createSourceReference(url, false))) {
-            if (source == null) {
-                throw new GorResourceException("Could not read link, invalid uri", url, null);
-            } else {
-                return GorDriverFactory.fromConfig().readLink(source);
-            }
-        } catch (IOException e) {
-            throw new GorResourceException("Could not read link", url, e);
-        }
     }
 
     @Override

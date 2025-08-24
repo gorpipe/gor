@@ -18,12 +18,6 @@ public class GorMeta extends BaseMeta {
         return meta;
     }
 
-    public static GorMeta createAndLoad(Path metaPath) {
-        GorMeta meta = new GorMeta();
-        meta.loadAndMergeMeta(metaPath);
-        return meta;
-    }
-
     public GorMeta() {
         super();
     }

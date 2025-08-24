@@ -25,10 +25,12 @@ Options
 +-------------------+-----------------------------------------------------------------+
 | ``-noheader``     | Don't write a header lines.  Not valid with gor/gorz/nor/norz.  |
 +-------------------+-----------------------------------------------------------------+
-| ``-link[v{0,1}] <link>`` | Writes a link file pointing to the the <file name>.      |
-|                   | -link and -linkv1 will write versioned link, in which case the  |
-|                   | the <file name> can not be overwritten.                         |
-|                   | -linkv0 will write non-versioned link file.                     |
+| ``-link <link>``  | Writes a link file pointing to the the <file name>.             |
+|                   |                                                                 |
++-------------------+-----------------------------------------------------------------+
+| ``-vlink <link>`` | Writes a versioned link file pointing to the the <file name>.   |
+|                   | The <file name> should not be overwritten if it has previously  |
+|                   | been used in a link file.                                       |
 +-------------------+-----------------------------------------------------------------+
 
 Examples
