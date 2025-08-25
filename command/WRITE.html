@@ -167,7 +167,7 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write filename [-<span class="no">f</span> forkCol] [-d] [-r] [-c] [-m] [-i type]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write &lt;file name&gt; [-<span class="no">f</span> forkCol] [-d] [-r] [-c] [-m] [-i type]
 </pre></div>
 </div>
 </div>
@@ -175,11 +175,11 @@
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
+<col style="width: 23%" />
+<col style="width: 77%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">column</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">&lt;column&gt;</span></code></p></td>
 <td><p>The “fork column” used to split the output into multiple files.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
@@ -200,32 +200,40 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-inferschema</span></code></p></td>
 <td><p>Write schema to the gor meta file.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">type</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-i</span> <span class="pre">&lt;type&gt;</span></code></p></td>
 <td><p>Write index file (.gori) with a .gorz file, (.tbi) with .vcf.gz
 Must state the type, which can be FULL, CHROM or TABIX</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">level</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">&lt;level&gt;</span></code></p></td>
 <td><p>Compression level (0-9). Default 1.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">'tags'</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-t</span> <span class="pre">'&lt;tags&gt;'</span></code></p></td>
 <td><p>List of tags which write ensures a file will be created.
 Only valid with the -f option.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tags</span> <span class="pre">'tags'</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tags</span> <span class="pre">'&lt;tags&gt;'</span></code></p></td>
 <td><p>List of tags/alias to use in the resulting dictionary when
 writing the files to directories.   Usually used with partgor
 as <code class="docutils literal notranslate"><span class="pre">-tags</span> <span class="pre">#{tags}</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">hf</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">&lt;hf&gt;</span></code></p></td>
 <td><p>Takes in a text source containing prefix to be prepended to the
 file written. Also support string in single quotes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-noheader</span></code></p></td>
 <td><p>Don’t write a header lines.  Not valid with gor/gorz/nor/norz.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-card</span> <span class="pre">'cols'</span></code></p></td>
-<td><p>Calculate cardinality of columns in ‘cols’ and adds to the
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-card</span> <span class="pre">'&lt;cols&gt;'</span></code></p></td>
+<td><p>Calculate cardinality of columns in ‘&lt;cols&gt;’ and adds to the
 outputs meta data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-link</span> <span class="pre">&lt;link&gt;</span></code></p></td>
+<td><p>Writes a link file pointing to the the &lt;file name&gt;.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-vlink</span> <span class="pre">&lt;link&gt;</span></code></p></td>
+<td><p>Writes a versioned link file pointing to the the &lt;file name&gt;.
+The &lt;file name&gt; should not be overwritten if it has previously
+been used in a link file.</p></td>
 </tr>
 </tbody>
 </table>
