@@ -270,10 +270,10 @@ Commands
      - Same as SELECT, but ignores errors generated from incorrect syntax.
      - GOR/NOR
    * - :ref:`TRYWHERE`
-     - Similar as WRITE, but appends to the given file.
+      - Same as WHERE, but ignores errors generated from incorrect syntax.
      - GOR/NOR
    * - :ref:`TSVAPPEND`
-     - Same as WHERE, but ignores errors generated from incorrect syntax.
+     - Similar as WRITE, but appends to the given file.
      - NOR
    * - :ref:`UNPIVOT`
      - Takes information in multiple rows and splits them into multiple rows as attribute-value pairs.
