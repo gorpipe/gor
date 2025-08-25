@@ -51,18 +51,28 @@ public class UTestTimeTravel {
 
     @Test
     public void testTimeTravelSimple() {
-        assertEquals(aold, TestUtils.runGorPipe("gor -time 150000000 A.gor.link", "-gorroot", workPath.toString()));
-        assertEquals(anew, TestUtils.runGorPipe("gor -time 250000000 A.gor.link", "-gorroot", workPath.toString()));
+        assertEquals(aold, TestUtils.runGorPipe("gor -time 1500000000000 A.gor.link", "-gorroot", workPath.toString()));
+        assertEquals(anew, TestUtils.runGorPipe("gor -time 2500000000000 A.gor.link", "-gorroot", workPath.toString()));
     }
 
     @Test
     public void testTimeTravelWithNestedQuery() {
-        assertEquals(anew, TestUtils.runGorPipe("gor -time 150000000 <(gor A.gor.link)", "-gorroot", workPath.toString()));
+        assertEquals(anew, TestUtils.runGorPipe("gor -time 1500000000000 <(gor A.gor.link)", "-gorroot", workPath.toString()));
     }
 
     @Test
     public void testTimeTravelOnlyInNestedQuery() {
-        assertEquals(aold, TestUtils.runGorPipe("gor <(gor -time 150000000 A.gor.link)", "-gorroot", workPath.toString()));
+        assertEquals(aold, TestUtils.runGorPipe("gor <(gor -time 1500000000000 A.gor.link)", "-gorroot", workPath.toString()));
+    }
+
+    @Test
+    public void testTimeTravelISO() {
+        assertEquals(aold, TestUtils.runGorPipe("gor -time 2017-07-14T02:40:00Z A.gor.link", "-gorroot", workPath.toString()));
+    }
+
+    @Test
+    public void testTimeTravelISOShort() {
+        assertEquals(aold, TestUtils.runGorPipe("gor -time 2017-07-14 A.gor.link", "-gorroot", workPath.toString()));
     }
 
     @Test
@@ -93,15 +103,15 @@ public class UTestTimeTravel {
         Files.writeString(workPath.resolve("A.gor.link"), """
                 ## VERSION = 1
                 #File\tTimestamp\tMD5\tSerial
-                Aold.gor\t100000000\t\t1
-                Anew.gor\t200000000\t\t2
+                Aold.gor\t1000000000000\t\t1
+                Anew.gor\t1700000000000\t\t2
                 """);
 
         Files.writeString(workPath.resolve("B.gor.link"), """
                 ## VERSION = 1
                 #File\tTimestamp\tMD5\tSerial
-                Bold.gor\t100000000\t\t1
-                Bnew.gor\t200000000\t\t2
+                Bold.gor\t1000000000000\t\t1
+                Bnew.gor\t1700000000000\t\t2
                 """);
     }
 

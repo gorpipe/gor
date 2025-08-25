@@ -99,6 +99,16 @@ public class UTestGorWrite {
         Assert.assertEquals(testdbsnpTestLine1, linkresult);
     }
 
+    @Test
+    public void testWritePathWithBothLinkTypes() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        var e = Assert.assertThrows(GorParsingException.class,
+                () -> TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp4.gor -vlink dbsnp3.gor",
+                        "-gorroot", workDirPath.toString()));
+        Assert.assertTrue(e.getMessage().contains("Options -link and -vlink are mutually exclusive"));
+    }
+
 
     @Test
     public void testWritePathWithServerLinkFile() throws IOException {

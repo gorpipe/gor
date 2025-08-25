@@ -1,8 +1,8 @@
 package gorsat;
 
-import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -495,7 +495,7 @@ public class UTestGorWriteExplicit {
     public void testExplicitWrite() throws IOException {
         var query = "create a = gor ../tests/data/gor/genes.gor | top 1 | write "+ workDirPath.resolve("test.gor").toAbsolutePath() +"; gor [a] | group chrom -count";
         var results = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());
-        Assert.assertTrue(Files.walk(cachePath).filter(p -> p.toString().endsWith(".gor")).allMatch(p -> p.endsWith(DataType.LINK.suffix)));
+        Assert.assertTrue(Files.walk(cachePath).filter(p -> p.toString().endsWith(".gor")).allMatch(p -> DataUtil.isLink(p.toString())));
         Assert.assertEquals(WRONG_RESULT, "Chrom\tbpStart\tbpStop\tallCount\nchr1\t0\t250000000\t1\n", results);
     }
 
@@ -503,7 +503,7 @@ public class UTestGorWriteExplicit {
     public void testExplicitWriteFolder() throws IOException {
         var query = "create a = pgor ../tests/data/gor/genes.gor | top 1 | write "+ workDirPath.resolve("test.gord").toAbsolutePath() +"; gor [a] | group chrom -count";
         var results = TestUtils.runGorPipe(query,"-cachedir",cachePath.toString());
-        Assert.assertTrue(Files.walk(cachePath).filter(p -> p.toString().endsWith(".gord")).allMatch(p -> p.endsWith(DataType.LINK.suffix)));
+        Assert.assertTrue(Files.walk(cachePath).filter(p -> p.toString().endsWith(".gord")).allMatch(p -> DataUtil.isLink(p.toString())));
         Assert.assertEquals(WRONG_RESULT, GENE_GROUP_CHROM_TOP1, results);
 
         String[] result = TestUtils.runGorPipe("nor -asdict " + workDirPath.resolve("test.gord")).split("\n");

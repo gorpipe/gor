@@ -57,6 +57,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -329,7 +330,7 @@ public class GorOptions {
         String monId = CommandParseUtilities.stringValueOfOptionWithDefault(options, "-H", null);
         String securityKey = CommandParseUtilities.replaceSingleQuotes(CommandParseUtilities.stringValueOfOptionWithDefault(options, "-Z", null));
         int tmpParallelBlocks = CommandParseUtilities.intValueOfOptionWithDefault(options, "-z", 0);
-        long queryTime = CommandParseUtilities.longValueOfOptionWithDefault(options, "-time", -1L);
+        long queryTime = CommandParseUtilities.epochValueOfOptionWithDefault(options, "-time", -1L);
 
         this.columnTags = tagsFromOptions(session, options);
         hasTagFiltering = this.columnTags != null;
