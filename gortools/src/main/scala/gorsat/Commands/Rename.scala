@@ -71,7 +71,7 @@ class Rename extends CommandInfo("RENAME",
       throw new GorParsingException("No column found that matches expression")
     }
 
-    CommandParsingResult(null, validHeader(cols.mkString("\t")))
+    CommandParsingResult(null, validHeader(cols.mkString("\t"), allowDuplicates = false))
   }
 
   private def getColumnIndex(colName: String, header: String, forNor: Boolean) = {

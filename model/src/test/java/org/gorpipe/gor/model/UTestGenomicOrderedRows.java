@@ -757,7 +757,7 @@ public class UTestGenomicOrderedRows {
         tags.add("SOME_BOGUS_TAG");
         filterTags = tags.stream().collect(Collectors.joining(","));
 
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s", dict.dictionary, filterTags)).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s Source -f %s", dict.dictionary, filterTags)).getIterator()) {
             while (source.next() != null) {
                 // Don't care about the line
             }
@@ -766,26 +766,26 @@ public class UTestGenomicOrderedRows {
             Assert.assertTrue(ge.getMessage().contains("Following are not in dictionary") && ge.getMessage().contains("SOME_BOGUS_TAG") && ge.getMessage().contains("PN" + numFiles + 1));
         }
 
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -f %s -fs", dict.dictionary, filterTags)).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s Source -f %s -fs", dict.dictionary, filterTags)).getIterator()) {
             Assert.assertEquals("Error in filtering", numTags * linesPerTag, countRemainingLines(source));
         }
 
         // Test no files selected.
 
         filterTags = "SOME_BOGUS_TAG";
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("%s -s PN -f %s -fs", dict.dictionary, filterTags)).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("%s -s Source -f %s -fs", dict.dictionary, filterTags)).getIterator()) {
             Assert.assertFalse(source.hasNext());
         }
 
         filterTags = "PNMA3";
-        final String res = TestUtils.runGorPipe(String.format("gor %s -s PN -f %s -nf | where PN = '%s'", dict.dictionary, filterTags, filterTags));
-        final String wantedRes = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tPNx\n" +
+        final String res = TestUtils.runGorPipe(String.format("gor %s -s Source -f %s -nf | where PN = '%s'", dict.dictionary, filterTags, filterTags));
+        final String wantedRes = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
                 "chr1\t2\tPNMA3\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t280385\tMany\n";
         Assert.assertEquals(wantedRes, res);
 
         filterTags = "PNMB1";
-        final String res2 = TestUtils.runGorPipe(String.format("%s -s PN -nf -f %s | where PN = '%s'", dict.dictionary, filterTags, filterTags));
-        final String wantedRes2 = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\tPNx\n" +
+        final String res2 = TestUtils.runGorPipe(String.format("%s -s Source2 -nf -f %s | where PN = '%s'", dict.dictionary, filterTags, filterTags));
+        final String wantedRes2 = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\tSource2\n" +
                 "chr1\t10\tPNMB1\tLineData for the chromosome and position line 1 10\tThis line should be long enough for this test purpose\t940393\tPNMB1\tMany\n";
         Assert.assertEquals(wantedRes2, res2);
     }
@@ -815,13 +815,13 @@ public class UTestGenomicOrderedRows {
         FileUtils.writeLines(tagfile, tags.subList(0, 1));
 
         // Single tag read.
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -ff %s", dict.dictionary, tagfile.toString())).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s Source -ff %s", dict.dictionary, tagfile.toString())).getIterator()) {
             Assert.assertEquals("Error in filtering single tags", 1 * linesPerTag, countRemainingLines(source));
         }
 
         // All tags.
         FileUtils.writeLines(tagfile, tags);
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -ff %s", dict.dictionary, tagfile.toString())).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s Source -ff %s", dict.dictionary, tagfile.toString())).getIterator()) {
             Assert.assertEquals("Error in filtering all tags", numTags * linesPerTag, countRemainingLines(source));
         }
 
@@ -829,7 +829,7 @@ public class UTestGenomicOrderedRows {
         tags.add("PN" + numFiles + 1);
         tags.add("SOME_BOGUS_TAG");
         FileUtils.writeLines(tagfile, tags);
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -ff %s", dict.dictionary, tagfile.toString())).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s Source -ff %s", dict.dictionary, tagfile.toString())).getIterator()) {
             while (source.next() != null) {
                 // Don't care about the line
             }
@@ -838,7 +838,7 @@ public class UTestGenomicOrderedRows {
             Assert.assertTrue(ge.getMessage().contains("Following are not in dictionary") && ge.getMessage().contains("SOME_BOGUS_TAG") && ge.getMessage().contains("PN" + numFiles + 1));
         }
 
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s PN -ff %s -fs", dict.dictionary, tagfile.toString())).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("-p chr1 %s -s Source -ff %s -fs", dict.dictionary, tagfile.toString())).getIterator()) {
             Assert.assertEquals("Error in filtering", numTags * linesPerTag, countRemainingLines(source));
         }
 
@@ -846,7 +846,7 @@ public class UTestGenomicOrderedRows {
         tags = new ArrayList<>();
         tags.add("SOME_BOGUS_TAG");
         FileUtils.writeLines(tagfile, tags);
-        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("%s -s PN -ff %s -fs", dict.dictionary, tagfile.toString())).getIterator()) {
+        try (final GenomicIterator source = GorOptions.createGorOptions(String.format("%s -s Source -ff %s -fs", dict.dictionary, tagfile.toString())).getIterator()) {
             Assert.assertFalse("Error in filtering", source.hasNext());
         }
 
@@ -855,8 +855,8 @@ public class UTestGenomicOrderedRows {
         tags.add(pn);
         FileUtils.writeLines(tagfile, tags);
 
-        final String res = TestUtils.runGorPipe(String.format("gor %s -s PN -nf -ff %s | where PN = '%s'", dict.dictionary, tagfile.toString(), pn));
-        final String wantedRes = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tPNx\n" +
+        final String res = TestUtils.runGorPipe(String.format("gor %s -s Source -nf -ff %s | where PN = '%s'", dict.dictionary, tagfile.toString(), pn));
+        final String wantedRes = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\n" +
                 "chr1\t2\tPNMA3\tLineData for the chromosome and position line 1 2\tThis line should be long enough for this test purpose\t280385\tMany\n";
         Assert.assertEquals(wantedRes, res);
 
@@ -865,8 +865,8 @@ public class UTestGenomicOrderedRows {
         tags.add(pn);
         FileUtils.writeLines(tagfile, tags);
 
-        final String res2 = TestUtils.runGorPipe(String.format("gor %s -s PN -nf -ff %s | where PN = '%s'", dict.dictionary, tagfile.toString(), pn));
-        final String wantedRes2 = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\tPNx\n" +
+        final String res2 = TestUtils.runGorPipe(String.format("gor %s -s Source2 -nf -ff %s | where PN = '%s'", dict.dictionary, tagfile.toString(), pn));
+        final String wantedRes2 = "Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData\tSource\tSource2\n" +
                 "chr1\t10\tPNMB1\tLineData for the chromosome and position line 1 10\tThis line should be long enough for this test purpose\t940393\tPNMB1\tMany\n";
         Assert.assertEquals(wantedRes2, res2);
     }

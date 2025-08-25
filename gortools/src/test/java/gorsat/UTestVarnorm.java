@@ -31,7 +31,7 @@ import org.junit.Test;
 public class UTestVarnorm {
     @Test
     public void testVarnorm() {
-        String query = "gor -p chr2 ../tests/data/gor/dbsnp_test.gorz | calc oldpos pos | calc oldref #3 | calc oldalt #4 | varnorm #3 #4 -right | calc oldpos pos | calc oldref #3 | calc oldalt #4 | varnorm #3 #4 -left | where gtshare(chrom,pos,#3,#4,oldpos,oldref,oldalt) = 0 or gtshare(chrom,oldpos,oldref,oldalt,oldposx,oldrefx,oldaltx)=0 or gtshare(chrom,pos,#3,#4,oldposx,oldrefx,oldaltx)=0 | rownum | throwif rownum = 1";
+        String query = "gor -p chr2 ../tests/data/gor/dbsnp_test.gorz | calc oldpos pos | calc oldref #3 | calc oldalt #4 | varnorm #3 #4 -right | calc oldposx pos | calc oldrefx #3 | calc oldaltx #4 | varnorm #3 #4 -left | where gtshare(chrom,pos,#3,#4,oldpos,oldref,oldalt) = 0 or gtshare(chrom,oldpos,oldref,oldalt,oldposx,oldrefx,oldaltx)=0 or gtshare(chrom,pos,#3,#4,oldposx,oldrefx,oldaltx)=0 | rownum | throwif rownum = 1";
         Assert.assertEquals(0, TestUtils.runGorPipeCount(query));
     }
 }

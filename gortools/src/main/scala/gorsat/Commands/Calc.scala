@@ -38,7 +38,7 @@ class Calc extends CommandInfo("CALC",
     val columnNames = Calc.getColumnsFromArgs(args)
     val exprSrc = Calc.getExpressionsFromArgs(args, columnNames)
 
-    val outgoingHeader = validHeader(forcedInputHeader + "\t" + columnNames.mkString("\t"))
+    val outgoingHeader = validHeader(forcedInputHeader + "\t" + columnNames.mkString("\t"), allowDuplicates = false)
 
     val pipeStep = CalcAnalysis(context, executeNor, exprSrc, forcedInputHeader, columnNames)
 

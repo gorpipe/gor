@@ -43,6 +43,8 @@ object IteratorUtilities {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
+  private val ALLOW_DUPLICATE_COLUMNS = System.getProperty("gor.iterators.allowDuplicateColumns", "false").toBoolean
+
   def getHeader(filename: String, gorRoot: String, context: GorContext): String = {
     val gm: GorMonitor = null
     var header = ""
@@ -63,7 +65,7 @@ object IteratorUtilities {
     header
   }
 
-  def validHeader(header: String): String = {
+  def validHeader(header: String, allowDuplicates: Boolean = true): String = {
     val cols = header.split("\t", -1)
     val badSymbols: List[Char] = List('\\', '/', '*', '+', '-','\'','$',';',',')
     val usedCols: mutable.HashSet[String] = mutable.HashSet()
@@ -87,8 +89,12 @@ object IteratorUtilities {
       //just appending x to used columns
       var colToUp = column.toUpperCase
       while (usedCols.contains(colToUp)) {
-        column = column + "x"
-        colToUp = column.toUpperCase
+        if (ALLOW_DUPLICATE_COLUMNS || allowDuplicates) {
+          column = column + "x"
+          colToUp = column.toUpperCase
+        } else {
+          throw new GorDataException(f"Error: Duplicate column name '$column%s' detected in header: $header%s")
+        }
       }
       usedCols.add(colToUp)
 

@@ -50,7 +50,7 @@ class CalcIfMissing extends CommandInfo("CALCIFMISSING",
     }
 
     if (newColumns.nonEmpty) {
-      val outgoingHeader = validHeader(forcedInputHeader + "\t" + newColumns.mkString("\t"))
+      val outgoingHeader = validHeader(forcedInputHeader + "\t" + newColumns.mkString("\t"), allowDuplicates = false)
       val pipeStep = CalcAnalysis(context, executeNor, expressions.toArray, forcedInputHeader, newColumns.toArray)
       CommandParsingResult(pipeStep, outgoingHeader)
     } else {

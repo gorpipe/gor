@@ -23,6 +23,7 @@
 package gorsat;
 
 import gorsat.Utilities.IteratorUtilities;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class UTestHeaderFlags {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(UTestHeaderFlags.class);
     /**
-     * If an excluded char becomes included after the initial state in {@link gorsat.Utilities.IteratorUtilities#validHeader(String)}
+     * If an excluded char becomes included after the initial state in gorsat.Utilities.IteratorUtilities#validHeader
      * this test will throw an exception.
      * Creates a temporary nor file with excluded escape characters in the first data row and no header flag '#'.
      * The test then runs nor -h on this file and tests if the metacharacters are correctly
@@ -62,23 +63,23 @@ public class UTestHeaderFlags {
         norFile.deleteOnExit();
     }
 
-    /**
-     * This tests that {@link gorsat.Utilities.IteratorUtilities#validHeader(String)} correctly handles reserved keywords
-     * and repeated reserved keywords in Nor headers.
-     *
-     * @throws Exception
-     */
     @Test
-    public void testValidHeaderUsedKeywords() {
+    public void testValidHeaderUsedKeywordsWithDupAllowingDup() {
         String testHeader = "#abc\tstart\tfrom\tselect\tmax\tmin\tfrom\tgroup\trange\torder\trank\torder";
-        String resultingHeader = IteratorUtilities.validHeader(testHeader);
+        String resultingHeader = IteratorUtilities.validHeader(testHeader, true);
         Assert.assertEquals("#abc\tstart\tfrom\tselect\tmax\tmin\tfromx\tgroup\trange\torder\trank\torderx", resultingHeader);
+    }
+
+    @Test
+    public void testValidHeaderUsedKeywordsWithDupNotAllowingDup() {
+        String testHeader = "#abc\tstart\tfrom\tselect\tmax\tmin\tfrom\tgroup\trange\torder\trank\torder";
+        Assert.assertThrows(GorDataException.class, () -> IteratorUtilities.validHeader(testHeader, false));
     }
 
     @Test
     public void testHeaderParsing() {
         String testStr = "test$He*aDer";
-        String resultingHeader = IteratorUtilities.validHeader(testStr);
+        String resultingHeader = IteratorUtilities.validHeader(testStr, false);
         Assert.assertEquals("testxHexaDer", resultingHeader);
     }
 }

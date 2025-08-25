@@ -69,7 +69,7 @@ public class UTestTableManagerCLI {
         int fileCount = 4;
         String[] sources = new String[]{"A", "B", "C", "D"};
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
-                "tableManagerCLI", workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+                "tableManagerCLI", workDirPath, fileCount, new int[]{1, 2, 3}, 10, "Source", true, sources);
 
         testFiles = new String[fileCount];
 

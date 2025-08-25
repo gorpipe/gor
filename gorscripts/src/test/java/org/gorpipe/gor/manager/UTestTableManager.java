@@ -645,7 +645,7 @@ public class UTestTableManager {
         int fileCount = 4;
         String[] sources = new String[]{"A", "B", "C", "D"};
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
-                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "Source", true, sources);
 
         Path dictFile = workDirPath.resolve(name + ".gord");
 
@@ -720,7 +720,7 @@ public class UTestTableManager {
         int fileCount = 4;
         String[] sources = new String[]{"A", "B", "C", "D"};
         Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
-                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "Source", true, sources);
 
         TableManagerCLI.main(new String[]{"help"});
 
