@@ -63,14 +63,6 @@ public interface SourceProvider {
     DataSource wrap(DataSource source) throws IOException;
 
     /**
-     * Read contents of a link source. A link source contains a reference to
-     * another source - possible handled by another provider.
-     */
-    default String readLink(DataSource source) throws IOException {
-        throw new UnsupportedEncodingException("Links unsupported");
-    }
-
-    /**
      * Create a genomic iterator from a source.
      */
     GenomicIterator createIterator(DataSource source) throws IOException;

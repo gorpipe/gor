@@ -58,11 +58,11 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     } else {
       linkCacheFileNameBase
     }
-    val linkCacheFilePath = Path.of(linkCacheFileNameBaseAdjusted + ".link")
+    val linkCacheFilePath = Path.of(DataUtil.toLink(linkCacheFileNameBaseAdjusted))
 
     Files.writeString(linkCacheFilePath,
       PathUtils.resolve(nested.getSession.getProjectContext.getProjectRoot, writeLocationPath).toString)
-    val extension = FileNameUtils.getExtension(linkCacheFileNameBaseAdjusted) + ".link"
+    val extension = DataUtil.toLink(FileNameUtils.getExtension(linkCacheFileNameBaseAdjusted))
 
     (linkCacheFilePath, extension)
   }
@@ -181,13 +181,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     () => block
   }
 
-
-
   override def setForce(force: Boolean): Unit = {
-
-  }
-
-  override def setQueryTime(time: lang.Long): Unit = {
 
   }
 

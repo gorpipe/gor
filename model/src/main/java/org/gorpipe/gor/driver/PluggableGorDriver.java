@@ -26,6 +26,7 @@ import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.IndexableSourceReference;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -33,6 +34,7 @@ import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.FileCache;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceIteratorFactory;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
@@ -222,7 +224,7 @@ public class PluggableGorDriver implements GorDriver {
     private DataSource handleLinks(DataSource source) throws IOException {
         if (source.getDataType() == LINK) {
             if (source.exists()) {
-                var sourceRef = getSourceRef(source, readLink(source), null);
+                var sourceRef = getSourceRef(source, LinkFile.load((StreamSource)source).getEntryUrl(source.getSourceReference().queryTime), null);
                 sourceRef.setLinkLastModified(source.getSourceMetadata().getLastModified());
                 source.close();
                 DataSource rawLinkSource = resolveDataSource(sourceRef);
@@ -299,14 +301,6 @@ public class PluggableGorDriver implements GorDriver {
             }
         }
         return source;
-    }
-
-    @Override
-    public String readLink(DataSource source) throws IOException {
-        SourceReference sourceReference = source.getSourceReference();
-        String linkSubPath = sourceReference.getLinkSubPath();
-        String linkText = sourceTypeToSourceProvider.get(source.getSourceType()).readLink(source);
-        return linkSubPath != null ? linkText + linkSubPath : linkText;
     }
 
     @Override

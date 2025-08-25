@@ -118,7 +118,7 @@ public class StreamUtils {
     public static String readString(InputStream stream, int maxLength) throws IOException {
         byte[] buf = new byte[maxLength];
         int read = readToBuffer(stream, buf, 0, maxLength);
-        return new String(buf, 0, read);
+        return read > 0 ? new String(buf, 0, read) : "";
     }
 
     /**

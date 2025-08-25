@@ -31,15 +31,11 @@ public class IndexableSourceReference extends SourceReference {
     private final String indexSource;
     private final String referenceSource;
 
-    public IndexableSourceReference(String url, String indexSource, String referenceSource, String securityContext, String commonRoot, ChromoLookup lookup) {
-        super(url, securityContext, commonRoot, lookup, null, false);
+    public IndexableSourceReference(String url, String indexSource, String referenceSource, String securityContext, String commonRoot, long queryTime, ChromoLookup lookup) {
+        super(url, securityContext, commonRoot, queryTime, lookup, null, false, true);
 
         this.indexSource = indexSource;
         this.referenceSource = referenceSource;
-    }
-
-    public IndexableSourceReference(String url, IndexableSourceReference parentSourceReference) {
-        this(url, parentSourceReference, null);
     }
 
     public IndexableSourceReference(String url, IndexableSourceReference parentSourceReference, String linkSubPath) {

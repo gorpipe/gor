@@ -280,15 +280,22 @@ public abstract class TableInfoBase implements TableInfo {
         } else {
             // Validate the header.
             if (this.header.getColumns().length != lineHeader.getColumns().length) {
-                throw new GorDataException(String.format("Can not update dictionary %s. The number of columns does not match (dict: %d, line: %d)",
-                        getPath(), this.header.getColumns().length, lineHeader.getColumns().length), -1, lineHeader.toString(), header.toString());
+                throw new GorDataException(
+                        String.format("Can not update dictionary %s. The number of columns does not match (dict: %d (%s), line: %d (%s))",
+                            getPath(),
+                            this.header.getColumns().length, String.join(",", this.header.getColumns()),
+                            lineHeader.getColumns().length, String.join(",", lineHeader.getColumns())),
+                        -1, lineHeader.toString(), header.toString());
             }
 
             if (FORCE_SAME_COLUMN_NAMES && this.header.isProper() && lineHeader.isProper() &&
                     !String.join(",", this.header.getColumns()).equals(String.join(",", lineHeader.getColumns()))) {
-                throw new GorDataException(String.format("Can not update dictionary %s.  The columns do not match (dict: %s vs line: %s)",
-                        getPath(), String.join(",", this.header.getColumns()), String.join(",",
-                                lineHeader.getColumns())), -1, lineHeader.toString(), header.toString() );
+                throw new GorDataException(
+                        String.format("Can not update dictionary %s.  The columns do not match (dict: %s vs line: %s)",
+                            getPath(),
+                            String.join(",", this.header.getColumns()),
+                            String.join(",", lineHeader.getColumns())),
+                        -1, lineHeader.toString(), header.toString() );
             }
         }
     }

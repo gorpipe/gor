@@ -38,7 +38,10 @@ class Meta() extends InputSourceInfo("META", CommandArguments("", "", 1)) {
 
     val dataSource = reader.resolveUrl(new SourceReferenceBuilder(inputData)
       .commonRoot(reader.getCommonRoot())
-      .securityContext(reader.getSecurityContext()).isFallback(false).build())
+      .securityContext(reader.getSecurityContext())
+      .isFallback(false)
+      .queryTime(reader.getQueryTime)
+      .build())
 
     val factory =GorDriverFactory.fromConfig()
     val it = factory.createMetaIterator(dataSource, reader)

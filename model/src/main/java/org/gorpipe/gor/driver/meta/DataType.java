@@ -54,7 +54,7 @@ public enum DataType {
     GORP(TABLE, ".gorp", true),
     GORQ(REPORT, ".gorq"),
     LINK(REFERENCE, ".link"),
-    LOCAL_LINK(REFERENCE, ".link.local"),
+    VERSIONED_LINK(REFERENCE, ".versioned.link"),
     CRAM(VARIANTS, ".cram", true),
     CRAI(INDEX, ".crai"),
     SPEC(VARIANTS, ".spec"),
@@ -110,7 +110,9 @@ public enum DataType {
     }
 
     private static boolean isLinkToType(String file, DataType type) {
-        return PathUtils.stripTrailingSlash(file.trim()).toLowerCase().endsWith(type.suffix + DataType.LINK.suffix);
+        var base = PathUtils.stripTrailingSlash(file.trim()).toLowerCase();
+        return base.endsWith(type.suffix + DataType.LINK.suffix)
+                || base.endsWith(type.suffix + DataType.VERSIONED_LINK.suffix);
     }
 
     public static boolean isOfTypeOrLinksToType(String file, DataType type) {

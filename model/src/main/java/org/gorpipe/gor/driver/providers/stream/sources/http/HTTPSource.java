@@ -158,7 +158,7 @@ public class HTTPSource implements StreamSource {
         if (sourceMetadata == null && exists == null) {
             HttpURLConnection urlc = null;
             try {
-                urlc = createBaseUrlConnection();
+                urlc = createBaseUrlConnection("HEAD");
                 log.debug("Reading source metadata from {} using HEAD", url);
                 urlc.setRequestMethod("HEAD");
                 urlc.connect();
@@ -192,6 +192,9 @@ public class HTTPSource implements StreamSource {
                     throw new GorResourceException("HTTP response other than OK found, response: " + responseCode + ", url: " + url.toString(), null).retry();
                 }
             } catch (IOException e) {
+                throw new GorResourceException("Error reading source metadata from " + url.toString(), url.toString(), e).retry();
+            } catch (Exception e) {
+                // Catch any other exception and throw a GorResourceException
                 throw new GorResourceException("Error reading source metadata from " + url.toString(), url.toString(), e).retry();
             } finally {
                 if (urlc != null)
@@ -257,8 +260,13 @@ public class HTTPSource implements StreamSource {
     }
 
     private HttpURLConnection createBaseUrlConnection() throws IOException {
+        return createBaseUrlConnection("GET");
+    }
+
+    private HttpURLConnection createBaseUrlConnection(String requestMethod) throws IOException {
         HttpURLConnection http = (HttpURLConnection) url.openConnection();
         http.setUseCaches(false);
+        http.setRequestMethod(requestMethod);
         http.setInstanceFollowRedirects(true);
         http.setDoInput(true);
         http.setDoOutput(false);

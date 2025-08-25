@@ -47,7 +47,7 @@ import java.util.Map;
 public class ProjectContext {
 
 
-    public static final FileReader DEFAULT_READER = new DriverBackedFileReader(System.getProperty("gor.security.context", ""), ".");
+    public static final FileReader DEFAULT_READER = new DriverBackedFileReader(System.getProperty("gor.security.context", ""), ".", Long.MAX_VALUE);
     public static final String DEFAULT_CACHE_DIR = System.getProperty("java.io.tmpdir");
 
     private String aliasFile;
@@ -155,7 +155,7 @@ public class ProjectContext {
             projectContext.fileReader = fileReader;
             projectContext.systemFileReader = systemFileReader != null
                     ? systemFileReader
-                    : new DriverBackedFileReader(fileReader.getSecurityContext(), fileReader.getCommonRoot());
+                    : new DriverBackedFileReader(fileReader.getSecurityContext(), fileReader.getCommonRoot(), fileReader.getQueryTime() );
             projectContext.logDirectory = logDirectory;
             projectContext.projectName = projectName;
             projectContext.queryEvaluator = queryEvaluator;

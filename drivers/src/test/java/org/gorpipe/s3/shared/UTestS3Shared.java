@@ -5,6 +5,7 @@ import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -198,7 +199,7 @@ public class UTestS3Shared {
 
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,
                                                  Credentials.OwnerType ownerType, String owner) throws IOException {
-        SourceReference sourceReference = new SourceReference.Builder(provider.getSharedUrlPrefix() + relativePath)
+        SourceReference sourceReference = new SourceReferenceBuilder(provider.getSharedUrlPrefix() + relativePath)
                 .commonRoot("projects/some_project")
                 .securityContext(createSecurityContext(provider.getService(), "some_s3_bucket", ownerType, owner))
                 .build();

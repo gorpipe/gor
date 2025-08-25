@@ -25,7 +25,13 @@ package gorsat;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSecurityException;
+import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
+import org.gorpipe.gor.driver.linkfile.LinkFileMeta;
+import org.gorpipe.gor.driver.linkfile.LinkFileV1;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
+import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -51,11 +57,21 @@ public class UTestGorWrite {
     public TemporaryFolder tempRoot = new TemporaryFolder();
     private Path tempRootPath;
 
+    private String defaultV1LinkFileHeader;
+    private String testdbsnpTestLine1 = """
+            Chrom\tPOS\treference\tallele\tdifferentrsIDs
+            chr1\t10179\tC\tCC\trs367896724
+            """;
+
     @Before
     public void setupTest() throws IOException {
         workDirPath = workDir.getRoot().toPath();
         Files.createDirectories(workDirPath.resolve("result_cache"));
         tempRootPath = tempRoot.getRoot().toPath();
+
+        var meta = new LinkFileMeta();
+        meta.setProperty(BaseMeta.HEADER_VERSION_KEY, "1");
+        defaultV1LinkFileHeader = meta.formatHeader();
     }
 
     @Test
@@ -67,8 +83,30 @@ public class UTestGorWrite {
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
 
         String linkresult = TestUtils.runGorPipe("gor dbsnp3.gor | top 1", "-gorroot", workDirPath.toString());
-        Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
-                "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
+        Assert.assertEquals(testdbsnpTestLine1, linkresult);
+    }
+
+    @Test
+    public void testWritePathWithVersionedLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
+
+        Assert.assertTrue( Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
+                defaultV1LinkFileHeader +  workDirPath.resolve("dbsnp2.gor") + "\t"));
+
+        String linkresult = TestUtils.runGorPipe("gor dbsnp3.gor | top 1", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(testdbsnpTestLine1, linkresult);
+    }
+
+    @Test
+    public void testWritePathWithBothLinkTypes() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        var e = Assert.assertThrows(GorParsingException.class,
+                () -> TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp4.gor -vlink dbsnp3.gor",
+                        "-gorroot", workDirPath.toString()));
+        Assert.assertTrue(e.getMessage().contains("Options -link and -vlink are mutually exclusive"));
     }
 
     @Test
@@ -77,11 +115,24 @@ public class UTestGorWrite {
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
         TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -link user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
 
-        Assert.assertEquals(workDirPath.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\n", Files.readString(workDirPath.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))));
+        Assert.assertEquals(workDirPath.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\n",
+                Files.readString(workDirPath.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))));
 
         String linkresult = TestUtils.runGorPipe("gor user_data/dbsnp3.gor | top 1", "-gorroot", workDirPath.toString());
-        Assert.assertEquals("Chrom\tPOS\treference\tallele\tdifferentrsIDs\n" +
-                "chr1\t10179\tC\tCC\trs367896724\n", linkresult);
+        Assert.assertEquals(testdbsnpTestLine1, linkresult);
+    }
+
+    @Test
+    public void testWritePathWithServerVersionedLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe(new String[] {"gor dbsnp.gor | write user_data/dbsnp2.gor -vlink user_data/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true);
+
+        Assert.assertTrue( Files.readString(workDirPath.resolve("user_data").resolve(DataUtil.toLinkFile("dbsnp3", DataType.GOR))).startsWith(
+                defaultV1LinkFileHeader +  workDirPath.resolve("user_data").resolve(DataUtil.toFile("dbsnp2", DataType.GOR)).toString() + "\t"));
+
+        String linkresult = TestUtils.runGorPipe("gor user_data/dbsnp3.gor | top 1", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(testdbsnpTestLine1, linkresult);
     }
 
     @Test
@@ -89,7 +140,10 @@ public class UTestGorWrite {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
 
-        Assert.assertThrows( "Writing link to un-writable project location, throws exception",GorSecurityException.class, () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor", "-gorroot", workDirPath.toString()}, true));
+        Assert.assertThrows( "Writing link to un-writable project location, throws exception",
+                GorSecurityException.class,
+                () -> TestUtils.runGorPipe(new String[]{"gor dbsnp.gor | write user_data/dbsnp2.gor -link /tmp/dbsnp3.gor",
+                        "-gorroot", workDirPath.toString()}, true));
 
     }
 
@@ -111,6 +165,19 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWritePathWithExistingVersionedLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), workDirPath.resolve("dbsnp.gor").toString() + "\n");
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
+
+        Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
+                defaultV1LinkFileHeader
+                        + workDirPath.resolve("dbsnp.gor") + "\t0\t\t0\n"
+                        + workDirPath.resolve("dbsnp2.gor") + "\t"));
+    }
+
+    @Test
     public void testWritePathWithExistingBadLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
@@ -118,6 +185,51 @@ public class UTestGorWrite {
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n", Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
+    }
+
+    @Test
+    public void testWritePathWithExistingBadVersionedLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), "");
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
+
+        Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
+                defaultV1LinkFileHeader + workDirPath.resolve("dbsnp2.gor") + "\t"));
+    }
+
+    @Test
+    public void testOverwritePathWithExistingLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
+
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString() + "\n",
+                Files.readString(workDirPath.resolve("dbsnp3.gor.link")));
+
+    }
+
+    @Test
+    public void testOverwritePathWithExistingVersionedLinkFile() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
+        LinkFile linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+
+        // Test with same file.
+        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -vlink dbsnp3.gor", "-gorroot", workDirPath.toString());
+        linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
+        Assert.assertEquals(2, linkFile.getEntriesCount());
+
+        // Test with different file
+        Assert.assertThrows( "Overwriting link with same path, throws exception",
+                GorSystemException.class,
+                () -> TestUtils.runGorPipe("gor dbsnp.gor | top 1 | write dbsnp2.gor -vlink dbsnp3.gor",
+                        "-gorroot", workDirPath.toString()));
     }
 
     @Test

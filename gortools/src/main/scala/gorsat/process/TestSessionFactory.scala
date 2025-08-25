@@ -38,7 +38,9 @@ import scala.jdk.javaapi.CollectionConverters
   * @param whitelistedCmdFiles  File for white listing
   * @param server               Indicates if the session is running on server or not
   */
-class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean, securityContext:String = null, allowedWriteLocations:Array[String] = Array[String]("test", "user_data", "result_cache")) extends GorSessionFactory{
+class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, server:Boolean,
+                         securityContext:String = null,
+                         allowedWriteLocations:Array[String] = Array[String]("test", "user_data", "result_cache")) extends GorSessionFactory {
 
   override def create(): GorSession = {
     val requestId = pipeOptions.requestId
@@ -49,7 +51,7 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
 
     val allowedWriteLocationList = CollectionConverters.asJava(allowedWriteLocations)
 
-    val fileReader = createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList);
+    val fileReader = createFileReader(pipeOptions.gorRoot, securityContext, server, allowedWriteLocationList, System.currentTimeMillis());
     val projectContextBuilder = new ProjectContext.Builder()
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
@@ -83,17 +85,18 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     session
   }
 
-  def createFileReader(gorRoot: String, securityContext: String = null, server: Boolean = false, writeLocations: util.List[String]): DriverBackedFileReader = {
+  def createFileReader(gorRoot: String, securityContext: String = null, server: Boolean = false,
+                       writeLocations: util.List[String], startTime: Long): DriverBackedFileReader = {
     val emptyGorRoot = StringUtil.isEmpty(gorRoot)
     if (!emptyGorRoot || !StringUtil.isEmpty(securityContext)) {
       if(server) {
         new DriverBackedSecureFileReader(gorRoot, securityContext,
-          AccessControlContext.builder().withWriteLocations(writeLocations).build())
+          AccessControlContext.builder().withWriteLocations(writeLocations).build(), startTime)
       } else {
-        new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot)
+        new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot, startTime)
       }
     } else {
-      new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot)
+      new DriverBackedFileReader(securityContext, if(emptyGorRoot) "." else gorRoot, startTime)
     }
   }
 }

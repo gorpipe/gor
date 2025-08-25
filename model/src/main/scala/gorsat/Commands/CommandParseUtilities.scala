@@ -236,7 +236,7 @@ object CommandParseUtilities {
     val optionValue: String = stringValueOfOption(args, name)
     var value: Long = -1
     try {
-      value = optionValue.toInt
+      value = optionValue.toLong
     } catch {
       case _: Throwable => throw new GorParsingException(s"Value $optionValue supplied with option $name is not a valid number", name, optionValue)
     }
@@ -258,6 +258,33 @@ object CommandParseUtilities {
       defaultValue
     }
   }
+
+  def epochValueOfOption(args: Array[String], name: String): Long = {
+    var optionValue: String = stringValueOfOption(args, name)
+    try {
+      if (optionValue.contains("-")) {
+        if (!optionValue.contains("T")) {
+          optionValue = optionValue + "T00:00:00Z"
+        } else if (!optionValue.contains("Z")) {
+          optionValue = optionValue + "Z"
+        }
+        java.time.Instant.parse(optionValue).toEpochMilli
+      } else {
+        optionValue.toLong
+      }
+    } catch {
+      case e: Throwable => throw new GorParsingException(s"Value $optionValue supplied with option $name is not a valid iso date/epoch", e)
+    }
+  }
+
+  def epochValueOfOptionWithDefault(args: Array[String], name: String, defaultValue: Long = 0): Long = {
+    if (hasOption(args, name)) {
+      epochValueOfOption(args, name)
+    } else {
+      defaultValue
+    }
+  }
+
 
   def doubleValueOfOption(args: Array[String], name: String): Double = {
     val optionValue: String = stringValueOfOption(args, name)

@@ -16,7 +16,7 @@ public class UTestBaseMeta {
     @Test
     public void testReadFromGorz() {
         BaseMeta meta = new BaseMeta();
-        meta.loadAndMergeMeta(Path.of("../tests/data/gor/genes.gorz"));
+        meta.loadAndMergeMeta(new DriverBackedFileReader(""),"../tests/data/gor/genes.gorz");
         Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", String.join("\t", meta.getColumns()));
     }
 
@@ -25,7 +25,7 @@ public class UTestBaseMeta {
         String columnCompressedGorz = Path.of(tf.getRoot().getAbsolutePath()).resolve("genes.cc.gorz").toString();
         TestUtils.runGorPipe("gor ../tests/data/gor/genes.gorz | write -c " + columnCompressedGorz);
         BaseMeta meta = new BaseMeta();
-        meta.loadAndMergeMeta(Path.of(columnCompressedGorz));
+        meta.loadAndMergeMeta(new DriverBackedFileReader(""), columnCompressedGorz);
 
         Assert.assertEquals("Chrom\tgene_start\tgene_end\tGene_Symbol", String.join("\t", meta.getColumns()));
     }

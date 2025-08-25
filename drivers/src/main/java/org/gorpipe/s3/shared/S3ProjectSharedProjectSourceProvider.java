@@ -46,7 +46,7 @@ public class S3ProjectSharedProjectSourceProvider extends S3SharedSourceProvider
 
     @Override
     protected void updateSharedSourceLink(S3SharedSource source, String project) {
-        source.setProjectLinkFile(DataUtil.toFile(PathUtils.stripTrailingSlash(getRelativePath(source)), DataType.LINK));
+        source.setProjectLinkFile(DataUtil.toLink(PathUtils.stripTrailingSlash(getRelativePath(source))));
 
         source.setProjectLinkFileContent(String.format("%sprojects/%s/%s",
                 S3ProjectSharedSourceType.PREFIX, project, getRelativePath(source)));

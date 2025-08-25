@@ -589,7 +589,7 @@ public class BucketManager<T extends DictionaryEntry> {
 
     private void deleteLinkFileIfExists(String path) {
         try {
-            String linkFile = DataUtil.isLink(path) ? path : DataUtil.toFile(path, DataType.LINK);
+            String linkFile = DataUtil.isLink(path) ? path : DataUtil.toLink(path);
             DataSource linkSource = table.getFileReader().resolveDataSource(table.getFileReader().createSourceReference(linkFile, false));
             if (linkSource != null && linkSource.exists()) {
                 linkSource.delete();
@@ -715,7 +715,7 @@ public class BucketManager<T extends DictionaryEntry> {
         if (usedBuckets.contains(bucketFile)) {
             return true;
         }
-        if (bucketFile.endsWith(".link")) {
+        if (DataUtil.isLink(bucketFile)) {
             String bucketFileNoLink = bucketFile.substring(0, bucketFile.length() - 5);
             if (usedBuckets.contains(bucketFileNoLink)) {
                 return true;

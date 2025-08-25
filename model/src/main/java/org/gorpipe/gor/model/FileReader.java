@@ -27,7 +27,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.driver.utils.LinkFile;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -329,14 +329,11 @@ public abstract class FileReader {
      */
     public abstract DataSource resolveDataSource(SourceReference sourceReference) throws IOException ;
 
-    /**
-     * Read link file and return the underlying file, following all link files.
-     * @param url   path to the link file
-     * @return the underlying file
-     */
-    public abstract String readLink(String url);
-
     public abstract String getCommonRoot();
+
+    public abstract long getQueryTime();
+
+    public abstract void setQueryTime(long queryTime);
 
     public abstract SourceReference createSourceReference(String url, boolean writeable);
 
@@ -345,11 +342,8 @@ public abstract class FileReader {
         if (Strings.isNullOrEmpty(url)) return;
         DataSource dataSource = resolveUrl(url, true);
         if (dataSource.forceLink()) {
-            try (OutputStream os = getOutputStream(dataSource.getProjectLinkFile())) {
-                // Create link file with the content of the data source.
-                LinkFile.create((StreamSource) dataSource, dataSource.getProjectLinkFileContent())
-                        .save(os);
-            }
+            DataSource linkDataSource = resolveUrl(dataSource.getProjectLinkFile(), true);
+            LinkFile.load((StreamSource) linkDataSource, dataSource.getProjectLinkFileContent()).save();
         }
     }
 

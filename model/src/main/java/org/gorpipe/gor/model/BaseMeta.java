@@ -306,10 +306,6 @@ public class BaseMeta {
         return metaLines;
     }
 
-    public void loadAndMergeMeta(Path metaPath) {
-        loadAndMergeMeta(new DriverBackedFileReader(""), metaPath.toString());
-    }
-
     public String getMetaPath() {
         return this.metaPathStr;
     }
@@ -354,5 +350,10 @@ public class BaseMeta {
         } catch (IOException ioe) {
             throw new GorSystemException(String.format("Could not save meta file %s", fileName), ioe);
         }
+    }
+
+    @Override
+    public String toString() {
+        return formatHeader();
     }
 }

@@ -20,6 +20,8 @@
 **/.run/
 
 **/.vscode/
+**/.kiro/
+**/.zed/
 
 **/.project
 **/.classpath

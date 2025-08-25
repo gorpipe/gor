@@ -3,6 +3,7 @@ package org.gorpipe.gor.util;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.table.util.PathUtils;
 
 import java.nio.file.Files;
 
@@ -122,6 +123,14 @@ public class DataUtil {
 
     public static String toLinkFile(String name, DataType type) {
         return name + type.suffix + DataType.LINK.suffix;
+    }
+
+    public static String toLink(String path) {
+        return PathUtils.stripTrailingSlash(path) + DataType.LINK.suffix;
+    }
+
+    public static String toVersionedLink(String path) {
+        return PathUtils.stripTrailingSlash(path) + DataType.VERSIONED_LINK.suffix;
     }
 
     public static String toTempTempFile(String file) {

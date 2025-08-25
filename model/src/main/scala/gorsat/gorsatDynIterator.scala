@@ -187,7 +187,21 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       }
       i += 1
     }
-    (if( prefix.nonEmpty ) prefix+";" else "") + (if( header ) pipeSteps.map(s => { if(s.toLowerCase.contains("sdl")) s else CommandParseUtilities.quoteSafeReplace(s,"|","| top 0 |") }).mkString("| top 0 |")+"| top 0" else pipeSteps.mkString("|"))
+    (if (prefix.nonEmpty) prefix+";" else "") + (
+      if (header) {
+        pipeSteps.map(s => {
+          if (s.toLowerCase.contains("sdl")) {
+            s
+          } else if (s.toLowerCase.startsWith("write ")) {
+            // Skip write commands when getting header
+            "skip -1"
+          } else {
+            CommandParseUtilities.quoteSafeReplace(s,"|","| top 0 |")
+          }
+        }).mkString("| top 0 |")+"| top 0"
+      } else {
+        pipeSteps.mkString("|")
+      })
   }
 
   def setPositionWithoutChrLimits(seekChr: String, seekPos : Int): Unit = {

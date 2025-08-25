@@ -614,9 +614,9 @@ public class GorJavaUtilities {
                     dictionarypathwriter.write(entry);
                 }
             } else writeDummyHeader(dictionarypathwriter);
-
-            localFileReader.writeLinkIfNeeded(dictionarypath);
         }
+
+        localFileReader.writeLinkIfNeeded(dictionarypath);
     }
 
     public static Optional<String[]> parseDictionaryColumn(String[] dictList, FileReader fileReader) {

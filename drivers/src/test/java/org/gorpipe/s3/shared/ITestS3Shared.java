@@ -9,6 +9,7 @@ import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.PluggableGorDriver;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.DriverBackedSecureFileReader;
 import org.gorpipe.gor.model.FileReader;
@@ -19,7 +20,6 @@ import org.gorpipe.test.IntegrationTests;
 import org.gorpipe.utils.DriverUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.contrib.java.lang.system.ProvideSystemProperty;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.experimental.categories.Category;
@@ -402,7 +402,7 @@ public class ITestS3Shared {
             source.delete();
         }
 
-        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + ".link")));
+        Assert.assertTrue(Files.exists(Path.of(gorRoot, dataPath + DataType.LINK.suffix)));
     }
 
     @Test
@@ -554,7 +554,7 @@ public class ITestS3Shared {
 
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,
                                                  Credentials.OwnerType ownerType, String owner) throws IOException {
-        SourceReference sourceReference = new SourceReference.Builder(provider.getSharedUrlPrefix() + relativePath)
+        SourceReference sourceReference = new SourceReferenceBuilder(provider.getSharedUrlPrefix() + relativePath)
                 .commonRoot("projects/some_project")
                 .securityContext(createSecurityContext(provider.getService(), ownerType, owner, S3_KEY, S3_SECRET))
                 .build();
