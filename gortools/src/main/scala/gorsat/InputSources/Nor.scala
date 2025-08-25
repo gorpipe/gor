@@ -60,7 +60,7 @@ object Nor
     var inputSource: GenomicIterator = null
 
     if (hasOption(args, "-time")) {
-      val queryTime = CommandParseUtilities.longValueOfOptionWithDefault(args, "-time", System.currentTimeMillis())
+      val queryTime = CommandParseUtilities.epochValueOfOption(args, "-time")
       context.getSession.getProjectContext.getFileReader.setQueryTime(queryTime)
     }
 
