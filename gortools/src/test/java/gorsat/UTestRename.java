@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -135,5 +136,11 @@ public class UTestRename {
     public void renameStrictWithNoMatch() {
         String query = "gorrow chr1,1 | calc A_Foo_1 0 | calc B_Bar_2 1 | rename -s C_Foo_(.*) Bar_#{1} | top 0";
         Assert.assertThrows(GorParsingException.class, () -> TestUtils.runGorPipe(query));
+    }
+
+    @Test
+    public void renameToExisting() {
+        String query = "gorrow chr1,1 | calc Foo 0 | calc Bar 1 | rename Foo Bar | top 0";
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
 }

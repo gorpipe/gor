@@ -107,10 +107,11 @@ class Liftover extends CommandInfo("LIFTOVER",
             | calc liftover_nStart IF(fulloverlap = 'mapped',int(liftover_nnStart),int(0))
             | select liftover_nChrom,liftover_nStart,3-distance[-1],1-2,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
-            | rename #1 """ + lhChrom +
-          """ | rename #2 """ + lhStart +
+          """ +
           """ | rename #repl#1 """ + buildPrefix + "_" + lhChrom +
           """ | rename #repl#2 """ + buildPrefix + "_" + lhStart +
+          """ | rename #1 """ + lhChrom +
+          """ | rename #2 """ + lhStart +
           """ | rename liftover_(.*) """ + buildPrefix +
           """_#{1} | sort genome"""
 
@@ -147,10 +148,11 @@ class Liftover extends CommandInfo("LIFTOVER",
           """)
             | select liftover_nChrom,liftover_nStart,3-distance[-1],1-2,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
-            | rename #1 """ + lhChrom +
-          """ | rename #2 """ + lhStart +
+          """ +
           """ | rename #repl#1 """ + buildPrefix + "_" + lhChrom +
           """ | rename #repl#2 """ + buildPrefix + "_" + lhStart +
+          """ | rename #1 """ + lhChrom +
+          """ | rename #2 """ + lhStart +
           """ | rename liftover_(.*) """ + buildPrefix +
           """_#{1} | sort genome"""
 
@@ -187,12 +189,13 @@ class Liftover extends CommandInfo("LIFTOVER",
             | select liftover_nChrom,liftover_nStart,liftover_nEnd,""" + (if (lhColnum > 3) "4-distance[-1]," else "") +
           """1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
-            | rename #1 """ + lhChrom +
-          """ | rename #2 """ + lhStart +
-          """ | rename #3 """ + lhEnd +
+          """ +
           """ | rename #repl#1 """ + buildPrefix + "_" + lhChrom +
           """ | rename #repl#2 """ + buildPrefix + "_" + lhStart +
           """ | rename #repl#3 """ + buildPrefix + "_" + lhEnd +
+          """ | rename #1 """ + lhChrom +
+          """ | rename #2 """ + lhStart +
+          """ | rename #3 """ + lhEnd +
           """ | rename liftover_(.*) """ + buildPrefix +
           """_#{1} | sort genome"""
 
@@ -224,12 +227,13 @@ class Liftover extends CommandInfo("LIFTOVER",
             | select liftover_nChrom,liftover_nStart,liftover_nEnd,""" + (if (lhColnum > 3) "4-distance[-1]," else "") +
           """1-3,liftover_qStrand,liftover_liftoverStatus""" + (if (all) ",liftover_score " else "") +
           """
-            | rename #1 """ + lhChrom +
-          """ | rename #2 """ + lhStart +
-          """ | rename #3 """ + lhEnd +
+          """ +
           """ | rename #repl#1 """ + buildPrefix + "_" + lhChrom +
           """ | rename #repl#2 """ + buildPrefix + "_" + lhStart +
           """ | rename #repl#3 """ + buildPrefix + "_" + lhEnd +
+          """ | rename #1 """ + lhChrom +
+          """ | rename #2 """ + lhStart +
+          """ | rename #3 """ + lhEnd +
           """ | rename liftover_(.*) """ + buildPrefix +
           """_#{1} | sort genome"""
 

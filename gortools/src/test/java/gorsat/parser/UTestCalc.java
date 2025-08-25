@@ -39,11 +39,13 @@ public class UTestCalc {
     }
 
     @Test
+    public void addsNewExistingColumn() {
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe("gorrow 1,1 | calc pos 42"));
+    }
+
+    @Test
     public void addsNewColumnWithSuffixWhenItExists() {
-        final String result = TestUtils.runGorPipe("gorrow 1,1 | calc data 42 | calc data 3.14");
-        final String expected = "chrom\tpos\tdata\tdatax\n" +
-                "chr1\t1\t42\t3.14\n";
-        Assert.assertEquals(expected, result);
+        Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe("gorrow 1,1 | calc data 42 | calc data 3.14"));
     }
 
     @Test
