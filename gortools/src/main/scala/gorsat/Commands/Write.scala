@@ -63,7 +63,7 @@ class Write extends CommandInfo("WRITE",
     md5 = hasOption(args, "-m")
     if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")).toInt
 
-if (hasOption(args, "-link") && hasOption(args, "-vlink")) {
+    if (hasOption(args, "-link") && hasOption(args, "-vlink")) {
       throw new GorParsingException("Options -link and -vlink are mutually exclusive")
     }
     val (link, linkVersion) = if (hasOption(args, "-link")) {

@@ -109,7 +109,6 @@ public class UTestGorWrite {
         Assert.assertTrue(e.getMessage().contains("Options -link and -vlink are mutually exclusive"));
     }
 
-
     @Test
     public void testWritePathWithServerLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
