@@ -44,6 +44,8 @@ import java.util.function.Function;
 public class CredentialClientCache<ClientClass> {
     private final static Logger log = LoggerFactory.getLogger(CredentialClientCache.class);
 
+    private static final int CACHE_EXPIRE_HOURS = 10;
+
     // Cache credential to client mapping
     private final Cache<Credentials, ClientClass> credToClient = createCache();
 
@@ -83,7 +85,7 @@ public class CredentialClientCache<ClientClass> {
     }
 
     private <K1, V1> Cache<K1, V1> createCache() {
-        return CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterAccess(1, TimeUnit.HOURS).build();
+        return CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterAccess(CACHE_EXPIRE_HOURS, TimeUnit.HOURS).build();
     }
 
     private Optional<Credentials> computeCred(CredentialsProvider creds, String lookup) {
@@ -103,7 +105,7 @@ public class CredentialClientCache<ClientClass> {
     }
 
     private boolean isValid(Credentials cred) {
-        return cred.isValidFor(1, ChronoUnit.HOURS);
+        return cred.isValidFor(CACHE_EXPIRE_HOURS, ChronoUnit.HOURS);
     }
 
     IOException convertException(ExecutionException e) {
