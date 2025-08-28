@@ -1,6 +1,6 @@
 ## Introduction
 
-The GORpipe analysis tool is developed and released by Genuity Science. It originates from the pioneers of population based genomic analysis, deCODE genetics, headquartered in Reykjavik, Iceland.
+The GORpipe analysis tool is developed and released by GeneDx. It originates from the pioneers of population based genomic analysis, deCODE genetics, headquartered in Reykjavik, Iceland.
         
 GORpipe is a tool based on a genomic ordered relational architecture and allows analysis of large sets of genomic and phenotypic tabular data using a declarative query language, in a parallel execution engine.  It is very efficient in a wide range of use-cases, including genome wide batch analysis, range-queries, genomic table joins of variants and segments, filtering, aggregation etc.  The query language combines ideas from SQL and Unix shell pipe syntax, supporting seek-able nested queries, materialized views, and a rich set of commands and functions.  For more information see the paper in Bioinformatics (https://dx.doi.org/10.1093%2Fbioinformatics%2Fbtw199).
 
