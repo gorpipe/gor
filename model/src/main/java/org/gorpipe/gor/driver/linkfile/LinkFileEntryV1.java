@@ -1,8 +1,10 @@
 package org.gorpipe.gor.driver.linkfile;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.util.DateUtils;
 import org.gorpipe.util.Strings;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -55,13 +57,13 @@ public record LinkFileEntryV1(String url, long timestamp, String md5, int serial
         }
         return new LinkFileEntryV1(
                 parts[0].trim(),
-                parts.length > 1 && !Strings.isNullOrEmpty(parts[1]) ? Long.parseLong(parts[1]) : 0,
+                parts.length > 1 && !Strings.isNullOrEmpty(parts[1]) ? DateUtils.parseDateISOEpoch(parts[1], true).toEpochMilli() : 0,
                 parts.length > 2 ? parts[2] : "",
                 parts.length > 3 && !Strings.isNullOrEmpty(parts[3]) ? Integer.parseInt(parts[3]) : 0
                 );
     }
 
     public String format() {
-        return url + "\t" + timestamp + "\t" + md5 + "\t" + serial;
+        return url + "\t" + Instant.ofEpochMilli(timestamp) + "\t" + md5 + "\t" + serial;
     }
 }

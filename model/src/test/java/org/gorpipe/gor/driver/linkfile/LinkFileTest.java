@@ -25,9 +25,11 @@ public class LinkFileTest {
             ## SERIAL = 0
             ## VERSION = 1
             #FILE\tTIMESTAMP\tMD5\tSERIAL
-            source/v1/ver1.gorz\t1734304890790\tABCDEAF13422\t1
-            source/v1/ver2.gorz\t1734305124533\t334DEAF13422\t2
+            source/v1/ver1.gorz\t2024-12-15T11:21:30.790Z\tABCDEAF13422\t1
+            source/v1/ver2.gorz\t2024-12-15T23:25:24.533Z\t334DEAF13422\t2
             """;
+    // 2024-12-15T11:21:30.790Z  = 1734261690790
+    // 2024-12-15T23:25:24.533Z  = 1734305124533L
     private final String v0LinkFileContent = "source/v0/verx.gorz\n";
     private final String simpleFile = "source/y.gorz";
     protected Path workPath;
@@ -79,10 +81,10 @@ public class LinkFileTest {
         LinkFile linkFile = LinkFile.load(mockSource, v1LinkFileContent);
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
 
-        assertEquals(null, linkFile.getEntryUrl(1734304890790L - 100));
-        assertEquals("/mnt/csa/projects/test/source/v1/ver1.gorz", linkFile.getEntryUrl(1734304890790L + 100));
+        assertEquals(null, linkFile.getEntryUrl(1734261690790L - 1000));
+        assertEquals("/mnt/csa/projects/test/source/v1/ver1.gorz", linkFile.getEntryUrl(1734261690790L + 1000));
         assertEquals("/mnt/csa/projects/test/source/v1/ver2.gorz", linkFile.getEntryUrl(1734305124533L));
-        assertEquals("/mnt/csa/projects/test/source/v1/ver2.gorz", linkFile.getEntryUrl(1734305124533L + 100));
+        assertEquals("/mnt/csa/projects/test/source/v1/ver2.gorz", linkFile.getEntryUrl(1734305124533L + 1000));
         assertEquals("/mnt/csa/projects/test/" + simpleFile, linkFile.getEntryUrl(System.currentTimeMillis()));
     }
 
