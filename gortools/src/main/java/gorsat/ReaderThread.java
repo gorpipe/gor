@@ -106,7 +106,7 @@ public class ReaderThread extends Thread {
     }
 
     public void stopProcessing( String message ) {
-        log.debug(message);
+        log.warn(message);
         stopProcessing = true;
         if (bufferedPipeStep != null) {
             bufferedPipeStep.wantsNoMore_$eq(true);
