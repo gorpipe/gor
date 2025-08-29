@@ -44,7 +44,7 @@ import java.util.function.Function;
 public class CredentialClientCache<ClientClass> {
     private final static Logger log = LoggerFactory.getLogger(CredentialClientCache.class);
 
-    private static final int CACHE_EXPIRE_HOURS = 10;
+    private static final int CACHE_EXPIRE_HOURS = 1;
 
     // Cache credential to client mapping
     private final Cache<Credentials, ClientClass> credToClient = createCache();
