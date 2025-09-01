@@ -34,30 +34,50 @@ class AbortingInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        int read = s3is.read();
-        this.updateBytesRead(read);
-        return read;
+        try {
+            int read = s3is.read();
+            this.updateBytesRead(read);
+            return read;
+        } catch (Exception e) {
+            logger.warn("Exception reading from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        int read = s3is.read(b, off, len);
-        this.updateBytesRead(read);
-        return read;
-    }
-
-    @Override
-    public long skip(long n) throws IOException {
-        long skipped = s3is.skip(n);
-        this.updateBytesRead(skipped);
-        return skipped;
+        try {
+            int read = s3is.read(b, off, len);
+            this.updateBytesRead(read);
+            return read;
+        } catch (Exception e) {
+            logger.warn("Exception reading from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public int read(byte[] b) throws IOException {
-        int read = s3is.read(b);
-        this.updateBytesRead(read);
-        return read;
+        try {
+            int read = s3is.read(b);
+            this.updateBytesRead(read);
+            return read;
+        } catch (Exception e) {
+            logger.warn("Exception reading from S3 stream", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        try {
+            long skipped = s3is.skip(n);
+            this.updateBytesRead(skipped);
+            return skipped;
+        } catch (Exception e) {
+            logger.warn("Exception skip from S3 stream", e);
+            throw e;
+        }
     }
 
     private void updateBytesRead(long read) {
@@ -68,65 +88,116 @@ class AbortingInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        long missingBytes = maxBytes - bytesRead.get();
-        if (missingBytes > 0) {
-            // We did not read all bytes.
-            if (missingBytes < SKIP_BYTES_THRESHOLD) {
-                // If we are close to the end, skip the rest (to avoid aborting)
-                long skipped = s3is.skip(missingBytes);
-                logger.debug("S3 stream, not all bytes read, skipping {} ({}) bytes out of {} bytes.", skipped, missingBytes, maxBytes);
-                s3is.close();
+        try {
+            long missingBytes = maxBytes - bytesRead.get();
+            if (missingBytes > 0) {
+                // We did not read all bytes.
+                if (missingBytes < SKIP_BYTES_THRESHOLD) {
+                    // If we are close to the end, skip the rest (to avoid aborting)
+                    long skipped = s3is.skip(missingBytes);
+                    logger.debug("S3 stream, not all bytes read, skipping {} ({}) bytes out of {} bytes.", skipped, missingBytes, maxBytes);
+                    s3is.close();
+                } else {
+                    logger.debug("S3 stream, not all bytes read, aborting S3 input stream. {} bytes not read, of {} bytes.", missingBytes, maxBytes);
+                    s3is.abort();
+                }
             } else {
-                logger.debug("S3 stream, not all bytes read, aborting S3 input stream. {} bytes not read, of {} bytes.", missingBytes, maxBytes);
-                s3is.abort();
+                s3is.close();
             }
-        } else {
-            s3is.close();
+        } catch (Exception e) {
+            logger.warn("Exception closing S3 stream", e);
+            throw e;
         }
+
     }
 
     @Override
     public byte[] readAllBytes() throws IOException {
-        return s3is.readAllBytes();
+        try {
+            return s3is.readAllBytes();
+        } catch (Exception e) {
+            logger.warn("Exception readAllBytes from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public byte[] readNBytes(int len) throws IOException {
-        return s3is.readNBytes(len);
+        try {
+            return s3is.readNBytes(len);
+        } catch (Exception e) {
+            logger.warn("Exception readNBytes from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public int readNBytes(byte[] b, int off, int len) throws IOException {
-        return s3is.readNBytes(b, off, len);
+        try {
+            return s3is.readNBytes(b, off, len);
+        } catch (Exception e) {
+            logger.warn("Exception readNBytes from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public void skipNBytes(long n) throws IOException {
-        s3is.skipNBytes(n);
+        try {
+            s3is.skipNBytes(n);
+        } catch (Exception e) {
+            logger.warn("Exception skipNbytes from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public int available() throws IOException {
-        return s3is.available();
+        try {
+            return s3is.available();
+        } catch (Exception e) {
+            logger.warn("Exception available from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public synchronized void mark(int readlimit) {
-        s3is.mark(readlimit);
+        try {
+            s3is.mark(readlimit);
+        } catch (Exception e) {
+            logger.warn("Exception mark S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public synchronized void reset() throws IOException {
-        s3is.reset();
+        try {
+            s3is.reset();
+        } catch (Exception e) {
+            logger.warn("Exception reset S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public boolean markSupported() {
-        return s3is.markSupported();
+        try {
+            return s3is.markSupported();
+        } catch (Exception e) {
+            logger.warn("Exception markSupported from S3 stream", e);
+            throw e;
+        }
     }
 
     @Override
     public long transferTo(OutputStream out) throws IOException {
-        return s3is.transferTo(out);
+        try {
+            return s3is.transferTo(out);
+        } catch (Exception e) {
+            logger.warn("Exception transferTo S3 stream", e);
+            throw e;
+        }
     }
 }
