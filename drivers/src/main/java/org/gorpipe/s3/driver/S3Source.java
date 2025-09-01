@@ -41,7 +41,6 @@ import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.util.PathUtils;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
-import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -185,7 +184,7 @@ public class S3Source implements StreamSource {
                 return new AbortingInputStream(asyncClient.getObject(request, AsyncResponseTransformer.toBlockingInputStream()).join(), request);
             }
             return new AbortingInputStream(client.getObject(request), request);
-        } catch (SdkException e) {
+        } catch (Exception e) {
             throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), getPath().toString(), e).retry();
         }
     }
@@ -205,15 +204,16 @@ public class S3Source implements StreamSource {
 
     private S3SourceMetadata createMetaData(String bucket, String key) {
         HeadObjectResponse objectMetaResponse;
-        if (asyncClient != null) {
-            objectMetaResponse = asyncClient.headObject(b -> b.bucket(bucket).key(key)).join();
-        } else {
-            try {
+        try {
+            if (asyncClient != null) {
+                objectMetaResponse = asyncClient.headObject(b -> b.bucket(bucket).key(key)).join();
+            } else {
                 objectMetaResponse = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
-            } catch (SdkException e) {
-                throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
             }
+        } catch (Exception e) {
+            throw new GorResourceException("Failed to load metadata for " + bucket + "/" + key, getPath().toString(), e).retry();
         }
+
         return new S3SourceMetadata(this, objectMetaResponse, sourceReference.getLinkLastModified());
     }
 
