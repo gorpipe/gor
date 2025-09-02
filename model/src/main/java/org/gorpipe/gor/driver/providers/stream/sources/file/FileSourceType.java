@@ -40,9 +40,6 @@ public class FileSourceType extends SourceType {
     @Override
     public boolean match(String file) {
         // TODO: Until we get better matching strategy we must exclude mem here.
-        // TODO: Should check if file (as commented out), but a lot code seems to pass various
-        //       non file elements so simply match everything (like the former impl).
-        //       We should be the last matcher anyway.
-        return !DataUtil.isMem(file); //&& (file.startsWith("file:") || !file.contains(":"));
+        return !DataUtil.isMem(file) && (file.startsWith("file:") || !file.contains(":/"));
     }
 }
