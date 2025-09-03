@@ -665,7 +665,7 @@ public class UTestBucketManager {
             buckets = table.filter().get().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
             List<String> bucketFolders = buckets.stream().map(l -> PathUtils.getParent(l)).distinct().collect(Collectors.toList());
             Assert.assertEquals("Incorrect number of bucket folders", 1, bucketFolders.size());
-            Assert.assertEquals("Incorrect bucket folder(s)", buc.pickBucketDir(), bucketFolders.get(0));
+            Assert.assertEquals("Incorrect bucket folder(s)", Path.of(buc.pickBucketDir()), Path.of(bucketFolders.get(0)));
             for (String bucket : buckets) {
                 Assert.assertTrue("Bucket does not exists", Files.exists(Path.of(PathUtils.resolve(table.getRootPath(), bucket))));
             }
@@ -839,7 +839,9 @@ public class UTestBucketManager {
         buckets = table.filter().get().stream().map(l -> l.getBucket()).distinct().collect(Collectors.toList());
         List<String> createdBucketFolders = buckets.stream().map(p -> PathUtils.getParent(p)).distinct().collect(Collectors.toList());
         Assert.assertEquals("Incorrect number of bucket folders", bucketDirs.size(), createdBucketFolders.size());
-        Assert.assertEquals("Incorrect bucket folder(s)", new TreeSet(bucketDirs), new TreeSet(createdBucketFolders));
+        Assert.assertEquals("Incorrect bucket folder(s)",
+                new TreeSet(bucketDirs.stream().map(s -> Path.of(s)).toList()),
+                new TreeSet(createdBucketFolders.stream().map(s -> Path.of(s)).toList()));
         for (String bucket : buckets) {
             Assert.assertTrue(String.format("Bucket %s does not exists", PathUtils.resolve(table.getRootPath(), bucket)),
                     Files.exists(Path.of(PathUtils.resolve(table.getRootPath(), bucket))));

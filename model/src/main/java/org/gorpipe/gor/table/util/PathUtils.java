@@ -261,7 +261,7 @@ public class PathUtils {
     public static String getParent(String path) {
         String p = stripTrailingSlash(path);
         var idx = p.lastIndexOf("/");
-        return idx >= 0 ? p.substring(0,idx) : "";
+        return idx >= 0 ? p.substring(0,idx+1) : "";
     }
 
     public static String getFileName(String path) {
@@ -341,6 +341,16 @@ public class PathUtils {
                 + "-temp-" + RandomStringUtils.insecure().nextAlphanumeric(8) + ext);
 
         return tempFileName;
+    }
+
+    public static boolean pathEquals(String path1, String path2) {
+        if (path1 == null && path2 == null) {
+            return true;
+        }
+        if (path1 == null || path2 == null) {
+            return false;
+        }
+        return Path.of(path1).normalize().equals(Path.of(path2).normalize());
     }
 
 }
