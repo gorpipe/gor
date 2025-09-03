@@ -44,6 +44,9 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 if (preRetryOp != null) {
                     preRetryOp.perform();
                 }
+            } catch (Exception e) {
+                log.warn("Non-retryable exception caught, will not retry.", e);
+                throw e;
             }
         }
 
@@ -77,6 +80,9 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 if (preRetryOp != null) {
                     preRetryOp.perform();
                 }
+            } catch (Exception e) {
+                log.warn("Non-retryable exception caught, will not retry.", e);
+                throw e;
             }
         }
 

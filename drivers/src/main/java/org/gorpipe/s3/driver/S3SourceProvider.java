@@ -38,6 +38,7 @@ import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.util.StringUtil;
 import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.http.crt.ProxyConfiguration;
@@ -292,7 +293,10 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.credentialsProvider(getCredentialsProvider(cred));
 
-        builder.overrideConfiguration(o -> o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries())));
+        builder.overrideConfiguration(o ->
+                o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
+                        .apiCallTimeout(s3Config.connectionTimeout())
+                        .apiCallAttemptTimeout(s3Config.socketTimeout()));
 
         var metricsPub = new PrometheusMetricPublisher();
         log.trace("Adding metrics publisher: {}", metricsPub);
