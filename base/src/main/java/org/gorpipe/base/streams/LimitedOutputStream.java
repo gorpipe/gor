@@ -1,12 +1,15 @@
 package org.gorpipe.base.streams;
 
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 public final class LimitedOutputStream extends FilterOutputStream {
+    Logger log = org.slf4j.LoggerFactory.getLogger(LimitedOutputStream.class);
+
     private long count;
     private long maxSize;
 
@@ -19,20 +22,48 @@ public final class LimitedOutputStream extends FilterOutputStream {
         return this.count;
     }
 
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        this.out.write(b, off, len);
-        this.count += (long)len;
-        this.check();
+        try {
+            this.out.write(b, off, len);
+            this.count += (long) len;
+            this.check();
+        } catch (Exception e) {
+            log.warn("Exception in write after writing {} bytes", this.count, e);
+            throw e;
+        }
     }
 
+    @Override
     public void write(int b) throws IOException {
-        this.out.write(b);
-        ++this.count;
-        this.check();
+        try {
+            this.out.write(b);
+            ++this.count;
+            this.check();
+        } catch (Exception e) {
+            log.warn("Exception in write after writing {} bytes", this.count, e);
+            throw e;
+        }
     }
 
+    @Override
+    public void flush() throws IOException {
+        try {
+            this.out.flush();
+        } catch (Exception e) {
+            log.warn("Exception in write after writing {} bytes", this.count, e);
+            throw e;
+        }
+    }
+
+    @Override
     public void close() throws IOException {
-        this.out.close();
+        try {
+            this.out.close();
+        } catch (Exception e) {
+            log.warn("Exception in write after writing {} bytes", this.count, e);
+            throw e;
+        }
     }
 
     private void check() {
