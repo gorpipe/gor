@@ -173,7 +173,7 @@ public class UTestGorWrite {
 
         Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
                 defaultV1LinkFileHeader
-                        + workDirPath.resolve("dbsnp.gor") + "\t0\t\t0\n"
+                        + workDirPath.resolve("dbsnp.gor") + "\t1970-01-01T00:00:00Z\t\t0\n"
                         + workDirPath.resolve("dbsnp2.gor") + "\t"));
     }
 
