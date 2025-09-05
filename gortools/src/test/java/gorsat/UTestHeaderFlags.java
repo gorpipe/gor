@@ -25,6 +25,7 @@ package gorsat;
 import gorsat.Utilities.IteratorUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
@@ -88,6 +89,7 @@ public class UTestHeaderFlags {
         Assert.assertThrows(GorDataException.class, () -> IteratorUtilities.validHeader(testHeader, false));
     }
 
+    @Ignore("Only works if run alone, as the property is read only on class load")
     @Test
     public void testValidHeaderUsedKeywordsWithDupAllowingDupOnlyGlobal() {
         System.setProperty("gor.iterators.allowDuplicateColumns", "true");
