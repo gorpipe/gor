@@ -58,4 +58,12 @@ public class UTestCalcIfMissing {
                 "chr1\t1\t64\t3.14\tbingo\n";
         Assert.assertEquals(expected, result);
     }
+
+    @Test
+    public void ignoresColumnWhenItExistsWithCaseDiff() {
+        final String result = TestUtils.runGorPipe("gorrow 1,1 | calc data1 64 | calcifmissing DATA1,data2,data3 42,3.14,'bingo'");
+        final String expected = "chrom\tpos\tdata1\tdata2\tdata3\n" +
+                "chr1\t1\t64\t3.14\tbingo\n";
+        Assert.assertEquals(expected, result);
+    }
 }

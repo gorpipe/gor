@@ -39,11 +39,11 @@ class CalcIfMissing extends CommandInfo("CALCIFMISSING",
     val columnNames = Calc.getColumnsFromArgs(args)
     val exprSrc = Calc.getExpressionsFromArgs(args, columnNames)
 
-    val existingColumns = forcedInputHeader.split('\t')
+    val existingColumns = forcedInputHeader.toLowerCase.split('\t')
     val newColumns = ArrayBuffer[String]()
     val expressions = ArrayBuffer[String]()
     for (i <- columnNames.indices) {
-      if (!existingColumns.contains(columnNames(i))) {
+      if (!existingColumns.contains(columnNames(i).toLowerCase)) {
         newColumns += columnNames(i)
         expressions += exprSrc(i)
       }
