@@ -29,7 +29,7 @@ public final class LimitedOutputStream extends FilterOutputStream {
             this.count += (long) len;
             this.check();
         } catch (Exception e) {
-            log.warn("Exception in write after writing {} bytes", this.count, e);
+            log.warn("Exception in write buffer after writing {} bytes", this.count, e);
             throw e;
         }
     }
@@ -41,7 +41,7 @@ public final class LimitedOutputStream extends FilterOutputStream {
             ++this.count;
             this.check();
         } catch (Exception e) {
-            log.warn("Exception in write after writing {} bytes", this.count, e);
+            log.warn("Exception in write byte after writing {} bytes", this.count, e);
             throw e;
         }
     }
@@ -51,7 +51,7 @@ public final class LimitedOutputStream extends FilterOutputStream {
         try {
             this.out.flush();
         } catch (Exception e) {
-            log.warn("Exception in write after writing {} bytes", this.count, e);
+            log.warn("Exception in flush after writing {} bytes", this.count, e);
             throw e;
         }
     }
@@ -61,7 +61,7 @@ public final class LimitedOutputStream extends FilterOutputStream {
         try {
             this.out.close();
         } catch (Exception e) {
-            log.warn("Exception in write after writing {} bytes", this.count, e);
+            log.warn("Exception in close after writing {} bytes", this.count, e);
             throw e;
         }
     }
