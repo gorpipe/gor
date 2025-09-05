@@ -92,8 +92,11 @@ object IteratorUtilities {
         if (ALLOW_DUPLICATE_COLUMNS || allowDuplicates) {
           column = column + "x"
           colToUp = column.toUpperCase
+          if (!allowDuplicates) {
+            logger.warn(s"Duplicate column name '$col' detected in header: $header. Renaming to '$column'")
+          }
         } else {
-          throw new GorDataException(f"Error: Duplicate column name '$column%s' detected in header: $header%s")
+          throw new GorDataException(f"Error: Duplicate column name '$column' detected in header: $header")
         }
       }
       usedCols.add(colToUp)
