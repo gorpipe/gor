@@ -94,6 +94,7 @@ public abstract class S3MultipartOutputStream extends OutputStream {
             try {
                 return uploadWithRetry(currentPart, partData);
             } catch (IOException e) {
+                logger.error(String.format("Uploading part %s/%s-%d failed after %d tries", bucket, key, currentPart, MAX_RETRIES), e);
                 throw new RuntimeException(e);
             }
         }, executor);
@@ -107,6 +108,7 @@ public abstract class S3MultipartOutputStream extends OutputStream {
 
     private CompletedPart uploadWithRetry(int partNum, byte[] data) throws IOException {
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            logger.info("Uploading part {}/{}-{} (attempt {}/{})", bucket, key, partNum, attempt, MAX_RETRIES);
             try {
                 UploadPartRequest req = UploadPartRequest.builder()
                         .bucket(bucket)
@@ -121,6 +123,7 @@ public abstract class S3MultipartOutputStream extends OutputStream {
                         .eTag(resp.eTag())
                         .build();
             } catch (Exception e) {
+                logger.warn(String.format("Upload part %s/%s-%d failed on attempt %d/%d", bucket, key, partNum, attempt, MAX_RETRIES), e);
                 if (attempt == MAX_RETRIES) throw new IOException(e);
                 try {
                     Thread.sleep(RETRY_SLEEP_BASE_MS * attempt);
