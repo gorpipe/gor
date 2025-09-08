@@ -138,11 +138,14 @@ public class S3Source implements StreamSource {
 
         long maxFileSize = (long)writeChunkSize * (long)MAX_S3_CHUNKS;
         try {
-            return
-                    new LimitedOutputStream(
-                    getPath().getFileSystem().provider().newOutputStream(getPath(),
-                            append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
-                    maxFileSize);
+            OutputStream os = asyncClient != null ?
+                    new S3MultipartOutputStreamAsync(asyncClient, bucket, key) :
+                    new S3MultipartOutputStreamSync(client, bucket, key);
+
+            return new LimitedOutputStream(os, maxFileSize);
+//                    getPath().getFileSystem().provider().newOutputStream(getPath(),
+//                            append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING),
+//                    maxFileSize);
         } catch (IOException e) {
             throw new GorResourceException(getName(), getName(), e).retry();
         }
