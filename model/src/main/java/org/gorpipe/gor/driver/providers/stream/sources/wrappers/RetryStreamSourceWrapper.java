@@ -194,7 +194,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
          */
         private void reopen() {
             StreamUtils.tryClose(in);
-            logger.info("Refresh meta data");
+            logger.info("Refreshing meta data");
             getSourceMetadata(); // Force metadata update.
 
             // Need to open it using the outer super class open (and be careful NOT to warp it again)
