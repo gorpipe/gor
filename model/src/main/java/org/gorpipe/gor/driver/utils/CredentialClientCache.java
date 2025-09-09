@@ -97,7 +97,7 @@ public class CredentialClientCache<ClientClass> {
                     return Optional.ofNullable(cred);
                 }
             }
-            log.debug("No credentials available for {}", lookup);
+            log.warn("No credentials available for {}", lookup);
             return Optional.empty();
         } catch (IOException e) {
             throw new RuntimeException(e);

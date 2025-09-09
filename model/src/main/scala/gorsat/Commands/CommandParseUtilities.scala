@@ -27,6 +27,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.GorCommand
 import org.gorpipe.gor.util.{DataUtil, StringUtil}
+import org.gorpipe.util.DateUtils
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -260,18 +261,9 @@ object CommandParseUtilities {
   }
 
   def epochValueOfOption(args: Array[String], name: String): Long = {
-    var optionValue: String = stringValueOfOption(args, name)
+    val optionValue: String = stringValueOfOption(args, name)
     try {
-      if (optionValue.contains("-")) {
-        if (!optionValue.contains("T")) {
-          optionValue = optionValue + "T00:00:00Z"
-        } else if (!optionValue.contains("Z")) {
-          optionValue = optionValue + "Z"
-        }
-        java.time.Instant.parse(optionValue).toEpochMilli
-      } else {
-        optionValue.toLong
-      }
+      DateUtils.parseDateISOEpoch(optionValue, true).toEpochMilli
     } catch {
       case e: Throwable => throw new GorParsingException(s"Value $optionValue supplied with option $name is not a valid iso date/epoch", e)
     }

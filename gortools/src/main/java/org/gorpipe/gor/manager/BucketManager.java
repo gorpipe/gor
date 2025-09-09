@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Function;
@@ -456,7 +457,7 @@ public class BucketManager<T extends DictionaryEntry> {
     private void doBucketizeForBucketDir(DictionaryTable tempTable, String bucketDir, Map<String, List<T>> newBucketsMap, int maxBucketCount) throws IOException {
         Map<String, List<T>> newBucketsMapForBucketDir =
                 newBucketsMap.keySet().stream()
-                        .filter(p -> PathUtils.getParent(p).equals(PathUtils.stripTrailingSlash(bucketDir)))
+                        .filter(p -> PathUtils.pathEquals(PathUtils.getParent(p), bucketDir))
                         .collect(Collectors.toMap(Function.identity(), newBucketsMap::get));
 
         //  Create the bucket files

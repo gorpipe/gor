@@ -23,8 +23,10 @@
 package org.gorpipe.gor.driver;
 
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,6 +64,37 @@ public class UTestPluggableGorDriver {
         PluggableGorDriver pd = PluggableGorDriver.instance();
         GenomicIterator iterator = pd.createIterator(new SourceReference("1.mem"));
         Assert.assertNotNull(iterator);
+    }
+
+    @Test
+    public void testResolveDataSourceFile() throws IOException {
+        String fileName = "testfile.gor";
+        DataSource source = gorDriver.resolveDataSource(new SourceReference(fileName));
+        Assert.assertTrue(source instanceof FileSource);
+        Assert.assertEquals(fileName, source.getName());
+    }
+
+    @Test
+    public void testResolveDataSourceFileSchema() throws IOException {
+        String fileName = "testfile.gor";
+        DataSource source = gorDriver.resolveDataSource(new SourceReference("file://" + fileName));
+        Assert.assertTrue(source instanceof FileSource);
+        Assert.assertEquals(fileName, source.getName());
+    }
+
+    @Test
+    public void testResolveDataSourceS3Schema() throws IOException {
+        String fileName = "s3://testfile.gor";
+        DataSource source = gorDriver.resolveDataSource(new SourceReference(fileName));
+        Assert.assertEquals(fileName, source.getName());
+    }
+
+    @Test
+    public void testResolveDataSourceUnknownSchema() throws IOException {
+        String fileName = "bla://testfile" + DataType.GOR.suffix;
+        Assert.assertThrows(GorResourceException.class, () -> {
+            gorDriver.resolveDataSource(new SourceReference(fileName));
+        });
     }
 
 }
