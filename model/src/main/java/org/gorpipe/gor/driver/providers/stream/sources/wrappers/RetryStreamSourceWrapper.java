@@ -28,6 +28,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +54,8 @@ import java.util.stream.Stream;
  * Created by villi on 29/08/15.
  */
 public class RetryStreamSourceWrapper extends WrappedStreamSource {
+
+    Logger logger = org.slf4j.LoggerFactory.getLogger(RetryStreamSourceWrapper.class);
 
     private final RetryHandlerBase retry;
 
@@ -191,6 +194,9 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
          */
         private void reopen() {
             StreamUtils.tryClose(in);
+            logger.info("Refresh meta data for {}", getPath());
+            getSourceMetadata(); // Force metadata update.
+
             // Need to open it using the outer super class open (and be careful NOT to warp it again)
             if (length == null) {
                 in = RetryStreamSourceWrapper.super.open(start + getPosition());
