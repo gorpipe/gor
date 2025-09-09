@@ -232,6 +232,16 @@ public class FileSource implements StreamSource {
     }
 
     @Override
+    public boolean existsWithMetaDataUpdate() {
+        try (Stream<Path> paths = Files.list(getPath().getParent())) {
+            // Intentially empty
+        } catch (IOException e) {
+            //Ignore
+        }
+        return exists();
+    }
+
+    @Override
     public String move(DataSource dest)  {
         try {
             return Files.move(Path.of(getFullPath()), Path.of(dest.getFullPath()),
