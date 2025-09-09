@@ -118,7 +118,8 @@ public class ITestS3Source extends CommonStreamTests {
     @Test
     public void testS3WriteLargeFile() {
         long startTime = System.currentTimeMillis();
-        TestUtils.runGorPipe(String.format("gorrows -p chr1:1-1000000000 | calc data 'Some dummy data to fatten the lines, boooooooooo' | write s3://gdb-unit-test-data/s3write/large.gor"));
+        TestUtils.runGorPipe(String.format("gorrows -p chr1:1-1000000000 | calc data 'Some dummy data to fatten the lines, boooooooooo' | write s3://gdb-unit-test-data/s3write/large.gor"),
+                false, DriverUtils.awsSecurityContext(S3_KEY, S3_SECRET));
         long duration = System.currentTimeMillis() - startTime;
         System.out.println("Time: " + duration/(1000) + " s");
     }

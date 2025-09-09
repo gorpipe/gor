@@ -123,8 +123,9 @@ public abstract class S3MultipartOutputStream extends OutputStream {
                         .eTag(resp.eTag())
                         .build();
             } catch (Exception e) {
-                logger.warn(String.format("Upload part %s/%s-%d failed on attempt %d/%d", bucket, key, partNum, attempt, MAX_RETRIES), e);
-                if (attempt == MAX_RETRIES) throw new IOException(e);
+                String errorMsg = String.format("Uploading part %s/%s-%d failed on attempt %d/%d: %s", bucket, key, partNum, attempt, MAX_RETRIES, e.getMessage());
+                logger.warn(errorMsg, e);
+                if (attempt == MAX_RETRIES) throw new IOException(errorMsg, e);
                 try {
                     Thread.sleep(RETRY_SLEEP_BASE_MS * attempt);
                 } catch (InterruptedException ignored) {

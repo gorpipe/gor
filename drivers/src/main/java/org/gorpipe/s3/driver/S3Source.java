@@ -71,6 +71,7 @@ public class S3Source implements StreamSource {
     // software.amazon.nio.s3..aws-java-nio-spi-for-s3 only uses credentials from the default provider chain (can not specify creds
     // in the driver as we can for Carlspring).  So we can not use it for multiple accounts (if using key and secret).
     private static final boolean USE_S3_CARLSPRING_FILESYSTEM = Boolean.parseBoolean(System.getProperty("gor.s3.use.carlspring.filesystem", "true"));
+    private static final boolean USE_S3_FILESYSTEM_OUTPUTSTREAM = Boolean.parseBoolean(System.getProperty("gor.s3.use.filesystem.outputstream", "false"));
     // Use NIO filesystem where possible.  Some S3 operations using the NIO filesystem are not supported by the OCI S3 compatibility layer.
     // TODP:  Maybe we should create a OCIS3CompatSource.
     private static final boolean OCI_S3_COMPATIBLE = Boolean.parseBoolean(System.getProperty("gor.oci.s3.compatible", "true"));
@@ -133,14 +134,20 @@ public class S3Source implements StreamSource {
 
     @Override
     public OutputStream getOutputStream(boolean append) {
-        if(append) throw new GorResourceException("S3 write not appendable",bucket+"/"+key);
+        if(append) throw new GorResourceException("S3 write not appendable", bucket+"/"+key);
         invalidateMeta();
 
         long maxFileSize = (long)writeChunkSize * (long)MAX_S3_CHUNKS;
         try {
-            OutputStream os = asyncClient != null ?
-                    new S3MultipartOutputStreamAsync(asyncClient, bucket, key) :
-                    new S3MultipartOutputStreamSync(client, bucket, key);
+            OutputStream os;
+            if (USE_S3_FILESYSTEM_OUTPUTSTREAM) {
+                os = getPath().getFileSystem().provider().newOutputStream(getPath(),
+                        append ? StandardOpenOption.APPEND : StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            } else {
+                os = asyncClient != null ?
+                        new S3MultipartOutputStreamAsync(asyncClient, bucket, key) :
+                        new S3MultipartOutputStreamSync(client, bucket, key);
+            }
 
             return new LimitedOutputStream(os, maxFileSize);
         } catch (IOException e) {
