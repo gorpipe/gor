@@ -122,6 +122,7 @@ public class FileSource implements StreamSource {
 
     protected void ensureOpenForRead()  {
         if (raf == null) {
+            log.warn("Opening file for read: {}", filePath);
             if (keepStackTraceForOpen) {
                 rafOpenedStackTrace = new Error();
             }
@@ -198,8 +199,10 @@ public class FileSource implements StreamSource {
             @Override
             public void close() throws IOException  {
                 try {
+                    log.warn("Closing stream to file: {}", filePath);
                     super.close();
                 } finally {
+                    log.warn("Cliing file source to file: {}", filePath);
                     FileSource.this.close();
                 }
             }
@@ -354,6 +357,7 @@ public class FileSource implements StreamSource {
     public void close()  {
         if (raf != null) {
             try {
+                log.warn("Closing RAF to file: {}", filePath);
                 raf.close();
             } catch (IOException e) {
                 throw GorResourceException.fromIOException(e, getPath()).retry();
