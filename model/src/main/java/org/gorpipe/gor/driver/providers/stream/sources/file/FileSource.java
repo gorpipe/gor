@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -130,8 +131,11 @@ public class FileSource implements StreamSource {
 
             try {
                 raf = new RandomAccessFile(filePath.toFile(), "r");
+                log.warn("Opened file for read: {}, {}/{}", filePath, raf.getFilePointer(), raf.length());
             } catch (FileNotFoundException e) {
                 throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
+            } catch (IOException e) {
+                log.warn("Logging out: {} info.  Got exception", filePath, e);
             }
         }
     }
@@ -239,6 +243,7 @@ public class FileSource implements StreamSource {
     public boolean existsWithMetaDataUpdate() {
         try (Stream<Path> paths = Files.list(getPath().getParent())) {
             // Intentially empty
+            log.warn("Listing parent dir of {} to update metadata {}", getPath(), paths.map(p -> p.toString()).collect(Collectors.joining("\n")));
         } catch (IOException e) {
             //Ignore
         }
