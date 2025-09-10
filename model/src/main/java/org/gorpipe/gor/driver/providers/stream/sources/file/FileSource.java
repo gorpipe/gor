@@ -96,6 +96,7 @@ public class FileSource implements StreamSource {
     public InputStream open(long start)  {
         ensureOpenForRead();
         try {
+            log.warn("Seeking to {} in raf file: {}", start, filePath);
             raf.seek(start);
         } catch (IOException e) {
             throw GorResourceException.fromIOException(e, getPath().toString()).retry();
@@ -420,7 +421,10 @@ public class FileSource implements StreamSource {
 //            if (Math.random() > 0.9) {
 //                throw new IOException("Stale file handle");
 //            }
-            return raf.read(b, off, len);
+
+            int read =  raf.read(b, off, len);
+            log.warn("Reading from file: %s (%d / %d) - off: %d len: %d actually read: %d".formatted(filePath, raf.getFilePointer(), raf.length(), off, len, read));
+            return read;
         }
 
         @Override
