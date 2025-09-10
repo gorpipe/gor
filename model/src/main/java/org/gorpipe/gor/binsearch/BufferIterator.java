@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
  */
 class BufferIterator {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BufferIterator.class);
+
     private byte[] buffer;
     private boolean hasNext;
     private int bufferIdx;
@@ -62,6 +64,7 @@ class BufferIterator {
         } else {
             this.lowerBound = getLowerBound(buffer, offset, upTo, firstPosBeginOfLine);
             this.upperBound = getUpperBound(buffer, offset, upTo, lastPosEndOfLine);
+            logger.warn("Bounds set to {} - {}.  Offsets {} - {}", this.lowerBound, this.upperBound, offset, upTo);
             if (this.lowerBound < this.upperBound) {
                 this.buffer = buffer;
                 this.hasNext = true;

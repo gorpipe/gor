@@ -425,7 +425,7 @@ public class FileSource implements StreamSource {
 
         @Override
         public void close() {
-            log.warn("FileSource Stream Closing stream to file: {} - {}", filePath, closable);
+            log.warn("FileSource Stream Closing stream to file: %s - %s".formatted(filePath, closable), new Exception());
             if (closable && raf != null) {
                 FileSource.this.close();
             }

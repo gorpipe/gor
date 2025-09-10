@@ -36,6 +36,8 @@ import java.util.Arrays;
  * @author hjaltii
  */
 public class SeekableIterator implements AutoCloseable {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SeekableIterator.class);
+
     private static final int DEFAULT_BUFFER_SIZE = 64 * 1024; //64K
     private static final int MAXIMUM_LINE_SIZE = 32 * 1024 * 1024; //32M
     static final StringIntKey DEFAULT_COMPARATOR = new StringIntKey(0, 1, StringIntKey.cmpLexico);
@@ -198,9 +200,9 @@ public class SeekableIterator implements AutoCloseable {
         if (this.file.getFilePointer() != this.bufferEndInFile) {
             this.file.seek(this.bufferEndInFile);
         }
-        while (this.bufferEndInFile < this.fileSize) {
-            extendBufferToRight();
-            if (this.bufferIterator.hasNext()) {
+        while (this.bufferEndInFile < this.fileSize) { // Possible do the whole file
+            extendBufferToRight(); // Fill buffer
+            if (this.bufferIterator.hasNext()) { // Check if has ready lines
                 break;
             } else {
                 final byte[] oldBuffer = this.buffer;
@@ -211,8 +213,13 @@ public class SeekableIterator implements AutoCloseable {
     }
 
     private void extendBufferToRight() throws IOException {
+        long startBytesInBuffer = this.numberOfBytesInBuffer;
+        log.warn("Extending buffer to right, fully. Current buffer size is {}/{} bytes. ",
+                this.numberOfBytesInBuffer , this.buffer.length);
         this.numberOfBytesInBuffer += readFully(this.buffer, this.numberOfBytesInBuffer, this.buffer.length - this.numberOfBytesInBuffer);
         this.bufferEndInFile = this.bufferPosInFile + this.numberOfBytesInBuffer;
+        log.warn("Extending buffer to right, fully. Current buffer size is {}/{} bytes. Read {}.  Buffer pos in file {}, buffer end in file {}, file size {}.",
+                this.numberOfBytesInBuffer , this.buffer.length, this.numberOfBytesInBuffer - startBytesInBuffer, this.bufferPosInFile, this.bufferEndInFile, this.fileSize);
         this.bufferIterator.update(this.buffer, 0, this.numberOfBytesInBuffer, true, this.bufferEndInFile == this.fileSize);
     }
 
@@ -344,6 +351,7 @@ public class SeekableIterator implements AutoCloseable {
 
     private void doubleTheBuffer() {
         if (this.buffer.length > MAXIMUM_LINE_SIZE) {
+            log.warn("Buffer is larger than then maximum line size of {} bytes.", MAXIMUM_LINE_SIZE );
             throw new IllegalStateException("Buffer is larger than then maximum line size of " + MAXIMUM_LINE_SIZE + " bytes.");
         } else {
             this.buffer = new byte[2 * this.buffer.length];
