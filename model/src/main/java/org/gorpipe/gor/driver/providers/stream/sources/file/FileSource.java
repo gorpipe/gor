@@ -429,6 +429,8 @@ public class FileSource implements StreamSource {
             }
         }
 
+
+
         @Override
         public int available() throws IOException {
             return (int) Math.min(raf.length() - raf.getFilePointer(), Integer.MAX_VALUE);

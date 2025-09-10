@@ -51,6 +51,14 @@ public interface StreamSource extends DataSource {
     }
 
     /**
+     * Close the stream source and free any resources associated with it.
+     * <p>
+     */
+    default void forceClose() throws IOException {
+        close();
+    }
+
+    /**
      * Open stream that reads through whole source.
      */
     InputStream open();
