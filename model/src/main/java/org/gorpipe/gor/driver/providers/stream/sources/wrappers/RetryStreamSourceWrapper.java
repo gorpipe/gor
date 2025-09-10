@@ -201,7 +201,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
             existsWithMetaDataUpdate();
             getSourceMetadata(); // Force metadata update.
 
-            // Need to open it using the outer super class open (and be careful NOT to warp it again)
+            // Need to open it using the outer super class open (and be careful NOT to wrap it again)
             if (length == null) {
                 in = RetryStreamSourceWrapper.super.open(start + getPosition());
             } else {

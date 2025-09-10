@@ -417,9 +417,9 @@ public class FileSource implements StreamSource {
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-            if (Math.random() > 0.9) {
-                throw new IOException("Stale file handle");
-            }
+//            if (Math.random() > 0.9) {
+//                throw new IOException("Stale file handle");
+//            }
             return raf.read(b, off, len);
         }
 
