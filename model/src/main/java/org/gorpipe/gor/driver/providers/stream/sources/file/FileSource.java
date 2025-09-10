@@ -360,6 +360,7 @@ public class FileSource implements StreamSource {
                 log.warn("Closing RAF to file: {}", filePath);
                 raf.close();
             } catch (IOException e) {
+                log.warn("Closing RAF to file: %s.  Got exectpion".format(filePath.toString()), e);
                 throw GorResourceException.fromIOException(e, getPath()).retry();
             } finally {
                 raf = null;
@@ -424,6 +425,7 @@ public class FileSource implements StreamSource {
 
         @Override
         public void close() {
+            log.warn("FileSource Stream Closing stream to file: {} - {}", filePath, closable);
             if (closable && raf != null) {
                 FileSource.this.close();
             }

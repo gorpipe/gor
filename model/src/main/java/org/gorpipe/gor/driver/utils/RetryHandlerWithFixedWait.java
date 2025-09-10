@@ -39,7 +39,7 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 lastException = e;
                 accumulatedDuration += sleep(e, tries, initialDuration);
 
-                log.warn("Retrying gor action (return) after " + accumulatedDuration + "ms, retry " + tries, e);
+                log.warn("Retrying gor action (return 1) after " + accumulatedDuration + "ms, retry " + tries, e);
 
                 log.warn("Calling pre-retry operation before retrying. Pretry op: {}", preRetryOp != null ? "Exists" : "Does not exist");
                 if (preRetryOp != null) {
