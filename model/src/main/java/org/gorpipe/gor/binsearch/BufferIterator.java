@@ -64,7 +64,6 @@ class BufferIterator {
         } else {
             this.lowerBound = getLowerBound(buffer, offset, upTo, firstPosBeginOfLine);
             this.upperBound = getUpperBound(buffer, offset, upTo, lastPosEndOfLine);
-            logger.warn("Bounds set to {} - {}.  Offsets {} - {}", this.lowerBound, this.upperBound, offset, upTo);
             if (this.lowerBound < this.upperBound) {
                 this.buffer = buffer;
                 this.hasNext = true;

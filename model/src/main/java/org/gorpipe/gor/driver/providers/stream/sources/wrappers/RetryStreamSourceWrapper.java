@@ -171,7 +171,9 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         public int read(byte[] b, int off, int len) throws IOException {
             return retry.perform(() -> {
                             try {
-                                return super.read(b, off, len);
+                                int read = super.read(b, off, len);
+                                logger.warn("Read called on {} off {} len {}, read {}", getFullPath(), off, len, read);
+                                return read;
                             } catch (IOException e) {
                                 throw GorResourceException.fromIOException(e, getPath()).retry();
                             }
@@ -193,7 +195,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
          * NB: If reopening the stream fails - it is not retried.
          */
         private void reopen() {
-            logger.warn("Calling try close 4");
+            logger.warn("Calling try close 4 start {} pos {}", start, getPosition());
             StreamUtils.tryClose(in);
             RetryStreamSourceWrapper.super.close();
             // Clear any cached metadata - it might have changed.
