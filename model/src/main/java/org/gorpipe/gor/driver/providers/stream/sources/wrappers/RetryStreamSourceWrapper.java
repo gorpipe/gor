@@ -193,13 +193,13 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
          * NB: If reopening the stream fails - it is not retried.
          */
         private void reopen() {
-            logger.warn("Calling try close 1");
+            logger.warn("Calling try close 2");
             StreamUtils.tryClose(in);
             RetryStreamSourceWrapper.super.close();
             // Clear any cached metadata - it might have changed.
             //logger.warn("Refreshing meta data");
             //existsWithMetaDataUpdate();
-            //getSourceMetadata(); // Force metadata update.
+            getSourceMetadata(); // Force metadata update.
 
             // Need to open it using the outer super class open (and be careful NOT to warp it again)
             if (length == null) {
