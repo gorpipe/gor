@@ -81,11 +81,7 @@ public class StreamSourceSeekableFile extends SeekableFile {
             // Safe to cast because length-position can only be less than len.
             len = (int) (length() - position);
         }
-//        // Individual operations are retried automatically with our retry wrapper, but we
-//        // may get errors, such as stale file handle, that we can recover from by
-//        // reopening the file before attempting the read operation again.
-//        int numRetries = 0;
-//        while (true) {
+
         try (InputStream stream = source.open(position, len)) {
             int read = StreamUtils.readToBuffer(stream, b, off, len);
             if (read > 0) {
@@ -94,18 +90,6 @@ public class StreamSourceSeekableFile extends SeekableFile {
             log.trace("Actually read: {}", read);
             return read;
         }
-//            } catch (IOException e) {
-//                if (e.getMessage().equals("Stale file handle")) {
-//                    numRetries++;
-//                    if (numRetries >= 3) {
-//                        log.warn("Stale file handle on {} after {} retries", getMeta().getNamedUrl(), numRetries, e);
-//                        throw(e);
-//                    }
-//                } else {
-//                    throw(e);
-//                }
-//            }
-//        }
     }
 
     @Override

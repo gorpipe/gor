@@ -232,16 +232,6 @@ public class FileSource implements StreamSource {
     }
 
     @Override
-    public boolean existsWithMetaDataUpdate() {
-        try (Stream<Path> paths = Files.list(getPath().getParent())) {
-            // Intentially empty
-        } catch (IOException e) {
-            //Ignore
-        }
-        return exists();
-    }
-
-    @Override
     public String move(DataSource dest)  {
         try {
             return Files.move(Path.of(getFullPath()), Path.of(dest.getFullPath()),
@@ -412,10 +402,6 @@ public class FileSource implements StreamSource {
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-//            if (Math.random() > 0.9) {
-//                throw new IOException("Stale file handle");
-//            }
-
             return raf.read(b, off, len);
         }
 

@@ -75,11 +75,6 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
-    public boolean existsWithMetaDataUpdate() {
-        return wrapped.existsWithMetaDataUpdate();
-    }
-
-    @Override
     public void validateAccess() {
         wrapped.validateAccess();
     }

@@ -105,10 +105,6 @@ public interface DataSource extends AutoCloseable {
      */
     boolean exists();
 
-    default boolean existsWithMetaDataUpdate() {
-        return exists();
-    }
-
     default void delete() {
         throw new GorResourceException("Delete is not implemented", getSourceType().getName());
     }
