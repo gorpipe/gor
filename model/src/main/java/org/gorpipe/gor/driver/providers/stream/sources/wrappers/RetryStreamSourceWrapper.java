@@ -171,9 +171,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         public int read(byte[] b, int off, int len) throws IOException {
             return retry.perform(() -> {
                             try {
-                                int read = super.read(b, off, len);
-                                logger.warn("Read called on {} off {} len {}, read {}", getFullPath(), off, len, read);
-                                return read;
+                                return super.read(b, off, len);
                             } catch (IOException e) {
                                 throw GorResourceException.fromIOException(e, getPath()).retry();
                             }
@@ -200,8 +198,8 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
             RetryStreamSourceWrapper.super.close();
             // Clear any cached metadata - it might have changed.
             //logger.warn("Refreshing meta data");
-            existsWithMetaDataUpdate();
-            getSourceMetadata(); // Force metadata update.
+            //existsWithMetaDataUpdate();
+            //getSourceMetadata(); // Force metadata update.
 
             // Need to open it using the outer super class open (and be careful NOT to wrap it again)
             if (length == null) {

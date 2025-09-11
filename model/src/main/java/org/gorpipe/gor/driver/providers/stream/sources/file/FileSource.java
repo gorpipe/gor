@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -97,7 +96,6 @@ public class FileSource implements StreamSource {
     public InputStream open(long start)  {
         ensureOpenForRead();
         try {
-            log.warn("Seeking to {} in raf file: {}", start, filePath);
             raf.seek(start);
         } catch (IOException e) {
             throw GorResourceException.fromIOException(e, getPath().toString()).retry();
@@ -124,18 +122,14 @@ public class FileSource implements StreamSource {
 
     protected void ensureOpenForRead()  {
         if (raf == null) {
-            log.warn("Opening file for read: {}", filePath);
             if (keepStackTraceForOpen) {
                 rafOpenedStackTrace = new Error();
             }
 
             try {
                 raf = new RandomAccessFile(filePath.toFile(), "r");
-                log.warn("Opened file for read: {}, {}/{}", filePath, raf.getFilePointer(), raf.length());
             } catch (FileNotFoundException e) {
                 throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
-            } catch (IOException e) {
-                log.warn("Logging out: {} info.  Got exception", filePath, e);
             }
         }
     }
@@ -204,10 +198,8 @@ public class FileSource implements StreamSource {
             @Override
             public void close() throws IOException  {
                 try {
-                    log.warn("Closing stream to file: {}", filePath);
                     super.close();
                 } finally {
-                    log.warn("Cliing file source to file: {}", filePath);
                     FileSource.this.close();
                 }
             }
@@ -363,10 +355,8 @@ public class FileSource implements StreamSource {
     public void close()  {
         if (raf != null) {
             try {
-                log.warn("Closing RAF to file: {}", filePath);
                 raf.close();
             } catch (IOException e) {
-                log.warn("Closing RAF to file: %s.  Got exectpion".format(filePath.toString()), e);
                 throw GorResourceException.fromIOException(e, getPath()).retry();
             } finally {
                 raf = null;
@@ -427,20 +417,15 @@ public class FileSource implements StreamSource {
 //                throw new IOException("Stale file handle");
 //            }
 
-            int read =  raf.read(b, off, len);
-            log.warn("Reading from file: %s (%d / %d) - off: %d len: %d actually read: %d".formatted(filePath, raf.getFilePointer(), raf.length(), off, len, read));
-            return read;
+            return raf.read(b, off, len);
         }
 
         @Override
         public void close() {
-            log.warn("FileSource Stream Closing stream to file: %s - %s".formatted(filePath, closable), new Exception());
             if (closable && raf != null) {
                 FileSource.this.close();
             }
         }
-
-
 
         @Override
         public int available() throws IOException {

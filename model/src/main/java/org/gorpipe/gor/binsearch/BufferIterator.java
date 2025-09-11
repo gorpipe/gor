@@ -33,8 +33,6 @@ import java.nio.charset.StandardCharsets;
  */
 class BufferIterator {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BufferIterator.class);
-
     private byte[] buffer;
     private boolean hasNext;
     private int bufferIdx;
