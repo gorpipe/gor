@@ -190,7 +190,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         }
 
         /**
-         * NB: If reopening the stream fails - it is not retried.
+         * NB: If reopening the stream fails - it is not retr   ied.
          */
         private void reopen() {
             logger.warn("Calling try close 4 start {} pos {}", start, getPosition());

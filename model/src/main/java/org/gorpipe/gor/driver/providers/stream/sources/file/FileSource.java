@@ -235,7 +235,6 @@ public class FileSource implements StreamSource {
     public boolean existsWithMetaDataUpdate() {
         try (Stream<Path> paths = Files.list(getPath().getParent())) {
             // Intentially empty
-            log.warn("Listing parent dir of {} to update metadata {}", getPath(), paths.map(p -> p.toString()).collect(Collectors.joining("\n")));
         } catch (IOException e) {
             //Ignore
         }
