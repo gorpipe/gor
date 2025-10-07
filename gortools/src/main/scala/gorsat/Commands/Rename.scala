@@ -105,8 +105,17 @@ class Rename extends CommandInfo("RENAME",
   }
 
   def replacePart(old: String, ix: Int, newValue: String): String = {
-    val target = s"{$ix}"
-    old.replace("$"+target, newValue).replace("#"+target, newValue)
+    var target = s"{$ix}"
+    var rep = old.replace("$"+target, newValue).replace("#"+target, newValue)
+    target = s"{u:$ix}"
+    rep = rep.replace("$" + target, newValue).replace("#" + target, newValue.toUpperCase)
+    target = s"{U:$ix}"
+    rep = rep.replace("$" + target, newValue).replace("#" + target, newValue.toUpperCase)
+    target = s"{l:$ix}"
+    rep = rep.replace("$" + target, newValue).replace("#" + target, newValue.toLowerCase)
+    target = s"{L:$ix}"
+    rep = rep.replace("$" + target, newValue).replace("#" + target, newValue.toLowerCase)
+    return rep
   }
 }
 

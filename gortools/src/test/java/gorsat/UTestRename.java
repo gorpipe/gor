@@ -143,4 +143,18 @@ public class UTestRename {
         String query = "gorrow chr1,1 | calc Foo 0 | calc Bar 1 | rename Foo Bar | top 0";
         Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
+
+    @Test
+    public void renameCase() {
+        String query = "gorrow chr1,1 | calc Foo_Boo 0 | rename (F.*)_(B.*) #{u:1}_#{L:2} | top 0";
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("chrom\tpos\tFOO_boo\n", result);
+    }
+
+    @Test
+    public void renameUpperCase() {
+        String query = "gorrow chr1,1 | rename (.*) #{U:1} | top 0";
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("CHROM\tPOS\n", result);
+    }
 }
