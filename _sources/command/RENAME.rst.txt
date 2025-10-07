@@ -12,9 +12,10 @@ renaming does not need to be referred to by name, but may be referred to by it's
 used by the :doc:`SELECT` command. You should not use a number when naming the columns, as this will result in an error.
 
 As with other column renaming commands, any collisions in column names will result in an "x" being appended to one of
-the column names in the GOR query  output.
+the column names in the GOR query output.
 
 Rename does also supports regular-expression with binding variables to rename multiple columns.
+See example below how to lowercase or uppercase parts of columnames with #{l:bind_n} and #{U:bind_n}
 
 Usage
 =====
@@ -46,4 +47,15 @@ and
 
 will rename columns like set_VEPa and lis_VEPb to VEPa and VEPb, respectively.
 
+.. code-block:: gor
+
+	gor ... | RENAME (.*)_VEP_(.*) #{U:1}_VEP#{l:2}
+
+will rename columns like set_VEP_a and lis_VEP_b to SET_VEPa and LIS_VEPb, respectively.
+
+.. code-block:: gor
+
+	gor ... | RENAME (.*) #{l:1}
+
+will lowercase name of all columns.
 

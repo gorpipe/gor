@@ -164,8 +164,9 @@
 renaming does not need to be referred to by name, but may be referred to by it’s column number in the same way as is
 used by the <a class="reference internal" href="SELECT.html"><span class="doc">SELECT</span></a> command. You should not use a number when naming the columns, as this will result in an error.</p>
 <p>As with other column renaming commands, any collisions in column names will result in an “x” being appended to one of
-the column names in the GOR query  output.</p>
-<p>Rename does also supports regular-expression with binding variables to rename multiple columns.</p>
+the column names in the GOR query output.</p>
+<p>Rename does also supports regular-expression with binding variables to rename multiple columns.
+See example below how to lowercase or uppercase parts of columnames with #{l:bind_n} and #{U:bind_n}</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">RENAME</span> oldColname newColname
@@ -197,6 +198,14 @@ the column names in the GOR query  output.</p>
 </pre></div>
 </div>
 <p>will rename columns like set_VEPa and lis_VEPb to VEPa and VEPb, respectively.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">RENAME</span> (.*)_VEP_(.*) #{U:1}_VEP#{l:2}
+</pre></div>
+</div>
+<p>will rename columns like set_VEP_a and lis_VEP_b to SET_VEPa and LIS_VEPb, respectively.</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">RENAME</span> (.*) #{l:1}
+</pre></div>
+</div>
+<p>will lowercase name of all columns.</p>
 </div>
 </div>
 
