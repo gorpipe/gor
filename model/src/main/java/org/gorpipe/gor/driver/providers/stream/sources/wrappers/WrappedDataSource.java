@@ -75,6 +75,11 @@ public class WrappedDataSource implements DataSource {
     }
 
     @Override
+    public void validateAccess() {
+        wrapped.validateAccess();
+    }
+
+    @Override
     public boolean exists() {
         return wrapped.exists();
     }
