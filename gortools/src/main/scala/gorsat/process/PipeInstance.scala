@@ -573,7 +573,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
       }
 
       if (finalCommand != null) {
-        finalCommand = GorJavaUtilities.projectReplacement(finalCommand, context.getSession)
+        finalCommand = CommandSubstitutions.projectReplacement(finalCommand, context.getSession)
         val inputSource = if (finalCommand.startsWith("sql ")) {
           val cmds = CommandParseUtilities.quoteSafeSplit(finalCommand.substring(4), ' ')
           finalCommand = CommandSubstitutions.filterCmd(cmds, filter).trim
@@ -605,51 +605,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     if (pipeStep.indexOf(' ') >= 0) pipeStep.slice(0, pipeStep.indexOf(' ')).toUpperCase else pipeStep.toUpperCase
   }
 
-  /**
-    * This method takes a command string and a parameter string
-    * and returns a tuple of strings that represent the command +/- the parameter string and the project root path.
-    */
-  def insertProjectContext(cmd: String, paramString: String): (String, String) = {
-    var command: String = cmd
-    var projectRoot = context.getSession.getProjectContext.getRoot.split("[ \t]+")(0)
-    if (projectRoot != null && projectRoot.length > 0) {
-      val rootPath = Paths.get(projectRoot)
-      if (Files.exists(rootPath)) {
-        val rootRealPath = rootPath.toRealPath()
-        projectRoot = rootRealPath.toString
 
-        val cachePath = rootRealPath.resolve("cache/result_cache")
-        if (Files.exists(cachePath)) {
-          val cacheRealPath = cachePath.toRealPath().getParent
-          command = command.replace("#{projectcache}", cacheRealPath.toString)
-        }
-
-        val dataPath = rootRealPath.resolve("source")
-        if (Files.exists(dataPath)) {
-          val dataRealPath = dataPath.toRealPath().getParent
-          command = command.replace("#{projectdata}", dataRealPath.toString)
-        }
-      }
-    } else {
-      projectRoot = new File(".").getAbsolutePath
-      if (context.getSession.getProjectContext.getCacheDir != null) command = command.replace("#{projectcache}", new File(context.getSession.getProjectContext.getCacheDir).getAbsolutePath)
-    }
-    command = command.replace("#{projectroot}", projectRoot)
-
-    val csaroot = System.getProperty("csa.root")
-    val csacache = System.getProperty("csa.cache.root")
-    if (csaroot != null) {
-      val csarootPath = Paths.get(csaroot)
-      command = command.replace("#{csaroot}", csarootPath.toString)
-    }
-    if (csacache != null) {
-      val csacacheRoot = Paths.get(csacache)
-      command = command.replace("#{cacheroot}", csacacheRoot.toString)
-    }
-
-    val ret = if (command.contains("#{params}")) command.replace("#{params}", paramString) else command + " " + paramString
-    (ret, projectRoot)
-  }
 
   /**
     * This method takes a command string, and a string that represents the leftHeader and returns the pipe header.
@@ -787,10 +743,7 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     if (icmd.isPresent) {
       val cmdalias = icmd.get()
       val cmdparams = whiteListCmdSet.get(cmdalias)
-      val cmd = cmdparams.getCommand
-      val commandRoot = insertProjectContext(cmd, paramString)
-      val command = commandRoot._1
-      val projectRoot = commandRoot._2
+      val command = CommandSubstitutions.insertProjectContext(cmdparams.getCommand, paramString, context)
       val skipheader = cmdparams.skipHeader()
       val skip = cmdparams.skipLines()
       val allowerror = cmdparams.allowError()

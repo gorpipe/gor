@@ -99,7 +99,8 @@ public class UTestSQLInputSource {
     @Test
     public void testNorSqlSourceWithProjectId() throws IOException, ClassNotFoundException {
         String sqlcmd = "norsql {select * from rda.v_variant_annotations where project_id = #{project_id}}";
-        var result = TestUtils.runGorPipe(sqlcmd);
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+        var result = TestUtils.runGorPipe(sqlcmd, false, securityContext);
         Assert.assertEquals(6, result.split("\n").length);
     }
 

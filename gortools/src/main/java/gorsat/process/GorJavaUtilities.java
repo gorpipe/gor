@@ -27,8 +27,6 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.model.FileReader;
-import org.gorpipe.gor.session.GorSession;
-import org.gorpipe.gor.driver.providers.rows.sources.db.DbScope;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.table.TableFactory;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
@@ -36,7 +34,6 @@ import org.gorpipe.gor.table.dictionary.gor.GorDictionaryEntry;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
-import org.gorpipe.gor.util.SqlReplacer;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,139 +189,12 @@ public class GorJavaUtilities {
         return query;
     }
 
-    public static String[] splitResourceHints(String query, String validStart) {
-        int i = query.indexOf("/*+");
-        String[] ret = new String[] {query,null};
-        if (i!=-1) {
-            int e = query.indexOf("*/",i+3);
-            String hints = query.substring(i+3,e).trim();
-            List<String> resourceHints = new ArrayList<>();
-            List<String> sqlHints = new ArrayList<>();
-            String[] hintSplit = hints.split("[ ]+");
-            Arrays.asList(hintSplit).forEach(hint -> {
-                if (hint.startsWith(validStart)) {
-                    resourceHints.add(hint);
-                } else {
-                    sqlHints.add(hint);
-                }
-            });
-            if (resourceHints.size()>0) ret[1] = String.join(" ", resourceHints);
-            if (sqlHints.size()==0) {
-                query = query.substring(0,i) + query.substring(e+2);
-            } else {
-                query = query.substring(0,i+3) + String.join(" ", sqlHints) + query.substring(e);
-            }
-            ret[0] = query;
-        }
-        return ret;
-    }
-
-    public static String createMapString(Map<String,String> createMap) {
-        return createMap.entrySet().stream().map(e -> "create "+e.getKey()+" = "+e.getValue()).collect(Collectors.joining("; ","",""));
-    }
-
-    public static List<Row> stream2RowList(Stream<Row> str) {
-        return str.collect(Collectors.toList());
-    }
-
-    public static String seekReplacement(String myCommand, String chr, int start, int stop) {
-        int sPos = myCommand.indexOf("#(S:");
-        if (sPos != -1) {
-            int sEnd = myCommand.indexOf(')', sPos + 1);
-
-            String seek = "";
-            if (chr != null) {
-                seek = myCommand.substring(sPos + 4, sEnd).replace("chr", chr);
-                int pos = seek.indexOf("pos-end");
-                if (pos != -1) {
-                    seek = seek.replace("pos", (start + 1) + "").replace("end", stop + "");
-                } else if (seek.contains("pos")) {
-                    pos = seek.indexOf("pos-");
-                    if (stop == -1) {
-                        seek = seek.replace("pos", start + "");
-                    } else if (start == stop && pos != -1) {
-                        seek = seek.replace("pos-", start + "");
-                    } else {
-                        seek = seek.replace("pos", start + "-") + stop;
-                    }
-                }
-            }
-            myCommand = myCommand.substring(0, sPos) + seek + myCommand.substring(sEnd + 1);
-        }
-        return myCommand;
-    }
-
-    public static void updateWithProjectInfo(GorSession session, Map<String, Object> map) {
-        if (map == null) return;
-
-        map.put(SqlReplacer.KEY_PROJECT_ID, session.getProjectContext().getProjectName());
-        map.put(SqlReplacer.KEY_REQUEST_ID, session.getRequestId());
-    }
-
-    public static String projectReplacement(String myCommand, GorSession session) throws IOException {
-        String projectRoot = session.getProjectContext().getRealProjectRoot();
-        String requestId = session.getRequestId();
-        String securityContext = session.getProjectContext().getFileReader().getSecurityContext();
-        return projectReplacement(myCommand, projectRoot, requestId, securityContext);
-    }
-
-    public static String projectReplacement(String myCommand, String projectRoot, String requestId, String securityContext) throws IOException {
-        myCommand = projectDataReplacement(projectRoot, myCommand);
-        myCommand = requestIdReplacement(requestId, myCommand);
-        myCommand = projectIdReplacement(securityContext, myCommand);
-        return myCommand;
-    }
-
-    public static String projectDataReplacement(String projectRoot, String myCommand) throws IOException {
-        if (projectRoot != null && projectRoot.length() > 0) {
-            Path rootPath = Paths.get(projectRoot);
-            if (Files.exists(rootPath)) {
-                Path rootRealPath = rootPath.toRealPath();
-                myCommand = myCommand.replace("#{projectroot}", rootRealPath.toString());
-
-                Path cachePath = rootRealPath.resolve("cache/result_cache");
-                if (Files.exists(cachePath)) {
-                    Path cacheRealPath = cachePath.toRealPath().getParent();
-                    myCommand = myCommand.replace("#{projectcache}", cacheRealPath.toString());
-                }
-
-                Path dataPath = rootRealPath.resolve("source");
-                if (Files.exists(dataPath)) {
-                    Path dataRealPath = dataPath.toRealPath().getParent();
-                    myCommand = myCommand.replace("#{projectdata}", dataRealPath.toString());
-                }
-            }
-        }
-        return myCommand;
-    }
-
-    private static String requestIdReplacement(String requestId, String myCommand) {
-        if (requestId != null) myCommand = myCommand.replace("#{requestid}", requestId);
-        return myCommand;
-
-    }
-
-    public static String projectIdReplacement(String securityContext, String myCommand) {
-        if (securityContext != null) {
-            List<DbScope> dbScopes = DbScope.parse(securityContext);
-            Integer projectIdValue = null;
-            for (DbScope dbScope : dbScopes) {
-                if (dbScope.getColumn().equals("project_id")) {
-                    projectIdValue = (Integer) dbScope.getValue();
-                }
-            }
-            if (projectIdValue != null) myCommand = myCommand.replace("#{projectid}", projectIdValue.toString());
-        }
-        return myCommand;
-    }
-
     public static GenomicIterator getDbIteratorSource(String sqlQuery, Map<String, Object> constants, final String source, boolean gortable, boolean scoping) {
         Supplier<Stream<String>> streamSupplier = () -> DbConnection.userConnections.getDBLinkStream( sqlQuery, constants, source);
         gorsat.Iterators.IteratorSource its;
         its = gortable ? new GorStreamIterator(streamSupplier, scoping) : new NorStreamIterator(streamSupplier);
         return new gorsat.Iterators.SingleIteratorSource(its, "dbit");
     }
-
 
     /**
      * Helper method for wrapping Object[] iterator to Stream.

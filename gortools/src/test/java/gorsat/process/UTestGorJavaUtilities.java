@@ -22,33 +22,9 @@
 
 package gorsat.process;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.IOException;
 
 public class UTestGorJavaUtilities {
 
 
-    @Test
-    public void testProjectIdReplacement() {
-        String myCommand1 = GorJavaUtilities.projectIdReplacement("dbscope=project_id#int#1", "#{projectid}");
-        String myCommand2 = GorJavaUtilities.projectIdReplacement("dbscope=organization#int#1", "#{projectid}");
-        String myCommand3 = GorJavaUtilities.projectIdReplacement("dbscope=project_id#int#1", "");
-        String myCommand4 = GorJavaUtilities.projectIdReplacement("dbscope=project_id#int#1,organization_id#int#1", "#{projectid}");
-        String myCommand5 = GorJavaUtilities.projectIdReplacement("dbscope=project_id#int#1,organization_id#int#1", "#{organizationId}");
-        String myCommand6 = GorJavaUtilities.projectIdReplacement("", "#{projectid}");
-        Assert.assertEquals("1", myCommand1);
-        Assert.assertEquals("#{projectid}", myCommand2);
-        Assert.assertEquals("", myCommand3);
-        Assert.assertEquals("1", myCommand4);
-        Assert.assertEquals("#{organizationId}", myCommand5);
-        Assert.assertEquals("#{projectid}", myCommand6);
-    }
 
-    @Test
-    public void testProjectReplacement() throws IOException {
-        String myCommand1 = GorJavaUtilities.projectReplacement("#{projectid}", "", "", "dbscope=project_id#int#1");
-        Assert.assertEquals("1", myCommand1);
-    }
 }
