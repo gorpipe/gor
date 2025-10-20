@@ -29,12 +29,11 @@ import org.gorpipe.gor.driver.meta.SourceMetadata;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
-import org.gorpipe.gor.driver.providers.rows.sources.db.DbScope;
 import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.StreamWrappedGenomicIterator;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.util.SqlReplacer;
+import org.gorpipe.gor.util.CommandSubstitutions;
 
 import java.util.HashMap;
 
@@ -56,16 +55,8 @@ public class SqlSource extends RowIteratorSource {
         sqlInfo = getInfoFromSql(sql);
 
         var constants = new HashMap<String, Object>();
-        var scopes = DbScope.parse(sourceReference.securityContext);
-        if (!scopes.isEmpty()) {
-            for (var s : scopes) {
-                if (s.getColumn().equalsIgnoreCase(SqlReplacer.KEY_PROJECT_ID)) {
-                    constants.put(SqlReplacer.KEY_DB_PROJECT_ID, s.getValue());
-                } else if (s.getColumn().equalsIgnoreCase(SqlReplacer.KEY_ORGANIZATION_ID)) {
-                    constants.put(SqlReplacer.KEY_DB_ORGANIZATION_ID, s.getValue());
-                }
-            }
-        }
+        CommandSubstitutions.updateMapFromSecurityContext(sourceReference.securityContext, constants);
+
         var connectionCache = this.getSourceReference().getUrl().startsWith(LegacyDbSourceType.ProtocolName) ?
                 DbConnection.systemConnections :
                 DbConnection.userConnections;

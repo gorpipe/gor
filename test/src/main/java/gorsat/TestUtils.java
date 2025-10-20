@@ -238,7 +238,7 @@ public class TestUtils {
         return factory.create();
     }
 
-    private static GorSession createSession(boolean server, String securityContext) {
+    public static GorSession createSession(boolean server, String securityContext) {
         return createSession(server, securityContext, DEFAULT_WRITE_LOCATIONS);
     }
 

@@ -25,10 +25,10 @@ package gorsat.InputSources
 import gorsat.Commands.CommandParseUtilities._
 import gorsat.Commands._
 import gorsat.Utilities.AnalysisUtilities
-import gorsat.process.{GorJavaUtilities, ProcessRowSource}
+import gorsat.process.ProcessRowSource
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.{GorContext, GorSession}
-import org.gorpipe.gor.util.DataUtil
+import org.gorpipe.gor.util.{CommandSubstitutions, DataUtil}
 
 object Cmd {
 
@@ -61,8 +61,7 @@ object Cmd {
       else command = session.getSystemContext.getReportBuilder.parse(command.substring(0, e + 1)) + command.substring(e + 1)
     }
 
-    val projectRoot = session.getProjectContext.getRealProjectRoot
-    command = GorJavaUtilities.projectReplacement(command, session)
+    command = CommandSubstitutions.projectReplacement(command, session)
 
     val filter: String = if (hasOption(args, "-f")) stringValueOfOption(args, "-f") else null
 
