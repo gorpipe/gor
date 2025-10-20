@@ -17,11 +17,11 @@ public class CommandSubstitutions {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CommandSubstitutions.class);
 
     public static final String KEY_USER = "user";
-    public static final String KEY_PROJECT = "project";       // Project name
-    public static final String KEY_PROJECT_ID = "project_id";   // Project id
-    public static final String KEY_DB_PROJECT_ID = "project-id";  // project id
-    public static final String KEY_ORGANIZATION_ID = "organization_id"; // Organization name
-    public static final String KEY_DB_ORGANIZATION_ID = "organization-id"; // organization id
+    public static final String KEY_PROJECT = "project";
+    public static final String KEY_PROJECT_ID = "project_id";
+    public static final String KEY_DB_PROJECT_ID = "project-id";
+    public static final String KEY_ORGANIZATION_ID = "organization_id";
+    public static final String KEY_DB_ORGANIZATION_ID = "organization-id";
 
     public static final String KEY_REQUEST_ID = "request_id";
     public static final String KEY_CHROM = "chrom";
@@ -193,7 +193,6 @@ public class CommandSubstitutions {
         map.put(KEY_REQUEST_ID, session.getRequestId());
 
         return updateMapFromProjectContext(session.getProjectContext(), map);
-        //updateMapFromSecurityContext(session.getProjectContext().getFileReader().getSecurityContext(), map);
     }
 
     /**
