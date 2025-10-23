@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SqlReplacer {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SqlReplacer.class);
 
     final static String REGEX = "#\\{(\\S+?)\\}";
 
@@ -84,16 +85,19 @@ public class SqlReplacer {
      */
     public static Map<String, Object> updateMapFromSecurityContext(String securityContext, Map<String, Object> map) {
         if (map == null) return map;
-
+        log.info("Parsing security context for DB scopes: {}", securityContext);
         var scopes = DbScope.parse(securityContext);
+        log.info("Extracted DB scopes from security context: {}", scopes.stream().map(s -> s.toString()).collect(Collectors.joining(", ")));
         for (var s : scopes) {
             if (s.getColumn().equalsIgnoreCase(CommandSubstitutions.KEY_PROJECT_ID)) {
                 map.put(KEY_DB_PROJECT_ID, s.getValue());
+                log.info("Added project ID to DB scopes map: {}={}", KEY_DB_PROJECT_ID, s.getValue());
             } else if (s.getColumn().equalsIgnoreCase(CommandSubstitutions.KEY_ORGANIZATION_ID)) {
                 map.put(KEY_DB_ORGANIZATION_ID, s.getValue());
             }
         }
 
+        log.info("Final map of DB scopes: {}", map);
         return map;
     }
 }
