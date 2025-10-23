@@ -65,8 +65,8 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
         Pair<String, Object[]> sqlWithParams = SqlReplacer.replaceConstants(content, constants);
 
         log.info("Executing DB NOR query: {}", sqlWithParams.getFormer());
-        log.info("With parameters: {}", Arrays.asList(sqlWithParams.getLatter())
-                .stream().map(Object::toString).collect(Collectors.joining(", ")));
+        log.info("With parameters: {}", sqlWithParams.getLatter() != null ? Arrays.asList(sqlWithParams.getLatter())
+                .stream().map(o -> o != null ? o.toString() : "null").collect(Collectors.joining(", ")) : "Empty params");
 
         // Get db connection.
         try {
