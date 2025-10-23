@@ -158,19 +158,4 @@ public class GorCommand {
         return rc.toString();
     }
 
-    /**
-     * @param cmd Gor Command
-     * @return command with user contstants
-     */
-    public static String replaceClientConstants(String cmd) {
-        String t = cmd;
-        if (Constants.isSet()) {
-            t = t.replace("#{project}", Constants.get().projectName());
-            t = t.replace("#{user}", Constants.get().userName());
-        }
-        return t;
-    }
-
-
-
 }

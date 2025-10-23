@@ -61,6 +61,7 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
      */
     public DbNorIterator(String content, Map<String, Object> constants, ConnectionPool pool) {
 
+        log.info("DB NOR query before replace: {}", content);
         // Replace scoping variables.
         Pair<String, Object[]> sqlWithParams = SqlReplacer.replaceConstants(content, constants);
 
