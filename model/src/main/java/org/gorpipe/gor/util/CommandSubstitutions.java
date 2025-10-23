@@ -19,16 +19,8 @@ public class CommandSubstitutions {
     public static final String KEY_USER = "user";
     public static final String KEY_PROJECT = "project";
     public static final String KEY_PROJECT_ID = "project_id";
-    public static final String KEY_DB_PROJECT_ID = "project-id";
     public static final String KEY_ORGANIZATION_ID = "organization_id";
-    public static final String KEY_DB_ORGANIZATION_ID = "organization-id";
-
     public static final String KEY_REQUEST_ID = "request_id";
-    public static final String KEY_CHROM = "chrom";
-    public static final String KEY_BPSTART = "bpstart";
-    public static final String KEY_BPSTOP = "bpstop";
-    public static final String KEY_TAGS = "tags";
-    public static final String KEY_DATABASE = "database";
 
     /**
      * Process a list of commands and apply filter and seek substitutions.
@@ -257,11 +249,9 @@ public class CommandSubstitutions {
         var scopes = DbScope.parse(securityContext);
         for (var s : scopes) {
             if (s.getColumn().equalsIgnoreCase(KEY_PROJECT_ID)) {
-                map.put(KEY_DB_PROJECT_ID, s.getValue());
                 map.put(KEY_PROJECT_ID, s.getValue());
                 map.put("projectid", s.getValue());
             } else if (s.getColumn().equalsIgnoreCase(KEY_ORGANIZATION_ID)) {
-                map.put(KEY_DB_ORGANIZATION_ID, s.getValue());
                 map.put(KEY_ORGANIZATION_ID, s.getValue());
             }
         }

@@ -28,7 +28,7 @@ import gorsat.Utilities.AnalysisUtilities
 import gorsat.process.GorJavaUtilities
 import org.gorpipe.gor.model.GorOptions
 import org.gorpipe.gor.session.{GorContext, GorSession}
-import org.gorpipe.gor.util.{CommandSubstitutions, SqlReplacer}
+import org.gorpipe.gor.util.SqlReplacer
 
 import java.util
 
@@ -55,12 +55,12 @@ object Sql {
     val database = if (hasOption(args, "-db")) stringValueOfOption(args, "-db") else null
 
     val map = new util.HashMap[String, Object]()
-    map.put(CommandSubstitutions.KEY_CHROM, range.chromosome)
-    map.put(CommandSubstitutions.KEY_BPSTART, range.start.toString)
-    map.put(CommandSubstitutions.KEY_BPSTOP, range.stop.toString)
-    map.put(CommandSubstitutions.KEY_DATABASE, database)
-    map.put(CommandSubstitutions.KEY_TAGS, tags )
-    CommandSubstitutions.updateMapWithProjectInfo(session, map)
+    map.put(SqlReplacer.KEY_CHROM, range.chromosome)
+    map.put(SqlReplacer.KEY_BPSTART, range.start.toString)
+    map.put(SqlReplacer.KEY_BPSTOP, range.stop.toString)
+    map.put(SqlReplacer.KEY_DATABASE, database)
+    map.put(SqlReplacer.KEY_TAGS, tags )
+    SqlReplacer.updateMapFromSecurityContext(session.getProjectContext.getFileReader.getSecurityContext, map)
 
     val iteratorSource = GorJavaUtilities.getDbIteratorSource(myCommand, map, database, !isNorContext, false)
 
