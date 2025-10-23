@@ -29,8 +29,10 @@ import org.gorpipe.util.db.ConnectionPool;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -38,6 +40,8 @@ import java.util.Map;
  * and do thus not support seek.
  */
 public class DbNorIterator implements Iterator<String>, AutoCloseable {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DbNorIterator.class);
 
     private Connection conn = null;
     private PreparedStatement stmt = null;
@@ -59,6 +63,10 @@ public class DbNorIterator implements Iterator<String>, AutoCloseable {
 
         // Replace scoping variables.
         Pair<String, Object[]> sqlWithParams = SqlReplacer.replaceConstants(content, constants);
+
+        log.info("Executing DB NOR query: {}", sqlWithParams.getFormer());
+        log.info("With parameters: {}", Arrays.asList(sqlWithParams.getLatter())
+                .stream().map(Object::toString).collect(Collectors.joining(", ")));
 
         // Get db connection.
         try {
