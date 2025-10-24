@@ -22,8 +22,6 @@
 
 package gorsat.process
 
-import java.io.File
-import java.nio.file.{Files, Paths}
 import java.util
 import java.util.Optional
 import gorsat.Analysis._
@@ -116,6 +114,9 @@ object PipeInstance {
   * This class defines the pipe instance when a gor query is run, including all commands, logic, and methods for processing and parsing options in the query.
   */
 class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) extends gorsatGorIterator(context) {
+
+  val DO_GLOBAL_QUERY_CONST_REPLACEMENTS: Boolean = System.getProperty("gor.query.const.replacements", "false").toBoolean
+
 
   // Define second constructor, needed for Java.
   def this(context: GorContext) = {
@@ -259,6 +260,9 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     thePipeStep = PlaceHolder()
 
     var argString = CommandParseUtilities.removeComments(inputQuery)
+    if (DO_GLOBAL_QUERY_CONST_REPLACEMENTS) {
+      argString = CommandSubstitutions.projectReplacement(argString, context.getSession)
+    }
     val gorCommands = CommandParseUtilities.quoteSafeSplitAndTrim(argString, ';') // In case this is a command line script
 
     if (fileSignature || virtualFile != null || ScriptParsers.isScript(gorCommands)) {

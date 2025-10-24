@@ -33,7 +33,7 @@ import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.StreamWrappedGenomicIterator;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.util.CommandSubstitutions;
+import org.gorpipe.gor.util.SqlReplacer;
 
 import java.util.HashMap;
 
@@ -55,7 +55,7 @@ public class SqlSource extends RowIteratorSource {
         sqlInfo = getInfoFromSql(sql);
 
         var constants = new HashMap<String, Object>();
-        CommandSubstitutions.updateMapFromSecurityContext(sourceReference.securityContext, constants);
+        SqlReplacer.updateMapFromSecurityContext(sourceReference.securityContext, constants);
 
         var connectionCache = this.getSourceReference().getUrl().startsWith(LegacyDbSourceType.ProtocolName) ?
                 DbConnection.systemConnections :

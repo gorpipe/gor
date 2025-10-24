@@ -26,6 +26,7 @@ import com.nextcode.gor.driver.utils.DatabaseHelper;
 import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -46,6 +47,9 @@ public class UTestSQLInputSource {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     @BeforeClass
     public static void initDb() throws IOException, ClassNotFoundException, SQLException {
@@ -97,8 +101,17 @@ public class UTestSQLInputSource {
     }
 
     @Test
-    public void testNorSqlSourceWithProjectId() throws IOException, ClassNotFoundException {
-        String sqlcmd = "norsql {select * from rda.v_variant_annotations where project_id = #{project_id}}";
+    public void testNorSqlSourceWithDbProjectId() {
+        String sqlcmd = "norsql {select * from rda.v_variant_annotations where project_id = #{project-id}}";
+        String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
+        var result = TestUtils.runGorPipe(sqlcmd, false, securityContext);
+        Assert.assertEquals(6, result.split("\n").length);
+    }
+
+    @Test
+    public void testNorSqlSourceWithProjectId() {
+        System.setProperty("gor.query.const.replacements", "true");
+        String sqlcmd = "norsql {select project_id,chromo,pos,pn,comment, #{project_id} x from rda.v_variant_annotations where project_id = '#{project_id}'}";
         String securityContext = "dbscope=project_id#int#10004|||extrastuff=other";
         var result = TestUtils.runGorPipe(sqlcmd, false, securityContext);
         Assert.assertEquals(6, result.split("\n").length);

@@ -238,7 +238,6 @@ public abstract class GorIterator implements AutoCloseable, Iterator<String> {
             if (fName != null) cmd = cmd.replaceAll("\\$file", fName);
             if (range >= 0) cmd = cmd.replaceAll("\\$range", String.valueOf(range));
         }
-        cmd = GorCommand.replaceClientConstants(cmd);
         return cmd;
     }
 

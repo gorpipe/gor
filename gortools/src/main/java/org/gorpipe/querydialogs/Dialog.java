@@ -28,7 +28,6 @@ import freemarker.core.Environment;
 import freemarker.core.ParseException;
 import freemarker.template.*;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.model.Constants;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.querydialogs.templating.DialogArgumentWrapper;
@@ -583,13 +582,7 @@ public class Dialog extends AbstractListBean {
     }
 
     private void setConfig() {
-        if (Constants.isSet()) {
-            final String constantsProjectName = Constants.get().projectName();
-            if (!constantsProjectName.equals(projectName)) {
-                initializeTemplateConfig(fileResolver, queryEval);
-                projectName = constantsProjectName;
-            }
-        } else if (TEMPLATE_CONFIG == null) {
+        if (TEMPLATE_CONFIG == null) {
             initializeTemplateConfig(fileResolver, queryEval);
         }
     }
