@@ -34,7 +34,7 @@ import org.gorpipe.gor.util.DataUtil
 
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -vlink", 0),
+  CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -63,13 +63,8 @@ class Write extends CommandInfo("WRITE",
     md5 = hasOption(args, "-m")
     if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")).toInt
 
-    if (hasOption(args, "-link") && hasOption(args, "-vlink")) {
-      throw new GorParsingException("Options -link and -vlink are mutually exclusive")
-    }
     val (link, linkVersion) = if (hasOption(args, "-link")) {
-      (stringValueOfOption(args, "-link"), 0)
-    } else if (hasOption(args, "-vlink")) {
-      (stringValueOfOption(args, "-vlink"), 1)
+      (stringValueOfOption(args, "-link"), 1)
     } else {
       ("", 0)
     }

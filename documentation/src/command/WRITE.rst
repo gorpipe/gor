@@ -62,10 +62,7 @@ Options
 | ``-card '<cols>'``| Calculate cardinality of columns in '<cols>' and adds to the    |
 |                   | outputs meta data.                                              |
 +-------------------+-----------------------------------------------------------------+
-| ``-link <link>``  | Writes a link file pointing to the the <file name>.             |
-|                   |                                                                 |
-+-------------------+-----------------------------------------------------------------+
-| ``-vlink <link>`` | Writes a versioned link file pointing to the the <file name>.   |
+| ``-link <link>`` | Writes a versioned link file pointing to the the <file name>.   |
 |                   | The <file name> should not be overwritten if it has previously  |
 |                   | been used in a link file.                                       |
 +-------------------+-----------------------------------------------------------------+

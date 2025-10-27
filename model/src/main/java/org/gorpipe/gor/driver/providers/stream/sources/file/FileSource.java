@@ -70,6 +70,13 @@ public class FileSource implements StreamSource {
     /**
      * Name of file.  This should be the full path to the file.
      */
+    public FileSource(Path fileName) {
+        this(new SourceReferenceBuilder(fileName.toString()).build());
+    }
+
+    /**
+     * Name of file.  This should be the full path to the file.
+     */
     public FileSource(SourceReference sourceReference) {
         this.sourceReference = fixSourceReference(sourceReference);
         this.filePath = getFullPath(this.sourceReference);
