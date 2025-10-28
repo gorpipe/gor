@@ -34,7 +34,7 @@ import org.gorpipe.gor.util.DataUtil
 
 
 class Write extends CommandInfo("WRITE",
-  CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link", 0),
+  CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -linkmeta", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -63,11 +63,8 @@ class Write extends CommandInfo("WRITE",
     md5 = hasOption(args, "-m")
     if (hasOption(args, "-l")) compressionLevel = stringValueOfOptionWithErrorCheck(args, "-l", Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")).toInt
 
-    val (link, linkVersion) = if (hasOption(args, "-link")) {
-      (stringValueOfOption(args, "-link"), 1)
-    } else {
-      ("", 0)
-    }
+    val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
+    val linkMetaOpt = if (hasOption(args, "-linkmeta")) stringValueOfOption(args, "-linkmeta") else ""
 
     if(fileName.isEmpty && useFolder.isEmpty) throw new GorResourceException("No file or folder specified","");
 
@@ -143,8 +140,8 @@ class Write extends CommandInfo("WRITE",
           useFolder,
           skipHeader,
           cardCol = card,
-          linkFile = link,
-          linkFileVersion = linkVersion,
+          linkFile = linkOpt,
+          linkFileMeta = linkMetaOpt,
           command = argString,
           infer = infer,
           maxseg = maxseg

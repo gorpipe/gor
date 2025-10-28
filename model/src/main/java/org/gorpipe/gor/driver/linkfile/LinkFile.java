@@ -10,6 +10,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.util.Strings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Class to work with link files, read, write and access metadata.
  *
- * Link file format, a valid nor format.   Note, the required fields form the current link file format.
+ * Link file format, a valid nor format.  Example:
  *
  * ## VERSION=<file format version>
  * ## ENTRIES_COUNT_MAX=<max entries to store in this file>
@@ -33,9 +34,26 @@ import java.util.concurrent.TimeUnit;
  * 1. No timestamp or serial is treated as 0 (older).
  * 2. Entries are added to the bottom.
  * 3. If entries have the same timestamp, the appearing later in the file is picked.
+ * 4. Required fields.
+ *     - URL
+ * 5, Optional fields.
+ *     - TIMESTAMP - in ISO data format or milliseconds since epoch, active time.
+ *     - MD5 - md5 checksum of the file or data the link points to.
+ *     - SERIAL - incrementing serial number for the link file entry.
+ * 6, Required meta fields.
+ *     - VERSION - Link file format version.
+ * 7. Optional meta fields.
+ *     - ENTRIES_COUNT_MAX - max entries to store in this file.
+ *     - ENTRIES_AGE_MAX - max age of entries in milliseconds.
+ *     -
  *
  */
 public abstract class LinkFile {
+
+    // TODO:
+    // 1. Remove source from the link file.   Instead just passed into the load and save static methods.
+    //    Offload to its own helper calss LineFilePersister/LinkFileLifeCycle or similar.
+    // 2. Add Info field add the end, to set external version info etc.
 
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
@@ -52,10 +70,10 @@ public abstract class LinkFile {
     public static LinkFile load(StreamSource source, String content) {
         var meta = LinkFileMeta.createAndLoad(content);
 
-        if ("1".equals(meta.getVersion())) {
-            return new LinkFileV1(source, meta, content);
-        } else {
+        if ("0".equals(meta.getVersion())) {
             return new LinkFileV0(source, meta, content);
+        } else {
+            return new LinkFileV1(source, meta, content);
         }
     }
 
@@ -69,7 +87,7 @@ public abstract class LinkFile {
         }
     }
 
-    public static String validateAndUpdateLinkFileName(String linkFilePath, int linkVersion) {
+    public static String validateAndUpdateLinkFileName(String linkFilePath) {
         if (DataUtil.isLink(linkFilePath)) {
             return linkFilePath;
         } else {
@@ -185,6 +203,13 @@ public abstract class LinkFile {
     }
 
     public abstract LinkFile appendEntry(String link, String md5, FileReader reader);
+
+    public LinkFile appendMeta(String meta) {
+        if (!Strings.isNullOrEmpty(meta)) {
+            this.meta.loadAndMergeMeta(meta);
+        }
+        return this;
+    }
 
     public void save() {
         try (OutputStream os = source.getOutputStream()) {

@@ -54,6 +54,11 @@ public class LinkFileMeta extends BaseMeta {
         setProperty(HEADER_ENTRIES_AGE_MAX_KEY, String.valueOf(entriesAgeMax));
     }
 
+    @Override
+    public String getVersion() {
+        return getProperty(HEADER_VERSION_KEY, "1");
+    }
+
     public static String getDefaultMetaContent() {
         return String.format("""
                 ## SERIAL = 0

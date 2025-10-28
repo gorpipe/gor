@@ -185,6 +185,33 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWriteLinkFileAndMeta() throws IOException {
+        TestUtils.runGorPipe("gorrow chr1,1,100 | write test.gor -link ltest.gor -linkmeta 'TEST1=T1,TEST2=T2, TEST3=T3'", "-gorroot", workDirPath.toString());
+
+        String linkresult = TestUtils.runGorPipe("gor ltest.gor | top 1", "-gorroot", workDirPath.toString());
+        Assert.assertEquals("chrom\tbpStart\tbpStop\nchr1\t1\t100\n", linkresult);
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals("T1", linkFile.getMeta().getProperty("TEST1"));
+        Assert.assertEquals("T2", linkFile.getMeta().getProperty("TEST2"));
+        Assert.assertEquals("T3", linkFile.getMeta().getProperty("TEST3"));
+    }
+
+    @Test
+    public void testWriteLinkFileAndUnqotedMeta() throws IOException {
+        TestUtils.runGorPipe("gorrow chr1,1,100 | write test.gor -link ltest.gor -linkmeta TEST1=T1,TEST2=T2", "-gorroot", workDirPath.toString());
+
+        String linkresult = TestUtils.runGorPipe("gor ltest.gor | top 1", "-gorroot", workDirPath.toString());
+        Assert.assertEquals("chrom\tbpStart\tbpStop\nchr1\t1\t100\n", linkresult);
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals("T1", linkFile.getMeta().getProperty("TEST1"));
+        Assert.assertEquals("T2", linkFile.getMeta().getProperty("TEST2"));
+    }
+
+    @Test
     public void testTxtWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
         Files.copy(p, workDirPath.resolve("simple1.nor"));

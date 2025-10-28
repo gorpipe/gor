@@ -32,7 +32,7 @@ import org.gorpipe.gor.util.StringUtil
 
 
 class TsvAppend extends CommandInfo("TSVAPPEND",
-  CommandArguments("-noheader", "-prefix -link", 0),
+  CommandArguments("-noheader", "-prefix -link -linkmeta", 0),
   CommandOptions(gorCommand = false, norCommand = true, verifyCommand = true)) {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
@@ -72,11 +72,8 @@ class TsvAppend extends CommandInfo("TSVAPPEND",
       else prefixFile = Option(prfx)
     }
 
-    val (link, linkVersion) = if (hasOption(args, "-link")) {
-      (stringValueOfOption(args, "-link"), 1)
-    } else {
-      ("", 0)
-    }
+    val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
+    val linkMetaOpt = if (hasOption(args, "-linkmeta")) stringValueOfOption(args, "-linkmeta") else ""
 
     val fixedHeader = forcedInputHeader.split("\t").slice(0, 2).mkString("\t")
 
@@ -90,8 +87,8 @@ class TsvAppend extends CommandInfo("TSVAPPEND",
           prefix=prefix,
           prefixFile=prefixFile,
           skipHeader=skipHeader,
-          linkFile=link,
-          linkFileVersion=linkVersion,
+          linkFile=linkOpt,
+          linkFileMeta=linkMetaOpt,
           command=argString
         )
       ),
