@@ -19,10 +19,14 @@ import java.util.stream.Collectors;
  * @param timestamp     timestamp of the link file entry.  Optional.
  * @param md5           md5 of file or data the link points to.  Optional.
  * @param serial        incrementing serial number for the link file entry.  Optional.
+ * @param info          extra info about the this version
  */
-public record LinkFileEntryV1(String url, long timestamp, String md5, int serial) implements LinkFileEntry {
+public record LinkFileEntryV1(String url, long timestamp, String md5, int serial, String info) implements LinkFileEntry {
 
-    public LinkFileEntryV1(String url, long timestamp, String md5, int serial) {
+    // Special key to store entry info in link file metadata.
+    public static final String ENTRY_INFO_KEY = "ENTRY_INFO";
+
+    public LinkFileEntryV1(String url, long timestamp, String md5, int serial, String info) {
         if (Strings.isNullOrBlank(url)) {
             throw new IllegalArgumentException("URL cannot be null or empty");
         }
@@ -37,6 +41,7 @@ public record LinkFileEntryV1(String url, long timestamp, String md5, int serial
         this.timestamp = timestamp;
         this.md5 = md5;
         this.serial = serial;
+        this.info = info;
     }
 
     public static List<LinkFileEntry> parse(String content) {
@@ -59,11 +64,12 @@ public record LinkFileEntryV1(String url, long timestamp, String md5, int serial
                 parts[0].trim(),
                 parts.length > 1 && !Strings.isNullOrEmpty(parts[1]) ? DateUtils.parseDateISOEpoch(parts[1], true).toEpochMilli() : 0,
                 parts.length > 2 ? parts[2] : "",
-                parts.length > 3 && !Strings.isNullOrEmpty(parts[3]) ? Integer.parseInt(parts[3]) : 0
+                parts.length > 3 && !Strings.isNullOrEmpty(parts[3]) ? Integer.parseInt(parts[3]) : 0,
+                parts.length > 4 ? parts[4] : ""
                 );
     }
 
     public String format() {
-        return url + "\t" + Instant.ofEpochMilli(timestamp) + "\t" + md5 + "\t" + serial;
+        return url + "\t" + Instant.ofEpochMilli(timestamp) + "\t" + md5 + "\t" + serial+ "\t" + info;
     }
 }

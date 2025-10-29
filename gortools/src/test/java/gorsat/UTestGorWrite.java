@@ -133,12 +133,12 @@ public class UTestGorWrite {
     public void testWritePathWithExistingVersionedLinkFile() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), workDirPath.resolve("dbsnp.gor").toString() + "\n");
+        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), defaultV1LinkFileHeader + workDirPath.resolve("dbsnp.gor").toString() + "\n");
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
         Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
                 defaultV1LinkFileHeader
-                        + workDirPath.resolve("dbsnp.gor") + "\t1970-01-01T00:00:00Z\t\t0\n"
+                        + workDirPath.resolve("dbsnp.gor") + "\t1970-01-01T00:00:00Z\t\t0\t\n"
                         + workDirPath.resolve("dbsnp2.gor") + "\t"));
     }
 
@@ -209,6 +209,17 @@ public class UTestGorWrite {
         Assert.assertEquals(1, linkFile.getEntriesCount());
         Assert.assertEquals("T1", linkFile.getMeta().getProperty("TEST1"));
         Assert.assertEquals("T2", linkFile.getMeta().getProperty("TEST2"));
+    }
+
+    @Test
+    public void testWriteLinkFileAndMetaWithInfo() throws IOException {
+        TestUtils.runGorPipe("gorrow chr1,1,100 | write test.gor -link ltest.gor -linkmeta TEST1=T1,ENTRY_INFO='Some file info'", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals("T1", linkFile.getMeta().getProperty("TEST1"));
+        Assert.assertEquals("NOTFOUND", linkFile.getMeta().getProperty("ENTRY_INFO", "NOTFOUND"));
+        Assert.assertEquals("Some file info", linkFile.getLatestEntry().info());
     }
 
     @Test

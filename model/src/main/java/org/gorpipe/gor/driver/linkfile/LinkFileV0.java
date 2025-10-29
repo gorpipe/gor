@@ -35,7 +35,7 @@ public class LinkFileV0 extends LinkFile {
     }
 
     @Override
-    public LinkFile appendEntry(String link, String md5, FileReader reader) {
+    public LinkFile appendEntry(String link, String md5, String info, FileReader reader) {
         entries.clear(); // V0 does not support multiple entries, so we clear the list
         entries.add(new LinkFileEntryV0(link));
         return this;

@@ -29,7 +29,7 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.linkfile.LinkFile
+import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
@@ -276,17 +276,17 @@ case class ForkWrite(forkCol: Int,
 
     if (useFork) {
       forkMap.values.foreach(sh => {
-        val (linkFile, linkFileUrl, linkFileMeta) = extractLink(sh.fileName)
+        val (linkFile, linkFileUrl, linkFileMeta, linkFileInfo) = extractLink(sh.fileName)
 
         if (linkFile.nonEmpty) {
-          writeLinkFile(linkFile, linkFileUrl, linkFileMeta)
+          writeLinkFile(linkFile, linkFileUrl, linkFileMeta, linkFileInfo)
         }
       })
     } else {
-      val (linkFile, linkFileUrl, linkFileMeta) = extractLink(fullFileName, options.linkFile, options.linkFileMeta)
+      val (linkFile, linkFileUrl, linkFileMeta, linkFileInfo) = extractLink(fullFileName, options.linkFile, options.linkFileMeta)
 
       if (linkFile.nonEmpty) {
-        writeLinkFile(linkFile, linkFileUrl, linkFileMeta, getMd5)
+        writeLinkFile(linkFile, linkFileUrl, linkFileMeta, getMd5, linkFileInfo)
       }
     }
   }
@@ -300,7 +300,7 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  private def extractLink(fileName: String, optLinkFile: String = "", optLinkFileMeta: String = "") : (String, String, String) = {
+  private def extractLink(fileName: String, optLinkFile: String = "", optLinkFileMeta: String = "") : (String, String, String, String) = {
     var linkFile = optLinkFile
     var linkFileContent = ""
     if (fileName.nonEmpty) {
@@ -314,12 +314,25 @@ case class ForkWrite(forkCol: Int,
         linkFileContent = PathUtils.resolve(session.getProjectContext.getProjectRoot, fileName)
       }
     }
-    val meta = if (!Strings.isNullOrEmpty(optLinkFileMeta))  CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',').map(s => "## " + s.trim).mkString("\n") else ""
-    (linkFile,linkFileContent, meta)
+
+    var linkFileMeta = ""
+    var linkFileInfo = ""
+    if (!Strings.isNullOrEmpty(optLinkFileMeta)) {
+      for (s <- CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',')) {
+        val l = s.trim
+        if (l.startsWith(LinkFileEntryV1.ENTRY_INFO_KEY)) {
+          linkFileInfo =  StringUtils.strip(l.substring(LinkFileEntryV1.ENTRY_INFO_KEY.length  + 1), "\"\'")
+        } else {
+          linkFileMeta += "## " + l + "\n"
+        }
+      }
+    }
+
+    (linkFile, linkFileContent, linkFileMeta, linkFileInfo)
   }
 
   private def writeLinkFile(linkFilePath: String, linkFileContent: String,
-                            linkFileMeta: String = "", md5: String = null) : Unit = {
+                            linkFileMeta: String = "", md5: String = null, linkFileInfo: String = null) : Unit = {
     val linkFileToWrite = LinkFile.validateAndUpdateLinkFileName(linkFilePath)
 
      // Validate that we can write to the location (skip link extension as writing links is always forbidden).
@@ -331,7 +344,7 @@ case class ForkWrite(forkCol: Int,
 
     LinkFile.load(fileReader.resolveUrl(linkFileToWrite, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
-      .appendEntry(linkFileContent, md5, fileReader)
+      .appendEntry(linkFileContent, md5, linkFileInfo, fileReader)
       .save()
   }
 }

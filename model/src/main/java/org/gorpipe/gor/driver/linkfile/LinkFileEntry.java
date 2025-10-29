@@ -10,4 +10,6 @@ public interface LinkFileEntry {
     String md5();
 
     int serial();
+
+    String info();
 }

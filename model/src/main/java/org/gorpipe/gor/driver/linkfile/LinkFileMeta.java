@@ -9,7 +9,7 @@ public class LinkFileMeta extends BaseMeta {
     public static final String HEADER_ENTRIES_COUNT_MAX_KEY = "ENTRIES_COUNT_MAX";
     public static final String HEADER_ENTRIES_AGE_MAX_KEY = "ENTRIES_AGE_MAX";
 
-    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", "Timestamp", "MD5", "Serial"};
+    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", "Timestamp", "MD5", "Serial", "Info"};
 
     public static final int DEFAULT_ENTRIES_COUNT_MAX = 100;
     public static final long DEFAULT_ENTRIES_AGE_MAX = Long.MAX_VALUE;
@@ -56,7 +56,7 @@ public class LinkFileMeta extends BaseMeta {
 
     @Override
     public String getVersion() {
-        return getProperty(HEADER_VERSION_KEY, "1");
+        return getProperty(HEADER_VERSION_KEY, "0");
     }
 
     public static String getDefaultMetaContent() {

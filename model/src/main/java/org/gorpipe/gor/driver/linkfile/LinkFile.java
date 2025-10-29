@@ -50,11 +50,6 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class LinkFile {
 
-    // TODO:
-    // 1. Remove source from the link file.   Instead just passed into the load and save static methods.
-    //    Offload to its own helper calss LineFilePersister/LinkFileLifeCycle or similar.
-    // 2. Add Info field add the end, to set external version info etc.
-
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
@@ -64,10 +59,10 @@ public abstract class LinkFile {
 
     public static LinkFile load(StreamSource source) throws IOException {
         var content = loadContentFromSource(source);
-        return load(source, content);
+        return create(source, content);
     }
 
-    public static LinkFile load(StreamSource source, String content) {
+    public static LinkFile create(StreamSource source, String content) {
         var meta = LinkFileMeta.createAndLoad(content);
 
         if ("0".equals(meta.getVersion())) {
@@ -77,21 +72,10 @@ public abstract class LinkFile {
         }
     }
 
-    public static LinkFile load(StreamSource source, int linkVersion) throws IOException {
-        switch (linkVersion) {
-            case 0:
-                return new LinkFileV0(source);
-            case 1:
-            default:
-                return new LinkFileV1(source);
-        }
-    }
-
     public static String validateAndUpdateLinkFileName(String linkFilePath) {
         if (DataUtil.isLink(linkFilePath)) {
             return linkFilePath;
         } else {
-            //return linkVersion == 0 ? DataUtil.toLink(linkFilePath) : DataUtil.toVersionedLink(linkFilePath);
             return DataUtil.toLink(linkFilePath);
         }
     }
@@ -166,7 +150,7 @@ public abstract class LinkFile {
      * @param timestamp  timestamp to match
      * @return best match entry or null if no entries.
      */
-    LinkFileEntry getEntry(long timestamp) {
+    public LinkFileEntry getEntry(long timestamp) {
         int index = entries.size() - 1;
         while (index >= 0 && entries.get(index).timestamp() > timestamp) {
             index--;
@@ -178,7 +162,7 @@ public abstract class LinkFile {
      * Get the latest entry.
      * @return the latest entry
      */
-    LinkFileEntry getLatestEntry() {
+    public LinkFileEntry getLatestEntry() {
         return entries != null && !entries.isEmpty() ? entries.get(entries.size() - 1) : null;
     }
 
@@ -199,10 +183,14 @@ public abstract class LinkFile {
     }
 
     public LinkFile appendEntry(String link, String md5) {
-        return appendEntry(link, md5, null);
+        return appendEntry(link, md5, null, null);
     }
 
-    public abstract LinkFile appendEntry(String link, String md5, FileReader reader);
+    public LinkFile appendEntry(String link, String md5, String info) {
+        return appendEntry(link, md5, info, null);
+    }
+
+    public abstract LinkFile appendEntry(String link, String md5, String info, FileReader reader);
 
     public LinkFile appendMeta(String meta) {
         if (!Strings.isNullOrEmpty(meta)) {
