@@ -163,7 +163,7 @@
 <p>The <a class="reference internal" href="#tsvappend"><span class="std std-ref">TSVAPPEND</span></a> command can be used to append a stream to a file.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | tsvappend &lt;file name&gt; [-noheader] [-prefix &lt;prefix&gt;] [-link &lt;link path&gt;]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">nor</span> ... | tsvappend &lt;file name&gt; [-noheader] [-prefix &lt;prefix&gt;] [-link &lt;link path&gt; [-lmeta &lt;link meta&gt;]
 </pre></div>
 </div>
 </div>
@@ -183,12 +183,13 @@ file written. Also support string in single quotes</p></td>
 <td><p>Don’t write a header lines.  Not valid with gor/gorz/nor/norz.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-link</span> <span class="pre">&lt;link&gt;</span></code></p></td>
-<td><p>Writes a link file pointing to the the &lt;file name&gt;.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-vlink</span> <span class="pre">&lt;link&gt;</span></code></p></td>
 <td><p>Writes a versioned link file pointing to the the &lt;file name&gt;.
 The &lt;file name&gt; should not be overwritten if it has previously
 been used in a link file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-linkmeta</span> <span class="pre">&lt;m&gt;</span></code></p></td>
+<td><p>Writes &lt;meta&gt; as meta data to the &lt;link&gt;.  &lt;meta&gt; is string for
+of comma separated key=value elements.</p></td>
 </tr>
 </tbody>
 </table>

@@ -14,7 +14,7 @@ Usage
 
 .. code-block:: gor
 
-	nor ... | tsvappend <file name> [-noheader] [-prefix <prefix>] [-link <link path>]
+	nor ... | tsvappend <file name> [-noheader] [-prefix <prefix>] [-link <link path> [-lmeta <link meta>]
 
 Options
 =======
@@ -25,12 +25,12 @@ Options
 +-------------------+-----------------------------------------------------------------+
 | ``-noheader``     | Don't write a header lines.  Not valid with gor/gorz/nor/norz.  |
 +-------------------+-----------------------------------------------------------------+
-| ``-link <link>``  | Writes a link file pointing to the the <file name>.             |
-|                   |                                                                 |
-+-------------------+-----------------------------------------------------------------+
-| ``-vlink <link>`` | Writes a versioned link file pointing to the the <file name>.   |
+| ``-link <link>``  | Writes a versioned link file pointing to the the <file name>.   |
 |                   | The <file name> should not be overwritten if it has previously  |
 |                   | been used in a link file.                                       |
++-------------------+-----------------------------------------------------------------+
+| ``-linkmeta <m>`` | Writes <meta> as meta data to the <link>.  <meta> is string for |
+|                   | of comma separated key=value elements.                          |
 +-------------------+-----------------------------------------------------------------+
 
 Examples
